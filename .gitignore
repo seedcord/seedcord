@@ -14,9 +14,6 @@ npm-debug.*
 debugging/
 **/.DS_Store
 
-# Ignore pnpm lock file
-pnpm-lock.yaml
-
 # Certs
 certs/
 
