@@ -1,7 +1,7 @@
 import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.js';
 import { InteractionHandler } from '../interfaces/Handler';
 import { Catchable } from '../decorators/Catchable';
-import { MaintenenaceEmbed } from '../components/bundles/Maintenance';
+import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 import { SlashRoute } from '../decorators/InteractionConfigurable';
 
 @SlashRoute('maintenance')
@@ -12,7 +12,7 @@ export class Maintenance extends InteractionHandler<ChatInputCommandInteraction>
     const channel = this.event.channel as TextChannel;
 
     await channel.send({
-      embeds: [new MaintenenaceEmbed(this.event.client).component]
+      embeds: [new MaintenanceEmbed(this.event.client).component]
     });
 
     await this.event.editReply({

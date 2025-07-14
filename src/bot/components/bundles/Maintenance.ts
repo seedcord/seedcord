@@ -1,18 +1,7 @@
-import { Client, PermissionFlagsBits } from 'discord.js';
+import { Client } from 'discord.js';
 import { BuilderComponent } from '../../interfaces/Components';
 
-export class MaintenanceCommand extends BuilderComponent<'command'> {
-  constructor() {
-    super('command');
-
-    this.instance
-      .setName('maintenance')
-      .setDescription('Post maintenance message')
-      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
-  }
-}
-
-export class MaintenenaceEmbed extends BuilderComponent<'embed'> {
+export class MaintenanceEmbed extends BuilderComponent<'embed'> {
   constructor(client: Client) {
     super('embed');
 
