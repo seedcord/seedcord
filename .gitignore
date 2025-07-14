@@ -1,0 +1,62 @@
+# dependencies
+node_modules/
+
+# debug
+npm-debug.*
+
+# local env files
+.env
+
+# typescript
+*.tsbuildinfo
+
+# misc 
+debugging/
+**/.DS_Store
+
+# Ignore pnpm lock file
+pnpm-lock.yaml
+
+# Certs
+certs/
+
+# Ignore build output directories
+dist/
+build/
+
+# Ignore IDE specific files
+**/.idea
+**/.vscode
+**/.vs
+
+# Ignore log files
+*.log
+Logs/
+
+# Ignore coverage reports
+coverage/
+
+# Ignore temporary files
+*.tmp
+*.swp
+
+# Ignore OS generated files
+Thumbs.db
+.DS_Store
+
+# Ignore Docker files
+# **/Dockerfile*
+# **/docker-compose*
+
+# Ignore secrets
+**/secrets.dev.yaml
+**/values.dev.yaml
+
+# Ignore miscellaneous project files
+**/.project
+**/.classpath
+**/.settings
+**/.toolstarget
+**/*.*proj.user
+**/*.dbmdl
+**/*.jfm

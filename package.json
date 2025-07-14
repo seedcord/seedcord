@@ -1,0 +1,45 @@
+{
+  "name": "seedcord",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:watch": "tsx start-watch.ts",
+    "test": "tsx debugging/test.ts",
+    "lint": "eslint 'src'",
+    "lint:fix": "eslint 'src' --fix",
+    "prettier": "prettier --write 'src'",
+    "build": "tsc -p .",
+    "start:bot": "npm run build && node dist/bot.js",
+    "dev:bot": "nodemon --config nodemon.bot.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "Dhruv <materwelondhruv@gmail.com>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.27.0",
+    "@types/eslint-plugin-security": "^3.0.0",
+    "@types/node": "^22.15.21",
+    "@typescript-eslint/eslint-plugin": "^8.32.1",
+    "@typescript-eslint/parser": "^8.32.1",
+    "eslint": "^9.27.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^4.3.5",
+    "eslint-plugin-security": "^3.0.1",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.32.1"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "discord.js": "^14.19.3",
+    "dotenv": "^16.5.0",
+    "mongoose": "^8.16.2",
+    "reflect-metadata": "^0.2.2",
+    "winston": "^3.17.0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "watch": ["src"],
+  "ignore": [
+    "Dockerfile.dev",
+    "Dockerfile.prod",
+    "compose.yaml",
+    "package.json",
+    "pnpm-lock.yaml",
+    "tsconfig.json",
+    "node_modules",
+    ".eslintrc",
+    ".prettierrc",
+    ".gitignore",
+    ".prettierignore",
+    ".eslintignore",
+    ",dockerignore",
+    ".env.development",
+    ".env.production"
+  ],
+  "ext": "js,ts,json",
+  "exec": "tsx bot.ts",
+  "delay": "1000"
+}
