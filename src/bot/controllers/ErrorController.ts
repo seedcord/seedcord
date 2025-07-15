@@ -3,7 +3,6 @@ import { UUID } from 'crypto';
 import { Guild, User } from 'discord.js';
 import * as path from 'path';
 import { CoreBot } from '../../core/CoreBot';
-import { Hooks } from '../../core/hooks/interfaces/Hooks';
 import { traverseDirectory } from '../../core/library/Helpers';
 import { LogService } from '../../core/services/LogService';
 import { ErrorType } from '../decorators/ErrorConfigurable';
@@ -102,7 +101,7 @@ export class ErrorController {
 
     if (error instanceof CustomError) {
       if (error instanceof DatabaseError) {
-        this.core.hooks.emit(Hooks.UnknownException, [error.uuid, error, guild, user]);
+        this.core.hooks.emit('unknownException', [error.uuid, error, guild, user]);
         this.logger.error(`DatabaseError: ${error.uuid}`);
       } else if (error.emit) {
         this.logger.error(`${error.name}: ${error.message}`, error);
@@ -126,7 +125,7 @@ export class ErrorController {
   }
 
   private newGenericErrorEmbed(uuid: UUID, error: Error, guild: Guild, user: User): GenericErrorEmbed {
-    this.core.hooks.emit(Hooks.UnknownException, [uuid, error, guild, user]);
+    this.core.hooks.emit('unknownException', [uuid, error, guild, user]);
     return new GenericErrorEmbed(uuid);
   }
 }

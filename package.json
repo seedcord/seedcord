@@ -8,7 +8,7 @@
     "test": "tsx debugging/test.ts",
     "lint": "eslint 'src'",
     "lint:fix": "eslint 'src' --fix",
-    "prettier": "prettier --write 'src'",
+    "format": "prettier --write 'src'",
     "build": "tsc -p .",
     "start:bot": "pnpm run build && node dist/bot.js",
     "dev:bot": "nodemon --config nodemon.bot.json",

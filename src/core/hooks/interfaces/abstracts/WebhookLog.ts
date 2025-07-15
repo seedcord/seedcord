@@ -1,7 +1,7 @@
 import { WebhookClient } from 'discord.js';
 import { HookHandler } from '../HookHandler';
-import { HookedEvents } from '../Hooks';
+import { HookKeys } from '../../types/Hooks';
 
-export abstract class WebhookLog<T extends keyof HookedEvents> extends HookHandler<T> {
+export abstract class WebhookLog<T extends HookKeys> extends HookHandler<T> {
   abstract webhook: WebhookClient;
 }

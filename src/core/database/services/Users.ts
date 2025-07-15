@@ -15,3 +15,10 @@ export class Users<D extends IUser = IUser> extends BaseService<D> {
     username: { type: String, required: true, unique: true }
   });
 }
+
+/* Declare Users to augment the ServiceMap */
+declare module '../types/Services' {
+  interface Services {
+    users: Users;
+  }
+}

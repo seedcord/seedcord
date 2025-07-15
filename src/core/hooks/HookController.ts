@@ -7,14 +7,14 @@ import { LogService } from '../services/LogService';
 import { HookMetadataKey } from './decorators/RegisterHook';
 import { HookEmitter } from './HookEmitter';
 import { HookHandler } from './interfaces/HookHandler';
-import { HookedEvents, Hooks } from './interfaces/Hooks';
+import { HookKeys, AllHooks } from './types/Hooks';
 
 type HookConstructor = TypedConstructor<typeof HookHandler>;
 
 export class HookController {
   private logger = new LogService('Hooks');
   private isInitialized = false;
-  private hookMap = new Map<Hooks, HookConstructor[]>();
+  private hookMap = new Map<HookKeys, HookConstructor[]>();
   private readonly emitter = new HookEmitter();
 
   constructor(protected core: Core) {}
@@ -40,7 +40,7 @@ export class HookController {
       for (const exportName of Object.keys(imported)) {
         const val = imported[exportName] as unknown;
         if (this.isHookHandler(val)) {
-          const hookName = Reflect.getMetadata(HookMetadataKey, val) as Hooks | undefined;
+          const hookName = Reflect.getMetadata(HookMetadataKey, val) as HookKeys | undefined;
           if (hookName) {
             this.registerHook(hookName, val);
             this.logger.info(
@@ -52,7 +52,7 @@ export class HookController {
     });
   }
 
-  private registerHook(hookName: Hooks, handler: HookConstructor): void {
+  private registerHook(hookName: HookKeys, handler: HookConstructor): void {
     let handlers = this.hookMap.get(hookName);
     if (!handlers) {
       handlers = [];
@@ -81,7 +81,7 @@ export class HookController {
     }
   }
 
-  public emit<E extends keyof HookedEvents>(event: E, data: HookedEvents[E]) {
+  public emit<E extends HookKeys>(event: E, data: AllHooks[E]) {
     return this.emitter.emit(event, data);
   }
 }

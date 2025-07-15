@@ -2,12 +2,12 @@ import { DiscordAPIError, WebhookClient } from 'discord.js';
 import { BuilderComponent } from '../../../../bot/interfaces/Components';
 import { Images } from '../../../library/globals/Assets';
 import { RegisterHook } from '../../decorators/RegisterHook';
-import { HookedEvents, Hooks } from '../../interfaces/Hooks';
 import { WebhookLog } from '../../interfaces/abstracts/WebhookLog';
 import { Globals } from '../../../library/globals/Globals';
+import { AllHooks } from '../../types/Hooks';
 
-@RegisterHook(Hooks.UnknownException)
-export class UnknownException extends WebhookLog<Hooks.UnknownException> {
+@RegisterHook('unknownException')
+export class UnknownException extends WebhookLog<'unknownException'> {
   webhook = new WebhookClient({
     url: Globals.isDevelopment ? '' : ''
   });
@@ -22,7 +22,7 @@ export class UnknownException extends WebhookLog<Hooks.UnknownException> {
 }
 
 class UnhandledErrorEmbed extends BuilderComponent<'embed'> {
-  constructor(data: HookedEvents[Hooks.UnknownException]) {
+  constructor(data: AllHooks['unknownException']) {
     super('embed');
 
     const [uuid, error, guild, user] = data;
