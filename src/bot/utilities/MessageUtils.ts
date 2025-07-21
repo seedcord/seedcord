@@ -1,6 +1,6 @@
-import { Message, TextChannel, User } from 'discord.js';
-import { Nullish } from '../../core/library/types/Miscellaneous';
-import { AtleastOneMessageComponent } from '../Types';
+import type { Nullish } from '../../core/library/types/Miscellaneous';
+import type { AtleastOneMessageComponent } from '../Types';
+import type { Message, TextChannel, User } from 'discord.js';
 
 export class MessageUtils {
   public static async send(channel: TextChannel, content: AtleastOneMessageComponent): Promise<Message> {

@@ -1,5 +1,6 @@
-import { Client, Guild, PermissionFlagsBits, Role, TextChannel } from 'discord.js';
-import { BotPermissionScope, Nullish } from '../../core/library/types/Miscellaneous';
+import { Guild, PermissionFlagsBits, Role } from 'discord.js';
+
+import { prettify } from '../../core/library/Helpers';
 import {
   BotMissingPermissionsError,
   CannotAssignBotRole,
@@ -7,15 +8,15 @@ import {
   RoleDoesNotExist,
   RoleHigherThanMe
 } from '../errors/Roles';
-import { prettify } from '../../core/library/Helpers';
+
+import type { BotPermissionScope, Nullish } from '../../core/library/types/Miscellaneous';
+import type { Client, PermissionsBitField, TextChannel } from 'discord.js';
 
 export const PermissionNames = new Map<bigint, string>(
   Object.entries(PermissionFlagsBits).map(([key, bit]) => [bit, prettify(key)])
 );
 
 export class RoleUtils {
-  public static async fetchRole(guild: Guild, roleId: string): Promise<Role>;
-  public static async fetchRole(client: Client, roleId: string): Promise<Role>;
   public static async fetchRole(clientOrGuild: Client | Guild, roleId: string): Promise<Role> {
     let role: Nullish<Role>;
 
@@ -61,7 +62,12 @@ export class RoleUtils {
   }
 
   public static getBotRole(client: Client, guild: Guild): Role {
-    return guild.roles.botRoleFor(client.user!)!;
+    if (!client.user) throw new Error('Client user is not available'); // TODO: Use custom error
+
+    const botRole = guild.roles.botRoleFor(client.user);
+    if (!botRole) throw new Error('Bot role not found in guild'); // TODO: Use custom error
+
+    return botRole;
   }
 
   public static hasPermsToAssign(targetRole: Role): void {
@@ -82,7 +88,7 @@ export class RoleUtils {
     client: Client,
     guildOrChannel: Guild | TextChannel,
     scope: BotPermissionScope = 'all',
-    inverse: boolean = false
+    inverse = false
   ): void {
     if (guildOrChannel instanceof Guild) {
       const botRole = this.getBotRole(client, guildOrChannel);
@@ -152,8 +158,13 @@ export class RoleUtils {
       }
     }
 
-    const permissions =
-      roleOrChannel instanceof Role ? roleOrChannel.permissions : roleOrChannel.permissionsFor(client.user!);
+    let permissions: Nullish<Readonly<PermissionsBitField>>;
+    if (roleOrChannel instanceof Role) {
+      permissions = roleOrChannel.permissions;
+    } else {
+      if (!client.user) throw new Error('Client user is not available'); // TODO: Use custom error
+      permissions = roleOrChannel.permissionsFor(client.user, true);
+    }
 
     if (!permissions) {
       throw new BotMissingPermissionsError('Missing Permissions', Array.from(required.values()), roleOrChannel);
@@ -165,9 +176,8 @@ export class RoleUtils {
         .map(([, name]) => name);
 
       if (dangerous.length > 0) {
-        throw new HasDangerousPermissions('Role has dangerous permissions', <Role>roleOrChannel, dangerous);
+        throw new HasDangerousPermissions('Role has dangerous permissions', roleOrChannel as Role, dangerous);
       }
-      return;
     } else {
       const missing = Array.from(required.entries())
         .filter(([bit]) => !permissions.has(bit, true))

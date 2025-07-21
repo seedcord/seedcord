@@ -1,4 +1,5 @@
 import { UUID } from 'crypto';
+
 import { ErrorKey, ErrorValue } from '../decorators/ErrorConfigurable';
 import { BaseError, BaseErrorEmbed, CustomError } from '../interfaces/Components';
 
@@ -17,7 +18,7 @@ export class DatabaseConnectionFailureEmbed extends BaseErrorEmbed {
 
 @ErrorKey('DatabaseError')
 export class DatabaseError extends CustomError {
-  protected override _emit: boolean = true; // Emit in logs regardless of environment
+  protected override _emit = true; // Emit in logs regardless of environment
 
   constructor(
     message: string,
@@ -35,6 +36,6 @@ export class DatabaseErrorEmbed extends BaseErrorEmbed {
     super();
     this.instance
       .setTitle('Database Error')
-      .setDescription(`An error occurred while interacting with the database.\n` + `### UUID: \`${error.uuid}\``);
+      .setDescription(`An error occurred while interacting with the database.\n### UUID: \`${error.uuid}\``);
   }
 }

@@ -1,9 +1,10 @@
-import mongoose from 'mongoose';
-import { IDocument } from '../library/types/Miscellaneous';
-import { Database } from './Database';
-import { ServiceMetadataKey } from './decorators/DatabaseService';
-import { Services } from './types/Services';
 import { ModelMetadataKey } from './decorators/DatabaseModel';
+import { ServiceMetadataKey } from './decorators/DatabaseService';
+
+import type { Database } from './Database';
+import type { Services } from './types/Services';
+import type { IDocument } from '../library/types/Miscellaneous';
+import type mongoose from 'mongoose';
 
 export abstract class BaseService<D extends IDocument = IDocument> {
   public readonly model: mongoose.Model<D>;

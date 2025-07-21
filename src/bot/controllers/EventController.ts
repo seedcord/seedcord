@@ -1,17 +1,21 @@
-import chalk from 'chalk';
-import { ClientEvents } from 'discord.js';
 import * as path from 'path';
-import { CoreBot } from '../../core/CoreBot';
+
+import chalk from 'chalk';
+
 import { traverseDirectory } from '../../core/library/Helpers';
 import { LogService } from '../../core/services/LogService';
 import { EventMetadataKey } from '../decorators/EventRegisterable';
-import { EventHandler, EventHandlerConstructor } from '../interfaces/Handler';
+import { EventHandler } from '../interfaces/Handler';
+
+import type { CoreBot } from '../../core/CoreBot';
+import type { EventHandlerConstructor } from '../interfaces/Handler';
+import type { ClientEvents } from 'discord.js';
 
 export class EventController {
-  private logger = new LogService('Events');
+  private readonly logger = new LogService('Events');
   private isInitialized = false;
 
-  private eventMap = new Map<keyof ClientEvents, Array<EventHandlerConstructor>>();
+  private readonly eventMap = new Map<keyof ClientEvents, EventHandlerConstructor[]>();
 
   public constructor(protected core: CoreBot) {}
 
@@ -39,7 +43,7 @@ export class EventController {
   private async loadHandlers(dir: string): Promise<void> {
     await traverseDirectory(dir, (_fullPath, relativePath, imported) => {
       for (const exportName of Object.keys(imported)) {
-        const val = <unknown>imported[exportName];
+        const val = imported[exportName];
         if (this.isEventHandlerClass(val)) {
           this.registerHandler(val);
           this.logger.info(
@@ -56,7 +60,7 @@ export class EventController {
   }
 
   private registerHandler(handlerClass: EventHandlerConstructor): void {
-    const eventName = Reflect.getMetadata(EventMetadataKey, handlerClass) as keyof ClientEvents;
+    const eventName = Reflect.getMetadata(EventMetadataKey, handlerClass) as keyof ClientEvents | undefined;
     if (!eventName) return;
 
     let handlers = this.eventMap.get(eventName);
@@ -89,14 +93,14 @@ export class EventController {
       try {
         this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(HandlerCtor.name)}`);
         const handler = new HandlerCtor(args, this.core);
-        if (handler.hasChecks?.()) {
+        if (handler.hasChecks()) {
           await handler.runChecks();
         }
 
         if (handler.shouldBreak()) return;
 
         // Execute if no errors
-        if (!handler.hasErrors?.()) {
+        if (!handler.hasErrors()) {
           await handler.execute();
         }
       } catch (err) {

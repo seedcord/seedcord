@@ -1,9 +1,10 @@
-import { DiscordAPIError, WebhookClient } from 'discord.js';
+import { DiscordAPIError, SnowflakeUtil, WebhookClient } from 'discord.js';
+
 import { BuilderComponent } from '../../../../bot/interfaces/Components';
 import { Images } from '../../../library/globals/Assets';
+import { Globals } from '../../../library/globals/Globals';
 import { RegisterHook } from '../../decorators/RegisterHook';
 import { WebhookLog } from '../../interfaces/abstracts/WebhookLog';
-import { Globals } from '../../../library/globals/Globals';
 import { AllHooks } from '../../types/Hooks';
 
 @RegisterHook('unknownException')
@@ -12,7 +13,7 @@ export class UnknownException extends WebhookLog<'unknownException'> {
     url: Globals.isDevelopment ? '' : ''
   });
 
-  async execute() {
+  async execute(): Promise<void> {
     await this.webhook.send({
       username: 'Unknown Exception',
       avatarURL: Images.Error,
@@ -25,20 +26,18 @@ class UnhandledErrorEmbed extends BuilderComponent<'embed'> {
   constructor(data: AllHooks['unknownException']) {
     super('embed');
 
-    const [uuid, error, guild, user] = data;
+    const { uuid, error, guild, user } = data;
 
     this.instance
       .setTitle(`An unknown exception was thrown`)
       .setColor('#ef4860')
       .setDescription(
-        `**Guild ID:** \`${guild.id}\`\n` +
-          `**Guild Name:** ${guild.name}\n` +
+        `**Guild ID:** \`${guild?.id ?? 'Not used in a guild'}\`\n` +
+          `**Guild Name:** ${guild?.name ?? 'Not used in a guild'}\n` +
           `**User ID:** \`${user.id}\`\n` +
           `**Username:** ${user.username}\n` +
           `### UUID: \`${uuid}\`\n` +
-          '```' +
-          error.stack +
-          '```'
+          `\`\`\`${error.stack}\`\`\``
       );
 
     this.setTimestampsIfAvailable(error);
@@ -50,11 +49,11 @@ class UnhandledErrorEmbed extends BuilderComponent<'embed'> {
     const now = Date.now();
 
     // Extract the snowflake ID from `/interactions/{ID}/`
-    const snowflake = error.url?.match(/\/interactions\/(\d+)\//)?.[1];
+    const snowflake = error.url.match(/\/interactions\/(\d+)\//)?.[1];
     if (!snowflake) return undefined;
 
     // Discord epoch offset (ms) and timestamp extraction
-    const interactionTs = Number((BigInt(snowflake) >> 22n) + 1420070400000n);
+    const interactionTs = Number(SnowflakeUtil.deconstruct(snowflake).timestamp);
 
     // Time difference
     const diff = now - interactionTs;

@@ -1,5 +1,5 @@
-import { Globals } from '../library/globals/Globals';
 import { LogService } from './LogService';
+import { Globals } from '../library/globals/Globals';
 
 export interface CooldownOptions {
   // Cooldown window in milliseconds (default 1 000)

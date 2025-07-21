@@ -1,8 +1,9 @@
 import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.js';
-import { InteractionHandler } from '../interfaces/Handler';
-import { Catchable } from '../decorators/Catchable';
+
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
+import { Catchable } from '../decorators/Catchable';
 import { SlashRoute } from '../decorators/InteractionConfigurable';
+import { InteractionHandler } from '../interfaces/Handler';
 
 @SlashRoute('maintenance')
 export class Maintenance extends InteractionHandler<ChatInputCommandInteraction> {

@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
+    "target": "esnext",
     "lib": ["ESNext"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "module": "commonjs",
+    "module": "nodenext",
     "rootDir": "./",
-    "resolveJsonModule": true,
+    "moduleResolution": "nodenext",
     "sourceMap": true,
     "outDir": "dist",
     "esModuleInterop": true,

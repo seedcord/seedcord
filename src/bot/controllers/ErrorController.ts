@@ -1,20 +1,25 @@
-import chalk from 'chalk';
-import { UUID } from 'crypto';
-import { Guild, User } from 'discord.js';
 import * as path from 'path';
-import { CoreBot } from '../../core/CoreBot';
+
+import chalk from 'chalk';
+
 import { traverseDirectory } from '../../core/library/Helpers';
 import { LogService } from '../../core/services/LogService';
 import { ErrorType } from '../decorators/ErrorConfigurable';
 import { DatabaseError } from '../errors/Database';
-import { BaseErrorConstructor, BaseErrorEmbed, BaseErrorEmbedConstructor, CustomError } from '../interfaces/Components';
+import { BaseErrorEmbed, CustomError } from '../interfaces/Components';
+
+import type { CoreBot } from '../../core/CoreBot';
+import type { Nullish } from '../../core/library/types/Miscellaneous';
+import type { BaseErrorConstructor, BaseErrorEmbedConstructor } from '../interfaces/Components';
+import type { UUID } from 'crypto';
+import type { Guild, User } from 'discord.js';
 
 export class ErrorController {
-  private logger = new LogService('Errors');
+  private readonly logger = new LogService('Errors');
   private isInitialized = false;
 
-  private errorMap = new Map<string, BaseErrorConstructor>();
-  private embedMap = new Map<string, BaseErrorEmbedConstructor>();
+  private readonly errorMap = new Map<string, BaseErrorConstructor>();
+  private readonly embedMap = new Map<string, BaseErrorEmbedConstructor>();
 
   public constructor(protected core: CoreBot) {}
 
@@ -31,9 +36,7 @@ export class ErrorController {
 
     const missingEmbeds = this.errorsWithoutEmbeds();
     if (missingEmbeds.length > 0) {
-      this.logger.info(
-        `${chalk.bold.red('Missing Embeds')}: ${missingEmbeds.join(', ')}` + ` (${missingEmbeds.length})`
-      );
+      this.logger.info(`${chalk.bold.red('Missing Embeds')}: ${missingEmbeds.join(', ')} (${missingEmbeds.length})`);
     } else {
       this.logger.info(`${chalk.bold.green('All errors have corresponding embeds')}`);
     }
@@ -56,7 +59,7 @@ export class ErrorController {
   private async loadErrors(dir: string): Promise<void> {
     await traverseDirectory(dir, (_fullPath, _relativePath, imported) => {
       for (const exportName of Object.keys(imported)) {
-        const exportedObj = <unknown>imported[exportName];
+        const exportedObj = imported[exportName];
 
         if (this.isBaseError(exportedObj)) {
           const errorKey = Reflect.getMetadata(ErrorType.Key, exportedObj) as string | undefined;
@@ -96,12 +99,12 @@ export class ErrorController {
     this.embedMap.set(embedKey, embedCtor);
   }
 
-  public getErrorEmbed(error: Error, guild: Guild, user: User): BaseErrorEmbed {
+  public getErrorEmbed(error: Error, guild: Nullish<Guild>, user: User): BaseErrorEmbed {
     const uuid = crypto.randomUUID();
 
     if (error instanceof CustomError) {
       if (error instanceof DatabaseError) {
-        this.core.hooks.emit('unknownException', [error.uuid, error, guild, user]);
+        this.core.hooks.emit('unknownException', { uuid, error, guild, user });
         this.logger.error(`DatabaseError: ${error.uuid}`);
       } else if (error.emit) {
         this.logger.error(`${error.name}: ${error.message}`, error);
@@ -115,17 +118,20 @@ export class ErrorController {
         ? (Reflect.getMetadata(ErrorType.Key, error.constructor) as string | undefined)
         : undefined;
 
-    if (!errorKey) {
-      return this.newGenericErrorEmbed(uuid, error, guild, user);
-    }
+    if (!errorKey) return this.newGenericErrorEmbed(uuid, error, guild, user);
 
     const embedCtor = this.embedMap.get(errorKey);
 
-    return new embedCtor!(<CustomError>error);
+    if (!embedCtor) {
+      this.logger.warn(`No embed found for error: ${errorKey}`);
+      return this.newGenericErrorEmbed(uuid, error, guild, user);
+    }
+
+    return new embedCtor(error as CustomError);
   }
 
-  private newGenericErrorEmbed(uuid: UUID, error: Error, guild: Guild, user: User): GenericErrorEmbed {
-    this.core.hooks.emit('unknownException', [uuid, error, guild, user]);
+  private newGenericErrorEmbed(uuid: UUID, error: Error, guild: Nullish<Guild>, user: User): GenericErrorEmbed {
+    this.core.hooks.emit('unknownException', { uuid, error, guild, user });
     return new GenericErrorEmbed(uuid);
   }
 }

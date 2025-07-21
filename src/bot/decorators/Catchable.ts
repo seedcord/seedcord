@@ -1,12 +1,13 @@
 import { MessageFlags } from 'discord.js';
-import { RepliableInteractionHandler } from '../interfaces/Handler';
+
+import type { RepliableInteractionHandler } from '../interfaces/Handler';
 
 export function Catchable(log?: boolean) {
   return function (
     _target: RepliableInteractionHandler,
     _propertyKey: string,
     descriptor: TypedPropertyDescriptor<(...args: any[]) => Promise<void>>
-  ) {
+  ): void {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (this: RepliableInteractionHandler, ...args: any[]): Promise<void> {
@@ -25,12 +26,11 @@ export function Catchable(log?: boolean) {
 
         this.setErrored();
 
-        if (log) {
-          console.log(error);
-        }
+        // eslint-disable-next-line no-console
+        if (log) console.error(error);
 
         const res = {
-          embeds: [this.core.bot.errors.getErrorEmbed(error, interaction.guild!, interaction.user).component],
+          embeds: [this.core.bot.errors.getErrorEmbed(error, interaction.guild, interaction.user).component],
           components: []
         };
 

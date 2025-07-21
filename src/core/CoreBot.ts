@@ -1,18 +1,23 @@
 import chalk from 'chalk';
+
 import { Bot } from '../bot/Bot';
 import { Database } from './database/Database';
 import { HookController } from './hooks/HookController';
-import { Core } from './library/interfaces/Core';
-
+import { CoordinatedShutdown } from './services/CoordinatedShutdown';
+import { HealthCheck } from './services/HealthCheck';
 import { LogService } from './services/LogService';
 
+import type { Core } from './library/interfaces/Core';
+
 export class CoreBot implements Core {
-  private logger = new LogService('CoreBot');
+  private readonly logger = new LogService('CoreBot');
+  public readonly shutdown = CoordinatedShutdown.instance;
   private isInitialized = false;
 
   public readonly db: Database = new Database(this);
   public readonly hooks: HookController = new HookController(this);
   public readonly bot: Bot = new Bot(this);
+  private readonly healthCheck: HealthCheck = new HealthCheck(this);
 
   constructor() {}
 
@@ -31,5 +36,9 @@ export class CoreBot implements Core {
     this.logger.info(chalk.bold('Starting Bot'));
     await this.bot.start();
     this.logger.info(chalk.bold('Bot started'));
+
+    this.logger.info(chalk.bold('Starting Health Check'));
+    await this.healthCheck.start();
+    this.logger.info(chalk.bold('Health Check started'));
   }
 }

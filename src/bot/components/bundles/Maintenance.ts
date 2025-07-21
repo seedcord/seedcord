@@ -1,5 +1,6 @@
-import { Client } from 'discord.js';
 import { BuilderComponent } from '../../interfaces/Components';
+
+import type { Client } from 'discord.js';
 
 export class MaintenanceEmbed extends BuilderComponent<'embed'> {
   constructor(client: Client) {

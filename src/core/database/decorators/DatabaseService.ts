@@ -1,6 +1,6 @@
-import { ConstructorFunction } from '../../library/types/Miscellaneous';
-import { BaseService } from '../BaseService';
-import { ServiceKeys } from '../types/Services';
+import type { ConstructorFunction } from '../../library/types/Miscellaneous';
+import type { BaseService } from '../BaseService';
+import type { ServiceKeys } from '../types/Services';
 
 export const ServiceMetadataKey = Symbol('db:serviceKey');
 

@@ -1,25 +1,30 @@
-import chalk from 'chalk';
-import { ChatInputCommandInteraction, Events, Interaction } from 'discord.js';
 import * as path from 'path';
-import { CoreBot } from '../../core/CoreBot';
+
+import chalk from 'chalk';
+import { Events } from 'discord.js';
+
 import { traverseDirectory } from '../../core/library/Helpers';
 import { LogService } from '../../core/services/LogService';
-import { InteractionRoutes } from '../decorators/InteractionConfigurable';
+import { InteractionMetadataKey, InteractionRoutes } from '../decorators/InteractionConfigurable';
 import { UnhandledEvent } from '../handlers/UnhandledEvent';
-import { HandlerConstructor, InteractionHandler, MiddlewareConstructor, Repliables } from '../interfaces/Handler';
+import { InteractionHandler } from '../interfaces/Handler';
+
+import type { CoreBot } from '../../core/CoreBot';
+import type { HandlerConstructor, MiddlewareConstructor, Repliables } from '../interfaces/Handler';
+import type { ChatInputCommandInteraction, Interaction } from 'discord.js';
 
 export class InteractionController {
-  private logger = new LogService('Interactions');
+  private readonly logger = new LogService('Interactions');
   private isInitialized = false;
 
-  private slashMap = new Map<string, HandlerConstructor>();
-  private buttonMap = new Map<string, HandlerConstructor>();
-  private modalMap = new Map<string, HandlerConstructor>();
-  private stringSelectMenuMap = new Map<string, HandlerConstructor>();
+  private readonly slashMap = new Map<string, HandlerConstructor>();
+  private readonly buttonMap = new Map<string, HandlerConstructor>();
+  private readonly modalMap = new Map<string, HandlerConstructor>();
+  private readonly stringSelectMenuMap = new Map<string, HandlerConstructor>();
 
-  private keysToIgnore = new Set(['confirm!confirmable', 'cancel!confirmable']);
+  private readonly keysToIgnore = new Set(['confirm!confirmable', 'cancel!confirmable']);
 
-  private middlewares: MiddlewareConstructor[] = [];
+  private readonly middlewares: MiddlewareConstructor[] = [];
 
   constructor(protected core: CoreBot) {}
 
@@ -46,7 +51,7 @@ export class InteractionController {
   private async loadHandlers(dir: string): Promise<void> {
     await traverseDirectory(dir, (_fullPath, relativePath, imported) => {
       for (const exportName of Object.keys(imported)) {
-        const val = <unknown>imported[exportName];
+        const val = imported[exportName];
         if (this.isHandlerClass(val)) {
           this.registerHandler(val);
           this.logger.info(
@@ -59,10 +64,14 @@ export class InteractionController {
 
   private isHandlerClass(obj: unknown): obj is HandlerConstructor {
     if (typeof obj !== 'function') return false;
-    return obj.prototype instanceof InteractionHandler;
+    return obj.prototype instanceof InteractionHandler && Reflect.hasMetadata(InteractionMetadataKey, obj);
   }
 
-  private registerHandler(handlerClass: HandlerConstructor) {
+  private registerHandler(handlerClass: HandlerConstructor): void {
+    const areRoutes = (routes: unknown): routes is string[] => {
+      return Array.isArray(routes) && routes.every((r) => typeof r === 'string');
+    };
+
     const routeTypes: [InteractionRoutes, Map<string, HandlerConstructor>][] = [
       [InteractionRoutes.Slash, this.slashMap],
       [InteractionRoutes.Button, this.buttonMap],
@@ -70,7 +79,10 @@ export class InteractionController {
       [InteractionRoutes.StringMenu, this.stringSelectMenuMap]
     ];
     for (const [routeType, map] of routeTypes) {
-      const routes: string[] = (Reflect.getMetadata(routeType, handlerClass) as string[]) || [];
+      const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+      if (!areRoutes(meta)) continue;
+
+      const routes = meta;
       routes.forEach((route) => map.set(route, handlerClass));
     }
   }
@@ -78,7 +90,7 @@ export class InteractionController {
   private attachToClient(): void {
     this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
       this.handleInteraction(interaction).catch((err: Error) => {
-        this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ` + err.name, err.stack);
+        this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
       });
     });
   }
@@ -94,9 +106,9 @@ export class InteractionController {
     }
     // Run middlewares first
     for (const MiddlewareCtor of this.middlewares) {
-      const middleware = new MiddlewareCtor(<Repliables>interaction, this.core);
+      const middleware = new MiddlewareCtor(interaction as Repliables, this.core);
       await middleware.execute();
-      if (middleware.hasErrors?.()) {
+      if (middleware.hasErrors()) {
         return;
       }
     }
@@ -108,14 +120,14 @@ export class InteractionController {
     }
 
     this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
-    const handler = new HandlerCtor(<Repliables>interaction, this.core);
-    if (handler.hasChecks?.()) {
+    const handler = new HandlerCtor(interaction as Repliables, this.core);
+    if (handler.hasChecks()) {
       await handler.runChecks();
     }
 
     if (handler.shouldBreak()) return;
 
-    if (!handler.hasErrors?.()) {
+    if (!handler.hasErrors()) {
       await handler.execute();
     }
   }
@@ -161,14 +173,17 @@ export class InteractionController {
         );
         break;
       }
+      default:
+        this.logger.warn(`Unhandled interaction type: ${interaction.type}`);
+        break;
     }
   }
 
   // Build the route from commandName, subcommandGroup, subcommand
   private buildSlashRoute(interaction: ChatInputCommandInteraction): string {
     const command = interaction.commandName;
-    const group = interaction.options?.getSubcommandGroup(false);
-    const sub = interaction.options?.getSubcommand(false);
+    const group = interaction.options.getSubcommandGroup(false);
+    const sub = interaction.options.getSubcommand(false);
 
     let route = command;
     if (group && sub) {

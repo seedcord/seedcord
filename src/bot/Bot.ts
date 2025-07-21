@@ -1,24 +1,27 @@
 import chalk from 'chalk';
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
-import { CoreBot } from '../core/CoreBot';
-import { Globals } from '../core/library/globals/Globals';
-import { LogService } from '../core/services/LogService';
+
 import { CommandRegistry } from './controllers/CommandRegistry';
 import { ErrorController } from './controllers/ErrorController';
 import { EventController } from './controllers/EventController';
 import { InteractionController } from './controllers/InteractionController';
 import { EmojiInjector } from './injectors/EmojiInjector';
+import { Globals } from '../core/library/globals/Globals';
+import { ShutdownPhase } from '../core/services/CoordinatedShutdown';
+import { LogService } from '../core/services/LogService';
+
+import type { CoreBot } from '../core/CoreBot';
 
 export class Bot {
-  private logger = new LogService('Bot');
+  private readonly logger = new LogService('Bot');
   private isInitialized = false;
 
   private readonly _client: Client;
-  private interactions: InteractionController;
-  private events: EventController;
+  private readonly interactions: InteractionController;
+  private readonly events: EventController;
   public errors: ErrorController;
-  private commands: CommandRegistry;
-  private emojiInjector: EmojiInjector;
+  private readonly commands: CommandRegistry;
+  private readonly emojiInjector: EmojiInjector;
 
   constructor(protected core: CoreBot) {
     this._client = new Client({
@@ -39,6 +42,8 @@ export class Bot {
 
     this.commands = new CommandRegistry(this._client);
     this.emojiInjector = new EmojiInjector(this._client);
+
+    this.core.shutdown.addTask(ShutdownPhase.DiscordCleanup, 'stop-bot', async () => await this.stop());
   }
 
   public async start(): Promise<void> {

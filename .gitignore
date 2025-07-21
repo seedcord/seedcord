@@ -10,7 +10,7 @@ npm-debug.*
 # typescript
 *.tsbuildinfo
 
-# misc 
+# misc
 debugging/
 **/.DS_Store
 
@@ -23,12 +23,18 @@ build/
 
 # Ignore IDE specific files
 **/.idea
-**/.vscode
 **/.vs
+
+# But keep .vscode settings for team consistency
+# **/.vscode (removed - we want to share VS Code settings)
 
 # Ignore log files
 *.log
+logs/
 Logs/
+
+# ESLint cache
+.eslintcache
 
 # Ignore coverage reports
 coverage/

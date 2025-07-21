@@ -1,9 +1,10 @@
+import type { Nullish } from '../../library/types/Miscellaneous';
 import type { UUID } from 'crypto';
 import type { Guild, User } from 'discord.js';
 
 // Default hooks that are always available in the framework
 export interface DefaultHooks {
-  unknownException: [uuid: UUID, error: Error, guild: Guild, user: User];
+  unknownException: { uuid: UUID; error: Error; guild: Nullish<Guild>; user: User };
 }
 
 // This interface can be augmented via declaration merging

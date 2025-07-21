@@ -1,6 +1,7 @@
 import { PermissionFlagsBits } from 'discord.js';
-import { BuilderComponent } from '../../interfaces/Components';
+
 import { RegisterCommand } from '../../decorators/CommandRegisterable';
+import { BuilderComponent } from '../../interfaces/Components';
 
 @RegisterCommand('global')
 export class MaintenanceCommand extends BuilderComponent<'command'> {

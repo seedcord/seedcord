@@ -1,4 +1,4 @@
-import { Handler } from '../interfaces/Handler';
+import type { Handler } from '../interfaces/Handler';
 
 type HandlerCtor = new (...args: any[]) => Handler;
 

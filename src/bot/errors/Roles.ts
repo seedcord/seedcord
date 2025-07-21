@@ -1,4 +1,5 @@
 import { Role, TextChannel } from 'discord.js';
+
 import { ErrorKey, ErrorValue } from '../decorators/ErrorConfigurable';
 import { BaseError, BaseErrorEmbed, CustomError } from '../interfaces/Components';
 
@@ -27,7 +28,7 @@ export class BotMissingPermissionsErrorEmbed extends BaseErrorEmbed {
         : `I am missing the following permissions in <#${error.roleOrChannel.id}>:`;
 
     this.instance.setDescription(
-      `${errorSubtext}\n\n` + `Please ensure I have the following missing permission(s):\n${missing}`
+      `${errorSubtext}\n\nPlease ensure I have the following missing permission(s):\n${missing}`
     );
   }
 }

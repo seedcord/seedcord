@@ -4,10 +4,10 @@ import { throwCustomError } from '../../library/Helpers';
 
 export function DBCatchable<T>(errorMessage: string) {
   return function (
-    _target: any,
+    _target: unknown,
     _propertyKey: string,
     descriptor: TypedPropertyDescriptor<(...args: any[]) => Promise<T>>
-  ) {
+  ): void {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]): Promise<T> {

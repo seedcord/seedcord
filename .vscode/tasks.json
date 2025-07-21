@@ -1,0 +1,213 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // Development Tasks
+    {
+      "type": "shell",
+      "label": "Dev: Start Watch Mode",
+      "command": "pnpm",
+      "args": ["start:watch"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": ["$tsc-watch"]
+    },
+    {
+      "type": "shell",
+      "label": "Dev: Start Bot",
+      "command": "pnpm",
+      "args": ["start:bot"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+
+    // Code Quality Tasks
+    {
+      "type": "shell",
+      "label": "Lint: Check",
+      "command": "pnpm",
+      "args": ["lint"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "type": "shell",
+      "label": "Lint: Fix",
+      "command": "pnpm",
+      "args": ["lint:fix"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+    {
+      "type": "shell",
+      "label": "Format: All Files",
+      "command": "pnpm",
+      "args": ["format"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "Format + Lint: Full Cleanup",
+      "command": "pnpm",
+      "args": ["format", "&&", "pnpm", "lint:fix"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$eslint-stylish"]
+    },
+
+    // Build Tasks
+    {
+      "type": "shell",
+      "label": "Build: TypeScript",
+      "command": "pnpm",
+      "args": ["build"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "type": "shell",
+      "label": "Build: Clean",
+      "command": "pnpm",
+      "args": ["clean"],
+      "group": "build"
+    },
+    {
+      "type": "shell",
+      "label": "TypeCheck: No Emit",
+      "command": "pnpm",
+      "args": ["typecheck"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "silent",
+        "focus": false,
+        "panel": "shared"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+
+    // Testing
+    {
+      "type": "shell",
+      "label": "Test: Run",
+      "command": "pnpm",
+      "args": ["test"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      }
+    },
+
+    // Docker Tasks
+    {
+      "type": "shell",
+      "label": "🐳 Docker: Build Dev Image",
+      "command": "docker",
+      "args": ["build", "--target", "development", "-t", "seedcord:dev", "."],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "🐳 Docker: Run Dev Container",
+      "command": "docker",
+      "args": ["run", "--rm", "-p", "3000:3000", "-p", "6956:6956", "--env-file", ".env", "seedcord:dev"],
+      "group": "build",
+      "dependsOn": "🐳 Docker: Build Dev Image",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "🐳 Docker: Build Prod Image",
+      "command": "docker",
+      "args": ["build", "-t", "seedcord:prod", "."],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated"
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      }
+    },
+    {
+      "type": "shell",
+      "label": "🐳 Docker: Run Prod Container",
+      "command": "docker",
+      "args": ["run", "--rm", "-p", "3000:3000", "-p", "6956:6956", "--env-file", ".env", "seedcord:prod"],
+      "group": "build",
+      "dependsOn": "🐳 Docker: Build Prod Image",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated"
+      }
+    }
+  ]
+}

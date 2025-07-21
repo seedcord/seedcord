@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { ServiceKeys } from '../types/Services';
+
+import type { ServiceKeys } from '../types/Services';
 
 export const ModelMetadataKey = Symbol('db:model');
 

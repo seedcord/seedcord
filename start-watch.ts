@@ -1,13 +1,15 @@
 import { spawn } from 'child_process';
-import { config } from 'dotenv';
 import os from 'os';
+
+import { config } from 'dotenv';
+
 import { LogService } from './src/core/services/LogService';
 
-config({ path: '.env.development' });
+config({ path: '.env' });
 
 const isMac = os.platform() === 'darwin';
 
-const script = 'npm run dev:bot';
+const script = 'pnpm run dev:bot';
 const args: string[] = isMac ? [] : ['--legacy-watch'];
 
 const nodemonProcess = spawn(script, args, {

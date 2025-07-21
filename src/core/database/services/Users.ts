@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+
 import { IDocument } from '../../library/types/Miscellaneous';
 import { BaseService } from '../BaseService';
 import { DatabaseModel } from '../decorators/DatabaseModel';
