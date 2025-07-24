@@ -3,14 +3,16 @@
  * Copyright (c) 2020 Mason Rogers <viction.dev@gmail.com> (https://github.com/mason-rogers)
  *
  * Modified in 2025 by Dhruv (https://github.com/materwelonDhruv)
- * Changes: improved type safety, added resolver support, service dependency
+ * Changes: typed variable parsing during both compile time and runtime, support for custom parsers, and more.
  */
 
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 export type EnvInput = string | undefined;
 type EnvParser<T> = (raw: EnvInput, fallback?: T) => T;
 export type EnvConverter<T> = typeof Number | typeof Boolean | typeof String | EnvParser<T>;
 
 export interface EnvConverterService {
+  getRaw(key: string): string | undefined;
   get(key: string, def?: string): string;
   getNumber(key: string, def?: number): number;
   getBoolean(key: string, def?: boolean): boolean;
@@ -21,46 +23,65 @@ export class Parser {
 
   constructor(private readonly envService: EnvConverterService) {}
 
-  private escapeRegexChars(str: string): string {
-    return str.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1');
-  }
+  resolveValueString(key: string, value: string, stack = new Set<string>()): string {
+    if (stack.has(key)) return value; // direct cycle, keep as is
 
-  resolveValueString(key: string, value: string): string {
-    const templates = value.match(this.TEMPLATE_REGEX);
-    if (!templates) return value;
+    stack.add(key);
 
-    for (const template of templates) {
+    const out = value.replace(this.TEMPLATE_REGEX, (template) => {
       const variable = template.slice(2, -1);
-      if (!variable || variable === key) continue; // Prevent any circulars
+      if (!variable) return template; // empty name, preserve
 
-      const variableVal = this.envService.get(variable);
+      if (stack.has(variable)) return template; // cycle, preserve
 
-      value = value.replace(new RegExp(this.escapeRegexChars(template), 'g'), variableVal || template);
-    }
+      const raw = this.envService.getRaw(variable);
+      if (!raw || raw === '') return template; // missing or empty, preserve
 
-    return value;
+      const resolved = this.resolveValueString(variable, raw, new Set(stack));
+
+      // If resolution still references the current key, skip replacement (indirect cycle)
+      if (resolved.includes(`\${${key}}`)) return template;
+
+      // If nothing changed (unresolved placeholders stayed), also preserve original template
+      if (resolved === raw && /\$\{[^}]*\}/.test(resolved)) return template;
+
+      return resolved;
+    });
+
+    stack.delete(key);
+    return out;
   }
 
-  convertValue<T>(key: string, fallback: T | undefined, converter: EnvConverter<T> | undefined): T {
+  convertValue<T>(
+    key: string,
+    fallback: T | undefined,
+    converter: EnvConverter<T> | undefined,
+    hasFallback = true
+  ): T | null | undefined {
     // Determine which converter to use
     const resolvedConverter = this.resolveConverter(converter, fallback);
 
     // Apply the converter
-    if (resolvedConverter === Number) return this.convertToNumber(key, fallback) as unknown as T;
-    if (resolvedConverter === Boolean) return this.convertToBoolean(key, fallback) as unknown as T;
-    if (resolvedConverter === String) return this.convertToString(key, fallback) as unknown as T;
+    if (resolvedConverter === Number)
+      return this.convertToNumber(key, fallback, hasFallback) as unknown as T | null | undefined;
+    if (resolvedConverter === Boolean)
+      return this.convertToBoolean(key, fallback, hasFallback) as unknown as T | null | undefined;
+    if (resolvedConverter === String)
+      return this.convertToString(key, fallback, hasFallback) as unknown as T | null | undefined;
 
     // Custom converter function
     const raw = this.envService.get(key, undefined) as EnvInput;
+
+    // If no fallback provided and no value found, return null
+    // If explicit undefined fallback and no value found, return undefined
+    if (raw === undefined) return hasFallback ? fallback : null;
+
     return (resolvedConverter as EnvParser<T>)(raw, fallback);
   }
 
   private resolveConverter<T>(converter: EnvConverter<T> | undefined, fallback: T | undefined): EnvConverter<T> {
     // User provided explicit converter. Use it
     if (converter) return converter;
-
-    // Special case: undefined fallback means we want undefined, not string conversion
-    if (fallback === undefined) return String;
 
     // Auto-detect type from fallback using typeof
     const fallbackType = typeof fallback;
@@ -69,21 +90,32 @@ export class Parser {
     return String;
   }
 
-  private convertToNumber<T>(key: string, fallback: T | undefined): number {
+  private convertToNumber<T>(key: string, fallback: T | undefined, hasFallback = true): number | null | undefined {
     // Convert fallback to number if needed
     const numFallback = typeof fallback === 'number' ? fallback : fallback ? Number(fallback) : undefined;
-    return this.envService.getNumber(key, numFallback);
+    const result = this.envService.getNumber(key, numFallback);
+    if (result === undefined) return hasFallback ? undefined : null;
+
+    return result;
   }
 
-  private convertToBoolean<T>(key: string, fallback: T | undefined): boolean {
+  private convertToBoolean<T>(key: string, fallback: T | undefined, hasFallback = true): boolean | null | undefined {
     // Convert fallback to boolean if needed
     const boolFallback = typeof fallback === 'boolean' ? fallback : fallback ? Boolean(fallback) : undefined;
-    return this.envService.getBoolean(key, boolFallback);
+    const result = this.envService.getBoolean(key, boolFallback);
+    if (result === undefined) return hasFallback ? undefined : null;
+
+    return result;
   }
 
-  private convertToString<T>(key: string, fallback: T | undefined): string | undefined {
+  private convertToString<T>(key: string, fallback: T | undefined, hasFallback = true): string | null | undefined {
     // Handle undefined fallback properly for strings
-    if (fallback === undefined) return this.envService.get(key, undefined);
+    if (fallback === undefined) {
+      const value = this.envService.get(key, undefined);
+      if (value === undefined) return hasFallback ? undefined : null;
+
+      return value;
+    }
 
     return this.envService.get(key, String(fallback));
   }

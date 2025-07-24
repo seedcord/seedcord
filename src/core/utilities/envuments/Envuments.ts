@@ -3,7 +3,7 @@
  * Copyright (c) 2020 Mason Rogers <viction.dev@gmail.com> (https://github.com/mason-rogers)
  *
  * Modified in 2025 by Dhruv (https://github.com/materwelonDhruv)
- * Changes: improved type safety, added resolver support, service dependency
+ * Changes: typed variable parsing during both compile time and runtime, support for custom parsers, and more.
  */
 
 import { config } from 'dotenv';
@@ -39,6 +39,7 @@ class Envuments implements EnvConverterService {
 
     // clear cache to force reload with new path
     EnvCache.clear();
+    void this.config;
 
     // reset internal environment to force re-evaluation
     this.internalEnvironment = this.determineEnvironment(
@@ -96,7 +97,6 @@ class Envuments implements EnvConverterService {
       } catch {
         // do nothing
       }
-
       // populate the Map with global environment variables
       for (const [key, value] of Object.entries(isolatedEnv)) EnvCache.set(key, value);
     }
@@ -118,15 +118,16 @@ class Envuments implements EnvConverterService {
       case EnvumentType.Number: {
         const num = Number(parsed);
 
-        return (!Number.isNaN(num) && num) || def;
+        return !Number.isNaN(num) ? num : def;
       }
 
       case EnvumentType.Boolean: {
         const yes = ['1', 'yes', 'true'];
         const no = ['0', 'no', 'false'];
 
-        if (yes.includes(parsed)) return true;
-        if (no.includes(parsed)) return false;
+        const lowerParsed = parsed.toLowerCase();
+        if (yes.includes(lowerParsed)) return true;
+        if (no.includes(lowerParsed)) return false;
 
         return def;
       }
@@ -159,6 +160,10 @@ class Envuments implements EnvConverterService {
 
   getBoolean(key: string, def?: boolean): boolean {
     return Envuments._get(key, EnvumentType.Boolean, def) as boolean;
+  }
+
+  getRaw(key: string): string | undefined {
+    return Envuments.config.get(key) as string | undefined;
   }
 }
 
