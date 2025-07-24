@@ -34,8 +34,8 @@ class UnhandledErrorEmbed extends BuilderComponent<'embed'> {
       .setDescription(
         `**Guild ID:** \`${guild?.id ?? 'Not used in a guild'}\`\n` +
           `**Guild Name:** ${guild?.name ?? 'Not used in a guild'}\n` +
-          `**User ID:** \`${user.id}\`\n` +
-          `**Username:** ${user.username}\n` +
+          `**User ID:** \`${user?.id ?? 'Missing user info'}\`\n` +
+          `**Username:** ${user?.username ?? 'Missing user info'}\n` +
           `### UUID: \`${uuid}\`\n` +
           `\`\`\`${error.stack}\`\`\``
       );

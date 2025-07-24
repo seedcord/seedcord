@@ -2,24 +2,22 @@ import chalk from 'chalk';
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 
 import { CommandRegistry } from './controllers/CommandRegistry';
-import { ErrorController } from './controllers/ErrorController';
 import { EventController } from './controllers/EventController';
 import { InteractionController } from './controllers/InteractionController';
 import { EmojiInjector } from './injectors/EmojiInjector';
 import { Globals } from '../core/library/globals/Globals';
 import { ShutdownPhase } from '../core/services/CoordinatedShutdown';
-import { LogService } from '../core/services/LogService';
+import { Logger } from '../core/services/Logger';
 
 import type { CoreBot } from '../core/CoreBot';
 
 export class Bot {
-  private readonly logger = new LogService('Bot');
+  private readonly logger = new Logger('Bot');
   private isInitialized = false;
 
   private readonly _client: Client;
   private readonly interactions: InteractionController;
   private readonly events: EventController;
-  public errors: ErrorController;
   private readonly commands: CommandRegistry;
   private readonly emojiInjector: EmojiInjector;
 
@@ -38,7 +36,6 @@ export class Bot {
 
     this.interactions = new InteractionController(core);
     this.events = new EventController(core);
-    this.errors = new ErrorController(core);
 
     this.commands = new CommandRegistry(this._client);
     this.emojiInjector = new EmojiInjector(this._client);
@@ -56,7 +53,6 @@ export class Bot {
 
     await this.interactions.init();
     await this.events.init();
-    await this.errors.init();
 
     await this.commands.init();
     await this.commands.setCommands();

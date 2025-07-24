@@ -3,7 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 
 import { traverseDirectory } from '../library/Helpers';
-import { LogService } from '../services/LogService';
+import { Logger } from '../services/Logger';
 import { HookMetadataKey } from './decorators/RegisterHook';
 import { HookEmitter } from './HookEmitter';
 import { HookHandler } from './interfaces/HookHandler';
@@ -15,7 +15,7 @@ import type { TypedConstructor } from '../library/types/Miscellaneous';
 type HookConstructor = TypedConstructor<typeof HookHandler>;
 
 export class HookController {
-  private readonly logger = new LogService('Hooks');
+  private readonly logger = new Logger('Hooks');
   private isInitialized = false;
   private readonly hookMap = new Map<HookKeys, HookConstructor[]>();
   private readonly emitter = new HookEmitter();

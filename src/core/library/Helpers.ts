@@ -2,7 +2,7 @@ import { readdir } from 'fs/promises';
 import * as path from 'path';
 
 import { DatabaseError } from '../../bot/errors/Database';
-import { LogService } from '../services/LogService';
+import { Logger } from '../services/Logger';
 
 import type { CustomErrorConstructor } from '../../bot/interfaces/Components';
 import type * as fs from 'fs';
@@ -221,7 +221,7 @@ export function throwCustomError<T extends CustomErrorConstructor>(
   customError: T
 ): never {
   const uuid = crypto.randomUUID();
-  LogService.Error('Throwing Custom Error', (error as Error).name);
+  Logger.Error('Throwing Custom Error', (error as Error).name);
 
   if (typeof customError === typeof DatabaseError) {
     const errorMessage = error instanceof Error ? error.message : message;

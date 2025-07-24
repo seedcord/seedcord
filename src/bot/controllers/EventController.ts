@@ -3,7 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 
 import { traverseDirectory } from '../../core/library/Helpers';
-import { LogService } from '../../core/services/LogService';
+import { Logger } from '../../core/services/Logger';
 import { EventMetadataKey } from '../decorators/EventRegisterable';
 import { EventHandler } from '../interfaces/Handler';
 
@@ -12,7 +12,7 @@ import type { EventHandlerConstructor } from '../interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 
 export class EventController {
-  private readonly logger = new LogService('Events');
+  private readonly logger = new Logger('Events');
   private isInitialized = false;
 
   private readonly eventMap = new Map<keyof ClientEvents, EventHandlerConstructor[]>();

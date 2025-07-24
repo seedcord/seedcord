@@ -1,11 +1,9 @@
-import { Role, TextChannel } from 'discord.js';
+import { Role } from 'discord.js';
 
-import { ErrorKey, ErrorValue } from '../decorators/ErrorConfigurable';
-import { BaseError, BaseErrorEmbed, CustomError } from '../interfaces/Components';
+import { CustomError } from '../interfaces/Components';
 
-// ------
+import type { TextChannel } from 'discord.js';
 
-@ErrorKey('BotMissingPermissionsError')
 export class BotMissingPermissionsError extends CustomError {
   constructor(
     message: string,
@@ -13,29 +11,20 @@ export class BotMissingPermissionsError extends CustomError {
     public roleOrChannel: Role | TextChannel
   ) {
     super(message);
-  }
-}
 
-@ErrorValue('BotMissingPermissionsError')
-export class BotMissingPermissionsErrorEmbed extends BaseErrorEmbed {
-  constructor(error: BotMissingPermissionsError) {
-    super();
-    const missing = error.missingPerms.map((perm) => `• ${perm}`).join('\n');
+    const missing = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
 
     const errorSubtext =
-      error.roleOrChannel instanceof Role
-        ? `My role, <@&${error.roleOrChannel.id}>, is missing the following permissions:`
-        : `I am missing the following permissions in <#${error.roleOrChannel.id}>:`;
+      this.roleOrChannel instanceof Role
+        ? `My role, <@&${this.roleOrChannel.id}>, is missing the following permissions:`
+        : `I am missing the following permissions in <#${this.roleOrChannel.id}>:`;
 
-    this.instance.setDescription(
+    this.response.setDescription(
       `${errorSubtext}\n\nPlease ensure I have the following missing permission(s):\n${missing}`
     );
   }
 }
 
-// ------
-
-@ErrorKey('RoleHigherThanMe')
 export class RoleHigherThanMe extends CustomError {
   constructor(
     message: string,
@@ -43,56 +32,33 @@ export class RoleHigherThanMe extends CustomError {
     public botRole: Role
   ) {
     super(message);
-  }
-}
 
-@ErrorValue('RoleHigherThanMe')
-export class RoleHigherThanMeEmbed extends BaseErrorEmbed {
-  constructor(error: RoleHigherThanMe) {
-    super();
-    this.instance.setDescription(
+    this.response.setDescription(
       `I cannot assign a role that is higher than me.\n\n` +
-        `The role <@&${error.role.id}> is higher than my role <@&${error.botRole.id}> in the hierarchy.`
+        `The role <@&${this.role.id}> is higher than my role <@&${this.botRole.id}> in the hierarchy.`
     );
   }
 }
 
-// ------
+export class CannotAssignBotRole extends CustomError {
+  constructor(message = 'I cannot assign a managed role.') {
+    super(message);
 
-@ErrorKey('CannotAssignBotRole')
-export class CannotAssignBotRole extends BaseError {}
-
-@ErrorValue('CannotAssignBotRole')
-export class CannotAssignBotRoleEmbed extends BaseErrorEmbed {
-  constructor() {
-    super();
-    this.instance.setDescription(`I cannot assign a managed role.`);
+    this.response.setDescription('I cannot assign a managed role.');
   }
 }
 
-// ------
-
-@ErrorKey('RoleDoesNotExist')
 export class RoleDoesNotExist extends CustomError {
   constructor(
     message: string,
     public roleId: string
   ) {
     super(message);
+
+    this.response.setDescription(`The role with ID \`${this.roleId}\` does not exist.`);
   }
 }
 
-@ErrorValue('RoleDoesNotExist')
-export class RoleDoesNotExistEmbed extends BaseErrorEmbed {
-  constructor(error: RoleDoesNotExist) {
-    super();
-    this.instance.setDescription(`The role with ID \`${error.roleId}\` does not exist.`);
-  }
-}
-
-// ------
-
-@ErrorKey('HasDangerousPermissions')
 export class HasDangerousPermissions extends CustomError {
   constructor(
     message: string,
@@ -100,17 +66,10 @@ export class HasDangerousPermissions extends CustomError {
     public dangerousPerms: string[]
   ) {
     super(message);
-  }
-}
 
-@ErrorValue('HasDangerousPermissions')
-export class HasDangerousPermissionsEmbed extends BaseErrorEmbed {
-  constructor(error: HasDangerousPermissions) {
-    super();
-    const dangerous = error.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-
-    this.instance.setDescription(
-      `The role <@&${error.role.id}> has the following dangerous permissions:\n\n` +
+    const dangerous = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
+    this.response.setDescription(
+      `The role <@&${this.role.id}> has the following dangerous permissions:\n\n` +
         `Please ensure the following dangerous permission(s) are not enabled:\n${dangerous}`
     );
   }

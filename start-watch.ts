@@ -3,7 +3,7 @@ import os from 'os';
 
 import { config } from 'dotenv';
 
-import { LogService } from './src/core/services/LogService';
+import { Logger } from './src/core/services/Logger';
 
 config({ path: '.env' });
 
@@ -18,9 +18,9 @@ const nodemonProcess = spawn(script, args, {
 });
 
 nodemonProcess.on('error', (error) => {
-  LogService.Error('start-watch', `Error | ${error.message}`);
+  Logger.Error('start-watch', `Error | ${error.message}`);
 });
 
 nodemonProcess.on('close', (code) => {
-  LogService.Info('start-watch', `nodemon process exited with code ${code}`);
+  Logger.Info('start-watch', `nodemon process exited with code ${code}`);
 });

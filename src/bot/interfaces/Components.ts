@@ -1,20 +1,23 @@
 import {
   ActionRowBuilder,
   ButtonBuilder,
+  ChannelSelectMenuBuilder,
   EmbedBuilder,
   InteractionContextType,
+  MentionableSelectMenuBuilder,
   ModalBuilder,
+  RoleSelectMenuBuilder,
   SlashCommandBuilder,
   SlashCommandSubcommandBuilder,
   SlashCommandSubcommandGroupBuilder,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
-  TextInputBuilder
+  TextInputBuilder,
+  UserSelectMenuBuilder
 } from 'discord.js';
 
 import { Globals } from '../../core/library/globals/Globals';
 
-import type { TypedConstructor } from '../../core/library/types/Miscellaneous';
 import type { ModalActionRowComponentBuilder } from 'discord.js';
 
 const BuilderTypes = {
@@ -23,6 +26,10 @@ const BuilderTypes = {
   button: ButtonBuilder,
   menu_string: StringSelectMenuBuilder,
   menu_option_string: StringSelectMenuOptionBuilder,
+  menu_user: UserSelectMenuBuilder,
+  menu_channel: ChannelSelectMenuBuilder,
+  menu_mentionable: MentionableSelectMenuBuilder,
+  menu_role: RoleSelectMenuBuilder,
   modal: ModalBuilder,
   subcommand: SlashCommandSubcommandBuilder,
   group: SlashCommandSubcommandGroupBuilder
@@ -31,6 +38,10 @@ const BuilderTypes = {
 const RowTypes = {
   button: ActionRowBuilder<ButtonBuilder>,
   menu_string: ActionRowBuilder<StringSelectMenuBuilder>,
+  menu_user: ActionRowBuilder<UserSelectMenuBuilder>,
+  menu_channel: ActionRowBuilder<ChannelSelectMenuBuilder>,
+  menu_mentionable: ActionRowBuilder<MentionableSelectMenuBuilder>,
+  menu_role: ActionRowBuilder<RoleSelectMenuBuilder>,
   modal: ActionRowBuilder<ModalActionRowComponentBuilder>
 };
 
@@ -126,8 +137,16 @@ export abstract class ModalComponent<M extends ModalFieldTypes> extends BaseComp
   }
 }
 
+export class BaseErrorEmbed extends BuilderComponent<'embed'> {
+  public constructor() {
+    super('embed');
+    this.instance.setTitle('Cannot Proceed');
+  }
+}
+
 export abstract class CustomError extends Error {
   protected _emit = false;
+  public readonly response = new BaseErrorEmbed().component;
 
   public constructor(public override message: string) {
     super(message);
@@ -140,20 +159,4 @@ export abstract class CustomError extends Error {
   }
 }
 
-export class BaseError extends CustomError {
-  constructor(public override message: string) {
-    super(message);
-  }
-}
-
 export type CustomErrorConstructor = new (message: string, ...args: any[]) => CustomError;
-export type BaseErrorConstructor = TypedConstructor<typeof BaseError>;
-
-export abstract class BaseErrorEmbed extends BuilderComponent<'embed'> {
-  public constructor(public readonly error?: CustomError) {
-    super('embed');
-    this.instance.setTitle('Cannot Proceed');
-  }
-}
-
-export type BaseErrorEmbedConstructor = TypedConstructor<typeof BaseErrorEmbed>;

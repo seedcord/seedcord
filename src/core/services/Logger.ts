@@ -2,17 +2,17 @@ import { createLogger, format, transports } from 'winston';
 
 import { Globals } from '../library/globals/Globals';
 
-import type { Logform, Logger } from 'winston';
+import type { Logform, Logger as Winston } from 'winston';
 import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 
-export class LogService {
-  declare private logger: Logger;
-  private static readonly instances = new Map<string, LogService>();
+export class Logger {
+  declare private logger: Winston;
+  private static readonly instances = new Map<string, Logger>();
 
-  private static instance(prefix: string): LogService {
+  private static instance(prefix: string): Logger {
     let instance = this.instances.get(prefix);
     if (!instance) {
-      instance = new LogService(prefix);
+      instance = new Logger(prefix);
       this.instances.set(prefix, instance);
     }
     return instance;

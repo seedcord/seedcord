@@ -1,4 +1,4 @@
-import { LogService } from './LogService';
+import { Logger } from './Logger';
 import { Globals } from '../library/globals/Globals';
 
 export interface CooldownOptions {
@@ -41,7 +41,7 @@ export class CooldownManager {
     const remaining = this.window - (now - (last ?? 0));
 
     if (Globals.isDevelopment && remaining > 0) {
-      LogService.Debug('CooldownManager', `${key} - ${remaining}ms remaining`);
+      Logger.Debug('CooldownManager', `${key} - ${remaining}ms remaining`);
     }
 
     if (last !== undefined && remaining > 0) {

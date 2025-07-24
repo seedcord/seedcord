@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { Events } from 'discord.js';
 
 import { traverseDirectory } from '../../core/library/Helpers';
-import { LogService } from '../../core/services/LogService';
+import { Logger } from '../../core/services/Logger';
 import { InteractionMetadataKey, InteractionRoutes } from '../decorators/InteractionConfigurable';
 import { UnhandledEvent } from '../handlers/UnhandledEvent';
 import { InteractionHandler } from '../interfaces/Handler';
@@ -14,7 +14,7 @@ import type { HandlerConstructor, MiddlewareConstructor, Repliables } from '../i
 import type { ChatInputCommandInteraction, Interaction } from 'discord.js';
 
 export class InteractionController {
-  private readonly logger = new LogService('Interactions');
+  private readonly logger = new Logger('Interactions');
   private isInitialized = false;
 
   private readonly slashMap = new Map<string, HandlerConstructor>();

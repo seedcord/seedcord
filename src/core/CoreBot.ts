@@ -5,12 +5,12 @@ import { Database } from './database/Database';
 import { HookController } from './hooks/HookController';
 import { CoordinatedShutdown } from './services/CoordinatedShutdown';
 import { HealthCheck } from './services/HealthCheck';
-import { LogService } from './services/LogService';
+import { Logger } from './services/Logger';
 
 import type { Core } from './library/interfaces/Core';
 
 export class CoreBot implements Core {
-  private readonly logger = new LogService('CoreBot');
+  private readonly logger = new Logger('CoreBot');
   public readonly shutdown = CoordinatedShutdown.instance;
   private isInitialized = false;
 

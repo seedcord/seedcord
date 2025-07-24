@@ -1,6 +1,8 @@
 /* decorators/EventCatchable.ts */
 import { Message } from 'discord.js';
 
+import { ErrorHandlingUtils } from '../utilities/ErrorHandlingUtils';
+
 import type { EventHandler } from '../interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 
@@ -25,14 +27,14 @@ export function EventCatchable(log?: boolean) {
         if (log) console.error(err);
 
         const eventArgs = Array.isArray(this.getEvent()) ? (this.getEvent() as unknown[]) : [this.getEvent()];
-
         const msg = eventArgs.find((x): x is Message => x instanceof Message);
+
+        // Use ErrorHandlingUtils for consistent error handling
+        const result = ErrorHandlingUtils.handleError(err, this.core, msg?.guild ?? null, msg?.author ?? null);
 
         if (!msg) return;
 
-        const embed = this.core.bot.errors.getErrorEmbed(err, msg.guild, msg.author).component;
-
-        await msg.reply({ embeds: [embed], components: [] });
+        await msg.reply({ embeds: [result.response], components: [] });
       }
     };
   };

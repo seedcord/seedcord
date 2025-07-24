@@ -3,7 +3,7 @@ import * as path from 'path';
 import chalk from 'chalk';
 
 import { traverseDirectory } from '../../core/library/Helpers';
-import { LogService } from '../../core/services/LogService';
+import { Logger } from '../../core/services/Logger';
 import { CommandMetadataKey } from '../decorators/CommandRegisterable';
 import { BuilderComponent } from '../interfaces/Components';
 
@@ -13,7 +13,7 @@ import type { Client, SlashCommandBuilder } from 'discord.js';
 type CommandCtor = new () => BuilderComponent<'command'>;
 
 export class CommandRegistry {
-  private readonly logger = new LogService('Commands');
+  private readonly logger = new Logger('Commands');
   private isInitialised = false;
 
   public readonly globalCommands: SlashCommandBuilder[] = [];

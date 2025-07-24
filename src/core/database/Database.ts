@@ -7,7 +7,7 @@ import { BaseService } from './BaseService';
 import { DatabaseConnectionFailure } from '../../bot/errors/Database';
 import { Globals } from '../library/globals/Globals';
 import { throwCustomError, traverseDirectory } from '../library/Helpers';
-import { LogService } from '../services/LogService';
+import { Logger } from '../services/Logger';
 import { ServiceMetadataKey } from './decorators/DatabaseService';
 import { ShutdownPhase } from '../services/CoordinatedShutdown';
 
@@ -16,7 +16,7 @@ import type { Core } from '../library/interfaces/Core';
 import type { TypeOfIDocument } from '../library/types/Miscellaneous';
 
 export class Database {
-  private readonly logger = new LogService('Database');
+  private readonly logger = new Logger('Database');
   private isInitialised = false;
   private readonly uri: string;
 

@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import chalk from 'chalk';
 
 import { ShutdownPhase } from './CoordinatedShutdown';
-import { LogService } from './LogService';
+import { Logger } from './Logger';
 import { Globals } from '../library/globals/Globals';
 
 import type { Core } from '../library/interfaces/Core';
@@ -13,7 +13,7 @@ const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
 
 export class HealthCheck {
-  private readonly logger = new LogService('HealthCheck');
+  private readonly logger = new Logger('HealthCheck');
   private readonly port: number = Globals.healthCheckPort;
   private readonly path: string = Globals.healthCheckPath;
   private server?: Server;

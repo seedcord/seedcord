@@ -10,7 +10,7 @@ import { EventEmitter } from 'node:events';
 
 import chalk from 'chalk';
 
-import { LogService } from './LogService';
+import { Logger } from './Logger';
 import { Globals } from '../library/globals/Globals';
 
 import type { TypedExclude, NumberRange } from '../library/types/Miscellaneous';
@@ -59,7 +59,7 @@ const LOG_FLUSH_DELAY_MS = 500;
 export class CoordinatedShutdown {
   private static _instance: CoordinatedShutdown;
 
-  private readonly logger = new LogService('CoordinatedShutdown');
+  private readonly logger = new Logger('CoordinatedShutdown');
   private readonly events = new EventEmitter();
   private readonly tasksMap = new Map<ShutdownPhase, ShutdownTask[]>();
 
