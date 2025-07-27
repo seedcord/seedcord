@@ -180,6 +180,7 @@ export async function traverseDirectory(
   try {
     entries = await readdir(dir, { withFileTypes: true });
   } catch {
+    Logger.Error('Failed to read directory', dir);
     entries = [];
   }
 

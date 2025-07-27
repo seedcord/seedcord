@@ -36,9 +36,7 @@ export class Logger {
         const msg = String(info.message);
         const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
 
-        if (typeof info.stack === 'string') {
-          return `${base}\n${info.stack}`;
-        }
+        if (typeof info.stack === 'string') return `${base}\n${info.stack}`;
         return base;
       })
     ];
