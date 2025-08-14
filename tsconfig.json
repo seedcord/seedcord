@@ -1,19 +1,8 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig.json",
+  "extends": "./packages/tsconfig/base.json",
   "compilerOptions": {
-    "target": "esnext",
-    "lib": ["ESNext"],
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "module": "nodenext",
-    "rootDir": "./",
-    "moduleResolution": "nodenext",
-    "sourceMap": true,
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "noImplicitOverride": true,
-    "noImplicitThis": true,
-    "skipLibCheck": true
-  }
+    "rootDir": "./"
+  },
+  "exclude": ["node_modules"]
 }

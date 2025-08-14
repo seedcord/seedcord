@@ -28,6 +28,14 @@ build/
 # But keep .vscode settings for team consistency
 # **/.vscode (removed - we want to share VS Code settings)
 
+# Turborepo
+.turbo/
+
+# Package manager caches
+.pnpm-store/
+.yarn/
+.npm/
+
 # Ignore log files
 *.log
 logs/

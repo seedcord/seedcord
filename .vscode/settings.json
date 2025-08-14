@@ -34,8 +34,10 @@
   "files.exclude": {
     "**/node_modules": true,
     "**/dist": true,
-    "**/.eslintcache": true,
-    "**/logs": true
+    "**/.turbo": true,
+    "**/coverage": true,
+    "**/.eslintcache": true
+    // "**/logs": true
   },
 
   // Terminal

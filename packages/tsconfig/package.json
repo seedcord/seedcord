@@ -1,0 +1,43 @@
+{
+  "name": "@seedcord/tsconfig",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Shared TypeScript configuration for seedcord projects",
+  "main": "./base.json",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seedcord/seedcord.git",
+    "directory": "packages/tsconfig"
+  },
+  "exports": {
+    "./base": {
+      "default": "./base.json"
+    },
+    "./node": {
+      "default": "./node.json"
+    }
+  },
+  "files": [
+    "base.json",
+    "node.json"
+  ],
+  "scripts": {
+    "build": "echo 'Already built as .json files'",
+    "clean": "echo 'No build artifacts to clean'",
+    "lint": "eslint '*.{mjs,ts}' --cache",
+    "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
+    "fmt": "prettier --write '*.{json,md}' --cache",
+    "fmt:check": "prettier --check '*.{json,md}' --cache",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@seedcord/eslint-config": "workspace:^",
+    "typescript": "^5.9.2"
+  }
+}

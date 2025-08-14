@@ -10,6 +10,7 @@
       "runtimeArgs": ["start:watch"],
       "console": "integratedTerminal",
       "restart": true,
+      "cwd": "${workspaceFolder}/packages/mock",
       "presentation": {
         "hidden": false,
         "group": "main"
@@ -22,21 +23,9 @@
       "name": "🔧 Build & Start Bot",
       "skipFiles": ["<node_internals>/**"],
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["start:bot"],
+      "runtimeArgs": ["dev:bot"],
       "console": "integratedTerminal",
-      "presentation": {
-        "hidden": false,
-        "group": "secondary"
-      }
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "🧪 Run Tests",
-      "skipFiles": ["<node_internals>/**"],
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["test"],
-      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}/packages/mock",
       "presentation": {
         "hidden": false,
         "group": "secondary"

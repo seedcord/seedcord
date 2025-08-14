@@ -1,0 +1,74 @@
+{
+  "name": "@seedcord/eslint-config",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Modular ESLint configuration package for seedcord projects with TypeScript, Prettier, and security rules",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seedcord/seedcord.git",
+    "directory": "packages/eslint-config"
+  },
+  "exports": {
+    ".": {
+      "import": "./create-config.mjs",
+      "types": "./create-config.d.mts"
+    },
+    "./constants": {
+      "import": "./constants.mjs"
+    },
+    "./rules/general": {
+      "import": "./rules/general-rules.mjs"
+    },
+    "./rules/typescript": {
+      "import": "./rules/typescript-rules.mjs"
+    },
+    "./rules/import": {
+      "import": "./rules/import-rules.mjs"
+    },
+    "./rules/prettier": {
+      "import": "./rules/prettier-rules.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "create-config.mjs",
+    "create-config.d.mts",
+    "constants.mjs",
+    "prettier.mjs",
+    "prettier.d.mts",
+    "rules/*.mjs"
+  ],
+  "scripts": {
+    "build": "echo 'Already built as .mjs files'",
+    "clean": "echo 'No build artifacts to clean'",
+    "lint": "eslint '*.{mjs,ts}' --cache",
+    "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
+    "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
+    "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
+    "tc": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.32.0",
+    "@types/lodash.merge": "^4.6.9",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.3",
+    "eslint-plugin-security": "^3.0.1",
+    "lodash.merge": "^4.6.2",
+    "typescript-eslint": "^8.38.0"
+  }
+}

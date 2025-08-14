@@ -1,0 +1,61 @@
+{
+  "name": "@seedcord/types",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "Types for Seedcord packages",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seedcord/seedcord.git",
+    "directory": "packages/types"
+  },
+  "exports": {
+    ".": {
+      "types": {
+        "development": "./src/index.ts",
+        "import": "./dist/index.d.mts",
+        "require": "./dist/index.d.cts",
+        "default": "./dist/index.d.ts"
+      },
+      "development": "./src/index.ts",
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "default": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup && cp dist/index.d.cts dist/index.d.mts",
+    "clean": "rm -rf dist",
+    "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+    "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+    "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+    "tc": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0"
+  },
+  "devDependencies": {
+    "@seedcord/eslint-config": "workspace:^",
+    "@seedcord/tsconfig": "workspace:^",
+    "@seedcord/tsup-config": "workspace:^"
+  }
+}
