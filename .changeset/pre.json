@@ -1,6 +1,6 @@
 {
   "mode": "pre",
-  "tag": "next",
+  "tag": "alpha",
   "initialVersions": {
     "@seedcord/eslint-config": "1.0.0",
     "@seedcord/mock": "0.0.0",
@@ -9,5 +9,8 @@
     "@seedcord/tsup-config": "1.0.0",
     "@seedcord/types": "0.0.0"
   },
-  "changesets": []
+  "changesets": [
+    "better-birds-see",
+    "loud-numbers-build"
+  ]
 }
