@@ -13,6 +13,12 @@ import type { IncomingMessage, Server, ServerResponse } from 'http';
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
 
+/**
+ * HTTP health check service for monitoring bot status.
+ *
+ * Provides a simple HTTP endpoint that responds with JSON status
+ * information, useful for container orchestration and monitoring.
+ */
 export class HealthCheck extends Plugin {
   public readonly logger = new Logger('HealthCheck');
   private readonly port: number = Globals.healthCheckPort;
@@ -52,6 +58,11 @@ export class HealthCheck extends Plugin {
     });
   }
 
+  /**
+   * Stops the health check server.
+   *
+   * @returns Promise that resolves when the server is closed
+   */
   public stop(): Promise<void> {
     return new Promise((shutdownResolve) => {
       this.server?.close(() => {

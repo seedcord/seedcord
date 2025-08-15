@@ -25,6 +25,16 @@ import type {
   UserSelectMenuInteraction
 } from 'discord.js';
 
+/**
+ * Manages Discord interaction handling and routing.
+ *
+ * Scans handler directories, registers handlers with Discord client events,
+ * and coordinates event execution through the handler system. Only handles interactions.
+ *
+ * Enforces that there is only one handler per interaction.
+ *
+ * @internal
+ */
 export class InteractionController implements Initializeable {
   private readonly logger = new Logger('Interactions');
   private isInitialized = false;

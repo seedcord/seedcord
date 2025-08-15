@@ -12,6 +12,10 @@ import { Logger } from '../services/Logger';
 
 import type { Core } from '../interfaces/Core';
 
+/**
+ * Discord bot implementation that manages client and controllers
+ * @internal - Accessed via core.bot, not directly instantiated by users
+ */
 export class Bot extends Plugin {
   public readonly logger = new Logger('Bot');
   private isInitialized = false;
@@ -22,6 +26,10 @@ export class Bot extends Plugin {
   private readonly commands: CommandRegistry;
   private readonly emojiInjector: EmojiInjector;
 
+  /**
+   * @param core - Seedcord core instance
+   * @internal
+   */
   constructor(protected core: Core) {
     super(core);
 
@@ -36,6 +44,10 @@ export class Bot extends Plugin {
     this.core.shutdown.addTask(ShutdownPhase.DiscordCleanup, 'stop-bot', async () => await this.stop());
   }
 
+  /**
+   * Initializes Discord client and all controllers
+   * @internal
+   */
   public async init(): Promise<void> {
     if (this.isInitialized) {
       return;
@@ -53,18 +65,30 @@ export class Bot extends Plugin {
     await this.emojiInjector.init();
   }
 
+  /**
+   * Stops the bot and cleans up connections
+   * @internal
+   */
   public async stop(): Promise<void> {
     this._client.removeAllListeners();
 
     await this.logout();
   }
 
+  /**
+   * Logs the bot into Discord using the configured token
+   * @private
+   */
   private async login(): Promise<Bot> {
     await this._client.login(Globals.botToken);
     this.logger.info(`Logged in as ${chalk.bold.magenta(this._client.user?.username)}!`);
     return this;
   }
 
+  /**
+   * Logs out and destroys the Discord client connection
+   * @private
+   */
   private async logout(): Promise<void> {
     await this._client.destroy();
     this.logger.info(chalk.bold.red('Logged out of Discord!'));

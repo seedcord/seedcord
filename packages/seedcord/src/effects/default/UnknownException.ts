@@ -2,11 +2,11 @@ import { DiscordAPIError, SnowflakeUtil, WebhookClient } from 'discord.js';
 
 import { BuilderComponent } from '../../interfaces/Components';
 import { Globals } from '../../library/Globals';
-import { RegisterHook } from '../decorators/RegisterHook';
+import { RegisterEffect } from '../decorators/RegisterEffect';
 import { WebhookLog } from '../interfaces/abstracts/WebhookLog';
-import { AllHooks } from '../types/Hooks';
+import { AllEffects } from '../types/Effects';
 
-@RegisterHook('unknownException')
+@RegisterEffect('unknownException')
 export class UnknownException extends WebhookLog<'unknownException'> {
   webhook = new WebhookClient({
     url: Globals.unknownExceptionWebhookUrl
@@ -22,7 +22,7 @@ export class UnknownException extends WebhookLog<'unknownException'> {
 }
 
 class UnhandledErrorEmbed extends BuilderComponent<'embed'> {
-  constructor(data: AllHooks['unknownException']) {
+  constructor(data: AllEffects['unknownException']) {
     super('embed');
 
     const { uuid, error, guild, user } = data;

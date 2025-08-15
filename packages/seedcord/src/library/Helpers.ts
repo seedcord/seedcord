@@ -4,7 +4,9 @@ import * as path from 'node:path';
 import { DatabaseError } from '../bot/errors/Database';
 import { Logger } from '../services/Logger';
 
-import type { CustomErrorConstructor } from '../interfaces/Components';
+// @ts-expect-error - TS thinks it's unused. But it's used in TSDoc
+//  eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { CustomErrorConstructor, CustomError } from '../interfaces/Components';
 import type * as fs from 'node:fs';
 
 /**
@@ -222,19 +224,20 @@ export async function traverseDirectory(
 export function throwCustomError<Ctor extends CustomErrorConstructor>(
   error: unknown,
   message: string,
-  customError: Ctor
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  CustomError: Ctor
 ): never {
   const uuid = crypto.randomUUID();
   Logger.Error('Throwing Custom Error', (error as Error).name);
 
-  if (typeof customError === typeof DatabaseError) {
+  if (typeof CustomError === typeof DatabaseError) {
     const errorMessage = error instanceof Error ? error.message : message;
-    throw new customError(errorMessage, uuid);
+    throw new CustomError(errorMessage, uuid);
   } else {
     if (error instanceof Error) {
-      throw new customError(`${message}: ${error.message ? error.message : error.toString()}`);
+      throw new CustomError(`${message}: ${error.message ? error.message : error.toString()}`);
     } else {
-      throw new customError(message);
+      throw new CustomError(message);
     }
   }
 }
@@ -280,7 +283,7 @@ export function fyShuffle<TArray>(items: TArray[]): TArray[] {
   const array = items.slice();
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    // @ts-ignore - TypeScript doesn't recognize that TArray can be swapped
+    // @ts-expect-error - TypeScript doesn't recognize that TArray can be swapped
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;

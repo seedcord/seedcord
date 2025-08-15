@@ -4,10 +4,34 @@ import { ErrorHandlingUtils } from '../utilities/ErrorHandlingUtils';
 
 import type { RepliableInteractionHandler } from '../../interfaces/Handler';
 
+/**
+ * Configuration options for the Catchable decorator.
+ */
 interface CatchableOptions {
+  /** Whether to log errors to console (default: false) */
   log?: boolean;
+  /** Always use followUp instead of reply/editReply (default: false) */
   forceFollowup?: boolean;
 }
+
+/**
+ * Catches and handles errors in interaction handler methods
+ *
+ * Automatically sends error responses to users and prevents uncaught exceptions.
+ * Should be applied to the execute() or runChecks() methods of interaction handlers.
+ *
+ * @param options - Configuration for error handling behavior
+ * @decorator
+ * @example
+ * ```typescript
+ * class MyHandler extends InteractionHandler {
+ *   \@Catchable({ log: true })
+ *   async execute() {
+ *     // method implementation
+ *   }
+ * }
+ * ```
+ */
 export function Catchable(options?: CatchableOptions) {
   return function (
     _target: RepliableInteractionHandler,
@@ -34,7 +58,12 @@ export function Catchable(options?: CatchableOptions) {
         // eslint-disable-next-line no-console
         if (log) console.error(error);
 
-        const { response } = ErrorHandlingUtils.handleError(error, this.core, interaction.guild, interaction.user);
+        const { response } = ErrorHandlingUtils.extractErrorResponse(
+          error,
+          this.core,
+          interaction.guild,
+          interaction.user
+        );
 
         const res = {
           embeds: [response],

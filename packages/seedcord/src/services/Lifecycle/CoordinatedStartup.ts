@@ -5,7 +5,9 @@ import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 import type { LifecycleTask, PhaseEvents, UnionToTuple } from '@seedcord/types';
 
 /**
- * Startup phases for coordinated plugin initialization.
+ * Startup phases for coordinated initialization
+ *
+ * Defines the order in which different components are initialized during bot startup.
  */
 export enum StartupPhase {
   /** Validate environment variables and config files */
@@ -18,7 +20,7 @@ export enum StartupPhase {
   Configuration,
   /** Instantiate plugin classes with Core and arguments */
   Instantiation,
-  /** Activate plugins by calling their init/setup hooks */
+  /** Activate plugins by calling their init/setup effects */
   Activation,
   /** Mark seedcord as ready and start handling interactions */
   Ready
@@ -37,8 +39,15 @@ const PHASE_ORDER: StartupPhase[] = [
 
 type CoordinatedStartupEventKey = PhaseEvents<'startup', UnionToTuple<StartupPhase>>;
 
+/** Extends LifecycleTask for startup-specific tasks */
 export interface StartupTask extends LifecycleTask {}
 
+/**
+ * Manages bot startup lifecycle with ordered phases
+ *
+ * Coordinates initialization of all bot components in a predictable sequence.
+ * Tasks are executed within their designated phases to ensure proper dependency order.
+ */
 export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
   private isStartingUp = false;
   private hasStarted = false;
@@ -48,7 +57,12 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
   }
 
   /**
-   * Add a task to a specific startup phase
+   * Adds a task to a specific startup phase with timeout.
+   *
+   * @param phase - The startup phase from {@link StartupPhase}
+   * @param taskName - Unique identifier for the task
+   * @param task - Async function to execute
+   * @param timeoutMs - Task timeout in milliseconds (default: 10000)
    */
   public override addTask(phase: StartupPhase, taskName: string, task: () => Promise<void>, timeoutMs = 10000): void {
     super.addTask(phase, taskName, task, timeoutMs);
@@ -98,7 +112,20 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
   }
 
   /**
-   * Start the coordinated startup sequence
+   * Executes the coordinated startup sequence.
+   *
+   * Runs all registered tasks across startup phases in the correct order.
+   * Each phase completes before the next phase begins. Tasks within a phase
+   * are executed sequentially to maintain predictable initialization.
+   *
+   * @returns Promise that resolves when startup is complete
+   * @throws An {@link Error} If startup fails or is called multiple times
+   * @example
+   * ```typescript
+   * const startup = new CoordinatedStartup();
+   * startup.addTask(StartupPhase.Services, 'database', () => db.connect(), 10000);
+   * await startup.run();
+   * ```
    */
   public async run(): Promise<void> {
     if (this.hasStarted) {

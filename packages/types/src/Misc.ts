@@ -1,8 +1,21 @@
+/**
+ * Makes at least one property of an object type required
+ * @param Props - The object type to modify
+ */
 export type AtLeastOne<Props, SingleKeyObjectMap = { [K in keyof Props]: Pick<Props, K> }> = Partial<Props> &
   SingleKeyObjectMap[keyof SingleKeyObjectMap];
 
-export type Nullish<Value = null> = Value extends null ? null | undefined : Value | null | undefined;
+/**
+ * Makes a type nullable by adding null and undefined
+ * @param Value - The type to make nullable
+ */
+export type Nullable<Value = null> = Value extends null ? null | undefined : Value | null | undefined;
 
+/**
+ * Helper type to create a numeric range
+ * @param Lower - The lower bound of the range
+ * @param Upper - The upper bound of the range
+ */
 export type NumberRange<
   Lower extends number,
   Upper extends number,
@@ -13,55 +26,102 @@ export type NumberRange<
     ? NumberRange<number, Upper, [...Accumulator, Accumulator['length']]>
     : NumberRange<Lower, Upper, [...Accumulator, Lower]>;
 
+/**
+ * Creates a tuple of repeated elements with a specific length
+ * @param Element - The type of element to repeat in the tuple
+ * @param Length - The desired length of the tuple
+ */
 export type TupleOf<Element, Length extends number, Result extends unknown[] = []> = Result['length'] extends Length
   ? Result
   : TupleOf<Element, Length, [...Result, Element]>;
 
+/**
+ * Removes properties from Source that exist in Excluded
+ * @param Source - The source type to remove properties from
+ * @param Excluded - The type containing properties to exclude
+ */
 export type Without<Source, Excluded> = Partial<Record<Exclude<keyof Source, keyof Excluded>, never>>;
 
+/**
+ * Creates an exclusive OR type - allows either one type or the other, but not both
+ * @param ThisObj - The first type option
+ * @param OtherObj - The second type option
+ */
 export type XOR<ThisObj, OtherObj> = ThisObj | OtherObj extends object
   ? (Without<ThisObj, OtherObj> & OtherObj) | (Without<OtherObj, ThisObj> & ThisObj)
   : ThisObj | OtherObj;
 
+/**
+ * Type-safe version of Omit that ensures the keys exist on the target object
+ * @param TargetObj - The object type to omit properties from
+ * @param ObjKeys - The keys to omit from the object
+ */
 export type TypedOmit<TargetObj, ObjKeys extends keyof TargetObj> = Omit<TargetObj, ObjKeys>;
 
+/**
+ * Type-safe version of Exclude that ensures the excluded types are valid members
+ * @param Target - The union type to exclude from
+ * @param UnionKeys - The types to exclude from the union
+ */
 export type TypedExclude<Target, UnionKeys extends Target> = Exclude<Target, UnionKeys>;
 
+/**
+ * Type-safe version of Extract that ensures the extracted types are valid members
+ * @param Target - The union type to extract from
+ * @param UnionKeys - The types to extract from the union
+ */
 export type TypedExtract<Target, UnionKeys extends Target> = Extract<Target, UnionKeys>;
 
+/** Represents any constructor function that can be instantiated with new */
 export type ConstructorFunction = new (...args: any[]) => unknown;
 
+/**
+ * Filters string union types to only include those that start with a specific string
+ * @param BaseUnion - The union of strings to filter
+ * @param StartingString - The string that valid members must start with
+ */
 export type StartsWith<
   BaseUnion extends string,
   StartingString extends string
 > = BaseUnion extends `${StartingString}${string}` ? BaseUnion : never;
 
+/**
+ * Extracts the constructor signature from a constructor type
+ * @param ConstructorType - The constructor type to extract the signature from
+ */
 export type TypedConstructor<ConstructorType> = ConstructorType extends new (...args: infer A) => infer R
   ? new (...args: A) => R
   : ConstructorType extends abstract new (...args: infer A) => infer R
     ? new (...args: A) => R
     : never;
 
-type UnionToIntersection<UnionType> = (UnionType extends unknown ? (x: UnionType) => void : never) extends (
+/**
+ * Converts a union type to an intersection type
+ * @param UnionType - The union type to convert to an intersection
+ */
+export type UnionToIntersection<UnionType> = (UnionType extends unknown ? (x: UnionType) => void : never) extends (
   x: infer I
 ) => void
   ? I
   : never;
 
-type LastOf<UnionType> =
+/**
+ * Gets the last type from a union type
+ * @param UnionType - The union type to get the last member from
+ */
+export type LastOf<UnionType> =
   UnionToIntersection<UnionType extends unknown ? (x: UnionType) => 0 : never> extends (x: infer L) => 0 ? L : never;
 
-/** Extracts every parameter _after_ the first one */
+/**
+ * Extracts all parameters after the first one from a tuple type
+ * @param TArgs - The tuple type to extract the tail from
+ */
 export type Tail<TArgs extends unknown[]> = TArgs extends [unknown, ...infer R] ? R : never;
 
+/**
+ * Converts a union type to a tuple type
+ * @param UnionType - The union type to convert to a tuple
+ */
 export type UnionToTuple<UnionType, TupleArray extends unknown[] = []> = [UnionType] extends [never]
   ? TupleArray
   : UnionToTuple<Exclude<UnionType, LastOf<UnionType>>, [LastOf<UnionType>, ...TupleArray]>;
-
-export type BotPermissionScope = 'manage' | 'others' | 'all' | bigint[] | 'embed';
-
-export interface IDocument {
-  _id: string;
-}
-
-export type TypeOfIDocument<Doc extends IDocument = IDocument> = Doc;

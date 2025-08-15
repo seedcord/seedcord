@@ -2,11 +2,34 @@ import { ModelMetadataKey } from './decorators/DatabaseModel';
 import { ServiceMetadataKey } from './decorators/DatabaseService';
 
 import type { Mongo } from './Mongo';
-import type { Services } from './types/Services';
 import type { Core } from '../interfaces/Core';
+import type { Services } from './types/Services';
 import type { IDocument, TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
 
+/**
+ * Base class for MongoDB service layers
+ *
+ * Provides typed access to MongoDB collections through Mongoose models.
+ * Services are automatically registered with the Mongo plugin when instantiated.
+ *
+ * @template Doc - The document type this service manages
+ * @example
+ * ```typescript
+ * \@DatabaseService('users')
+ * export class Users extends BaseService<IUser> {
+ *   \@DatabaseModel('users')
+ *   public static schema = new mongoose.Schema<IUser>({
+ *     username: { type: String, required: true, unique: true }
+ *   });
+ *
+ *   // Custom methods here
+ *   public async findByUsername(username: string) {
+ *     return this.model.findOne({ username });
+ *   }
+ * }
+ * ```
+ */
 export abstract class BaseService<Doc extends IDocument = IDocument> {
   public readonly model: mongoose.Model<Doc>;
 
@@ -28,4 +51,5 @@ export abstract class BaseService<Doc extends IDocument = IDocument> {
   }
 }
 
+/** Constructor type for BaseService classes */
 export type BaseServiceConstructor = TypedConstructor<typeof BaseService>;

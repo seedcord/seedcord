@@ -25,12 +25,30 @@ export enum SelectMenuType {
 export const InteractionMetadataKey = Symbol('interaction:metadata');
 
 /**
- * Decorator for slash command routes. The route can be:
- *  - "profile"
- *  - "settings/edit"
- *  - "settings/advanced/edit"
+ * Routes slash commands to handler classes
  *
- * Pass an array of routes if the same handler should respond to multiple.
+ * Supports single commands, subcommands, and subcommand groups.
+ * Use forward slashes to separate subcommand paths.
+ *
+ * @param routeOrRoutes - Command path(s) to handle
+ * @decorator
+ * @example
+ * ```typescript
+ * \@SlashRoute('ping')
+ * class PingCommand extends InteractionHandler {
+ *   // handles /ping command
+ * }
+ *
+ * \@SlashRoute(['ban', 'kick'])
+ * class ModerationHandler extends InteractionHandler {
+ *   // handles /ban and /kick commands
+ * }
+ *
+ * \@SlashRoute('admin/user/promote')
+ * class PromoteHandler extends InteractionHandler {
+ *   // handles /admin user promote subcommand
+ * }
+ * ```
  */
 export function SlashRoute(routeOrRoutes: string | string[]) {
   return function (constructor: ConstructorFunction): void {
@@ -39,8 +57,13 @@ export function SlashRoute(routeOrRoutes: string | string[]) {
 }
 
 /**
- * Decorator for button routes. This should match a `customId` prefix.
- * e.g., 'accept' or 'login'.
+ * Routes button interactions to handler classes
+ *
+ * Matches the customId prefix before the first colon.
+ * For customId "accept:user123", use @ButtonRoute("accept").
+ *
+ * @param routeOrRoutes - CustomId prefix(es) to handle
+ * @decorator
  */
 export function ButtonRoute(routeOrRoutes: string | string[]) {
   return function (constructor: ConstructorFunction): void {
@@ -49,7 +72,12 @@ export function ButtonRoute(routeOrRoutes: string | string[]) {
 }
 
 /**
- * Decorator for modal routes. This should match a `customId` prefix.
+ * Routes modal submissions to handler classes
+ *
+ * Matches the customId prefix before the first colon.
+ *
+ * @param routeOrRoutes - CustomId prefix(es) to handle
+ * @decorator
  */
 export function ModalRoute(routeOrRoutes: string | string[]) {
   return function (constructor: ConstructorFunction): void {
@@ -58,9 +86,11 @@ export function ModalRoute(routeOrRoutes: string | string[]) {
 }
 
 /**
- * Decorator for context menu commands. This should match the command name.
- * @param type - The type of context menu ('message' or 'user')
- * @param routeOrRoutes - The command name(s) to route to this handler
+ * Routes context menu commands to handler classes
+ *
+ * @param type - Context menu type: 'message' for message context menus, 'user' for user context menus
+ * @param routeOrRoutes - Command name(s) to handle
+ * @decorator
  */
 export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string | string[]) {
   return function (constructor: ConstructorFunction): void {
@@ -70,11 +100,16 @@ export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string
 }
 
 /**
- * Decorator for autocomplete interactions. Supports routing by command and focused field.
- * @param commandRoutes - Command name or subcommand paths
- * @param focusedFields - Focused option names to handle
- * @example @AutocompleteRoute('user', 'name') // Single command, single field
- * @example @AutocompleteRoute(['user', 'profile'], ['name', 'bio']) // Multiple commands, multiple fields
+ * Routes autocomplete interactions to handler classes
+ *
+ * Handles autocomplete requests for specific command options.
+ * Creates routes for each command-field combination.
+ *
+ * @param commandRoutes - Command path(s) to handle
+ * @param focusedFields - Option name(s) to provide completions for
+ * @example \@AutocompleteRoute('user', 'name') // Single command, single field
+ * @example \@AutocompleteRoute(['user', 'profile'], ['name', 'bio']) // Multiple commands, multiple fields
+ * @decorator
  */
 export function AutocompleteRoute(commandRoutes: string | string[], focusedFields: string | string[]) {
   return function (constructor: ConstructorFunction): void {
@@ -92,7 +127,13 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
 }
 
 /**
- * Decorator for select menu routes. This should match a `customId` prefix.
+ * Routes select menu interactions to handler classes
+ *
+ * Matches the customId prefix before the first colon.
+ *
+ * @param type - Select menu type from {@link SelectMenuType}
+ * @param routeOrRoutes - CustomId prefix(es) to handle
+ * @decorator
  */
 export function SelectMenuRoute(type: SelectMenuType, routeOrRoutes: string | string[]) {
   return function (constructor: ConstructorFunction): void {

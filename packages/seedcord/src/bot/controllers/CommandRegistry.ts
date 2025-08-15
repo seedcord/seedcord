@@ -13,6 +13,14 @@ import type { ContextMenuCommandBuilder } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
 
+/**
+ * Manages Discord application command registration and deployment.
+ *
+ * Scans command directories, builds command structures, and handles both
+ * global and guild-specific command deployment to Discord's API.
+ *
+ * @internal
+ */
 export class CommandRegistry implements Initializeable {
   private readonly logger = new Logger('Commands');
   private isInitialised = false;

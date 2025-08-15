@@ -2,23 +2,39 @@ import { Guild, PermissionFlagsBits, Role } from 'discord.js';
 
 import { prettify } from '../../library/Helpers';
 import {
-  BotMissingPermissionsError,
+  MissingPermissions,
   CannotAssignBotRole,
   HasDangerousPermissions,
   RoleDoesNotExist,
   RoleHigherThanMe
 } from '../errors/Roles';
 
-import type { BotPermissionScope, Nullish } from '@seedcord/types';
+import type { Nullable } from '@seedcord/types';
 import type { Client, PermissionsBitField, TextChannel } from 'discord.js';
 
 export const PermissionNames = new Map<bigint, string>(
   Object.entries(PermissionFlagsBits).map(([key, bit]) => [bit, prettify(key)])
 );
 
+/**
+ * Defines the scope types for bot permission validation.
+ */
+export type BotPermissionScope = 'manage' | 'others' | 'all' | bigint[] | 'embed';
+
+/**
+ * Utility functions for Discord role operations and permission validation.
+ */
 export class RoleUtils {
+  /**
+   * Fetches a role by ID from a client or guild.
+   *
+   * @param clientOrGuild - Discord client or guild instance
+   * @param roleId - The role ID to fetch
+   * @returns Promise resolving to the role
+   * @throws A {@link RoleDoesNotExist} When the role doesn't exist
+   */
   public static async fetchRole(clientOrGuild: Client | Guild, roleId: string): Promise<Role> {
-    let role: Nullish<Role>;
+    let role: Nullable<Role>;
 
     if (!roleId) {
       throw new RoleDoesNotExist('Role ID is null or undefined', roleId);
@@ -61,6 +77,14 @@ export class RoleUtils {
     return role;
   }
 
+  /**
+   * Gets the bot's highest role in a guild.
+   *
+   * @param client - The Discord client instance
+   * @param guild - The guild to get the bot's role from
+   * @returns The bot's highest role in the guild
+   * @throws An {@link Error} When the bot is not in the guild
+   */
   public static getBotRole(client: Client, guild: Guild): Role {
     if (!client.user) throw new Error('Client user is not available'); // TODO: Use custom error
 
@@ -70,6 +94,14 @@ export class RoleUtils {
     return botRole;
   }
 
+  /**
+   * Validates if the bot has permission to assign a target role.
+   *
+   * @param targetRole - The role to check assignment permissions for
+   * @throws A {@link RoleHigherThanMe} When the target role is higher than bot's role
+   * @throws A {@link CannotAssignBotRole} When trying to assign a managed/bot role
+   * @throws A {@link MissingPermissions} When bot lacks Manage Roles permission
+   */
   public static hasPermsToAssign(targetRole: Role): void {
     const botRole = this.getBotRole(targetRole.client, targetRole.guild);
 
@@ -84,6 +116,15 @@ export class RoleUtils {
     this.checkBotPermissions(targetRole.client, targetRole.guild, [PermissionFlagsBits.ManageRoles]);
   }
 
+  /**
+   * Checks if the bot has required permissions in a guild or channel.
+   *
+   * @param client - The Discord client instance
+   * @param guildOrChannel - Guild or text channel to check permissions in
+   * @param scope - Permission scope to validate
+   * @param inverse - Whether to check for absence of permissions
+   * @throws A {@link MissingPermissions} When bot lacks required permissions
+   */
   public static checkBotPermissions(
     client: Client,
     guildOrChannel: Guild | TextChannel,
@@ -98,6 +139,16 @@ export class RoleUtils {
     }
   }
 
+  /**
+   * Checks permissions for a role or channel with overloads.
+   *
+   * @param client - The Discord client instance
+   * @param roleOrChannel - Role or channel to check permissions for
+   * @param scope - Permission scope to validate
+   * @param inverse - Whether to check for absence of permissions (role only)
+   * @throws A {@link MissingPermissions} When required permissions are missing
+   * @throws A {@link HasDangerousPermissions} When role has dangerous permissions (if inverse is true)
+   */
   public static checkPermissions(
     client: Client,
     roleOrChannel: Role,
@@ -158,7 +209,7 @@ export class RoleUtils {
       }
     }
 
-    let permissions: Nullish<Readonly<PermissionsBitField>>;
+    let permissions: Nullable<Readonly<PermissionsBitField>>;
     if (roleOrChannel instanceof Role) {
       permissions = roleOrChannel.permissions;
     } else {
@@ -167,7 +218,7 @@ export class RoleUtils {
     }
 
     if (!permissions) {
-      throw new BotMissingPermissionsError('Missing Permissions', Array.from(required.values()), roleOrChannel);
+      throw new MissingPermissions('Missing Permissions', Array.from(required.values()), roleOrChannel);
     }
 
     if (inverse) {
@@ -184,7 +235,7 @@ export class RoleUtils {
         .map(([, name]) => name);
 
       if (missing.length > 0) {
-        throw new BotMissingPermissionsError('Missing Permissions', missing, roleOrChannel);
+        throw new MissingPermissions('Missing Permissions', missing, roleOrChannel);
       }
     }
   }

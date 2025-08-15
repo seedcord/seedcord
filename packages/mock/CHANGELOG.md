@@ -1,5 +1,22 @@
 # @seedcord/mock
 
+## 0.1.0-alpha.2
+
+### Minor Changes
+
+- 956f225: renamed hooks to effects because these aren't lifecycle hooks but fire-and-forget side effects
+
+### Patch Changes
+
+- 73a33a5: fix repository url in package.json
+- dad89c6: add LICENSE to all package roots
+- Updated dependencies [73a33a5]
+- Updated dependencies [dad89c6]
+- Updated dependencies [956f225]
+- Updated dependencies [73a33a5]
+  - @seedcord/types@0.1.0-alpha.1
+  - seedcord@0.1.0-alpha.2
+
 ## 0.0.1-alpha.1
 
 ### Patch Changes

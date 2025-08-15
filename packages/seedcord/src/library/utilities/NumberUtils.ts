@@ -1,3 +1,6 @@
+/**
+ * Utility functions for number manipulation and formatting.
+ */
 export class NumberUtils {
   /**
    * Rounds a number to a specified number of decimal places.

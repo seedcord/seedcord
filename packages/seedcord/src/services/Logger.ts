@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import { createLogger, format, transports } from 'winston';
 
 import { Globals } from '../library/Globals';
@@ -5,6 +6,12 @@ import { Globals } from '../library/Globals';
 import type { Logform, Logger as Winston } from 'winston';
 import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 
+/**
+ * Logging service with console and file output support
+ *
+ * Provides structured logging with timestamps, levels, and labels.
+ * Instances are cached by transport name for consistent formatting.
+ */
 export class Logger {
   declare private logger: Winston;
   private static readonly instances = new Map<string, Logger>();
@@ -112,59 +119,136 @@ export class Logger {
     });
   }
 
+  /**
+   * Logs an error message with optional additional data.
+   *
+   * @param msg - The error message to log
+   * @param args - Additional data to include in the log entry
+   */
   public error(msg: string, ...args: unknown[]): void {
     this.logger.error(msg, ...args);
   }
 
+  /**
+   * Logs a warning message with optional additional data.
+   *
+   * @param msg - The warning message to log
+   * @param args - Additional data to include in the log entry
+   */
   public warn(msg: string, ...args: unknown[]): void {
     this.logger.warn(msg, ...args);
   }
 
+  /**
+   * Logs an informational message with optional additional data.
+   *
+   * @param msg - The informational message to log
+   * @param args - Additional data to include in the log entry
+   */
   public info(msg: string, ...args: unknown[]): void {
     this.logger.info(msg, ...args);
   }
 
+  /**
+   * Logs an HTTP-related message with optional additional data.
+   *
+   * @param msg - The HTTP message to log
+   * @param args - Additional data to include in the log entry
+   */
   public http(msg: string, ...args: unknown[]): void {
     this.logger.http(msg, ...args);
   }
 
+  /**
+   * Logs a verbose message with optional additional data.
+   *
+   * @param msg - The verbose message to log
+   * @param args - Additional data to include in the log entry
+   */
   public verbose(msg: string, ...args: unknown[]): void {
     this.logger.verbose(msg, ...args);
   }
 
+  /**
+   * Logs a debug message with optional additional data.
+   *
+   * @param msg - The debug message to log
+   * @param args - Additional data to include in the log entry
+   */
   public debug(msg: string, ...args: unknown[]): void {
     this.logger.debug(msg, ...args);
   }
 
+  /**
+   * Logs a silly/trace level message with optional additional data.
+   *
+   * @param msg - The silly message to log
+   * @param args - Additional data to include in the log entry
+   */
   public silly(msg: string, ...args: unknown[]): void {
     this.logger.silly(msg, ...args);
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  /**
+   * Static method to log an error message with a specific prefix.
+   * Creates or retrieves a logger instance for the given prefix.
+   *
+   * @param prefix - The logger prefix/label to use
+   * @param msg - The error message to log
+   * @param args - Additional data to include in the log entry
+   */
   public static Error(prefix: string, msg: string, ...args: unknown[]): void {
     const logger = this.instance(prefix);
     logger.error(msg, ...args);
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  /**
+   * Static method to log an informational message with a specific prefix.
+   * Creates or retrieves a logger instance for the given prefix.
+   *
+   * @param prefix - The logger prefix/label to use
+   * @param msg - The informational message to log
+   * @param args - Additional data to include in the log entry
+   */
   public static Info(prefix: string, msg: string, ...args: unknown[]): void {
     const logger = this.instance(prefix);
     logger.info(msg, ...args);
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  /**
+   * Static method to log a warning message with a specific prefix.
+   * Creates or retrieves a logger instance for the given prefix.
+   *
+   * @param prefix - The logger prefix/label to use
+   * @param msg - The warning message to log
+   * @param args - Additional data to include in the log entry
+   */
   public static Warn(prefix: string, msg: string, ...args: unknown[]): void {
     const logger = this.instance(prefix);
     logger.warn(msg, ...args);
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  /**
+   * Static method to log a debug message with a specific prefix.
+   * Creates or retrieves a logger instance for the given prefix.
+   *
+   * @param prefix - The logger prefix/label to use
+   * @param msg - The debug message to log
+   * @param args - Additional data to include in the log entry
+   */
   public static Debug(prefix: string, msg: string, ...args: unknown[]): void {
     const logger = this.instance(prefix);
     logger.debug(msg, ...args);
   }
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention
+  /**
+   * Static method to log a silly/trace level message with a specific prefix.
+   * Creates or retrieves a logger instance for the given prefix.
+   *
+   * @param prefix - The logger prefix/label to use
+   * @param msg - The silly message to log
+   * @param args - Additional data to include in the log entry
+   */
   public static Silly(prefix: string, msg: string, ...args: unknown[]): void {
     const logger = this.instance(prefix);
     logger.silly(msg, ...args);

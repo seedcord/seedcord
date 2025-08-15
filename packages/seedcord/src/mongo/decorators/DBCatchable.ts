@@ -2,6 +2,24 @@ import { DatabaseError } from '../../bot/errors/Database';
 import { CustomError } from '../../interfaces/Components';
 import { throwCustomError } from '../../library/Helpers';
 
+/**
+ * Catches and wraps database operation errors.
+ *
+ * Automatically wraps non-CustomError exceptions in DatabaseError instances
+ * with UUID tracking. Should be applied to database service methods.
+ *
+ * @param errorMessage - Message to include when wrapping errors
+ * @decorator
+ * @example
+ * ```typescript
+ * class UserService extends BaseService {
+ *   \@DBCatchable('Failed to find user')
+ *   async findById(id: string) {
+ *     return this.model.findById(id);
+ *   }
+ * }
+ * ```
+ */
 export function DBCatchable<TypeReturn>(errorMessage: string) {
   return function (
     _target: unknown,

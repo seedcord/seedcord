@@ -30,7 +30,21 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
   }
 
   /**
-   * Add a task to a specific phase
+   * Adds a lifecycle task to a specific phase.
+   *
+   * Tasks are executed in phase order during lifecycle operations.
+   * Each task has a timeout to prevent hanging operations.
+   *
+   * @param phase - The lifecycle phase to add the task to
+   * @param taskName - Unique name for the task (used for logging and removal)
+   * @param task - Async function to execute during the phase
+   * @param timeoutMs - Maximum time allowed for task execution in milliseconds
+   * @example
+   * ```typescript
+   * lifecycle.addTask(StartupPhase.Services, 'start-database', async () => {
+   *   await database.connect();
+   * }, 10000);
+   * ```
    */
   public addTask(phase: TPhase, taskName: string, task: () => Promise<void>, timeoutMs: number): void {
     if (!this.canAddTask()) return;
@@ -45,7 +59,11 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
   }
 
   /**
-   * Remove a task by name from a specific phase
+   * Removes a lifecycle task from a specific phase.
+   *
+   * @param phase - The lifecycle phase to remove the task from
+   * @param taskName - Name of the task to remove
+   * @returns True if the task was found and removed, false otherwise
    */
   public removeTask(phase: TPhase, taskName: string): boolean {
     if (!this.canRemoveTask()) return false;

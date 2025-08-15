@@ -1,20 +1,18 @@
-import type { Nullish, AtleastOneMessageComponent } from '@seedcord/types';
-import type { Message, TextChannel, User } from 'discord.js';
+import type { AtleastOneMessageComponent, Nullable } from '@seedcord/types';
+import type { Message, User } from 'discord.js';
 
+/**
+ * Utility functions for Discord message operations.
+ */
 export class MessageUtils {
-  public static async send(channel: TextChannel, content: AtleastOneMessageComponent): Promise<Message> {
-    const payload = {
-      ...(content.content !== undefined && { content: content.content }),
-      ...(content.embeds !== undefined && { embeds: [...content.embeds] }),
-      ...(content.components !== undefined && {
-        components: [...content.components]
-      })
-    };
-
-    return await channel.send(payload);
-  }
-
-  public static async sendDM(user: User, content: AtleastOneMessageComponent): Promise<Nullish<Message>> {
+  /**
+   * Sends a direct message to a user.
+   *
+   * @param user - The user to send the DM to
+   * @param content - Message content with embeds, components, etc.
+   * @returns Promise resolving to the sent message, or null if DM failed
+   */
+  public static async attemptSendDM(user: User, content: AtleastOneMessageComponent): Promise<Nullable<Message>> {
     const payload = {
       ...(content.content !== undefined && { content: content.content }),
       ...(content.embeds !== undefined && { embeds: [...content.embeds] }),

@@ -43,7 +43,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
   public constructor() {
     super('CoordinatedShutdown', PHASE_ORDER, ShutdownPhase);
 
-    // Register signal hooks
+    // Register signal effects
     this.registerSignalHandlers();
   }
 
@@ -93,21 +93,42 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
   }
 
   /**
-   * Add a task to a specific shutdown phase
+   * Adds a task to a specific shutdown phase with timeout.
+   *
+   * @param phase - The shutdown phase from {@link ShutdownPhase}
+   * @param taskName - Unique identifier for the task
+   * @param task - Async function to execute
+   * @param timeoutMs - Task timeout in milliseconds (default: 5000)
    */
   public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
     super.addTask(phase, taskName, task, timeoutMs);
   }
 
   /**
-   * Remove a task by name from a specific phase
+   * Removes a task from a specific shutdown phase.
+   *
+   * @param phase - The shutdown phase to remove from
+   * @param taskName - Name of the task to remove
+   * @returns True if task was found and removed
    */
   public override removeTask(phase: ShutdownPhase, taskName: string): boolean {
     return super.removeTask(phase, taskName);
   }
 
   /**
-   * Start the coordinated shutdown sequence
+   * Executes the coordinated shutdown sequence.
+   *
+   * Runs all registered tasks across shutdown phases in reverse order.
+   * Tasks within each phase are executed in parallel for faster shutdown.
+   * Process exits with the specified code when complete.
+   *
+   * @param exitCode - Process exit code (default: 0)
+   * @returns Promise that resolves when shutdown is complete
+   * @example
+   * ```typescript
+   * shutdown.addTask(ShutdownPhase.Services, 'database', () => db.disconnect(), 5000);
+   * await shutdown.run(0); // Graceful shutdown
+   * ```
    */
   public async run(exitCode = 0): Promise<void> {
     if (this.isShuttingDown) {

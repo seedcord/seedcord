@@ -1,11 +1,11 @@
 {
   "name": "@seedcord/types",
   "type": "module",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Types for Seedcord packages",
   "repository": {
     "type": "git",
-    "url": "https://github.com/seedcord/seedcord.git",
+    "url": "https://github.com/materwelondhruv/seedcord.git",
     "directory": "packages/types"
   },
   "exports": {

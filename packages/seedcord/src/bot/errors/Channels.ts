@@ -1,6 +1,15 @@
 import { CustomError } from '../../interfaces/Components';
 
+/**
+ * Error thrown when a requested channel cannot be found.
+ */
 export class ChannelNotFoundError extends CustomError {
+  /**
+   * Creates a new ChannelNotFoundError.
+   *
+   * @param message - The error message
+   * @param channelId - The ID of the channel that could not be found
+   */
   constructor(
     message: string,
     public readonly channelId: string
@@ -11,7 +20,16 @@ export class ChannelNotFoundError extends CustomError {
   }
 }
 
+/**
+ * Error thrown when the bot cannot send embeds in a channel.
+ */
 export class CannotSendEmbedsError extends CustomError {
+  /**
+   * Creates a new CannotSendEmbedsError.
+   *
+   * @param message - The error message
+   * @param channelId - The ID of the channel where embeds cannot be sent
+   */
   constructor(
     message: string,
     public readonly channelId: string
@@ -31,7 +49,16 @@ export class CannotSendEmbedsError extends CustomError {
   }
 }
 
+/**
+ * Error thrown when a channel could not be found or accessed.
+ */
 export class CouldNotFindChannel extends CustomError {
+  /**
+   * Creates a new CouldNotFindChannel error.
+   *
+   * @param message - The error message
+   * @param channelId - The ID of the channel that could not be found
+   */
   constructor(
     message: string,
     public readonly channelId: string
@@ -44,7 +71,16 @@ export class CouldNotFindChannel extends CustomError {
   }
 }
 
+/**
+ * Error thrown when a channel is not a text channel.
+ */
 export class ChannelNotTextChannel extends CustomError {
+  /**
+   * Creates a new ChannelNotTextChannel error.
+   *
+   * @param message - The error message
+   * @param channelId - The ID of the channel that is not a text channel
+   */
   constructor(
     message: string,
     public readonly channelId: string

@@ -2,9 +2,10 @@ import { ColorResolvable } from 'discord.js';
 import { Envapt, Envapter } from 'envapt';
 
 /**
- * Global configuration variables for the application. These ENV variables are reserved for the framework.
+ * Global configuration variables and environment settings
  *
- * Set them in your `.env` file to override the default.
+ * Provides centralized access to environment variables and framework settings.
+ * Extend this class in your bot to add custom environment variables.
  */
 export class Globals extends Envapter {
   @Envapt('DISCORD_BOT_TOKEN', { fallback: undefined })
@@ -26,8 +27,6 @@ export class Globals extends Envapter {
   public static readonly unknownExceptionWebhookUrl: string;
 
   // Variables
-  /**
-   * The default color of the bot's embeds. Can simply override by `Globals.botColor =`
-   */
+  /** Default color for bot embeds - can be overridden by setting Globals.botColor */
   public static botColor: ColorResolvable = this.isProduction ? '#fe565a' : '#3fa045';
 }

@@ -10,6 +10,16 @@ import type { EventHandlerConstructor } from '../../interfaces/Handler';
 import type { Initializeable } from '../../interfaces/Plugin';
 import type { ClientEvents } from 'discord.js';
 
+/**
+ * Manages Discord event handler registration and execution.
+ *
+ * Scans event handler directories, registers handlers with Discord client events,
+ * and coordinates event execution through the handler system. Does not handle interactions.
+ *
+ * Multiple handlers can point to one event.
+ *
+ * @internal
+ */
 export class EventController implements Initializeable {
   private readonly logger = new Logger('Events');
   private isInitialized = false;
@@ -71,7 +81,7 @@ export class EventController implements Initializeable {
 
   private attachToClient(): void {
     for (const [eventName] of this.eventMap) {
-      // For each event type, call all relevant hooks in sequence.
+      // For each event type, call all relevant effects in sequence.
       this.logger.debug(
         `Attaching ${chalk.bold.green(eventName)} to ${chalk.bold.yellow(this.core.bot.client.user?.username)}`
       );

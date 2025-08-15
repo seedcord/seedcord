@@ -38,10 +38,10 @@ export * from './interfaces/Plugin';
 export type * from './interfaces/Core';
 export type * from './interfaces/Config';
 
-// Hooks exports
-export * from './hooks/HookController';
-export * from './hooks/HookEmitter';
-export * from './hooks/decorators/RegisterHook';
-export * from './hooks/interfaces/HookHandler';
-export * from './hooks/interfaces/abstracts/WebhookLog';
-export type * from './hooks/types/Hooks';
+// Effects exports
+export * from './effects/EffectsRegistry';
+export * from './effects/EffectsEmitter';
+export * from './effects/decorators/RegisterEffect';
+export * from './effects/interfaces/EffectsHandler';
+export * from './effects/interfaces/abstracts/WebhookLog';
+export type * from './effects/types/Effects';

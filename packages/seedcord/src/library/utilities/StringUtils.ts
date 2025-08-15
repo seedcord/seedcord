@@ -1,3 +1,6 @@
+/**
+ * Utility functions for string manipulation and formatting.
+ */
 export class StringUtils {
   /**
    * Returns the word with it's first letter capitalized and the rest in lowercase.
@@ -10,7 +13,9 @@ export class StringUtils {
 
   /**
    * Function takes an array of strings or numbers and returns the number of characters in the longest string/number
+   *
    * @param arr - The array of strings or numbers
+   * @returns The length of the longest element when converted to string
    */
   public static longestStringLength(arr: (string | number)[]): number {
     return Math.max(...arr.map((el) => el.toString().length));

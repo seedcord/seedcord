@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapt } from 'envapt';
-import { Seedcord, Globals, StartupPhase, Mongo } from 'seedcord';
+import { Globals, Mongo, Seedcord, StartupPhase } from 'seedcord';
 
 Globals.envPaths = resolve(import.meta.dirname, '../../../.env');
 
@@ -49,8 +49,8 @@ async function main(): Promise<void> {
       },
       emojis: Emojis
     },
-    hooks: {
-      path: resolve(import.meta.dirname, './hooks')
+    effects: {
+      path: resolve(import.meta.dirname, './effects')
     }
   }).attach('db', Mongo, StartupPhase.Configuration, {
     servicesDir: resolve(import.meta.dirname, './services'),

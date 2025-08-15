@@ -1,43 +1,43 @@
 import type { ClientOptions } from 'discord.js';
 
-// interactions, events, commands, services, hooks
+// interactions, events, commands, services, effects
 
 /**
- * Discord interaction hooks configuration
+ * Djs Interactions handlers
  */
 interface InteractionsConfig {
   /**
-   * Path for interaction hooks, such as slash commands and buttons.
+   * Path to dir containing interaction handlers.
    */
   path: string;
 }
 
 /**
- * Discord event hooks configuration
+ * Djs Events handlers
  */
 interface EventsConfig {
   /**
-   * Path for event hooks.
+   * Path to dir containing event handlers.
    */
   path: string;
 }
 
 /**
- * Discord command registry configuration
+ * Djs SlashCommands and ContextMenuCommands
  */
 interface CommandsConfig {
   /**
-   * Path for command hooks.
+   * Path to dir containing commands and context menus to register.
    */
   path: string;
 }
 
 /**
- * Discord hook hooks configuration
+ * Application side effects configuration
  */
-interface HooksConfig {
+interface EffectsConfig {
   /**
-   * Path for hook hooks.
+   * Path to dir of user defined side effects.
    */
   path: string;
 }
@@ -61,7 +61,8 @@ interface BotConfig {
   emojis?: Record<string, string>;
 }
 
+/** Main configuration object for Seedcord bot */
 export interface Config {
   bot: BotConfig;
-  hooks: HooksConfig;
+  effects: EffectsConfig;
 }

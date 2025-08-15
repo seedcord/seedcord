@@ -12,6 +12,7 @@ import type {
   ModalSubmitInteraction
 } from 'discord.js';
 
+/** All valid Discord.js interaction types that can be handled */
 export type ValidInteractionTypes =
   | ChatInputCommandInteraction
   | ButtonInteraction
@@ -20,17 +21,28 @@ export type ValidInteractionTypes =
   | AnySelectMenuInteraction
   | ContextMenuCommandInteraction;
 
+/** All valid Discord.js client events except interaction events */
 export type ValidNonInteractionTypes = ClientEvents[Exclude<keyof ClientEvents, Events.InteractionCreate>];
+
+/** All event types that can be handled (interactions and client events) */
 export type ValidEventTypes = ValidInteractionTypes | ValidNonInteractionTypes;
 
+/** Interaction types that can receive replies (excludes autocomplete) */
 export type Repliables = Exclude<ValidInteractionTypes, AutocompleteInteraction>;
 
+/** Handler types that can reply to interactions */
 export type RepliableInteractionHandler = InteractionHandler<Repliables> | InteractionMiddleware<Repliables>;
 
+/** Base interface for event handlers */
 export interface Handler {
   execute(): Promise<void>;
 }
 
+/**
+ * Interface for handlers that can run pre-execution checks
+ *
+ * Should always accompany the `@Catchable` decorator. Will require the class to implement the `runChecks` method.
+ */
 export interface WithChecks {
   runChecks(): Promise<void>;
 }
@@ -53,6 +65,10 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
     this.args = args ?? [];
   }
 
+  /**
+   * Main handler logic - implement this method to define behavior
+   * @virtual Override this method in your handler classes
+   */
   abstract execute(): Promise<void>;
 
   public hasChecks(): this is HandlerWithChecks {
@@ -76,15 +92,19 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
   }
 
   /**
-   * Get the arguments passed from the customId
-   * For example, if customId is "accept:user123-guild456", args will be ["user123", "guild456"]
+   * Gets arguments parsed from interaction customId
+   *
+   * Arguments are extracted from customId using ":" and "-" separators.
+   * For customId "accept:user123-guild456", returns ["user123", "guild456"]
    */
   protected getArgs(): string[] {
     return this.args;
   }
 
   /**
-   * Get a specific argument by index
+   * Gets a specific argument by index from parsed customId
+   * @param index - Zero-based index of the argument to retrieve
+   * @returns The argument at the specified index, or undefined if not found
    */
   protected getArg(index: number): string | undefined {
     return this.args[index];
@@ -92,10 +112,12 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
 }
 
 /**
- * All interactions with the bot including Handlers and what those hooks do or pass to other services should extend this class.
- * This class implements ICheckable when the decorator Checkable is used on the class.
- * @implements Handler
- * @template Repliable - A type that extends one of the ValidEventTypes. Can add more types to the ValidEventTypes union type if needed.
+ * Base class for Discord interaction handlers
+ *
+ * Extend this class to handle slash commands, buttons, modals, and select menus.
+ * Use decorators like @SlashRoute, @ButtonRoute, etc. to define routing.
+ *
+ * @template Repliable - The interaction type this handler processes
  */
 export abstract class InteractionHandler<Repliable extends Repliables>
   extends BaseHandler<Repliable>
@@ -106,6 +128,14 @@ export abstract class InteractionHandler<Repliable extends Repliables>
   }
 }
 
+/**
+ * Base class for interaction middleware
+ *
+ * Middleware runs before interaction handlers and can modify behavior or block execution.
+ * Unlike handlers, middleware should not send responses directly.
+ *
+ * @template Repliable - The interaction type this middleware processes
+ */
 export abstract class InteractionMiddleware<Repliable extends Repliables>
   extends BaseHandler<Repliable>
   implements Handler
@@ -116,9 +146,13 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
 }
 
 /**
- * Autocomplete interactions handler - separate from repliable interactions
+ * Handler for Discord autocomplete interactions
+ *
+ * Extend this class to provide autocomplete suggestions for slash command options.
+ * The focused option is automatically available via the `focused` property.
  */
 export abstract class AutocompleteHandler extends BaseHandler<AutocompleteInteraction> implements Handler {
+  /** The currently focused autocomplete option (Based on what you set in \@AutocompleteRoute) */
   protected readonly focused: AutocompleteFocusedOption;
   constructor(event: AutocompleteInteraction, core: Core, args?: string[]) {
     super(event, core, args);
@@ -127,10 +161,12 @@ export abstract class AutocompleteHandler extends BaseHandler<AutocompleteIntera
 }
 
 /**
- * All non-interaction events with the bot including Handlers and what those hooks do or pass to other services should extend this class.
- * This class implements ICheckable when the decorator Checkable is used on the class.
- * @implements Handler
- * @template Repliable - A type that extends one of the ValidEventTypes. Can add more types to the ValidEventTypes union type if needed.
+ * Base class for Discord client event handlers
+ *
+ * Extend this class to handle Discord events like messageCreate, guildMemberAdd, etc.
+ * Use the @EventRegisterable decorator to specify which event to listen for.
+ *
+ * @template Repliable - The Discord event type this handler processes
  */
 export abstract class EventHandler<Repliable extends keyof ClientEvents>
   extends BaseHandler<ClientEvents[Repliable]>
@@ -142,12 +178,16 @@ export abstract class EventHandler<Repliable extends keyof ClientEvents>
 }
 
 // A generic type alias for a handler constructor
+/** Constructor type for interaction and autocomplete handlers */
 export type HandlerConstructor = TypedConstructor<typeof InteractionHandler | typeof AutocompleteHandler>;
 
+/** Constructor type for interaction middleware */
 export type MiddlewareConstructor = TypedConstructor<typeof InteractionMiddleware> &
   (new (event: Repliables, core: Core, args?: string[]) => InteractionMiddleware<Repliables>);
 
+/** Constructor type for autocomplete handlers */
 export type AutocompleteHandlerConstructor = TypedConstructor<typeof AutocompleteHandler> &
   (new (event: AutocompleteInteraction, core: Core, args?: string[]) => AutocompleteHandler);
 
+/** Constructor type for Discord client event handlers */
 export type EventHandlerConstructor = TypedConstructor<typeof EventHandler>;

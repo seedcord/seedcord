@@ -6,6 +6,24 @@ import { ErrorHandlingUtils } from '../utilities/ErrorHandlingUtils';
 import type { EventHandler } from '../../interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 
+/**
+ * Catches and handles errors in event handler methods.
+ *
+ * Automatically handles errors in event handlers and sends error responses
+ * if the event contains a Discord message object.
+ *
+ * @param log - Whether to log errors to console (default: false)
+ * @decorator
+ * @example
+ * ```typescript
+ * class MessageHandler extends EventHandler {
+ *   \@EventCatchable(true)
+ *   async execute() {
+ *     // Event handling logic
+ *   }
+ * }
+ * ```
+ */
 export function EventCatchable(log?: boolean) {
   return function (
     _target: EventHandler<keyof ClientEvents>,
@@ -29,12 +47,16 @@ export function EventCatchable(log?: boolean) {
         const eventArgs = Array.isArray(this.getEvent()) ? (this.getEvent() as unknown[]) : [this.getEvent()];
         const msg = eventArgs.find((x): x is Message => x instanceof Message);
 
-        // Use ErrorHandlingUtils for consistent error handling
-        const result = ErrorHandlingUtils.handleError(err, this.core, msg?.guild ?? null, msg?.author ?? null);
+        const { response } = ErrorHandlingUtils.extractErrorResponse(
+          err,
+          this.core,
+          msg?.guild ?? null,
+          msg?.author ?? null
+        );
 
         if (!msg) return;
 
-        await msg.reply({ embeds: [result.response], components: [] });
+        await msg.reply({ embeds: [response], components: [] });
       }
     };
   };

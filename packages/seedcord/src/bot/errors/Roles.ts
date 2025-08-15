@@ -4,7 +4,17 @@ import { CustomError } from '../../interfaces/Components';
 
 import type { TextChannel } from 'discord.js';
 
-export class BotMissingPermissionsError extends CustomError {
+/**
+ * Error thrown when the bot lacks necessary permissions to perform an action.
+ */
+export class MissingPermissions extends CustomError {
+  /**
+   * Creates a new BotMissingPermissionsError.
+   *
+   * @param message - The error message
+   * @param missingPerms - Array of missing permission names
+   * @param roleOrChannel - The role or channel where permissions are missing
+   */
   constructor(
     message: string,
     public missingPerms: string[],
@@ -25,7 +35,15 @@ export class BotMissingPermissionsError extends CustomError {
   }
 }
 
+/**
+ * Error thrown when attempting to modify a role higher than the bot's highest role.
+ */
 export class RoleHigherThanMe extends CustomError {
+  /**
+   * Creates a new RoleHigherThanMe error.
+   *
+   * @param message - The error message
+   */
   constructor(
     message: string,
     public role: Role,
@@ -40,7 +58,15 @@ export class RoleHigherThanMe extends CustomError {
   }
 }
 
+/**
+ * Error thrown when attempting to assign a managed/bot role.
+ */
 export class CannotAssignBotRole extends CustomError {
+  /**
+   * Creates a new CannotAssignBotRole error.
+   *
+   * @param message - The error message
+   */
   constructor(message = 'I cannot assign a managed role.') {
     super(message);
 
@@ -48,7 +74,16 @@ export class CannotAssignBotRole extends CustomError {
   }
 }
 
+/**
+ * Error thrown when a requested role does not exist.
+ */
 export class RoleDoesNotExist extends CustomError {
+  /**
+   * Creates a new RoleDoesNotExist error.
+   *
+   * @param message - The error message
+   * @param roleId - The ID of the role that doesn't exist
+   */
   constructor(
     message: string,
     public roleId: string
@@ -59,7 +94,17 @@ export class RoleDoesNotExist extends CustomError {
   }
 }
 
+/**
+ * Error thrown when a role has dangerous permissions that shouldn't be assigned.
+ */
 export class HasDangerousPermissions extends CustomError {
+  /**
+   * Creates a new HasDangerousPermissions error.
+   *
+   * @param message - The error message
+   * @param role - The role with dangerous permissions
+   * @param dangerousPerms - Array of dangerous permission names
+   */
   constructor(
     message: string,
     public role: Role,
