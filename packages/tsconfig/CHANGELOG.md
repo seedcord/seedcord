@@ -1,5 +1,12 @@
 # @seedcord/tsconfig
 
+## 1.0.1
+
+### Patch Changes
+
+- 48a8c9b: fix repository url in package.json
+- 48a8c9b: add LICENSE to all package roots
+
 ## 1.0.1-alpha.0
 
 ### Patch Changes

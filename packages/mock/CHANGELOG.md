@@ -1,5 +1,28 @@
 # @seedcord/mock
 
+## 0.1.0
+
+### Minor Changes
+
+- 2a141ec: Created a new package called @seedcord/plugins and moved mongo there
+- 48a8c9b: renamed hooks to effects because these aren't lifecycle hooks but fire-and-forget side effects
+
+### Patch Changes
+
+- 48a8c9b: fix repository url in package.json
+- 48a8c9b: add LICENSE to all package roots
+- Updated dependencies [d9e2a50]
+- Updated dependencies [48a8c9b]
+- Updated dependencies [8c4ce41]
+- Updated dependencies [2a141ec]
+- Updated dependencies [d9e2a50]
+- Updated dependencies [48a8c9b]
+- Updated dependencies [48a8c9b]
+- Updated dependencies [48a8c9b]
+  - @seedcord/types@0.1.0
+  - seedcord@0.1.0
+  - @seedcord/plugins@0.1.0
+
 ## 0.1.0-alpha.3
 
 ### Minor Changes

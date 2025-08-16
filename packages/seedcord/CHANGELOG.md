@@ -1,5 +1,25 @@
 # seedcord
 
+## 0.1.0
+
+### Minor Changes
+
+- 2a141ec: Created a new package called @seedcord/plugins and moved mongo there
+- d9e2a50: migrate to monorepo and first test for package
+- 48a8c9b: renamed hooks to effects because these aren't lifecycle hooks but fire-and-forget side effects
+
+### Patch Changes
+
+- 8c4ce41: Added eslint for TSDoc
+- 48a8c9b: add LICENSE to all package roots
+- 48a8c9b: add TSDoc to almost everything
+- Updated dependencies [d9e2a50]
+- Updated dependencies [48a8c9b]
+- Updated dependencies [8c4ce41]
+- Updated dependencies [48a8c9b]
+- Updated dependencies [48a8c9b]
+  - @seedcord/types@0.1.0
+
 ## 0.1.0-alpha.3
 
 ### Minor Changes
