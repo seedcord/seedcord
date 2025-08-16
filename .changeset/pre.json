@@ -1,4 +1,5 @@
 {
+  "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
   "mode": "pre",
   "tag": "alpha",
   "initialVersions": {
