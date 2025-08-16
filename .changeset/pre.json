@@ -7,11 +7,14 @@
     "seedcord": "0.0.0",
     "@seedcord/tsconfig": "1.0.0",
     "@seedcord/tsup-config": "1.0.0",
-    "@seedcord/types": "0.0.0"
+    "@seedcord/types": "0.0.0",
+    "@seedcord/plugins": "0.1.0"
   },
   "changesets": [
     "better-birds-see",
     "cute-coins-greet",
+    "gold-sides-end",
+    "green-badgers-visit",
     "loud-numbers-build",
     "nasty-buckets-bet",
     "shaggy-wombats-write",

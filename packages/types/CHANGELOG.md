@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.1.0-alpha.2
+
+### Patch Changes
+
+- 8c4ce41: Added eslint for TSDoc
+
 ## 0.1.0-alpha.1
 
 ### Patch Changes

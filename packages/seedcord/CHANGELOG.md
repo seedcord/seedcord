@@ -1,5 +1,17 @@
 # seedcord
 
+## 0.1.0-alpha.3
+
+### Minor Changes
+
+- 2a141ec: Created a new package called @seedcord/plugins and moved mongo there
+
+### Patch Changes
+
+- 8c4ce41: Added eslint for TSDoc
+- Updated dependencies [8c4ce41]
+  - @seedcord/types@0.1.0-alpha.2
+
 ## 0.1.0-alpha.2
 
 ### Minor Changes
