@@ -8,7 +8,7 @@ import type { AllEffects, EffectKeys } from './types/Effects';
  * Provides a strongly-typed wrapper around Node.js EventEmitter
  * for Seedcord's effect system.
  *
- * @template AllEffects - Side effect definitions mapping event names to data types
+ * @typeParam AllEffects - Side effect definitions mapping event names to data types
  */
 export class EffectsEmitter {
   private readonly emitter = new EventEmitter();
@@ -16,7 +16,7 @@ export class EffectsEmitter {
   /**
    * Registers a listener for the specified side effect.
    *
-   * @template KeyOfEffects - The side effect name type
+   * @typeParam KeyOfEffects - The side effect name type
    * @param event - The side effect name to listen for
    * @param listener - Function to call when the event is emitted
    * @returns This EffectsEmitter instance for chaining
@@ -32,7 +32,7 @@ export class EffectsEmitter {
   /**
    * Registers a one-time listener for the specified side effect.
    *
-   * @template KeyOfEffects - The side effect name type
+   * @typeParam KeyOfEffects - The side effect name type
    * @param event - The side effect name to listen for once
    * @param listener - Function to call when the event is emitted
    * @returns This EffectsEmitter instance for chaining
@@ -48,7 +48,7 @@ export class EffectsEmitter {
   /**
    * Emits a side effect with the provided data.
    *
-   * @template KeyOfEffects - The side effect name type
+   * @typeParam KeyOfEffects - The side effect name type
    * @param event - The side effect name to emit
    * @param data - The data to pass to registered listeners
    * @returns True if the event had listeners, false otherwise

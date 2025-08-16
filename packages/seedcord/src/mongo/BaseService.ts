@@ -13,7 +13,7 @@ import type mongoose from 'mongoose';
  * Provides typed access to MongoDB collections through Mongoose models.
  * Services are automatically registered with the Mongo plugin when instantiated.
  *
- * @template Doc - The document type this service manages
+ * @typeParam Doc - The document type this service manages
  * @example
  * ```typescript
  * \@DatabaseService('users')

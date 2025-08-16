@@ -41,6 +41,6 @@ export type EffectKeys = keyof AllEffects;
 /**
  * Helper type to get parameters for a specific effect event.
  *
- * @template KeyOfEffects - The effect event name
+ * @typeParam KeyOfEffects - The effect event name
  */
 export type EffectParams<KeyOfEffects extends EffectKeys> = AllEffects[KeyOfEffects];

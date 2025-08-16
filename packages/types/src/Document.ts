@@ -12,6 +12,6 @@ export interface IDocument {
 /**
  * Helper type to extract the type of a document that extends IDocument.
  *
- * @template Doc - The document type extending IDocument
+ * @typeParam Doc - The document type extending IDocument
  */
 export type TypeOfIDocument<Doc extends IDocument = IDocument> = Doc;

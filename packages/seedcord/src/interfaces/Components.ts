@@ -73,7 +73,7 @@ type InstantiatedModalField<ModalKey extends ModalFieldTypes> = InstanceType<(ty
  *
  * Provides common functionality for building Discord components with proper typing.
  *
- * @template TComponent - The Discord.js component type being wrapped
+ * @typeParam TComponent - The Discord.js component type being wrapped
  */
 abstract class BaseComponent<TComponent> {
   private readonly _component: TComponent;
@@ -88,8 +88,7 @@ abstract class BaseComponent<TComponent> {
    *
    * Returns the finalized component ready for use in Discord messages.
    *
-   * @note Do not use for further configuration - use `instance` for that.
-   * @see {@link instance} for mutating the component
+   * Please do not use for further configuration, use `this.instance` for that.
    * @example new SomeComponent().component
    */
   public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<ActionRowComponentType>;
@@ -99,7 +98,7 @@ abstract class BaseComponent<TComponent> {
    *
    * Use this to access Discord.js builder methods like setTitle(), setDescription(), etc.
    *
-   * @protected Use this in your component classes to configure the builder
+   * Use this in your component classes to configure the builder
    * @example this.instance.setTitle('My Modal')
    */
   protected get instance(): TComponent {
@@ -113,7 +112,7 @@ abstract class BaseComponent<TComponent> {
  * Wraps Discord.js builders (SlashCommandBuilder, EmbedBuilder, etc.) with
  * Seedcord-specific defaults and helper methods.
  *
- * @template BuilderKey - The type of Discord.js builder being wrapped
+ * @typeParam BuilderKey - The type of Discord.js builder being wrapped
  */
 export abstract class BuilderComponent<BuilderKey extends BuilderType> extends BaseComponent<
   InstantiatedBuilder<BuilderKey>
@@ -158,7 +157,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
  *
  * Wraps Discord.js action row builder with Seedcord-specific defaults and helper methods.
  *
- * @template RowKey - The Discord.js action row type being wrapped
+ * @typeParam RowKey - The Discord.js action row type being wrapped
  */
 export abstract class RowComponent<RowKey extends ActionRowComponentType> extends BaseComponent<
   InstantiatedActionRow<RowKey>
@@ -178,7 +177,7 @@ export abstract class RowComponent<RowKey extends ActionRowComponentType> extend
  *
  * Automatically wraps modal field components in an action row for use in modals.
  *
- * @template ModalKey - The type of modal field component being wrapped
+ * @typeParam ModalKey - The type of modal field component being wrapped
  * @internal
  */
 class ModalRow<ModalKey extends ModalFieldTypes> extends RowComponent<'modal'> {
@@ -200,7 +199,7 @@ class ModalRow<ModalKey extends ModalFieldTypes> extends RowComponent<'modal'> {
  * Wraps Discord.js modal field builders (TextInputBuilder, etc.) and
  * packages them in action rows for use in modals.
  *
- * @template ModalKey - The type of modal field builder being wrapped
+ * @typeParam ModalKey - The type of modal field builder being wrapped
  */
 export abstract class ModalComponent<ModalKey extends ModalFieldTypes> extends BaseComponent<
   InstantiatedModalField<ModalKey>

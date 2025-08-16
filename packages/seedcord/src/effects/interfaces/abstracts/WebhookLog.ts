@@ -10,8 +10,7 @@ import type { WebhookClient } from 'discord.js';
  * Extends EffectsHandler to provide webhook-based logging capabilities.
  * Implementations must define the webhook client to send messages to.
  *
- * @template KeyOfEffects - The specific side effect type this handler processes
- * @virtual
+ * @typeParam KeyOfEffects - The specific side effect type this handler processes
  */
 export abstract class WebhookLog<KeyOfEffects extends EffectKeys> extends EffectsHandler<KeyOfEffects> {
   /** The Discord webhook client for sending log messages */

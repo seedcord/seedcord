@@ -24,8 +24,8 @@ export function numberFixer(num: number, decimalPlaces: number): number {
 /**
  * Takes two numbers and returns the percentage of the first number in the second number with two decimal places.
  *
- * @param num1 The first number.
- * @param num2 The second number.
+ * @param num1 - The first number.
+ * @param num2 - The second number.
  *
  * @returns The percentage of the first number in the second number with two decimal places.
  */
@@ -215,11 +215,13 @@ export async function traverseDirectory(
  * @throws Instance of the provided {@link CustomError} subclass
  *
  * @example
+ * ```typescript
  * try {
  *   // risky code
  * } catch (e) {
  *   throwCustomError(e, "Something went wrong", MyCustomError);
  * }
+ * ```
  */
 export function throwCustomError<Ctor extends CustomErrorConstructor>(
   error: unknown,
@@ -269,15 +271,17 @@ export function prettify(key: string): string {
  * This function creates a new array with the same elements in a random order,
  * without modifying the original array.
  *
- * @template TArray - The type of elements in the array
- * @param {TArray[]} items - The array to shuffle
- * @returns {TArray[]} A new array with the same elements in a random order
+ * @typeParam TArray - The type of elements in the array
+ * @param items - The array to shuffle
+ * @returns A new array with the same elements in a random order
  *
  * @example
+ * ```typescript
  * const numbers = [1, 2, 3, 4, 5];
  * const shuffled = fyShuffle(numbers);
  * // shuffled might be [3, 1, 5, 2, 4]
  * // numbers is still [1, 2, 3, 4, 5]
+ * ```
  */
 export function fyShuffle<TArray>(items: TArray[]): TArray[] {
   const array = items.slice();

@@ -7,8 +7,7 @@ import type { AllEffects, EffectKeys } from '../types/Effects';
  * Provides type-safe access to effects data and the core framework instance.
  * Extend this class to create custom side effect handlers.
  *
- * @template KeyOfEffects - The specific side effect type this handler processes
- * @virtual
+ * @typeParam KeyOfEffects - The specific side effect type this handler processes
  */
 export abstract class EffectsHandler<KeyOfEffects extends EffectKeys> {
   /**
@@ -27,7 +26,7 @@ export abstract class EffectsHandler<KeyOfEffects extends EffectKeys> {
 
   /**
    * Executes the effect handler logic.
-   * @virtual Must be implemented by subclasses.
+   * @virtual Override this method in your handler classes
    */
   abstract execute(): Promise<void>;
 }

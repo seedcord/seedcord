@@ -12,7 +12,13 @@ export const ServiceMetadataKey = Symbol('db:serviceKey');
  *
  * @param key - Service key for registration and type-safe access
  * @decorator
- * @example @DatabaseService('users')
+ * @example
+ * ```typescript
+ * \@DatabaseService('users')
+ * export class Users<Doc extends IUser = IUser> extends BaseService<Doc> {
+ *   // Some code
+ * }
+ * ```
  */
 export function DatabaseService<TService extends ServiceKeys>(key: TService) {
   return <DatabaseCtor extends ConstructorFunction & { prototype: BaseService }>(ctor: DatabaseCtor): void => {

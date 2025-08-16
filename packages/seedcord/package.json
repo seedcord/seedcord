@@ -51,10 +51,10 @@
   },
   "dependencies": {
     "@seedcord/types": "workspace:^",
-    "chalk": "^5.4.1",
-    "discord.js": "^14.0.0",
-    "envapt": "^2.2.8",
-    "mongoose": "^8.16.4",
+    "chalk": "^5.5.0",
+    "discord.js": "^14.21.0",
+    "envapt": "^2.2.9",
+    "mongoose": "^8.17.1",
     "reflect-metadata": "^0.2.2",
     "winston": "^3.17.0"
   },

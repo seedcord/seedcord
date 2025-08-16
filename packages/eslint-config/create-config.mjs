@@ -2,6 +2,7 @@ import prettierConfig from 'eslint-config-prettier';
 import eslintImport from 'eslint-plugin-import';
 import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
+import eslintTsdoc from 'eslint-plugin-tsdoc';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
@@ -18,6 +19,7 @@ import {
 import { GENERAL_RULES, OVERRIDE_RULES, SECURITY_RULES } from './rules/general-rules.mjs';
 import { IMPORT_RULES, IMPORT_SETTINGS } from './rules/import-rules.mjs';
 import { PRETTIER_RULES } from './rules/prettier-rules.mjs';
+import { TSDOC_RULES, DOCUMENTATION_RULES } from './rules/tsdoc-rules.mjs';
 import { TYPESCRIPT_RULES } from './rules/typescript-rules.mjs';
 
 /**
@@ -106,7 +108,10 @@ export default function createConfig(options = {}) {
     // TypeScript-specific rules configuration
     {
       files: TS_FILES,
-      rules: TYPESCRIPT_RULES
+      plugins: {
+        tsdoc: eslintTsdoc
+      },
+      rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES)
     },
 
     // Additional rules configuration

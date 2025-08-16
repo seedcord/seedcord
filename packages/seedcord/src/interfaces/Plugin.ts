@@ -77,15 +77,18 @@ export class Pluggable {
    *
    * Make sure to augment the {@link Core} interface with the plugin type to ensure TypeScript recognizes it and provides intellisense.
    *
-   * @template Key - The property name for accessing the plugin
-   * @template Ctor - The plugin constructor type
+   * @typeParam Key - The property name for accessing the plugin
+   * @typeParam Ctor - The plugin constructor type
    * @param key - Property name to access the plugin instance
    * @param Plugin - Plugin constructor class
    * @param startupPhase - When during startup to initialize this plugin ({@link StartupPhase})
    * @param args - Additional arguments to pass to the plugin constructor
    * @returns This instance with the plugin attached as a typed property
    * @throws An {@link Error} When called after initialization or if key already exists
-   * @example seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...' })
+   * @example
+   * ```typescript
+   * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', dbName: 'seedcord' })
+   * ```
    */
   public attach<Key extends string, Ctor extends PluginCtor>(
     this: this,

@@ -77,7 +77,6 @@ export class Bot extends Plugin {
 
   /**
    * Logs the bot into Discord using the configured token
-   * @private
    */
   private async login(): Promise<Bot> {
     await this._client.login(Globals.botToken);
@@ -87,7 +86,6 @@ export class Bot extends Plugin {
 
   /**
    * Logs out and destroys the Discord client connection
-   * @private
    */
   private async logout(): Promise<void> {
     await this._client.destroy();

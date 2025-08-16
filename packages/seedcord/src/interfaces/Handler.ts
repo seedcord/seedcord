@@ -42,8 +42,17 @@ export interface Handler {
  * Interface for handlers that can run pre-execution checks
  *
  * Should always accompany the `@Catchable` decorator. Will require the class to implement the `runChecks` method.
+ *
+ * @see {@link Checkable}
  */
 export interface WithChecks {
+  /**
+   * Runs pre-execution checks for the handler.
+   *
+   * @remarks It'll be called automatically if a class is decorated with {@link Checkable} before the execute method.
+   *
+   * @virtual Override this method in your handler classes
+   */
   runChecks(): Promise<void>;
 }
 
@@ -115,9 +124,9 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
  * Base class for Discord interaction handlers
  *
  * Extend this class to handle slash commands, buttons, modals, and select menus.
- * Use decorators like @SlashRoute, @ButtonRoute, etc. to define routing.
+ * Use decorators like \@SlashRoute, \@ButtonRoute, etc. to define routing.
  *
- * @template Repliable - The interaction type this handler processes
+ * @typeParam Repliable - The interaction type this handler processes
  */
 export abstract class InteractionHandler<Repliable extends Repliables>
   extends BaseHandler<Repliable>
@@ -134,7 +143,7 @@ export abstract class InteractionHandler<Repliable extends Repliables>
  * Middleware runs before interaction handlers and can modify behavior or block execution.
  * Unlike handlers, middleware should not send responses directly.
  *
- * @template Repliable - The interaction type this middleware processes
+ * @typeParam Repliable - The interaction type this middleware processes
  */
 export abstract class InteractionMiddleware<Repliable extends Repliables>
   extends BaseHandler<Repliable>
@@ -164,9 +173,9 @@ export abstract class AutocompleteHandler extends BaseHandler<AutocompleteIntera
  * Base class for Discord client event handlers
  *
  * Extend this class to handle Discord events like messageCreate, guildMemberAdd, etc.
- * Use the @EventRegisterable decorator to specify which event to listen for.
+ * Use the \@EventRegisterable decorator to specify which event to listen for.
  *
- * @template Repliable - The Discord event type this handler processes
+ * @typeParam Repliable - The Discord event type this handler processes
  */
 export abstract class EventHandler<Repliable extends keyof ClientEvents>
   extends BaseHandler<ClientEvents[Repliable]>

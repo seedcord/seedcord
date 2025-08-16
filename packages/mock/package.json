@@ -37,7 +37,7 @@
   "dependencies": {
     "@seedcord/types": "workspace:^",
     "discord.js": "^14.21.0",
-    "envapt": "^2.2.8",
+    "envapt": "^2.2.9",
     "mongoose": "^8.17.1",
     "reflect-metadata": "^0.2.2",
     "seedcord": "workspace:^"
