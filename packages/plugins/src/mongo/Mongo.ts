@@ -1,28 +1,26 @@
+import 'reflect-metadata';
+
 import chalk from 'chalk';
 import mongoose from 'mongoose';
+import { Globals, Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
 
 import { BaseService } from './BaseService';
-import { Plugin } from '../interfaces/Plugin';
-import { Globals } from '../library/Globals';
-import { traverseDirectory } from '../library/Helpers';
-import { ShutdownPhase } from '../services/Lifecycle/CoordinatedShutdown';
-import { Logger } from '../services/Logger';
 import { ServiceMetadataKey } from './decorators/DatabaseService';
 
 import type { BaseServiceConstructor } from './BaseService';
-import type { Core } from '../interfaces/Core';
 import type { Services } from './types/Services';
+import type { Core } from 'seedcord';
 
 /**
  * Configuration options for MongoDB connection and service loading.
  */
 interface MongoOptions {
   /** Directory path containing database service classes */
-  servicesDir: string;
+  dir: string;
   /** MongoDB connection URI */
   uri: string;
   /** Database name to use */
-  dbName: string;
+  name: string;
 }
 
 /**
@@ -67,7 +65,7 @@ export class Mongo extends Plugin {
   private async connect(): Promise<void> {
     await mongoose
       .connect(this.uri, {
-        dbName: this.options.dbName,
+        dbName: this.options.name,
         ...(Globals.isProduction && { tls: true, ssl: true })
       })
       .then((i) => this.logger.info(`Connected to MongoDB: ${chalk.bold.magenta(i.connection.name)}`))
@@ -84,7 +82,7 @@ export class Mongo extends Plugin {
   }
 
   private async loadServices(): Promise<void> {
-    const servicesDir = this.options.servicesDir;
+    const servicesDir = this.options.dir;
     this.logger.info(chalk.bold(servicesDir));
 
     await traverseDirectory(servicesDir, (_full, rel, mod) => {

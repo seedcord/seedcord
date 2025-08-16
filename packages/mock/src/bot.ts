@@ -2,9 +2,10 @@ import 'reflect-metadata';
 
 import { resolve } from 'node:path';
 
+import { Mongo } from '@seedcord/plugins';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapt } from 'envapt';
-import { Globals, Mongo, Seedcord, StartupPhase } from 'seedcord';
+import { Globals, Seedcord, StartupPhase } from 'seedcord';
 
 Globals.envPaths = resolve(import.meta.dirname, '../../../.env');
 
@@ -53,9 +54,9 @@ async function main(): Promise<void> {
       path: resolve(import.meta.dirname, './effects')
     }
   }).attach('db', Mongo, StartupPhase.Configuration, {
-    servicesDir: resolve(import.meta.dirname, './services'),
+    dir: resolve(import.meta.dirname, './services'),
     uri: Vars.mongoUri,
-    dbName: Vars.dbName
+    name: Vars.dbName
   });
 
   await seedcord.start();

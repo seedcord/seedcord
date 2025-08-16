@@ -123,6 +123,9 @@ importers:
 
   packages/mock:
     dependencies:
+      '@seedcord/plugins':
+        specifier: workspace:*
+        version: link:../plugins
       '@seedcord/types':
         specifier: workspace:^
         version: link:../types
@@ -132,6 +135,37 @@ importers:
       envapt:
         specifier: ^2.2.9
         version: 2.2.9
+      mongoose:
+        specifier: ^8.17.1
+        version: 8.17.1
+      reflect-metadata:
+        specifier: ^0.2.2
+        version: 0.2.2
+      seedcord:
+        specifier: workspace:^
+        version: link:../seedcord
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:^
+        version: link:../tsconfig
+      '@seedcord/tsup-config':
+        specifier: workspace:^
+        version: link:../tsup-config
+
+  packages/plugins:
+    dependencies:
+      '@seedcord/types':
+        specifier: workspace:^
+        version: link:../types
+      chalk:
+        specifier: ^5.5.0
+        version: 5.5.0
       mongoose:
         specifier: ^8.17.1
         version: 8.17.1

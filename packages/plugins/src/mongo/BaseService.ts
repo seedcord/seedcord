@@ -2,10 +2,10 @@ import { ModelMetadataKey } from './decorators/DatabaseModel';
 import { ServiceMetadataKey } from './decorators/DatabaseService';
 
 import type { Mongo } from './Mongo';
-import type { Core } from '../interfaces/Core';
 import type { Services } from './types/Services';
 import type { IDocument, TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
+import type { Core } from 'seedcord';
 
 /**
  * Base class for MongoDB service layers

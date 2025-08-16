@@ -77,5 +77,6 @@
   "[markdown]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "files.trimTrailingWhitespace": false
-  }
+  },
+  "vitest.shellType": "terminal"
 }

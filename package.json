@@ -31,7 +31,7 @@
     "local:mock:watch": "cd packages/mock && tsx src/start-watch.ts",
     "local:test:seedcord": "cd packages/seedcord && NODE_OPTIONS=--conditions=development vitest",
     "local:test:mock": "cd packages/mock && NODE_OPTIONS=--conditions=development vitest",
-    "update:packages": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done"
+    "bump:deps": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done"
   },
   "keywords": [
     "discord",

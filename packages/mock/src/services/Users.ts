@@ -1,6 +1,6 @@
+import { BaseService, DatabaseModel, DatabaseService } from '@seedcord/plugins';
 import { IDocument } from '@seedcord/types';
 import mongoose from 'mongoose';
-import { BaseService, DatabaseModel, DatabaseService } from 'seedcord';
 
 interface IUser extends IDocument {
   username: string;
@@ -17,7 +17,7 @@ export class Users<Doc extends IUser = IUser> extends BaseService<Doc> {
 }
 
 /* Declare Users to augment the ServiceMap */
-declare module 'seedcord' {
+declare module '@seedcord/plugins' {
   interface Services {
     users: Users;
   }

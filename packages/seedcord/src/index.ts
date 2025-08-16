@@ -19,14 +19,6 @@ export * from './services/Lifecycle/CoordinatedShutdown';
 export * from './services/HealthCheck';
 export * from './services/CooldownManager';
 
-// Database exports
-export * from './mongo/Mongo';
-export * from './mongo/BaseService';
-export * from './mongo/decorators/DBCatchable';
-export * from './mongo/decorators/DatabaseModel';
-export * from './mongo/decorators/DatabaseService';
-export type * from './mongo/types/Services';
-
 // Library exports
 export * from './library/Globals';
 export * from './library/Helpers';
@@ -45,3 +37,6 @@ export * from './effects/decorators/RegisterEffect';
 export * from './effects/interfaces/EffectsHandler';
 export * from './effects/interfaces/abstracts/WebhookLog';
 export type * from './effects/types/Effects';
+
+// Errors
+export * from './bot/errors/Database';

@@ -11,5 +11,7 @@ export class TestError extends InteractionHandler<ChatInputCommandInteraction> {
       content: 'This is a test error',
       flags: MessageFlags.Ephemeral
     });
+
+    this.core.db.services.users.test();
   }
 }

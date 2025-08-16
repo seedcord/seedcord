@@ -35,6 +35,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@seedcord/plugins": "workspace:*",
     "@seedcord/types": "workspace:^",
     "discord.js": "^14.21.0",
     "envapt": "^2.2.9",

@@ -1,6 +1,4 @@
-import { DatabaseError } from '../../bot/errors/Database';
-import { CustomError } from '../../interfaces/Components';
-import { throwCustomError } from '../../library/Helpers';
+import { CustomError, throwCustomError, DatabaseError } from 'seedcord';
 
 /**
  * Catches and wraps database operation errors.
