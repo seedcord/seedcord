@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.0.2
+
+### Patch Changes
+
+- 97ef5a1: make public
+
 ## 1.0.1
 
 ### Patch Changes

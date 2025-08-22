@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.1.1
+
+### Patch Changes
+
+- ae9f9b5: update tsdoc to use correct tags
+
 ## 0.1.0
 
 ### Minor Changes
