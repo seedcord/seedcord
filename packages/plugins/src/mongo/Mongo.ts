@@ -70,6 +70,7 @@ export class Mongo extends Plugin {
       })
       .then((i) => this.logger.info(`Connected to MongoDB: ${chalk.bold.magenta(i.connection.name)}`))
       .catch((err) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         throw new Error(`Could not connect to MongoDB`, err);
       });
   }

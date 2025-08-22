@@ -104,6 +104,21 @@ abstract class BaseComponent<TComponent> {
   protected get instance(): TComponent {
     return this._component;
   }
+
+  /**
+   * Builds a customId string for interactive components
+   *
+   * Creates customIds in the format "prefix:arg1-arg2-arg3" for buttons, modals, etc.
+   * Arguments are joined with hyphens and separated from prefix with a colon.
+   *
+   * @param prefix - The route prefix that handlers will match against
+   * @param args - Additional arguments to encode in the customId
+   * @returns Formatted customId string
+   */
+  public buildCustomId(prefix: string, ...args: string[]): string {
+    if (args.length === 0) return prefix;
+    return `${prefix}:${args.join('-')}`;
+  }
 }
 
 /**
@@ -134,21 +149,6 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
     // TODO: Add checks for specific builders that make sure mandatory fields are set
 
     return this.instance;
-  }
-
-  /**
-   * Builds a customId string for interactive components
-   *
-   * Creates customIds in the format "prefix:arg1-arg2-arg3" for buttons, modals, etc.
-   * Arguments are joined with hyphens and separated from prefix with a colon.
-   *
-   * @param prefix - The route prefix that handlers will match against
-   * @param args - Additional arguments to encode in the customId
-   * @returns Formatted customId string
-   */
-  public buildCustomId(prefix: string, ...args: string[]): string {
-    if (args.length === 0) return prefix;
-    return `${prefix}:${args.join('-')}`;
   }
 }
 

@@ -32,8 +32,6 @@ const PHASE_ORDER: ShutdownPhase[] = [
 
 type CoordinatedShutdownEventKey = PhaseEvents<'shutdown', UnionToTuple<ShutdownPhase>>;
 
-export interface ShutdownTask extends LifecycleTask {}
-
 const LOG_FLUSH_DELAY_MS = 500;
 
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
@@ -71,6 +69,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
           .then(() => this.runTaskWithTimeout(phase, task))
           .then(
             () => ({ status: 'fulfilled', value: undefined }) satisfies PromiseSettledResult<void>,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             (reason) => ({ status: 'rejected', reason }) satisfies PromiseSettledResult<void>
           )
       );

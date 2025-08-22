@@ -7,6 +7,6 @@
     "allowJs": true,
     "checkJs": false
   },
-  "include": ["*.ts", "*.mjs", "**/*.mjs", "tests/**/*.ts", "tsup.config.ts"],
+  "include": ["./src", "eslint.config.mjs", "./tsup.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

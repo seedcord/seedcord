@@ -1,5 +1,15 @@
 # seedcord
 
+## 0.1.1
+
+### Patch Changes
+
+- 72137e9: eslint issue fixes
+- c188583: move buildCustomId method to BaseComponent so all components can access
+- 5ac7d83: cleanup package files and bump deps
+- Updated dependencies [5ac7d83]
+  - @seedcord/types@0.1.2
+
 ## 0.1.0
 
 ### Minor Changes

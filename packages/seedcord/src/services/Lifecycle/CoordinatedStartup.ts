@@ -39,9 +39,6 @@ const PHASE_ORDER: StartupPhase[] = [
 
 type CoordinatedStartupEventKey = PhaseEvents<'startup', UnionToTuple<StartupPhase>>;
 
-/** Extends LifecycleTask for startup-specific tasks */
-export interface StartupTask extends LifecycleTask {}
-
 /**
  * Manages bot startup lifecycle with ordered phases
  *
@@ -104,6 +101,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
           .then(() => this.runTaskWithTimeout(phase, task))
           .then(
             () => ({ status: 'fulfilled', value: undefined }) satisfies PromiseSettledResult<void>,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             (reason) => ({ status: 'rejected', reason }) satisfies PromiseSettledResult<void>
           )
       );

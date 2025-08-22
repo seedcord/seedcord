@@ -1,7 +1,7 @@
 {
   "name": "@seedcord/mock",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Mock bot for testing",
   "repository": {
@@ -11,13 +11,12 @@
   },
   "exports": {
     ".": {
-      "development": "./src/index.ts",
       "default": "./dist/index.mjs"
     }
   },
   "files": [],
   "scripts": {
-    "dev": "tsx src/bot.ts --conditions=development",
+    "dev": "tsx src/bot.ts",
     "dev:bot": "nodemon --config nodemon.json",
     "start:watch": "tsx src/start-watch.ts",
     "build": "tsup",
@@ -27,20 +26,20 @@
     "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
     "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
     "tc": "tsc --noEmit",
-    "test": "NODE_OPTIONS=--conditions=development vitest run",
-    "test:watch": "NODE_OPTIONS=--conditions=development vitest dev",
-    "coverage": "NODE_OPTIONS=--conditions=development vitest run --coverage"
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "coverage": "vitest run --coverage"
   },
   "peerDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "catalog:peer"
   },
   "dependencies": {
     "@seedcord/plugins": "workspace:*",
     "@seedcord/types": "workspace:^",
-    "discord.js": "^14.21.0",
-    "envapt": "^2.2.9",
-    "mongoose": "^8.17.1",
-    "reflect-metadata": "^0.2.2",
+    "discord.js": "catalog:deps",
+    "envapt": "catalog:deps",
+    "mongoose": "catalog:deps",
+    "reflect-metadata": "catalog:deps",
     "seedcord": "workspace:^"
   },
   "devDependencies": {

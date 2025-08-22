@@ -1,4 +1,7 @@
 // Prettier configuration
+
+import { Linter } from 'eslint';
+
 // Make sure these match .prettierrc at root
 export const PRETTIER_CONFIG = {
   tabWidth: 2,
@@ -15,7 +18,7 @@ export const PRETTIER_CONFIG = {
   proseWrap: 'preserve'
 };
 
-export const PRETTIER_RULES = {
+export const PRETTIER_RULES: Linter.RulesRecord = {
   'prettier/prettier': [
     'error',
     PRETTIER_CONFIG,

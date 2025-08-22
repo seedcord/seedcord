@@ -1,5 +1,17 @@
 # @seedcord/plugins
 
+## 0.1.1
+
+### Patch Changes
+
+- 72137e9: eslint issue fixes
+- 5ac7d83: cleanup package files and bump deps
+- Updated dependencies [72137e9]
+- Updated dependencies [c188583]
+- Updated dependencies [5ac7d83]
+  - seedcord@0.1.1
+  - @seedcord/types@0.1.2
+
 ## 0.1.0
 
 ### Minor Changes

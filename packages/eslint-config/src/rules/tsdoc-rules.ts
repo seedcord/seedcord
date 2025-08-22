@@ -1,9 +1,11 @@
+import { Linter } from 'eslint';
+
 // TSDoc rules for enforcing documentation standards
 export const TSDOC_RULES = {
   'tsdoc/syntax': 'warn'
 };
 
-export const DOCUMENTATION_RULES = {
+export const DOCUMENTATION_RULES: Linter.RulesRecord = {
   '@typescript-eslint/explicit-function-return-type': [
     'warn',
     {

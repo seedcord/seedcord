@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.1.2
+
+### Patch Changes
+
+- 5ac7d83: cleanup package files and bump deps
+
 ## 0.1.1
 
 ### Patch Changes

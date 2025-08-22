@@ -1,5 +1,11 @@
 # @seedcord/tsconfig
 
+## 1.0.2
+
+### Patch Changes
+
+- 5ac7d83: cleanup package files and bump deps
+
 ## 1.0.1
 
 ### Patch Changes

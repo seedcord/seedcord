@@ -1,5 +1,16 @@
 # @seedcord/eslint-config
 
+## 1.1.0
+
+### Minor Changes
+
+- 5ad6c49: port to typescript and use build tool
+
+### Patch Changes
+
+- aef9b78: move devDeps to deps and clean up exports
+- 5ac7d83: cleanup package files and bump deps
+
 ## 1.0.2
 
 ### Patch Changes

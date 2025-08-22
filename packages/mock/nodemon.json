@@ -16,6 +16,6 @@
     ".env"
   ],
   "ext": "js,ts,json",
-  "exec": "tsx src/bot.ts --conditions=development",
+  "exec": "tsx src/bot.ts",
   "delay": "1000"
 }

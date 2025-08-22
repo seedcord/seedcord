@@ -1,7 +1,7 @@
 {
   "name": "@seedcord/tsup-config",
   "type": "module",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Shared Tsup configuration for seedcord packages",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -34,14 +34,10 @@
     "test:watch": "vitest dev",
     "coverage": "vitest run --coverage"
   },
-  "peerDependencies": {
-    "tsup": "^8.0.0",
-    "typescript": "^5.9.2"
-  },
   "devDependencies": {
     "@seedcord/eslint-config": "workspace:^",
     "@seedcord/tsconfig": "workspace:^",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:peer"
   }
 }

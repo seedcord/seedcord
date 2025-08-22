@@ -10,9 +10,6 @@ import { CoordinatedStartup, StartupPhase } from './services/Lifecycle/Coordinat
 import type { Config } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
 
-// Seedcord interface extension to to tell TypeScript that plugin will be available at runtime
-export interface Seedcord extends Core {}
-
 /**
  * Main Seedcord bot framework class
  *

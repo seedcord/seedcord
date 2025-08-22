@@ -1,7 +1,7 @@
 {
   "name": "@seedcord/plugins",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Official plugins for Seedcord Discord bot framework",
   "repository": {
     "type": "git",
@@ -10,13 +10,6 @@
   },
   "exports": {
     ".": {
-      "types": {
-        "development": "./src/index.ts",
-        "import": "./dist/index.d.mts",
-        "require": "./dist/index.d.cts",
-        "default": "./dist/index.d.ts"
-      },
-      "development": "./src/index.ts",
       "import": {
         "types": "./dist/index.d.mts",
         "default": "./dist/index.mjs"
@@ -24,8 +17,7 @@
       "require": {
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
-      },
-      "default": "./dist/index.mjs"
+      }
     }
   },
   "files": [
@@ -47,14 +39,14 @@
     "coverage": "vitest run --coverage"
   },
   "peerDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "catalog:peer"
   },
   "dependencies": {
     "@seedcord/types": "workspace:^",
     "seedcord": "workspace:^",
-    "chalk": "^5.5.0",
-    "mongoose": "^8.17.1",
-    "reflect-metadata": "^0.2.2"
+    "chalk": "catalog:deps",
+    "mongoose": "catalog:deps",
+    "reflect-metadata": "catalog:deps"
   },
   "devDependencies": {
     "@seedcord/eslint-config": "workspace:^",

@@ -1,10 +1,8 @@
 {
   "name": "@seedcord/eslint-config",
   "type": "module",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "ESlint config for Seedcord projects",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/materwelondhruv/seedcord.git",
@@ -12,40 +10,25 @@
   },
   "exports": {
     ".": {
-      "import": "./create-config.mjs",
-      "types": "./create-config.d.mts"
-    },
-    "./constants": {
-      "import": "./constants.mjs"
-    },
-    "./rules/general": {
-      "import": "./rules/general-rules.mjs"
-    },
-    "./rules/typescript": {
-      "import": "./rules/typescript-rules.mjs"
-    },
-    "./rules/import": {
-      "import": "./rules/import-rules.mjs"
-    },
-    "./rules/prettier": {
-      "import": "./rules/prettier-rules.mjs"
-    },
-    "./rules/tsdoc": {
-      "import": "./rules/tsdoc-rules.mjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": [
     "dist",
-    "create-config.mjs",
-    "create-config.d.mts",
-    "constants.mjs",
-    "prettier.mjs",
-    "prettier.d.mts",
-    "rules/*.mjs"
+    "package.json",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
-    "build": "echo 'Already built as .mjs files'",
-    "clean": "echo 'No build artifacts to clean'",
+    "build": "tsup && cp dist/index.d.cts dist/index.d.mts",
+    "clean": "rm -rf dist",
     "lint": "eslint '*.{mjs,ts}' --cache",
     "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
     "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
@@ -56,15 +39,15 @@
     "coverage": "vitest run --coverage"
   },
   "peerDependencies": {
-    "typescript": "^5.9.2"
+    "typescript": "catalog:peer"
   },
-  "devDependencies": {
+  "dependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.33.0",
     "@types/lodash.merge": "^4.6.9",
-    "@typescript-eslint/eslint-plugin": "^8.39.1",
-    "@typescript-eslint/parser": "^8.39.1",
-    "eslint": "^9.33.0",
+    "@typescript-eslint/eslint-plugin": "^8.40.0",
+    "@typescript-eslint/parser": "^8.40.0",
+    "eslint": "catalog:peer",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
@@ -72,6 +55,10 @@
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-tsdoc": "^0.4.0",
     "lodash.merge": "^4.6.2",
-    "typescript-eslint": "^8.39.1"
+    "typescript-eslint": "^8.40.0"
+  },
+  "devDependencies": {
+    "@types/eslint-plugin-security": "^3.0.0",
+    "tsup": "^8.5.0"
   }
 }

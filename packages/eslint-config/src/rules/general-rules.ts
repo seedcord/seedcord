@@ -1,6 +1,7 @@
-/* eslint-disable no-magic-numbers */
+import { Linter } from 'eslint';
+
 // General JavaScript rules
-export const GENERAL_RULES = {
+export const GENERAL_RULES: Linter.RulesRecord = {
   'no-console': 'warn',
   'no-debugger': 'error',
   'no-alert': 'error',

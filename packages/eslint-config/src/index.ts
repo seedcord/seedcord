@@ -15,52 +15,55 @@ import {
   TEST_FILES,
   TS_FILES,
   TYPESCRIPT_LANGUAGE_OPTIONS
-} from './constants.mjs';
-import { GENERAL_RULES, OVERRIDE_RULES, SECURITY_RULES } from './rules/general-rules.mjs';
-import { IMPORT_RULES, IMPORT_SETTINGS } from './rules/import-rules.mjs';
-import { PRETTIER_RULES } from './rules/prettier-rules.mjs';
-import { TSDOC_RULES, DOCUMENTATION_RULES } from './rules/tsdoc-rules.mjs';
-import { TYPESCRIPT_RULES } from './rules/typescript-rules.mjs';
+} from './constants';
+import {
+  DOCUMENTATION_RULES,
+  GENERAL_RULES,
+  IMPORT_RULES,
+  IMPORT_SETTINGS,
+  OVERRIDE_RULES,
+  PRETTIER_RULES,
+  SECURITY_RULES,
+  TSDOC_RULES,
+  TYPESCRIPT_RULES
+} from './rules';
 
-/**
- * @typedef {import('typescript-eslint').Config} Config
- * @typedef {Object} CreateConfigOptions
- * @property {string} [tsconfigRootDir] - Root directory for TypeScript config
- * @property {Config[]} [userConfigs] - Additional user configurations
- */
+// Types
+type FlatConfig = ReturnType<typeof tseslint.config>;
+type FlatConfigItem = FlatConfig extends readonly (infer U)[] ? U : never;
 
-/**
- * Creates an ESLint configuration
- * @param {CreateConfigOptions} [options={}] - Configuration options
- * @returns {Config[]} ESLint configuration array
- */
-export default function createConfig(options = {}) {
+export interface CreateConfigOptions {
+  tsconfigRootDir?: string;
+  userConfigs?: FlatConfigItem[];
+}
+
+// Create the ESLint configuration for Seedcord projects
+export default function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tseslint.config> {
   const { tsconfigRootDir = process.cwd(), userConfigs = [] } = options;
 
   // Create TypeScript parser options with dynamic tsconfigRootDir
-  const createTsParserOptions = (rootDir) => ({
-    project: ['./tsconfig.json'], // Use main tsconfig, could be overridden with tsconfig.eslint.json if needed
-    tsconfigRootDir: rootDir,
-    sourceType: 'module',
-    ecmaVersion: 2024
+  const createTsParserOptions = (rootDir: string) => ({
+    // Use main tsconfig, can be overridden by consumers if needed
+    project: ['./tsconfig.json'],
+    tsconfigRootDir: rootDir
   });
 
   return tseslint.config(
     // Global ignores
     {
-      ignores: GLOBAL_IGNORES
+      ignores: [...GLOBAL_IGNORES]
     },
 
     // Base ESLint configuration for JavaScript/MJS files
     {
-      files: JS_FILES,
+      files: [...JS_FILES],
       languageOptions: merge({}, JAVASCRIPT_LANGUAGE_OPTIONS),
       linterOptions: COMMON_LINTER_OPTIONS
     },
 
     // TypeScript-specific configuration
     {
-      files: TS_FILES,
+      files: [...TS_FILES],
       languageOptions: merge({}, TYPESCRIPT_LANGUAGE_OPTIONS, {
         parser: tseslint.parser,
         parserOptions: createTsParserOptions(tsconfigRootDir)
@@ -69,17 +72,14 @@ export default function createConfig(options = {}) {
     },
 
     // Enable recommended configurations for TypeScript files only
-    {
-      files: TS_FILES,
-      ...tseslint.configs.recommended.reduce((acc, config) => ({ ...acc, ...config }), {}),
-      ...tseslint.configs.recommendedTypeChecked.reduce((acc, config) => ({ ...acc, ...config }), {}),
-      ...tseslint.configs.strict.reduce((acc, config) => ({ ...acc, ...config }), {}),
-      ...tseslint.configs.stylistic.reduce((acc, config) => ({ ...acc, ...config }), {})
-    },
+    ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
+    ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),
+    ...tseslint.configs.strict.map((c) => ({ ...c, files: [...TS_FILES] })),
+    ...tseslint.configs.stylistic.map((c) => ({ ...c, files: [...TS_FILES] })),
 
     // Security plugin - apply to all files
     {
-      files: ALL_FILES,
+      files: [...ALL_FILES],
       plugins: {
         security: eslintSecurity
       },
@@ -88,7 +88,7 @@ export default function createConfig(options = {}) {
 
     // Import plugin - apply to all files
     {
-      files: ALL_FILES,
+      files: [...ALL_FILES],
       plugins: {
         import: eslintImport
       },
@@ -98,7 +98,7 @@ export default function createConfig(options = {}) {
 
     // Main rules configuration for all files
     {
-      files: ALL_FILES,
+      files: [...ALL_FILES],
       plugins: {
         prettier: eslintPrettier
       },
@@ -107,22 +107,22 @@ export default function createConfig(options = {}) {
 
     // TypeScript-specific rules configuration
     {
-      files: TS_FILES,
+      files: [...TS_FILES],
       plugins: {
         tsdoc: eslintTsdoc
       },
-      rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES)
+      rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
     },
 
     // Additional rules configuration
     {
-      files: ALL_FILES,
+      files: [...ALL_FILES],
       rules: merge({}, GENERAL_RULES, SECURITY_RULES, OVERRIDE_RULES)
     },
 
     // Test files configuration
     {
-      files: TEST_FILES,
+      files: [...TEST_FILES],
       rules: {
         'max-lines-per-function': 'off',
         'no-magic-numbers': 'off',

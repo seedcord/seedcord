@@ -1,5 +1,7 @@
+import { Linter } from 'eslint';
+
 // TypeScript-specific rules
-export const TYPESCRIPT_RULES = {
+export const TYPESCRIPT_RULES: Linter.RulesRecord = {
   '@typescript-eslint/explicit-function-return-type': [
     'warn',
     {
@@ -28,7 +30,7 @@ export const TYPESCRIPT_RULES = {
   '@typescript-eslint/no-non-null-assertion': 'warn',
   '@typescript-eslint/prefer-nullish-coalescing': 'error',
   '@typescript-eslint/prefer-optional-chain': 'error',
-  '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+  '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
   '@typescript-eslint/no-unnecessary-condition': 'warn',
   '@typescript-eslint/no-floating-promises': 'error',
   '@typescript-eslint/await-thenable': 'error',
@@ -117,5 +119,5 @@ export const TYPESCRIPT_RULES = {
   '@typescript-eslint/no-useless-constructor': 'off',
   '@typescript-eslint/no-empty-function': 'off',
   '@typescript-eslint/unified-signatures': 'warn',
-  '@typescript-eslint/no-unnecessary-type-assertion': 'warn'
+  '@typescript-eslint/no-empty-object-type': 'off'
 };
