@@ -3,5 +3,3 @@
 </p>
 
 ---
-
-Docs coming soon™
