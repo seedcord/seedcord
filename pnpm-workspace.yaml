@@ -4,7 +4,7 @@ packages:
 catalogs:
   peer:
     typescript: ^5.9.2
-    eslint: ^9.33.0
+    eslint: ^9.34.0
   deps:
     chalk: ^5.6.0
     discord.js: ^14.22.1
