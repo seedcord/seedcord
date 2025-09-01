@@ -1,5 +1,20 @@
 # seedcord
 
+## 0.2.0
+
+### Minor Changes
+
+- dabf324: move services to its own package
+- 0258dd5: add ComponentsV2 builders to BuilderComponent and a number utility
+
+### Patch Changes
+
+- 0ed832b: debug logging in emoji injector
+- Updated dependencies [dabf324]
+- Updated dependencies [f0650e8]
+  - @seedcord/utils@0.1.0
+  - @seedcord/services@0.1.0
+
 ## 0.1.1
 
 ### Patch Changes

@@ -4,12 +4,12 @@ import { resolve } from 'node:path';
 
 import { Mongo } from '@seedcord/plugins';
 import { GatewayIntentBits, Partials } from 'discord.js';
-import { Envapt } from 'envapt';
-import { Globals, Seedcord, StartupPhase } from 'seedcord';
+import { Envapt, Envapter } from 'envapt';
+import { Seedcord, StartupPhase } from 'seedcord';
 
-Globals.envPaths = resolve(import.meta.dirname, '../../../.env');
+Envapter.envPaths = resolve(import.meta.dirname, '../../../.env');
 
-export class Vars extends Globals {
+export class Vars extends Envapter {
   // Mongo Plugin
   @Envapt('MONGO_URI', { fallback: 'mongodb://localhost:27017/' })
   public static readonly mongoUri: string;

@@ -1,8 +1,8 @@
+import { Logger } from '@seedcord/services';
+import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 
 import { Plugin } from '../interfaces/Plugin';
-import { traverseDirectory } from '../library/Helpers';
-import { Logger } from '../services/Logger';
 import { EffectMetadataKey } from './decorators/RegisterEffect';
 import { UnknownException } from './default/UnknownException';
 import { EffectsEmitter } from './EffectsEmitter';
@@ -52,20 +52,24 @@ export class EffectsRegistry extends Plugin {
   }
 
   private async loadEffects(dir: string): Promise<void> {
-    await traverseDirectory(dir, (_fullPath, relativePath, imported) => {
-      for (const exportName of Object.keys(imported)) {
-        const val = imported[exportName];
-        if (this.isEffectHandler(val)) {
-          const effectName = Reflect.getMetadata(EffectMetadataKey, val) as EffectKeys | undefined;
-          if (effectName) {
-            this.registerEffect(effectName, val);
-            this.logger.info(
-              `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-            );
+    await traverseDirectory(
+      dir,
+      (_fullPath, relativePath, imported) => {
+        for (const exportName of Object.keys(imported)) {
+          const val = imported[exportName];
+          if (this.isEffectHandler(val)) {
+            const effectName = Reflect.getMetadata(EffectMetadataKey, val) as EffectKeys | undefined;
+            if (effectName) {
+              this.registerEffect(effectName, val);
+              this.logger.info(
+                `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
+              );
+            }
           }
         }
-      }
-    });
+      },
+      this.logger
+    );
   }
 
   private registerEffect(effectName: EffectKeys, handler: EffectConstructor): void {

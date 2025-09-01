@@ -1,0 +1,56 @@
+{
+  "name": "@seedcord/services",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Services for Seedcord packages",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/materwelondhruv/seedcord.git",
+    "directory": "packages/services"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "files": [
+    "dist",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup && cp dist/index.d.cts dist/index.d.mts",
+    "clean": "rm -rf dist",
+    "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+    "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+    "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+    "tc": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "typescript": "catalog:peer"
+  },
+  "dependencies": {
+    "@seedcord/types": "workspace:^",
+    "discord.js": "catalog:deps",
+    "chalk": "catalog:deps",
+    "envapt": "catalog:deps",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@seedcord/eslint-config": "workspace:^",
+    "@seedcord/tsconfig": "workspace:^",
+    "@seedcord/tsup-config": "workspace:^"
+  }
+}

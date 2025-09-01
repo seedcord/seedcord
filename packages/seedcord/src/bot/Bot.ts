@@ -1,14 +1,13 @@
+import { Logger, ShutdownPhase } from '@seedcord/services';
 import chalk from 'chalk';
 import { Client } from 'discord.js';
+import { Envapt } from 'envapt';
 
+import { Plugin } from '../interfaces/Plugin';
 import { CommandRegistry } from './controllers/CommandRegistry';
 import { EventController } from './controllers/EventController';
 import { InteractionController } from './controllers/InteractionController';
 import { EmojiInjector } from './injectors/EmojiInjector';
-import { Plugin } from '../interfaces/Plugin';
-import { Globals } from '../library/Globals';
-import { ShutdownPhase } from '../services/Lifecycle/CoordinatedShutdown';
-import { Logger } from '../services/Logger';
 
 import type { Core } from '../interfaces/Core';
 
@@ -17,6 +16,14 @@ import type { Core } from '../interfaces/Core';
  * @internal - Accessed via core.bot, not directly instantiated by users
  */
 export class Bot extends Plugin {
+  @Envapt<string>('DISCORD_BOT_TOKEN', {
+    converter(raw, _fallback) {
+      if (typeof raw !== 'string') throw new Error('Missing DISCORD_BOT_TOKEN');
+      return raw;
+    }
+  })
+  declare public readonly botToken: string;
+
   public readonly logger = new Logger('Bot');
   private isInitialized = false;
 
@@ -79,7 +86,7 @@ export class Bot extends Plugin {
    * Logs the bot into Discord using the configured token
    */
   private async login(): Promise<Bot> {
-    await this._client.login(Globals.botToken);
+    await this._client.login(this.botToken);
     this.logger.info(`Logged in as ${chalk.bold.magenta(this._client.user?.username)}!`);
     return this;
   }

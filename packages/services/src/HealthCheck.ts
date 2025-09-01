@@ -1,13 +1,11 @@
 import { createServer } from 'http';
 
 import chalk from 'chalk';
+import { Envapt } from 'envapt';
 
-import { ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
+import { CoordinatedShutdown, ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
 import { Logger } from './Logger';
-import { Plugin } from '../interfaces/Plugin';
-import { Globals } from '../library/Globals';
 
-import type { Core } from '../interfaces/Core';
 import type { IncomingMessage, Server, ServerResponse } from 'http';
 
 const HTTP_OK = 200;
@@ -19,16 +17,20 @@ const HTTP_NOT_FOUND = 404;
  * Provides a simple HTTP endpoint that responds with JSON status
  * information, useful for container orchestration and monitoring.
  */
-export class HealthCheck extends Plugin {
+export class HealthCheck {
   public readonly logger = new Logger('HealthCheck');
-  private readonly port: number = Globals.healthCheckPort;
-  private readonly path: string = Globals.healthCheckPath;
+
+  @Envapt('HEALTH_CHECK_PORT', { fallback: 6956 })
+  declare public readonly port: number;
+
+  @Envapt('HEALTH_CHECK_PATH', { fallback: '/healthcheck' })
+  declare public readonly path: string;
+
   private server?: Server;
 
-  constructor(private readonly core: Core) {
-    super(core);
+  constructor(shutdown: CoordinatedShutdown) {
     // Register shutdown task
-    this.core.shutdown.addTask(ShutdownPhase.StopServices, 'stop-healthcheck-server', async () => await this.stop());
+    shutdown.addTask(ShutdownPhase.StopServices, 'stop-healthcheck-server', async () => await this.stop());
   }
 
   /**
@@ -48,12 +50,12 @@ export class HealthCheck extends Plugin {
       });
 
       this.server.on('error', reject);
+      this.server.once('listening', () => resolve());
 
       this.server.listen(this.port, () => {
         this.logger.info(
           `${chalk.green.bold('✓')} Health check server listening on ${chalk.cyan(`http://localhost:${this.port}${this.path}`)}`
         );
-        resolve();
       });
     });
   }
@@ -64,11 +66,17 @@ export class HealthCheck extends Plugin {
    * @returns Promise that resolves when the server is closed
    */
   public stop(): Promise<void> {
-    return new Promise((shutdownResolve) => {
-      this.server?.close(() => {
-        this.logger.info(chalk.bold.red('Health check server stopped'));
-        shutdownResolve();
+    if (this.server !== undefined) {
+      const server = this.server;
+      return new Promise((resolve) => {
+        server.once('close', () => resolve());
+
+        server.close(() => {
+          this.logger.info(chalk.bold.red('Health check server stopped'));
+        });
       });
-    });
+    }
+
+    return Promise.resolve();
   }
 }

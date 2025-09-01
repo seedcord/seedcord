@@ -1,15 +1,23 @@
 import { DiscordAPIError, SnowflakeUtil, WebhookClient } from 'discord.js';
+import { Envapt } from 'envapt';
 
 import { BuilderComponent } from '../../interfaces/Components';
-import { Globals } from '../../library/Globals';
 import { RegisterEffect } from '../decorators/RegisterEffect';
 import { WebhookLog } from '../interfaces/abstracts/WebhookLog';
 import { AllEffects } from '../types/Effects';
 
 @RegisterEffect('unknownException')
 export class UnknownException extends WebhookLog<'unknownException'> {
+  @Envapt('UNKNOWN_EXCEPTION_WEBHOOK_URL', {
+    converter(raw, _fallback) {
+      if (!raw) throw new Error('Missing UNKNOWN_EXCEPTION_WEBHOOK_URL');
+      return raw;
+    }
+  })
+  declare static readonly unknownExceptionWebhookUrl: string;
+
   webhook = new WebhookClient({
-    url: Globals.unknownExceptionWebhookUrl
+    url: UnknownException.unknownExceptionWebhookUrl
   });
 
   async execute(): Promise<void> {

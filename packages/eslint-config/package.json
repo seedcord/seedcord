@@ -1,7 +1,7 @@
 {
   "name": "@seedcord/eslint-config",
   "type": "module",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "ESlint config for Seedcord projects",
   "repository": {
     "type": "git",
@@ -43,7 +43,6 @@
   },
   "dependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.34.0",
     "@types/lodash.merge": "^4.6.9",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",

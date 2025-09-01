@@ -1,11 +1,9 @@
+import { HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import chalk from 'chalk';
 
 import { Bot } from './bot/Bot';
 import { EffectsRegistry } from './effects/EffectsRegistry';
 import { Pluggable } from './interfaces/Plugin';
-import { HealthCheck } from './services/HealthCheck';
-import { CoordinatedShutdown } from './services/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup, StartupPhase } from './services/Lifecycle/CoordinatedStartup';
 
 import type { Config } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
@@ -58,7 +56,7 @@ export class Seedcord extends Pluggable implements Core {
 
     this.effects = new EffectsRegistry(this as unknown as Core);
     this.bot = new Bot(this as unknown as Core);
-    this.healthCheck = new HealthCheck(this as unknown as Core);
+    this.healthCheck = new HealthCheck(this.shutdown);
 
     this.registerStartupTasks();
   }

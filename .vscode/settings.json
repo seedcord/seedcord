@@ -78,5 +78,15 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "files.trimTrailingWhitespace": false
   },
-  "vitest.shellType": "terminal"
+
+  // Vitest configuration
+  "vitest.shellType": "terminal",
+
+  // Markdownlint configuration
+  "markdownlint.config": {
+    "MD033": false,
+    "MD013": false,
+    "MD041": false,
+    "MD024": false
+  }
 }

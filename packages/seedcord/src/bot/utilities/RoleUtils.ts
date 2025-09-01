@@ -1,6 +1,6 @@
+import { prettify } from '@seedcord/utils';
 import { Guild, PermissionFlagsBits, Role } from 'discord.js';
 
-import { prettify } from '../../library/Helpers';
 import {
   MissingPermissions,
   CannotAssignBotRole,

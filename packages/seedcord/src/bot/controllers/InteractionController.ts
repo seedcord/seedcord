@@ -1,9 +1,9 @@
+import { Logger } from '@seedcord/services';
+import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Events } from 'discord.js';
 
 import { AutocompleteHandler, InteractionHandler } from '../../interfaces/Handler';
-import { traverseDirectory } from '../../library/Helpers';
-import { Logger } from '../../services/Logger';
 import { InteractionMetadataKey, InteractionRoutes } from '../decorators/InteractionConfigurable';
 import { UnhandledEvent } from '../defaults/UnhandledEvent';
 
@@ -83,16 +83,20 @@ export class InteractionController implements Initializeable {
   }
 
   private async loadHandlers(dir: string): Promise<void> {
-    await traverseDirectory(dir, (_fullPath, relativePath, imported) => {
-      for (const val of Object.values(imported)) {
-        if (this.isHandlerClass(val)) {
-          this.registerHandler(val);
-          this.logger.info(
-            `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-          );
+    await traverseDirectory(
+      dir,
+      (_fullPath, relativePath, imported) => {
+        for (const val of Object.values(imported)) {
+          if (this.isHandlerClass(val)) {
+            this.registerHandler(val);
+            this.logger.info(
+              `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
+            );
+          }
         }
-      }
-    });
+      },
+      this.logger
+    );
   }
 
   private isHandlerClass(obj: unknown): obj is HandlerConstructor {

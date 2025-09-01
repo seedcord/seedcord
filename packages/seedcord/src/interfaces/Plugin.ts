@@ -1,9 +1,7 @@
 import chalk from 'chalk';
 
 import type { Core } from './Core';
-import type { CoordinatedShutdown } from '../services/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup, StartupPhase } from '../services/Lifecycle/CoordinatedStartup';
-import type { Logger } from '../services/Logger';
+import type { CoordinatedShutdown, CoordinatedStartup, StartupPhase, Logger } from '@seedcord/services';
 import type { Tail } from '@seedcord/types';
 
 /** Interface for objects that can be initialized asynchronously */
@@ -87,7 +85,7 @@ export class Pluggable {
    * @throws An {@link Error} When called after initialization or if key already exists
    * @example
    * ```typescript
-   * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', dbName: 'seedcord' })
+   * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
    * ```
    */
   public attach<Key extends string, Ctor extends PluginCtor>(

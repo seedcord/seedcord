@@ -32,13 +32,13 @@ import {
 type FlatConfig = ReturnType<typeof tseslint.config>;
 type FlatConfigItem = FlatConfig extends readonly (infer U)[] ? U : never;
 
-export interface CreateConfigOptions {
+interface CreateConfigOptions {
   tsconfigRootDir?: string;
   userConfigs?: FlatConfigItem[];
 }
 
 // Create the ESLint configuration for Seedcord projects
-export default function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tseslint.config> {
+function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tseslint.config> {
   const { tsconfigRootDir = process.cwd(), userConfigs = [] } = options;
 
   // Create TypeScript parser options with dynamic tsconfigRootDir
@@ -136,3 +136,8 @@ export default function createConfig(options: CreateConfigOptions = {}): ReturnT
     ...userConfigs
   );
 }
+
+export * from './constants';
+export * from './rules';
+export default createConfig;
+export type { CreateConfigOptions };

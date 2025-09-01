@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 
 import chalk from 'chalk';
+import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
-import { Globals, Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
+import { Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
 
 import { BaseService } from './BaseService';
 import { ServiceMetadataKey } from './decorators/DatabaseService';
@@ -66,7 +67,7 @@ export class Mongo extends Plugin {
     await mongoose
       .connect(this.uri, {
         dbName: this.options.name,
-        ...(Globals.isProduction && { tls: true, ssl: true })
+        ...(Envapter.isProduction && { tls: true, ssl: true })
       })
       .then((i) => this.logger.info(`Connected to MongoDB: ${chalk.bold.magenta(i.connection.name)}`))
       .catch((err) => {
@@ -86,16 +87,20 @@ export class Mongo extends Plugin {
     const servicesDir = this.options.dir;
     this.logger.info(chalk.bold(servicesDir));
 
-    await traverseDirectory(servicesDir, (_full, rel, mod) => {
-      for (const Service of Object.values(mod)) {
-        if (this.isServiceClass(Service)) {
-          const instance = new Service(this, this.core);
-          this.logger.info(
-            `${chalk.italic('Registered')} ${chalk.bold.yellow(instance.constructor.name)} from ${chalk.gray(rel)}`
-          );
+    await traverseDirectory(
+      servicesDir,
+      (_full, rel, mod) => {
+        for (const Service of Object.values(mod)) {
+          if (this.isServiceClass(Service)) {
+            const instance = new Service(this, this.core);
+            this.logger.info(
+              `${chalk.italic('Registered')} ${chalk.bold.yellow(instance.constructor.name)} from ${chalk.gray(rel)}`
+            );
+          }
         }
-      }
-    });
+      },
+      this.logger
+    );
 
     this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta(Object.keys(this.services).length)} services`);
   }

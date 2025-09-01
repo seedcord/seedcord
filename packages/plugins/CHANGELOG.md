@@ -1,5 +1,18 @@
 # @seedcord/plugins
 
+## 0.2.0
+
+### Minor Changes
+
+- dabf324: move services to its own package
+
+### Patch Changes
+
+- Updated dependencies [dabf324]
+- Updated dependencies [0258dd5]
+- Updated dependencies [0ed832b]
+  - seedcord@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes

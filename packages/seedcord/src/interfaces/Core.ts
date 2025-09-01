@@ -3,8 +3,7 @@ import type { Config } from './Config';
 import type { Plugin } from './Plugin';
 import type { Bot } from '../bot/Bot';
 import type { EffectsRegistry } from '../effects/EffectsRegistry';
-import type { CoordinatedShutdown } from '../services/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '../services/Lifecycle/CoordinatedStartup';
+import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 
 /** Base interface defining core Seedcord functionality */
 interface BaseCore {

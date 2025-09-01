@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.1.1
+
+### Patch Changes
+
+- 63fcf6f: refactor exports and remove unused dep
+
 ## 1.1.0
 
 ### Minor Changes

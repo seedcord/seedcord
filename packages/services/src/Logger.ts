@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-base-to-string */
 /* eslint-disable @typescript-eslint/naming-convention */
+import { Envapter } from 'envapt';
 import { createLogger, format, transports } from 'winston';
-
-import { Globals } from '../library/Globals';
 
 import type { Logform, Logger as Winston } from 'winston';
 import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
@@ -87,7 +86,7 @@ export class Logger {
   private createConsoleTransport(transportName: string): ConsoleTransportInstance {
     return new transports.Console({
       format: format.combine(format.label({ label: transportName }), ...this.getFormatCustomizations()),
-      level: Globals.isDevelopment ? 'silly' : Globals.isStaging ? 'debug' : 'info'
+      level: Envapter.isDevelopment ? 'silly' : Envapter.isStaging ? 'debug' : 'info'
     });
   }
 
@@ -96,7 +95,7 @@ export class Logger {
     const transportsArray: any[] = [consoleTransport];
 
     // Add file transport only in non-production environments
-    if (Globals.isDevelopment) {
+    if (Envapter.isDevelopment) {
       const maxSizeInMB = 10;
       transportsArray.push(
         new transports.File({

@@ -1,8 +1,8 @@
+import { Logger } from '@seedcord/services';
+import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 
 import { EventHandler } from '../../interfaces/Handler';
-import { traverseDirectory } from '../../library/Helpers';
-import { Logger } from '../../services/Logger';
 import { EventMetadataKey } from '../decorators/EventRegisterable';
 
 import type { Core } from '../../interfaces/Core';
@@ -50,16 +50,20 @@ export class EventController implements Initializeable {
   }
 
   private async loadHandlers(dir: string): Promise<void> {
-    await traverseDirectory(dir, (_fullPath, relativePath, imported) => {
-      for (const val of Object.values(imported)) {
-        if (this.isEventHandlerClass(val)) {
-          this.registerHandler(val);
-          this.logger.info(
-            `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-          );
+    await traverseDirectory(
+      dir,
+      (_fullPath, relativePath, imported) => {
+        for (const val of Object.values(imported)) {
+          if (this.isEventHandlerClass(val)) {
+            this.registerHandler(val);
+            this.logger.info(
+              `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
+            );
+          }
         }
-      }
-    });
+      },
+      this.logger
+    );
   }
 
   private isEventHandlerClass(obj: unknown): obj is EventHandlerConstructor {

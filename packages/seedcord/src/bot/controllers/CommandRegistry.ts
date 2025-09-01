@@ -1,9 +1,9 @@
+import { Logger } from '@seedcord/services';
+import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { SlashCommandBuilder } from 'discord.js';
 
 import { BuilderComponent } from '../../interfaces/Components';
-import { traverseDirectory } from '../../library/Helpers';
-import { Logger } from '../../services/Logger';
 import { CommandMetadataKey } from '../decorators/CommandRegisterable';
 
 import type { Core } from '../../interfaces/Core';
@@ -46,9 +46,14 @@ export class CommandRegistry implements Initializeable {
   }
 
   private async loadCommands(dir: string): Promise<void> {
-    await traverseDirectory(dir, (_full, rel, mod) => {
-      for (const exported of Object.values(mod)) if (this.isCommandClass(exported)) this.registerCommand(exported, rel);
-    });
+    await traverseDirectory(
+      dir,
+      (_full, rel, mod) => {
+        for (const exported of Object.values(mod))
+          if (this.isCommandClass(exported)) this.registerCommand(exported, rel);
+      },
+      this.logger
+    );
   }
 
   private isCommandClass(obj: unknown): obj is CommandCtor {

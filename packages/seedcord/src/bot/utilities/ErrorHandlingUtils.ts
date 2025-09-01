@@ -1,7 +1,8 @@
 import * as crypto from 'node:crypto';
 
+import { Logger } from '@seedcord/services';
+
 import { CustomError } from '../../interfaces/Components';
-import { Logger } from '../../services/Logger';
 import { DatabaseError } from '../errors/Database';
 
 import type { Core } from '../../interfaces/Core';

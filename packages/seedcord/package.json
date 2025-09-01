@@ -1,7 +1,7 @@
 {
   "name": "seedcord",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "A Discord bot framework built on top of Discord.js",
   "repository": {
     "type": "git",
@@ -43,12 +43,13 @@
   },
   "dependencies": {
     "@seedcord/types": "workspace:^",
+    "@seedcord/utils": "workspace:*",
+    "@seedcord/services": "workspace:*",
     "chalk": "catalog:deps",
     "discord.js": "catalog:deps",
     "envapt": "catalog:deps",
     "mongoose": "catalog:deps",
-    "reflect-metadata": "catalog:deps",
-    "winston": "^3.17.0"
+    "reflect-metadata": "catalog:deps"
   },
   "devDependencies": {
     "@seedcord/eslint-config": "workspace:^",

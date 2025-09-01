@@ -1,7 +1,7 @@
 import chalk from 'chalk';
+import { Envapt } from 'envapt';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
-import { Globals } from '../../library/Globals';
 
 import type { LifecycleTask, PhaseEvents, UnionToTuple } from '@seedcord/types';
 
@@ -35,6 +35,9 @@ type CoordinatedShutdownEventKey = PhaseEvents<'shutdown', UnionToTuple<Shutdown
 const LOG_FLUSH_DELAY_MS = 500;
 
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
+  @Envapt('SHUTDOWN_IS_ENABLED', { fallback: false })
+  declare private readonly isShutdownEnabled: boolean;
+
   private isShuttingDown = false;
   private exitCode = 0;
 
@@ -46,7 +49,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
   }
 
   protected canAddTask(): boolean {
-    return Globals.shutdownIsEnabled;
+    return this.isShutdownEnabled;
   }
 
   protected canRemoveTask(): boolean {
@@ -78,7 +81,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
   }
 
   private registerSignalHandlers(): void {
-    if (!Globals.shutdownIsEnabled) return;
+    if (!this.isShutdownEnabled) return;
 
     process.on('SIGTERM', () => {
       this.logger.info(`Received ${chalk.yellow.bold('SIGTERM')} signal`);
