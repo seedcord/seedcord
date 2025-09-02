@@ -1,4 +1,5 @@
 export type * from './types/Services';
+export type * from './types/Document';
 export * from './BaseService';
 export * from './Mongo';
 

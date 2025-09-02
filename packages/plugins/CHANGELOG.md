@@ -1,5 +1,14 @@
 # @seedcord/plugins
 
+## 0.2.1
+
+### Patch Changes
+
+- move IDocument type export to the plugins package
+- Updated dependencies
+  - seedcord@0.2.1
+  - @seedcord/types@0.1.3
+
 ## 0.2.0
 
 ### Minor Changes
