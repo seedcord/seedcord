@@ -51,7 +51,10 @@ export class ErrorHandlingUtils {
       };
     }
 
-    this.logger.error(uuid, error);
+    const showStack = core.config.bot.errorStack;
+    if (showStack) this.logger.error(uuid, error);
+    else this.logger.error(`${uuid} | ${error.message}`);
+
     core.effects.emit('unknownException', { uuid, error, guild, user });
 
     return {

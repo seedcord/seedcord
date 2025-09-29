@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.1.2
+
+### Patch Changes
+
+- 8a7591a: bump deps
+
 ## 1.1.1
 
 ### Patch Changes

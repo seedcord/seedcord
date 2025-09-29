@@ -1,6 +1,7 @@
 import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
+import { Collection } from 'discord.js';
 
 import { Plugin } from '../interfaces/Plugin';
 import { EffectMetadataKey } from './decorators/RegisterEffect';
@@ -26,7 +27,7 @@ type EffectConstructor = TypedConstructor<typeof EffectsHandler>;
 export class EffectsRegistry extends Plugin {
   public readonly logger = new Logger('Effects');
   private isInitialized = false;
-  private readonly effectsMap = new Map<EffectKeys, EffectConstructor[]>();
+  private readonly effectsMap = new Collection<EffectKeys, EffectConstructor[]>();
   private readonly emitter = new EffectsEmitter();
 
   constructor(protected core: Core) {

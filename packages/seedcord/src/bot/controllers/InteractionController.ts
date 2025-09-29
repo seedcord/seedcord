@@ -1,7 +1,7 @@
 import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { Events } from 'discord.js';
+import { Collection, Events } from 'discord.js';
 
 import { AutocompleteHandler, InteractionHandler } from '../../interfaces/Handler';
 import { InteractionMetadataKey, InteractionRoutes } from '../decorators/InteractionConfigurable';
@@ -39,23 +39,29 @@ export class InteractionController implements Initializeable {
   private readonly logger = new Logger('Interactions');
   private isInitialized = false;
 
-  private readonly slashMap = new Map<string, HandlerConstructor>();
-  private readonly buttonMap = new Map<string, HandlerConstructor>();
-  private readonly modalMap = new Map<string, HandlerConstructor>();
-  private readonly stringSelectMap = new Map<string, HandlerConstructor>();
-  private readonly userSelectMap = new Map<string, HandlerConstructor>();
-  private readonly roleSelectMap = new Map<string, HandlerConstructor>();
-  private readonly channelSelectMap = new Map<string, HandlerConstructor>();
-  private readonly mentionableSelectMap = new Map<string, HandlerConstructor>();
-  private readonly messageContextMenuMap = new Map<string, HandlerConstructor>();
-  private readonly userContextMenuMap = new Map<string, HandlerConstructor>();
-  private readonly autocompleteMap = new Map<string, HandlerConstructor>();
+  private readonly slashMap = new Collection<string, HandlerConstructor>();
+  private readonly buttonMap = new Collection<string, HandlerConstructor>();
+  private readonly modalMap = new Collection<string, HandlerConstructor>();
+  private readonly stringSelectMap = new Collection<string, HandlerConstructor>();
+  private readonly userSelectMap = new Collection<string, HandlerConstructor>();
+  private readonly roleSelectMap = new Collection<string, HandlerConstructor>();
+  private readonly channelSelectMap = new Collection<string, HandlerConstructor>();
+  private readonly mentionableSelectMap = new Collection<string, HandlerConstructor>();
+  private readonly messageContextMenuMap = new Collection<string, HandlerConstructor>();
+  private readonly userContextMenuMap = new Collection<string, HandlerConstructor>();
+  private readonly autocompleteMap = new Collection<string, HandlerConstructor>();
 
-  private readonly keysToIgnore = new Set(['confirm!confirmable', 'cancel!confirmable']);
+  private readonly keysToIgnore = new Set<string>();
 
   private readonly middlewares: MiddlewareConstructor[] = [];
 
-  constructor(protected core: Core) {}
+  constructor(protected core: Core) {
+    // Add ignored keys from config
+    const ignoredKeysFromConfig = this.core.config.bot.interactions.ignoreCustomIds;
+    if (ignoredKeysFromConfig) {
+      for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
+    }
+  }
 
   public async init(): Promise<void> {
     if (this.isInitialized) return;
@@ -112,7 +118,7 @@ export class InteractionController implements Initializeable {
       return Array.isArray(routes) && routes.every((r) => typeof r === 'string');
     };
 
-    const routeTypes: [InteractionRoutes, Map<string, HandlerConstructor>][] = [
+    const routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
       [InteractionRoutes.Slash, this.slashMap],
       [InteractionRoutes.Button, this.buttonMap],
       [InteractionRoutes.Modal, this.modalMap],
@@ -153,7 +159,7 @@ export class InteractionController implements Initializeable {
 
   private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
     interaction: TInteraction,
-    getMap: () => Map<string, HandlerConstructor>,
+    getMap: () => Collection<string, HandlerConstructor>,
     interactionType: string
   ): Promise<void> {
     const { prefix, args } = this.parseCustomId(interaction.customId);

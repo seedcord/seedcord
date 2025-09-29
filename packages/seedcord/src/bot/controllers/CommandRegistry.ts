@@ -1,7 +1,7 @@
 import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { SlashCommandBuilder } from 'discord.js';
+import { Collection, SlashCommandBuilder } from 'discord.js';
 
 import { BuilderComponent } from '../../interfaces/Components';
 import { CommandMetadataKey } from '../decorators/CommandRegisterable';
@@ -26,7 +26,7 @@ export class CommandRegistry implements Initializeable {
   private isInitialised = false;
 
   public readonly globalCommands: (SlashCommandBuilder | ContextMenuCommandBuilder)[] = [];
-  public readonly guildCommands = new Map<string, (SlashCommandBuilder | ContextMenuCommandBuilder)[]>();
+  public readonly guildCommands = new Collection<string, (SlashCommandBuilder | ContextMenuCommandBuilder)[]>();
 
   public constructor(private readonly core: Core) {}
 

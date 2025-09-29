@@ -1,5 +1,23 @@
 # seedcord
 
+## 0.3.0
+
+### Minor Changes
+
+- 2ada52b: update how emit stacks is handled via new config property
+- 4585b73: config entry to be able to ignore specific custom-ids from the InteractionController
+- 4611ac7: make commands registry maps public via bot. Also validate existence of bot token automatically
+
+### Patch Changes
+
+- e47636a: validate existence of unknown_interaction_url
+- 8a7591a: bump deps
+- ad2e3c3: use djs Collection object
+- Updated dependencies [8a7591a]
+  - @seedcord/services@0.1.1
+  - @seedcord/types@0.1.4
+  - @seedcord/utils@0.1.1
+
 ## 0.2.1
 
 ### Patch Changes

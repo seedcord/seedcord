@@ -1,5 +1,14 @@
 # @seedcord/utils
 
+## 0.1.1
+
+### Patch Changes
+
+- 8a7591a: bump deps
+- Updated dependencies [8a7591a]
+  - @seedcord/services@0.1.1
+  - @seedcord/types@0.1.4
+
 ## 0.1.0
 
 ### Minor Changes

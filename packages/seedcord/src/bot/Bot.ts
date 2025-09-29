@@ -30,7 +30,7 @@ export class Bot extends Plugin {
   private readonly _client: Client;
   private readonly interactions: InteractionController;
   private readonly events: EventController;
-  private readonly commands: CommandRegistry;
+  public readonly commands: CommandRegistry;
   private readonly emojiInjector: EmojiInjector;
 
   /**

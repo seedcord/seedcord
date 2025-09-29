@@ -1,6 +1,7 @@
 import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
+import { Collection, type ClientEvents } from 'discord.js';
 
 import { EventHandler } from '../../interfaces/Handler';
 import { EventMetadataKey } from '../decorators/EventRegisterable';
@@ -8,7 +9,6 @@ import { EventMetadataKey } from '../decorators/EventRegisterable';
 import type { Core } from '../../interfaces/Core';
 import type { EventHandlerConstructor } from '../../interfaces/Handler';
 import type { Initializeable } from '../../interfaces/Plugin';
-import type { ClientEvents } from 'discord.js';
 
 /**
  * Manages Discord event handler registration and execution.
@@ -24,7 +24,7 @@ export class EventController implements Initializeable {
   private readonly logger = new Logger('Events');
   private isInitialized = false;
 
-  private readonly eventMap = new Map<keyof ClientEvents, EventHandlerConstructor[]>();
+  private readonly eventMap = new Collection<keyof ClientEvents, EventHandlerConstructor[]>();
 
   public constructor(protected core: Core) {}
 

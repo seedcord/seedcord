@@ -249,11 +249,13 @@ export class BaseErrorEmbed extends BuilderComponent<'embed'> {
  * Errors extending CustomError should be used with the `Catchable` decorators to implement a control flow. These errors will be caught and handled by the framework to show the user the configured response.
  */
 export abstract class CustomError extends Error {
-  protected _emit = false;
+  private _emit = false;
   public readonly response = new BaseErrorEmbed().component;
 
   protected constructor(public override message: string) {
     super(message);
+
+    // TODO: Is this line even needed?
     Error.captureStackTrace(this, this.constructor);
   }
 
@@ -267,6 +269,15 @@ export abstract class CustomError extends Error {
    */
   public get emit(): boolean {
     return this._emit;
+  }
+
+  /**
+   * Sets whether this error should be emitted to logs
+   *
+   * @see {@link emit}
+   */
+  public set emit(value: boolean) {
+    this._emit = value;
   }
 }
 

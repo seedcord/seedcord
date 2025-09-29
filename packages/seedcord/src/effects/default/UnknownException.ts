@@ -11,6 +11,8 @@ export class UnknownException extends WebhookLog<'unknownException'> {
   @Envapt('UNKNOWN_EXCEPTION_WEBHOOK_URL', {
     converter(raw, _fallback) {
       if (!raw) throw new Error('Missing UNKNOWN_EXCEPTION_WEBHOOK_URL');
+      if (!URL.canParse(String(raw))) throw new Error('Invalid UNKNOWN_EXCEPTION_WEBHOOK_URL');
+
       return raw;
     }
   })

@@ -1,5 +1,21 @@
 # @seedcord/mock
 
+## 0.2.2
+
+### Patch Changes
+
+- e47636a: validate existence of unknown_interaction_url
+- 8a7591a: bump deps
+- Updated dependencies [e47636a]
+- Updated dependencies [8a7591a]
+- Updated dependencies [2ada52b]
+- Updated dependencies [4585b73]
+- Updated dependencies [ad2e3c3]
+- Updated dependencies [4611ac7]
+  - seedcord@0.3.0
+  - @seedcord/plugins@0.2.2
+  - @seedcord/types@0.1.4
+
 ## 0.2.1
 
 ### Patch Changes

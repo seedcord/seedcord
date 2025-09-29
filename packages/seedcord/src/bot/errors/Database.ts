@@ -9,8 +9,6 @@ import type { UUID } from 'crypto';
  * a UUID for error tracking and debugging purposes.
  */
 export class DatabaseError extends CustomError {
-  protected override _emit = true; // Emit in logs regardless of environment
-
   /**
    * Creates a new DatabaseError.
    *
@@ -22,6 +20,7 @@ export class DatabaseError extends CustomError {
     public uuid: UUID
   ) {
     super(message);
+    this.emit = true; // Emit in logs regardless of environment
     this.name = 'DatabaseError';
 
     this.response

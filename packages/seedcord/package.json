@@ -1,7 +1,7 @@
 {
   "name": "seedcord",
   "type": "module",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A Discord bot framework built on top of Discord.js",
   "repository": {
     "type": "git",
@@ -48,7 +48,6 @@
     "chalk": "catalog:deps",
     "discord.js": "catalog:deps",
     "envapt": "catalog:deps",
-    "mongoose": "catalog:deps",
     "reflect-metadata": "catalog:deps"
   },
   "devDependencies": {

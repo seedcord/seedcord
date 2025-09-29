@@ -1,5 +1,11 @@
 # @seedcord/tsconfig
 
+## 1.0.3
+
+### Patch Changes
+
+- 8a7591a: bump deps
+
 ## 1.0.2
 
 ### Patch Changes
