@@ -1,7 +1,7 @@
 {
   "name": "@seedcord/services",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Services for Seedcord packages",
   "repository": {
     "type": "git",
@@ -40,10 +40,10 @@
   },
   "dependencies": {
     "@seedcord/types": "workspace:^",
-    "discord.js": "catalog:deps",
     "chalk": "catalog:deps",
+    "discord.js": "catalog:deps",
     "envapt": "catalog:deps",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "@seedcord/eslint-config": "workspace:^",

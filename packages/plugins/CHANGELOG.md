@@ -1,5 +1,14 @@
 # @seedcord/plugins
 
+## 0.3.1
+
+### Patch Changes
+
+- bump deps
+- Updated dependencies
+  - seedcord@0.4.1
+  - @seedcord/types@0.2.1
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @seedcord/mock
 
+## 0.2.4
+
+### Patch Changes
+
+- bump deps
+- Updated dependencies
+  - seedcord@0.4.1
+  - @seedcord/plugins@0.3.1
+  - @seedcord/types@0.2.1
+
 ## 0.2.3
 
 ### Patch Changes

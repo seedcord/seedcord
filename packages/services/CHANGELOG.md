@@ -1,5 +1,13 @@
 # @seedcord/services
 
+## 0.2.1
+
+### Patch Changes
+
+- bump deps
+- Updated dependencies
+  - @seedcord/types@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
