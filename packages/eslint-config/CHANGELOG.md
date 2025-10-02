@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.2.0
+
+### Minor Changes
+
+- update export settings (BREAKING)
+
 ## 1.1.2
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @seedcord/plugins
 
+## 0.3.0
+
+### Minor Changes
+
+- update export settings (BREAKING)
+
+### Patch Changes
+
+- Updated dependencies
+  - seedcord@0.4.0
+  - @seedcord/types@0.2.0
+
 ## 0.2.2
 
 ### Patch Changes

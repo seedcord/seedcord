@@ -1,23 +1,20 @@
 {
   "name": "@seedcord/eslint-config",
   "type": "module",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "ESlint config for Seedcord projects",
   "repository": {
     "type": "git",
     "url": "https://github.com/materwelondhruv/seedcord.git",
     "directory": "packages/eslint-config"
   },
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
-      }
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.mjs"
     }
   },
   "files": [
@@ -27,7 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup && cp dist/index.d.cts dist/index.d.mts",
+    "build": "tsup",
     "clean": "rm -rf dist",
     "lint": "eslint '*.{mjs,ts}' --cache",
     "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",

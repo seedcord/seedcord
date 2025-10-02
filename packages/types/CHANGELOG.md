@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.2.0
+
+### Minor Changes
+
+- update export settings (BREAKING)
+
 ## 0.1.4
 
 ### Patch Changes
