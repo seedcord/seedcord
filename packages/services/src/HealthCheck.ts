@@ -26,6 +26,9 @@ export class HealthCheck {
   @Envapt('HEALTH_CHECK_PATH', { fallback: '/healthcheck' })
   declare public readonly path: string;
 
+  @Envapt('HEALTH_CHECK_HOST')
+  declare public readonly host: string | null;
+
   private server?: Server;
 
   constructor(shutdown: CoordinatedShutdown) {
@@ -50,13 +53,21 @@ export class HealthCheck {
       });
 
       this.server.on('error', reject);
-      this.server.once('listening', () => resolve());
-
-      this.server.listen(this.port, () => {
+      this.server.once('listening', () => {
+        const address = this.host ?? 'localhost';
         this.logger.info(
-          `${chalk.green.bold('✓')} Health check server listening on ${chalk.cyan(`http://localhost:${this.port}${this.path}`)}`
+          `${chalk.green.bold('✓')} Health check server listening on ${chalk.cyan(`http://${address}:${this.port}${this.path}`)}`
         );
+        resolve();
       });
+
+      if (this.host) {
+        this.logger.debug(`Binding health check server to ${this.host}`);
+        this.server.listen(this.port, this.host);
+      } else {
+        this.logger.debug('Binding health check server to all interfaces');
+        this.server.listen(this.port);
+      }
     });
   }
 
