@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
-  "enabledManagers": ["pnpm", "pnpm-workspace", "npm", "github-actions"],
+  "enabledManagers": ["npm", "github-actions"],
   "schedule": ["* 0-3 * * 1"],
   "dependencyDashboard": true,
   "prConcurrentLimit": 2,
@@ -16,7 +16,7 @@
   "prTitle": "chore(deps): bump deps",
   "packageRules": [
     {
-      "matchManagers": ["pnpm", "npm"],
+      "matchManagers": ["npm"],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "all non major npm updates",
       "prTitle": "chore(deps): bump deps",
