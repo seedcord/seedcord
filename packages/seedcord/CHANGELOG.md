@@ -1,5 +1,18 @@
 # seedcord
 
+## 0.4.3
+
+### Patch Changes
+
+- 8374f01: set up project-wide ci/cd
+- 31d1a56: bump deps
+- 5625037: add a way to specify HOST for healthcheck
+- Updated dependencies [8374f01]
+- Updated dependencies [31d1a56]
+  - @seedcord/services@0.2.2
+  - @seedcord/types@0.2.2
+  - @seedcord/utils@0.2.3
+
 ## 0.4.2
 
 ### Patch Changes

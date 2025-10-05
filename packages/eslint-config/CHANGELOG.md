@@ -1,5 +1,12 @@
 # @seedcord/eslint-config
 
+## 1.2.2
+
+### Patch Changes
+
+- 8374f01: set up project-wide ci/cd
+- 31d1a56: bump deps
+
 ## 1.2.1
 
 ### Patch Changes

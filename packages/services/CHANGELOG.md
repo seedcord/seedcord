@@ -1,5 +1,15 @@
 # @seedcord/services
 
+## 0.2.2
+
+### Patch Changes
+
+- 8374f01: set up project-wide ci/cd
+- 31d1a56: bump deps
+- Updated dependencies [8374f01]
+- Updated dependencies [31d1a56]
+  - @seedcord/types@0.2.2
+
 ## 0.2.1
 
 ### Patch Changes

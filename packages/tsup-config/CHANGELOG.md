@@ -1,5 +1,12 @@
 # @seedcord/tsup-config
 
+## 1.0.5
+
+### Patch Changes
+
+- 8374f01: set up project-wide ci/cd
+- 31d1a56: bump deps
+
 ## 1.0.4
 
 ### Patch Changes

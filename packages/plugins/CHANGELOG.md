@@ -1,5 +1,17 @@
 # @seedcord/plugins
 
+## 0.3.2
+
+### Patch Changes
+
+- 8374f01: set up project-wide ci/cd
+- 31d1a56: bump deps
+- Updated dependencies [8374f01]
+- Updated dependencies [31d1a56]
+- Updated dependencies [5625037]
+  - seedcord@0.4.3
+  - @seedcord/types@0.2.2
+
 ## 0.3.1
 
 ### Patch Changes
