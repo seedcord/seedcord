@@ -53,6 +53,7 @@
     "@types/node": "^24.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "chai": "^6.0.1",
+    "@seedcord/eslint-config": "workspace:^",
     "eslint": "catalog:peer",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.3",

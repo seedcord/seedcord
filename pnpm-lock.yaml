@@ -41,6 +41,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^19.8.1
         version: 19.8.1
+      '@seedcord/eslint-config':
+        specifier: workspace:^
+        version: link:packages/eslint-config
       '@swc/core':
         specifier: ^1.13.3
         version: 1.13.3

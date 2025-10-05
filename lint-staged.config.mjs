@@ -1,11 +1,21 @@
+const quoteFiles = (files) => files.map((file) => `"${file.replace(/"/g, '\\"')}"`).join(' ');
+
+const runPrettier = (files) => {
+  const fileList = quoteFiles(files);
+  return fileList ? [`prettier --ignore-unknown --write ${fileList}`] : [];
+};
+
+const runEslint = (files) => {
+  const fileList = quoteFiles(files);
+  return fileList ? [`eslint --max-warnings=0 --fix ${fileList}`] : [];
+};
+
 /**
  * @type {import('lint-staged').Configuration}
  */
 const config = {
-  '*.{ts,tsx,js,jsx,cjs,mjs}': ['pnpm exec prettier --write'],
-  '*.{json,md,mdx,yml,yaml}': ['pnpm exec prettier --write'],
-  '*.{css,scss,less}': ['pnpm exec prettier --write'],
-  '**/*': () => ['pnpm run lint', 'pnpm run tc']
+  '*': runPrettier,
+  '*.{ts,tsx,js,jsx,cjs,mjs}': runEslint
 };
 
 export default config;
