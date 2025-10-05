@@ -1,4 +1,4 @@
-name: PR labeler
+name: Repository labeler
 
 on:
   pull_request_target:
@@ -7,18 +7,45 @@ on:
       - synchronize
       - reopened
       - ready_for_review
+  issues:
+    types:
+      - opened
+      - edited
+      - reopened
 
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 jobs:
-  label:
-    name: Apply labels
+  label-pull-requests:
+    if: github.event_name == 'pull_request_target'
+    name: Apply PR labels
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
       - name: Apply labels from config
         uses: actions/labeler@v5
         with:
           configuration-path: .github/labeler.yml
           sync-labels: true
+
+  label-issues:
+    if: github.event_name == 'issues'
+    name: Apply issue labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply labels from config
+        uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labeler.yml

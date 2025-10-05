@@ -24,9 +24,7 @@ build/
 # Ignore IDE specific files
 **/.idea
 **/.vs
-
-# But keep .vscode settings for team consistency
-# **/.vscode (removed - we want to share VS Code settings)
+# We keep .vscode because it has recommended settings and extensions
 
 # Turborepo
 .turbo/

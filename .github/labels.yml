@@ -25,6 +25,9 @@
 - name: pkg:tsup-config
   color: 16a34a
   description: Changes related to TSUP config package
+- name: pkg:api-docs
+  color: 16a34a
+  description: Changes related to API docs tooling
 - name: area:docs
   color: 0e8a16
   description: Documentation updates

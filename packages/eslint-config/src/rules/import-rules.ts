@@ -1,11 +1,13 @@
+import path from 'node:path';
+
 import { Linter } from 'eslint';
 
 // Import plugin configuration
-export const IMPORT_SETTINGS = {
+export const createImportSettings = (rootDir: string) => ({
   'import/resolver': {
     typescript: {
       alwaysTryTypes: true,
-      project: './tsconfig.json'
+      project: [path.join(rootDir, 'tsconfig.json')]
     },
     node: {
       extensions: ['.js', '.jsx', '.ts', '.tsx']
@@ -16,7 +18,7 @@ export const IMPORT_SETTINGS = {
   },
   'import/internal-regex': '^(src/|@/)',
   'import/external-module-folders': ['node_modules', 'dist']
-};
+});
 
 export const IMPORT_RULES: Linter.RulesRecord = {
   'import/order': [

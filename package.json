@@ -32,7 +32,8 @@
     "local:mock:watch": "cd packages/mock && tsx src/start-watch.ts",
     "local:test:seedcord": "cd packages/seedcord && vitest",
     "local:test:mock": "cd packages/mock && vitest",
-    "bump:deps": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done"
+    "bump:deps": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
+    "docs:extract": "pnpm --filter @seedcord/api-docs run extract"
   },
   "keywords": [
     "discord",
@@ -48,12 +49,12 @@
     "@changesets/cli": "^2.29.6",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
+    "@seedcord/eslint-config": "workspace:^",
     "@swc/core": "^1.13.3",
     "@types/chai": "^5.2.2",
     "@types/node": "^24.3.0",
     "@vitest/coverage-v8": "^3.2.4",
     "chai": "^6.0.1",
-    "@seedcord/eslint-config": "workspace:^",
     "eslint": "catalog:peer",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.3",

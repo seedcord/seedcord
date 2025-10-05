@@ -1,0 +1,38 @@
+{
+  "name": "@seedcord/api-docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Internal tooling to generate seedcord API model JSON files",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/materwelondhruv/seedcord.git",
+    "directory": "packages/api-docs"
+  },
+  "scripts": {
+    "extract": "tsx src/index.ts",
+    "lint": "eslint 'src/**/*.ts' --cache",
+    "lint:fix": "eslint 'src/**/*.ts' --cache --fix",
+    "fmt": "prettier --write 'src/**/*.{ts,md,json}' --cache",
+    "fmt:check": "prettier --check 'src/**/*.{ts,md,json}' --cache",
+    "tc": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest dev",
+    "coverage": "vitest run --coverage"
+  },
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "typedoc": "^0.28.13"
+  },
+  "devDependencies": {
+    "@seedcord/eslint-config": "workspace:^",
+    "@seedcord/tsconfig": "workspace:^",
+    "@seedcord/tsup-config": "workspace:^"
+  }
+}

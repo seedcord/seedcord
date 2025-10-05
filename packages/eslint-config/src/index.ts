@@ -20,12 +20,12 @@ import {
   DOCUMENTATION_RULES,
   GENERAL_RULES,
   IMPORT_RULES,
-  IMPORT_SETTINGS,
   OVERRIDE_RULES,
   PRETTIER_RULES,
   SECURITY_RULES,
   TSDOC_RULES,
-  TYPESCRIPT_RULES
+  TYPESCRIPT_RULES,
+  createImportSettings
 } from './rules';
 
 // Types
@@ -92,7 +92,7 @@ function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tses
       plugins: {
         import: eslintImport
       },
-      settings: IMPORT_SETTINGS,
+      settings: createImportSettings(tsconfigRootDir),
       rules: IMPORT_RULES
     },
 
