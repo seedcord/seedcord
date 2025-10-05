@@ -1,0 +1,49 @@
+pkg:seedcord:
+  - 'packages/seedcord/**'
+  - 'seedcord/**'
+pkg:mock:
+  - 'packages/mock/**'
+pkg:services:
+  - 'packages/services/**'
+pkg:plugins:
+  - 'packages/plugins/**'
+pkg:types:
+  - 'packages/types/**'
+pkg:utils:
+  - 'packages/utils/**'
+pkg:eslint-config:
+  - 'packages/eslint-config/**'
+pkg:tsconfig:
+  - 'packages/tsconfig/**'
+pkg:tsup-config:
+  - 'packages/tsup-config/**'
+area:docs:
+  - 'docs/**'
+  - '**/*.md'
+area:tests:
+  - '**/*.test.ts'
+  - '**/*.spec.ts'
+  - '**/__tests__/**'
+area:ci:
+  - '.github/**'
+  - 'turbo.json'
+  - 'turbo.jsonc'
+  - 'pnpm-workspace.yaml'
+  - 'pnpm-lock.yaml'
+area:config:
+  - '**/*.mjs'
+  - '**/*.cjs'
+  - '**/*.json'
+  - 'tsconfig.json'
+  - 'tsconfig/**'
+  - 'eslint.config.mjs'
+  - 'vitest.config.ts'
+area:release:
+  - '.changeset/**'
+  - '**/package.json'
+  - 'pnpm-lock.yaml'
+area:assets:
+  - 'assets/**'
+  - '**/*.png'
+  - '**/*.svg'
+  - '**/*.jpg'
