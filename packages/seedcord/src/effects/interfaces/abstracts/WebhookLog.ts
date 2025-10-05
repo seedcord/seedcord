@@ -13,10 +13,10 @@ import type { WebhookClient } from 'discord.js';
  * @typeParam KeyOfEffects - The specific side effect type this handler processes
  */
 export abstract class WebhookLog<KeyOfEffects extends EffectKeys> extends EffectsHandler<KeyOfEffects> {
-  /** The Discord webhook client for sending log messages */
-  abstract webhook: WebhookClient;
+    /** The Discord webhook client for sending log messages */
+    abstract webhook: WebhookClient;
 
-  constructor(data: AllEffects[KeyOfEffects], core: Core) {
-    super(data, core);
-  }
+    constructor(data: AllEffects[KeyOfEffects], core: Core) {
+        super(data, core);
+    }
 }

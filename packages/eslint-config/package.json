@@ -1,60 +1,60 @@
 {
-  "name": "@seedcord/eslint-config",
-  "type": "module",
-  "version": "1.2.2",
-  "description": "ESlint config for Seedcord projects",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/materwelondhruv/seedcord.git",
-    "directory": "packages/eslint-config"
-  },
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.mjs"
+    "name": "@seedcord/eslint-config",
+    "type": "module",
+    "version": "1.2.2",
+    "description": "ESlint config for Seedcord projects",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "directory": "packages/eslint-config"
+    },
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "clean": "rm -rf dist",
+        "lint": "eslint '*.{mjs,ts}' --cache",
+        "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
+        "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
+        "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@eslint/eslintrc": "^3.3.1",
+        "@types/lodash.merge": "^4.6.9",
+        "@typescript-eslint/eslint-plugin": "^8.45.0",
+        "@typescript-eslint/parser": "^8.45.0",
+        "eslint": "catalog:peer",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-import-resolver-typescript": "^4.4.4",
+        "eslint-plugin-import": "^2.32.0",
+        "eslint-plugin-prettier": "^5.5.4",
+        "eslint-plugin-security": "^3.0.1",
+        "eslint-plugin-tsdoc": "^0.4.0",
+        "lodash.merge": "^4.6.2",
+        "typescript-eslint": "^8.45.0"
+    },
+    "devDependencies": {
+        "@types/eslint-plugin-security": "^3.0.0",
+        "tsup": "^8.5.0"
     }
-  },
-  "files": [
-    "dist",
-    "package.json",
-    "README.md",
-    "LICENSE"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "clean": "rm -rf dist",
-    "lint": "eslint '*.{mjs,ts}' --cache",
-    "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
-    "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
-    "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
-    "tc": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest dev",
-    "coverage": "vitest run --coverage"
-  },
-  "peerDependencies": {
-    "typescript": "catalog:peer"
-  },
-  "dependencies": {
-    "@eslint/eslintrc": "^3.3.1",
-    "@types/lodash.merge": "^4.6.9",
-    "@typescript-eslint/eslint-plugin": "^8.45.0",
-    "@typescript-eslint/parser": "^8.45.0",
-    "eslint": "catalog:peer",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-import-resolver-typescript": "^4.4.4",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "eslint-plugin-security": "^3.0.1",
-    "eslint-plugin-tsdoc": "^0.4.0",
-    "lodash.merge": "^4.6.2",
-    "typescript-eslint": "^8.45.0"
-  },
-  "devDependencies": {
-    "@types/eslint-plugin-security": "^3.0.0",
-    "tsup": "^8.5.0"
-  }
 }

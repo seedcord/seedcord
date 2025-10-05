@@ -1,50 +1,50 @@
 {
-  "name": "@seedcord/mock",
-  "type": "module",
-  "version": "0.2.5",
-  "private": true,
-  "description": "Mock bot for testing",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/materwelondhruv/seedcord.git",
-    "directory": "packages/mock"
-  },
-  "exports": {
-    ".": {
-      "default": "./dist/index.mjs"
+    "name": "@seedcord/mock",
+    "type": "module",
+    "version": "0.2.5",
+    "private": true,
+    "description": "Mock bot for testing",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "directory": "packages/mock"
+    },
+    "exports": {
+        ".": {
+            "default": "./dist/index.mjs"
+        }
+    },
+    "files": [],
+    "scripts": {
+        "dev": "tsx src/bot.ts",
+        "dev:bot": "nodemon --config nodemon.json",
+        "start:watch": "tsx src/start-watch.ts",
+        "build": "tsup",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@seedcord/plugins": "workspace:*",
+        "@seedcord/types": "workspace:^",
+        "discord.js": "catalog:deps",
+        "envapt": "catalog:deps",
+        "mongoose": "catalog:deps",
+        "reflect-metadata": "catalog:deps",
+        "seedcord": "workspace:^"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsup-config": "workspace:^"
     }
-  },
-  "files": [],
-  "scripts": {
-    "dev": "tsx src/bot.ts",
-    "dev:bot": "nodemon --config nodemon.json",
-    "start:watch": "tsx src/start-watch.ts",
-    "build": "tsup",
-    "clean": "rm -rf dist",
-    "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
-    "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
-    "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
-    "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
-    "tc": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest dev",
-    "coverage": "vitest run --coverage"
-  },
-  "peerDependencies": {
-    "typescript": "catalog:peer"
-  },
-  "dependencies": {
-    "@seedcord/plugins": "workspace:*",
-    "@seedcord/types": "workspace:^",
-    "discord.js": "catalog:deps",
-    "envapt": "catalog:deps",
-    "mongoose": "catalog:deps",
-    "reflect-metadata": "catalog:deps",
-    "seedcord": "workspace:^"
-  },
-  "devDependencies": {
-    "@seedcord/eslint-config": "workspace:^",
-    "@seedcord/tsconfig": "workspace:^",
-    "@seedcord/tsup-config": "workspace:^"
-  }
 }

@@ -10,12 +10,12 @@ import type * as fs from 'node:fs';
  * @returns True if the entry is a file ending with .ts or .js.
  */
 export function isTsOrJsFile(entry: fs.Dirent): boolean {
-  return (
-    entry.isFile() &&
-    (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) &&
-    !entry.name.endsWith('.d.ts') &&
-    !entry.name.endsWith('.map')
-  );
+    return (
+        entry.isFile() &&
+        (entry.name.endsWith('.ts') || entry.name.endsWith('.js')) &&
+        !entry.name.endsWith('.d.ts') &&
+        !entry.name.endsWith('.map')
+    );
 }
 
 /**
@@ -26,28 +26,28 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
  * @returns A Promise that resolves when the traversal is complete.
  */
 export async function traverseDirectory(
-  dir: string,
-  callback: (fullPath: string, relativePath: string, imported: Record<string, unknown>) => Promise<void> | void,
-  logger: Logger
+    dir: string,
+    callback: (fullPath: string, relativePath: string, imported: Record<string, unknown>) => Promise<void> | void,
+    logger: Logger
 ): Promise<void> {
-  let entries: fs.Dirent[];
+    let entries: fs.Dirent[];
 
-  try {
-    entries = await readdir(dir, { withFileTypes: true });
-  } catch {
-    logger.error('Failed to read this directory');
-    entries = [];
-  }
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    const relativePath = path.relative(process.cwd(), fullPath);
-
-    if (entry.isDirectory()) {
-      await traverseDirectory(fullPath, callback, logger);
-    } else if (isTsOrJsFile(entry)) {
-      const imported = (await import(fullPath)) as Record<string, unknown>;
-      await callback(fullPath, relativePath, imported);
+    try {
+        entries = await readdir(dir, { withFileTypes: true });
+    } catch {
+        logger.error('Failed to read this directory');
+        entries = [];
     }
-  }
+
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relativePath = path.relative(process.cwd(), fullPath);
+
+        if (entry.isDirectory()) {
+            await traverseDirectory(fullPath, callback, logger);
+        } else if (isTsOrJsFile(entry)) {
+            const imported = (await import(fullPath)) as Record<string, unknown>;
+            await callback(fullPath, relativePath, imported);
+        }
+    }
 }

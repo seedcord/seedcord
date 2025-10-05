@@ -7,14 +7,14 @@ import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services
 
 /** Base interface defining core Seedcord functionality */
 interface BaseCore {
-  readonly bot: Bot;
-  readonly effects: EffectsRegistry;
-  readonly shutdown: CoordinatedShutdown;
-  readonly startup: CoordinatedStartup;
+    readonly bot: Bot;
+    readonly effects: EffectsRegistry;
+    readonly shutdown: CoordinatedShutdown;
+    readonly startup: CoordinatedStartup;
 
-  readonly config: Config;
+    readonly config: Config;
 
-  start(): Promise<this>;
+    start(): Promise<this>;
 }
 
 /**

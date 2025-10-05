@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 describe('ESLint Config Package', () => {
-  it('should pass basic test', () => {
-    expect(true).toBe(true);
-  });
+    it('should provide a basic sanity check', () => {
+        expect(true).toBe(true);
+    });
 });

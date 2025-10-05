@@ -1,7 +1,7 @@
 import { capitalize } from './capitalize';
 
 interface PrettifyOptions {
-  capitalize?: boolean;
+    capitalize?: boolean;
 }
 /**
  * Converts a string from any common naming convention to human-readable format.
@@ -20,12 +20,12 @@ interface PrettifyOptions {
  */
 
 export function prettify(key: string, opts?: PrettifyOptions): string {
-  const result = key
-    .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase/PascalCase
-    .replace(/[_-]/g, ' ') // snake_case and kebab-case
-    .trim();
+    const result = key
+        .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase/PascalCase
+        .replace(/[_-]/g, ' ') // snake_case and kebab-case
+        .trim();
 
-  if (opts?.capitalize) return capitalize(result);
+    if (opts?.capitalize) return capitalize(result);
 
-  return result;
+    return result;
 }

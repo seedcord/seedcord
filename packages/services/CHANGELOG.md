@@ -8,7 +8,7 @@
 - 31d1a56: bump deps
 - Updated dependencies [8374f01]
 - Updated dependencies [31d1a56]
-  - @seedcord/types@0.2.2
+    - @seedcord/types@0.2.2
 
 ## 0.2.1
 
@@ -16,7 +16,7 @@
 
 - bump deps
 - Updated dependencies
-  - @seedcord/types@0.2.1
+    - @seedcord/types@0.2.1
 
 ## 0.2.0
 
@@ -27,7 +27,7 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @seedcord/types@0.2.0
+    - @seedcord/types@0.2.0
 
 ## 0.1.1
 
@@ -35,7 +35,7 @@
 
 - 8a7591a: bump deps
 - Updated dependencies [8a7591a]
-  - @seedcord/types@0.1.4
+    - @seedcord/types@0.1.4
 
 ## 0.1.0
 

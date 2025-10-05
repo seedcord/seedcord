@@ -3,11 +3,11 @@ import { BuilderComponent } from 'seedcord';
 import type { Client } from 'discord.js';
 
 export class MaintenanceEmbed extends BuilderComponent<'embed'> {
-  constructor(client: Client) {
-    super('embed');
+    constructor(client: Client) {
+        super('embed');
 
-    this.instance
-      .setTitle('Ongoing Maintenance')
-      .setDescription(`${client.user?.username} is currently down for maintenance! Please check back later.`);
-  }
+        this.instance
+            .setTitle('Ongoing Maintenance')
+            .setDescription(`${client.user?.username} is currently down for maintenance! Please check back later.`);
+    }
 }

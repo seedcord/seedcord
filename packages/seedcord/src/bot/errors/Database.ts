@@ -9,22 +9,22 @@ import type { UUID } from 'crypto';
  * a UUID for error tracking and debugging purposes.
  */
 export class DatabaseError extends CustomError {
-  /**
-   * Creates a new DatabaseError.
-   *
-   * @param message - The error message describing what went wrong
-   * @param uuid - A unique identifier for this specific error instance
-   */
-  constructor(
-    message: string,
-    public uuid: UUID
-  ) {
-    super(message);
-    this.emit = true; // Emit in logs regardless of environment
-    this.name = 'DatabaseError';
+    /**
+     * Creates a new DatabaseError.
+     *
+     * @param message - The error message describing what went wrong
+     * @param uuid - A unique identifier for this specific error instance
+     */
+    constructor(
+        message: string,
+        public uuid: UUID
+    ) {
+        super(message);
+        this.emit = true; // Emit in logs regardless of environment
+        this.name = 'DatabaseError';
 
-    this.response
-      .setTitle('Database Error')
-      .setDescription(`An error occurred while interacting with the database.\n### UUID: \`${this.uuid}\``);
-  }
+        this.response
+            .setTitle('Database Error')
+            .setDescription(`An error occurred while interacting with the database.\n### UUID: \`${this.uuid}\``);
+    }
 }

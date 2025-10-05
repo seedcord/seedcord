@@ -15,5 +15,5 @@
  */
 
 export function prettyDifference(numBefore: number, numAfter: number): string {
-  return (numAfter - numBefore > 0 ? `+${numAfter - numBefore}` : numAfter - numBefore).toString();
+    return (numAfter - numBefore > 0 ? `+${numAfter - numBefore}` : numAfter - numBefore).toString();
 }

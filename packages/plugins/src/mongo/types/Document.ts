@@ -5,8 +5,8 @@
  * with the required `_id` field.
  */
 export interface IDocument {
-  /** MongoDB document identifier */
-  _id: string;
+    /** MongoDB document identifier */
+    _id: string;
 }
 
 /**

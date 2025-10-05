@@ -25,84 +25,87 @@ type EffectConstructor = TypedConstructor<typeof EffectsHandler>;
  * @internal Accessed via core.effects, not directly instantiated
  */
 export class EffectsRegistry extends Plugin {
-  public readonly logger = new Logger('Effects');
-  private isInitialized = false;
-  private readonly effectsMap = new Collection<EffectKeys, EffectConstructor[]>();
-  private readonly emitter = new EffectsEmitter();
+    public readonly logger = new Logger('Effects');
+    private isInitialized = false;
+    private readonly effectsMap = new Collection<EffectKeys, EffectConstructor[]>();
+    private readonly emitter = new EffectsEmitter();
 
-  constructor(protected core: Core) {
-    super(core);
-  }
-
-  public async init(): Promise<void> {
-    if (this.isInitialized) return;
-
-    this.isInitialized = true;
-
-    const effectsDir = this.core.config.effects.path;
-    this.logger.info(chalk.bold(effectsDir));
-
-    this.registerEffect('unknownException', UnknownException);
-
-    await this.loadEffects(effectsDir);
-
-    this.attachEffects();
-
-    const totalEffects = Array.from(this.effectsMap.values()).reduce((acc, handlers) => acc + handlers.length, 0);
-    this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.bold.magenta(totalEffects)} side effects`);
-  }
-
-  private async loadEffects(dir: string): Promise<void> {
-    await traverseDirectory(
-      dir,
-      (_fullPath, relativePath, imported) => {
-        for (const exportName of Object.keys(imported)) {
-          const val = imported[exportName];
-          if (this.isEffectHandler(val)) {
-            const effectName = Reflect.getMetadata(EffectMetadataKey, val) as EffectKeys | undefined;
-            if (effectName) {
-              this.registerEffect(effectName, val);
-              this.logger.info(
-                `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-              );
-            }
-          }
-        }
-      },
-      this.logger
-    );
-  }
-
-  private registerEffect(effectName: EffectKeys, handler: EffectConstructor): void {
-    let handlers = this.effectsMap.get(effectName);
-    if (!handlers) {
-      handlers = [];
-      this.effectsMap.set(effectName, handlers);
+    constructor(protected core: Core) {
+        super(core);
     }
-    handlers.push(handler);
-  }
 
-  private isEffectHandler(obj: unknown): obj is EffectConstructor {
-    if (typeof obj !== 'function') return false;
-    return obj.prototype instanceof EffectsHandler;
-  }
+    public async init(): Promise<void> {
+        if (this.isInitialized) return;
 
-  private attachEffects(): void {
-    for (const [effectName, handlerCtors] of this.effectsMap) {
-      this.emitter.on(effectName, (data) => {
-        for (const HandlerCtor of handlerCtors) {
-          try {
-            const instance = new HandlerCtor(data, this.core);
-            void instance.execute();
-          } catch (err) {
-            this.logger.error(`Error in side effect ${String(effectName)} handler ${HandlerCtor.name}:`, err);
-          }
-        }
-      });
+        this.isInitialized = true;
+
+        const effectsDir = this.core.config.effects.path;
+        this.logger.info(chalk.bold(effectsDir));
+
+        this.registerEffect('unknownException', UnknownException);
+
+        await this.loadEffects(effectsDir);
+
+        this.attachEffects();
+
+        const totalEffects = Array.from(this.effectsMap.values()).reduce((acc, handlers) => acc + handlers.length, 0);
+        this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.bold.magenta(totalEffects)} side effects`);
     }
-  }
 
-  public emit<KeyOfEffects extends EffectKeys>(event: KeyOfEffects, data: AllEffects[KeyOfEffects]): boolean {
-    return this.emitter.emit(event, data);
-  }
+    private async loadEffects(dir: string): Promise<void> {
+        await traverseDirectory(
+            dir,
+            (_fullPath, relativePath, imported) => {
+                for (const exportName of Object.keys(imported)) {
+                    const val = imported[exportName];
+                    if (this.isEffectHandler(val)) {
+                        const effectName = Reflect.getMetadata(EffectMetadataKey, val) as EffectKeys | undefined;
+                        if (effectName) {
+                            this.registerEffect(effectName, val);
+                            this.logger.info(
+                                `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
+                            );
+                        }
+                    }
+                }
+            },
+            this.logger
+        );
+    }
+
+    private registerEffect(effectName: EffectKeys, handler: EffectConstructor): void {
+        let handlers = this.effectsMap.get(effectName);
+        if (!handlers) {
+            handlers = [];
+            this.effectsMap.set(effectName, handlers);
+        }
+        handlers.push(handler);
+    }
+
+    private isEffectHandler(obj: unknown): obj is EffectConstructor {
+        if (typeof obj !== 'function') return false;
+        return obj.prototype instanceof EffectsHandler;
+    }
+
+    private attachEffects(): void {
+        for (const [effectName, handlerCtors] of this.effectsMap) {
+            this.emitter.on(effectName, (data) => {
+                for (const HandlerCtor of handlerCtors) {
+                    try {
+                        const instance = new HandlerCtor(data, this.core);
+                        void instance.execute();
+                    } catch (err) {
+                        this.logger.error(
+                            `Error in side effect ${String(effectName)} handler ${HandlerCtor.name}:`,
+                            err
+                        );
+                    }
+                }
+            });
+        }
+    }
+
+    public emit<KeyOfEffects extends EffectKeys>(event: KeyOfEffects, data: AllEffects[KeyOfEffects]): boolean {
+        return this.emitter.emit(event, data);
+    }
 }

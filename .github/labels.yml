@@ -1,81 +1,81 @@
 - name: pkg:seedcord
-  color: 16a34a
+  color: ff6b6b
   description: Changes related to the seedcord package
 - name: pkg:mock
-  color: 16a34a
+  color: 8d6e63
   description: Changes related to the mock package
 - name: pkg:services
-  color: 16a34a
+  color: 45b7d1
   description: Changes related to shared services
 - name: pkg:plugins
-  color: 16a34a
+  color: 02796b
   description: Changes related to plugins
 - name: pkg:types
-  color: 16a34a
+  color: ffeaa7
   description: Changes related to shared types
 - name: pkg:utils
-  color: 16a34a
+  color: dda0dd
   description: Changes related to utilities
 - name: pkg:eslint-config
-  color: 16a34a
+  color: 78597d
   description: Changes related to ESLint config package
 - name: pkg:tsconfig
-  color: 16a34a
+  color: 196699
   description: Changes related to TSConfig package
 - name: pkg:tsup-config
-  color: 16a34a
+  color: 196699
   description: Changes related to TSUP config package
 - name: pkg:api-docs
-  color: 16a34a
+  color: 85c1e9
   description: Changes related to API docs tooling
 - name: area:docs
-  color: 0e8a16
+  color: 28a745
   description: Documentation updates
 - name: area:tests
-  color: fbca04
+  color: ffc107
   description: Test updates
 - name: area:ci
-  color: 1d76db
+  color: 007bff
   description: Continuous integration and automation changes
 - name: area:config
-  color: c5def5
+  color: 6c757d
   description: Repository configuration updates
 - name: area:release
-  color: d4c5f9
+  color: e83e8c
   description: Release engineering changes
 - name: area:assets
-  color: fcdc00
+  color: fd7e14
   description: Static asset updates
 - name: type:bug
-  color: d73a4a
+  color: dc3545
   description: Bug fix
 - name: type:feature
-  color: a2eeef
+  color: 17a2b8
   description: New feature or enhancement
 - name: type:chore
-  color: e4e669
+  color: ffc107
   description: Maintenance tasks
 - name: type:refactor
-  color: cfd3d7
+  color: 6c757d
   description: Refactoring work
 - name: type:docs
-  color: 0e8a16
+  color: 28a745
   description: Documentation only changes
 - name: priority:high
-  color: b60205
+  color: dc3545
   description: Needs urgent attention
 - name: priority:medium
-  color: d93f0b
+  color: fd7e14
   description: Address in the near future
 - name: priority:low
-  color: fbca04
+  color: ffc107
   description: Nice to have changes
 - name: status:needs-triage
-  color: d4c5f9
+  color: 6f42c1
   description: Awaiting triage
 - name: status:blocked
-  color: b60205
+  color: dc3545
   description: Blocked by another task or dependency
 - name: good first issue
-  color: 7057ff
+  color: 28a745
   description: Great for newcomers to the project

@@ -1,25 +1,25 @@
 import type { Core } from './Core';
 import type { TypedConstructor } from '@seedcord/types';
 import type {
-  AnySelectMenuInteraction,
-  AutocompleteFocusedOption,
-  AutocompleteInteraction,
-  ButtonInteraction,
-  ChatInputCommandInteraction,
-  ClientEvents,
-  ContextMenuCommandInteraction,
-  Events,
-  ModalSubmitInteraction
+    AnySelectMenuInteraction,
+    AutocompleteFocusedOption,
+    AutocompleteInteraction,
+    ButtonInteraction,
+    ChatInputCommandInteraction,
+    ClientEvents,
+    ContextMenuCommandInteraction,
+    Events,
+    ModalSubmitInteraction
 } from 'discord.js';
 
 /** All valid Discord.js interaction types that can be handled */
 export type ValidInteractionTypes =
-  | ChatInputCommandInteraction
-  | ButtonInteraction
-  | ModalSubmitInteraction
-  | AutocompleteInteraction
-  | AnySelectMenuInteraction
-  | ContextMenuCommandInteraction;
+    | ChatInputCommandInteraction
+    | ButtonInteraction
+    | ModalSubmitInteraction
+    | AutocompleteInteraction
+    | AnySelectMenuInteraction
+    | ContextMenuCommandInteraction;
 
 /** All valid Discord.js client events except interaction events */
 export type ValidNonInteractionTypes = ClientEvents[Exclude<keyof ClientEvents, Events.InteractionCreate>];
@@ -35,7 +35,7 @@ export type RepliableInteractionHandler = InteractionHandler<Repliables> | Inter
 
 /** Base interface for event handlers */
 export interface Handler {
-  execute(): Promise<void>;
+    execute(): Promise<void>;
 }
 
 /**
@@ -46,78 +46,78 @@ export interface Handler {
  * @see {@link Checkable}
  */
 export interface WithChecks {
-  /**
-   * Runs pre-execution checks for the handler.
-   *
-   * @remarks It'll be called automatically if a class is decorated with {@link Checkable} before the execute method.
-   *
-   * @virtual Override this method in your handler classes
-   */
-  runChecks(): Promise<void>;
+    /**
+     * Runs pre-execution checks for the handler.
+     *
+     * @remarks It'll be called automatically if a class is decorated with {@link Checkable} before the execute method.
+     *
+     * @virtual Override this method in your handler classes
+     */
+    runChecks(): Promise<void>;
 }
 
 interface HandlerWithChecks extends WithChecks, Handler {}
 
 abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
-  protected checkable = false;
-  protected break = false;
-  protected errored = false;
-  protected event: ValidEvent;
-  protected args: string[] = [];
+    protected checkable = false;
+    protected break = false;
+    protected errored = false;
+    protected event: ValidEvent;
+    protected args: string[] = [];
 
-  protected constructor(
-    event: ValidEvent,
-    public core: Core,
-    args?: string[]
-  ) {
-    this.event = event;
-    this.args = args ?? [];
-  }
+    protected constructor(
+        event: ValidEvent,
+        public core: Core,
+        args?: string[]
+    ) {
+        this.event = event;
+        this.args = args ?? [];
+    }
 
-  /**
-   * Main handler logic - implement this method to define behavior
-   * @virtual Override this method in your handler classes
-   */
-  abstract execute(): Promise<void>;
+    /**
+     * Main handler logic - implement this method to define behavior
+     * @virtual Override this method in your handler classes
+     */
+    abstract execute(): Promise<void>;
 
-  public hasChecks(): this is HandlerWithChecks {
-    return this.checkable;
-  }
+    public hasChecks(): this is HandlerWithChecks {
+        return this.checkable;
+    }
 
-  public hasErrors(): boolean {
-    return this.errored;
-  }
+    public hasErrors(): boolean {
+        return this.errored;
+    }
 
-  public setErrored(): void {
-    this.errored = true;
-  }
+    public setErrored(): void {
+        this.errored = true;
+    }
 
-  public shouldBreak(): boolean {
-    return this.break;
-  }
+    public shouldBreak(): boolean {
+        return this.break;
+    }
 
-  public getEvent(): ValidEvent {
-    return this.event;
-  }
+    public getEvent(): ValidEvent {
+        return this.event;
+    }
 
-  /**
-   * Gets arguments parsed from interaction customId
-   *
-   * Arguments are extracted from customId using ":" and "-" separators.
-   * For customId "accept:user123-guild456", returns ["user123", "guild456"]
-   */
-  protected getArgs(): string[] {
-    return this.args;
-  }
+    /**
+     * Gets arguments parsed from interaction customId
+     *
+     * Arguments are extracted from customId using ":" and "-" separators.
+     * For customId "accept:user123-guild456", returns ["user123", "guild456"]
+     */
+    protected getArgs(): string[] {
+        return this.args;
+    }
 
-  /**
-   * Gets a specific argument by index from parsed customId
-   * @param index - Zero-based index of the argument to retrieve
-   * @returns The argument at the specified index, or undefined if not found
-   */
-  protected getArg(index: number): string | undefined {
-    return this.args[index];
-  }
+    /**
+     * Gets a specific argument by index from parsed customId
+     * @param index - Zero-based index of the argument to retrieve
+     * @returns The argument at the specified index, or undefined if not found
+     */
+    protected getArg(index: number): string | undefined {
+        return this.args[index];
+    }
 }
 
 /**
@@ -129,12 +129,12 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
  * @typeParam Repliable - The interaction type this handler processes
  */
 export abstract class InteractionHandler<Repliable extends Repliables>
-  extends BaseHandler<Repliable>
-  implements Handler
+    extends BaseHandler<Repliable>
+    implements Handler
 {
-  constructor(event: Repliable, core: Core, args?: string[]) {
-    super(event, core, args);
-  }
+    constructor(event: Repliable, core: Core, args?: string[]) {
+        super(event, core, args);
+    }
 }
 
 /**
@@ -146,12 +146,12 @@ export abstract class InteractionHandler<Repliable extends Repliables>
  * @typeParam Repliable - The interaction type this middleware processes
  */
 export abstract class InteractionMiddleware<Repliable extends Repliables>
-  extends BaseHandler<Repliable>
-  implements Handler
+    extends BaseHandler<Repliable>
+    implements Handler
 {
-  constructor(event: Repliable, core: Core, args?: string[]) {
-    super(event, core, args);
-  }
+    constructor(event: Repliable, core: Core, args?: string[]) {
+        super(event, core, args);
+    }
 }
 
 /**
@@ -161,12 +161,12 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
  * The focused option is automatically available via the `focused` property.
  */
 export abstract class AutocompleteHandler extends BaseHandler<AutocompleteInteraction> implements Handler {
-  /** The currently focused autocomplete option (Based on what you set in \@AutocompleteRoute) */
-  protected readonly focused: AutocompleteFocusedOption;
-  constructor(event: AutocompleteInteraction, core: Core, args?: string[]) {
-    super(event, core, args);
-    this.focused = this.event.options.getFocused(true);
-  }
+    /** The currently focused autocomplete option (Based on what you set in \@AutocompleteRoute) */
+    protected readonly focused: AutocompleteFocusedOption;
+    constructor(event: AutocompleteInteraction, core: Core, args?: string[]) {
+        super(event, core, args);
+        this.focused = this.event.options.getFocused(true);
+    }
 }
 
 /**
@@ -178,12 +178,12 @@ export abstract class AutocompleteHandler extends BaseHandler<AutocompleteIntera
  * @typeParam Repliable - The Discord event type this handler processes
  */
 export abstract class EventHandler<Repliable extends keyof ClientEvents>
-  extends BaseHandler<ClientEvents[Repliable]>
-  implements Handler
+    extends BaseHandler<ClientEvents[Repliable]>
+    implements Handler
 {
-  constructor(event: ClientEvents[Repliable], core: Core, args?: string[]) {
-    super(event, core, args);
-  }
+    constructor(event: ClientEvents[Repliable], core: Core, args?: string[]) {
+        super(event, core, args);
+    }
 }
 
 // A generic type alias for a handler constructor
@@ -192,11 +192,11 @@ export type HandlerConstructor = TypedConstructor<typeof InteractionHandler | ty
 
 /** Constructor type for interaction middleware */
 export type MiddlewareConstructor = TypedConstructor<typeof InteractionMiddleware> &
-  (new (event: Repliables, core: Core, args?: string[]) => InteractionMiddleware<Repliables>);
+    (new (event: Repliables, core: Core, args?: string[]) => InteractionMiddleware<Repliables>);
 
 /** Constructor type for autocomplete handlers */
 export type AutocompleteHandlerConstructor = TypedConstructor<typeof AutocompleteHandler> &
-  (new (event: AutocompleteInteraction, core: Core, args?: string[]) => AutocompleteHandler);
+    (new (event: AutocompleteInteraction, core: Core, args?: string[]) => AutocompleteHandler);
 
 /** Constructor type for Discord client event handlers */
 export type EventHandlerConstructor = TypedConstructor<typeof EventHandler>;

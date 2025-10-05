@@ -1,43 +1,43 @@
 {
-  "name": "@seedcord/tsup-config",
-  "type": "module",
-  "version": "1.0.5",
-  "description": "Shared Tsup configuration for seedcord packages",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "private": true,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/materwelondhruv/seedcord.git",
-    "directory": "packages/tsup-config"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+    "name": "@seedcord/tsup-config",
+    "type": "module",
+    "version": "1.0.5",
+    "description": "Shared Tsup configuration for seedcord packages",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "directory": "packages/tsup-config"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        }
+    },
+    "files": [
+        "dist",
+        "src"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "clean": "rm -rf dist",
+        "lint": "eslint '*.{mjs,ts}' --cache",
+        "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
+        "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
+        "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "tsup": "^8.5.0",
+        "typescript": "catalog:peer"
     }
-  },
-  "files": [
-    "dist",
-    "src"
-  ],
-  "scripts": {
-    "build": "tsup",
-    "clean": "rm -rf dist",
-    "lint": "eslint '*.{mjs,ts}' --cache",
-    "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
-    "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
-    "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
-    "tc": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest dev",
-    "coverage": "vitest run --coverage"
-  },
-  "devDependencies": {
-    "@seedcord/eslint-config": "workspace:^",
-    "@seedcord/tsconfig": "workspace:^",
-    "tsup": "^8.5.0",
-    "typescript": "catalog:peer"
-  }
 }

@@ -4,53 +4,53 @@ import { Linter } from 'eslint';
 
 // Import plugin configuration
 export const createImportSettings = (rootDir: string) => ({
-  'import/resolver': {
-    typescript: {
-      alwaysTryTypes: true,
-      project: [path.join(rootDir, 'tsconfig.json')]
+    'import/resolver': {
+        typescript: {
+            alwaysTryTypes: true,
+            project: [path.join(rootDir, 'tsconfig.json')]
+        },
+        node: {
+            extensions: ['.js', '.jsx', '.ts', '.tsx']
+        }
     },
-    node: {
-      extensions: ['.js', '.jsx', '.ts', '.tsx']
-    }
-  },
-  'import/parsers': {
-    '@typescript-eslint/parser': ['.ts', '.tsx']
-  },
-  'import/internal-regex': '^(src/|@/)',
-  'import/external-module-folders': ['node_modules', 'dist']
+    'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx']
+    },
+    'import/internal-regex': '^(src/|@/)',
+    'import/external-module-folders': ['node_modules', 'dist']
 });
 
 export const IMPORT_RULES: Linter.RulesRecord = {
-  'import/order': [
-    'warn',
-    {
-      groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'type'],
-      'newlines-between': 'always',
-      alphabetize: {
-        order: 'asc',
-        caseInsensitive: true,
-        orderImportKind: 'asc'
-      },
-      warnOnUnassignedImports: false,
-      distinctGroup: true,
-      pathGroups: [
+    'import/order': [
+        'warn',
         {
-          pattern: '@/**',
-          group: 'internal',
-          position: 'before'
+            groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'type'],
+            'newlines-between': 'always',
+            alphabetize: {
+                order: 'asc',
+                caseInsensitive: true,
+                orderImportKind: 'asc'
+            },
+            warnOnUnassignedImports: false,
+            distinctGroup: true,
+            pathGroups: [
+                {
+                    pattern: '@/**',
+                    group: 'internal',
+                    position: 'before'
+                }
+            ],
+            pathGroupsExcludedImportTypes: ['builtin']
         }
-      ],
-      pathGroupsExcludedImportTypes: ['builtin']
-    }
-  ],
-  'import/newline-after-import': ['error', { count: 1 }],
-  'import/no-duplicates': ['error', { considerQueryString: true }],
-  'import/no-unresolved': 'error',
-  'import/no-cycle': 'warn',
-  'import/no-unused-modules': 'off',
-  'import/no-deprecated': 'warn',
-  'import/first': 'error',
-  'import/no-absolute-path': 'error',
-  'import/no-self-import': 'error',
-  'import/no-useless-path-segments': ['error', { noUselessIndex: true }]
+    ],
+    'import/newline-after-import': ['error', { count: 1 }],
+    'import/no-duplicates': ['error', { considerQueryString: true }],
+    'import/no-unresolved': 'error',
+    'import/no-cycle': 'warn',
+    'import/no-unused-modules': 'off',
+    'import/no-deprecated': 'warn',
+    'import/first': 'error',
+    'import/no-absolute-path': 'error',
+    'import/no-self-import': 'error',
+    'import/no-useless-path-segments': ['error', { noUselessIndex: true }]
 };

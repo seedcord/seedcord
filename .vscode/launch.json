@@ -1,60 +1,60 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "🚀 Launch Watch Mode (Primary)",
-      "skipFiles": ["<node_internals>/**"],
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["start:watch"],
-      "console": "integratedTerminal",
-      "restart": true,
-      "cwd": "${workspaceFolder}/packages/mock",
-      "presentation": {
-        "hidden": false,
-        "group": "main"
-      },
-      "internalConsoleOptions": "neverOpen"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "🔧 Build & Start Bot",
-      "skipFiles": ["<node_internals>/**"],
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev:bot"],
-      "console": "integratedTerminal",
-      "cwd": "${workspaceFolder}/packages/mock",
-      "presentation": {
-        "hidden": false,
-        "group": "secondary"
-      }
-    },
-    {
-      "type": "node",
-      "request": "attach",
-      "name": "🔗 Attach to Process",
-      "port": 9229,
-      "restart": true,
-      "localRoot": "${workspaceFolder}",
-      "remoteRoot": "/usr/source/app",
-      "skipFiles": ["<node_internals>/**"],
-      "presentation": {
-        "hidden": false,
-        "group": "debug"
-      }
-    }
-  ],
-  "compounds": [
-    {
-      "name": "🔄 Full Development Mode",
-      "configurations": ["🚀 Launch Watch Mode (Primary)"],
-      "stopAll": true,
-      "presentation": {
-        "hidden": false,
-        "group": "compounds"
-      }
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "🚀 Launch Watch Mode (Primary)",
+            "skipFiles": ["<node_internals>/**"],
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": ["start:watch"],
+            "console": "integratedTerminal",
+            "restart": true,
+            "cwd": "${workspaceFolder}/packages/mock",
+            "presentation": {
+                "hidden": false,
+                "group": "main"
+            },
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "🔧 Build & Start Bot",
+            "skipFiles": ["<node_internals>/**"],
+            "runtimeExecutable": "pnpm",
+            "runtimeArgs": ["dev:bot"],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}/packages/mock",
+            "presentation": {
+                "hidden": false,
+                "group": "secondary"
+            }
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "🔗 Attach to Process",
+            "port": 9229,
+            "restart": true,
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/usr/source/app",
+            "skipFiles": ["<node_internals>/**"],
+            "presentation": {
+                "hidden": false,
+                "group": "debug"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "🔄 Full Development Mode",
+            "configurations": ["🚀 Launch Watch Mode (Primary)"],
+            "stopAll": true,
+            "presentation": {
+                "hidden": false,
+                "group": "compounds"
+            }
+        }
+    ]
 }

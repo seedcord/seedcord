@@ -1,66 +1,66 @@
 {
-  "version": "2.0.0",
-  "tasks": [
-    // Docker Tasks
-    {
-      "type": "shell",
-      "label": "🐳 Docker: Build Dev Image",
-      "command": "docker",
-      "args": ["build", "--target", "development", "-t", "seedcord:dev", "."],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "dedicated"
-      },
-      "options": {
-        "cwd": "${workspaceFolder}"
-      }
-    },
-    {
-      "type": "shell",
-      "label": "🐳 Docker: Run Dev Container",
-      "command": "docker",
-      "args": ["run", "--rm", "-p", "3000:3000", "-p", "6956:6956", "--env-file", ".env", "seedcord:dev"],
-      "group": "build",
-      "dependsOn": "🐳 Docker: Build Dev Image",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "dedicated"
-      }
-    },
-    {
-      "type": "shell",
-      "label": "🐳 Docker: Build Prod Image",
-      "command": "docker",
-      "args": ["build", "-t", "seedcord:prod", "."],
-      "group": "build",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": false,
-        "panel": "dedicated"
-      },
-      "options": {
-        "cwd": "${workspaceFolder}"
-      }
-    },
-    {
-      "type": "shell",
-      "label": "🐳 Docker: Run Prod Container",
-      "command": "docker",
-      "args": ["run", "--rm", "-p", "3000:3000", "-p", "6956:6956", "--env-file", ".env", "seedcord:prod"],
-      "group": "build",
-      "dependsOn": "🐳 Docker: Build Prod Image",
-      "presentation": {
-        "echo": true,
-        "reveal": "always",
-        "focus": true,
-        "panel": "dedicated"
-      }
-    }
-  ]
+    "version": "2.0.0",
+    "tasks": [
+        // Docker Tasks
+        {
+            "type": "shell",
+            "label": "🐳 Docker: Build Dev Image",
+            "command": "docker",
+            "args": ["build", "--target", "development", "-t", "seedcord:dev", "."],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "🐳 Docker: Run Dev Container",
+            "command": "docker",
+            "args": ["run", "--rm", "-p", "3000:3000", "-p", "6956:6956", "--env-file", ".env", "seedcord:dev"],
+            "group": "build",
+            "dependsOn": "🐳 Docker: Build Dev Image",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "🐳 Docker: Build Prod Image",
+            "command": "docker",
+            "args": ["build", "-t", "seedcord:prod", "."],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "🐳 Docker: Run Prod Container",
+            "command": "docker",
+            "args": ["run", "--rm", "-p", "3000:3000", "-p", "6956:6956", "--env-file", ".env", "seedcord:prod"],
+            "group": "build",
+            "dependsOn": "🐳 Docker: Build Prod Image",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated"
+            }
+        }
+    ]
 }

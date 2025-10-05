@@ -3,7 +3,7 @@
  * @typeParam Props - The object type to modify
  */
 export type AtLeastOne<Props, SingleKeyObjectMap = { [K in keyof Props]: Pick<Props, K> }> = Partial<Props> &
-  SingleKeyObjectMap[keyof SingleKeyObjectMap];
+    SingleKeyObjectMap[keyof SingleKeyObjectMap];
 
 /**
  * Makes a type nullable by adding null and undefined
@@ -17,14 +17,14 @@ export type Nullable<Value = null> = Value extends null ? null | undefined : Val
  * @typeParam Upper - The upper bound of the range
  */
 export type NumberRange<
-  Lower extends number,
-  Upper extends number,
-  Accumulator extends unknown[] = []
+    Lower extends number,
+    Upper extends number,
+    Accumulator extends unknown[] = []
 > = Accumulator['length'] extends Upper
-  ? [...Accumulator, Accumulator['length']][number]
-  : Accumulator['length'] extends Lower
-    ? NumberRange<number, Upper, [...Accumulator, Accumulator['length']]>
-    : NumberRange<Lower, Upper, [...Accumulator, Lower]>;
+    ? [...Accumulator, Accumulator['length']][number]
+    : Accumulator['length'] extends Lower
+      ? NumberRange<number, Upper, [...Accumulator, Accumulator['length']]>
+      : NumberRange<Lower, Upper, [...Accumulator, Lower]>;
 
 /**
  * Creates a tuple of repeated elements with a specific length
@@ -32,8 +32,8 @@ export type NumberRange<
  * @typeParam Length - The desired length of the tuple
  */
 export type TupleOf<Element, Length extends number, Result extends unknown[] = []> = Result['length'] extends Length
-  ? Result
-  : TupleOf<Element, Length, [...Result, Element]>;
+    ? Result
+    : TupleOf<Element, Length, [...Result, Element]>;
 
 /**
  * Removes properties from Source that exist in Excluded
@@ -48,8 +48,8 @@ export type Without<Source, Excluded> = Partial<Record<Exclude<keyof Source, key
  * @typeParam OtherObj - The second type option
  */
 export type XOR<ThisObj, OtherObj> = ThisObj | OtherObj extends object
-  ? (Without<ThisObj, OtherObj> & OtherObj) | (Without<OtherObj, ThisObj> & ThisObj)
-  : ThisObj | OtherObj;
+    ? (Without<ThisObj, OtherObj> & OtherObj) | (Without<OtherObj, ThisObj> & ThisObj)
+    : ThisObj | OtherObj;
 
 /**
  * Type-safe version of Omit that ensures the keys exist on the target object
@@ -81,8 +81,8 @@ export type ConstructorFunction = new (...args: any[]) => unknown;
  * @typeParam StartingString - The string that valid members must start with
  */
 export type StartsWith<
-  BaseUnion extends string,
-  StartingString extends string
+    BaseUnion extends string,
+    StartingString extends string
 > = BaseUnion extends `${StartingString}${string}` ? BaseUnion : never;
 
 /**
@@ -90,27 +90,27 @@ export type StartsWith<
  * @typeParam ConstructorType - The constructor type to extract the signature from
  */
 export type TypedConstructor<ConstructorType> = ConstructorType extends new (...args: infer A) => infer R
-  ? new (...args: A) => R
-  : ConstructorType extends abstract new (...args: infer A) => infer R
     ? new (...args: A) => R
-    : never;
+    : ConstructorType extends abstract new (...args: infer A) => infer R
+      ? new (...args: A) => R
+      : never;
 
 /**
  * Converts a union type to an intersection type
  * @typeParam UnionType - The union type to convert to an intersection
  */
 export type UnionToIntersection<UnionType> = (UnionType extends unknown ? (x: UnionType) => void : never) extends (
-  x: infer I
+    x: infer I
 ) => void
-  ? I
-  : never;
+    ? I
+    : never;
 
 /**
  * Gets the last type from a union type
  * @typeParam UnionType - The union type to get the last member from
  */
 export type LastOf<UnionType> =
-  UnionToIntersection<UnionType extends unknown ? (x: UnionType) => 0 : never> extends (x: infer L) => 0 ? L : never;
+    UnionToIntersection<UnionType extends unknown ? (x: UnionType) => 0 : never> extends (x: infer L) => 0 ? L : never;
 
 /**
  * Extracts all parameters after the first one from a tuple type
@@ -123,5 +123,5 @@ export type Tail<TArgs extends unknown[]> = TArgs extends [unknown, ...infer R] 
  * @typeParam UnionType - The union type to convert to a tuple
  */
 export type UnionToTuple<UnionType, TupleArray extends unknown[] = []> = [UnionType] extends [never]
-  ? TupleArray
-  : UnionToTuple<Exclude<UnionType, LastOf<UnionType>>, [LastOf<UnionType>, ...TupleArray]>;
+    ? TupleArray
+    : UnionToTuple<Exclude<UnionType, LastOf<UnionType>>, [LastOf<UnionType>, ...TupleArray]>;

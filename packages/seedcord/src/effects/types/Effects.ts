@@ -6,8 +6,8 @@ import type { Guild, User } from 'discord.js';
  * Default side effects that are always available in the framework.
  */
 export interface DefaultEffects {
-  /** Triggered when an unhandled exception occurs */
-  unknownException: { uuid: UUID; error: Error; guild: Nullable<Guild>; user: Nullable<User> };
+    /** Triggered when an unhandled exception occurs */
+    unknownException: { uuid: UUID; error: Error; guild: Nullable<Guild>; user: Nullable<User> };
 }
 
 /**

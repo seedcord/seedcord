@@ -9,33 +9,33 @@ import type { PackageDocResult } from './types';
 
 // create the output folder, run typedoc for each package, then the manifest at the end
 async function run(): Promise<void> {
-  await mkdir(OUTPUT_DIR, { recursive: true });
+    await mkdir(OUTPUT_DIR, { recursive: true });
 
-  const packageDirs = await discoverWorkspacePackages();
-  const results: PackageDocResult[] = [];
+    const packageDirs = await discoverWorkspacePackages();
+    const results: PackageDocResult[] = [];
 
-  for (const packageDir of packageDirs) {
-    const result = await extractPackageDocs(packageDir);
-    if (!result) continue;
+    for (const packageDir of packageDirs) {
+        const result = await extractPackageDocs(packageDir);
+        if (!result) continue;
 
-    results.push(result);
+        results.push(result);
 
-    const statusIcon = result.succeeded ? '✅' : '❌';
-    const outputSummary = result.outputPath ? `→ ${toRepoRelative(result.outputPath)}` : '→ —';
-    const warningSummary = result.warnings.length > 0 ? ` ⚠️ ${result.warnings.length}` : '';
-    console.log(`${statusIcon} ${result.name}@${result.version} ${outputSummary}${warningSummary}`);
+        const statusIcon = result.succeeded ? '✅' : '❌';
+        const outputSummary = result.outputPath ? `→ ${toRepoRelative(result.outputPath)}` : '→ —';
+        const warningSummary = result.warnings.length > 0 ? ` ⚠️ ${result.warnings.length}` : '';
+        console.log(`${statusIcon} ${result.name}@${result.version} ${outputSummary}${warningSummary}`);
 
-    if (!result.succeeded) {
-      throw new Error(`TypeDoc extraction failed for ${result.name}. see logs above.`);
+        if (!result.succeeded) {
+            throw new Error(`TypeDoc extraction failed for ${result.name}. see logs above.`);
+        }
     }
-  }
 
-  await writeManifest(results);
+    await writeManifest(results);
 
-  console.log(`\nGenerated ${results.length} API documents → ${toRepoRelative(OUTPUT_DIR)}`);
+    console.log(`\nGenerated ${results.length} API documents → ${toRepoRelative(OUTPUT_DIR)}`);
 }
 
 run().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+    console.error(error);
+    process.exitCode = 1;
 });

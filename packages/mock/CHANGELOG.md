@@ -9,9 +9,9 @@
 - Updated dependencies [8374f01]
 - Updated dependencies [31d1a56]
 - Updated dependencies [5625037]
-  - seedcord@0.4.3
-  - @seedcord/plugins@0.3.2
-  - @seedcord/types@0.2.2
+    - seedcord@0.4.3
+    - @seedcord/plugins@0.3.2
+    - @seedcord/types@0.2.2
 
 ## 0.2.4
 
@@ -19,18 +19,18 @@
 
 - bump deps
 - Updated dependencies
-  - seedcord@0.4.1
-  - @seedcord/plugins@0.3.1
-  - @seedcord/types@0.2.1
+    - seedcord@0.4.1
+    - @seedcord/plugins@0.3.1
+    - @seedcord/types@0.2.1
 
 ## 0.2.3
 
 ### Patch Changes
 
 - Updated dependencies
-  - seedcord@0.4.0
-  - @seedcord/plugins@0.3.0
-  - @seedcord/types@0.2.0
+    - seedcord@0.4.0
+    - @seedcord/plugins@0.3.0
+    - @seedcord/types@0.2.0
 
 ## 0.2.2
 
@@ -44,9 +44,9 @@
 - Updated dependencies [4585b73]
 - Updated dependencies [ad2e3c3]
 - Updated dependencies [4611ac7]
-  - seedcord@0.3.0
-  - @seedcord/plugins@0.2.2
-  - @seedcord/types@0.1.4
+    - seedcord@0.3.0
+    - @seedcord/plugins@0.2.2
+    - @seedcord/types@0.1.4
 
 ## 0.2.1
 
@@ -54,9 +54,9 @@
 
 - move IDocument type export to the plugins package
 - Updated dependencies
-  - seedcord@0.2.1
-  - @seedcord/plugins@0.2.1
-  - @seedcord/types@0.1.3
+    - seedcord@0.2.1
+    - @seedcord/plugins@0.2.1
+    - @seedcord/types@0.1.3
 
 ## 0.2.0
 
@@ -69,8 +69,8 @@
 - Updated dependencies [dabf324]
 - Updated dependencies [0258dd5]
 - Updated dependencies [0ed832b]
-  - seedcord@0.2.0
-  - @seedcord/plugins@0.2.0
+    - seedcord@0.2.0
+    - @seedcord/plugins@0.2.0
 
 ## 0.1.1
 
@@ -80,9 +80,9 @@
 - Updated dependencies [72137e9]
 - Updated dependencies [c188583]
 - Updated dependencies [5ac7d83]
-  - seedcord@0.1.1
-  - @seedcord/plugins@0.1.1
-  - @seedcord/types@0.1.2
+    - seedcord@0.1.1
+    - @seedcord/plugins@0.1.1
+    - @seedcord/types@0.1.2
 
 ## 0.1.0
 
@@ -103,9 +103,9 @@
 - Updated dependencies [48a8c9b]
 - Updated dependencies [48a8c9b]
 - Updated dependencies [48a8c9b]
-  - @seedcord/types@0.1.0
-  - seedcord@0.1.0
-  - @seedcord/plugins@0.1.0
+    - @seedcord/types@0.1.0
+    - seedcord@0.1.0
+    - @seedcord/plugins@0.1.0
 
 ## 0.1.0-alpha.3
 
@@ -117,9 +117,9 @@
 
 - Updated dependencies [8c4ce41]
 - Updated dependencies [2a141ec]
-  - seedcord@0.1.0-alpha.3
-  - @seedcord/types@0.1.0-alpha.2
-  - @seedcord/plugins@0.1.0-alpha.2
+    - seedcord@0.1.0-alpha.3
+    - @seedcord/types@0.1.0-alpha.2
+    - @seedcord/plugins@0.1.0-alpha.2
 
 ## 0.1.0-alpha.2
 
@@ -135,20 +135,20 @@
 - Updated dependencies [dad89c6]
 - Updated dependencies [956f225]
 - Updated dependencies [73a33a5]
-  - @seedcord/types@0.1.0-alpha.1
-  - seedcord@0.1.0-alpha.2
+    - @seedcord/types@0.1.0-alpha.1
+    - seedcord@0.1.0-alpha.2
 
 ## 0.0.1-alpha.1
 
 ### Patch Changes
 
 - Updated dependencies
-  - @seedcord/types@0.1.0-alpha.0
-  - seedcord@0.1.0-alpha.1
+    - @seedcord/types@0.1.0-alpha.0
+    - seedcord@0.1.0-alpha.1
 
 ## 0.0.1-alpha.0
 
 ### Patch Changes
 
 - Updated dependencies
-  - seedcord@0.1.0-alpha.0
+    - seedcord@0.1.0-alpha.0

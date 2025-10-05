@@ -32,24 +32,24 @@ import type { Core } from 'seedcord';
  * ```
  */
 export abstract class BaseService<Doc extends IDocument = IDocument> {
-  public readonly model: mongoose.Model<Doc>;
+    public readonly model: mongoose.Model<Doc>;
 
-  public constructor(
-    protected readonly db: Mongo,
-    protected readonly core: Core
-  ) {
-    const ctor = this.constructor;
+    public constructor(
+        protected readonly db: Mongo,
+        protected readonly core: Core
+    ) {
+        const ctor = this.constructor;
 
-    const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
-    if (!key) throw new Error(`Missing @DatabaseService on ${ctor.name}`);
+        const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
+        if (!key) throw new Error(`Missing @DatabaseService on ${ctor.name}`);
 
-    const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<Doc> | undefined;
-    if (!model) throw new Error(`Missing @DatabaseModel on ${ctor.name}`);
+        const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<Doc> | undefined;
+        if (!model) throw new Error(`Missing @DatabaseModel on ${ctor.name}`);
 
-    this.model = model;
+        this.model = model;
 
-    db._register(key as keyof Services, this as unknown as Services[keyof Services]);
-  }
+        db._register(key as keyof Services, this as unknown as Services[keyof Services]);
+    }
 }
 
 /** Constructor type for BaseService classes */

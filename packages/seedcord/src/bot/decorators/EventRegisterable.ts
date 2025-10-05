@@ -22,7 +22,7 @@ export const EventMetadataKey = Symbol('event:metadata');
  * ```
  */
 export function RegisterEvent<KeyofEvents extends keyof ClientEvents>(eventName: KeyofEvents) {
-  return function (constructor: ConstructorFunction): void {
-    Reflect.defineMetadata(EventMetadataKey, eventName, constructor);
-  };
+    return function (constructor: ConstructorFunction): void {
+        Reflect.defineMetadata(EventMetadataKey, eventName, constructor);
+    };
 }

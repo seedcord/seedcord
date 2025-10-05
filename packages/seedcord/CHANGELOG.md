@@ -9,16 +9,16 @@
 - 5625037: add a way to specify HOST for healthcheck
 - Updated dependencies [8374f01]
 - Updated dependencies [31d1a56]
-  - @seedcord/services@0.2.2
-  - @seedcord/types@0.2.2
-  - @seedcord/utils@0.2.3
+    - @seedcord/services@0.2.2
+    - @seedcord/types@0.2.2
+    - @seedcord/utils@0.2.3
 
 ## 0.4.2
 
 ### Patch Changes
 
 - Updated dependencies
-  - @seedcord/utils@0.2.2
+    - @seedcord/utils@0.2.2
 
 ## 0.4.1
 
@@ -26,9 +26,9 @@
 
 - bump deps
 - Updated dependencies
-  - @seedcord/services@0.2.1
-  - @seedcord/types@0.2.1
-  - @seedcord/utils@0.2.1
+    - @seedcord/services@0.2.1
+    - @seedcord/types@0.2.1
+    - @seedcord/utils@0.2.1
 
 ## 0.4.0
 
@@ -39,9 +39,9 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @seedcord/services@0.2.0
-  - @seedcord/types@0.2.0
-  - @seedcord/utils@0.2.0
+    - @seedcord/services@0.2.0
+    - @seedcord/types@0.2.0
+    - @seedcord/utils@0.2.0
 
 ## 0.3.0
 
@@ -57,9 +57,9 @@
 - 8a7591a: bump deps
 - ad2e3c3: use djs Collection object
 - Updated dependencies [8a7591a]
-  - @seedcord/services@0.1.1
-  - @seedcord/types@0.1.4
-  - @seedcord/utils@0.1.1
+    - @seedcord/services@0.1.1
+    - @seedcord/types@0.1.4
+    - @seedcord/utils@0.1.1
 
 ## 0.2.1
 
@@ -67,7 +67,7 @@
 
 - move IDocument type export to the plugins package
 - Updated dependencies
-  - @seedcord/types@0.1.3
+    - @seedcord/types@0.1.3
 
 ## 0.2.0
 
@@ -81,8 +81,8 @@
 - 0ed832b: debug logging in emoji injector
 - Updated dependencies [dabf324]
 - Updated dependencies [f0650e8]
-  - @seedcord/utils@0.1.0
-  - @seedcord/services@0.1.0
+    - @seedcord/utils@0.1.0
+    - @seedcord/services@0.1.0
 
 ## 0.1.1
 
@@ -92,7 +92,7 @@
 - c188583: move buildCustomId method to BaseComponent so all components can access
 - 5ac7d83: cleanup package files and bump deps
 - Updated dependencies [5ac7d83]
-  - @seedcord/types@0.1.2
+    - @seedcord/types@0.1.2
 
 ## 0.1.0
 
@@ -112,7 +112,7 @@
 - Updated dependencies [8c4ce41]
 - Updated dependencies [48a8c9b]
 - Updated dependencies [48a8c9b]
-  - @seedcord/types@0.1.0
+    - @seedcord/types@0.1.0
 
 ## 0.1.0-alpha.3
 
@@ -124,7 +124,7 @@
 
 - 8c4ce41: Added eslint for TSDoc
 - Updated dependencies [8c4ce41]
-  - @seedcord/types@0.1.0-alpha.2
+    - @seedcord/types@0.1.0-alpha.2
 
 ## 0.1.0-alpha.2
 
@@ -139,14 +139,14 @@
 - Updated dependencies [73a33a5]
 - Updated dependencies [dad89c6]
 - Updated dependencies [73a33a5]
-  - @seedcord/types@0.1.0-alpha.1
+    - @seedcord/types@0.1.0-alpha.1
 
 ## 0.1.0-alpha.1
 
 ### Patch Changes
 
 - Updated dependencies
-  - @seedcord/types@0.1.0-alpha.0
+    - @seedcord/types@0.1.0-alpha.0
 
 ## 0.1.0-alpha.0
 

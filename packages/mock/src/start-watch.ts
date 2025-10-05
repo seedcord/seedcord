@@ -9,14 +9,14 @@ const script = 'pnpm run dev:bot';
 const args: string[] = isMac ? [] : ['--legacy-watch'];
 
 const nodemonProcess = spawn(script, args, {
-  stdio: 'inherit',
-  shell: true
+    stdio: 'inherit',
+    shell: true
 });
 
 nodemonProcess.on('error', (error) => {
-  Logger.Error('start-watch', `Error | ${error.message}`);
+    Logger.Error('start-watch', `Error | ${error.message}`);
 });
 
 nodemonProcess.on('close', (code) => {
-  Logger.Info('start-watch', `nodemon process exited with code ${code}`);
+    Logger.Info('start-watch', `nodemon process exited with code ${code}`);
 });

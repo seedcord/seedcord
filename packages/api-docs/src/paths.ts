@@ -14,15 +14,15 @@ export const MANIFEST_PATH = path.join(OUTPUT_DIR, 'manifest.json');
 
 // make paths relative to the repo root so they look nice in the manifest and console and on github
 export function toRepoRelative(filePath: string): string {
-  return path.relative(REPO_ROOT, filePath).split(path.sep).join('/');
+    return path.relative(REPO_ROOT, filePath).split(path.sep).join('/');
 }
 
 // same idea as the one above but relative to this package
 export function toPackageRelative(filePath: string): string {
-  return path.relative(PACKAGE_ROOT, filePath).split(path.sep).join('/');
+    return path.relative(PACKAGE_ROOT, filePath).split(path.sep).join('/');
 }
 
 // every package writes to generated/<package>.json
 export function getOutputPathForPackage(unscopedName: string): string {
-  return path.join(OUTPUT_DIR, `${unscopedName}.json`);
+    return path.join(OUTPUT_DIR, `${unscopedName}.json`);
 }

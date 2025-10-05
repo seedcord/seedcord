@@ -10,11 +10,11 @@
  * ordinal(13); // "13th"
  */
 export function ordinal(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  const index = (v - 20) % 10;
-  const suffix = s[index] ?? s[v] ?? s[0];
-  if (!suffix) return `${n}th`;
+    const s = ['th', 'st', 'nd', 'rd'];
+    const v = n % 100;
+    const index = (v - 20) % 10;
+    const suffix = s[index] ?? s[v] ?? s[0];
+    if (!suffix) return `${n}th`;
 
-  return `${n}${suffix}`;
+    return `${n}${suffix}`;
 }

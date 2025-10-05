@@ -8,15 +8,15 @@ type CommandCtor = new (...args: any[]) => BuilderComponent<'command' | 'context
  * Metadata for global command registration.
  */
 interface GlobalMeta {
-  scope: 'global';
+    scope: 'global';
 }
 
 /**
  * Metadata for guild-specific command registration.
  */
 interface GuildMeta {
-  scope: 'guild';
-  guilds: string[];
+    scope: 'guild';
+    guilds: string[];
 }
 
 /**
@@ -63,8 +63,8 @@ export function RegisterCommand(scope: 'guild', guilds: string[]): (ctor: Comman
  * @decorator
  */
 export function RegisterCommand(scope: 'global' | 'guild', guilds: string[] = []) {
-  return (ctor: CommandCtor): void => {
-    const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
-    Reflect.defineMetadata(CommandMetadataKey, meta, ctor);
-  };
+    return (ctor: CommandCtor): void => {
+        const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
+        Reflect.defineMetadata(CommandMetadataKey, meta, ctor);
+    };
 }

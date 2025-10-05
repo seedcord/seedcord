@@ -1,43 +1,43 @@
 name: commitlint
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize, ready_for_review]
-  push:
-    branches-ignore:
-      - 'dependabot/**'
+    pull_request:
+        types: [opened, reopened, synchronize, ready_for_review]
+    push:
+        branches-ignore:
+            - 'dependabot/**'
 
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  commitlint:
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
-    runs-on: ubuntu-latest
-    concurrency:
-      group: commitlint-${{ github.ref }}
-      cancel-in-progress: true
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    commitlint:
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+        runs-on: ubuntu-latest
+        concurrency:
+            group: commitlint-${{ github.ref }}
+            cancel-in-progress: true
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.17.1
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 10.17.1
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --filter .
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --filter .
 
-      - name: Lint last commit
-        if: github.event_name == 'push'
-        run: pnpm exec commitlint --last --verbose
+            - name: Lint last commit
+              if: github.event_name == 'push'
+              run: pnpm exec commitlint --last --verbose
 
-      - name: Lint PR commit range
-        if: github.event_name == 'pull_request'
-        run: pnpm exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose
+            - name: Lint PR commit range
+              if: github.event_name == 'pull_request'
+              run: pnpm exec commitlint --from "${{ github.event.pull_request.base.sha }}" --to "${{ github.event.pull_request.head.sha }}" --verbose

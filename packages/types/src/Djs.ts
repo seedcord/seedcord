@@ -3,8 +3,8 @@ import type { EmbedBuilder, ActionRowBuilder, MessageActionRowComponentBuilder }
 
 /** Discord message content with embeds and components */
 export interface MessageContent {
-  embeds: EmbedBuilder[];
-  components: [ActionRowBuilder<MessageActionRowComponentBuilder>];
+    embeds: EmbedBuilder[];
+    components: [ActionRowBuilder<MessageActionRowComponentBuilder>];
 }
 
 /** Discord message that requires at least one of content, embeds, or components */

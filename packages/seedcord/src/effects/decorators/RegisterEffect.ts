@@ -22,7 +22,7 @@ export const EffectMetadataKey = Symbol('effect:metadata');
  * ```
  */
 export function RegisterEffect<TEffect extends EffectKeys>(effect: TEffect) {
-  return function (constructor: ConstructorFunction): void {
-    Reflect.defineMetadata(EffectMetadataKey, effect, constructor);
-  };
+    return function (constructor: ConstructorFunction): void {
+        Reflect.defineMetadata(EffectMetadataKey, effect, constructor);
+    };
 }

@@ -1,10 +1,10 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig.json",
-  "extends": "./base.json",
-  "compilerOptions": {
-    "rootDir": "./",
-    "outDir": "./dist"
-  },
-  "include": ["**/*.ts", "**/*.mts", "**/*.json"],
-  "exclude": ["node_modules", "dist", "coverage", "tests"]
+    "$schema": "https://json.schemastore.org/tsconfig.json",
+    "extends": "./base.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "outDir": "./dist"
+    },
+    "include": ["**/*.ts", "**/*.mts", "**/*.json"],
+    "exclude": ["node_modules", "dist", "coverage"]
 }

@@ -8,8 +8,8 @@
 - 31d1a56: bump deps
 - Updated dependencies [8374f01]
 - Updated dependencies [31d1a56]
-  - @seedcord/services@0.2.2
-  - @seedcord/types@0.2.2
+    - @seedcord/services@0.2.2
+    - @seedcord/types@0.2.2
 
 ## 0.2.2
 
@@ -23,8 +23,8 @@
 
 - bump deps
 - Updated dependencies
-  - @seedcord/services@0.2.1
-  - @seedcord/types@0.2.1
+    - @seedcord/services@0.2.1
+    - @seedcord/types@0.2.1
 
 ## 0.2.0
 
@@ -35,8 +35,8 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @seedcord/services@0.2.0
-  - @seedcord/types@0.2.0
+    - @seedcord/services@0.2.0
+    - @seedcord/types@0.2.0
 
 ## 0.1.1
 
@@ -44,8 +44,8 @@
 
 - 8a7591a: bump deps
 - Updated dependencies [8a7591a]
-  - @seedcord/services@0.1.1
-  - @seedcord/types@0.1.4
+    - @seedcord/services@0.1.1
+    - @seedcord/types@0.1.4
 
 ## 0.1.0
 
@@ -57,4 +57,4 @@
 ### Patch Changes
 
 - Updated dependencies [dabf324]
-  - @seedcord/services@0.1.0
+    - @seedcord/services@0.1.0

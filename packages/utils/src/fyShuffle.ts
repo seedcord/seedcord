@@ -16,11 +16,11 @@
  * ```
  */
 export function fyShuffle<TArray>(items: TArray[]): TArray[] {
-  const array = items.slice();
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    // @ts-expect-error - TypeScript doesn't recognize that TArray can be swapped
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
+    const array = items.slice();
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        // @ts-expect-error - TypeScript doesn't recognize that TArray can be swapped
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
 }

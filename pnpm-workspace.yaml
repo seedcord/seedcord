@@ -1,13 +1,13 @@
 packages:
-  - packages/*
+    - packages/*
 
 catalogs:
-  deps:
-    chalk: 5.6.2
-    discord.js: 14.22.1
-    envapt: 4.0.0
-    mongoose: 8.19.0
-    reflect-metadata: 0.2.2
-  peer:
-    eslint: 9.37.0
-    typescript: 5.9.3
+    deps:
+        chalk: 5.6.2
+        discord.js: 14.22.1
+        envapt: 4.0.0
+        mongoose: 8.19.0
+        reflect-metadata: 0.2.2
+    peer:
+        eslint: 9.37.0
+        typescript: 5.9.3

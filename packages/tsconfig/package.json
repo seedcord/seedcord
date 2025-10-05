@@ -1,36 +1,36 @@
 {
-  "name": "@seedcord/tsconfig",
-  "type": "module",
-  "version": "1.0.5",
-  "description": "Shared TypeScript configuration for seedcord projects",
-  "main": "./base.json",
-  "private": true,
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/materwelondhruv/seedcord.git",
-    "directory": "packages/tsconfig"
-  },
-  "exports": {
-    "./base": {
-      "default": "./base.json"
+    "name": "@seedcord/tsconfig",
+    "type": "module",
+    "version": "1.0.5",
+    "description": "Shared TypeScript configuration for seedcord projects",
+    "main": "./base.json",
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "directory": "packages/tsconfig"
+    },
+    "exports": {
+        "./base": {
+            "default": "./base.json"
+        }
+    },
+    "files": [
+        "base.json"
+    ],
+    "scripts": {
+        "build": "echo 'Already built as .json files'",
+        "clean": "echo 'No build artifacts to clean'",
+        "lint": "eslint '*.{mjs,ts}' --cache",
+        "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
+        "fmt": "prettier --write '*.{json,md}' --cache",
+        "fmt:check": "prettier --check '*.{json,md}' --cache",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "typescript": "catalog:peer"
     }
-  },
-  "files": [
-    "base.json"
-  ],
-  "scripts": {
-    "build": "echo 'Already built as .json files'",
-    "clean": "echo 'No build artifacts to clean'",
-    "lint": "eslint '*.{mjs,ts}' --cache",
-    "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
-    "fmt": "prettier --write '*.{json,md}' --cache",
-    "fmt:check": "prettier --check '*.{json,md}' --cache",
-    "test": "vitest run",
-    "test:watch": "vitest dev",
-    "coverage": "vitest run --coverage"
-  },
-  "devDependencies": {
-    "@seedcord/eslint-config": "workspace:^",
-    "typescript": "catalog:peer"
-  }
 }

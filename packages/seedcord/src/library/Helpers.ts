@@ -26,22 +26,22 @@ import type { CustomErrorConstructor } from '../interfaces/Components';
  * ```
  */
 export function throwCustomError<Ctor extends CustomErrorConstructor>(
-  error: unknown,
-  message: string,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  CustomError: Ctor
+    error: unknown,
+    message: string,
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    CustomError: Ctor
 ): never {
-  const uuid = crypto.randomUUID();
-  Logger.Error('Throwing Custom Error', (error as Error).name);
+    const uuid = crypto.randomUUID();
+    Logger.Error('Throwing Custom Error', (error as Error).name);
 
-  if (typeof CustomError === typeof DatabaseError) {
-    const errorMessage = error instanceof Error ? error.message : message;
-    throw new CustomError(errorMessage, uuid);
-  } else {
-    if (error instanceof Error) {
-      throw new CustomError(`${message}: ${error.message ? error.message : error.toString()}`);
+    if (typeof CustomError === typeof DatabaseError) {
+        const errorMessage = error instanceof Error ? error.message : message;
+        throw new CustomError(errorMessage, uuid);
     } else {
-      throw new CustomError(message);
+        if (error instanceof Error) {
+            throw new CustomError(`${message}: ${error.message ? error.message : error.toString()}`);
+        } else {
+            throw new CustomError(message);
+        }
     }
-  }
 }

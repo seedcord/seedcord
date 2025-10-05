@@ -1,5 +1,5 @@
 import { createTsupConfig } from '@seedcord/tsup-config';
 
 export default createTsupConfig({
-  format: ['esm']
+    format: ['esm']
 });

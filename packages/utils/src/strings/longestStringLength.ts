@@ -6,5 +6,5 @@
  */
 
 export function longestStringLength(arr: (string | number)[]): number {
-  return Math.max(...arr.map((el) => el.toString().length));
+    return Math.max(...arr.map((el) => el.toString().length));
 }

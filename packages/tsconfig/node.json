@@ -1,10 +1,10 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig.json",
-  "extends": "./base.json",
-  "compilerOptions": {
-    "lib": ["ESNext", "Decorators", "Decorators.Legacy"],
-    "target": "ES2022",
-    "module": "esnext",
-    "moduleResolution": "bundler"
-  }
+    "$schema": "https://json.schemastore.org/tsconfig.json",
+    "extends": "./base.json",
+    "compilerOptions": {
+        "lib": ["ESNext", "Decorators", "Decorators.Legacy"],
+        "target": "ES2022",
+        "module": "esnext",
+        "moduleResolution": "bundler"
+    }
 }
