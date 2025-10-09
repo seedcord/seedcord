@@ -7,6 +7,7 @@ import {
     EmbedBuilder,
     FileBuilder,
     InteractionContextType,
+    LabelBuilder,
     MediaGalleryBuilder,
     MentionableSelectMenuBuilder,
     ModalBuilder,
@@ -24,11 +25,24 @@ import {
 } from 'discord.js';
 import { Envapt } from 'envapt';
 
-import type { ColorResolvable, ModalActionRowComponentBuilder } from 'discord.js';
+import type { ColorResolvable } from 'discord.js';
 
 const BuilderTypes = {
+    // Command Components
     command: SlashCommandBuilder,
+    context_menu: ContextMenuCommandBuilder,
+    subcommand: SlashCommandSubcommandBuilder,
+    group: SlashCommandSubcommandGroupBuilder,
+
+    // Embed Components
     embed: EmbedBuilder,
+
+    // Modal Components
+    modal: ModalBuilder,
+    label: LabelBuilder,
+    text_input: TextInputBuilder,
+
+    // Action Row Components
     button: ButtonBuilder,
     menu_string: StringSelectMenuBuilder,
     menu_option_string: StringSelectMenuOptionBuilder,
@@ -36,10 +50,8 @@ const BuilderTypes = {
     menu_channel: ChannelSelectMenuBuilder,
     menu_mentionable: MentionableSelectMenuBuilder,
     menu_role: RoleSelectMenuBuilder,
-    modal: ModalBuilder,
-    context_menu: ContextMenuCommandBuilder,
-    subcommand: SlashCommandSubcommandBuilder,
-    group: SlashCommandSubcommandGroupBuilder,
+
+    // ComponentsV2
     container: ContainerBuilder,
     text_display: TextDisplayBuilder,
     file: FileBuilder,
@@ -55,19 +67,13 @@ const RowTypes: {
     menu_channel: typeof ActionRowBuilder<ChannelSelectMenuBuilder>;
     menu_mentionable: typeof ActionRowBuilder<MentionableSelectMenuBuilder>;
     menu_role: typeof ActionRowBuilder<RoleSelectMenuBuilder>;
-    modal: typeof ActionRowBuilder<ModalActionRowComponentBuilder>;
 } = {
     button: ActionRowBuilder<ButtonBuilder>,
     menu_string: ActionRowBuilder<StringSelectMenuBuilder>,
     menu_user: ActionRowBuilder<UserSelectMenuBuilder>,
     menu_channel: ActionRowBuilder<ChannelSelectMenuBuilder>,
     menu_mentionable: ActionRowBuilder<MentionableSelectMenuBuilder>,
-    menu_role: ActionRowBuilder<RoleSelectMenuBuilder>,
-    modal: ActionRowBuilder<ModalActionRowComponentBuilder>
-};
-
-const ModalTypes = {
-    text: TextInputBuilder
+    menu_role: ActionRowBuilder<RoleSelectMenuBuilder>
 };
 
 type BuilderType = keyof typeof BuilderTypes;
@@ -75,9 +81,6 @@ type InstantiatedBuilder<BuilderKey extends BuilderType> = InstanceType<(typeof 
 
 type ActionRowComponentType = keyof typeof RowTypes;
 type InstantiatedActionRow<RowKey extends ActionRowComponentType> = InstanceType<(typeof RowTypes)[RowKey]>;
-
-type ModalFieldTypes = keyof typeof ModalTypes;
-type InstantiatedModalField<ModalKey extends ModalFieldTypes> = InstanceType<(typeof ModalTypes)[ModalKey]>;
 
 /**
  * Base class for Discord component wrappers
@@ -183,48 +186,6 @@ export abstract class RowComponent<RowKey extends ActionRowComponentType> extend
 
     get component(): InstantiatedActionRow<RowKey> {
         return this.instance;
-    }
-}
-
-/**
- * Action row wrapper for modal components
- *
- * Automatically wraps modal field components in an action row for use in modals.
- *
- * @typeParam ModalKey - The type of modal field component being wrapped
- * @internal
- */
-class ModalRow<ModalKey extends ModalFieldTypes> extends RowComponent<'modal'> {
-    /**
-     * Creates a new modal action row with the specified component.
-     *
-     * @param component - The modal field component to wrap in an action row
-     */
-    constructor(component: InstantiatedModalField<ModalKey>) {
-        super('modal');
-
-        this.instance.addComponents(component);
-    }
-}
-
-/**
- * Base class for modal field components
- *
- * Wraps Discord.js modal field builders (TextInputBuilder, etc.) and
- * packages them in action rows for use in modals.
- *
- * @typeParam ModalKey - The type of modal field builder being wrapped
- */
-export abstract class ModalComponent<ModalKey extends ModalFieldTypes> extends BaseComponent<
-    InstantiatedModalField<ModalKey>
-> {
-    protected constructor(type: ModalKey) {
-        const ComponentClass = ModalTypes[type] as unknown;
-        super(ComponentClass as new () => InstantiatedModalField<ModalKey>);
-    }
-
-    get component(): InstantiatedActionRow<'modal'> {
-        return new ModalRow<ModalKey>(this.instance).component;
     }
 }
 
