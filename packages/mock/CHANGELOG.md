@@ -1,5 +1,26 @@
 # @seedcord/mock
 
+## 0.2.6
+
+### Patch Changes
+
+- daf5dd9: new middlewares feature for both interactions and other events with priority sorting
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [0a74a7b]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+    - seedcord@0.5.0
+    - @seedcord/types@0.3.0
+    - @seedcord/plugins@0.3.3
+
 ## 0.2.5
 
 ### Patch Changes

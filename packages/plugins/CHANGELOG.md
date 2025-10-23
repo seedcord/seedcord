@@ -1,5 +1,25 @@
 # @seedcord/plugins
 
+## 0.3.3
+
+### Patch Changes
+
+- daf5dd9: improve type exports and tsdoc
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [0a74a7b]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+    - seedcord@0.5.0
+    - @seedcord/types@0.3.0
+
 ## 0.3.2
 
 ### Patch Changes

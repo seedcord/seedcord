@@ -1,5 +1,32 @@
 # seedcord
 
+## 0.5.0
+
+### Minor Changes
+
+- daf5dd9: new middlewares feature for both interactions and other events with priority sorting
+- daf5dd9: added metadata to default UnknownException so it's easier to debug issues down the line in bots
+- daf5dd9: better parsing and handling for DEFAULT_BOT_COLOR from env file as a hex string, or number, or a Discord.js Color string
+- daf5dd9: buildSlashRoute method as an alternative to building the argument for command-based route decorators
+- 0a74a7b: **BREAKING:** remove action row components for modals. (we are not following deprecations till seedcord v1 is out. minor versions will be breaking changes)
+- daf5dd9: **BREAKING:** some utility types were renamed and some were moved to different packages
+- daf5dd9: **BREAKING:** utils in seedcord are no longer static methods on classes but standalone functions
+
+### Patch Changes
+
+- daf5dd9: some tsdoc for better info and documentation
+- daf5dd9: improve type exports and tsdoc
+- daf5dd9: update effects related docs for clarity
+- daf5dd9: export missing classes and entities
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+- Updated dependencies [daf5dd9]
+    - @seedcord/services@0.3.0
+    - @seedcord/types@0.3.0
+    - @seedcord/utils@0.3.0
+
 ## 0.4.3
 
 ### Patch Changes

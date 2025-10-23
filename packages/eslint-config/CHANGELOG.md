@@ -1,5 +1,12 @@
 # @seedcord/eslint-config
 
+## 1.2.3
+
+### Patch Changes
+
+- daf5dd9: improve type exports and tsdoc
+- bfe77f6: use the provided tsconfig path for import settings
+
 ## 1.2.2
 
 ### Patch Changes
