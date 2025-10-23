@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from 'node:events';
 
 import type { AllEffects, EffectKeys } from './types/Effects';
 
@@ -9,6 +9,8 @@ import type { AllEffects, EffectKeys } from './types/Effects';
  * for Seedcord's effect system.
  *
  * @typeParam AllEffects - Side effect definitions mapping event names to data types
+ *
+ * @internal
  */
 export class EffectsEmitter {
     private readonly emitter = new EventEmitter();

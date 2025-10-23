@@ -7,7 +7,13 @@ import type { Guild, User } from 'discord.js';
  */
 export interface DefaultEffects {
     /** Triggered when an unhandled exception occurs */
-    unknownException: { uuid: UUID; error: Error; guild: Nullable<Guild>; user: Nullable<User> };
+    unknownException: {
+        uuid: UUID;
+        error: Error;
+        guild: Nullable<Guild>;
+        user: Nullable<User>;
+        metadata?: unknown;
+    };
 }
 
 /**

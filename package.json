@@ -4,7 +4,7 @@
     "description": "A Discord bot framework built on top of Discord.js",
     "private": true,
     "type": "module",
-    "packageManager": "pnpm@10.17.1",
+    "packageManager": "pnpm@10.19.0",
     "scripts": {
         "build": "turbo build",
         "dev": "turbo dev",
@@ -16,8 +16,9 @@
         "test": "turbo test",
         "lint-staged": "lint-staged",
         "clean": "turbo clean",
-        "rebuild": "turbo clean && turbo build",
-        "prebuild": "turbo clean && turbo lint && turbo tc",
+        "clean:node": "find . -name node_modules -type d -prune -exec rm -rf '{}' +",
+        "turbo:rebuild": "turbo clean && turbo build",
+        "turbo:prebuild": "turbo clean && turbo lint && turbo tc",
         "turbo:prune": "turbo prune",
         "turbo:graph": "turbo build --graph",
         "turbo:trace": "turbo build --trace",
@@ -27,13 +28,10 @@
         "cs:status": "changeset status",
         "release": "pnpm run build && pnpm run cs:publish",
         "prepublishOnly": "pnpm run clean && pnpm run build",
-        "local:seedcord": "cd packages/seedcord && tsx watch src/index.ts",
-        "local:mock": "cd packages/mock && tsx watch src/bot.ts",
-        "local:mock:watch": "cd packages/mock && tsx src/start-watch.ts",
-        "local:test:seedcord": "cd packages/seedcord && vitest",
-        "local:test:mock": "cd packages/mock && vitest",
         "bump:deps": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
-        "docs:extract": "pnpm --filter @seedcord/api-docs run extract"
+        "docs:extract": "pnpm --filter @seedcord/docs-generator run smoke -o ./debugging/generated -p ./packages",
+        "docs:parse": "pnpm --filter @seedcord/docs-engine run smoke ./debugging/generated -o ./debugging/samples",
+        "docs:smoke": "pnpm docs:extract && pnpm docs:parse"
     },
     "keywords": [
         "discord",

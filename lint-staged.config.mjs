@@ -25,9 +25,16 @@ const findNearestConfig = (filePath) => {
 };
 
 const runEslint = (files) => {
+    const filteredFiles = files.filter((file) => {
+        // skip any .d.ts files
+        if (file.endsWith('.d.ts')) return false;
+        if (file.endsWith('next-env.d.ts')) return false;
+        return true;
+    });
+
     const byConfig = new Map();
 
-    for (const file of files) {
+    for (const file of filteredFiles) {
         const configPath = findNearestConfig(file);
         const key = configPath ?? 'DEFAULT';
 
@@ -42,7 +49,7 @@ const runEslint = (files) => {
         if (!fileList) continue;
 
         const configFlag = configPath === 'DEFAULT' ? '' : `--config ${JSON.stringify(configPath)}`;
-        const command = ['eslint --max-warnings=0 --fix', configFlag, fileList].filter(Boolean).join(' ');
+        const command = ['eslint --max-warnings=0 --fix --cache', configFlag, fileList].filter(Boolean).join(' ');
         commands.push(command);
     }
 

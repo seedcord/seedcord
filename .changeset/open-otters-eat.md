@@ -1,5 +1,5 @@
 ---
-'@seedcord/api-docs': minor
+'@seedcord/docs-generator': minor
 ---
 
 api json generator using typedoc

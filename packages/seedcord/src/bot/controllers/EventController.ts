@@ -3,12 +3,21 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
 
-import { EventHandler } from '../../interfaces/Handler';
-import { EventMetadataKey } from '../decorators/EventRegisterable';
+import { EventHandler, EventMiddleware } from '../../interfaces/Handler';
+import { areRoutes } from '../../miscellaneous/areRoutes';
+import { EventMetadataKey } from '../decorators/Events';
+import { MiddlewareMetadataKey, MiddlewareType } from '../decorators/Middlewares';
 
 import type { Core } from '../../interfaces/Core';
-import type { EventHandlerConstructor } from '../../interfaces/Handler';
+import type { EventHandlerConstructor, EventMiddlewareConstructor } from '../../interfaces/Handler';
 import type { Initializeable } from '../../interfaces/Plugin';
+import type { MiddlewareMetadata } from '../decorators/Middlewares';
+
+interface RegisteredEventMiddleware {
+    readonly ctor: EventMiddlewareConstructor;
+    readonly priority: number;
+    readonly events?: readonly (keyof ClientEvents)[];
+}
 
 /**
  * Manages Discord event handler registration and execution.
@@ -25,6 +34,7 @@ export class EventController implements Initializeable {
     private isInitialized = false;
 
     private readonly eventMap = new Collection<keyof ClientEvents, EventHandlerConstructor[]>();
+    private readonly middlewares: RegisteredEventMiddleware[] = [];
 
     public constructor(protected core: Core) {}
 
@@ -37,9 +47,16 @@ export class EventController implements Initializeable {
         const handlersDir = this.core.config.bot.events.path;
         this.logger.info(chalk.bold(handlersDir));
 
+        const middlewareDir = this.core.config.bot.events.middlewares;
+        if (middlewareDir) {
+            this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
+            await this.loadMiddlewares(middlewareDir);
+        }
+
         await this.loadHandlers(handlersDir);
         this.attachToClient();
 
+        this.logger.info(`→ ${chalk.magenta.bold(this.middlewares.length)} middlewares`);
         const loadedEventsArray: string[] = [];
         this.eventMap.forEach((handlers, eventName) => {
             loadedEventsArray.push(`${chalk.magenta.bold(handlers.length)} ${eventName}`);
@@ -54,16 +71,76 @@ export class EventController implements Initializeable {
             dir,
             (_fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
-                    if (this.isEventHandlerClass(val)) {
-                        this.registerHandler(val);
-                        this.logger.info(
-                            `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-                        );
-                    }
+                    if (!this.isEventHandlerClass(val)) continue;
+                    this.registerHandler(val);
+                    this.logger.info(
+                        `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
+                    );
                 }
             },
             this.logger
         );
+    }
+
+    private async loadMiddlewares(dir: string): Promise<void> {
+        await traverseDirectory(
+            dir,
+            (_fullPath, relativePath, imported) => {
+                for (const val of Object.values(imported)) {
+                    if (!this.isMiddlewareClass(val)) continue;
+                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
+                    if (metadata?.type !== MiddlewareType.Event) continue;
+
+                    this.registerMiddleware(val, metadata, relativePath);
+                }
+            },
+            this.logger
+        );
+    }
+
+    private registerMiddleware(
+        middlewareCtor: EventMiddlewareConstructor,
+        metadata: MiddlewareMetadata,
+        relativePath: string
+    ): void {
+        const alreadyRegistered = this.middlewares.some((entry) => entry.ctor === middlewareCtor);
+        if (alreadyRegistered) return;
+
+        this.middlewares.push({
+            ctor: middlewareCtor,
+            priority: metadata.priority,
+            ...(metadata.events ? { events: metadata.events } : {})
+        });
+        this.middlewares.sort((a, b) => a.priority - b.priority);
+
+        this.logger.info(
+            `${chalk.italic('Registered event middleware')} ${chalk.bold.yellow(middlewareCtor.name)} ${chalk.gray(`(priority ${metadata.priority})`)} from ${chalk.gray(relativePath)}`
+        );
+    }
+
+    private async runMiddlewares<KeyOfEvents extends keyof ClientEvents>(
+        eventName: KeyOfEvents,
+        args: ClientEvents[KeyOfEvents]
+    ): Promise<boolean> {
+        for (const { ctor, events } of this.middlewares) {
+            if (events && !events.includes(eventName)) continue;
+
+            try {
+                const middleware = new ctor(args, this.core);
+                if (middleware.hasChecks()) await middleware.runChecks();
+
+                if (middleware.shouldBreak() || middleware.hasErrors()) return false;
+
+                await middleware.execute();
+
+                if (middleware.shouldBreak() || middleware.hasErrors()) return false;
+            } catch (err) {
+                this.logger.error(`Error in event middleware ${ctor.name} for event ${String(eventName)}:`, err);
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private isEventHandlerClass(obj: unknown): obj is EventHandlerConstructor {
@@ -71,16 +148,28 @@ export class EventController implements Initializeable {
         return obj.prototype instanceof EventHandler && Reflect.hasMetadata(EventMetadataKey, obj);
     }
 
-    private registerHandler(handlerClass: EventHandlerConstructor): void {
-        const eventName = Reflect.getMetadata(EventMetadataKey, handlerClass) as keyof ClientEvents | undefined;
-        if (!eventName) return;
+    private isMiddlewareClass(obj: unknown): obj is EventMiddlewareConstructor {
+        if (typeof obj !== 'function') return false;
+        return obj.prototype instanceof EventMiddleware && Reflect.hasMetadata(MiddlewareMetadataKey, obj);
+    }
 
-        let handlers = this.eventMap.get(eventName);
-        if (!handlers) {
-            handlers = [];
-            this.eventMap.set(eventName, handlers);
+    private registerHandler(handlerClass: EventHandlerConstructor): void {
+        const raw = Reflect.getMetadata(EventMetadataKey, handlerClass) as unknown;
+
+        const names = areRoutes(raw) ? raw : typeof raw === 'string' ? [raw] : [];
+
+        if (names.length === 0) return;
+
+        for (const name of names) {
+            const key = name as keyof ClientEvents;
+
+            let handlers = this.eventMap.get(key);
+            if (!handlers) {
+                handlers = [];
+                this.eventMap.set(key, handlers);
+            }
+            handlers.push(handlerClass);
         }
-        handlers.push(handlerClass);
     }
 
     private attachToClient(): void {
@@ -101,6 +190,9 @@ export class EventController implements Initializeable {
         eventName: KeyOfEvents,
         args: ClientEvents[KeyOfEvents]
     ): Promise<void> {
+        const shouldContinue = await this.runMiddlewares(eventName, args);
+        if (!shouldContinue) return;
+
         const handlerCtors = this.eventMap.get(eventName);
         if (!handlerCtors || handlerCtors.length === 0) return;
 

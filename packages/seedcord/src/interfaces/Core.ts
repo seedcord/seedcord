@@ -5,8 +5,11 @@ import type { Bot } from '../bot/Bot';
 import type { EffectsRegistry } from '../effects/EffectsRegistry';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 
-/** Base interface defining core Seedcord functionality */
-interface BaseCore {
+/** Base interface defining core Seedcord functionality
+ *
+ * @internal
+ */
+export interface BaseCore {
     readonly bot: Bot;
     readonly effects: EffectsRegistry;
     readonly shutdown: CoordinatedShutdown;

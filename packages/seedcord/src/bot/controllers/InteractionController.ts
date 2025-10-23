@@ -3,13 +3,17 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
 
-import { AutocompleteHandler, InteractionHandler } from '../../interfaces/Handler';
-import { InteractionMetadataKey, InteractionRoutes } from '../decorators/InteractionConfigurable';
+import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '../../interfaces/Handler';
+import { areRoutes } from '../../miscellaneous/areRoutes';
+import { InteractionMetadataKey, InteractionRoutes } from '../decorators/Interactions';
+import { MiddlewareMetadataKey, MiddlewareType } from '../decorators/Middlewares';
 import { UnhandledEvent } from '../defaults/UnhandledEvent';
+import { buildSlashRoute } from '../utilities/miscellaneous/buildSlashRoute';
 
 import type { Core } from '../../interfaces/Core';
-import type { HandlerConstructor, MiddlewareConstructor, Repliables } from '../../interfaces/Handler';
+import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '../../interfaces/Handler';
 import type { Initializeable } from '../../interfaces/Plugin';
+import type { MiddlewareMetadata } from '../decorators/Middlewares';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,
@@ -24,6 +28,11 @@ import type {
     UserContextMenuCommandInteraction,
     UserSelectMenuInteraction
 } from 'discord.js';
+
+interface RegisteredMiddleware {
+    readonly ctor: InteractionMiddlewareConstructor;
+    readonly priority: number;
+}
 
 /**
  * Manages Discord interaction handling and routing.
@@ -53,7 +62,7 @@ export class InteractionController implements Initializeable {
 
     private readonly keysToIgnore = new Set<string>();
 
-    private readonly middlewares: MiddlewareConstructor[] = [];
+    private readonly middlewares: RegisteredMiddleware[] = [];
 
     constructor(protected core: Core) {
         // Add ignored keys from config
@@ -71,10 +80,17 @@ export class InteractionController implements Initializeable {
         const handlersDir = this.core.config.bot.interactions.path;
         this.logger.info(chalk.bold(handlersDir));
 
+        const middlewareDir = this.core.config.bot.interactions.middlewares;
+        if (middlewareDir) {
+            this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
+            await this.loadMiddlewares(middlewareDir);
+        }
+
         await this.loadHandlers(handlersDir);
         this.attachToClient();
 
         this.logger.info(`${chalk.bold.green('Loaded interaction handlers:')}`);
+        this.logger.info(`→ ${chalk.magenta.bold(this.middlewares.length)} middlewares`);
         this.logger.info(`→ ${chalk.magenta.bold(this.slashMap.size)} slash commands`);
         this.logger.info(`→ ${chalk.magenta.bold(this.buttonMap.size)} buttons`);
         this.logger.info(`→ ${chalk.magenta.bold(this.modalMap.size)} modals`);
@@ -93,15 +109,46 @@ export class InteractionController implements Initializeable {
             dir,
             (_fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
-                    if (this.isHandlerClass(val)) {
-                        this.registerHandler(val);
-                        this.logger.info(
-                            `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-                        );
-                    }
+                    if (!this.isHandlerClass(val)) continue;
+                    this.registerHandler(val);
+                    this.logger.info(
+                        `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
+                    );
                 }
             },
             this.logger
+        );
+    }
+
+    private async loadMiddlewares(dir: string): Promise<void> {
+        await traverseDirectory(
+            dir,
+            (_fullPath, relativePath, imported) => {
+                for (const val of Object.values(imported)) {
+                    if (!this.isMiddlewareClass(val)) continue;
+                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
+                    if (metadata?.type !== MiddlewareType.Interaction) continue;
+
+                    this.registerMiddleware(val, metadata, relativePath);
+                }
+            },
+            this.logger
+        );
+    }
+
+    private registerMiddleware(
+        middlewareCtor: InteractionMiddlewareConstructor,
+        metadata: MiddlewareMetadata,
+        relativePath: string
+    ): void {
+        const alreadyRegistered = this.middlewares.some((entry) => entry.ctor === middlewareCtor);
+        if (alreadyRegistered) return;
+
+        this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        this.middlewares.sort((a, b) => a.priority - b.priority);
+
+        this.logger.info(
+            `${chalk.italic('Registered middleware')} ${chalk.bold.yellow(middlewareCtor.name)} ${chalk.gray(`(priority ${metadata.priority})`)} from ${chalk.gray(relativePath)}`
         );
     }
 
@@ -113,11 +160,12 @@ export class InteractionController implements Initializeable {
         );
     }
 
-    private registerHandler(handlerClass: HandlerConstructor): void {
-        const areRoutes = (routes: unknown): routes is string[] => {
-            return Array.isArray(routes) && routes.every((r) => typeof r === 'string');
-        };
+    private isMiddlewareClass(obj: unknown): obj is InteractionMiddlewareConstructor {
+        if (typeof obj !== 'function') return false;
+        return obj.prototype instanceof InteractionMiddleware && Reflect.hasMetadata(MiddlewareMetadataKey, obj);
+    }
 
+    private registerHandler(handlerClass: HandlerConstructor): void {
         const routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
             [InteractionRoutes.Slash, this.slashMap],
             [InteractionRoutes.Button, this.buttonMap],
@@ -183,10 +231,13 @@ export class InteractionController implements Initializeable {
         if (this.keysToIgnore.has(key)) return;
 
         // Run middlewares first
-        for (const MiddlewareCtor of this.middlewares) {
-            const middleware = new MiddlewareCtor(interaction as Repliables, this.core, args);
+        for (const { ctor } of this.middlewares) {
+            const middleware = new ctor(interaction as Repliables, this.core, args);
+            if (middleware.hasChecks()) await middleware.runChecks();
+            if (middleware.shouldBreak() || middleware.hasErrors()) return;
+
             await middleware.execute();
-            if (middleware.hasErrors()) return;
+            if (middleware.shouldBreak() || middleware.hasErrors()) return;
         }
         let HandlerCtor = getHandler(key);
         if (!HandlerCtor) {
@@ -245,7 +296,7 @@ export class InteractionController implements Initializeable {
     }
 
     private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-        const route = this.buildSlashRoute(interaction);
+        const route = buildSlashRoute(interaction);
         await this.processInteraction(
             interaction,
             () => route,
@@ -298,7 +349,7 @@ export class InteractionController implements Initializeable {
     }
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
-        const route = this.buildSlashRoute(interaction);
+        const route = buildSlashRoute(interaction);
         const focused = interaction.options.getFocused(true);
         const autocompleteKey = `${route}:${focused.name}`;
 
@@ -307,22 +358,5 @@ export class InteractionController implements Initializeable {
             () => autocompleteKey,
             (key) => this.autocompleteMap.get(key)
         );
-    }
-
-    // Build the route from commandName, subcommandGroup, subcommand
-    private buildSlashRoute(interaction: ChatInputCommandInteraction | AutocompleteInteraction): string {
-        const command = interaction.commandName;
-        const group = interaction.options.getSubcommandGroup(false);
-        const sub = interaction.options.getSubcommand(false);
-
-        let route = command;
-        if (group && sub) {
-            route = `${route}/${group}/${sub}`;
-        } else if (group) {
-            route = `${route}/${group}`;
-        } else if (sub) {
-            route = `${route}/${sub}`;
-        }
-        return route;
     }
 }

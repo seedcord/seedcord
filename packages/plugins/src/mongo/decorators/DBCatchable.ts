@@ -6,11 +6,12 @@ import { CustomError, throwCustomError, DatabaseError } from 'seedcord';
  * Automatically wraps non-CustomError exceptions in DatabaseError instances
  * with UUID tracking. Should be applied to database service methods.
  *
+ * @typeParam TypeReturn - The return type of the decorated method
  * @param errorMessage - Message to include when wrapping errors
  * @decorator
  * @example
  * ```typescript
- * class UserService extends BaseService {
+ * class UserService extends MongoService<IUser> {
  *   \@DBCatchable('Failed to find user')
  *   async findById(id: string) {
  *     return this.model.findById(id);

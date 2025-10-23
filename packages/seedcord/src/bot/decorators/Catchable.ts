@@ -1,16 +1,16 @@
 import { MessageFlags } from 'discord.js';
 
-import { ErrorHandlingUtils } from '../utilities/ErrorHandlingUtils';
+import { extractErrorResponse } from '../utilities/errors/extractErrorResponse';
 
 import type { RepliableInteractionHandler } from '../../interfaces/Handler';
 
 /**
  * Configuration options for the Catchable decorator.
  */
-interface CatchableOptions {
-    /** Whether to log errors to console (default: false) */
+export interface CatchableOptions {
+    /** Whether to log errors to console (default: `false`) */
     log?: boolean;
-    /** Always use followUp instead of reply/editReply (default: false) */
+    /** Always use followUp instead of reply/editReply (default: `false`) */
     forceFollowup?: boolean;
 }
 
@@ -58,11 +58,12 @@ export function Catchable(options?: CatchableOptions) {
                 // eslint-disable-next-line no-console
                 if (log) console.error(error);
 
-                const { response } = ErrorHandlingUtils.extractErrorResponse(
+                const { response } = extractErrorResponse(
                     error,
                     this.core,
                     interaction.guild,
-                    interaction.user
+                    interaction.user,
+                    interaction
                 );
 
                 const res = {

@@ -3,7 +3,8 @@ import { Envapt } from 'envapt';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
-import type { LifecycleTask, PhaseEvents, UnionToTuple } from '@seedcord/types';
+import type { LifecycleTask, PhaseEvents } from './LifecycleTypes';
+import type { UnionToTuple } from 'type-fest';
 
 /**
  * Shutdown phases for coordinated application shutdown.
@@ -30,10 +31,21 @@ const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.FinalCleanup
 ];
 
-type CoordinatedShutdownEventKey = PhaseEvents<'shutdown', UnionToTuple<ShutdownPhase>>;
+/**
+ * Event keys for coordinated shutdown phases
+ */
+export type CoordinatedShutdownEventKey = PhaseEvents<'shutdown', UnionToTuple<ShutdownPhase>>;
 
 const LOG_FLUSH_DELAY_MS = 500;
 
+/**
+ * CoordinatedShutdown manages graceful application shutdown by executing registered tasks across defined phases.
+ *
+ * It listens for termination signals (SIGINT, SIGTERM) and runs tasks in parallel within each phase.
+ * Tasks can be added or removed dynamically, and each task has an associated timeout.
+ *
+ * Enable or disable the shutdown mechanism via the SHUTDOWN_IS_ENABLED environment variable. It's disabled by default. I recommend enabling it in production environments.
+ */
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
     @Envapt('SHUTDOWN_IS_ENABLED', { fallback: false })
     declare private readonly isShutdownEnabled: boolean;
@@ -124,7 +136,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
      * Tasks within each phase are executed in parallel for faster shutdown.
      * Process exits with the specified code when complete.
      *
-     * @param exitCode - Process exit code (default: 0)
+     * @param exitCode - Process exit code (default: `0`)
      * @returns Promise that resolves when shutdown is complete
      * @example
      * ```typescript

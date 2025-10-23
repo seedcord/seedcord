@@ -1,4 +1,13 @@
-import type { TupleOf } from '@seedcord/types';
+import type { TupleOf } from 'type-fest';
+
+export interface RoundToDenomOptions {
+    /**
+     * Suffixes to use for each denomination level. Defaults to `['K', 'M', 'B', 'T', 'Q']`.
+     */
+    suffixes?: TupleOf<5, string>;
+    /** Number of decimal places to include in the rounded result. Defaults to `1`. */
+    precision?: number;
+}
 
 /**
  * Rounds a number to a string representation with a denomination suffix.
@@ -11,13 +20,7 @@ import type { TupleOf } from '@seedcord/types';
  * ```
  * @returns The rounded number as a string with a denomination suffix.
  */
-export function roundToDenomination(
-    num: number,
-    opts?: {
-        suffixes?: TupleOf<string, 5>;
-        precision?: number;
-    }
-): string {
+export function roundToDenomination(num: number, opts?: RoundToDenomOptions): string {
     const { suffixes = ['K', 'M', 'B', 'T', 'Q'], precision = 1 } = opts ?? {};
 
     if (num < 10000) {

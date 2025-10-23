@@ -1,0 +1,51 @@
+{
+    "name": "@seedcord/docs-engine",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Documentation parser, renderer, and explorer for Seedcord",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "directory": "packages/docs-engine"
+    },
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs",
+            "default": "./dist/index.mjs"
+        }
+    },
+    "scripts": {
+        "build": "tsup",
+        "clean": "rm -rf dist",
+        "smoke": "tsx src/smoke.ts",
+        "lint": "eslint 'src/**/*.ts' --cache",
+        "lint:fix": "eslint 'src/**/*.ts' --cache --fix",
+        "fmt": "prettier --write 'src/**/*.{ts,md,json}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,md,json}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "files": [
+        "dist",
+        "src",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "dependencies": {
+        "typedoc": "catalog:deps",
+        "typedoc-plugin-dt-links": "^2.0.25",
+        "typedoc-plugin-mdn-links": "^5.0.10"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsup-config": "workspace:^"
+    }
+}

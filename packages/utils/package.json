@@ -41,6 +41,7 @@
     "dependencies": {
         "@seedcord/types": "workspace:^",
         "@seedcord/services": "workspace:^",
+        "type-fest": "catalog:deps",
         "discord.js": "catalog:deps"
     },
     "devDependencies": {

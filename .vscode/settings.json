@@ -2,10 +2,12 @@
     // Editor Settings
     "editor.detectIndentation": false,
     "editor.trimAutoWhitespace": true,
+    "editor.tabSize": 4,
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
         "source.fixAll.eslint": "explicit"
     },
 
@@ -16,11 +18,16 @@
     "prettier.useEditorConfig": true,
 
     // ESLint Settings
-    "eslint.validate": ["typescript", "javascript"],
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
     "eslint.run": "onType",
     "eslint.format.enable": false,
     "eslint.lintTask.enable": true,
     "eslint.codeActionsOnSave.mode": "all",
+    "eslint.workingDirectories": [
+        {
+            "mode": "auto"
+        }
+    ],
 
     // EditorConfig Support
     "editorconfig.generateAuto": false,

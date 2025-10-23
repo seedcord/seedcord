@@ -11,12 +11,13 @@ export const ModelMetadataKey = Symbol('db:model');
  * for service registration. The model becomes available as `this.model` in the service.
  * Must be applied to a `public static schema` property in the service class.
  *
+ * @typeParam TService - The service key type
  * @param collection - Collection name for the Mongoose model
  * @decorator
  * @example
  * ```typescript
  * \@DatabaseService('users')
- * export class Users extends BaseService<IUser> {
+ * export class Users extends MongoService<IUser> {
  *   \@DatabaseModel('users')
  *   public static schema = new mongoose.Schema<IUser>({
  *     username: { type: String, required: true, unique: true }

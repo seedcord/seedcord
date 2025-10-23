@@ -5,17 +5,17 @@ import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 import { Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
 
-import { BaseService } from './BaseService';
 import { ServiceMetadataKey } from './decorators/DatabaseService';
+import { MongoService } from './MongoService';
 
-import type { BaseServiceConstructor } from './BaseService';
+import type { MongoServiceConstructor } from './MongoService';
 import type { Services } from './types/Services';
 import type { Core } from 'seedcord';
 
 /**
  * Configuration options for MongoDB connection and service loading.
  */
-interface MongoOptions {
+export interface MongoOptions {
     /** Directory path containing database service classes */
     dir: string;
     /** MongoDB connection URI */
@@ -105,10 +105,10 @@ export class Mongo extends Plugin {
         this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta(Object.keys(this.services).length)} services`);
     }
 
-    private isServiceClass(obj: unknown): obj is BaseServiceConstructor {
+    private isServiceClass(obj: unknown): obj is MongoServiceConstructor {
         return (
             typeof obj === 'function' &&
-            obj.prototype instanceof BaseService &&
+            obj.prototype instanceof MongoService &&
             Reflect.hasMetadata(ServiceMetadataKey, obj)
         );
     }

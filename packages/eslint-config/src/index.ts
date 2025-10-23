@@ -29,11 +29,32 @@ import {
 } from './rules';
 
 // Types
+/**
+ * Flattened type for the entire ESLint configuration array.
+ *
+ * @internal
+ */
+
 type FlatConfig = ReturnType<typeof tseslint.config>;
+/**
+ * Flattened type for ESLint configuration items.
+ *
+ * @internal
+ */
 type FlatConfigItem = FlatConfig extends readonly (infer U)[] ? U : never;
 
+/**
+ * Options for creating the ESLint configuration.
+ *
+ */
 interface CreateConfigOptions {
+    /**
+     * Root directory for TypeScript configuration (default: `process.cwd()`)
+     */
     tsconfigRootDir?: string;
+    /**
+     * Additional user-defined ESLint configuration items to merge
+     */
     userConfigs?: FlatConfigItem[];
 }
 
@@ -140,4 +161,4 @@ function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tses
 export * from './constants';
 export * from './rules';
 export default createConfig;
-export type { CreateConfigOptions };
+export type { CreateConfigOptions, FlatConfig, FlatConfigItem };

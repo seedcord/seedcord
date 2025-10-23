@@ -40,11 +40,12 @@
     },
     "dependencies": {
         "@seedcord/types": "workspace:^",
-        "seedcord": "workspace:^",
         "chalk": "catalog:deps",
-        "mongoose": "catalog:deps",
         "envapt": "catalog:deps",
-        "reflect-metadata": "catalog:deps"
+        "mongoose": "catalog:deps",
+        "reflect-metadata": "catalog:deps",
+        "type-fest": "catalog:deps",
+        "seedcord": "workspace:^"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",

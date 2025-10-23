@@ -1,3 +1,4 @@
+import { hexToNumber } from '@seedcord/utils';
 import {
     ActionRowBuilder,
     ButtonBuilder,
@@ -25,9 +26,16 @@ import {
 } from 'discord.js';
 import { Envapt } from 'envapt';
 
+import { parseEnvColor } from '../miscellaneous/parseEnvColor';
+
 import type { ColorResolvable } from 'discord.js';
 
-const BuilderTypes = {
+/**
+ * Available Discord.js builder classes for use with BuilderComponent
+ *
+ * @internal
+ */
+export const BuilderTypes = {
     // Command Components
     command: SlashCommandBuilder,
     context_menu: ContextMenuCommandBuilder,
@@ -60,7 +68,12 @@ const BuilderTypes = {
     separator: SeparatorBuilder
 };
 
-const RowTypes: {
+/**
+ * Available Discord.js action row classes for use with RowComponent
+ *
+ * @internal
+ */
+export const RowTypes: {
     button: typeof ActionRowBuilder<ButtonBuilder>;
     menu_string: typeof ActionRowBuilder<StringSelectMenuBuilder>;
     menu_user: typeof ActionRowBuilder<UserSelectMenuBuilder>;
@@ -76,11 +89,25 @@ const RowTypes: {
     menu_role: ActionRowBuilder<RoleSelectMenuBuilder>
 };
 
-type BuilderType = keyof typeof BuilderTypes;
-type InstantiatedBuilder<BuilderKey extends BuilderType> = InstanceType<(typeof BuilderTypes)[BuilderKey]>;
+/**
+ * Available Discord.js builder types for use with BuilderComponent
+ */
+export type BuilderType = keyof typeof BuilderTypes;
 
-type ActionRowComponentType = keyof typeof RowTypes;
-type InstantiatedActionRow<RowKey extends ActionRowComponentType> = InstanceType<(typeof RowTypes)[RowKey]>;
+/**
+ * @internal
+ */
+export type InstantiatedBuilder<BuilderKey extends BuilderType> = InstanceType<(typeof BuilderTypes)[BuilderKey]>;
+
+/**
+ * Available Discord.js action row types for use with RowComponent
+ */
+export type ActionRowComponentType = keyof typeof RowTypes;
+
+/**
+ * @internal
+ */
+export type InstantiatedActionRow<RowKey extends ActionRowComponentType> = InstanceType<(typeof RowTypes)[RowKey]>;
 
 /**
  * Base class for Discord component wrappers
@@ -88,8 +115,10 @@ type InstantiatedActionRow<RowKey extends ActionRowComponentType> = InstanceType
  * Provides common functionality for building Discord components with proper typing.
  *
  * @typeParam TComponent - The Discord.js component type being wrapped
+ *
+ * @internal
  */
-abstract class BaseComponent<TComponent> {
+export abstract class BaseComponent<TComponent> {
     private readonly _component: TComponent;
 
     // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -122,7 +151,7 @@ abstract class BaseComponent<TComponent> {
     /**
      * Builds a customId string for interactive components
      *
-     * Creates customIds in the format "prefix:arg1-arg2-arg3" for buttons, modals, etc.
+     * Creates customIds in the format `prefix:arg1-arg2-arg3` for buttons, modals, etc.
      * Arguments are joined with hyphens and separated from prefix with a colon.
      *
      * @param prefix - The route prefix that handlers will match against
@@ -146,8 +175,17 @@ abstract class BaseComponent<TComponent> {
 export abstract class BuilderComponent<BuilderKey extends BuilderType> extends BaseComponent<
     InstantiatedBuilder<BuilderKey>
 > {
-    @Envapt<ColorResolvable>('DEFAULT_BOT_COLOR', { fallback: 'Default' })
-    declare private readonly botColor: ColorResolvable;
+    /**
+     * Bot color for the component
+     * Uses the DEFAULT_BOT_COLOR environment variable or falls back to 'Default' set by Discord.js.
+     *
+     * Set DEFAULT_BOT_COLOR to a hex code in your `.env` file to customize.
+     */
+    @Envapt<ColorResolvable>('DEFAULT_BOT_COLOR', {
+        fallback: 'Default',
+        converter: (raw, fallback) => parseEnvColor(raw, fallback)
+    })
+    declare public readonly botColor: ColorResolvable;
 
     protected constructor(type: BuilderKey) {
         const ComponentClass = BuilderTypes[type] as unknown;
@@ -155,6 +193,13 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
 
         // Override in builders
         if (this.instance instanceof EmbedBuilder) this.instance.setColor(this.botColor);
+
+        // Override in builders
+        if (this.instance instanceof ContainerBuilder) {
+            this.instance.setAccentColor(
+                this.botColor === 'Default' ? undefined : hexToNumber(this.botColor.toString())
+            );
+        }
 
         // Override in builders
         if (this.instance instanceof SlashCommandBuilder || this.instance instanceof ContextMenuCommandBuilder) {
@@ -216,7 +261,6 @@ export abstract class CustomError extends Error {
     protected constructor(public override message: string) {
         super(message);
 
-        // TODO: Is this line even needed?
         Error.captureStackTrace(this, this.constructor);
     }
 
@@ -234,8 +278,6 @@ export abstract class CustomError extends Error {
 
     /**
      * Sets whether this error should be emitted to logs
-     *
-     * @see {@link emit}
      */
     public set emit(value: boolean) {
         this._emit = value;

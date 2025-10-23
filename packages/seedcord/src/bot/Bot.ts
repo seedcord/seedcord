@@ -33,10 +33,6 @@ export class Bot extends Plugin {
     public readonly commands: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
 
-    /**
-     * @param core - Seedcord core instance
-     * @internal
-     */
     constructor(protected core: Core) {
         super(core);
 

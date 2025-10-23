@@ -53,12 +53,18 @@ pkg:tsup-config:
     - issues:
           - title: '/pkg:tsup-config/i'
           - body: '/pkg:tsup-config/i'
-pkg:api-docs:
+pkg:docs-generator:
     - changed-files:
-          - any-glob-to-any-file: 'packages/api-docs/**'
+          - any-glob-to-any-file: 'packages/docs-generator/**'
     - issues:
-          - title: '/pkg:api-docs/i'
-          - body: '/pkg:api-docs/i'
+          - title: '/pkg:docs-generator/i'
+          - body: '/pkg:docs-generator/i'
+pkg:docs-engine:
+    - changed-files:
+          - any-glob-to-any-file: 'packages/docs-engine/**'
+    - issues:
+          - title: '/pkg:docs-engine/i'
+          - body: '/pkg:docs-engine/i'
 area:docs:
     - changed-files:
           - any-glob-to-any-file: 'docs/**'
@@ -96,14 +102,6 @@ area:config:
     - issues:
           - title: '/config/i'
           - body: '/config/i'
-area:release:
-    - changed-files:
-          - any-glob-to-any-file: '.changeset/**'
-          - any-glob-to-any-file: '**/package.json'
-          - any-glob-to-any-file: pnpm-lock.yaml
-    - issues:
-          - title: '/release/i'
-          - body: '/release/i'
 area:assets:
     - changed-files:
           - any-glob-to-any-file: 'assets/**'

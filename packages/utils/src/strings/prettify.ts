@@ -1,6 +1,9 @@
 import { capitalize } from './capitalize';
 
-interface PrettifyOptions {
+/**
+ * Options for the `prettify` function.
+ */
+export interface PrettifyOptions {
     capitalize?: boolean;
 }
 /**

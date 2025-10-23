@@ -40,13 +40,15 @@ async function main(): Promise<void> {
                 partials: [Partials.GuildMember, Partials.User]
             },
             interactions: {
-                path: resolve(import.meta.dirname, './handlers')
+                path: resolve(import.meta.dirname, './handlers'),
+                middlewares: resolve(import.meta.dirname, './handlers/middlewares')
             },
             commands: {
                 path: resolve(import.meta.dirname, './components/commands')
             },
             events: {
-                path: resolve(import.meta.dirname, './events')
+                path: resolve(import.meta.dirname, './events'),
+                middlewares: resolve(import.meta.dirname, './events/middlewares')
             },
             emojis: Emojis
         },

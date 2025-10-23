@@ -25,9 +25,12 @@
 - name: pkg:tsup-config
   color: 196699
   description: Changes related to TSUP config package
-- name: pkg:api-docs
+- name: pkg:docs-generator
   color: 85c1e9
   description: Changes related to API docs tooling
+- name: pkg:doc-engine
+  color: 9b59b6
+  description: Changes related to the documentation engine package
 - name: area:docs
   color: 28a745
   description: Documentation updates
@@ -40,9 +43,6 @@
 - name: area:config
   color: 6c757d
   description: Repository configuration updates
-- name: area:release
-  color: e83e8c
-  description: Release engineering changes
 - name: area:assets
   color: fd7e14
   description: Static asset updates

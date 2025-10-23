@@ -1,7 +1,7 @@
 /* decorators/EventCatchable.ts */
 import { Message } from 'discord.js';
 
-import { ErrorHandlingUtils } from '../utilities/ErrorHandlingUtils';
+import { extractErrorResponse } from '../utilities/errors/extractErrorResponse';
 
 import type { EventHandler } from '../../interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
@@ -12,7 +12,7 @@ import type { ClientEvents } from 'discord.js';
  * Automatically handles errors in event handlers and sends error responses
  * if the event contains a Discord message object.
  *
- * @param log - Whether to log errors to console (default: false)
+ * @param log - Whether to log errors to console (default: `false`)
  * @decorator
  * @example
  * ```typescript
@@ -47,11 +47,12 @@ export function EventCatchable(log?: boolean) {
                 const eventArgs = Array.isArray(this.getEvent()) ? (this.getEvent() as unknown[]) : [this.getEvent()];
                 const msg = eventArgs.find((x): x is Message => x instanceof Message);
 
-                const { response } = ErrorHandlingUtils.extractErrorResponse(
+                const { response } = extractErrorResponse(
                     err,
                     this.core,
                     msg?.guild ?? null,
-                    msg?.author ?? null
+                    msg?.author ?? null,
+                    eventArgs
                 );
 
                 if (!msg) return;

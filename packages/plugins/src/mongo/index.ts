@@ -1,6 +1,6 @@
 export type * from './types/Services';
 export type * from './types/Document';
-export * from './BaseService';
+export * from './MongoService';
 export * from './Mongo';
 
 // Decorators

@@ -3,6 +3,7 @@
 import { Envapter } from 'envapt';
 import { createLogger, format, transports } from 'winston';
 
+import type { ILogger } from '@seedcord/types';
 import type { Logform, Logger as Winston } from 'winston';
 import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 
@@ -12,7 +13,7 @@ import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
  * Provides structured logging with timestamps, levels, and labels.
  * Instances are cached by transport name for consistent formatting.
  */
-export class Logger {
+export class Logger implements ILogger {
     declare private logger: Winston;
     private static readonly instances = new Map<string, Logger>();
 

@@ -30,13 +30,13 @@ export abstract class Plugin implements Initializeable {
 
 /**
  * Constructor type for plugins that can accept additional arguments after Core
- * @param TPlugin - The plugin type being constructed
+ * @typeParam TPlugin - The plugin type being constructed
  */
 export type PluginCtor<TPlugin extends Plugin = Plugin> = new (core: Core, ...args: any[]) => TPlugin;
 
 /**
  * Extracts the argument types for a plugin constructor (excluding the Core parameter)
- * @param Ctor - The plugin constructor to extract arguments from
+ * @typeParam Ctor - The plugin constructor to extract arguments from
  */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
 

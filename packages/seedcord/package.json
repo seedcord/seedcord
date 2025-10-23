@@ -45,6 +45,7 @@
         "chalk": "catalog:deps",
         "discord.js": "catalog:deps",
         "envapt": "catalog:deps",
+        "type-fest": "catalog:deps",
         "reflect-metadata": "catalog:deps"
     },
     "devDependencies": {

@@ -43,6 +43,7 @@
         "chalk": "catalog:deps",
         "discord.js": "catalog:deps",
         "envapt": "catalog:deps",
+        "type-fest": "catalog:deps",
         "winston": "^3.18.3"
     },
     "devDependencies": {

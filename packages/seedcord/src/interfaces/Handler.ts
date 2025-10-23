@@ -44,6 +44,7 @@ export interface Handler {
  * Should always accompany the `@Catchable` decorator. Will require the class to implement the `runChecks` method.
  *
  * @see {@link Checkable}
+ * @see {@link Catchable}
  */
 export interface WithChecks {
     /**
@@ -56,9 +57,19 @@ export interface WithChecks {
     runChecks(): Promise<void>;
 }
 
-interface HandlerWithChecks extends WithChecks, Handler {}
+/**
+ * Interface for handlers that implement pre-execution checks
+ *
+ * @internal
+ */
+export interface HandlerWithChecks extends WithChecks, Handler {}
 
-abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
+/**
+ * Base class for all handlers. Not meant to be used directly.
+ *
+ * @internal
+ */
+export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
     protected checkable = false;
     protected break = false;
     protected errored = false;
@@ -103,8 +114,8 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
     /**
      * Gets arguments parsed from interaction customId
      *
-     * Arguments are extracted from customId using ":" and "-" separators.
-     * For customId "accept:user123-guild456", returns ["user123", "guild456"]
+     * Arguments are extracted from customId using `:` and `-` separators.
+     * For customId `accept:user123-guild456`, returns `["user123", "guild456"]`
      */
     protected getArgs(): string[] {
         return this.args;
@@ -124,7 +135,7 @@ abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handle
  * Base class for Discord interaction handlers
  *
  * Extend this class to handle slash commands, buttons, modals, and select menus.
- * Use decorators like \@SlashRoute, \@ButtonRoute, etc. to define routing.
+ * Use decorators like `@SlashRoute`, `@ButtonRoute`, etc. to define routing.
  *
  * @typeParam Repliable - The interaction type this handler processes
  */
@@ -155,13 +166,27 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
 }
 
 /**
+ * Base class for Discord event middleware
+ *
+ * Middleware runs before event handlers and can modify behavior or block execution.
+ */
+export abstract class EventMiddleware<EventName extends keyof ClientEvents>
+    extends BaseHandler<ClientEvents[EventName]>
+    implements Handler
+{
+    constructor(event: ClientEvents[EventName], core: Core, args?: string[]) {
+        super(event, core, args);
+    }
+}
+
+/**
  * Handler for Discord autocomplete interactions
  *
  * Extend this class to provide autocomplete suggestions for slash command options.
  * The focused option is automatically available via the `focused` property.
  */
 export abstract class AutocompleteHandler extends BaseHandler<AutocompleteInteraction> implements Handler {
-    /** The currently focused autocomplete option (Based on what you set in \@AutocompleteRoute) */
+    /** The currently focused autocomplete option (Based on what you set in `@AutocompleteRoute`) */
     protected readonly focused: AutocompleteFocusedOption;
     constructor(event: AutocompleteInteraction, core: Core, args?: string[]) {
         super(event, core, args);
@@ -173,7 +198,7 @@ export abstract class AutocompleteHandler extends BaseHandler<AutocompleteIntera
  * Base class for Discord client event handlers
  *
  * Extend this class to handle Discord events like messageCreate, guildMemberAdd, etc.
- * Use the \@EventRegisterable decorator to specify which event to listen for.
+ * Use the `EventRegisterable` decorator to specify which event to listen for.
  *
  * @typeParam Repliable - The Discord event type this handler processes
  */
@@ -191,8 +216,19 @@ export abstract class EventHandler<Repliable extends keyof ClientEvents>
 export type HandlerConstructor = TypedConstructor<typeof InteractionHandler | typeof AutocompleteHandler>;
 
 /** Constructor type for interaction middleware */
-export type MiddlewareConstructor = TypedConstructor<typeof InteractionMiddleware> &
+export type InteractionMiddlewareConstructor = TypedConstructor<typeof InteractionMiddleware> &
     (new (event: Repliables, core: Core, args?: string[]) => InteractionMiddleware<Repliables>);
+
+/** Constructor type for legacy interaction middleware */
+export type MiddlewareConstructor = InteractionMiddlewareConstructor;
+
+/** Constructor type for event middleware */
+export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware> &
+    (new <EventName extends keyof ClientEvents>(
+        event: ClientEvents[EventName],
+        core: Core,
+        args?: string[]
+    ) => EventMiddleware<EventName>);
 
 /** Constructor type for autocomplete handlers */
 export type AutocompleteHandlerConstructor = TypedConstructor<typeof AutocompleteHandler> &

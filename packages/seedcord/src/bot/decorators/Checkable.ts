@@ -1,6 +1,11 @@
 import type { Handler } from '../../interfaces/Handler';
 
-type HandlerCtor = new (...args: any[]) => Handler;
+/**
+ * Constructor type for handler classes.
+ *
+ * @internal
+ */
+export type HandlerCtor = new (...args: any[]) => Handler;
 
 /**
  * Marks a handler class as requiring check execution.
@@ -8,12 +13,13 @@ type HandlerCtor = new (...args: any[]) => Handler;
  * Enables the runChecks() method to be called before execute()
  * for handlers that need pre-execution validation.
  *
- * @param ctor - The handler to mark as checkable (Do not pass this directly. Just call the decorator without a **()**)
+ * @typeParam TypeHandler - The type of the handler class being decorated
+ * @param ctor - The handler to mark as checkable (Do not pass this directly. Just call the decorator without a `()`)
  * @decorator
  * @example
  * ```typescript
  * \@Checkable
- * class AdminCommand extends InteractionHandler {
+ * class AdminCommand extends InteractionHandler implements WithChecks {
  *   async runChecks() {
  *     // Perform admin permission checks
  *   }

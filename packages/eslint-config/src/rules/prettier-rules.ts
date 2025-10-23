@@ -1,9 +1,10 @@
 // Prettier configuration
 
 import { Linter } from 'eslint';
+import { Options } from 'prettier';
 
 // Make sure these match .prettierrc at root
-export const PRETTIER_CONFIG = {
+export const PRETTIER_CONFIG: Options = {
     tabWidth: 4,
     semi: true,
     singleQuote: true,

@@ -2,7 +2,8 @@ import chalk from 'chalk';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
-import type { LifecycleTask, PhaseEvents, UnionToTuple } from '@seedcord/types';
+import type { LifecycleTask, PhaseEvents } from './LifecycleTypes';
+import type { UnionToTuple } from 'type-fest';
 
 /**
  * Startup phases for coordinated initialization
@@ -37,7 +38,10 @@ const PHASE_ORDER: StartupPhase[] = [
     StartupPhase.Ready
 ];
 
-type CoordinatedStartupEventKey = PhaseEvents<'startup', UnionToTuple<StartupPhase>>;
+/**
+ * Event keys for coordinated startup phases
+ */
+export type CoordinatedStartupEventKey = PhaseEvents<'startup', UnionToTuple<StartupPhase>>;
 
 /**
  * Manages bot startup lifecycle with ordered phases

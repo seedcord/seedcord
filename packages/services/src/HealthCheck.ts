@@ -20,12 +20,21 @@ const HTTP_NOT_FOUND = 404;
 export class HealthCheck {
     public readonly logger = new Logger('HealthCheck');
 
+    /**
+     * Set `PORT` in your `.env` to change the default port (6956).
+     */
     @Envapt('HEALTH_CHECK_PORT', { fallback: 6956 })
     declare public readonly port: number;
 
+    /**
+     * Set `HEALTH_CHECK_PATH` in your `.env` to change the default path (`/healthcheck`).
+     */
     @Envapt('HEALTH_CHECK_PATH', { fallback: '/healthcheck' })
     declare public readonly path: string;
 
+    /**
+     * Set `HEALTH_CHECK_HOST` in your `.env` to change the host. Defaults to `null` (all interfaces).
+     */
     @Envapt('HEALTH_CHECK_HOST')
     declare public readonly host: string | null;
 

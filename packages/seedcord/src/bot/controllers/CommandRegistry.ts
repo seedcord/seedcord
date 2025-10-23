@@ -4,11 +4,11 @@ import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
 
 import { BuilderComponent } from '../../interfaces/Components';
-import { CommandMetadataKey } from '../decorators/CommandRegisterable';
+import { CommandMetadataKey } from '../decorators/Command';
 
 import type { Core } from '../../interfaces/Core';
 import type { Initializeable } from '../../interfaces/Plugin';
-import type { CommandMeta } from '../decorators/CommandRegisterable';
+import type { CommandMeta } from '../decorators/Command';
 import type { ContextMenuCommandBuilder } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;

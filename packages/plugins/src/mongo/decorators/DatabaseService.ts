@@ -1,6 +1,6 @@
-import type { BaseService } from '../BaseService';
+import type { MongoService } from '../MongoService';
 import type { ServiceKeys } from '../types/Services';
-import type { ConstructorFunction } from '@seedcord/types';
+import type { Constructor } from 'type-fest';
 
 export const ServiceMetadataKey = Symbol('db:serviceKey');
 
@@ -10,18 +10,19 @@ export const ServiceMetadataKey = Symbol('db:serviceKey');
  * Associates a service class with a key for dependency injection.
  * The service becomes available via `core.db.services[key]`.
  *
+ * @typeParam TService - The service key type
  * @param key - Service key for registration and type-safe access
  * @decorator
  * @example
  * ```typescript
  * \@DatabaseService('users')
- * export class Users<Doc extends IUser = IUser> extends BaseService<Doc> {
+ * export class Users<Doc extends IUser = IUser> extends MongoService<Doc> {
  *   // Some code
  * }
  * ```
  */
 export function DatabaseService<TService extends ServiceKeys>(key: TService) {
-    return <DatabaseCtor extends ConstructorFunction & { prototype: BaseService }>(ctor: DatabaseCtor): void => {
+    return <DatabaseCtor extends Constructor<unknown> & { prototype: MongoService }>(ctor: DatabaseCtor): void => {
         Reflect.defineMetadata(ServiceMetadataKey, key, ctor);
     };
 }

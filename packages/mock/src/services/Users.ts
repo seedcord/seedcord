@@ -1,4 +1,4 @@
-import { BaseService, DatabaseModel, DatabaseService, IDocument } from '@seedcord/plugins';
+import { DatabaseModel, DatabaseService, IDocument, MongoService } from '@seedcord/plugins';
 import mongoose from 'mongoose';
 
 interface IUser extends IDocument {
@@ -6,7 +6,7 @@ interface IUser extends IDocument {
 }
 
 @DatabaseService('users')
-export class Users<Doc extends IUser = IUser> extends BaseService<Doc> {
+export class Users<Doc extends IUser = IUser> extends MongoService<Doc> {
     @DatabaseModel('users')
     public static schema = new mongoose.Schema<IUser>({
         username: { type: String, required: true, unique: true }
