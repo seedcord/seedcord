@@ -28,7 +28,9 @@
         "cs:status": "changeset status",
         "release": "pnpm run build && pnpm run cs:publish",
         "prepublishOnly": "pnpm run clean && pnpm run build",
-        "bump:deps": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
+        "bump:deps:pkgs": "for dir in packages/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
+        "bump:deps:apps": "for dir in apps/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
+        "bump:deps": "pnpm run bump:deps:pkgs && pnpm run bump:deps:apps",
         "docs:extract": "pnpm --filter @seedcord/docs-generator run smoke -o ./debugging/generated -p ./packages",
         "docs:parse": "pnpm --filter @seedcord/docs-engine run smoke ./debugging/generated -o ./debugging/samples",
         "docs:smoke": "pnpm docs:extract && pnpm docs:parse"

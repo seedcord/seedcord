@@ -5,13 +5,13 @@ packages:
 catalogs:
     deps:
         chalk: 5.6.2
-        discord.js: 14.23.2
+        discord.js: 14.24.0
         envapt: 4.0.1
         mongoose: 8.19.2
         prettier: 3.6.2
         reflect-metadata: 0.2.2
-        typedoc: 0.28.14
         type-fest: 5.1.0
+        typedoc: 0.28.14
     peer:
         eslint: 9.38.0
         typescript: 5.9.3

@@ -7,6 +7,7 @@ import {
     ContextMenuCommandBuilder,
     EmbedBuilder,
     FileBuilder,
+    FileUploadBuilder,
     InteractionContextType,
     LabelBuilder,
     MediaGalleryBuilder,
@@ -49,6 +50,7 @@ export const BuilderTypes = {
     modal: ModalBuilder,
     label: LabelBuilder,
     text_input: TextInputBuilder,
+    file_upload: FileUploadBuilder,
 
     // Action Row Components
     button: ButtonBuilder,
