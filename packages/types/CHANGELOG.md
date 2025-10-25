@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.3.1
+
+### Patch Changes
+
+- aaa59b7: bump deps, update djs to 14.24.0, make file_upload available in BuilderComponent
+
 ## 0.3.0
 
 ### Minor Changes

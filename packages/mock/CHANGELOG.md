@@ -1,5 +1,14 @@
 # @seedcord/mock
 
+## 0.2.7
+
+### Patch Changes
+
+- aaa59b7: bump deps, update djs to 14.24.0, make file_upload available in BuilderComponent
+- Updated dependencies [aaa59b7]
+    - seedcord@0.5.1
+    - @seedcord/types@0.3.1
+
 ## 0.2.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.3.0
+
+### Minor Changes
+
+- 5005f2d: options to enable or disable pre-initialized plugins (in case some other eslint package you import imports the same plugin by default)
+
 ## 1.2.3
 
 ### Patch Changes
