@@ -35,7 +35,7 @@ import {
  *
  * @internal
  */
-type FlatConfigFile = Linter.Config[];
+type FlatConfig = Linter.Config[];
 
 /**
  * Flattened type for ESLint configuration items.
@@ -91,7 +91,7 @@ function pluginBlock(params: {
  *
  * @param options - Configuration options to customize the ESLint setup.
  */
-function createConfig(options: CreateConfigOptions = {}): FlatConfigFile {
+function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const {
         tsconfigRootDir = process.cwd(),
         userConfigs = [],
@@ -197,5 +197,5 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfigFile {
 
 export * from './constants';
 export * from './rules';
-export type { CreateConfigOptions, FlatConfigFile, FlatConfigItem };
+export type { CreateConfigOptions, FlatConfig, FlatConfigItem };
 export default createConfig;
