@@ -1,8 +1,10 @@
+import type { ESLint, Linter } from 'eslint';
 import prettierConfig from 'eslint-config-prettier';
 import eslintImport from 'eslint-plugin-import';
 import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
 import eslintTsdoc from 'eslint-plugin-tsdoc';
+import { defineConfig } from 'eslint/config';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
@@ -28,61 +30,94 @@ import {
     createImportSettings
 } from './rules';
 
-// Types
 /**
  * Flattened type for the entire ESLint configuration array.
  *
  * @internal
  */
+type FlatConfigFile = Linter.Config[];
 
-type FlatConfig = ReturnType<typeof tseslint.config>;
 /**
  * Flattened type for ESLint configuration items.
  *
  * @internal
  */
-type FlatConfigItem = FlatConfig extends readonly (infer U)[] ? U : never;
+type FlatConfigItem = Linter.Config;
 
 /**
  * Options for creating the ESLint configuration.
  *
  */
 interface CreateConfigOptions {
-    /**
-     * Root directory for TypeScript configuration (default: `process.cwd()`)
-     */
+    /** Root directory for TypeScript configuration (default: `process.cwd()`) */
     tsconfigRootDir?: string;
-    /**
-     * Additional user-defined ESLint configuration items to merge
-     */
+
+    /** Additional user-defined ESLint configuration items to merge */
     userConfigs?: FlatConfigItem[];
+
+    /** Toggle registration of the `eslint-plugin-import` plugin (default: `true`) */
+    registerImportPlugin?: boolean;
+
+    /** Toggle registration of the `eslint-plugin-prettier` plugin (default: `true`) */
+    registerPrettierPlugin?: boolean;
+
+    /** Toggle registration of the `eslint-plugin-security` plugin (default: `true`) */
+    registerSecurityPlugin?: boolean;
+
+    /** Toggle registration of the `eslint-plugin-tsdoc` plugin (default: `true`) */
+    registerTsdocPlugin?: boolean;
 }
 
-// Create the ESLint configuration for Seedcord projects
-function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tseslint.config> {
-    const { tsconfigRootDir = process.cwd(), userConfigs = [] } = options;
+// Helper to build a config item with optional plugin registration
+function pluginBlock(params: {
+    enabled: boolean;
+    files: string[];
+    pluginName?: string;
+    plugin?: unknown;
+    rules?: Linter.RulesRecord;
+    settings?: Linter.Config['settings'];
+}): FlatConfigItem {
+    const item: FlatConfigItem = { files: [...params.files] };
+    if (params.settings) item.settings = params.settings;
+    if (params.rules) item.rules = params.rules;
+    if (params.enabled && params.plugin && params.pluginName) {
+        item.plugins = { [params.pluginName]: params.plugin } as Record<string, ESLint.Plugin>;
+    }
+    return item;
+}
 
-    // Create TypeScript parser options with dynamic tsconfigRootDir
+/**
+ * Creates a comprehensive ESLint configuration tailored for JavaScript and TypeScript projects.
+ *
+ * @param options - Configuration options to customize the ESLint setup.
+ */
+function createConfig(options: CreateConfigOptions = {}): FlatConfigFile {
+    const {
+        tsconfigRootDir = process.cwd(),
+        userConfigs = [],
+        registerImportPlugin = true,
+        registerPrettierPlugin = true,
+        registerSecurityPlugin = true,
+        registerTsdocPlugin = true
+    } = options;
+
     const createTsParserOptions = (rootDir: string) => ({
-        // Use main tsconfig, can be overridden by consumers if needed
         project: ['./tsconfig.json'],
         tsconfigRootDir: rootDir
     });
 
-    return tseslint.config(
+    return defineConfig(
         // Global ignores
-        {
-            ignores: [...GLOBAL_IGNORES]
-        },
+        { ignores: [...GLOBAL_IGNORES] },
 
-        // Base ESLint configuration for JavaScript/MJS files
+        // Base ESLint configuration for JavaScript files
         {
             files: [...JS_FILES],
             languageOptions: merge({}, JAVASCRIPT_LANGUAGE_OPTIONS),
             linterOptions: COMMON_LINTER_OPTIONS
         },
 
-        // TypeScript-specific configuration
+        // TypeScript specific configuration
         {
             files: [...TS_FILES],
             languageOptions: merge({}, TYPESCRIPT_LANGUAGE_OPTIONS, {
@@ -92,56 +127,56 @@ function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tses
             linterOptions: COMMON_LINTER_OPTIONS
         },
 
-        // Enable recommended configurations for TypeScript files only
+        // typescript eslint shared configs applied to TS files only
         ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
         ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),
         ...tseslint.configs.strict.map((c) => ({ ...c, files: [...TS_FILES] })),
         ...tseslint.configs.stylistic.map((c) => ({ ...c, files: [...TS_FILES] })),
 
-        // Security plugin - apply to all files
-        {
+        // Security
+        pluginBlock({
+            enabled: registerSecurityPlugin,
             files: [...ALL_FILES],
-            plugins: {
-                security: eslintSecurity
-            },
-            rules: merge({}, eslintSecurity.configs.recommended.rules)
-        },
+            pluginName: 'security',
+            plugin: eslintSecurity,
+            rules: merge({}, eslintSecurity.configs.recommended.rules) as Linter.RulesRecord
+        }),
 
-        // Import plugin - apply to all files
-        {
+        // Import
+        pluginBlock({
+            enabled: registerImportPlugin,
             files: [...ALL_FILES],
-            plugins: {
-                import: eslintImport
-            },
+            pluginName: 'import',
+            plugin: eslintImport,
             settings: createImportSettings(tsconfigRootDir),
             rules: IMPORT_RULES
-        },
+        }),
 
-        // Main rules configuration for all files
-        {
+        // Prettier
+        pluginBlock({
+            enabled: registerPrettierPlugin,
             files: [...ALL_FILES],
-            plugins: {
-                prettier: eslintPrettier
-            },
+            pluginName: 'prettier',
+            plugin: eslintPrettier,
             rules: PRETTIER_RULES
-        },
+        }),
 
-        // TypeScript-specific rules configuration
-        {
+        // TSDoc
+        pluginBlock({
+            enabled: registerTsdocPlugin,
             files: [...TS_FILES],
-            plugins: {
-                tsdoc: eslintTsdoc
-            },
+            pluginName: 'tsdoc',
+            plugin: eslintTsdoc,
             rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
-        },
+        }),
 
-        // Additional rules configuration
+        // Additional rules for all files
         {
             files: [...ALL_FILES],
             rules: merge({}, GENERAL_RULES, SECURITY_RULES, OVERRIDE_RULES)
         },
 
-        // Test files configuration
+        // Test files
         {
             files: [...TEST_FILES],
             rules: {
@@ -154,11 +189,13 @@ function createConfig(options: CreateConfigOptions = {}): ReturnType<typeof tses
 
         // Prettier config to disable conflicting rules
         prettierConfig,
+
+        // User provided configs last
         ...userConfigs
     );
 }
 
 export * from './constants';
 export * from './rules';
+export type { CreateConfigOptions, FlatConfigFile, FlatConfigItem };
 export default createConfig;
-export type { CreateConfigOptions, FlatConfig, FlatConfigItem };
