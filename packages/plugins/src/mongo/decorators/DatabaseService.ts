@@ -1,6 +1,5 @@
-import type { MongoService } from '../MongoService';
+import type { MongoServiceConstructor } from '../MongoService';
 import type { ServiceKeys } from '../types/Services';
-import type { Constructor } from 'type-fest';
 
 export const ServiceMetadataKey = Symbol('db:serviceKey');
 
@@ -22,7 +21,7 @@ export const ServiceMetadataKey = Symbol('db:serviceKey');
  * ```
  */
 export function DatabaseService<TService extends ServiceKeys>(key: TService) {
-    return <DatabaseCtor extends Constructor<unknown> & { prototype: MongoService }>(ctor: DatabaseCtor): void => {
+    return <DatabaseCtor extends MongoServiceConstructor>(ctor: DatabaseCtor): void => {
         Reflect.defineMetadata(ServiceMetadataKey, key, ctor);
     };
 }
