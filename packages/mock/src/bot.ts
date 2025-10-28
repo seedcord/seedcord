@@ -7,7 +7,7 @@ import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapt, Envapter } from 'envapt';
 import { Seedcord, StartupPhase } from 'seedcord';
 
-Envapter.envPaths = resolve(import.meta.dirname, '../../../.env');
+Envapter.envPaths = resolve(import.meta.dirname, '../.env');
 
 export class Vars extends Envapter {
     // Mongo Plugin
