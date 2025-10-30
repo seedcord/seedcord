@@ -1,4 +1,4 @@
-import type { EventFrequency } from '../../types';
+import type { EventFrequency } from '@miscellaneous/types';
 import type { ClientEvents } from 'discord.js';
 import type { Constructor } from 'type-fest';
 

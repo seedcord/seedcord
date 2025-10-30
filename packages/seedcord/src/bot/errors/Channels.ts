@@ -1,4 +1,4 @@
-import { CustomError } from '../../interfaces/Components';
+import { CustomError } from '@interfaces/Components';
 
 /**
  * Error thrown when a requested channel cannot be found.

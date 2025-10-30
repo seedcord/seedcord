@@ -1,6 +1,6 @@
 import { Role } from 'discord.js';
 
-import { CustomError } from '../../interfaces/Components';
+import { CustomError } from '@interfaces/Components';
 
 import type { TextChannel } from 'discord.js';
 

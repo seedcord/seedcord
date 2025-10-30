@@ -1,5 +1,5 @@
-import type { EventFrequency } from '../../types';
 import type { EffectKeys } from '../types/Effects';
+import type { EventFrequency } from '@miscellaneous/types';
 import type { Constructor } from 'type-fest';
 
 /**

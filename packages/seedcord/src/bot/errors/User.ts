@@ -1,4 +1,4 @@
-import { CustomError } from '../../interfaces/Components';
+import { CustomError } from '@interfaces/Components';
 
 /**
  * Error thrown when attempting to perform actions on a user not in the guild.

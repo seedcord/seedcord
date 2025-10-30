@@ -1,7 +1,7 @@
 import { EffectsHandler } from '../EffectsHandler';
 
-import type { Core } from '../../interfaces/Core';
 import type { EffectKeys, AllEffects } from '../types/Effects';
+import type { Core } from '@interfaces/Core';
 import type { WebhookClient } from 'discord.js';
 
 /**

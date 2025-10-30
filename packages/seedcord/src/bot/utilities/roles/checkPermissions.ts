@@ -1,7 +1,7 @@
 import { prettify } from '@seedcord/utils';
 import { Role, PermissionFlagsBits } from 'discord.js';
 
-import { MissingPermissions, HasDangerousPermissions } from '../../errors/Roles';
+import { MissingPermissions, HasDangerousPermissions } from '@bErrors/Roles';
 
 import type { Nullable, TypedExclude } from '@seedcord/types';
 import type { Client, TextChannel, PermissionsBitField } from 'discord.js';

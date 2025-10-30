@@ -27,7 +27,7 @@ import {
 } from 'discord.js';
 import { Envapt } from 'envapt';
 
-import { parseEnvColor } from '../miscellaneous/parseEnvColor';
+import { parseEnvColor } from '@miscellaneous/parseEnvColor';
 
 import type { ColorResolvable } from 'discord.js';
 

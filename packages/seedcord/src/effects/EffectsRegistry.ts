@@ -3,16 +3,17 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection } from 'discord.js';
 
+import { Plugin } from '@interfaces/Plugin';
+
 import { EffectMetadataKey } from './decorators/RegisterEffect';
 import { UnknownException } from './default/UnknownException';
 import { EffectsEmitter } from './EffectsEmitter';
 import { EffectsHandler } from './EffectsHandler';
-import { Plugin } from '../interfaces/Plugin';
 
-import type { EventFrequency } from '../types';
 import type { RegisterEffectMetadataEntry } from './decorators/RegisterEffect';
-import type { Core } from '../interfaces/Core';
 import type { AllEffects, EffectKeys } from './types/Effects';
+import type { Core } from '@interfaces/Core';
+import type { EventFrequency } from '@miscellaneous/types';
 import type { TypedConstructor } from '@seedcord/types';
 
 type EffectConstructor = TypedConstructor<typeof EffectsHandler>;

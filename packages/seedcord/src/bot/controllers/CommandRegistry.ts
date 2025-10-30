@@ -3,12 +3,12 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
 
-import { BuilderComponent } from '../../interfaces/Components';
-import { CommandMetadataKey } from '../decorators/Command';
+import { CommandMetadataKey } from '@bDecorators/Command';
+import { BuilderComponent } from '@interfaces/Components';
 
-import type { Core } from '../../interfaces/Core';
-import type { Initializeable } from '../../interfaces/Plugin';
-import type { CommandMeta } from '../decorators/Command';
+import type { CommandMeta } from '@bDecorators/Command';
+import type { Core } from '@interfaces/Core';
+import type { Initializeable } from '@interfaces/Plugin';
 import type { ContextMenuCommandBuilder } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;

@@ -1,4 +1,4 @@
-import type { BuilderComponent } from '../../interfaces/Components';
+import type { BuilderComponent } from '@interfaces/Components';
 
 /**
  * Metadata key for command registration information.

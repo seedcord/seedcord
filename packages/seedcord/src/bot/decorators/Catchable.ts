@@ -1,8 +1,8 @@
 import { MessageFlags } from 'discord.js';
 
-import { extractErrorResponse } from '../utilities/errors/extractErrorResponse';
+import { extractErrorResponse } from '@bUtilities/errors/extractErrorResponse';
 
-import type { RepliableInteractionHandler } from '../../interfaces/Handler';
+import type { RepliableInteractionHandler } from '@interfaces/Handler';
 
 /**
  * Configuration options for the Catchable decorator.

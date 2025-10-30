@@ -1,4 +1,4 @@
-import { areRoutes } from '../../miscellaneous/areRoutes';
+import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { Constructor } from 'type-fest';
 

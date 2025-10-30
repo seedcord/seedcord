@@ -4,77 +4,77 @@ import 'reflect-metadata';
 export * from './Seedcord';
 
 // Bot export
-export * from './bot/Bot';
+export * from '@bot/Bot';
 
 // Bot decorators exports
-export * from './bot/decorators/Checkable';
-export * from './bot/decorators/Catchable';
-export * from './bot/decorators/Command';
-export * from './bot/decorators/EventCatchable';
-export * from './bot/decorators/Events';
-export * from './bot/decorators/Interactions';
-export * from './bot/decorators/Middlewares';
+export * from '@bDecorators/Checkable';
+export * from '@bDecorators/Catchable';
+export * from '@bDecorators/Command';
+export * from '@bDecorators/EventCatchable';
+export * from '@bDecorators/Events';
+export * from '@bDecorators/Interactions';
+export * from '@bDecorators/Middlewares';
 
 // Bot Controller Exports
-export * from './bot/controllers/CommandRegistry';
-export * from './bot/controllers/EventController';
-export * from './bot/controllers/InteractionController';
+export * from '@bControllers/CommandRegistry';
+export * from '@bControllers/EventController';
+export * from '@bControllers/InteractionController';
 
 // Bot Error Exports
-export * from './bot/errors/Channels';
-export * from './bot/errors/Database';
-export * from './bot/errors/Roles';
-export * from './bot/errors/User';
+export * from '@bErrors/Channels';
+export * from '@bErrors/Database';
+export * from '@bErrors/Roles';
+export * from '@bErrors/User';
 
 // Bot Injectors Exports
-export * from './bot/injectors/EmojiInjector';
+export * from '@bot/injectors/EmojiInjector';
 
 // Bot Utilities Channels Exports
-export * from './bot/utilities/channels/fetchText';
-export * from './bot/utilities/channels/sendInText';
+export * from '@bUtilities/channels/fetchText';
+export * from '@bUtilities/channels/sendInText';
 
 // Bot Utilities Errors Exports
-export * from './bot/utilities/errors/extractErrorResponse';
-export * from './bot/utilities/errors/throwCustomError';
+export * from '@bUtilities/errors/extractErrorResponse';
+export * from '@bUtilities/errors/throwCustomError';
 
 // Bot Utilities Messages Exports
-export * from './bot/utilities/messages/attemptSendDM';
+export * from '@bUtilities/messages/attemptSendDM';
 
 // Bot Utilities Miscellaneous Exports
-export * from './bot/utilities/miscellaneous/buildSlashRoute';
+export * from '@bUtilities/miscellaneous/buildSlashRoute';
 
 // Bot Utilities Permissions Exports
-export * from './bot/utilities/roles/checkBotPermissions';
-export * from './bot/utilities/roles/checkPermissions';
-export * from './bot/utilities/roles/fetchRole';
-export * from './bot/utilities/roles/getBotRole';
-export * from './bot/utilities/roles/hasPermsToAssign';
+export * from '@bUtilities/roles/checkBotPermissions';
+export * from '@bUtilities/roles/checkPermissions';
+export * from '@bUtilities/roles/fetchRole';
+export * from '@bUtilities/roles/getBotRole';
+export * from '@bUtilities/roles/hasPermsToAssign';
 
 // Bot Utilities Users Exports
-export * from './bot/utilities/users/fetchGuildMember';
-export * from './bot/utilities/users/fetchManyGuildMembers';
-export * from './bot/utilities/users/fetchManyUsers';
-export * from './bot/utilities/users/fetchUser';
-export * from './bot/utilities/users/updateMemberRoles';
+export * from '@bUtilities/users/fetchGuildMember';
+export * from '@bUtilities/users/fetchManyGuildMembers';
+export * from '@bUtilities/users/fetchManyUsers';
+export * from '@bUtilities/users/fetchUser';
+export * from '@bUtilities/users/updateMemberRoles';
 
 // Bot Utility Types Exports
-export type * from './bot/utilities/Types';
+export type * from '@bUtilities/Types';
 
 // Bot Default Exports
-export * from './bot/defaults/UnhandledEvent';
+export * from '@bot/defaults/UnhandledEvent';
 
 // Interfaces exports
-export * from './interfaces/Components';
-export * from './interfaces/Handler';
-export * from './interfaces/Plugin';
-export type * from './interfaces/Core';
-export type * from './interfaces/Config';
+export * from '@interfaces/Components';
+export * from '@interfaces/Handler';
+export * from '@interfaces/Plugin';
+export type * from '@interfaces/Core';
+export type * from '@interfaces/Config';
 
 // Effects exports
 export * from './effects';
 
 // Errors
-export * from './bot/errors/Database';
+export * from '@bErrors/Database';
 
 // Export Services
 export * from '@seedcord/services';

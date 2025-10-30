@@ -1,9 +1,8 @@
-/* decorators/EventCatchable.ts */
 import { Message } from 'discord.js';
 
-import { extractErrorResponse } from '../utilities/errors/extractErrorResponse';
+import { extractErrorResponse } from '@bUtilities/errors/extractErrorResponse';
 
-import type { EventHandler } from '../../interfaces/Handler';
+import type { EventHandler } from '@interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 
 /**

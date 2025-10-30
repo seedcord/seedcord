@@ -3,17 +3,17 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
 
-import { EventHandler, EventMiddleware } from '../../interfaces/Handler';
-import { areRoutes } from '../../miscellaneous/areRoutes';
-import { EventMetadataKey } from '../decorators/Events';
-import { MiddlewareMetadataKey, MiddlewareType } from '../decorators/Middlewares';
+import { EventMetadataKey } from '@bDecorators/Events';
+import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { EventHandler, EventMiddleware } from '@interfaces/Handler';
+import { areRoutes } from '@miscellaneous/areRoutes';
 
-import type { Core } from '../../interfaces/Core';
-import type { EventHandlerConstructor, EventMiddlewareConstructor } from '../../interfaces/Handler';
-import type { Initializeable } from '../../interfaces/Plugin';
-import type { EventFrequency } from '../../types';
-import type { RegisterEventMetadataEntry } from '../decorators/Events';
-import type { MiddlewareMetadata } from '../decorators/Middlewares';
+import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
+import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { Core } from '@interfaces/Core';
+import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@interfaces/Handler';
+import type { Initializeable } from '@interfaces/Plugin';
+import type { EventFrequency } from '@miscellaneous/types';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;

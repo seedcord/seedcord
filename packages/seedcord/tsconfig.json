@@ -3,7 +3,19 @@
     "extends": "../tsconfig/node.json",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "paths": {
+            "@bot/*": ["./src/bot/*"],
+            "@effects/*": ["./src/effects/*"],
+            "@interfaces/*": ["./src/interfaces/*"],
+            "@miscellaneous/*": ["./src/miscellaneous/*"],
+
+            // Paths inside src/bot
+            "@bErrors/*": ["./src/bot/errors/*"],
+            "@bUtilities/*": ["./src/bot/utilities/*"],
+            "@bControllers/*": ["./src/bot/controllers/*"],
+            "@bDecorators/*": ["./src/bot/decorators/*"]
+        }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts"],
     "exclude": ["node_modules", "dist"]

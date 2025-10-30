@@ -3,9 +3,9 @@ import * as crypto from 'node:crypto';
 import { Logger } from '@seedcord/services';
 import { Envapt } from 'envapt';
 
-import { CustomError } from '../../../interfaces/Components';
-import { Core } from '../../../interfaces/Core';
-import { DatabaseError } from '../../errors/Database';
+import { DatabaseError } from '@bErrors/Database';
+import { CustomError } from '@interfaces/Components';
+import { Core } from '@interfaces/Core';
 
 import type { Nullable } from '@seedcord/types';
 import type { EmbedBuilder, Guild, User } from 'discord.js';

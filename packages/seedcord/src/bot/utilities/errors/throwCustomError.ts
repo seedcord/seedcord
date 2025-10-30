@@ -1,8 +1,8 @@
 import { Logger } from '@seedcord/services';
 
-import { DatabaseError } from '../../errors/Database';
+import { DatabaseError } from '@bErrors/Database';
 
-import type { CustomErrorConstructor } from '../../../interfaces/Components';
+import type { CustomErrorConstructor } from '@interfaces/Components';
 
 /**
  * Throws a custom error with a formatted message and optional UUID.

@@ -1,8 +1,9 @@
 import { PermissionFlagsBits } from 'discord.js';
 
+import { RoleHigherThanMe, CannotAssignBotRole } from '@bErrors/Roles';
+
 import { checkBotPermissions } from './checkBotPermissions';
 import { getBotRole } from './getBotRole';
-import { RoleHigherThanMe, CannotAssignBotRole } from '../../errors/Roles';
 
 import type { Role } from 'discord.js';
 

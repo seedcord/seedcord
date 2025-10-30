@@ -3,17 +3,18 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
 
-import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '../../interfaces/Handler';
-import { areRoutes } from '../../miscellaneous/areRoutes';
-import { InteractionMetadataKey, InteractionRoutes } from '../decorators/Interactions';
-import { MiddlewareMetadataKey, MiddlewareType } from '../decorators/Middlewares';
-import { UnhandledEvent } from '../defaults/UnhandledEvent';
-import { buildSlashRoute } from '../utilities/miscellaneous/buildSlashRoute';
+import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
+import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
+import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
+import { areRoutes } from '@miscellaneous/areRoutes';
 
-import type { Core } from '../../interfaces/Core';
-import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '../../interfaces/Handler';
-import type { Initializeable } from '../../interfaces/Plugin';
-import type { MiddlewareMetadata } from '../decorators/Middlewares';
+import { UnhandledEvent } from '../defaults/UnhandledEvent';
+
+import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { Core } from '@interfaces/Core';
+import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '@interfaces/Handler';
+import type { Initializeable } from '@interfaces/Plugin';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

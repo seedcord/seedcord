@@ -1,8 +1,8 @@
 import type { Config } from './Config';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import type { Plugin } from './Plugin';
-import type { Bot } from '../bot/Bot';
-import type { EffectsRegistry } from '../effects/EffectsRegistry';
+import type { Bot } from '@bot/Bot';
+import type { EffectsRegistry } from '@effects/EffectsRegistry';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 
 /** Base interface defining core Seedcord functionality

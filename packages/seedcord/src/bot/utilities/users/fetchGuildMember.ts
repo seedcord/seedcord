@@ -1,4 +1,4 @@
-import { UserNotInGuild } from '../../errors/User';
+import { UserNotInGuild } from '@bErrors/User';
 
 import type { Guild, GuildMember } from 'discord.js';
 

@@ -1,6 +1,6 @@
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 
-import { UserNotFound } from '../../errors/User';
+import { UserNotFound } from '@bErrors/User';
 
 import type { Client, User } from 'discord.js';
 

@@ -3,7 +3,8 @@ import { filterCirculars } from '@seedcord/utils';
 import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError, SnowflakeUtil } from 'discord.js';
 import { Envapt } from 'envapt';
 
-import { BuilderComponent } from '../../interfaces/Components';
+import { BuilderComponent } from '@interfaces/Components';
+
 import { WebhookLog } from '../bases/WebhookLog';
 import { RegisterEffect } from '../decorators/RegisterEffect';
 import { AllEffects } from '../types/Effects';

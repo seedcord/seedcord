@@ -1,7 +1,7 @@
 import { Logger } from '@seedcord/services';
 import chalk from 'chalk';
 
-import type { Core } from '../../interfaces/Core';
+import type { Core } from '@interfaces/Core';
 
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis');

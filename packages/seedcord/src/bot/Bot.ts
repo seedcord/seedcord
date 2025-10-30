@@ -3,13 +3,14 @@ import chalk from 'chalk';
 import { Client } from 'discord.js';
 import { Envapt } from 'envapt';
 
-import { Plugin } from '../interfaces/Plugin';
-import { CommandRegistry } from './controllers/CommandRegistry';
-import { EventController } from './controllers/EventController';
-import { InteractionController } from './controllers/InteractionController';
+import { CommandRegistry } from '@bControllers/CommandRegistry';
+import { EventController } from '@bControllers/EventController';
+import { InteractionController } from '@bControllers/InteractionController';
+import { Plugin } from '@interfaces/Plugin';
+
 import { EmojiInjector } from './injectors/EmojiInjector';
 
-import type { Core } from '../interfaces/Core';
+import type { Core } from '@interfaces/Core';
 
 /**
  * Discord bot implementation that manages client and controllers
