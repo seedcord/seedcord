@@ -1,10 +1,10 @@
 import { Logger } from '@seedcord/services';
 import { filterCirculars } from '@seedcord/utils';
-import { AttachmentBuilder, DiscordAPIError, SeparatorSpacingSize, SnowflakeUtil, WebhookClient } from 'discord.js';
+import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError, SnowflakeUtil } from 'discord.js';
 import { Envapt } from 'envapt';
 
 import { BuilderComponent } from '../../interfaces/Components';
-import { WebhookLog } from '../bases/abstracts/WebhookLog';
+import { WebhookLog } from '../bases/WebhookLog';
 import { RegisterEffect } from '../decorators/RegisterEffect';
 import { AllEffects } from '../types/Effects';
 

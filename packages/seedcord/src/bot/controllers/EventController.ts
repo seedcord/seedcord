@@ -11,12 +11,19 @@ import { MiddlewareMetadataKey, MiddlewareType } from '../decorators/Middlewares
 import type { Core } from '../../interfaces/Core';
 import type { EventHandlerConstructor, EventMiddlewareConstructor } from '../../interfaces/Handler';
 import type { Initializeable } from '../../interfaces/Plugin';
+import type { EventFrequency } from '../../types';
+import type { RegisterEventMetadataEntry } from '../decorators/Events';
 import type { MiddlewareMetadata } from '../decorators/Middlewares';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;
     readonly priority: number;
     readonly events?: readonly (keyof ClientEvents)[];
+}
+
+interface RegisteredEventHandlerEntry {
+    readonly ctor: EventHandlerConstructor;
+    readonly frequency: EventFrequency;
 }
 
 /**
@@ -33,7 +40,7 @@ export class EventController implements Initializeable {
     private readonly logger = new Logger('Events');
     private isInitialized = false;
 
-    private readonly eventMap = new Collection<keyof ClientEvents, EventHandlerConstructor[]>();
+    private readonly eventMap = new Collection<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
     private readonly middlewares: RegisteredEventMiddleware[] = [];
 
     public constructor(protected core: Core) {}
@@ -156,6 +163,24 @@ export class EventController implements Initializeable {
     private registerHandler(handlerClass: EventHandlerConstructor): void {
         const raw = Reflect.getMetadata(EventMetadataKey, handlerClass) as unknown;
 
+        if (Array.isArray(raw)) {
+            for (const entry of raw as RegisterEventMetadataEntry<keyof ClientEvents>[]) {
+                const key = entry.event;
+
+                let handlers = this.eventMap.get(key);
+                if (!handlers) {
+                    handlers = [];
+                    this.eventMap.set(key, handlers);
+                }
+
+                handlers.push({
+                    ctor: handlerClass,
+                    frequency: entry.frequency
+                });
+            }
+            return;
+        }
+
         const names = areRoutes(raw) ? raw : typeof raw === 'string' ? [raw] : [];
 
         if (names.length === 0) return;
@@ -168,51 +193,70 @@ export class EventController implements Initializeable {
                 handlers = [];
                 this.eventMap.set(key, handlers);
             }
-            handlers.push(handlerClass);
+            handlers.push({
+                ctor: handlerClass,
+                frequency: 'on'
+            });
         }
     }
 
     private attachToClient(): void {
-        for (const [eventName] of this.eventMap) {
-            // For each event type, call all relevant effects in sequence.
+        for (const [eventName, handlerEntries] of this.eventMap) {
             this.logger.debug(
                 `Attaching ${chalk.bold.green(eventName)} to ${chalk.bold.yellow(this.core.bot.client.user?.username)}`
             );
-            this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
-                void (async () => {
-                    await this.processEvent(eventName, args);
-                })();
-            });
+
+            for (const entry of handlerEntries) {
+                const register =
+                    entry.frequency === 'once'
+                        ? this.core.bot.client.once.bind(this.core.bot.client)
+                        : this.core.bot.client.on.bind(this.core.bot.client);
+
+                register(eventName, (...args: ClientEvents[typeof eventName]) => {
+                    void (async () => {
+                        await this.processEvent(eventName, args, entry.ctor);
+                    })();
+                });
+            }
         }
     }
 
     private async processEvent<KeyOfEvents extends keyof ClientEvents>(
         eventName: KeyOfEvents,
-        args: ClientEvents[KeyOfEvents]
+        args: ClientEvents[KeyOfEvents],
+        specificHandler?: EventHandlerConstructor
     ): Promise<void> {
         const shouldContinue = await this.runMiddlewares(eventName, args);
         if (!shouldContinue) return;
 
-        const handlerCtors = this.eventMap.get(eventName);
-        if (!handlerCtors || handlerCtors.length === 0) return;
+        if (specificHandler) {
+            await this.processHandler(eventName, specificHandler, args);
+            return;
+        }
 
-        for (const HandlerCtor of handlerCtors) {
-            try {
-                this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(HandlerCtor.name)}`);
-                const handler = new HandlerCtor(args, this.core);
-                if (handler.hasChecks()) {
-                    await handler.runChecks();
-                }
+        const handlerEntries = this.eventMap.get(eventName);
+        if (!handlerEntries || handlerEntries.length === 0) return;
 
-                if (handler.shouldBreak()) return;
+        for (const entry of handlerEntries) {
+            await this.processHandler(eventName, entry.ctor, args);
+        }
+    }
 
-                // Execute if no errors
-                if (!handler.hasErrors()) {
-                    await handler.execute();
-                }
-            } catch (err) {
-                this.logger.error(`Error in event ${String(eventName)} handler ${HandlerCtor.name}:`, err);
-            }
+    private async processHandler<KeyOfEvents extends keyof ClientEvents>(
+        eventName: KeyOfEvents,
+        ctor: EventHandlerConstructor,
+        args: ClientEvents[KeyOfEvents]
+    ): Promise<void> {
+        try {
+            this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.constructor.name)}`);
+            const handler = new ctor(args, this.core);
+            if (handler.hasChecks()) await handler.runChecks();
+
+            if (handler.shouldBreak()) return;
+
+            if (!handler.hasErrors()) await handler.execute();
+        } catch (err) {
+            this.logger.error(`Error in event ${String(eventName)} handler ${ctor.constructor.name}:`, err);
         }
     }
 }

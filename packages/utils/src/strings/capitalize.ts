@@ -1,5 +1,5 @@
 /**
- * Returns the word with it's first letter capitalized and the rest in lowercase.
+ * Returns the word with its first letter capitalized and the rest in lowercase.
  * @param word - The word to be formatted.
  * @returns The formatted word.
  */

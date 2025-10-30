@@ -74,7 +74,7 @@ export class CommandRegistry implements Initializeable {
         if (meta.scope === 'global') {
             this.globalCommands.push(comp);
             this.logger.info(`${chalk.italic('Registered')} ${chalk.bold.yellow(ctor.name)} from ${chalk.gray(rel)}`);
-            this.logger.info(`  → Global ${commandType}: ${chalk.bold.cyan(comp.name)}`);
+            this.logger.info(`→ Global ${commandType}: ${chalk.bold.cyan(comp.name)}`);
         } else {
             for (const g of meta.guilds) {
                 const arr = this.guildCommands.get(g) ?? [];
@@ -83,7 +83,7 @@ export class CommandRegistry implements Initializeable {
             }
             this.logger.info(`${chalk.italic('Registered')} ${chalk.bold.yellow(ctor.name)} from ${chalk.gray(rel)}`);
             this.logger.info(
-                `  → Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
+                `→ Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
             );
         }
     }
@@ -95,7 +95,7 @@ export class CommandRegistry implements Initializeable {
             this.logger.info(
                 `${chalk.bold.green('Configured')} ${chalk.magenta.bold(this.globalCommands.length)} global ${tag}`
             );
-            this.logger.info(` → ${this.globalCommands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
+            this.logger.info(`→ ${this.globalCommands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
 
         for (const [guildId, commands] of this.guildCommands.entries()) {

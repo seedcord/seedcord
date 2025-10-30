@@ -1,14 +1,14 @@
 import { EffectsHandler } from '../EffectsHandler';
 
-import type { Core } from '../../../interfaces/Core';
-import type { AllEffects, EffectKeys } from '../../types/Effects';
+import type { Core } from '../../interfaces/Core';
+import type { EffectKeys, AllEffects } from '../types/Effects';
 import type { WebhookClient } from 'discord.js';
 
 /**
  * Abstract webhook logging handler for side effect events.
  *
  * Extends EffectsHandler to provide webhook-based logging capabilities.
- * Implementations must define the webhook client to send messages to.
+ * Implementations must define the `webhook client` to send messages to by implementing the webhook property.
  *
  * @typeParam KeyOfEffects - The specific side effect type this handler processes
  */

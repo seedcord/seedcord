@@ -3,21 +3,22 @@ import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection } from 'discord.js';
 
-import { Plugin } from '../interfaces/Plugin';
-import { EffectsHandler } from './bases/EffectsHandler';
 import { EffectMetadataKey } from './decorators/RegisterEffect';
 import { UnknownException } from './default/UnknownException';
 import { EffectsEmitter } from './EffectsEmitter';
+import { EffectsHandler } from './EffectsHandler';
+import { Plugin } from '../interfaces/Plugin';
 
+import type { EventFrequency } from '../types';
+import type { RegisterEffectMetadataEntry } from './decorators/RegisterEffect';
 import type { Core } from '../interfaces/Core';
 import type { AllEffects, EffectKeys } from './types/Effects';
-import type { RegisterEffectOptions } from './types/RegisterEffectOptions';
 import type { TypedConstructor } from '@seedcord/types';
 
 type EffectConstructor = TypedConstructor<typeof EffectsHandler>;
-interface EffectEntry {
+interface RegisteredEffectHandlerEntry {
     ctor: EffectConstructor;
-    frequency: 'once' | 'on';
+    frequency: EventFrequency;
 }
 
 /**
@@ -32,7 +33,7 @@ interface EffectEntry {
 export class EffectsRegistry extends Plugin {
     public readonly logger = new Logger('Effects');
     private isInitialized = false;
-    private readonly effectsMap = new Collection<EffectKeys, EffectEntry[]>();
+    private readonly effectsMap = new Collection<EffectKeys, RegisteredEffectHandlerEntry[]>();
     private readonly emitter = new EffectsEmitter();
 
     constructor(protected core: Core) {
@@ -64,7 +65,7 @@ export class EffectsRegistry extends Plugin {
                 for (const exportName of Object.keys(imported)) {
                     const val = imported[exportName];
                     if (this.isEffectHandler(val)) {
-                        const meta = Reflect.getMetadata(EffectMetadataKey, val) as RegisterEffectOptions;
+                        const meta = Reflect.getMetadata(EffectMetadataKey, val) as RegisterEffectMetadataEntry;
                         this.registerEffect(val, meta);
                         this.logger.info(
                             `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
@@ -76,7 +77,7 @@ export class EffectsRegistry extends Plugin {
         );
     }
 
-    private registerEffect(handler: EffectConstructor, options: RegisterEffectOptions): void {
+    private registerEffect(handler: EffectConstructor, options: RegisterEffectMetadataEntry): void {
         let handlers = this.effectsMap.get(options.effect);
         if (!handlers) {
             handlers = [];

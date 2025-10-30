@@ -1,5 +1,5 @@
+import type { EventFrequency } from '../../types';
 import type { EffectKeys } from '../types/Effects';
-import type { RegisterEffectOptions } from '../types/RegisterEffectOptions';
 import type { Constructor } from 'type-fest';
 
 /**
@@ -8,6 +8,26 @@ import type { Constructor } from 'type-fest';
  * @internal
  */
 export const EffectMetadataKey = Symbol('effect:metadata');
+
+/**
+ * Options accepted by the `@RegisterEffect` decorator.
+ */
+export interface RegisterEffectOptions {
+    /** Frequency: `'once'` or `'on'`. Defaults to `'on'`. */
+    readonly frequency?: EventFrequency | undefined;
+}
+
+/**
+ * Metadata entry representing a registered effect handler.
+ *
+ * @internal
+ */
+export interface RegisterEffectMetadataEntry {
+    /** The effect event name to register for. */
+    readonly effect: EffectKeys;
+    /** Frequency: `'once'` or `'on'`. Defaults to `'on'`. */
+    readonly frequency?: EventFrequency | undefined;
+}
 
 /**
  * Registers a side effect handler class with a specific side effect event.
@@ -35,12 +55,9 @@ export const EffectMetadataKey = Symbol('effect:metadata');
  * \@RegisterEffect('userJoin')
  * ```
  */
-export function RegisterEffect<TEffect extends EffectKeys>(
-    effect: TEffect,
-    options?: Omit<RegisterEffectOptions, 'effect'>
-) {
+export function RegisterEffect<TEffect extends EffectKeys>(effect: TEffect, options?: RegisterEffectOptions) {
     return function (constructor: Constructor<unknown>): void {
-        const meta: RegisterEffectOptions = {
+        const meta: RegisterEffectMetadataEntry = {
             effect,
             frequency: options?.frequency
         };

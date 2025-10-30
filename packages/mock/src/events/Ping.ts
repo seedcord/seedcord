@@ -1,7 +1,7 @@
 import { Events } from 'discord.js';
 import { EventHandler, RegisterEvent } from 'seedcord';
 
-@RegisterEvent(Events.MessageCreate)
+@RegisterEvent(Events.MessageCreate, { frequency: 'once' })
 @RegisterEvent(Events.MessageUpdate)
 export class PingPong extends EventHandler<Events.MessageCreate> {
     public async execute(): Promise<void> {
