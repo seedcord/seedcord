@@ -4,8 +4,8 @@ import { AttachmentBuilder, DiscordAPIError, SeparatorSpacingSize, SnowflakeUtil
 import { Envapt } from 'envapt';
 
 import { BuilderComponent } from '../../interfaces/Components';
+import { WebhookLog } from '../bases/abstracts/WebhookLog';
 import { RegisterEffect } from '../decorators/RegisterEffect';
-import { WebhookLog } from '../interfaces/abstracts/WebhookLog';
 import { AllEffects } from '../types/Effects';
 
 /**

@@ -71,13 +71,7 @@ export type * from './interfaces/Core';
 export type * from './interfaces/Config';
 
 // Effects exports
-export * from './effects/EffectsRegistry';
-export * from './effects/EffectsEmitter';
-export * from './effects/decorators/RegisterEffect';
-export * from './effects/default/UnknownException';
-export * from './effects/interfaces/EffectsHandler';
-export * from './effects/interfaces/abstracts/WebhookLog';
-export type * from './effects/types/Effects';
+export * from './effects';
 
 // Errors
 export * from './bot/errors/Database';
