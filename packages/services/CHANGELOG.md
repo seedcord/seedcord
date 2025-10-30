@@ -1,5 +1,13 @@
 # @seedcord/services
 
+## 0.3.2
+
+### Patch Changes
+
+- bump discord.js version to latest
+- Updated dependencies
+    - @seedcord/types@0.3.2
+
 ## 0.3.1
 
 ### Patch Changes

@@ -5,7 +5,7 @@ packages:
 catalogs:
     deps:
         chalk: 5.6.2
-        discord.js: 14.24.0
+        discord.js: 14.24.1
         envapt: 4.0.1
         mongoose: 8.19.2
         prettier: 3.6.2

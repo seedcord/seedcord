@@ -1,5 +1,15 @@
 # seedcord
 
+## 0.6.2
+
+### Patch Changes
+
+- bump discord.js version to latest
+- Updated dependencies
+    - @seedcord/services@0.3.2
+    - @seedcord/types@0.3.2
+    - @seedcord/utils@0.3.3
+
 ## 0.6.1
 
 ### Patch Changes
