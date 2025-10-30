@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.6.1
+
+### Patch Changes
+
+- fix logging for event handler. wrong ref to class name
+
 ## 0.6.0
 
 ### Minor Changes

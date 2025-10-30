@@ -248,7 +248,7 @@ export class EventController implements Initializeable {
         args: ClientEvents[KeyOfEvents]
     ): Promise<void> {
         try {
-            this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.constructor.name)}`);
+            this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.name)}`);
             const handler = new ctor(args, this.core);
             if (handler.hasChecks()) await handler.runChecks();
 
@@ -256,7 +256,7 @@ export class EventController implements Initializeable {
 
             if (!handler.hasErrors()) await handler.execute();
         } catch (err) {
-            this.logger.error(`Error in event ${String(eventName)} handler ${ctor.constructor.name}:`, err);
+            this.logger.error(`Error in event ${String(eventName)} handler ${ctor.name}:`, err);
         }
     }
 }
