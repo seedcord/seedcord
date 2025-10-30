@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.6.1
+
+### Patch Changes
+
+- fix logging for event handler. wrong ref to class name
+
 ## 0.6.0
 
 ### Minor Changes
@@ -9,7 +15,6 @@
 
 ### Patch Changes
 
-- fix logging for event handler. wrong ref to class name
 - Updated dependencies [d8b4c50]
     - @seedcord/utils@0.3.2
 
