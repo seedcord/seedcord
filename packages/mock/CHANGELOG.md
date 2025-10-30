@@ -1,5 +1,14 @@
 # @seedcord/mock
 
+## 0.2.9
+
+### Patch Changes
+
+- bump discord.js version to latest
+- Updated dependencies
+    - seedcord@0.6.2
+    - @seedcord/types@0.3.2
+
 ## 0.2.8
 
 ### Patch Changes
