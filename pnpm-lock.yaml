@@ -243,9 +243,6 @@ importers:
             '@seedcord/utils':
                 specifier: workspace:^
                 version: link:../utils
-            '@types/pg':
-                specifier: ^8.15.6
-                version: 8.15.6
             chalk:
                 specifier: catalog:deps
                 version: 5.6.2
@@ -283,6 +280,9 @@ importers:
             '@seedcord/tsup-config':
                 specifier: workspace:^
                 version: link:../tsup-config
+            '@types/pg':
+                specifier: ^8.15.6
+                version: 8.15.6
 
     packages/seedcord:
         dependencies:
@@ -444,6 +444,13 @@ packages:
         resolution:
             {
                 integrity: sha512-qMlSxKbpRlAridDExk92nSobyDdpPijUq2DW6oDnUqd0iOGxmQjyqhMIihI9+zv4LPyZdRje2cavWPbCbWm3eA==
+            }
+        engines: { node: '>=6.9.0' }
+
+    '@babel/helper-validator-identifier@7.27.1':
+        resolution:
+            {
+                integrity: sha512-D2hP9eA+Sqx1kBZgzxZh0y1trbuU+JoDkiEwqhQ36nodYqJwyEIhPSdMNd7lOm/4io72luTPWH20Yda0xOuUow==
             }
         engines: { node: '>=6.9.0' }
 
@@ -2661,10 +2668,10 @@ packages:
                 integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==
             }
 
-    emoji-regex@10.6.0:
+    emoji-regex@10.5.0:
         resolution:
             {
-                integrity: sha512-toUI84YS5YmxW219erniWD0CIVOo46xGKColeNQRgOzDorgBi1v4D71/OFzgD9GO2UGKIv1C3Sp8DAn0+j5w7A==
+                integrity: sha512-lb49vf1Xzfx080OKA0o6l8DQQpV+6Vg95zyCJX9VB/BqKYlhG7N4wgROUUHRA+ZPUefLnteQOad7z1kT2bV7bg==
             }
 
     emoji-regex@8.0.0:
@@ -5962,11 +5969,13 @@ packages:
 snapshots:
     '@babel/code-frame@7.27.1':
         dependencies:
-            '@babel/helper-validator-identifier': 7.28.5
+            '@babel/helper-validator-identifier': 7.27.1
             js-tokens: 4.0.0
             picocolors: 1.1.1
 
     '@babel/helper-string-parser@7.27.1': {}
+
+    '@babel/helper-validator-identifier@7.27.1': {}
 
     '@babel/helper-validator-identifier@7.28.5': {}
 
@@ -7358,7 +7367,7 @@ snapshots:
 
     eastasianwidth@0.2.0: {}
 
-    emoji-regex@10.6.0: {}
+    emoji-regex@10.5.0: {}
 
     emoji-regex@8.0.0: {}
 
@@ -8890,7 +8899,7 @@ snapshots:
 
     string-width@7.2.0:
         dependencies:
-            emoji-regex: 10.6.0
+            emoji-regex: 10.5.0
             get-east-asian-width: 1.4.0
             strip-ansi: 7.1.2
 
