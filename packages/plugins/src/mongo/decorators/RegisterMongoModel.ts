@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-import type { ServiceKeys } from '../types/Services';
+import type { MongoServiceKeys } from '../types/MongoServices';
 
 export const ModelMetadataKey = Symbol('db:model');
 
@@ -16,16 +16,16 @@ export const ModelMetadataKey = Symbol('db:model');
  * @decorator
  * @example
  * ```typescript
- * \@DatabaseService('users')
+ * \@RegisterMongoService('users')
  * export class Users extends MongoService<IUser> {
- *   \@DatabaseModel('users')
+ *   \@RegisterMongoModel('users')
  *   public static schema = new mongoose.Schema<IUser>({
  *     username: { type: String, required: true, unique: true }
  *   });
  * }
  * ```
  */
-export function DatabaseModel<TService extends ServiceKeys>(collection: TService) {
+export function RegisterMongoModel<TService extends MongoServiceKeys>(collection: TService) {
     return <
         SchemaObj extends Record<KeyOfSchema, mongoose.Schema>,
         KeyOfSchema extends keyof SchemaObj & (string | symbol)

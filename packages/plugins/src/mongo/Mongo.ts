@@ -5,24 +5,14 @@ import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 import { Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
 
-import { ServiceMetadataKey } from './decorators/DatabaseService';
+import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 import { MongoService } from './MongoService';
 
 import type { MongoServiceConstructor } from './MongoService';
-import type { Services } from './types/Services';
+import type { MongoOptions } from './types/MongoOptions';
+import type { MongoServices } from './types/MongoServices';
+import type { Mongoose } from 'mongoose';
 import type { Core } from 'seedcord';
-
-/**
- * Configuration options for MongoDB connection and service loading.
- */
-export interface MongoOptions {
-    /** Directory path containing database service classes */
-    dir: string;
-    /** MongoDB connection URI */
-    uri: string;
-    /** Database name to use */
-    name: string;
-}
 
 /**
  * MongoDB integration plugin for Seedcord.
@@ -37,9 +27,12 @@ export class Mongo extends Plugin {
 
     /**
      * Map of all loaded services.
-     * Keys come from `@DatabaseService('key')`
+     * Keys come from `@RegisterMongoService('key')`
      */
-    public readonly services: Services = {} as Services;
+    public readonly services: MongoServices = {} as MongoServices;
+
+    /** Exposed Mongoose instance once `init` completes. */
+    declare public connection: Mongoose;
 
     constructor(
         public readonly core: Core,
@@ -64,12 +57,15 @@ export class Mongo extends Plugin {
     }
 
     private async connect(): Promise<void> {
-        await mongoose
+        this.connection = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
                 ...(Envapter.isProduction && { tls: true, ssl: true })
             })
-            .then((i) => this.logger.info(`Connected to MongoDB: ${chalk.bold.magenta(i.connection.name)}`))
+            .then((conn) => {
+                this.logger.info(chalk.green.bold(`Connected to MongoDB: ${chalk.magenta.bold(conn.connection.name)}`));
+                return conn;
+            })
             .catch((err) => {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                 throw new Error(`Could not connect to MongoDB`, err);
@@ -77,7 +73,7 @@ export class Mongo extends Plugin {
     }
 
     private async disconnect(): Promise<void> {
-        await mongoose
+        await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
             .catch((err) => this.logger.error(`Could not disconnect from MongoDB: ${(err as Error).message}`));
@@ -113,7 +109,12 @@ export class Mongo extends Plugin {
         );
     }
 
-    _register<SKey extends keyof Services>(key: SKey, instance: Services[SKey]): void {
+    /**
+     * Register hook used by decorated services.
+     *
+     * @internal
+     */
+    _register<SKey extends keyof MongoServices>(key: SKey, instance: MongoServices[SKey]): void {
         this.services[key] = instance;
     }
 }

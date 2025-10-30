@@ -1,9 +1,9 @@
-import { ModelMetadataKey } from './decorators/DatabaseModel';
-import { ServiceMetadataKey } from './decorators/DatabaseService';
+import { ModelMetadataKey } from './decorators/RegisterMongoModel';
+import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 
 import type { Mongo } from './Mongo';
-import type { IDocument } from './types/Document';
-import type { Services } from './types/Services';
+import type { MongoDocument } from './types/MongoDocument';
+import type { MongoServices } from './types/MongoServices';
 import type { TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
 import type { Core } from 'seedcord';
@@ -17,9 +17,9 @@ import type { Core } from 'seedcord';
  * @typeParam Doc - The document type this service manages
  * @example
  * ```typescript
- * \@DatabaseService('users')
+ * \@RegisterMongoService('users')
  * export class Users extends MongoService<IUser> {
- *   \@DatabaseModel('users')
+ *   \@RegisterMongoModel('users')
  *   public static schema = new mongoose.Schema<IUser>({
  *     username: { type: String, required: true, unique: true }
  *   });
@@ -31,7 +31,7 @@ import type { Core } from 'seedcord';
  * }
  * ```
  */
-export abstract class MongoService<Doc extends IDocument = IDocument> {
+export abstract class MongoService<Doc extends MongoDocument = MongoDocument> {
     public readonly model: mongoose.Model<Doc>;
 
     public constructor(
@@ -41,16 +41,16 @@ export abstract class MongoService<Doc extends IDocument = IDocument> {
         const ctor = this.constructor;
 
         const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
-        if (!key) throw new Error(`Missing @DatabaseService on ${ctor.name}`);
+        if (!key) throw new Error(`Missing @RegisterMongoService on ${ctor.name}`);
 
         const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<Doc> | undefined;
-        if (!model) throw new Error(`Missing @DatabaseModel on ${ctor.name}`);
+        if (!model) throw new Error(`Missing @RegisterMongoModel on ${ctor.name}`);
 
         this.model = model;
 
-        db._register(key as keyof Services, this as unknown as Services[keyof Services]);
+        db._register(key as keyof MongoServices, this as unknown as MongoServices[keyof MongoServices]);
     }
 }
 
-/** Constructor type for MongoService classes */
+/** Constructor type for {@link MongoService} classes */
 export type MongoServiceConstructor = TypedConstructor<typeof MongoService>;

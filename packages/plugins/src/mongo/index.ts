@@ -1,9 +1,10 @@
-export type * from './types/Services';
-export type * from './types/Document';
-export * from './MongoService';
 export * from './Mongo';
+export * from './MongoService';
 
 // Decorators
-export * from './decorators/DBCatchable';
-export * from './decorators/DatabaseModel';
-export * from './decorators/DatabaseService';
+export * from './decorators/RegisterMongoModel';
+export * from './decorators/RegisterMongoService';
+
+// Types
+export type * from './types/MongoDocument';
+export type * from './types/MongoServices';

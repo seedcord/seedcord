@@ -3,7 +3,7 @@ import { CustomError, throwCustomError, DatabaseError } from 'seedcord';
 /**
  * Catches and wraps database operation errors.
  *
- * Automatically wraps non-CustomError exceptions in DatabaseError instances
+ * Wraps non-CustomError exceptions in DatabaseError instances
  * with UUID tracking. Should be applied to database service methods.
  *
  * @typeParam TypeReturn - The return type of the decorated method
@@ -12,14 +12,18 @@ import { CustomError, throwCustomError, DatabaseError } from 'seedcord';
  * @example
  * ```typescript
  * class UserService extends MongoService<IUser> {
- *   \@DBCatchable('Failed to find user')
+ *   \@WrapDatabaseError('Failed to find user')
  *   async findById(id: string) {
  *     return this.model.findById(id);
  *   }
  * }
  * ```
+ *
+ * @see {@link DatabaseError}
+ * @see {@link CustomError}
+ * @see {@link MongoService}
  */
-export function DBCatchable<TypeReturn>(errorMessage: string) {
+export function WrapDatabaseError<TypeReturn>(errorMessage: string) {
     return function (
         _target: unknown,
         _propertyKey: string,
