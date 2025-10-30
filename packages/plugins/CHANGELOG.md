@@ -1,5 +1,19 @@
 # @seedcord/plugins
 
+## 0.4.0
+
+### Minor Changes
+
+- d8b4c50: **BREAKING:** Mongo plugin's exported entities were renamed. And a Kysely-Postgres plugin was added.
+
+### Patch Changes
+
+- Updated dependencies [d8b4c50]
+- Updated dependencies [615eac2]
+- Updated dependencies [e48b386]
+    - @seedcord/utils@0.3.2
+    - seedcord@0.6.0
+
 ## 0.3.3
 
 ### Patch Changes

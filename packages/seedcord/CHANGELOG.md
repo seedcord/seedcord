@@ -1,5 +1,17 @@
 # seedcord
 
+## 0.6.0
+
+### Minor Changes
+
+- 615eac2: add 'once' and 'on' functionality when registering event handlers
+- e48b386: add option to choose "once" or "on" for effects for triggering them
+
+### Patch Changes
+
+- Updated dependencies [d8b4c50]
+    - @seedcord/utils@0.3.2
+
 ## 0.5.1
 
 ### Patch Changes

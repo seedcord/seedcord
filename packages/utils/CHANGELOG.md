@@ -1,5 +1,11 @@
 # @seedcord/utils
 
+## 0.3.2
+
+### Patch Changes
+
+- d8b4c50: new util function `keepDefined`
+
 ## 0.3.1
 
 ### Patch Changes

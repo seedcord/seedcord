@@ -1,5 +1,16 @@
 # @seedcord/mock
 
+## 0.2.8
+
+### Patch Changes
+
+- d8b4c50: updated sample code to use the new exported contents from @seedcord/plugin
+- Updated dependencies [d8b4c50]
+- Updated dependencies [615eac2]
+- Updated dependencies [e48b386]
+    - @seedcord/plugins@0.4.0
+    - seedcord@0.6.0
+
 ## 0.2.7
 
 ### Patch Changes
