@@ -11,7 +11,7 @@ catalogs:
             version: 5.6.2
         discord.js:
             specifier: 14.24.1
-            version: 14.24.0
+            version: 14.24.1
         envapt:
             specifier: 4.0.1
             version: 4.0.0
