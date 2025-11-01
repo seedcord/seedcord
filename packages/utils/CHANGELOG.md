@@ -1,5 +1,14 @@
 # @seedcord/utils
 
+## 0.3.4
+
+### Patch Changes
+
+- bump deps (mainly djs to 14.24.2)
+- Updated dependencies
+    - @seedcord/services@0.3.3
+    - @seedcord/types@0.3.3
+
 ## 0.3.3
 
 ### Patch Changes
