@@ -1,5 +1,11 @@
 # @seedcord/plugins
 
+## 0.4.1
+
+### Patch Changes
+
+- allow a way to pass in other kysely options via plugin
+
 ## 0.4.0
 
 ### Minor Changes

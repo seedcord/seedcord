@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import chalk from 'chalk';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig } from 'pg';
-import { Logger, Plugin, ShutdownPhase } from 'seedcord';
+import { keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
 
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
 import { KpgMigrationManager } from './KpgMigrationManager';
@@ -89,7 +89,8 @@ export class KyselyPg<Database extends object> extends Plugin {
             await this.testPoolConnection(pool);
 
             this.connection = new Kysely<Database>({
-                dialect: new PostgresDialect({ pool })
+                dialect: new PostgresDialect({ pool }),
+                ...keepDefined(this.options.kysely ?? {})
             });
 
             this.migrationManager = new KpgMigrationManager({
