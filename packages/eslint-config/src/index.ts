@@ -1,10 +1,9 @@
-import type { ESLint, Linter } from 'eslint';
+import { defineConfig } from 'eslint/config';
 import prettierConfig from 'eslint-config-prettier';
 import eslintImport from 'eslint-plugin-import';
 import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
 import eslintTsdoc from 'eslint-plugin-tsdoc';
-import { defineConfig } from 'eslint/config';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
@@ -29,6 +28,8 @@ import {
     TYPESCRIPT_RULES,
     createImportSettings
 } from './rules';
+
+import type { ESLint, Linter } from 'eslint';
 
 /**
  * Flattened type for the entire ESLint configuration array.

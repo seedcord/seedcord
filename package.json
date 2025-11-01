@@ -59,7 +59,7 @@
         "husky": "^9.1.7",
         "lint-staged": "^16.2.6",
         "nodemon": "^3.1.10",
-        "prettier": "^3.6.2",
+        "prettier": "catalog:deps",
         "tsup": "^8.5.0",
         "tsx": "^4.20.6",
         "turbo": "^2.6.0",
@@ -68,5 +68,12 @@
     },
     "engines": {
         "node": ">=22.12.0"
+    },
+    "pnpm": {
+        "overrides": {
+            "eslint": "9.38.0",
+            "@eslint/core": "0.16.0",
+            "@eslint/js": "9.38.0"
+        }
     }
 }
