@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.7.0
+
+### Minor Changes
+
+- fix login before handlers were registering making some of them useless
+
 ## 0.6.3
 
 ### Patch Changes

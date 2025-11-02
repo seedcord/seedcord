@@ -1,5 +1,12 @@
 # @seedcord/plugins
 
+## 0.4.2
+
+### Patch Changes
+
+- Updated dependencies
+    - seedcord@0.7.0
+
 ## 0.4.1
 
 ### Patch Changes

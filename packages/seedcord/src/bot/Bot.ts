@@ -42,10 +42,10 @@ export class Bot extends Plugin {
         this.interactions = new InteractionController(core);
         this.events = new EventController(core);
 
-        this.commands = new CommandRegistry(this.core);
-        this.emojiInjector = new EmojiInjector(this.core);
+        this.commands = new CommandRegistry(core);
+        this.emojiInjector = new EmojiInjector(core);
 
-        this.core.shutdown.addTask(ShutdownPhase.DiscordCleanup, 'stop-bot', async () => await this.stop());
+        core.shutdown.addTask(ShutdownPhase.DiscordCleanup, 'stop-bot', async () => await this.stop());
     }
 
     /**
@@ -58,10 +58,10 @@ export class Bot extends Plugin {
         }
         this.isInitialized = true;
 
-        await this.login();
-
         await this.interactions.init();
         await this.events.init();
+
+        await this.login();
 
         await this.commands.init();
         await this.commands.setCommands();
