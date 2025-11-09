@@ -203,7 +203,7 @@ export class EventController implements Initializeable {
     private attachToClient(): void {
         for (const [eventName, handlerEntries] of this.eventMap) {
             this.logger.debug(
-                `Attaching ${chalk.bold.green(eventName)} to ${chalk.bold.yellow(this.core.bot.client.user?.username)}`
+                `Attaching ${chalk.bold.green(eventName)} to the client with ${chalk.gray(handlerEntries.length)} handler(s)`
             );
 
             for (const entry of handlerEntries) {
