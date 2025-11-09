@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.7.1
+
+### Patch Changes
+
+- fix "undefined" in log message on startup when registering events. will now show handler count per event in logging
+
 ## 0.7.0
 
 ### Minor Changes
