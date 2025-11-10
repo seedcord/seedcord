@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/tsconfig",
     "type": "module",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "description": "Shared TypeScript configuration for seedcord projects",
     "main": "./base.json",
     "private": true,

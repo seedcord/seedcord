@@ -1,5 +1,11 @@
 # @seedcord/tsconfig
 
+## 1.0.6
+
+### Patch Changes
+
+- a1a90e6: custom seedcord errors and error codes
+
 ## 1.0.5
 
 ### Patch Changes

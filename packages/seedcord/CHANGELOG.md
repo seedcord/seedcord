@@ -1,5 +1,28 @@
 # seedcord
 
+## 0.8.0
+
+### Minor Changes
+
+- a1a90e6: ignored key list for interactions now also accepts RegExp patterns.
+- a1a90e6: core.bot will now emit some useful events. (unhandled errors and all events)
+- a1a90e6: new StrictEventEmitter class. Plugin extends this now so strongly typed EventEmitter methods are available on all plugins. To use, pass a map of events as the generic to Plugin<here>.
+- a1a90e6: strongly type routing decorators so they can only be applied to the correct handler classes
+- a1a90e6: global Emojis and augmentable interface for the same. better DX than mutating user's own Emojis object
+- a1a90e6: (beta feature) new Confirmable decorator makes it very easy to require a confirmation before running the "execute" method in handlers
+- a1a90e6: populate method that can be overridden to execute synchronous code. it's called at the end of the constructor in handlers.
+
+### Patch Changes
+
+- a1a90e6: logger instance in handlers available via this.logger
+- a1a90e6: custom seedcord errors and error codes
+- a1a90e6: better validation for UNKNOWN_EXCEPTION_WEBHOOK_URL
+- a1a90e6: make sure that a registered command can only ever be guild OR global
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+    - @seedcord/services@0.4.0
+    - @seedcord/utils@0.3.5
+
 ## 0.7.1
 
 ### Patch Changes

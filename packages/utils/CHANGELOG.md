@@ -1,5 +1,14 @@
 # @seedcord/utils
 
+## 0.3.5
+
+### Patch Changes
+
+- a1a90e6: custom seedcord errors and error codes
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+    - @seedcord/services@0.4.0
+
 ## 0.3.4
 
 ### Patch Changes

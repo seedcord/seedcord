@@ -1,5 +1,25 @@
 # @seedcord/plugins
 
+## 0.4.3
+
+### Patch Changes
+
+- a1a90e6: custom seedcord errors and error codes
+- a1a90e6: allow passing mongoose connection options and timeout ms for both mongo and kyselypg plugins
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+- Updated dependencies [a1a90e6]
+    - seedcord@0.8.0
+    - @seedcord/utils@0.3.5
+
 ## 0.4.2
 
 ### Patch Changes

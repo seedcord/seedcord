@@ -1,5 +1,15 @@
 # @seedcord/services
 
+## 0.4.0
+
+### Minor Changes
+
+- a1a90e6: new StrictEventEmitter class. Plugin extends this now so strongly typed EventEmitter methods are available on all plugins. To use, pass a map of events as the generic to Plugin<here>.
+
+### Patch Changes
+
+- a1a90e6: custom seedcord errors and error codes
+
 ## 0.3.3
 
 ### Patch Changes
