@@ -18,13 +18,6 @@ export class Vars extends Envapter {
     public static readonly dbName: string;
 }
 
-export const Emojis = {
-    success: 'checkmark',
-    error: 'cross',
-    loading: 'ritual_loader_1',
-    heart: 'red_heart'
-};
-
 async function main(): Promise<void> {
     const seedcord = new Seedcord({
         bot: {
@@ -50,7 +43,10 @@ async function main(): Promise<void> {
                 path: resolve(import.meta.dirname, './events'),
                 middlewares: resolve(import.meta.dirname, './events/middlewares')
             },
-            emojis: Emojis
+            emojis: {
+                Confirm: 'confirmation_check',
+                Cancel: 'confirmation_cross'
+            }
         },
         effects: {
             path: resolve(import.meta.dirname, './effects')
@@ -67,6 +63,11 @@ async function main(): Promise<void> {
 declare module 'seedcord' {
     interface Core {
         db: Mongo;
+    }
+
+    interface EmojiMap {
+        Confirm: string;
+        Cancel: string;
     }
 }
 

@@ -78,6 +78,8 @@ export class EmojiInjector {
                 emojiStorage[key] = `<${emoji.identifier}>`;
                 foundCount++;
 
+                this.logger.debug(`${chalk.bold.green('Found')}: ${chalk.magenta.bold(emojiName)} (${emoji.id})`);
+
                 return;
             }
 
@@ -87,7 +89,7 @@ export class EmojiInjector {
             );
         });
 
-        this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta.bold(foundCount)} emojis`);
+        this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta.bold(foundCount)} emoji(s)`);
     }
 
     private clearEmojis(): void {
