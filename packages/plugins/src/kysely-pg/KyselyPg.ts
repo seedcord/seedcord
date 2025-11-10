@@ -47,7 +47,12 @@ export class KyselyPg<Database extends object> extends Plugin {
         super(core);
         this.serviceRegistry = new KpgServiceRegistry(this, core, this.logger);
         this.databaseBootstrapper = new KpgDatabaseBootstrapper(this.logger);
-        this.core.shutdown.addTask(ShutdownPhase.ExternalResources, 'stop-kyselypg', async () => await this.stop());
+        this.core.shutdown.addTask(
+            ShutdownPhase.ExternalResources,
+            'stop-kyselypg',
+            async () => await this.stop(),
+            this.options.timeout
+        );
     }
 
     /**

@@ -1,3 +1,4 @@
+import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 import { MessageFlags } from 'discord.js';
 
 import { extractErrorResponse } from '@bUtilities/errors/extractErrorResponse';
@@ -46,7 +47,7 @@ export function Catchable(options?: CatchableOptions) {
         descriptor.value = async function (this: RepliableInteractionHandler, ...args: any[]): Promise<void> {
             const interaction = this.getEvent();
 
-            if (!originalMethod) throw new Error('Method not found');
+            if (!originalMethod) throw new SeedcordError(SeedcordErrorCode.DecoratorMethodNotFound);
 
             try {
                 await originalMethod.apply(this, args);

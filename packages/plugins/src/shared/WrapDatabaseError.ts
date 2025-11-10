@@ -1,4 +1,4 @@
-import { CustomError, throwCustomError, DatabaseError } from 'seedcord';
+import { CustomError, DatabaseError, SeedcordError, SeedcordErrorCode, throwCustomError } from 'seedcord';
 
 /**
  * Catches and wraps database operation errors.
@@ -33,7 +33,7 @@ export function WrapDatabaseError<TypeReturn>(errorMessage: string) {
 
         descriptor.value = async function (...args: any[]): Promise<TypeReturn> {
             if (!originalMethod) {
-                throw new Error('Method not found');
+                throw new SeedcordError(SeedcordErrorCode.DecoratorMethodNotFound);
             }
 
             try {

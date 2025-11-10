@@ -1,3 +1,5 @@
+import { Logger } from '@seedcord/services';
+
 import type { Core } from './Core';
 import type { TypedConstructor } from '@seedcord/types';
 import type {
@@ -21,8 +23,10 @@ export type ValidInteractionTypes =
     | AnySelectMenuInteraction
     | ContextMenuCommandInteraction;
 
+export type ValidNonInteractionKeys = Exclude<keyof ClientEvents, Events.InteractionCreate>;
+
 /** All valid Discord.js client events except interaction events */
-export type ValidNonInteractionTypes = ClientEvents[Exclude<keyof ClientEvents, Events.InteractionCreate>];
+export type ValidNonInteractionTypes = ClientEvents[ValidNonInteractionKeys];
 
 /** All event types that can be handled (interactions and client events) */
 export type ValidEventTypes = ValidInteractionTypes | ValidNonInteractionTypes;
@@ -32,6 +36,9 @@ export type Repliables = Exclude<ValidInteractionTypes, AutocompleteInteraction>
 
 /** Handler types that can reply to interactions */
 export type RepliableInteractionHandler = InteractionHandler<Repliables> | InteractionMiddleware<Repliables>;
+
+/** Event handler types that can reply to events */
+export type RepliableEventHandler = EventHandler<ValidNonInteractionKeys> | EventMiddleware<ValidNonInteractionKeys>;
 
 /** Base interface for event handlers */
 export interface Handler {
@@ -75,6 +82,7 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     protected errored = false;
     protected event: ValidEvent;
     protected args: string[] = [];
+    protected logger: Logger;
 
     protected constructor(
         event: ValidEvent,
@@ -83,6 +91,9 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     ) {
         this.event = event;
         this.args = args ?? [];
+        this.logger = new Logger(this.constructor.name);
+
+        this.populate();
     }
 
     /**
@@ -90,6 +101,11 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
      * @virtual Override this method in your handler classes
      */
     abstract execute(): Promise<void>;
+
+    /**
+     * Populates the handler with necessary data before execution. Override this method in your handler classes to customize population logic. This method is called at the end of the constructor before all async operations.
+     */
+    protected populate(): void {}
 
     public hasChecks(): this is HandlerWithChecks {
         return this.checkable;
@@ -170,7 +186,7 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
  *
  * Middleware runs before event handlers and can modify behavior or block execution.
  */
-export abstract class EventMiddleware<EventName extends keyof ClientEvents>
+export abstract class EventMiddleware<EventName extends ValidNonInteractionKeys>
     extends BaseHandler<ClientEvents[EventName]>
     implements Handler
 {
@@ -202,7 +218,7 @@ export abstract class AutocompleteHandler extends BaseHandler<AutocompleteIntera
  *
  * @typeParam Repliable - The Discord event type this handler processes
  */
-export abstract class EventHandler<Repliable extends keyof ClientEvents>
+export abstract class EventHandler<Repliable extends ValidNonInteractionKeys>
     extends BaseHandler<ClientEvents[Repliable]>
     implements Handler
 {
@@ -224,7 +240,7 @@ export type MiddlewareConstructor = InteractionMiddlewareConstructor;
 
 /** Constructor type for event middleware */
 export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware> &
-    (new <EventName extends keyof ClientEvents>(
+    (new <EventName extends ValidNonInteractionKeys>(
         event: ClientEvents[EventName],
         core: Core,
         args?: string[]

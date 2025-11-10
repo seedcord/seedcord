@@ -1,6 +1,8 @@
-export * from './Logger';
-export * from './HealthCheck';
 export * from './CooldownManager';
+export * from './Errors';
+export * from './HealthCheck';
+export * from './Logger';
+export * from './StrictEventEmitter';
 
 // Lifecycle
 export * from './Lifecycle/CoordinatedLifecycle';

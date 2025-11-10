@@ -1,3 +1,5 @@
+import { SeedcordError, SeedcordErrorCode } from 'seedcord';
+
 import { PgServiceMetadataKey, PgTableMetadataKey } from './decorators/RegisterKpgService';
 
 import type { KyselyPg } from './KyselyPg';
@@ -40,13 +42,15 @@ export abstract class KpgService<Database extends object, TTable extends keyof D
         const ctor = this.constructor;
 
         const key = Reflect.getMetadata(PgServiceMetadataKey, ctor) as string | undefined;
-        if (!key) throw new Error(`Missing @RegisterKpgService on ${ctor.name}`);
+        if (!key) {
+            throw new SeedcordError(SeedcordErrorCode.PluginKpgServiceDecoratorMissing, [ctor.name]);
+        }
 
         const table = Reflect.getMetadata(PgTableMetadataKey, ctor) as TTable | undefined;
 
         // This check should always pass since TTable is derived from the key if a table is not provided explicitly.
         if (!table) {
-            throw new Error(`Missing table metadata for ${ctor.name}. Provide a table via @RegisterKpgService().`);
+            throw new SeedcordError(SeedcordErrorCode.PluginKpgServiceTableMissing, [ctor.name]);
         }
 
         this.table = table;

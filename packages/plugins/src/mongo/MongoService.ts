@@ -1,3 +1,5 @@
+import { SeedcordError, SeedcordErrorCode } from 'seedcord';
+
 import { ModelMetadataKey } from './decorators/RegisterMongoModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 
@@ -41,10 +43,14 @@ export abstract class MongoService<Doc extends MongoDocument = MongoDocument> {
         const ctor = this.constructor;
 
         const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
-        if (!key) throw new Error(`Missing @RegisterMongoService on ${ctor.name}`);
+        if (!key) {
+            throw new SeedcordError(SeedcordErrorCode.PluginMongoServiceDecoratorMissing, [ctor.name]);
+        }
 
         const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<Doc> | undefined;
-        if (!model) throw new Error(`Missing @RegisterMongoModel on ${ctor.name}`);
+        if (!model) {
+            throw new SeedcordError(SeedcordErrorCode.PluginMongoModelDecoratorMissing, [ctor.name]);
+        }
 
         this.model = model;
 

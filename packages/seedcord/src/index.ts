@@ -14,6 +14,7 @@ export * from '@bDecorators/EventCatchable';
 export * from '@bDecorators/Events';
 export * from '@bDecorators/Interactions';
 export * from '@bDecorators/Middlewares';
+export * from '@bDecorators/Confirmable';
 
 // Bot Controller Exports
 export * from '@bControllers/CommandRegistry';

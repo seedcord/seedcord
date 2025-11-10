@@ -114,7 +114,10 @@ export class EffectsRegistry extends Plugin {
         }
     }
 
-    public emit<KeyOfEffects extends EffectKeys>(event: KeyOfEffects, data: AllEffects[KeyOfEffects]): boolean {
+    public override emit<KeyOfEffects extends EffectKeys>(
+        event: KeyOfEffects,
+        data: AllEffects[KeyOfEffects]
+    ): boolean {
         return this.emitter.emit(event, data);
     }
 }

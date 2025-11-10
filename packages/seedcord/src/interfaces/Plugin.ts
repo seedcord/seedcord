@@ -1,7 +1,15 @@
+import { SeedcordError, SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
 import chalk from 'chalk';
 
 import type { Core } from './Core';
-import type { CoordinatedShutdown, CoordinatedStartup, StartupPhase, Logger } from '@seedcord/services';
+import type {
+    SENoEvents,
+    CoordinatedShutdown,
+    CoordinatedStartup,
+    Logger,
+    StartupPhase,
+    SEEventMapLike
+} from '@seedcord/services';
 import type { Tail } from '@seedcord/types';
 
 /** Interface for objects that can be initialized asynchronously */
@@ -15,11 +23,16 @@ export interface Initializeable {
  * Extend this class to create plugins that integrate with the Seedcord lifecycle.
  * Plugins have access to the core instance and must implement initialization logic.
  */
-export abstract class Plugin implements Initializeable {
+export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents> = SENoEvents>
+    extends StrictEventEmitter<TPluginEvents>
+    implements Initializeable
+{
     /** Logger instance for this plugin - must be implemented by subclasses */
     public abstract logger: Logger;
 
-    constructor(protected pluggable: Core) {}
+    constructor(protected pluggable: Core) {
+        super();
+    }
 
     /**
      * Initialize the plugin - implement setup logic here
@@ -46,7 +59,9 @@ export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Cto
  * Provides plugin attachment capabilities and lifecycle management.
  * Plugins are attached during configuration and initialized during startup.
  */
-export class Pluggable {
+export class Pluggable<
+    TPluggableEvents extends SEEventMapLike<TPluggableEvents> = SENoEvents
+> extends StrictEventEmitter<TPluggableEvents> {
     protected isInitialized = false;
     protected readonly shutdown: CoordinatedShutdown;
     protected readonly startup: CoordinatedStartup;
@@ -54,6 +69,7 @@ export class Pluggable {
     private static readonly PLUGIN_INIT_TIMEOUT_MS = 15000;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+        super();
         this.shutdown = shutdown;
         this.startup = startup;
     }
@@ -82,7 +98,7 @@ export class Pluggable {
      * @param startupPhase - When during startup to initialize this plugin ({@link StartupPhase})
      * @param args - Additional arguments to pass to the plugin constructor
      * @returns This instance with the plugin attached as a typed property
-     * @throws An {@link Error} When called after initialization or if key already exists
+     * @throws A {@link SeedcordError} When called after initialization or if key already exists
      * @example
      * ```typescript
      * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
@@ -96,8 +112,12 @@ export class Pluggable {
         startupPhase: StartupPhase,
         ...args: PluginArgs<Ctor>
     ): this & Record<Key, InstanceType<Ctor>> {
-        if (this.isInitialized) throw new Error('Cannot attach a plugin after initialization.');
-        if ((this as Record<string, unknown>)[key]) throw new Error(`Plugin with key "${key}" already exists.`);
+        if (this.isInitialized) {
+            throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
+        }
+        if ((this as Record<string, unknown>)[key]) {
+            throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+        }
 
         const instance = new Plugin(this as unknown as Core, ...args);
 

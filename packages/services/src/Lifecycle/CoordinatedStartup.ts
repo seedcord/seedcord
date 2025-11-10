@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 
+import { SeedcordError, SeedcordErrorCode } from '../Errors';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
 import type { LifecycleTask, PhaseEvents } from './LifecycleTypes';
@@ -71,11 +72,11 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
     protected canAddTask(): boolean {
         if (this.hasStarted) {
-            throw new Error('Cannot add tasks after startup sequence has already completed');
+            throw new SeedcordError(SeedcordErrorCode.LifecycleAddAfterCompletion);
         }
 
         if (this.isStartingUp) {
-            throw new Error('Cannot add tasks while startup sequence is in progress');
+            throw new SeedcordError(SeedcordErrorCode.LifecycleAddDuringRun);
         }
 
         return true;
@@ -83,7 +84,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
     protected canRemoveTask(): boolean {
         if (this.isStartingUp) {
-            throw new Error('Cannot remove tasks while startup sequence is in progress');
+            throw new SeedcordError(SeedcordErrorCode.LifecycleRemoveDuringRun);
         }
 
         return true;

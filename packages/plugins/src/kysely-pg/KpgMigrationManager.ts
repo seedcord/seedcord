@@ -6,6 +6,7 @@ import { inspect } from 'node:util';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
 import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely';
+import { SeedcordError, SeedcordErrorCode, SeedcordRangeError } from 'seedcord';
 
 import type {
     MigrationManagerContext,
@@ -39,7 +40,7 @@ export class KpgMigrationManager<Database extends object> {
             case 'down': {
                 const stepCount = steps ?? 1;
                 if (!Number.isInteger(stepCount) || stepCount < 0) {
-                    throw new Error('Migration step count must be a non-negative integer');
+                    throw new SeedcordRangeError(SeedcordErrorCode.PluginKpgInvalidStepCount);
                 }
 
                 if (stepCount === 0) {
@@ -55,7 +56,7 @@ export class KpgMigrationManager<Database extends object> {
                 return;
             }
             default:
-                throw new Error(`Unknown migration direction: ${String(direction)}`);
+                throw new SeedcordError(SeedcordErrorCode.PluginKpgUnknownDirection, [direction]);
         }
     }
 
@@ -180,12 +181,12 @@ export class KpgMigrationManager<Database extends object> {
         }
 
         const label = Array.isArray(target) ? target.join(', ') : target;
-        throw new Error(`Unable to resolve migrations at path: ${label}`);
+        throw new SeedcordError(SeedcordErrorCode.PluginKpgUnresolvedMigrationsPath, [label]);
     }
 
     private async createModuleProvider(files: string[]): Promise<MigrationProvider> {
         if (files.length === 0) {
-            throw new Error('No migration files provided');
+            throw new SeedcordError(SeedcordErrorCode.PluginKpgNoMigrationFiles);
         }
 
         const comparator =
@@ -197,7 +198,7 @@ export class KpgMigrationManager<Database extends object> {
                 const mod: unknown = await import(moduleUrl);
 
                 if (!this.isMigrationModule(mod)) {
-                    throw new Error(`Migration file ${filePath} must export async functions up and down`);
+                    throw new SeedcordError(SeedcordErrorCode.PluginKpgInvalidMigrationModule, [filePath]);
                 }
 
                 const { up, down } = mod;
@@ -286,7 +287,7 @@ export class KpgMigrationManager<Database extends object> {
             throw error;
         }
 
-        throw new Error(message);
+        throw new SeedcordError(SeedcordErrorCode.PluginKpgNonErrorFailure, [message]);
     }
 
     private isMigrationModule(value: unknown): value is MigrationModule {

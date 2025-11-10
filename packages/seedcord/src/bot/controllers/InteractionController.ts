@@ -61,7 +61,7 @@ export class InteractionController implements Initializeable {
     private readonly userContextMenuMap = new Collection<string, HandlerConstructor>();
     private readonly autocompleteMap = new Collection<string, HandlerConstructor>();
 
-    private readonly keysToIgnore = new Set<string>();
+    private readonly keysToIgnore = new Set<string | RegExp>();
 
     private readonly middlewares: RegisteredMiddleware[] = [];
 
@@ -191,8 +191,10 @@ export class InteractionController implements Initializeable {
 
     private attachToClient(): void {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
+            this.core.bot.emit('any:interaction', interaction);
             this.handleInteraction(interaction).catch((err: Error) => {
                 this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                this.core.bot.emit('error:unhandled:interaction', err);
             });
         });
     }
@@ -229,7 +231,14 @@ export class InteractionController implements Initializeable {
         args?: string[]
     ): Promise<void> {
         const key = extractKey(interaction);
-        if (this.keysToIgnore.has(key)) return;
+        // Check if the key is in the ignore list
+        if (
+            [...this.keysToIgnore].some((pattern) =>
+                typeof pattern === 'string' ? pattern === key : pattern.test(key)
+            )
+        ) {
+            return;
+        }
 
         // Run middlewares first
         for (const { ctor } of this.middlewares) {

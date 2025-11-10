@@ -3,7 +3,15 @@ import 'reflect-metadata';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
-import { Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
+import {
+    keepDefined,
+    Logger,
+    Plugin,
+    SeedcordError,
+    SeedcordErrorCode,
+    ShutdownPhase,
+    traverseDirectory
+} from 'seedcord';
 
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 import { MongoService } from './MongoService';
@@ -21,7 +29,7 @@ import type { Core } from 'seedcord';
  * access to database services through service registration decorators.
  */
 export class Mongo extends Plugin {
-    public readonly logger = new Logger('MongoDB');
+    public readonly logger = new Logger('Mongo');
     private isInitialised = false;
     private readonly uri: string;
 
@@ -41,7 +49,12 @@ export class Mongo extends Plugin {
         super(core);
         this.uri = options.uri;
 
-        this.core.shutdown.addTask(ShutdownPhase.ExternalResources, 'stop-database', async () => await this.stop());
+        this.core.shutdown.addTask(
+            ShutdownPhase.ExternalResources,
+            'stop-database',
+            async () => await this.stop(),
+            this.options.timeout
+        );
     }
 
     public async init(): Promise<void> {
@@ -60,15 +73,17 @@ export class Mongo extends Plugin {
         this.connection = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
-                ...(Envapter.isProduction && { tls: true, ssl: true })
+                ...(Envapter.isProduction && { tls: true, ssl: true }),
+                ...keepDefined(this.options.connectionOptions ?? {})
             })
             .then((conn) => {
                 this.logger.info(chalk.green.bold(`Connected to MongoDB: ${chalk.magenta.bold(conn.connection.name)}`));
                 return conn;
             })
             .catch((err) => {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                throw new Error(`Could not connect to MongoDB`, err);
+                throw new SeedcordError(SeedcordErrorCode.PluginMongoConnectionFailed, [this.options.name], {
+                    cause: err
+                });
             });
     }
 

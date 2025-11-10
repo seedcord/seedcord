@@ -110,7 +110,7 @@ export class CommandRegistry implements Initializeable {
             this.logger.info(
                 `${chalk.bold.green('Configured')} ${chalk.magenta.bold(commands.length)} ${tag} for guild ${chalk.bold.yellow(guild.name)}`
             );
-            this.logger.info(` → ${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
+            this.logger.info(`→ ${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
     }
 }

@@ -1,3 +1,4 @@
+import { SeedcordErrorCode, SeedcordTypeError } from '@seedcord/services';
 import { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
 /**
  * Route string computed from provided parts.
@@ -51,7 +52,7 @@ export function buildSlashRoute(
         group = arg1.options.getSubcommandGroup(false) ?? undefined;
         sub = arg1.options.getSubcommand(false) ?? undefined;
     } else {
-        throw new TypeError('Invalid argument passed to buildSlashRoute');
+        throw new SeedcordTypeError(SeedcordErrorCode.UtilInvalidSlashRouteArgument);
     }
 
     if (sub && group) return `${command}/${group}/${sub}`;

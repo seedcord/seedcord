@@ -1,3 +1,4 @@
+import type { EventHandler, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { ClientEvents } from 'discord.js';
 import type { Constructor } from 'type-fest';
@@ -9,9 +10,9 @@ import type { Constructor } from 'type-fest';
  */
 export const EventMetadataKey = Symbol('event:metadata');
 
-/** Options accepted by the `@RegisterEvent` decorator. */
+/** Options accepted by the event registration decorator. */
 export interface RegisterEventOptions {
-    /** Frequency: `'once'` or `'on'`. Defaults to `'on'`. */
+    /** Frequency: 'once' or 'on'. Defaults to 'on'. */
     readonly frequency?: EventFrequency | undefined;
 }
 
@@ -20,25 +21,30 @@ export interface RegisterEventOptions {
  *
  * @internal
  */
-export interface RegisterEventMetadataEntry<KeyofEvents extends keyof ClientEvents> {
-    readonly event: KeyofEvents;
+export interface RegisterEventMetadataEntry<EventKey extends keyof ClientEvents> {
+    readonly event: EventKey;
     readonly frequency: EventFrequency;
 }
 
+/** Tuple describing a single event and optional options. */
+export type EventSpec<EventKey extends ValidNonInteractionKeys> = readonly [
+    event: EventKey,
+    options?: RegisterEventOptions
+];
+
 /**
- * Registers an event handler class with a one or multiple Discord.js event(s).
+ * Registers an event handler class with one or more Discord.js events.
  *
- * Associates the decorated class with the mentioned Discord client event(s) for automatic registration and execution when the event is emitted.
+ * Associates the decorated class with the provided Discord client events for automatic registration and execution when those events are emitted.
  *
- * You can use this decorator multiple times on the same class to register for different events with varying option settings.
+ * Supply any number of event tuples. Each tuple can include per event options.
  *
- * @typeParam KeyofEvents - The key of the Discord.js ClientEvents to register for
- * @param events - The Discord.js event name(s) to listen for
- * @param options - Options to configure the event handler registration.
+ * @typeParam EventKey - Union of Discord.js ClientEvents keys to register for
+ * @param defs - One or more tuples of [event, options]
  * @decorator
  * @example
- * ```typescript
- * \@RegisterEvent(Events.MessageCreate)
+ * ```ts
+ * \@RegisterEvent([Events.MessageCreate])
  * class MessageHandler extends EventHandler<Events.MessageCreate> {
  *   async execute() {
  *     // Handle message creation
@@ -47,8 +53,8 @@ export interface RegisterEventMetadataEntry<KeyofEvents extends keyof ClientEven
  * ```
  *
  * @example
- * ```typescript
- * \@RegisterEvent([Events.MessageCreate, Events.MessageUpdate])
+ * ```ts
+ * \@RegisterEvent([Events.MessageCreate], [Events.MessageUpdate])
  * class MessageHandler extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
  *   async execute() {
  *     // Handle message creation or update
@@ -58,28 +64,27 @@ export interface RegisterEventMetadataEntry<KeyofEvents extends keyof ClientEven
  *
  * @example
  * ```ts
- * \@RegisterEvent(Events.MessageCreate, { frequency: 'once' })
- * class OneTimeMessageHandler extends EventHandler<Events.MessageCreate> {
+ * \@RegisterEvent([Events.MessageCreate, { frequency: 'once' }], [Events.MessageUpdate])
+ * class OneTimeMessageHandler extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
  *   async execute() {
- *     // Handle only the first message creation
+ *     // Handle only the first message creation, and message update normally
  *   }
  * }
  * ```
  */
-export function RegisterEvent<KeyofEvents extends keyof ClientEvents>(
-    events: KeyofEvents | KeyofEvents[],
-    options?: RegisterEventOptions
-) {
-    return function (constructor: Constructor<unknown>): void {
+export function RegisterEvent<const Defs extends readonly EventSpec<ValidNonInteractionKeys>[]>(...defs: Defs) {
+    type EventKey = Defs[number][0];
+
+    return function <HandlerCtor extends Constructor<EventHandler<EventKey>>>(constructor: HandlerCtor): void {
         const saved = Reflect.getMetadata(EventMetadataKey, constructor) as
-            | RegisterEventMetadataEntry<KeyofEvents>[]
+            | RegisterEventMetadataEntry<EventKey>[]
             | undefined;
         const existing = saved ?? [];
 
-        const toStore = Array.isArray(events) ? events : [events];
-        const frequency = options?.frequency ?? 'on';
-
-        const entries = toStore.map<RegisterEventMetadataEntry<KeyofEvents>>((event) => ({ event, frequency }));
+        const entries = defs.map<RegisterEventMetadataEntry<EventKey>>(([event, options]) => ({
+            event,
+            frequency: options?.frequency ?? 'on'
+        }));
 
         Reflect.defineMetadata(EventMetadataKey, [...existing, ...entries], constructor);
     };

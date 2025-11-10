@@ -7,6 +7,7 @@ import { EventEmitter } from 'node:events';
 
 import chalk from 'chalk';
 
+import { SeedcordError, SeedcordErrorCode } from '../Errors';
 import { Logger } from '../Logger';
 
 import type { LifecycleTask } from './LifecycleTypes';
@@ -50,7 +51,9 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         if (!this.canAddTask()) return;
 
         const tasks = this.tasksMap.get(phase);
-        if (!tasks) throw new Error(`Unknown phase: ${phase}`);
+        if (!tasks) {
+            throw new SeedcordError(SeedcordErrorCode.LifecycleUnknownPhase, [phase]);
+        }
 
         tasks.push({ name: taskName, task, timeout: timeoutMs });
         this.logger.debug(
@@ -106,9 +109,10 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         // Check results
         const failures = results.filter((r) => r.status === 'rejected').length;
         if (failures > 0) {
-            const errorMessage = `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} completed with ${chalk.bold.red(failures)} failed tasks`;
-
-            throw new Error(errorMessage);
+            throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [
+                chalk.bold.magenta(this.phaseEnum[phase]),
+                failures
+            ]);
         } else {
             this.logger.info(
                 `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
@@ -132,7 +136,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
                 task.task(),
                 new Promise<void>((_, reject) => {
                     setTimeout(() => {
-                        reject(new Error(`Task '${task.name}' timed out after ${task.timeout}ms`));
+                        reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [task.name, task.timeout]));
                     }, task.timeout);
                 })
             ]);

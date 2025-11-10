@@ -1,5 +1,13 @@
 import { areRoutes } from '@miscellaneous/areRoutes';
 
+import type { AutocompleteHandler, InteractionHandler, Repliables } from '@interfaces/Handler';
+import type {
+    AnySelectMenuInteraction,
+    ButtonInteraction,
+    ChatInputCommandInteraction,
+    ContextMenuCommandInteraction,
+    ModalSubmitInteraction
+} from 'discord.js';
 import type { Constructor } from 'type-fest';
 
 /**
@@ -72,7 +80,7 @@ export const InteractionMetadataKey = Symbol('interaction:metadata');
  * ```
  */
 export function SlashRoute(routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<unknown>): void {
+    return function (constructor: Constructor<InteractionHandler<ChatInputCommandInteraction>>): void {
         storeMetadata(InteractionRoutes.Slash, routeOrRoutes, constructor);
     };
 }
@@ -88,7 +96,7 @@ export function SlashRoute(routeOrRoutes: string | string[]) {
  * @decorator
  */
 export function ButtonRoute(routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<unknown>): void {
+    return function (constructor: Constructor<InteractionHandler<ButtonInteraction>>): void {
         storeMetadata(InteractionRoutes.Button, routeOrRoutes, constructor);
     };
 }
@@ -102,7 +110,7 @@ export function ButtonRoute(routeOrRoutes: string | string[]) {
  * @decorator
  */
 export function ModalRoute(routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<unknown>): void {
+    return function (constructor: Constructor<InteractionHandler<ModalSubmitInteraction>>): void {
         storeMetadata(InteractionRoutes.Modal, routeOrRoutes, constructor);
     };
 }
@@ -115,7 +123,7 @@ export function ModalRoute(routeOrRoutes: string | string[]) {
  * @decorator
  */
 export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<unknown>): void {
+    return function (constructor: Constructor<InteractionHandler<ContextMenuCommandInteraction>>): void {
         const routeType = type === 'message' ? InteractionRoutes.MessageContextMenu : InteractionRoutes.UserContextMenu;
         storeMetadata(routeType, routeOrRoutes, constructor);
     };
@@ -134,7 +142,7 @@ export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string
  * @decorator
  */
 export function AutocompleteRoute(commandRoutes: string | string[], focusedFields: string | string[]) {
-    return function (constructor: Constructor<unknown>): void {
+    return function (constructor: Constructor<AutocompleteHandler>): void {
         const routes = Array.isArray(commandRoutes) ? commandRoutes : [commandRoutes];
         const fields = Array.isArray(focusedFields) ? focusedFields : [focusedFields];
 
@@ -167,7 +175,7 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
  * ```
  */
 export function SelectMenuRoute(type: SelectMenuType, routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<unknown>): void {
+    return function (constructor: Constructor<InteractionHandler<AnySelectMenuInteraction>>): void {
         const routeMap = {
             [SelectMenuType.String]: InteractionRoutes.StringMenu,
             [SelectMenuType.User]: InteractionRoutes.UserMenu,
@@ -183,7 +191,11 @@ export function SelectMenuRoute(type: SelectMenuType, routeOrRoutes: string | st
 /**
  * Helper to store route(s) in an array on reflect metadata.
  */
-function storeMetadata(symbol: InteractionRoutes, routes: string | string[], constructor: Constructor<unknown>): void {
+function storeMetadata(
+    symbol: InteractionRoutes,
+    routes: string | string[],
+    constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler>
+): void {
     const savedRoutes: unknown = Reflect.getMetadata(symbol, constructor);
     const existing: string[] = areRoutes(savedRoutes) ? savedRoutes : [];
 

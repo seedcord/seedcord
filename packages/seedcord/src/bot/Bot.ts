@@ -1,6 +1,6 @@
-import { Logger, ShutdownPhase } from '@seedcord/services';
+import { Logger, SeedcordError, SeedcordErrorCode, ShutdownPhase } from '@seedcord/services';
 import chalk from 'chalk';
-import { Client } from 'discord.js';
+import { Client, ClientEvents, Interaction } from 'discord.js';
 import { Envapt } from 'envapt';
 
 import { CommandRegistry } from '@bControllers/CommandRegistry';
@@ -8,18 +8,30 @@ import { EventController } from '@bControllers/EventController';
 import { InteractionController } from '@bControllers/InteractionController';
 import { Plugin } from '@interfaces/Plugin';
 
-import { EmojiInjector } from './injectors/EmojiInjector';
+import { EmojiInjector, Emojis, type EmojiMap } from './injectors/EmojiInjector';
 
 import type { Core } from '@interfaces/Core';
+
+/**
+ * Bot event types
+ */
+export interface BotEvents {
+    'error:unhandled:interaction': [error: Error];
+    'error:unhandled:event': [error: Error];
+    'any:event': { [K in keyof ClientEvents]: [K, ...ClientEvents[K]] }[keyof ClientEvents];
+    'any:interaction': [interaction: Interaction];
+}
 
 /**
  * Discord bot implementation that manages client and controllers
  * @internal - Accessed via core.bot, not directly instantiated by users
  */
-export class Bot extends Plugin {
+export class Bot extends Plugin<BotEvents> {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
         converter(raw, _fallback) {
-            if (typeof raw !== 'string') throw new Error('Missing DISCORD_BOT_TOKEN');
+            if (typeof raw !== 'string') {
+                throw new SeedcordError(SeedcordErrorCode.ConfigMissingDiscordToken);
+            }
             return raw;
         }
     })
@@ -33,6 +45,7 @@ export class Bot extends Plugin {
     private readonly events: EventController;
     public readonly commands: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
+    public readonly emojis: EmojiMap = Emojis;
 
     constructor(protected core: Core) {
         super(core);
@@ -98,5 +111,32 @@ export class Bot extends Plugin {
 
     public get client(): Client {
         return this._client;
+    }
+
+    /**
+     * Emits with correlation between a Discord event key and its exact arg tuple.
+     *
+     * @typeParam TKey - Discord event name
+     * @param event - Must be the literal `any:event`
+     * @param name - Concrete Discord event name
+     * @param args - Exact tuple for that Discord event
+     */
+    override emit<TKey extends keyof ClientEvents>(
+        event: 'any:event',
+        name: TKey,
+        ...args: ClientEvents[TKey]
+    ): boolean;
+
+    /**
+     * Fallback for other BotEvents keys.
+     *
+     * @typeParam TEventKey - Bot event key
+     * @param event - Bot event key
+     * @param args - Tuple payload for the key
+     */
+    override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
+
+    override emit(event: string, ...args: unknown[]): boolean {
+        return super.emit(event as never, ...(args as never));
     }
 }

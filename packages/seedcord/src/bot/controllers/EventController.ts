@@ -11,14 +11,14 @@ import { areRoutes } from '@miscellaneous/areRoutes';
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { Core } from '@interfaces/Core';
-import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@interfaces/Handler';
+import type { EventHandlerConstructor, EventMiddlewareConstructor, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;
     readonly priority: number;
-    readonly events?: readonly (keyof ClientEvents)[];
+    readonly events?: readonly ValidNonInteractionKeys[];
 }
 
 interface RegisteredEventHandlerEntry {
@@ -213,8 +213,12 @@ export class EventController implements Initializeable {
                         : this.core.bot.client.on.bind(this.core.bot.client);
 
                 register(eventName, (...args: ClientEvents[typeof eventName]) => {
+                    this.core.bot.emit('any:event', eventName, ...args);
                     void (async () => {
-                        await this.processEvent(eventName, args, entry.ctor);
+                        await this.processEvent(eventName, args, entry.ctor).catch((err: Error) => {
+                            this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                            this.core.bot.emit('error:unhandled:event', err);
+                        });
                     })();
                 });
             }

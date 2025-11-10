@@ -1,3 +1,5 @@
+import { SeedcordError, SeedcordErrorCode, SeedcordTypeError } from '@seedcord/services';
+
 /**
  * Converts hexcode to number
  *
@@ -6,17 +8,17 @@
  */
 export function hexToNumber(hex: string): number {
     if (typeof hex !== 'string') {
-        throw new TypeError('hexToNumber expects a string input');
+        throw new SeedcordTypeError(SeedcordErrorCode.UtilHexInputType);
     }
 
     const normalized = hex.replace(/^#/, '');
     if (!/^[0-9a-fA-F]+$/.test(normalized)) {
-        throw new Error('Invalid hex string');
+        throw new SeedcordError(SeedcordErrorCode.UtilHexInvalid);
     }
 
     const converted = parseInt(normalized, 16);
     if (Number.isNaN(converted)) {
-        throw new Error('Invalid hex string');
+        throw new SeedcordError(SeedcordErrorCode.UtilHexInvalid);
     }
 
     return converted;

@@ -42,4 +42,6 @@ export interface KpgOptions {
     readonly forceInsecureSSL?: boolean;
     /** Kysely config (excludes dialect because it's Postgres for this plugin) */
     readonly kysely?: TypedOmit<KyselyConfig, 'dialect'>;
+    /** Plugin timeout in milliseconds */
+    timeout?: number;
 }

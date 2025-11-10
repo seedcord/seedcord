@@ -1,3 +1,4 @@
+import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 import { prettify } from '@seedcord/utils';
 import { Role, PermissionFlagsBits } from 'discord.js';
 
@@ -111,7 +112,9 @@ export function checkPermissions(
     if (roleOrChannel instanceof Role) {
         permissions = roleOrChannel.permissions;
     } else {
-        if (!client.user) throw new Error('Client user is not available'); // TODO: Use custom error
+        if (!client.user) {
+            throw new SeedcordError(SeedcordErrorCode.CoreClientUserUnavailable);
+        }
         permissions = roleOrChannel.permissionsFor(client.user, true);
     }
 
