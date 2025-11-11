@@ -11,7 +11,7 @@ import type { NonEmptyTuple } from 'type-fest';
 /**
  * Configuration options for the EventCatchable decorator.
  */
-export interface CatchableOptions {
+export interface EventCatchableOptions {
     /** Whether to log errors to console using console.error (default: `false`) */
     log?: boolean;
     /**
@@ -40,7 +40,7 @@ export interface CatchableOptions {
  * }
  * ```
  */
-export function EventCatchable(options?: CatchableOptions) {
+export function EventCatchable(options?: EventCatchableOptions) {
     return function (
         _target: RepliableEventHandler,
         _prop: string,
