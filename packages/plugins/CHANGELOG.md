@@ -1,5 +1,13 @@
 # @seedcord/plugins
 
+## 0.4.4
+
+### Patch Changes
+
+- 5eb5d88: fix indentation inconsistency in logging
+- Updated dependencies [c27ca87]
+    - seedcord@0.8.2
+
 ## 0.4.3
 
 ### Patch Changes
