@@ -51,7 +51,6 @@ export function EventCatchable(options?: EventCatchableOptions) {
         const silent = options?.silent ?? false;
         const original = descriptor.value;
 
-        // eslint-disable-next-line complexity
         descriptor.value = async function (this: EventHandler<keyof ClientEvents>, ...args: any[]): Promise<void> {
             if (!original) throw new SeedcordError(SeedcordErrorCode.DecoratorMethodNotFound);
 
@@ -65,11 +64,7 @@ export function EventCatchable(options?: EventCatchableOptions) {
                 if (log) console.error(err);
 
                 if (typeof silent === 'boolean' && silent) return;
-                if (
-                    typeof silent !== 'boolean' &&
-                    Array.isArray(silent) &&
-                    silent.some((errorType) => err instanceof errorType)
-                ) {
+                if (typeof silent !== 'boolean' && silent.some((errorType) => err instanceof errorType)) {
                     return;
                 }
 
