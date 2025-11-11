@@ -1,10 +1,10 @@
 # seedcord
 
-## 0.8.2
+## 0.9.0
 
-### Patch Changes
+### Minor Changes
 
-- c27ca87: new option to silence caught errors in event handlers. you can now prevent the decorator from trying to send the error response in chat.
+- c27ca87: **BREAKING**: new option to silence caught errors in event handlers. you can now prevent the decorator from trying to send the error response in chat. The signature of the decorator has changed, making it a breaking change.
 
 ## 0.8.1
 

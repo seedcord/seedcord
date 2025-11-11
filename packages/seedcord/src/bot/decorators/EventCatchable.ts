@@ -28,12 +28,13 @@ export interface EventCatchableOptions {
  * Automatically handles errors in event handlers and sends error responses
  * if the event contains a Discord message object.
  *
- * @param log - Whether to log errors to console (default: `false`)
+ * @param options - Configuration for error handling behavior
+ * @see {@link EventCatchableOptions}
  * @decorator
  * @example
  * ```typescript
  * class MessageHandler extends EventHandler {
- *   \@EventCatchable(true)
+ *   \@EventCatchable({ log: true, silent: [MyCustomError] })
  *   async execute() {
  *     // Event handling logic
  *   }
