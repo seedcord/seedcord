@@ -13,7 +13,6 @@
  * // Returns "-3"
  * prettyDifference(10, 7);
  */
-
 export function prettyDifference(numBefore: number, numAfter: number): string {
     return (numAfter - numBefore > 0 ? `+${numAfter - numBefore}` : numAfter - numBefore).toString();
 }

@@ -1,9 +1,8 @@
+import type mongoose from 'mongoose';
+
 /**
  * Configuration options for MongoDB connection and service loading.
  */
-
-import type mongoose from 'mongoose';
-
 export interface MongoOptions {
     /** Directory path containing database service classes */
     dir: string;

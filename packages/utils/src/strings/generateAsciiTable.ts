@@ -4,7 +4,6 @@
  * @param data - The data to be displayed in the table.
  * @returns The generated ASCII table as a string.
  */
-
 export function generateAsciiTable(data: string[][]): string {
     if (data.length === 0) return '';
 

@@ -6,7 +6,6 @@
  *
  * @returns The percentage of the first number in the second number with two decimal places.
  */
-
 export function percentage(num1: number, num2: number): number {
     return Number(((num1 / num2) * 100).toFixed(2));
 }
