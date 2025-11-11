@@ -101,7 +101,7 @@ export interface BotConfig {
      * };
      * ```
      */
-    emojis?: Partial<EmojiMap>;
+    emojis?: EmojiMap;
 
     /**
      * Whether to show the error stack trace in the terminal in errors caught by the `@Catchable` decorator
