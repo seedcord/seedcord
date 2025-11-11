@@ -1,39 +1,8 @@
-import { Role } from 'discord.js';
+import { GuildMember, Role, TextChannel } from 'discord.js';
 
 import { CustomError } from '@interfaces/Components';
 
-import type { TextChannel } from 'discord.js';
-
-/**
- * Error thrown when the bot lacks necessary permissions to perform an action.
- */
-export class MissingPermissions extends CustomError {
-    /**
-     * Creates a new BotMissingPermissionsError.
-     *
-     * @param message - The error message
-     * @param missingPerms - Array of missing permission names
-     * @param roleOrChannel - The role or channel where permissions are missing
-     */
-    constructor(
-        message: string,
-        public missingPerms: string[],
-        public roleOrChannel: Role | TextChannel
-    ) {
-        super(message);
-
-        const missing = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
-
-        const errorSubtext =
-            this.roleOrChannel instanceof Role
-                ? `My role, <@&${this.roleOrChannel.id}>, is missing the following permissions:`
-                : `I am missing the following permissions in <#${this.roleOrChannel.id}>:`;
-
-        this.response.setDescription(
-            `${errorSubtext}\n\nPlease ensure I have the following missing permission(s):\n${missing}`
-        );
-    }
-}
+import type { Guild } from 'discord.js';
 
 /**
  * Error thrown when attempting to modify a role higher than the bot's highest role.
@@ -95,27 +64,89 @@ export class RoleDoesNotExist extends CustomError {
 }
 
 /**
- * Error thrown when a role has dangerous permissions that shouldn't be assigned.
+ * Error thrown when required permissions are missing.
+ */
+export class MissingPermissions extends CustomError {
+    /**
+     * Creates a new MissingPermissions error.
+     *
+     * @param message - The error message
+     * @param missingPerms - Array of missing permission names
+     * @param where - Location or subject where permissions are missing
+     */
+    constructor(
+        message: string,
+        public where: Role | TextChannel | Guild | GuildMember,
+        public missingPerms: string[]
+    ) {
+        super(message);
+
+        const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
+
+        const mention =
+            this.where instanceof Role
+                ? `<@&${this.where.id}>`
+                : this.where instanceof TextChannel
+                  ? `<#${this.where.id}>`
+                  : this.where instanceof GuildMember
+                    ? `<@${this.where.id}>`
+                    : `\`${this.where.name}\``;
+
+        const label =
+            this.where instanceof Role
+                ? 'role'
+                : this.where instanceof TextChannel
+                  ? 'channel'
+                  : this.where instanceof GuildMember
+                    ? 'member'
+                    : 'guild';
+
+        this.response.setDescription(
+            `The ${label} ${mention} is missing the following permission entries:\n\n${bullets}`
+        );
+    }
+}
+
+/**
+ * Error thrown when a target has permissions that must not be present.
  */
 export class HasDangerousPermissions extends CustomError {
     /**
      * Creates a new HasDangerousPermissions error.
      *
      * @param message - The error message
-     * @param role - The role with dangerous permissions
+     * @param target - The subject that has the unwanted permissions
      * @param dangerousPerms - Array of dangerous permission names
      */
     constructor(
         message: string,
-        public role: Role,
+        public target: Role | TextChannel | Guild | GuildMember,
         public dangerousPerms: string[]
     ) {
         super(message);
 
-        const dangerous = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
+        const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
+
+        const mention =
+            this.target instanceof Role
+                ? `<@&${this.target.id}>`
+                : this.target instanceof TextChannel
+                  ? `<#${this.target.id}>`
+                  : this.target instanceof GuildMember
+                    ? `<@${this.target.id}>`
+                    : `\`${this.target.name}\``;
+
+        const label =
+            this.target instanceof Role
+                ? 'role'
+                : this.target instanceof TextChannel
+                  ? 'channel'
+                  : this.target instanceof GuildMember
+                    ? 'member'
+                    : 'guild';
+
         this.response.setDescription(
-            `The role <@&${this.role.id}> has the following dangerous permissions:\n\n` +
-                `Please ensure the following dangerous permission(s) are not enabled:\n${dangerous}`
+            `The ${label} ${mention} has the following permission entries that must not be enabled:\n\n${bullets}`
         );
     }
 }

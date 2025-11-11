@@ -20,7 +20,6 @@ const messages = {
         'Seedcord can only be instantiated once. Use the existing instance instead.',
     [SeedcordErrorCode.CorePluginAfterInit]: () => 'Cannot attach a plugin after initialization.',
     [SeedcordErrorCode.CorePluginKeyExists]: (key: string) => `Plugin with key "${key}" already exists.`,
-    [SeedcordErrorCode.CoreClientUserUnavailable]: () => 'Client user is not available.',
     [SeedcordErrorCode.CoreBotRoleMissing]: (guildId?: string) =>
         guildId ? `Bot role not found in guild ${guildId}.` : 'Bot role not found in guild.',
 

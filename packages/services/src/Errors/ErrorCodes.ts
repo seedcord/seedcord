@@ -15,8 +15,7 @@ export enum SeedcordErrorCode {
     CoreSingletonViolation = 1201,
     CorePluginAfterInit = 1202,
     CorePluginKeyExists = 1203,
-    CoreClientUserUnavailable = 1204,
-    CoreBotRoleMissing = 1205,
+    CoreBotRoleMissing = 1204,
 
     DecoratorInteractionEventFilter = 1301,
     DecoratorMethodNotFound = 1302,

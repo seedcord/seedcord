@@ -45,8 +45,8 @@ export * from '@bUtilities/messages/attemptSendDM';
 export * from '@bUtilities/miscellaneous/buildSlashRoute';
 
 // Bot Utilities Permissions Exports
-export * from '@bUtilities/roles/checkBotPermissions';
-export * from '@bUtilities/roles/checkPermissions';
+export * from '@bot/utilities/permissions/checkBotPermissions';
+export * from '@bot/utilities/permissions/checkPermissions';
 export * from '@bUtilities/roles/fetchRole';
 export * from '@bUtilities/roles/getBotRole';
 export * from '@bUtilities/roles/hasPermsToAssign';
