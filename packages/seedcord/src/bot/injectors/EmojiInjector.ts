@@ -2,8 +2,9 @@ import { Logger } from '@seedcord/services';
 import chalk from 'chalk';
 
 import type { Core } from '@interfaces/Core';
+import type { ApplicationEmoji } from 'discord.js';
 
-const emojiStorage: Record<string, string> = {};
+const emojiStorage: Record<string, ApplicationEmoji | string> = {};
 
 /**
  * Emoji mapping interface. Augment this to add your project's emoji keys. Make sure to provide the same keys when configuring emojis in your bot config.
@@ -38,12 +39,16 @@ const emojiStorage: Record<string, string> = {};
  */
 export interface EmojiMap {}
 
+export type InjectedEmojiMap = {
+    [K in keyof EmojiMap]: ApplicationEmoji | string;
+};
+
 /**
  * Global emoji mappings object
  *
  * @see {@link EmojiMap}
  */
-export const Emojis = emojiStorage as EmojiMap;
+export const Emojis = emojiStorage as InjectedEmojiMap;
 
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis');
@@ -75,7 +80,7 @@ export class EmojiInjector {
             const emoji = this.core.bot.client.application?.emojis.cache.find((e) => e.name === emojiName);
 
             if (emoji) {
-                emojiStorage[key] = `<${emoji.identifier}>`;
+                emojiStorage[key] = emoji;
                 foundCount++;
 
                 this.logger.debug(`${chalk.bold.green('Found')}: ${chalk.magenta.bold(emojiName)} (${emoji.id})`);
@@ -85,7 +90,7 @@ export class EmojiInjector {
 
             emojiStorage[key] = emojiName;
             this.logger.warn(
-                `${chalk.bold.yellow('Missing')}: ${chalk.magenta.bold(emojiName)} (using configured value)`
+                `${chalk.bold.yellow('Missing')}: ${chalk.magenta.bold(emojiName)} (using provided string)`
             );
         });
 
