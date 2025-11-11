@@ -63,11 +63,6 @@ export function EventCatchable(options?: EventCatchableOptions) {
                 // eslint-disable-next-line no-console
                 if (log) console.error(err);
 
-                if (typeof silent === 'boolean' && silent) return;
-                if (typeof silent !== 'boolean' && silent.some((errorType) => err instanceof errorType)) {
-                    return;
-                }
-
                 const eventArgs = Array.isArray(this.getEvent()) ? (this.getEvent() as unknown[]) : [this.getEvent()];
                 const msg = eventArgs.find((x): x is Message => x instanceof Message);
 
@@ -78,6 +73,11 @@ export function EventCatchable(options?: EventCatchableOptions) {
                     msg?.author ?? null,
                     eventArgs
                 );
+
+                if (typeof silent === 'boolean' && silent) return;
+                if (typeof silent !== 'boolean' && silent.some((errorType) => err instanceof errorType)) {
+                    return;
+                }
 
                 if (!msg) return;
 

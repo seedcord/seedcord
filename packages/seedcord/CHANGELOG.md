@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.9.1
+
+### Patch Changes
+
+- fix incorrect break on silent preventing unknownException effect from firing
+
 ## 0.9.0
 
 ### Minor Changes
