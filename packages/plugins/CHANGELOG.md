@@ -6,7 +6,7 @@
 
 - 5eb5d88: fix indentation inconsistency in logging
 - Updated dependencies [c27ca87]
-    - seedcord@0.8.2
+    - seedcord@0.9.0
 
 ## 0.4.3
 
