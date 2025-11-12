@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.10.1
+
+### Patch Changes
+
+- ce0d4bc: add inferred literal string type to buildCustomId method so the customId shows up on hover
+
 ## 0.10.0
 
 ### Minor Changes
