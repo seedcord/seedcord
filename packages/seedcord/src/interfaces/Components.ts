@@ -173,16 +173,6 @@ export abstract class BaseComponent<TComponent> {
         ...args: Args
     ): `${Prefix}:${Join<Args, '-'>}`;
 
-    /**
-     * Builds a customId string for interactive components
-     *
-     * Creates customIds in the format `prefix:arg1-arg2-arg3` for buttons, modals, etc.
-     * Arguments are joined with hyphens and separated from prefix with a colon.
-     *
-     * @param prefix - The route prefix that handlers will match against
-     * @param args - Additional arguments to encode in the customId
-     * @returns Formatted customId string
-     */
     public buildCustomId<Prefix extends string, Args extends NonEmptyTuple<string> | []>(
         prefix: Prefix,
         ...args: Args
