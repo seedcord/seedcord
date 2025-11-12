@@ -52,5 +52,30 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsup-config": "workspace:^"
-    }
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    },
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "discord.js",
+        "bot-framework",
+        "typescript",
+        "seedcord",
+        "framework",
+        "discord-bot-framework",
+        "plugin-system",
+        "modular-bot",
+        "decorators",
+        "commands",
+        "discord-api",
+        "typescript-framework",
+        "event-handler",
+        "bot-development",
+        "slash-commands",
+        "middleware",
+        "open-source"
+    ]
 }

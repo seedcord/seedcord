@@ -48,5 +48,9 @@
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsup-config": "workspace:^"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
     }
 }
