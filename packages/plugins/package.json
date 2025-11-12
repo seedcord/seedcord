@@ -5,7 +5,7 @@
     "description": "Official plugins for Seedcord Discord bot framework",
     "repository": {
         "type": "git",
-        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "url": "https://github.com/materwelonDhruv/seedcord.git",
         "directory": "packages/plugins"
     },
     "types": "./dist/index.d.ts",

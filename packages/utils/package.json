@@ -5,7 +5,7 @@
     "description": "Utility functions for Seedcord packages",
     "repository": {
         "type": "git",
-        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "url": "https://github.com/materwelonDhruv/seedcord.git",
         "directory": "packages/utils"
     },
     "types": "./dist/index.d.ts",

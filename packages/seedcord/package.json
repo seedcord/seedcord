@@ -5,7 +5,7 @@
     "description": "A Discord bot framework built on top of Discord.js",
     "repository": {
         "type": "git",
-        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "url": "https://github.com/materwelonDhruv/seedcord.git",
         "directory": "packages/seedcord"
     },
     "types": "./dist/index.d.ts",

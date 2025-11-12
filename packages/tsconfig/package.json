@@ -7,7 +7,7 @@
     "private": true,
     "repository": {
         "type": "git",
-        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "url": "https://github.com/materwelonDhruv/seedcord.git",
         "directory": "packages/tsconfig"
     },
     "exports": {

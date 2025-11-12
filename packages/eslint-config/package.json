@@ -5,7 +5,7 @@
     "description": "ESlint config for Seedcord projects",
     "repository": {
         "type": "git",
-        "url": "https://github.com/materwelondhruv/seedcord.git",
+        "url": "https://github.com/materwelonDhruv/seedcord.git",
         "directory": "packages/eslint-config"
     },
     "types": "./dist/index.d.ts",
