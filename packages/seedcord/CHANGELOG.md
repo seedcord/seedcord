@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.10.2
+
+### Patch Changes
+
+- strictly type the SelectMenuRoute decorator on a select menu interaction handler based on the SelectMenuType passed in
+
 ## 0.10.1
 
 ### Patch Changes

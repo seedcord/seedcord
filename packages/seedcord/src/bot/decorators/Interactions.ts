@@ -2,11 +2,15 @@ import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { AutocompleteHandler, InteractionHandler, Repliables } from '@interfaces/Handler';
 import type {
-    AnySelectMenuInteraction,
     ButtonInteraction,
+    ChannelSelectMenuInteraction,
     ChatInputCommandInteraction,
     ContextMenuCommandInteraction,
-    ModalSubmitInteraction
+    MentionableSelectMenuInteraction,
+    ModalSubmitInteraction,
+    RoleSelectMenuInteraction,
+    StringSelectMenuInteraction,
+    UserSelectMenuInteraction
 } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
@@ -157,6 +161,23 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
 }
 
 /**
+ * Select menu interaction type mapping
+ *
+ * @internal
+ */
+export type SelectMenuInteractionFor<SelectMenu extends SelectMenuType> = SelectMenu extends SelectMenuType.String
+    ? StringSelectMenuInteraction
+    : SelectMenu extends SelectMenuType.User
+      ? UserSelectMenuInteraction
+      : SelectMenu extends SelectMenuType.Role
+        ? RoleSelectMenuInteraction
+        : SelectMenu extends SelectMenuType.Channel
+          ? ChannelSelectMenuInteraction
+          : SelectMenu extends SelectMenuType.Mentionable
+            ? MentionableSelectMenuInteraction
+            : never;
+
+/**
  * Routes select menu interactions to handler classes
  *
  * Matches the customId prefix before the first colon.
@@ -174,8 +195,8 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
  * }
  * ```
  */
-export function SelectMenuRoute(type: SelectMenuType, routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<InteractionHandler<AnySelectMenuInteraction>>): void {
+export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectMenu, routeOrRoutes: string | string[]) {
+    return function (constructor: Constructor<InteractionHandler<SelectMenuInteractionFor<SelectMenu>>>): void {
         const routeMap = {
             [SelectMenuType.String]: InteractionRoutes.StringMenu,
             [SelectMenuType.User]: InteractionRoutes.UserMenu,
