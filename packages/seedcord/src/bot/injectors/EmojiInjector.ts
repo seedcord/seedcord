@@ -11,7 +11,7 @@ export type SavedEmojiType = GuildEmoji | ApplicationEmoji | string;
 
 const emojiStorage: Record<string, SavedEmojiType> = {};
 
-/* Emoji config values can be either a plain name or a tuple [name, guildId] */
+/** Emoji config values can be either a plain name or a tuple [name, guildId] */
 export type EmojiConfigValue = string | readonly [string, string];
 
 function isEmojiTuple(v: unknown): v is readonly [string, string] {
@@ -86,7 +86,7 @@ export class EmojiInjector {
             return;
         }
 
-        const configEmojis = this.core.config.bot.emojis as Partial<Record<keyof EmojiMap, EmojiConfigValue>>;
+        const configEmojis = this.core.config.bot.emojis as Record<keyof EmojiMap, EmojiConfigValue>;
         await this.core.bot.client.application?.emojis.fetch();
 
         let foundCount = 0;

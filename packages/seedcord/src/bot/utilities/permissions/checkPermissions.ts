@@ -1,5 +1,5 @@
 import { prettify } from '@seedcord/utils';
-import { PermissionFlagsBits, Role, Guild, GuildMember } from 'discord.js';
+import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 
 import { HasDangerousPermissions, MissingPermissions } from '@bot/defaults/errors/Roles';
 
@@ -21,8 +21,7 @@ export const PermissionNames = new Map<bigint, string>(
 export type BotPermissionScope = readonly bigint[];
 
 /**
- * Optional custom error constructors.
- * Use to replace the default error classes with your own.
+ * Optional custom error constructors for {@link CheckPermissionOptions}.
  */
 export interface PermissionErrorCtors {
     /* Error thrown when required permissions are missing */
@@ -40,7 +39,7 @@ export interface PermissionErrorCtors {
 }
 
 /**
- * Options for permission checking.
+ * Options for {@link checkPermissions}.
  *
  * @see {@link PermissionErrorCtors}
  */

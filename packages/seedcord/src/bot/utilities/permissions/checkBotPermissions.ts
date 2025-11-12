@@ -1,3 +1,4 @@
+import { Logger } from '@seedcord/services';
 import { Guild } from 'discord.js';
 
 import { MissingPermissions } from '@bot/defaults/errors/Roles';
@@ -14,7 +15,7 @@ import type { TextChannel } from 'discord.js';
  * @param scope - Permission bits to validate
  * @param inverse - Whether to check for absence of the given permissions
  * @param errors - Optional custom error constructors
- * @throws A MissingPermissions error when required permissions are missing
+ * @throws A {@link MissingPermissions} error when required permissions are missing or when bot member is unavailable/uncached
  *
  * @example
  * ```ts
@@ -46,9 +47,14 @@ export function checkBotPermissions(
     }
 
     const me = target.guild.members.me;
+
     if (!me) {
         const names = scope.map((bit) => PermissionNames.get(bit) ?? String(bit));
         const Missing = errors?.missing ?? MissingPermissions;
+        Logger.Warn(
+            'checkBotPermissions',
+            `Bot member is unavailable in guild ${target.guild.id} while checking permissions in channel ${target.id}`
+        );
         throw new Missing('Missing Permissions', target, names);
     }
 

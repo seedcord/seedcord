@@ -1,4 +1,4 @@
-import { PermissionFlagsBits, type Guild, type GuildMember, type Role, type TextChannel } from 'discord.js';
+import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
 
 import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/defaults/errors/Roles';
 
@@ -8,7 +8,7 @@ import { getBotRole } from '../roles/getBotRole';
 import type { CustomError } from '@interfaces/Components';
 
 /**
- * Optional custom error constructors for assignment checks.
+ * Optional custom error constructors for {@link HasPermsToAssignOptions}.
  */
 export interface AssignRoleErrorCtors {
     /** Custom error for role higher than bot */
@@ -24,7 +24,7 @@ export interface AssignRoleErrorCtors {
 }
 
 /**
- * Options for role assignment permission checks.
+ * Options for {@link hasPermsToAssign}.
  */
 export interface HasPermsToAssignOptions {
     /** Target role to validate for assignment */
@@ -61,9 +61,7 @@ export interface HasPermsToAssignOptions {
  */
 export function hasPermsToAssign(roleOrOptions: Role | HasPermsToAssignOptions): void {
     const { targetRole, errors } =
-        roleOrOptions instanceof Object && 'id' in roleOrOptions
-            ? { targetRole: roleOrOptions, errors: undefined }
-            : roleOrOptions;
+        roleOrOptions instanceof Role ? { targetRole: roleOrOptions, errors: undefined } : roleOrOptions;
 
     const HigherErr = errors?.higher ?? RoleHigherThanMe;
     const ManagedErr = errors?.managed ?? CannotAssignBotRole;
