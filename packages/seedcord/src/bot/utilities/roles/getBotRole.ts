@@ -11,6 +11,10 @@ import type { Guild, Role } from 'discord.js';
  */
 export function getBotRole(guild: Guild): Role {
     const botRole = guild.roles.botRoleFor(guild.client.user);
-    if (!botRole) throw new SeedcordError(SeedcordErrorCode.CoreBotRoleMissing, [guild.id]);
+
+    if (!botRole) {
+        throw new SeedcordError(SeedcordErrorCode.CoreBotRoleMissing, [guild.id]);
+    }
+
     return botRole;
 }
