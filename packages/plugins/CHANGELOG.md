@@ -1,5 +1,19 @@
 # @seedcord/plugins
 
+## 0.4.5
+
+### Patch Changes
+
+- 6e067da: remove extra line(s) after tsdoc comments
+- Updated dependencies [2049570]
+- Updated dependencies [6e067da]
+- Updated dependencies [6d12a7c]
+- Updated dependencies [485670a]
+- Updated dependencies [6fc2b8f]
+- Updated dependencies [c0bf149]
+    - seedcord@0.10.0
+    - @seedcord/utils@0.3.6
+
 ## 0.4.4
 
 ### Patch Changes

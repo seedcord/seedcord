@@ -1,5 +1,11 @@
 # @seedcord/services
 
+## 0.5.0
+
+### Minor Changes
+
+- c0bf149: **BREAKING**: replaced the checkPermissions param-based calls with an options-style api and overloads that now require passing the target (role or member) and context (guild or channel) explicitly; added inverse and custom error support so usage signatures have changed and previous direct calls will need updating
+
 ## 0.4.0
 
 ### Minor Changes

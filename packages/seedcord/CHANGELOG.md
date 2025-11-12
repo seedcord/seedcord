@@ -1,5 +1,22 @@
 # seedcord
 
+## 0.10.0
+
+### Minor Changes
+
+- 2049570: you can now pass in a tuple to the emojis map like [emojiName, guildId] where both the values are strings. the injector will then look through cached guilds and inject the emoji from that guild.
+- 6d12a7c: seedcord provided Emojis map will now either have the full ApplicationEmoji object, GuildEmoji object, or the provided string if an emoji is not found.
+- 6fc2b8f: require all emojis in the EmojiMap to be provided in config
+- c0bf149: **BREAKING**: replaced the checkPermissions param-based calls with an options-style api and overloads that now require passing the target (role or member) and context (guild or channel) explicitly; added inverse and custom error support so usage signatures have changed and previous direct calls will need updating
+
+### Patch Changes
+
+- 485670a: add optional custom error input for hasPermsToAssign function as well
+- Updated dependencies [6e067da]
+- Updated dependencies [c0bf149]
+    - @seedcord/utils@0.3.6
+    - @seedcord/services@0.5.0
+
 ## 0.9.1
 
 ### Patch Changes

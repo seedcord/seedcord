@@ -1,5 +1,13 @@
 # @seedcord/utils
 
+## 0.3.6
+
+### Patch Changes
+
+- 6e067da: remove extra line(s) after tsdoc comments
+- Updated dependencies [c0bf149]
+    - @seedcord/services@0.5.0
+
 ## 0.3.5
 
 ### Patch Changes
