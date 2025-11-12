@@ -1,9 +1,9 @@
 import { PermissionFlagsBits, type Guild, type GuildMember, type Role, type TextChannel } from 'discord.js';
 
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bErrors/Roles';
+import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/defaults/errors/Roles';
 
-import { getBotRole } from './getBotRole';
-import { checkBotPermissions } from '../permissions/checkBotPermissions';
+import { checkBotPermissions } from './checkBotPermissions';
+import { getBotRole } from '../roles/getBotRole';
 
 import type { CustomError } from '@interfaces/Components';
 

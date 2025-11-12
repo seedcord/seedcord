@@ -1,7 +1,7 @@
 import { prettify } from '@seedcord/utils';
 import { PermissionFlagsBits, Role, Guild, GuildMember } from 'discord.js';
 
-import { HasDangerousPermissions, MissingPermissions } from '@bErrors/Roles';
+import { HasDangerousPermissions, MissingPermissions } from '@bot/defaults/errors/Roles';
 
 import type { CustomError } from '@interfaces/Components';
 import type { Nullable } from '@seedcord/types';

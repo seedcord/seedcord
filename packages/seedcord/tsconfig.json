@@ -11,7 +11,7 @@
             "@miscellaneous/*": ["./src/miscellaneous/*"],
 
             // Paths inside src/bot
-            "@bErrors/*": ["./src/bot/errors/*"],
+            "@bErrors/*": ["./src/bot/defaults/errors/*"],
             "@bUtilities/*": ["./src/bot/utilities/*"],
             "@bControllers/*": ["./src/bot/controllers/*"],
             "@bDecorators/*": ["./src/bot/decorators/*"]

@@ -1,6 +1,6 @@
 import { TextChannel } from 'discord.js';
 
-import { CouldNotFindChannel } from '@bErrors/Channels';
+import { CouldNotFindChannel } from '@bot/defaults/errors/Channels';
 
 import type { Nullable } from '@seedcord/types';
 import type { Channel, Client, TextChannelResolvable } from 'discord.js';

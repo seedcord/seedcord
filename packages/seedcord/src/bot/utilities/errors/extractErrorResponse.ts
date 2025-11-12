@@ -3,7 +3,7 @@ import * as crypto from 'node:crypto';
 import { Logger } from '@seedcord/services';
 import { Envapt } from 'envapt';
 
-import { DatabaseError } from '@bErrors/Database';
+import { DatabaseError } from '@bot/defaults/errors/Database';
 import { CustomError } from '@interfaces/Components';
 import { Core } from '@interfaces/Core';
 

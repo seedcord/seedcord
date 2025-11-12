@@ -1,6 +1,6 @@
 import { Guild } from 'discord.js';
 
-import { RoleDoesNotExist } from '@bErrors/Roles';
+import { RoleDoesNotExist } from '@bot/defaults/errors/Roles';
 
 import type { Nullable } from '@seedcord/types';
 import type { Client, Role } from 'discord.js';

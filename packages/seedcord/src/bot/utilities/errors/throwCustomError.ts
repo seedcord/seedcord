@@ -1,6 +1,6 @@
 import { Logger } from '@seedcord/services';
 
-import { DatabaseError } from '@bErrors/Database';
+import { DatabaseError } from '@bot/defaults/errors/Database';
 
 import type { CustomErrorConstructor } from '@interfaces/Components';
 

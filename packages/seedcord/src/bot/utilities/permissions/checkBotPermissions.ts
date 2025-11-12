@@ -1,6 +1,6 @@
 import { Guild } from 'discord.js';
 
-import { MissingPermissions } from '@bErrors/Roles';
+import { MissingPermissions } from '@bot/defaults/errors/Roles';
 
 import { checkPermissions, PermissionNames } from './checkPermissions';
 
