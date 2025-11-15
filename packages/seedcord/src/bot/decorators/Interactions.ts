@@ -1,6 +1,6 @@
 import { areRoutes } from '@miscellaneous/areRoutes';
 
-import type { AutocompleteHandler, InteractionHandler, Repliables } from '@interfaces/Handler';
+import type { InteractionHandler, AutocompleteHandler, HandlerConstructor, Repliables } from '@interfaces/Handler';
 import type {
     ButtonInteraction,
     ChannelSelectMenuInteraction,
@@ -52,6 +52,24 @@ export enum SelectMenuType {
 export const InteractionMetadataKey = Symbol('interaction:metadata');
 
 /**
+ * Extract the event type from an InteractionHandler subclass
+ *
+ * @internal
+ */
+type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+    InstanceType<TCtor> extends InteractionHandler<infer TEvent> ? TEvent : never;
+
+/**
+ * Compile time assertion that Required is included in the handler event union
+ *
+ * @internal
+ */
+type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+    Extract<HandlerEventType<TCtor>, TRequired> extends never
+        ? Constructor<['Handler event generic must include', TRequired]>
+        : TCtor;
+
+/**
  * Routes slash commands to handler classes
  *
  * Supports single commands, subcommands, and subcommand groups.
@@ -84,8 +102,10 @@ export const InteractionMetadataKey = Symbol('interaction:metadata');
  * ```
  */
 export function SlashRoute(routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<InteractionHandler<ChatInputCommandInteraction>>): void {
-        storeMetadata(InteractionRoutes.Slash, routeOrRoutes, constructor);
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertHandles<ChatInputCommandInteraction, TCtor>
+    ): void {
+        storeMetadata(InteractionRoutes.Slash, routeOrRoutes, constructor as HandlerConstructor);
     };
 }
 
@@ -100,8 +120,10 @@ export function SlashRoute(routeOrRoutes: string | string[]) {
  * @decorator
  */
 export function ButtonRoute(routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<InteractionHandler<ButtonInteraction>>): void {
-        storeMetadata(InteractionRoutes.Button, routeOrRoutes, constructor);
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertHandles<ButtonInteraction, TCtor>
+    ): void {
+        storeMetadata(InteractionRoutes.Button, routeOrRoutes, constructor as HandlerConstructor);
     };
 }
 
@@ -114,8 +136,10 @@ export function ButtonRoute(routeOrRoutes: string | string[]) {
  * @decorator
  */
 export function ModalRoute(routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<InteractionHandler<ModalSubmitInteraction>>): void {
-        storeMetadata(InteractionRoutes.Modal, routeOrRoutes, constructor);
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertHandles<ModalSubmitInteraction, TCtor>
+    ): void {
+        storeMetadata(InteractionRoutes.Modal, routeOrRoutes, constructor as HandlerConstructor);
     };
 }
 
@@ -127,9 +151,11 @@ export function ModalRoute(routeOrRoutes: string | string[]) {
  * @decorator
  */
 export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<InteractionHandler<ContextMenuCommandInteraction>>): void {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertHandles<ContextMenuCommandInteraction, TCtor>
+    ): void {
         const routeType = type === 'message' ? InteractionRoutes.MessageContextMenu : InteractionRoutes.UserContextMenu;
-        storeMetadata(routeType, routeOrRoutes, constructor);
+        storeMetadata(routeType, routeOrRoutes, constructor as HandlerConstructor);
     };
 }
 
@@ -196,7 +222,9 @@ export type SelectMenuInteractionFor<SelectMenu extends SelectMenuType> = Select
  * ```
  */
 export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectMenu, routeOrRoutes: string | string[]) {
-    return function (constructor: Constructor<InteractionHandler<SelectMenuInteractionFor<SelectMenu>>>): void {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertHandles<SelectMenuInteractionFor<SelectMenu>, TCtor>
+    ): void {
         const routeMap = {
             [SelectMenuType.String]: InteractionRoutes.StringMenu,
             [SelectMenuType.User]: InteractionRoutes.UserMenu,
@@ -205,7 +233,7 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectM
             [SelectMenuType.Mentionable]: InteractionRoutes.MentionableMenu
         };
 
-        storeMetadata(routeMap[type], routeOrRoutes, constructor);
+        storeMetadata(routeMap[type], routeOrRoutes, constructor as HandlerConstructor);
     };
 }
 
