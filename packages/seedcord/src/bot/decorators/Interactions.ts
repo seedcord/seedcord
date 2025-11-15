@@ -54,17 +54,21 @@ export const InteractionMetadataKey = Symbol('interaction:metadata');
 /**
  * Extract the event type from an InteractionHandler subclass
  *
+ * Used by the interaction routing decorators.
+ *
  * @internal
  */
-type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+export type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
     InstanceType<TCtor> extends InteractionHandler<infer TEvent> ? TEvent : never;
 
 /**
  * Compile time assertion that Required is included in the handler event union
  *
+ * Used by the interaction routing decorators.
+ *
  * @internal
  */
-type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+export type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
     Extract<HandlerEventType<TCtor>, TRequired> extends never
         ? Constructor<['Handler event generic must include', TRequired]>
         : TCtor;
