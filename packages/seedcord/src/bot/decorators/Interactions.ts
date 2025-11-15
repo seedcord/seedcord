@@ -62,7 +62,7 @@ export type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHa
     InstanceType<TCtor> extends InteractionHandler<infer TEvent> ? TEvent : never;
 
 /**
- * Compile time assertion that Required is included in the handler event union
+ * Compile time assertion that the required event type(s) `TRequired` are included in the handler event union.
  *
  * Used by the interaction routing decorators.
  *
