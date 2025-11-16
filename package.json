@@ -4,7 +4,7 @@
     "description": "A Discord bot framework built on top of Discord.js",
     "private": true,
     "type": "module",
-    "packageManager": "pnpm@10.19.0",
+    "packageManager": "pnpm@10.22.0",
     "scripts": {
         "build": "turbo build",
         "dev": "turbo dev",

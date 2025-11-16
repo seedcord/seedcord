@@ -97,7 +97,9 @@ const shouldDefer = <TComponentType extends MessageComponentType>(
 ): boolean => {
     if (ix.deferred) return false;
     if (opts.defer === false) return false;
-    return isSlash || isContext;
+    if (isSlash || isContext) return true;
+    if (isMessageComponentIx(ix)) return true;
+    return false;
 };
 
 const maybeDefer = async <TComponentType extends MessageComponentType>(
