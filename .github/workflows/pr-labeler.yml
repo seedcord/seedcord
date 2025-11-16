@@ -25,13 +25,13 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
               with:
                   fetch-depth: 0
                   repository: ${{ github.event.pull_request.head.repo.full_name }}
                   ref: ${{ github.event.pull_request.head.ref }}
             - name: Apply labels from config
-              uses: actions/labeler@v5
+              uses: actions/labeler@v6
               with:
                   configuration-path: .github/labeler.yml
                   sync-labels: true
@@ -42,10 +42,10 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
               with:
                   fetch-depth: 0
             - name: Apply labels from config
-              uses: actions/labeler@v5
+              uses: actions/labeler@v6
               with:
                   configuration-path: .github/labeler.yml

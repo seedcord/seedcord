@@ -20,7 +20,7 @@ jobs:
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
               with:
                   fetch-depth: 0
             - uses: pnpm/action-setup@v4
@@ -37,7 +37,7 @@ jobs:
             id-token: write
             pull-requests: write
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
               with:
                   fetch-depth: 0
             - name: Turbo cache
@@ -47,15 +47,15 @@ jobs:
                   turbo_team: ${{ vars.TURBO_TEAM }}
                   enable_fallback_cache: 'true'
             - uses: pnpm/action-setup@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
-                  node-version: 22.20.0
+                  node-version: 24.20.0
                   cache: pnpm
                   registry-url: https://registry.npmjs.org
             - uses: pnpm/action-setup@v4
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
-                  node-version: 22.20.0
+                  node-version: 24.20.0
                   cache: pnpm
                   registry-url: https://registry.npmjs.org
             - run: npm i -g npm@latest
