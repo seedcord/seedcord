@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.10.4
+
+### Patch Changes
+
+- eb7de1f: fix configurable behavior not deferring when defer: true is provided
+
 ## 0.10.3
 
 ### Patch Changes
