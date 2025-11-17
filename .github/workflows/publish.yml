@@ -67,7 +67,6 @@ jobs:
             - id: changesets
               uses: changesets/action@v1
               if: ${{ github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
-              #   give custom pr and commit messages
               with:
                   publish: pnpm run release
                   commit: 'chore(release): version packages'
