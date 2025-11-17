@@ -43,7 +43,7 @@ runs:
                   sudo apt-get install -y gh >/dev/null
               fi
 
-              echo "$GH_TOKEN" | gh auth login --with-token
+              gh auth login --with-token
 
               PR_NUMBER=$(gh pr list --repo "$GITHUB_REPO" --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number')
 
