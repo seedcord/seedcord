@@ -1,5 +1,11 @@
 # @seedcord/tsconfig
 
+## 1.1.0
+
+### Minor Changes
+
+- ec50439: make package public
+
 ## 1.0.6
 
 ### Patch Changes
