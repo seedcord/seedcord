@@ -1,5 +1,11 @@
 # @seedcord/tsup-config
 
+## 1.1.0
+
+### Minor Changes
+
+- ec50439: make tsup package public
+
 ## 1.0.5
 
 ### Patch Changes
