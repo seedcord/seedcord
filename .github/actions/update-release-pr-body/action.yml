@@ -1,0 +1,58 @@
+name: Update release PR body
+
+description: Updates the body of the release PR created by changesets/action.
+
+inputs:
+    release_branch:
+        description: Name of the release branch (e.g. changeset-release/main).
+        required: true
+    body:
+        description: Fully formatted PR body to apply.
+        required: true
+    github_token:
+        description: Token with pull request write permissions.
+        required: false
+        default: ${{ github.token }}
+
+runs:
+    using: composite
+    steps:
+        - name: Update PR body
+          shell: bash
+          env:
+              GH_TOKEN: ${{ inputs.github_token }}
+              RELEASE_BRANCH: ${{ inputs.release_branch }}
+              PR_BODY: ${{ inputs.body }}
+              GITHUB_REPO: ${{ github.repository }}
+          run: |
+              set -euo pipefail
+
+              if [ -z "$RELEASE_BRANCH" ]; then
+                  echo "Release branch input is empty; nothing to update."
+                  exit 0
+              fi
+
+              if [ -z "$PR_BODY" ]; then
+                  echo "PR body is empty; skipping update."
+                  exit 0
+              fi
+
+              if ! command -v gh >/dev/null 2>&1; then
+                  echo "Installing GitHub CLI"
+                  sudo apt-get update >/dev/null
+                  sudo apt-get install -y gh >/dev/null
+              fi
+
+              echo "$GH_TOKEN" | gh auth login --with-token
+
+              PR_NUMBER=$(gh pr list --repo "$GITHUB_REPO" --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number')
+
+              if [ -z "$PR_NUMBER" ] || [ "$PR_NUMBER" = "null" ]; then
+                  echo "No open PR found for branch $RELEASE_BRANCH; skipping update."
+                  exit 0
+              fi
+
+              BODY_FILE=$(mktemp)
+              printf '%s' "$PR_BODY" > "$BODY_FILE"
+
+              gh pr edit "$PR_NUMBER" --body-file "$BODY_FILE"

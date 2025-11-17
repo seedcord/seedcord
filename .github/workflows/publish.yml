@@ -63,12 +63,24 @@ jobs:
             - run: npm config get registry && npm ping
             - run: pnpm install --frozen-lockfile
             - run: pnpm run prepublishOnly
-            - uses: changesets/action@v1
+            - name: Determine release metadata
+              id: release_meta
+              uses: ./.github/actions/release-metadata
+
+            - id: changesets
+              uses: changesets/action@v1
               if: ${{ github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
               with:
                   publish: pnpm run release
                   commit: 'chore(release): version packages'
-                  title: 'chore(release): version packages'
+                  title: ${{ steps.release_meta.outputs.title }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   HUSKY: 0
+            - name: Update release PR body
+              if: ${{ steps.changesets.outputs.hasChangesets == 'true' && steps.release_meta.outputs.body != '' }}
+              uses: ./.github/actions/update-release-pr-body
+              with:
+                  release_branch: changeset-release/${{ github.event.workflow_run.head_branch }}
+                  body: ${{ steps.release_meta.outputs.body }}
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
