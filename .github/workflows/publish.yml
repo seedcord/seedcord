@@ -77,10 +77,3 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   HUSKY: 0
-            - name: Update release PR body
-              if: ${{ steps.changesets.outputs.hasChangesets == 'true' && steps.release_meta.outputs.body != '' }}
-              uses: ./.github/actions/update-release-pr-body
-              with:
-                  release_branch: changeset-release/${{ github.event.workflow_run.head_branch }}
-                  body: ${{ steps.release_meta.outputs.body }}
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
