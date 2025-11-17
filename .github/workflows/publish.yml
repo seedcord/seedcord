@@ -73,7 +73,7 @@ jobs:
               with:
                   publish: pnpm run release
                   commit: 'chore(release): version packages'
-                  title: ${{ steps.release_meta.outputs.title }}
+                  title: 'chore: release packages'
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   HUSKY: 0
