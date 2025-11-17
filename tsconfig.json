@@ -1,6 +1,6 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig.json",
-    "extends": "./packages/tsconfig/base.json",
+    "extends": "@seedcord/tsconfig/base",
     "compilerOptions": {
         "rootDir": "./"
     },

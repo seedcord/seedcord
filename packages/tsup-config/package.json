@@ -2,10 +2,9 @@
     "name": "@seedcord/tsup-config",
     "type": "module",
     "version": "1.0.5",
-    "description": "Shared Tsup configuration for seedcord packages",
+    "description": "Tsup preset for seedcord packages and beyond",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "private": true,
     "repository": {
         "type": "git",
         "url": "https://github.com/materwelonDhruv/seedcord.git",
@@ -39,5 +38,9 @@
         "@seedcord/tsconfig": "workspace:^",
         "tsup": "^8.5.0",
         "typescript": "catalog:peer"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
     }
 }

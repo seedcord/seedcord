@@ -50,6 +50,7 @@
         "@commitlint/cli": "^20.1.0",
         "@commitlint/config-conventional": "^20.0.0",
         "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
         "@swc/core": "^1.14.0",
         "@types/chai": "^5.2.3",
         "@types/node": "^24.9.2",

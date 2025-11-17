@@ -55,6 +55,9 @@ importers:
             '@seedcord/eslint-config':
                 specifier: workspace:^
                 version: link:packages/eslint-config
+            '@seedcord/tsconfig':
+                specifier: workspace:^
+                version: link:packages/tsconfig
             '@swc/core':
                 specifier: ^1.14.0
                 version: 1.14.0
@@ -360,14 +363,7 @@ importers:
                 specifier: workspace:^
                 version: link:../tsup-config
 
-    packages/tsconfig:
-        devDependencies:
-            '@seedcord/eslint-config':
-                specifier: workspace:^
-                version: link:../eslint-config
-            typescript:
-                specifier: catalog:peer
-                version: 5.9.3
+    packages/tsconfig: {}
 
     packages/tsup-config:
         devDependencies:

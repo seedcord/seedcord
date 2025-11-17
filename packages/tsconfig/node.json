@@ -3,7 +3,7 @@
     "extends": "./base.json",
     "compilerOptions": {
         "lib": ["ESNext", "Decorators", "Decorators.Legacy"],
-        "target": "ES2022",
+        "target": "ES2024",
         "module": "esnext",
         "moduleResolution": "bundler"
     }
