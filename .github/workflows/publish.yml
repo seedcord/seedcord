@@ -5,6 +5,7 @@ on:
         workflows: ['tests']
         types: [completed]
         branches: [main]
+    workflow_dispatch: {}
 
 permissions:
     contents: write
