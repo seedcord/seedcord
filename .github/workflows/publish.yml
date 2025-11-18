@@ -25,7 +25,7 @@ jobs:
                   fetch-depth: 0
             - uses: pnpm/action-setup@v4
             - run: pnpm install --frozen-lockfile
-            - run: pnpm publish --dry-run --workspace-root
+            - run: pnpm publish --dry-run --workspace-root --no-git-checks
 
     npm-publish:
         if: ${{ github.event.workflow_run.conclusion == 'success' }}
