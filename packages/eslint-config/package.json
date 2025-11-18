@@ -42,21 +42,21 @@
         "@eslint/eslintrc": "^3.3.1",
         "@types/eslint-plugin-security": "^3.0.0",
         "@types/lodash.merge": "^4.6.9",
-        "@typescript-eslint/eslint-plugin": "^8.46.2",
-        "@typescript-eslint/parser": "^8.46.2",
+        "@typescript-eslint/eslint-plugin": "^8.47.0",
+        "@typescript-eslint/parser": "^8.47.0",
         "eslint": "catalog:peer",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.4",
         "eslint-plugin-import": "^2.32.0",
         "eslint-plugin-prettier": "^5.5.4",
         "eslint-plugin-security": "^3.0.1",
-        "eslint-plugin-tsdoc": "^0.4.0",
+        "eslint-plugin-tsdoc": "^0.5.0",
         "lodash.merge": "^4.6.2",
         "prettier": "catalog:deps",
-        "typescript-eslint": "^8.46.2"
+        "typescript-eslint": "^8.47.0"
     },
     "devDependencies": {
-        "tsup": "^8.5.0"
+        "tsup": "^8.5.1"
     },
     "publishConfig": {
         "access": "public",

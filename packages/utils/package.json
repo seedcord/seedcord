@@ -41,8 +41,7 @@
     "dependencies": {
         "@seedcord/types": "workspace:^",
         "@seedcord/services": "workspace:^",
-        "type-fest": "catalog:deps",
-        "discord.js": "catalog:deps"
+        "type-fest": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
