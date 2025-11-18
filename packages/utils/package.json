@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/utils",
     "type": "module",
-    "version": "0.3.6",
+    "version": "0.3.7",
     "description": "Utility functions for Seedcord packages",
     "repository": {
         "type": "git",

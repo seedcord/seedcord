@@ -1,5 +1,17 @@
 # @seedcord/mock
 
+## 0.2.16
+
+### Patch Changes
+
+- 1d8986b: bump deps
+- 1d8986b: bump djs to 14.25.0
+- Updated dependencies [1d8986b]
+- Updated dependencies [1d8986b]
+    - @seedcord/types@0.3.4
+    - @seedcord/plugins@0.4.6
+    - seedcord@0.10.5
+
 ## 0.2.15
 
 ### Patch Changes

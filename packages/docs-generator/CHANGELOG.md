@@ -1,5 +1,11 @@
 # @seedcord/docs-generator
 
+## 0.2.1
+
+### Patch Changes
+
+- 1d8986b: bump deps
+
 ## 0.2.0
 
 ### Minor Changes
