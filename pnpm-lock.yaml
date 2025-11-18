@@ -38,6 +38,9 @@ catalogs:
             specifier: 5.9.3
             version: 5.9.3
 
+overrides:
+    glob: 11.1.0
+
 importers:
     .:
         devDependencies:
@@ -1361,6 +1364,20 @@ packages:
             '@types/node':
                 optional: true
 
+    '@isaacs/balanced-match@4.0.1':
+        resolution:
+            {
+                integrity: sha512-yzMTt9lEb8Gv7zRioUilSglI0c0smZ9k5D65677DLWLtWJaXIS3CqcGyUFByYKlnUj6TkjLVs54fBl6+TiGQDQ==
+            }
+        engines: { node: 20 || >=22 }
+
+    '@isaacs/brace-expansion@5.0.0':
+        resolution:
+            {
+                integrity: sha512-ZT55BDLV0yv0RBm2czMiZ+SqCGO7AvmOM3G/w2xhVPH+te0aKgFjmBvGlL1dH+ql2tgGO3MVrbb3jCKyvpgnxA==
+            }
+        engines: { node: 20 || >=22 }
+
     '@isaacs/cliui@8.0.2':
         resolution:
             {
@@ -1449,13 +1466,6 @@ packages:
                 integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==
             }
         engines: { node: '>= 8' }
-
-    '@pkgjs/parseargs@0.11.0':
-        resolution:
-            {
-                integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
-            }
-        engines: { node: '>=14' }
 
     '@pkgr/core@0.2.9':
         resolution:
@@ -3551,11 +3561,12 @@ packages:
             }
         engines: { node: '>=10.13.0' }
 
-    glob@10.5.0:
+    glob@11.1.0:
         resolution:
             {
-                integrity: sha512-DfXN8DfhJ7NH3Oe7cFmu3NCu1wKbkReJ8TorzSAFbSKrlNaQSKfIzqYqVY8zlbs2NLBbWpRiU52GX2PbaBVNkg==
+                integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==
             }
+        engines: { node: 20 || >=22 }
         hasBin: true
 
     global-directory@4.0.1:
@@ -4031,11 +4042,12 @@ packages:
             }
         engines: { node: '>=8' }
 
-    jackspeak@3.4.3:
+    jackspeak@4.1.1:
         resolution:
             {
-                integrity: sha512-OGlZQpz2yfahA/Rd1Y8Cd9SIEsqvXkLVoSw/cgwhnhFMDbsQFeZYoJJ7bIZBS9BcamUW96asq/npPWugM+RQBw==
+                integrity: sha512-zptv57P3GpL+O0I7VdMJNBZCu+BPHVQUk55Ft8/QCJjTVxrnJHuVuX/0Bl2A6/+2oyR/ZMEuFKwmzqqZ/U5nPQ==
             }
+        engines: { node: 20 || >=22 }
 
     jiti@2.6.1:
         resolution:
@@ -4408,11 +4420,12 @@ packages:
             }
         engines: { node: '>= 12.0.0' }
 
-    lru-cache@10.4.3:
+    lru-cache@11.2.2:
         resolution:
             {
-                integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==
+                integrity: sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg==
             }
+        engines: { node: 20 || >=22 }
 
     lunr@2.3.9:
         resolution:
@@ -4498,6 +4511,13 @@ packages:
                 integrity: sha512-VP79XUPxV2CigYP3jWwAUFSku2aKqBH7uTAapFWCBqutsbmDo96KY5o8uh6U+/YSIn5OxJnXp73beVkpqMIGhA==
             }
         engines: { node: '>=18' }
+
+    minimatch@10.1.1:
+        resolution:
+            {
+                integrity: sha512-enIvLvRAFZYXJzkCYG5RKmPfrFArdLv+R+lbQ53BmIMLIry74bjKzX6iHAm8WYamJkhSSEabrWN5D97XnKObjQ==
+            }
+        engines: { node: 20 || >=22 }
 
     minimatch@3.1.2:
         resolution:
@@ -4849,12 +4869,12 @@ packages:
                 integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==
             }
 
-    path-scurry@1.11.1:
+    path-scurry@2.0.1:
         resolution:
             {
-                integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==
+                integrity: sha512-oWyT4gICAu+kaA7QWk/jvCHWarMKNs6pXOGWKDTr7cw4IGcUbW+PeTfbaQiLGheFRpjo6O9J0PmyMfQPjH71oA==
             }
-        engines: { node: '>=16 || 14 >=14.18' }
+        engines: { node: 20 || >=22 }
 
     path-type@4.0.0:
         resolution:
@@ -6804,6 +6824,12 @@ snapshots:
         optionalDependencies:
             '@types/node': 24.10.1
 
+    '@isaacs/balanced-match@4.0.1': {}
+
+    '@isaacs/brace-expansion@5.0.0':
+        dependencies:
+            '@isaacs/balanced-match': 4.0.1
+
     '@isaacs/cliui@8.0.2':
         dependencies:
             string-width: 5.1.2
@@ -6874,9 +6900,6 @@ snapshots:
         dependencies:
             '@nodelib/fs.scandir': 2.1.5
             fastq: 1.19.1
-
-    '@pkgjs/parseargs@0.11.0':
-        optional: true
 
     '@pkgr/core@0.2.9': {}
 
@@ -8259,14 +8282,14 @@ snapshots:
         dependencies:
             is-glob: 4.0.3
 
-    glob@10.5.0:
+    glob@11.1.0:
         dependencies:
             foreground-child: 3.3.1
-            jackspeak: 3.4.3
-            minimatch: 9.0.5
+            jackspeak: 4.1.1
+            minimatch: 10.1.1
             minipass: 7.1.2
             package-json-from-dist: 1.0.1
-            path-scurry: 1.11.1
+            path-scurry: 2.0.1
 
     global-directory@4.0.1:
         dependencies:
@@ -8516,11 +8539,9 @@ snapshots:
             html-escaper: 2.0.2
             istanbul-lib-report: 3.0.1
 
-    jackspeak@3.4.3:
+    jackspeak@4.1.1:
         dependencies:
             '@isaacs/cliui': 8.0.2
-        optionalDependencies:
-            '@pkgjs/parseargs': 0.11.0
 
     jiti@2.6.1: {}
 
@@ -8704,7 +8725,7 @@ snapshots:
             safe-stable-stringify: 2.5.0
             triple-beam: 1.4.1
 
-    lru-cache@10.4.3: {}
+    lru-cache@11.2.2: {}
 
     lunr@2.3.9: {}
 
@@ -8749,6 +8770,10 @@ snapshots:
             picomatch: 2.3.1
 
     mimic-function@5.0.1: {}
+
+    minimatch@10.1.1:
+        dependencies:
+            '@isaacs/brace-expansion': 5.0.0
 
     minimatch@3.1.2:
         dependencies:
@@ -8957,9 +8982,9 @@ snapshots:
 
     path-parse@1.0.7: {}
 
-    path-scurry@1.11.1:
+    path-scurry@2.0.1:
         dependencies:
-            lru-cache: 10.4.3
+            lru-cache: 11.2.2
             minipass: 7.1.2
 
     path-type@4.0.0: {}
@@ -9370,7 +9395,7 @@ snapshots:
         dependencies:
             '@jridgewell/gen-mapping': 0.3.13
             commander: 4.1.1
-            glob: 10.5.0
+            glob: 11.1.0
             lines-and-columns: 1.2.4
             mz: 2.7.0
             pirates: 4.0.7
