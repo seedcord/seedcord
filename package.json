@@ -51,30 +51,23 @@
         "@commitlint/config-conventional": "^20.0.0",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@swc/core": "^1.14.0",
+        "@swc/core": "^1.15.2",
         "@types/chai": "^5.2.3",
-        "@types/node": "^24.9.2",
-        "@vitest/coverage-v8": "^4.0.6",
-        "chai": "^6.2.0",
+        "@types/node": "^24.10.1",
+        "@vitest/coverage-v8": "^4.0.10",
+        "chai": "^6.2.1",
         "eslint": "catalog:peer",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.6",
-        "nodemon": "^3.1.10",
+        "nodemon": "^3.1.11",
         "prettier": "catalog:deps",
-        "tsup": "^8.5.0",
+        "tsup": "^8.5.1",
         "tsx": "^4.20.6",
-        "turbo": "^2.6.0",
+        "turbo": "^2.6.1",
         "typescript": "catalog:peer",
-        "vitest": "^4.0.6"
+        "vitest": "^4.0.10"
     },
     "engines": {
         "node": ">=22.12.0"
-    },
-    "pnpm": {
-        "overrides": {
-            "eslint": "9.38.0",
-            "@eslint/core": "0.16.0",
-            "@eslint/js": "9.38.0"
-        }
     }
 }
