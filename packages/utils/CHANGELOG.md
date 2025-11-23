@@ -1,5 +1,16 @@
 # @seedcord/utils
 
+## 0.3.8
+
+### Patch Changes
+
+- f8fbe70: bump general dependencies
+- Updated dependencies [f354d30]
+- Updated dependencies [f8fbe70]
+- Updated dependencies [f8fbe70]
+    - @seedcord/services@0.6.0
+    - @seedcord/types@0.3.5
+
 ## 0.3.7
 
 ### Patch Changes

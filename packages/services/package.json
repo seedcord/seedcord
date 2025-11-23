@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/services",
     "type": "module",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "description": "Services for Seedcord packages",
     "repository": {
         "type": "git",

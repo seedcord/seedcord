@@ -1,5 +1,17 @@
 # @seedcord/mock
 
+## 0.2.17
+
+### Patch Changes
+
+- f8fbe70: bump general dependencies
+- Updated dependencies [f8fbe70]
+- Updated dependencies [f8fbe70]
+- Updated dependencies [f8fbe70]
+    - seedcord@0.10.6
+    - @seedcord/plugins@0.5.0
+    - @seedcord/types@0.3.5
+
 ## 0.2.16
 
 ### Patch Changes

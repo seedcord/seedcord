@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.3.3
+
+### Patch Changes
+
+- f8fbe70: bump general dependencies
+
 ## 1.3.2
 
 ### Patch Changes

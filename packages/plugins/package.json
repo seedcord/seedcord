@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/plugins",
     "type": "module",
-    "version": "0.4.6",
+    "version": "0.5.0",
     "description": "Official plugins for Seedcord Discord bot framework",
     "repository": {
         "type": "git",

@@ -1,5 +1,11 @@
 # @seedcord/docs-engine
 
+## 0.2.2
+
+### Patch Changes
+
+- f8fbe70: bump general dependencies
+
 ## 0.2.1
 
 ### Patch Changes
