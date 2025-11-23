@@ -67,6 +67,9 @@ interface CreateConfigOptions {
 
     /** Toggle registration of the `eslint-plugin-tsdoc` plugin (default: `true`) */
     registerTsdocPlugin?: boolean;
+
+    /** Toggle registration of TypeScript ESLint configs (default: `true`) */
+    registerTypescriptConfigs?: boolean;
 }
 
 // Helper to build a config item with optional plugin registration
@@ -99,13 +102,25 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         registerImportPlugin = true,
         registerPrettierPlugin = true,
         registerSecurityPlugin = true,
-        registerTsdocPlugin = true
+        registerTsdocPlugin = true,
+        registerTypescriptConfigs = true
     } = options;
 
     const createTsParserOptions = (rootDir: string) => ({
         project: ['./tsconfig.json'],
         tsconfigRootDir: rootDir
     });
+
+    const tsConfigs: FlatConfigItem[] = [];
+
+    if (registerTypescriptConfigs) {
+        tsConfigs.push(
+            ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
+            ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),
+            ...tseslint.configs.strict.map((c) => ({ ...c, files: [...TS_FILES] })),
+            ...tseslint.configs.stylistic.map((c) => ({ ...c, files: [...TS_FILES] }))
+        );
+    }
 
     return defineConfig(
         // Global ignores
@@ -129,10 +144,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         },
 
         // typescript eslint shared configs applied to TS files only
-        ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
-        ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),
-        ...tseslint.configs.strict.map((c) => ({ ...c, files: [...TS_FILES] })),
-        ...tseslint.configs.stylistic.map((c) => ({ ...c, files: [...TS_FILES] })),
+        ...tsConfigs,
 
         // Security
         pluginBlock({

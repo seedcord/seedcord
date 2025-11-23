@@ -5,6 +5,7 @@
 ### Patch Changes
 
 - f8fbe70: bump general dependencies
+- allow disabling tseslint (typescript-eslint) rule registration
 
 ## 1.3.2
 
