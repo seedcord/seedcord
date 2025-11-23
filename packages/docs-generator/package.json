@@ -48,7 +48,7 @@
     ],
     "dependencies": {
         "typedoc": "catalog:deps",
-        "typedoc-plugin-dt-links": "^2.0.29",
+        "typedoc-plugin-dt-links": "^2.0.30",
         "typedoc-plugin-mdn-links": "^5.0.10"
     },
     "devDependencies": {

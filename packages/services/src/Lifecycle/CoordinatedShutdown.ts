@@ -47,7 +47,7 @@ const LOG_FLUSH_DELAY_MS = 500;
  * Enable or disable the shutdown mechanism via the SHUTDOWN_IS_ENABLED environment variable. It's disabled by default. I recommend enabling it in production environments.
  */
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
-    @Envapt('SHUTDOWN_IS_ENABLED', { fallback: false })
+    @Envapt('SHUTDOWN_IS_ENABLED', { fallback: true })
     declare private readonly isShutdownEnabled: boolean;
 
     private isShuttingDown = false;
