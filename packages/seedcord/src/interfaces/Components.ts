@@ -204,7 +204,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
     })
     declare public readonly botColor: ColorResolvable;
 
-    protected constructor(type: BuilderKey) {
+    protected constructor(public readonly type: BuilderKey) {
         const ComponentClass = BuilderTypes[type] as unknown;
         super(ComponentClass as new () => InstantiatedBuilder<BuilderKey>);
 

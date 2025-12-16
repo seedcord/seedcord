@@ -58,7 +58,11 @@ export class CommandRegistry implements Initializeable {
 
     private isCommandClass(obj: unknown): obj is CommandCtor {
         if (typeof obj !== 'function') return false;
-        return obj.prototype instanceof BuilderComponent && Reflect.hasMetadata(CommandMetadataKey, obj);
+        return (
+            obj.prototype instanceof BuilderComponent &&
+            (obj.prototype.type === 'command' || obj.prototype.type === 'context_menu') &&
+            Reflect.hasMetadata(CommandMetadataKey, obj)
+        );
     }
 
     private registerCommand(ctor: CommandCtor, rel: string): void {
