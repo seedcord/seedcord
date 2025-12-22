@@ -1,0 +1,20 @@
+name: "Docs Extract"
+description: "Composite action to run the repository `docs:extract` command and produce debugging/generated/manifest.json"
+inputs:
+    output-dir:
+        description: "Output directory for generated JSON files"
+        required: false
+        default: "./debugging/generated"
+    packages-dir:
+        description: "Directory containing packages to extract from"
+        required: false
+        default: "./packages"
+runs:
+    using: "composite"
+    steps:
+      - name: Run docs extraction
+        shell: bash
+        run: |
+            pnpm --version || true
+            echo "Running docs extraction: output=${{ inputs.output-dir }}, packages=${{ inputs.packages-dir }}"
+            pnpm --filter @seedcord/docs-generator run smoke -o "${{ inputs.output-dir }}" -p "${{ inputs.packages-dir }}"

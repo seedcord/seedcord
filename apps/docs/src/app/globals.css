@@ -1,0 +1,123 @@
+@import 'tailwindcss';
+@import '../styles/tokens.css';
+@import '../styles/utilities.css';
+
+:root {
+    --bg: var(--color-bg);
+    --text: var(--color-text);
+    --surface: var(--color-surface);
+    --border: rgba(0, 0, 0, 0.12);
+
+    --deprecated-dark: #cf3234;
+
+    color-scheme: light;
+}
+
+[data-theme='dark'] {
+    --bg: var(--color-bg);
+    --text: var(--color-text);
+    --surface: var(--color-surface);
+    --border: rgba(255, 255, 255, 0.16);
+
+    --deprecated-dark: #cf3234;
+
+    color-scheme: dark;
+}
+
+@layer base {
+    *,
+    *::before,
+    *::after {
+        border-color: var(--border);
+    }
+
+    body {
+        background-color: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans, 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+        min-height: 100vh;
+    }
+
+    a,
+    button {
+        transition:
+            color 0.2s ease,
+            background-color 0.2s ease,
+            border-color 0.2s ease,
+            transform 0.2s ease;
+    }
+}
+
+[data-theme='light'] .shiki-theme-group .shiki-dark,
+[data-theme='light'] .shiki-inline-group .shiki-dark {
+    display: none;
+}
+
+[data-theme='light'] .shiki-theme-group .shiki-light,
+[data-theme='light'] .shiki-inline-group .shiki-light {
+    display: block;
+}
+
+[data-theme='light'] .shiki-inline-group .shiki-light {
+    display: inline;
+}
+
+[data-theme='dark'] .shiki-inline-group .shiki-dark {
+    display: inline;
+}
+
+@keyframes commandOverlayShow {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes commandOverlayHide {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes commandSurfaceShow {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes commandSurfaceHide {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+}
+
+[data-command-overlay][data-state='open'] {
+    animation: commandOverlayShow 160ms ease-out forwards;
+}
+
+[data-command-overlay][data-state='closed'] {
+    animation: commandOverlayHide 140ms ease-in forwards;
+}
+
+[data-command-content][data-state='open'] {
+    animation: commandSurfaceShow 200ms cubic-bezier(0.21, 0.61, 0.35, 1) forwards;
+}
+
+[data-command-content][data-state='closed'] {
+    animation: commandSurfaceHide 150ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
