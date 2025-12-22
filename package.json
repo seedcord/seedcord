@@ -65,7 +65,8 @@
         "tsx": "^4.20.6",
         "turbo": "^2.6.1",
         "typescript": "catalog:peer",
-        "vitest": "^4.0.13"
+        "vitest": "^4.0.13",
+        "tsd": "^0.33.0"
     },
     "engines": {
         "node": ">=22.12.0"

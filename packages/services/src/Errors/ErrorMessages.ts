@@ -1,5 +1,10 @@
 import { SeedcordErrorCode } from './ErrorCodes';
 
+/**
+ * Mapping of Seedcord error codes to their corresponding message formatters.
+ *
+ * @internal
+ */
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing]: () =>
@@ -64,11 +69,21 @@ const messages = {
     [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`
 } as const;
 
-export type SeedcordErrorArguments<TCode extends SeedcordErrorCode> = Parameters<(typeof messages)[TCode]>;
+/**
+ * Argument types for Seedcord error messages.
+ *
+ * @internal
+ */
+export type SeedcordErrorArguments<Code extends SeedcordErrorCode> = Parameters<(typeof messages)[Code]>;
 
-export function formatSeedcordErrorMessage<TCode extends SeedcordErrorCode>(
-    code: TCode,
-    args?: SeedcordErrorArguments<TCode>
+/**
+ * Formats a Seedcord error message based on the provided code and arguments.
+ *
+ * @internal
+ */
+export function formatSeedcordErrorMessage<Code extends SeedcordErrorCode>(
+    code: Code,
+    args?: SeedcordErrorArguments<Code>
 ): string {
     const formatter = messages[code];
     const resolvedArgs = (args ?? []) as unknown[];

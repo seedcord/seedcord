@@ -93,7 +93,9 @@ const runEslint = (files) => {
         if (!fileList) continue;
 
         const configFlag = configPath === 'DEFAULT' ? '' : `--config ${JSON.stringify(configPath)}`;
-        const command = ['eslint --max-warnings=0 --fix --cache', configFlag, fileList].filter(Boolean).join(' ');
+        const command = ['eslint --no-warn-ignored --max-warnings=0 --fix --cache', configFlag, fileList]
+            .filter(Boolean)
+            .join(' ');
         commands.push(command);
     }
 
