@@ -53,7 +53,7 @@
     --surface-92: color-mix(in oklab, var(--color-surface) 92%, transparent);
 
     --accent-a-hover: color-mix(in oklab, var(--accent-a) 88%, black);
-    --accent-b-hover: color-mix(in oklab, var(--accent-b) 92%, #000 8%);
+    --accent-b-hover: color-mix(in oklab, var(--accent-b) 92%, black 8%);
 
     --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--color-text) 28%, transparent);
     --focus-outline-b: color-mix(in oklab, var(--accent-b) 78%, transparent);

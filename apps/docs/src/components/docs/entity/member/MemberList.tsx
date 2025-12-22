@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 import { cn } from '@lib/utils';
 
-import { MEMBER_TITLES, MEMBER_ACCENTS } from '../constants';
+import { MEMBER_TITLES } from '../constants';
 
 import type { EntityMemberSummary, MemberPrefix } from '../types';
 import type { ReactElement } from 'react';
@@ -21,7 +21,6 @@ function MemberList({ items, prefix, onNavigate }: MemberListProps): ReactElemen
     }
 
     const title = MEMBER_TITLES[prefix];
-    const accentClass = MEMBER_ACCENTS[prefix];
 
     return (
         <section className="min-w-0 space-y-2.5" aria-labelledby={`${prefix}-list-heading`}>
@@ -38,10 +37,11 @@ function MemberList({ items, prefix, onNavigate }: MemberListProps): ReactElemen
                             }}
                             className={cn(
                                 'group bg-surface-96 flex w-full min-w-0 items-center justify-between rounded-lg border border-(--border)/70 px-3.5 py-2 text-sm text-(--text) transition',
-                                'hover:border-[color-mix(in_oklab,var(--accent-b)_34%,var(--border))] hover:bg-[color-mix(in_oklab,var(--accent-b)_12%,var(--surface)_88%)]'
+                                'hover:border-[color-mix(in_oklab,var(--accent-b)_34%,var(--border))]',
+                                'hover:bg-[color-mix(in_oklab,var(--accent-b)_12%,var(--surface)_88%)]'
                             )}
                         >
-                            <span className={cn('truncate font-medium', accentClass)}>
+                            <span className={cn('truncate font-medium')}>
                                 {prefix === 'method' ? `${item.label}()` : item.label}
                             </span>
                         </Link>
