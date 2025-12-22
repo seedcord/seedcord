@@ -1,3 +1,4 @@
+import type { EffectsHandler } from '../EffectsHandler';
 import type { EffectKeys } from '../types/Effects';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { Constructor } from 'type-fest';
@@ -56,7 +57,7 @@ export interface RegisterEffectMetadataEntry {
  * ```
  */
 export function RegisterEffect<TEffect extends EffectKeys>(effect: TEffect, options?: RegisterEffectOptions) {
-    return function (constructor: Constructor<unknown>): void {
+    return function <HandlerCtor extends Constructor<EffectsHandler<TEffect>>>(constructor: HandlerCtor): void {
         const meta: RegisterEffectMetadataEntry = {
             effect,
             frequency: options?.frequency
