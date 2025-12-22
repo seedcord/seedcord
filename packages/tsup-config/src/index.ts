@@ -1,6 +1,30 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { defineConfig } from 'tsup';
 
 import type { Options } from 'tsup';
+
+let cachedVersion: string | undefined;
+
+function readPackageVersion(): string {
+    if (cachedVersion) return cachedVersion;
+
+    try {
+        const pkgPath = resolve(process.cwd(), 'package.json');
+        const pkgRaw = readFileSync(pkgPath, 'utf8');
+        const pkg = JSON.parse(pkgRaw) as { version?: unknown };
+        if (typeof pkg.version === 'string' && pkg.version.length > 0) {
+            cachedVersion = pkg.version;
+            return cachedVersion;
+        }
+    } catch {
+        // ignore file system errors and fall back to the default version
+    }
+
+    cachedVersion = '0.0.0';
+    return cachedVersion;
+}
 
 /**
  * Creates a standardized tsup configuration for seedcord packages
@@ -32,8 +56,13 @@ function createTsupConfig({
             return { js: '.mjs' };
         }
         return { js: '.js' };
-    }
+    },
+    define = {},
+    env = {},
+    ...rest
 }: Options = {}): Options {
+    const packageVersion = readPackageVersion();
+
     return defineConfig({
         format,
         entry,
@@ -50,9 +79,19 @@ function createTsupConfig({
         sourcemap,
         treeshake,
         outDir,
-        outExtension
+        outExtension,
+        define: {
+            __PACKAGE_VERSION__: JSON.stringify(packageVersion),
+            ...define
+        },
+        env: {
+            PACKAGE_VERSION: packageVersion,
+            ...env
+        },
+        ...rest
     }) as Options;
 }
 
 export { createTsupConfig };
+export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
 export type { Options };

@@ -5,3 +5,5 @@ export * from './slugger';
 export { kindLabel, kindKey, kindName } from './kinds';
 export { PackageDirectory, type DirectoryEntity, type DirectorySnapshot } from './directory';
 export type * from './types';
+
+export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

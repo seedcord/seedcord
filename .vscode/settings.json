@@ -96,5 +96,5 @@
         "MD041": false,
         "MD024": false
     },
-    "prettier.prettierPath": "node_modules/prettier",
+    "prettier.prettierPath": "node_modules/prettier"
 }

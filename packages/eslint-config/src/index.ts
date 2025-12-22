@@ -215,4 +215,5 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 export * from './constants';
 export * from './rules';
 export type { CreateConfigOptions, FlatConfig, FlatConfigItem };
+export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
 export default createConfig;
