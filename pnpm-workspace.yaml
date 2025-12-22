@@ -1,24 +1,24 @@
 packages:
-    - packages/*
-    - apps/*
+  - packages/*
+  - apps/*
 
 catalogs:
-    deps:
-        chalk: 5.6.2
-        discord.js: 14.25.1
-        envapt: 4.1.0
-        mongoose: 9.0.0
-        prettier: 3.6.2
-        reflect-metadata: 0.2.2
-        type-fest: 5.2.0
-        typedoc: 0.28.14
-    peer:
-        eslint: 9.39.1
-        typescript: 5.9.3
+  deps:
+    chalk: 5.6.2
+    discord.js: 14.25.1
+    envapt: 4.1.0
+    mongoose: 9.0.0
+    prettier: 3.7.4
+    reflect-metadata: 0.2.2
+    type-fest: 5.3.1
+    typedoc: 0.28.15
+  peer:
+    eslint: 9.39.1
+    typescript: 5.9.3
 
 onlyBuiltDependencies:
-    - '@swc/core'
-    - '@tailwindcss/oxide'
-    - esbuild
-    - sharp
-    - unrs-resolver
+  - '@swc/core'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - sharp
+  - unrs-resolver

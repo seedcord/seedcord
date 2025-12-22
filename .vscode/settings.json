@@ -95,5 +95,6 @@
         "MD013": false,
         "MD041": false,
         "MD024": false
-    }
+    },
+    "prettier.prettierPath": "node_modules/prettier",
 }

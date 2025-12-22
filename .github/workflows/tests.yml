@@ -74,6 +74,12 @@ jobs:
             - name: Test
               run: pnpm test
 
+            - name: Generate docs manifest
+              uses: ./.github/actions/docs-extract
+              with:
+                  output-dir: ./debugging/generated
+                  packages-dir: ./packages
+
             - name: Build
               run: pnpm build
 

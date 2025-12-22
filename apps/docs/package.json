@@ -1,0 +1,49 @@
+{
+    "name": "@seedcord/docs",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@radix-ui/react-dialog": "^1.1.15",
+        "@radix-ui/react-dropdown-menu": "^2.1.16",
+        "@radix-ui/react-popover": "^1.1.15",
+        "@radix-ui/react-slot": "^1.2.4",
+        "@radix-ui/react-tooltip": "^1.2.8",
+        "@seedcord/docs-engine": "workspace:*",
+        "@seedcord/docs-generator": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/types": "workspace:*",
+        "@tailwindcss/postcss": "^4.1.18",
+        "cmdk": "^1.1.1",
+        "lucide-react": "^0.562.0",
+        "next": "^16.1.0",
+        "next-themes": "^0.4.6",
+        "postcss": "^8.5.6",
+        "prettier": "catalog:deps",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3",
+        "shiki": "^3.20.0",
+        "tailwindcss": "^4.1.18",
+        "type-fest": "catalog:deps",
+        "typedoc": "catalog:deps",
+        "zustand": "^5.0.9"
+    },
+    "devDependencies": {
+        "@seedcord/tsconfig": "workspace:^",
+        "@types/react": "^19.2.7",
+        "@types/react-dom": "^19.2.3",
+        "eslint-config-next": "^16.1.0",
+        "eslint-plugin-jsx-a11y": "^6.10.2",
+        "prettier-plugin-tailwindcss": "^0.7.2",
+        "typescript": "catalog:peer"
+    }
+}

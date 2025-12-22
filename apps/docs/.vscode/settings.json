@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.css": "tailwindcss"
+    },
+    "editor.quickSuggestions": { "strings": "on", "comments": "on" },
+    "tailwindCSS.classFunctions": ["cn", "clsx", "cva", "tw", "tw\\.[a-zA-Z]+"],
+    "tailwindCSS.classAttributes": ["class", "className", "myClassList"]
+}
