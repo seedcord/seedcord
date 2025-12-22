@@ -1,113 +1,113 @@
 pkg:seedcord:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/seedcord/**'
-          - any-glob-to-any-file: 'seedcord/**'
-    - issues:
-          - title: '/pkg:seedcord/i'
-          - body: '/pkg:seedcord/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/seedcord/**'
+      - any-glob-to-any-file: 'seedcord/**'
+  - issues:
+      - title: '/pkg:seedcord/i'
+      - body: '/pkg:seedcord/i'
 pkg:mock:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/mock/**'
-    - issues:
-          - title: '/pkg:mock/i'
-          - body: '/pkg:mock/i'
+  - changed-files:
+      - any-glob-to-any-file: 'mock/**'
+  - issues:
+      - title: '/pkg:mock/i'
+      - body: '/pkg:mock/i'
 pkg:services:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/services/**'
-    - issues:
-          - title: '/pkg:services/i'
-          - body: '/pkg:services/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/services/**'
+  - issues:
+      - title: '/pkg:services/i'
+      - body: '/pkg:services/i'
 pkg:plugins:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/plugins/**'
-    - issues:
-          - title: '/pkg:plugins/i'
-          - body: '/pkg:plugins/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/plugins/**'
+  - issues:
+      - title: '/pkg:plugins/i'
+      - body: '/pkg:plugins/i'
 pkg:types:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/types/**'
-    - issues:
-          - title: '/pkg:types/i'
-          - body: '/pkg:types/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/types/**'
+  - issues:
+      - title: '/pkg:types/i'
+      - body: '/pkg:types/i'
 pkg:utils:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/utils/**'
-    - issues:
-          - title: '/pkg:utils/i'
-          - body: '/pkg:utils/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/utils/**'
+  - issues:
+      - title: '/pkg:utils/i'
+      - body: '/pkg:utils/i'
 pkg:eslint-config:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/eslint-config/**'
-    - issues:
-          - title: '/pkg:eslint-config/i'
-          - body: '/pkg:eslint-config/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-config/**'
+  - issues:
+      - title: '/pkg:eslint-config/i'
+      - body: '/pkg:eslint-config/i'
 pkg:tsconfig:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/tsconfig/**'
-    - issues:
-          - title: '/pkg:tsconfig/i'
-          - body: '/pkg:tsconfig/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/tsconfig/**'
+  - issues:
+      - title: '/pkg:tsconfig/i'
+      - body: '/pkg:tsconfig/i'
 pkg:tsup-config:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/tsup-config/**'
-    - issues:
-          - title: '/pkg:tsup-config/i'
-          - body: '/pkg:tsup-config/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/tsup-config/**'
+  - issues:
+      - title: '/pkg:tsup-config/i'
+      - body: '/pkg:tsup-config/i'
 pkg:docs-generator:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/docs-generator/**'
-    - issues:
-          - title: '/pkg:docs-generator/i'
-          - body: '/pkg:docs-generator/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/docs-generator/**'
+  - issues:
+      - title: '/pkg:docs-generator/i'
+      - body: '/pkg:docs-generator/i'
 pkg:docs-engine:
-    - changed-files:
-          - any-glob-to-any-file: 'packages/docs-engine/**'
-    - issues:
-          - title: '/pkg:docs-engine/i'
-          - body: '/pkg:docs-engine/i'
+  - changed-files:
+      - any-glob-to-any-file: 'packages/docs-engine/**'
+  - issues:
+      - title: '/pkg:docs-engine/i'
+      - body: '/pkg:docs-engine/i'
 area:docs:
-    - changed-files:
-          - any-glob-to-any-file: 'docs/**'
-          - any-glob-to-any-file: '**/*.md'
-    - issues:
-          - title: '/docs?/i'
-          - body: '/docs?/i'
+  - changed-files:
+      - any-glob-to-any-file: 'docs/**'
+      - any-glob-to-any-file: '**/*.md'
+  - issues:
+      - title: '/docs?/i'
+      - body: '/docs?/i'
 area:tests:
-    - changed-files:
-          - any-glob-to-any-file: '**/*.test.ts'
-          - any-glob-to-any-file: '**/*.spec.ts'
-          - any-glob-to-any-file: '**/__tests__/**/*'
-    - issues:
-          - title: '/tests?/i'
-          - body: '/tests?/i'
+  - changed-files:
+      - any-glob-to-any-file: '**/*.test.ts'
+      - any-glob-to-any-file: '**/*.spec.ts'
+      - any-glob-to-any-file: '**/__tests__/**/*'
+  - issues:
+      - title: '/tests?/i'
+      - body: '/tests?/i'
 area:ci:
-    - changed-files:
-          - any-glob-to-any-file: '.github/**'
-          - any-glob-to-any-file: turbo.json
-          - any-glob-to-any-file: turbo.jsonc
-          - any-glob-to-any-file: pnpm-workspace.yaml
-          - any-glob-to-any-file: pnpm-lock.yaml
-    - issues:
-          - title: '/ci/i'
-          - body: '/ci/i'
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
+      - any-glob-to-any-file: turbo.json
+      - any-glob-to-any-file: turbo.jsonc
+      - any-glob-to-any-file: pnpm-workspace.yaml
+      - any-glob-to-any-file: pnpm-lock.yaml
+  - issues:
+      - title: '/ci/i'
+      - body: '/ci/i'
 area:config:
-    - changed-files:
-          - any-glob-to-any-file: '**/*.mjs'
-          - any-glob-to-any-file: '**/*.cjs'
-          - any-glob-to-any-file: '**/*.json'
-          - any-glob-to-any-file: tsconfig.json
-          - any-glob-to-any-file: 'tsconfig/**'
-          - any-glob-to-any-file: eslint.config.mjs
-          - any-glob-to-any-file: vitest.config.ts
-    - issues:
-          - title: '/config/i'
-          - body: '/config/i'
+  - changed-files:
+      - any-glob-to-any-file: '**/*.mjs'
+      - any-glob-to-any-file: '**/*.cjs'
+      - any-glob-to-any-file: '**/*.json'
+      - any-glob-to-any-file: tsconfig.json
+      - any-glob-to-any-file: 'tsconfig/**'
+      - any-glob-to-any-file: eslint.config.mjs
+      - any-glob-to-any-file: vitest.config.ts
+  - issues:
+      - title: '/config/i'
+      - body: '/config/i'
 area:assets:
-    - changed-files:
-          - any-glob-to-any-file: 'assets/**'
-          - any-glob-to-any-file: '**/*.png'
-          - any-glob-to-any-file: '**/*.svg'
-          - any-glob-to-any-file: '**/*.jpg'
-    - issues:
-          - title: '/assets?/i'
-          - body: '/assets?/i'
+  - changed-files:
+      - any-glob-to-any-file: 'assets/**'
+      - any-glob-to-any-file: '**/*.png'
+      - any-glob-to-any-file: '**/*.svg'
+      - any-glob-to-any-file: '**/*.jpg'
+  - issues:
+      - title: '/assets?/i'
+      - body: '/assets?/i'

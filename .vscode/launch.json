@@ -10,7 +10,7 @@
             "runtimeArgs": ["start:watch"],
             "console": "integratedTerminal",
             "restart": true,
-            "cwd": "${workspaceFolder}/packages/mock",
+            "cwd": "${workspaceFolder}/mock",
             "presentation": {
                 "hidden": false,
                 "group": "main"
@@ -25,7 +25,7 @@
             "runtimeExecutable": "pnpm",
             "runtimeArgs": ["dev:bot"],
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder}/packages/mock",
+            "cwd": "${workspaceFolder}/mock",
             "presentation": {
                 "hidden": false,
                 "group": "secondary"
