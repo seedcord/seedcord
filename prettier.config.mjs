@@ -1,17 +1,3 @@
-/** @type {import("prettier").Config} */
-const config = {
-    tabWidth: 4,
-    semi: true,
-    singleQuote: true,
-    trailingComma: 'none',
-    printWidth: 120,
-    bracketSpacing: true,
-    arrowParens: 'always',
-    endOfLine: 'lf',
-    useTabs: false,
-    quoteProps: 'as-needed',
-    bracketSameLine: false,
-    proseWrap: 'preserve'
-};
+import { PRETTIER_CONFIG } from '@seedcord/eslint-config';
 
-export default config;
+export default PRETTIER_CONFIG;

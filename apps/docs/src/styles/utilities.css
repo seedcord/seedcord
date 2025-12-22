@@ -1,0 +1,233 @@
+@layer utilities {
+    .text-subtle {
+        @apply text-[color-mix(in_oklab,var(--color-text)_70%,transparent)];
+    }
+
+    .bg-page {
+        @apply bg-(--bg-dim);
+    }
+
+    .hover-bg-accent-a:hover {
+        @apply bg-(--accent-a-hover);
+    }
+
+    .hover-bg-accent-b:hover {
+        @apply bg-(--accent-b-hover);
+    }
+
+    .shadow-soft-token {
+        @apply shadow-(--shadow-soft-token,var(--shadow-soft));
+    }
+}
+
+@layer utilities {
+    .bg-surface-98 {
+        @apply bg-(--surface-98);
+    }
+
+    .bg-surface-97 {
+        @apply bg-(--surface-97);
+    }
+
+    .bg-surface-96 {
+        @apply bg-(--surface-96);
+    }
+
+    .bg-surface-95 {
+        @apply bg-(--surface-95);
+    }
+
+    .bg-surface-94 {
+        @apply bg-(--surface-94);
+    }
+
+    .bg-surface-92 {
+        @apply bg-(--surface-92);
+    }
+
+    .card {
+        @apply rounded-2xl border border-(--border);
+    }
+
+    .panel {
+        @apply rounded-xl border border-(--border) bg-(--surface-96);
+    }
+
+    .surface-pill {
+        @apply bg-(--surface-94);
+    }
+
+    .surface-chip {
+        @apply rounded-sm bg-(--surface-92);
+    }
+}
+
+/* TODO: Refactor and use the correct tailwind layer and the @apply things */
+@layer utilities {
+    .border-border {
+        border-color: var(--border);
+    }
+
+    .bg-surface {
+        background-color: var(--surface);
+    }
+
+    .shadow-soft {
+        box-shadow: 0 10px 30px rgba(7, 9, 23, 0.08);
+    }
+
+    .code-scroll-area {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .code-scroll-content {
+        display: inline-block;
+        min-width: 100%;
+    }
+
+    .code-scroll-area pre {
+        width: max-content;
+        min-width: 100%;
+    }
+
+    .code-scroll-area .shiki-theme-group {
+        display: inline-flex;
+        width: max-content;
+    }
+
+    .code-scroll-area .shiki {
+        display: inline-block;
+        width: max-content !important;
+    }
+
+    .code-scroll-area .shiki code {
+        width: max-content;
+    }
+
+    .code-scroll-area::-webkit-scrollbar {
+        height: 10px;
+    }
+
+    .code-scroll-area::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .code-scroll-area::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.22);
+        border-radius: 9999px;
+        opacity: 0;
+        transition: opacity 220ms ease;
+    }
+
+    .code-scroll-area.show-scrollbar::-webkit-scrollbar-thumb,
+    .code-scroll-area:hover::-webkit-scrollbar-thumb {
+        opacity: 1;
+    }
+
+    .code-scroll-area.show-scrollbar {
+        scrollbar-width: thin;
+    }
+
+    .code-scroll-area.show-scrollbar {
+        --scrollbar-thumb-opacity: 1;
+    }
+
+    .shiki {
+        background-color: transparent !important;
+        font-family: var(--font-geist-mono, 'JetBrains Mono', monospace);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0.1rem 0.2rem;
+    }
+
+    .shiki code {
+        display: block;
+        width: 100%;
+    }
+
+    .shiki-theme-group {
+        position: relative;
+    }
+
+    .shiki-inline-group {
+        display: inline-flex;
+        gap: 0.35rem;
+    }
+
+    .shiki-inline-group .shiki-inline {
+        display: inline;
+    }
+
+    .shiki a,
+    .shiki-inline a {
+        color: inherit;
+        text-decoration-line: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        text-decoration-color: currentColor;
+    }
+
+    .shiki a:focus,
+    .shiki a:hover,
+    .shiki-inline a:focus,
+    .shiki-inline a:hover {
+        opacity: 0.95;
+    }
+
+    .shiki a *,
+    .shiki-inline a * {
+        text-decoration-line: underline;
+        text-decoration-thickness: 1px;
+        text-underline-offset: 2px;
+        text-decoration-color: currentColor;
+    }
+
+    .shiki-theme-group .shiki-light,
+    .shiki-inline-group .shiki-light {
+        display: none;
+    }
+
+    .deprecated-card {
+        position: relative;
+        border: 3px solid var(--deprecated-dark);
+        border-radius: 1rem;
+    }
+
+    .deprecated-card::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: -1px;
+        width: 28px;
+        height: 20px;
+        background: transparent;
+        z-index: 2;
+    }
+
+    .deprecated-label {
+        position: absolute;
+        top: -0.6rem;
+        left: 0.75rem;
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.625rem;
+        font-weight: 700;
+        color: white;
+        border-radius: 9999px;
+        background-color: var(--deprecated-dark);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+}
