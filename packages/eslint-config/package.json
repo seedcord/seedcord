@@ -39,11 +39,11 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@eslint/eslintrc": "^3.3.1",
+        "@eslint/eslintrc": "^3.3.3",
         "@types/eslint-plugin-security": "^3.0.0",
         "@types/lodash.merge": "^4.6.9",
-        "@typescript-eslint/eslint-plugin": "^8.47.0",
-        "@typescript-eslint/parser": "^8.47.0",
+        "@typescript-eslint/eslint-plugin": "^8.50.0",
+        "@typescript-eslint/parser": "^8.50.0",
         "eslint": "catalog:peer",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.4",
@@ -53,7 +53,7 @@
         "eslint-plugin-tsdoc": "^0.5.0",
         "lodash.merge": "^4.6.2",
         "prettier": "catalog:deps",
-        "typescript-eslint": "^8.47.0"
+        "typescript-eslint": "^8.50.0"
     },
     "devDependencies": {
         "tsup": "^8.5.1"
