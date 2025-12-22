@@ -22,6 +22,9 @@
         "mikestead.dotenv",
 
         // Development productivity
-        "gruntfuggly.todo-tree"
+        "gruntfuggly.todo-tree",
+
+        // Icon themes (so we can use the custom seedcord icon)
+        "PKief.material-icon-theme"
     ]
 }
