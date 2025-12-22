@@ -1,0 +1,42 @@
+{
+    "name": "@seedcord/cli",
+    "type": "module",
+    "version": "0.0.0",
+    "private": true,
+    "description": "CLI for seedcord",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/materwelonDhruv/seedcord.git",
+        "directory": "packages/cli"
+    },
+    "files": [],
+    "scripts": {
+        "dev": "tsx src/index.ts",
+        "build": "tsup",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@clack/prompts": "^0.11.0",
+        "@commander-js/extra-typings": "^14.0.0",
+        "chalk": "catalog:deps",
+        "commander": "^14.0.2",
+        "lodash.merge": "^4.6.2"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsup-config": "workspace:^",
+        "@types/lodash.merge": "^4.6.9"
+    }
+}
