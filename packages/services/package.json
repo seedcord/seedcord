@@ -44,7 +44,7 @@
         "discord.js": "catalog:deps",
         "envapt": "catalog:deps",
         "type-fest": "catalog:deps",
-        "winston": "^3.18.3"
+        "winston": "^3.19.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",

@@ -43,7 +43,7 @@
         "@seedcord/utils": "workspace:^",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps",
-        "kysely": "^0.28.8",
+        "kysely": "^0.28.9",
         "mongoose": "catalog:deps",
         "pg": "^8.16.3",
         "reflect-metadata": "catalog:deps",
@@ -51,10 +51,10 @@
         "type-fest": "catalog:deps"
     },
     "devDependencies": {
-        "@types/pg": "^8.15.6",
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/tsup-config": "workspace:^"
+        "@seedcord/tsup-config": "workspace:^",
+        "@types/pg": "^8.16.0"
     },
     "publishConfig": {
         "access": "public",
