@@ -53,6 +53,9 @@ interface CreateConfigOptions {
     /** Root directory for TypeScript configuration (default: `process.cwd()`) */
     tsconfigRootDir?: string;
 
+    /** Additional glob patterns to extend the shared ignore list */
+    generalIgnores?: string[];
+
     /** Additional user-defined ESLint configuration items to merge */
     userConfigs?: FlatConfigItem[];
 
@@ -98,6 +101,7 @@ function pluginBlock(params: {
 function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const {
         tsconfigRootDir = process.cwd(),
+        generalIgnores = [],
         userConfigs = [],
         registerImportPlugin = true,
         registerPrettierPlugin = true,
@@ -124,7 +128,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
     return defineConfig(
         // Global ignores
-        { ignores: [...GLOBAL_IGNORES] },
+        { ignores: [...GLOBAL_IGNORES, ...generalIgnores] },
 
         // Base ESLint configuration for JavaScript files
         {
