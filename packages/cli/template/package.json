@@ -1,0 +1,24 @@
+{
+  "name": "seed",
+  "version": "1.0.0",
+  "description": "",
+  "private": "true",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx bot.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.0",
+  "devDependencies": {
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@types/node": "^24.2.1",
+    "discord.js": "^14.21.0",
+    "seedcord": "0.1.0-alpha.1"
+  }
+}

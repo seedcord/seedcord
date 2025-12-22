@@ -1,4 +1,5 @@
 import { defineConfig } from 'eslint/config';
+import path from 'path';
 import prettierConfig from 'eslint-config-prettier';
 import eslintImport from 'eslint-plugin-import';
 import eslintPrettier from 'eslint-plugin-prettier';
@@ -126,9 +127,14 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         );
     }
 
+    // Resolve general ignores relative to the repository root so callers can
+    // provide globs that are local to their package (e.g. "template/**/*.ts").
+    const ignoreBase = path.relative(process.cwd(), tsconfigRootDir).replace(/\\/g, '/');
+    const resolvedGeneralIgnores = generalIgnores.map((g) => (ignoreBase ? `${ignoreBase}/${g}` : g));
+
     return defineConfig(
         // Global ignores
-        { ignores: [...GLOBAL_IGNORES, ...generalIgnores] },
+        { ignores: [...GLOBAL_IGNORES, ...resolvedGeneralIgnores] },
 
         // Base ESLint configuration for JavaScript files
         {

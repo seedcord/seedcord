@@ -36,7 +36,6 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
-        "tsup": "^8.5.1",
         "typescript": "catalog:peer"
     },
     "publishConfig": {
