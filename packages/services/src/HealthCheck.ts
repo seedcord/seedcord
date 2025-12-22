@@ -21,7 +21,7 @@ export class HealthCheck {
     public readonly logger = new Logger('HealthCheck');
 
     /**
-     * Set `PORT` in your `.env` to change the default port (6956).
+     * Set `HEALTH_CHECK_PORT` in your `.env` to change the default port (6956).
      */
     @Envapt('HEALTH_CHECK_PORT', { fallback: 6956 })
     declare public readonly port: number;
