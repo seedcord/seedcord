@@ -11,7 +11,7 @@
     },
     "scripts": {
         "dev": "seedcord dev",
-        "build": "tsc",
+        "build": "seedcord build",
         "start": "pnpm build && node dist/index.mjs",
         "clean": "rm -rf dist",
         "lint": "eslint 'src/**/*.{ts,tsx}' --cache",

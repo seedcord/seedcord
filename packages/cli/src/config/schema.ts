@@ -1,5 +1,20 @@
+export interface SeedcordBuildConfig {
+    /**
+     * Directory where build artifacts should be emitted. Defaults to ./dist relative to the config directory.
+     */
+    outDir?: string;
+    /**
+     * Optional tsconfig path to use for builds. Defaults to the nearest tsconfig.build.json or tsconfig.json.
+     */
+    tsconfig?: string;
+    /**
+     * File name (or relative path) for the bootstrap file emitted inside the build output.
+     */
+    bootstrap?: string;
+}
+
 /**
- * Configuration used by the Seedcord CLI when running `seedcord dev`.
+ * Configuration used by the Seedcord CLI when running `seedcord dev` or `seedcord build`.
  */
 export interface SeedcordDevConfig {
     /**
@@ -10,16 +25,34 @@ export interface SeedcordDevConfig {
      * Path to the module whose default export is a configured Seedcord instance.
      */
     instance: string;
+    /**
+     * Entry file that should be executed when starting the bot (and copied into the build output).
+     */
+    entry: string;
+    /**
+     * Optional build configuration overrides.
+     */
+    build?: SeedcordBuildConfig;
+}
+
+export interface ResolvedSeedcordBuildConfig {
+    outDir: string;
+    bootstrap: string;
+    tsconfig?: string;
 }
 
 /**
  * Fully resolved configuration with absolute file system paths.
  */
-export interface ResolvedSeedcordDevConfig extends Required<SeedcordDevConfig> {
+export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build'>> {
     /**
      * Absolute path to the config file that produced this resolution.
      */
     configFile: string;
+    /**
+     * Resolved build options with absolute paths.
+     */
+    build: ResolvedSeedcordBuildConfig;
 }
 
 /**

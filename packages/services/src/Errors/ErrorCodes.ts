@@ -94,5 +94,25 @@ export enum SeedcordErrorCode {
     /** Seedcord instance export is missing a start() method. */
     CliInstanceInvalid = 3108,
     /** Seedcord instance threw during startup. */
-    CliStartFailed = 3109
+    CliStartFailed = 3109,
+    /** Config is missing the required entry string. */
+    CliConfigMissingEntry = 3110,
+    /** Config build options must be an object when provided. */
+    CliConfigInvalidBuild = 3111,
+    /** Config build outDir must be a string when provided. */
+    CliConfigInvalidBuildOutDir = 3112,
+    /** Config build tsconfig must be a string when provided. */
+    CliConfigInvalidBuildTsconfig = 3113,
+    /** Config build bootstrap must be a string when provided. */
+    CliConfigInvalidBuildBootstrap = 3114,
+    /** Entry file must be inside the configured root directory. */
+    CliConfigEntryOutsideRoot = 3115,
+    /** Unable to locate a TypeScript config file for builds. */
+    CliBuildTsconfigNotFound = 3116,
+    /** Failed to parse the resolved tsconfig file. */
+    CliBuildTsconfigInvalid = 3117,
+    /** TypeScript reported diagnostics during emit. */
+    CliBuildFailed = 3118,
+    /** Unable to write the generated bootstrap file. */
+    CliBootstrapWriteFailed = 3119
 }

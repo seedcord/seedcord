@@ -20,10 +20,12 @@ const silentLogger: ILogger = {
 };
 
 describe('ConfigLoader', () => {
-    it('resolves entry relative to the config directory', async () => {
+    it('resolves paths and build defaults relative to config directory', async () => {
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(): TModule {
-                return { default: { instance: './bot.ts', root: './src' } satisfies SeedcordDevConfig } as TModule;
+                return {
+                    default: { instance: './bot.ts', root: './src', entry: './index.ts' } satisfies SeedcordDevConfig
+                } as TModule;
             }
         };
 
@@ -34,12 +36,16 @@ describe('ConfigLoader', () => {
 
         expect(resolved.root).toBe(resolve(process.cwd(), 'src'));
         expect(resolved.instance).toBe(resolve(process.cwd(), 'src/bot.ts'));
+        expect(resolved.entry).toBe(resolve(process.cwd(), 'src/index.ts'));
+        expect(resolved.build.outDir).toBe(resolve(process.cwd(), 'dist'));
+        expect(resolved.build.bootstrap).toBe(resolve(process.cwd(), 'dist/index.mjs'));
+        expect(resolved.build.tsconfig).toBeUndefined();
     });
 
-    it('throws when entry is missing', async () => {
+    it('throws when instance is missing', async () => {
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(): TModule {
-                return { default: {} } as TModule;
+                return { default: { entry: './index.ts' } } as TModule;
             }
         };
 
@@ -47,6 +53,20 @@ describe('ConfigLoader', () => {
 
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
             'Config must include an `instance` string'
+        );
+    });
+
+    it('throws when entry is missing', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(): TModule {
+                return { default: { instance: './bot.ts' } } as TModule;
+            }
+        };
+
+        const loader = new ConfigLoader(moduleLoader, silentLogger);
+
+        await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
+            'Config must include an `entry` string'
         );
     });
 });
@@ -58,7 +78,16 @@ describe('SeedcordDevRunner', () => {
 
         const locator = { locate: vi.fn(() => configPath) };
         const configLoader = {
-            load: vi.fn(() => ({ instance: instancePath, root: dirname(instancePath), configFile: configPath }))
+            load: vi.fn(() => ({
+                instance: instancePath,
+                root: dirname(instancePath),
+                configFile: configPath,
+                entry: instancePath,
+                build: {
+                    outDir: join(process.cwd(), 'dist'),
+                    bootstrap: join(process.cwd(), 'dist/index.mjs')
+                }
+            }))
         };
         const start = vi.fn(() => undefined);
         const instanceLoader = { load: vi.fn(() => ({ start })) };

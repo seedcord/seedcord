@@ -1,5 +1,6 @@
 // CLI command exports
 export { DevCommand } from './commands/DevCommand';
+export { BuildCommand } from './commands/BuildCommand';
 
 // Config schema and helpers
 export { ConfigLoader } from './config/ConfigLoader';
@@ -13,6 +14,9 @@ export { RuntimeModuleLoader } from './modules/RuntimeModuleLoader';
 
 // Runtime helpers
 export { SeedcordDevRunner } from './runtime/SeedcordDevRunner';
+export { SeedcordBuildRunner } from './runtime/SeedcordBuildRunner';
+export { TypeScriptProjectBuilder } from './builder/TypeScriptProjectBuilder';
+export { BootstrapWriter } from './builder/BootstrapWriter';
 export { SeedcordInstanceLoader } from './runtime/SeedcordInstanceLoader';
 
 // Shared utilities

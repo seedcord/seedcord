@@ -34,6 +34,12 @@ catalogs:
     eslint:
       specifier: 9.39.2
       version: 9.39.1
+    tsup:
+      specifier: 8.5.1
+      version: 8.5.1
+    tsx:
+      specifier: 4.20.6
+      version: 4.20.6
     typescript:
       specifier: 5.9.3
       version: 5.9.3
@@ -233,9 +239,6 @@ importers:
       '@seedcord/tsconfig':
         specifier: workspace:^
         version: link:../packages/tsconfig
-      '@seedcord/tsup-config':
-        specifier: workspace:^
-        version: link:../packages/tsup-config
 
   packages/cli:
     dependencies:
@@ -260,15 +263,12 @@ importers:
       jiti:
         specifier: ^2.6.1
         version: 2.6.1
-      lodash.merge:
-        specifier: ^4.6.2
-        version: 4.6.2
-      tsx:
-        specifier: ^4.20.6
-        version: 4.20.6
-      typescript:
+      tsup:
         specifier: catalog:peer
-        version: 5.9.3
+        version: 8.5.1(@swc/core@1.15.3)(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.2)
+      tsx:
+        specifier: catalog:peer
+        version: 4.20.6
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:^
@@ -279,9 +279,9 @@ importers:
       '@seedcord/tsup-config':
         specifier: workspace:^
         version: link:../tsup-config
-      '@types/lodash.merge':
-        specifier: ^4.6.9
-        version: 4.6.9
+      typescript:
+        specifier: catalog:peer
+        version: 5.9.3
 
   packages/docs-engine:
     dependencies:

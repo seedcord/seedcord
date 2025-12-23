@@ -47,16 +47,16 @@
         "chalk": "catalog:deps",
         "commander": "^14.0.2",
         "jiti": "^2.6.1",
-        "lodash.merge": "^4.6.2",
         "@seedcord/services": "workspace:^",
         "@seedcord/types": "workspace:^",
-        "tsx": "^4.20.6"
+        "tsx": "catalog:peer",
+        "tsup": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:^",
         "@seedcord/tsconfig": "workspace:^",
         "@seedcord/tsup-config": "workspace:^",
-        "@types/lodash.merge": "^4.6.9"
+        "typescript": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",

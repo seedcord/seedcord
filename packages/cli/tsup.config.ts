@@ -11,7 +11,8 @@ export default createTsupConfig({
         'jiti',
         'tsx',
         'tsx/esm/api',
-        'seedcord'
+        'seedcord',
+        'typescript'
     ],
     banner: {
         js: 'import { createRequire } from "node:module"; const require = createRequire(import.meta.url);'
