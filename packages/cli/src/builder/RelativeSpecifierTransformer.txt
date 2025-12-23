@@ -1,1 +1,0 @@
-// Deprecated placeholder retained for git history. Specifier rewriting handled externally.
