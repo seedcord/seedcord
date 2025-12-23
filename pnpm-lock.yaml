@@ -97,10 +97,10 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0
       tsup:
-        specifier: ^8.5.1
+        specifier: catalog:peer
         version: 8.5.1(@swc/core@1.15.3)(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)(yaml@2.8.2)
       tsx:
-        specifier: ^4.20.6
+        specifier: catalog:peer
         version: 4.20.6
       turbo:
         specifier: ^2.6.1
@@ -260,6 +260,9 @@ importers:
       commander:
         specifier: ^14.0.2
         version: 14.0.2
+      fix-esm-import-path:
+        specifier: ^1.10.3
+        version: 1.10.3
       jiti:
         specifier: ^2.6.1
         version: 2.6.1
@@ -3371,6 +3374,10 @@ packages:
 
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
+
+  fix-esm-import-path@1.10.3:
+    resolution: {integrity: sha512-mX98PYCWpLwJD7tuMvBXWJtQ5Se6eEiwC77VDP0s3xFvtNgixLGm95ebvEK16cbffV2doO5Vs9Jjg9RuNvhXYQ==}
+    hasBin: true
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -8497,6 +8504,12 @@ snapshots:
       magic-string: 0.30.21
       mlly: 1.8.0
       rollup: 4.54.0
+
+  fix-esm-import-path@1.10.3:
+    dependencies:
+      debug: 4.4.3(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
 
   flat-cache@4.0.1:
     dependencies:

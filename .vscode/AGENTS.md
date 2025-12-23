@@ -38,7 +38,7 @@
 
 - Moving and renaming files should be done with the `mv` command to ensure proper git tracking. It's also better than creating a new file and replacing contents.
 
-- For files you plan to delete, simply comment out all the code in it, and update the file name using the `mv` command to append `.deprecated` to the file name. This way, git will track the change and you can always recover the file if needed.
+- For files you plan to delete, simply change the file ext to `txt`. This way, git will track the change and you can always recover the file if needed.
 
 - If files are large and cause a lint error because of that, consider breaking them down into smaller, more manageable files.
 

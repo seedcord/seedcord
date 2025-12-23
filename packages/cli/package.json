@@ -49,6 +49,7 @@
         "jiti": "^2.6.1",
         "@seedcord/services": "workspace:^",
         "@seedcord/types": "workspace:^",
+        "fix-esm-import-path": "^1.10.3",
         "tsx": "catalog:peer",
         "tsup": "catalog:peer"
     },

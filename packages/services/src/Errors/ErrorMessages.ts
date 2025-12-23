@@ -94,8 +94,6 @@ const messages = {
         `Failed to start Seedcord from ${instancePath}: ${reason}.`,
     [SeedcordErrorCode.CliBuildTsconfigNotFound]: (hint: string) =>
         `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
-    [SeedcordErrorCode.CliBuildTsconfigInvalid]: (tsconfigPath: string, reason: string) =>
-        `Failed to parse tsconfig at ${tsconfigPath}: ${reason}.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
         `Failed to write bootstrap file at ${targetPath}: ${reason}.`
