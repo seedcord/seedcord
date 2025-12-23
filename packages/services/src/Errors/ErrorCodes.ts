@@ -75,5 +75,24 @@ export enum SeedcordErrorCode {
     /** A migration module failed to export the expected functions. */
     PluginKpgInvalidMigrationModule = 2207,
     /** An arbitrary (non-Error) failure was reported by a migration. */
-    PluginKpgNonErrorFailure = 2208
+    PluginKpgNonErrorFailure = 2208,
+
+    /** Config file default export was not an object. */
+    CliConfigInvalidExport = 3101,
+    /** Config is missing the required instance string. */
+    CliConfigMissingInstance = 3102,
+    /** Config root was provided but not a string. */
+    CliConfigInvalidRoot = 3103,
+    /** Unable to locate a Seedcord config file. */
+    CliConfigNotFound = 3104,
+    /** CLI entry file does not exist. */
+    CliEntryNotFound = 3105,
+    /** tsx failed to import the provided entry file. */
+    CliTsxImportFailed = 3106,
+    /** Native import and jiti fallback both failed. */
+    CliImportFailed = 3107,
+    /** Seedcord instance export is missing a start() method. */
+    CliInstanceInvalid = 3108,
+    /** Seedcord instance threw during startup. */
+    CliStartFailed = 3109
 }

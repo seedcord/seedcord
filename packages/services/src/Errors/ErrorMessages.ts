@@ -66,8 +66,24 @@ const messages = {
     [SeedcordErrorCode.PluginKpgNoMigrationFiles]: () => 'No migration files provided.',
     [SeedcordErrorCode.PluginKpgInvalidMigrationModule]: (filePath: string) =>
         `Migration file ${filePath} must export async functions up and down.`,
-    [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`
-} as const;
+    [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,
+
+    [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
+    [SeedcordErrorCode.CliConfigMissingInstance]: () =>
+        'Config must include an `instance` string that points to your Seedcord default export.',
+    [SeedcordErrorCode.CliConfigInvalidRoot]: () => 'Config `root` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
+        `Unable to locate a Seedcord config in ${baseDir}. Searched for ${candidates.join(', ')}.`,
+    [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${entryPath}.`,
+    [SeedcordErrorCode.CliTsxImportFailed]: (entryPath: string, reason: string) =>
+        `Failed to import ${entryPath} via tsx: ${reason}.`,
+    [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
+        `Failed to import ${entryPath}: ${nativeReason}. Fallback via jiti also failed: ${fallbackReason}.`,
+    [SeedcordErrorCode.CliInstanceInvalid]: () =>
+        'Seedcord instance must default export an object with a start() method.',
+    [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
+        `Failed to start Seedcord from ${instancePath}: ${reason}.`
+} satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**
  * Argument types for Seedcord error messages.
