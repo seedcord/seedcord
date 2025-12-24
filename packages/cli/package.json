@@ -4,7 +4,7 @@
     "version": "0.0.1",
     "description": "CLI for seedcord",
     "bin": {
-        "seedcord": "./dist/cli.mjs"
+        "seedcord": "./bin/seedcord.mjs"
     },
     "repository": {
         "type": "git",
@@ -12,6 +12,7 @@
         "directory": "packages/cli"
     },
     "files": [
+        "bin",
         "dist",
         "package.json",
         "README.md",
