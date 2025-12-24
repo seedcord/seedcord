@@ -1,9 +1,17 @@
 import { Envapter } from 'envapt';
-import { createLogger } from 'winston';
+import winston, { createLogger } from 'winston';
 
 import { TransportFactory } from './TransportFactory';
 
-import type { ChannelConfig, LoggerConfiguration, LoggerLevel, TransportConfig, WinstonInstance } from './Types';
+import type { ILoggerSink, ILoggerSinkHandle } from './Transports/SinkTransport';
+import type {
+    ChannelConfig,
+    LoggerConfiguration,
+    LoggerLevel,
+    TransportConfig,
+    WinstonInstance,
+    WinstonTransport
+} from './Types';
 
 /**
  * Manages Winston logger instances per channel with caching.
@@ -14,6 +22,17 @@ import type { ChannelConfig, LoggerConfiguration, LoggerLevel, TransportConfig, 
  */
 export class LoggerChannelRegistry {
     private static _instance: LoggerChannelRegistry | null = null;
+
+    private nextSinkId = 1;
+    private readonly sinks = new Map<
+        number,
+        {
+            readonly sink: ILoggerSink;
+            readonly muteConsole: boolean;
+            readonly transportsByChannel: Map<string, WinstonTransport>;
+            readonly removedConsoleByChannel: Map<string, WinstonTransport[]>;
+        }
+    >();
 
     private readonly DEFAULT_LEVEL: LoggerLevel = Envapter.isDevelopment
         ? 'silly'
@@ -121,19 +140,113 @@ export class LoggerChannelRegistry {
         );
 
         const effectiveLevel = channelConfig.level ?? this.DEFAULT_LEVEL;
-        const transports = (channelConfig.transports ?? []).map((transportConfig: TransportConfig) =>
-            this.transportFactory.build({
-                channel,
-                label: channel,
-                level: effectiveLevel,
-                config: transportConfig,
-                defaultFormat: channelConfig.format ?? 'pretty',
-                stripAnsi: channelConfig.stripAnsi ?? true
-            })
-        );
+
+        const consoleMuted = this.isConsoleMuted();
+
+        const transports = (channelConfig.transports ?? [])
+            .filter((transportConfig: TransportConfig) => !(consoleMuted && transportConfig.type === 'console'))
+            .map((transportConfig: TransportConfig) =>
+                this.transportFactory.build({
+                    channel,
+                    label: channel,
+                    level: effectiveLevel,
+                    config: transportConfig,
+                    defaultFormat: channelConfig.format ?? 'pretty',
+                    stripAnsi: channelConfig.stripAnsi ?? true
+                })
+            );
 
         const logger = createLogger({ level: effectiveLevel, transports });
+
+        for (const entry of this.sinks.values()) {
+            this.applySinkToCachedLogger(channel, logger, entry);
+        }
+
         this.cache.set(channel, logger);
         return logger;
+    }
+
+    private isConsoleMuted(): boolean {
+        for (const entry of this.sinks.values()) {
+            if (entry.muteConsole) return true;
+        }
+        return false;
+    }
+
+    public installSink(sink: ILoggerSink, options?: { muteConsole?: boolean }): ILoggerSinkHandle {
+        const id = this.nextSinkId;
+        this.nextSinkId += 1;
+
+        const record = {
+            sink,
+            muteConsole: options?.muteConsole ?? true,
+            transportsByChannel: new Map<string, WinstonTransport>(),
+            removedConsoleByChannel: new Map<string, WinstonTransport[]>()
+        };
+
+        this.sinks.set(id, record);
+
+        for (const [channel, logger] of this.cache.entries()) {
+            this.applySinkToCachedLogger(channel, logger, record);
+        }
+
+        return new (class implements ILoggerSinkHandle {
+            public constructor(
+                private readonly registry: LoggerChannelRegistry,
+                private readonly key: number
+            ) {}
+            public dispose(): void {
+                this.registry.uninstallSink(this.key);
+            }
+        })(this, id);
+    }
+
+    private uninstallSink(id: number): void {
+        const record = this.sinks.get(id);
+        if (!record) return;
+
+        for (const [channel, logger] of this.cache.entries()) {
+            const sinkTransport = record.transportsByChannel.get(channel);
+            if (sinkTransport) logger.remove(sinkTransport);
+
+            const removed = record.removedConsoleByChannel.get(channel);
+            if (removed?.length) {
+                for (const t of removed) logger.add(t);
+            }
+        }
+
+        this.sinks.delete(id);
+    }
+
+    private applySinkToCachedLogger(
+        channel: string,
+        logger: WinstonInstance,
+        record: {
+            readonly sink: ILoggerSink;
+            readonly muteConsole: boolean;
+            readonly transportsByChannel: Map<string, WinstonTransport>;
+            readonly removedConsoleByChannel: Map<string, WinstonTransport[]>;
+        }
+    ): void {
+        if (record.muteConsole) {
+            const removed: WinstonTransport[] = [];
+            for (const t of logger.transports) {
+                if (t instanceof winston.transports.Console) {
+                    removed.push(t);
+                }
+            }
+            if (removed.length) {
+                for (const t of removed) logger.remove(t);
+                record.removedConsoleByChannel.set(channel, removed);
+            }
+        }
+
+        const sinkTransport = this.transportFactory.buildSinkTransport(
+            { channel, label: channel, level: logger.level as unknown as LoggerLevel },
+            record.sink
+        );
+
+        logger.add(sinkTransport);
+        record.transportsByChannel.set(channel, sinkTransport);
     }
 }

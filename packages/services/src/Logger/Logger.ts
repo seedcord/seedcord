@@ -53,7 +53,8 @@ export class Logger implements ILogger {
     constructor(label: string, options?: LoggerOptions) {
         this.label = label;
         this.channel = options?.channel ?? this.registry.getDefaultChannel();
-        this.logger = this.registry.get(this.channel).child({ label: this.label });
+        this.logger = this.registry.get(this.channel).child({ label: this.label, channel: this.channel });
+
         this.utils = new LoggerUtilitiesAccessor(this);
     }
 
@@ -64,7 +65,7 @@ export class Logger implements ILogger {
      */
     public setChannel(channel: string): void {
         this.channel = channel;
-        this.logger = this.registry.get(channel).child({ label: this.label });
+        this.logger = this.registry.get(channel).child({ label: this.label, channel });
     }
 
     /**

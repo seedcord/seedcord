@@ -5,7 +5,9 @@ import { Envapter } from 'envapt';
 import { format, transports } from 'winston';
 
 import { LogFormatter } from './LogFormatter';
+import { SinkTransport } from './Transports/SinkTransport';
 
+import type { ILoggerSink } from './Transports/SinkTransport';
 import type { LoggerFormatMode, LoggerLevel, TransportConfig, WinstonTransport } from './Types';
 
 /**
@@ -19,6 +21,12 @@ export interface TransportBuildInput {
     config: TransportConfig;
     defaultFormat: LoggerFormatMode;
     stripAnsi: boolean;
+}
+
+interface BuildInput {
+    readonly channel: string;
+    readonly label: string;
+    readonly level: LoggerLevel;
 }
 
 /**
@@ -125,6 +133,17 @@ export class TransportFactory {
             ...(input.config.maxFiles !== undefined ? { maxFiles: input.config.maxFiles } : {}),
             tailable: true,
             format: this.buildFileFormat(input.label, effectiveFormat, shouldStripAnsi)
+        });
+    }
+
+    public buildSinkTransport(input: BuildInput, sink: ILoggerSink): WinstonTransport {
+        const format = this.buildConsoleFormat(input.label);
+
+        return new SinkTransport({
+            level: input.level,
+            channel: input.channel,
+            sink,
+            format
         });
     }
 }
