@@ -52,8 +52,8 @@
         "typedoc-plugin-mdn-links": "^5.0.10"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:^",
-        "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/tsup-config": "workspace:^"
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsup-config": "workspace:*"
     }
 }

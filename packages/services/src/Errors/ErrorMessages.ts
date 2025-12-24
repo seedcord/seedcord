@@ -66,8 +66,38 @@ const messages = {
     [SeedcordErrorCode.PluginKpgNoMigrationFiles]: () => 'No migration files provided.',
     [SeedcordErrorCode.PluginKpgInvalidMigrationModule]: (filePath: string) =>
         `Migration file ${filePath} must export async functions up and down.`,
-    [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`
-} as const;
+    [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,
+
+    [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
+    [SeedcordErrorCode.CliConfigMissingInstance]: () =>
+        'Config must include an `instance` string that points to your Seedcord default export.',
+    [SeedcordErrorCode.CliConfigInvalidRoot]: () => 'Config `root` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigNotFound]: (baseDir: string, candidates: readonly string[]) =>
+        `Unable to locate a Seedcord config in ${baseDir}. Searched for ${candidates.join(', ')}.`,
+    [SeedcordErrorCode.CliConfigMissingEntry]: () =>
+        'Config must include an `entry` string that points to your startup script.',
+    [SeedcordErrorCode.CliConfigInvalidBuild]: () => 'Config `build` must be an object when provided.',
+    [SeedcordErrorCode.CliConfigInvalidBuildOutDir]: () => 'Config `build.outDir` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigInvalidBuildTsconfig]: () => 'Config `build.tsconfig` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigInvalidBuildBootstrap]: () =>
+        'Config `build.bootstrap` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigEntryOutsideRoot]: (entryPath: string, root: string) =>
+        `Entry file ${entryPath} must reside inside configured root ${root}.`,
+    [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${entryPath}.`,
+    [SeedcordErrorCode.CliTsxImportFailed]: (entryPath: string, reason: string) =>
+        `Failed to import ${entryPath} via tsx: ${reason}.`,
+    [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
+        `Failed to import ${entryPath}: ${nativeReason}. Fallback via jiti also failed: ${fallbackReason}.`,
+    [SeedcordErrorCode.CliInstanceInvalid]: () =>
+        'Seedcord instance must default export an object with a start() method.',
+    [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
+        `Failed to start Seedcord from ${instancePath}: ${reason}.`,
+    [SeedcordErrorCode.CliBuildTsconfigNotFound]: (hint: string) =>
+        `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
+    [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
+    [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
+        `Failed to write bootstrap file at ${targetPath}: ${reason}.`
+} satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**
  * Argument types for Seedcord error messages.

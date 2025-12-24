@@ -7,7 +7,7 @@
             "name": "🚀 Launch Watch Mode (Primary)",
             "skipFiles": ["<node_internals>/**"],
             "runtimeExecutable": "pnpm",
-            "runtimeArgs": ["start:watch"],
+            "runtimeArgs": ["dev"],
             "console": "integratedTerminal",
             "restart": true,
             "cwd": "${workspaceFolder}/mock",

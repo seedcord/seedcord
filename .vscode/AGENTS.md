@@ -1,3 +1,5 @@
+- Write OOP code where it makes sense to. Favor inheritance and composition over functions. Use interfaces and abstract classes as needed. Although, don't overdo it. If a simple function makes more sense, use that instead.
+
 - DO NOT do any inline imports unless absolutely necessary. For example, `as import('some-package').SomeType`. BAD BAD BAD.
 
 - Do NOT use "any" type unless it makes sense in context.
@@ -15,6 +17,8 @@
 - DO NOT try to lint or run scripts unless it's absolutely needed to complete the given task.
 
 - DO NOT run `pnpm lint`. ALWAYS run `pnpm lint:fix` instead.
+
+- After completing tasks, cd into the packages you've updated and run `pnpm tc` and `pnpm lint:fix` to ensure there are no type errors or linting issues.
 
 - ALWAYS, I repeat, ALWAYS first cd into the package or app's directory, then run the command via pnpm.
 
@@ -36,7 +40,7 @@
 
 - Moving and renaming files should be done with the `mv` command to ensure proper git tracking. It's also better than creating a new file and replacing contents.
 
-- For files you plan to delete, simply comment out all the code in it, and update the file name using the `mv` command to append `.deprecated` to the file name. This way, git will track the change and you can always recover the file if needed.
+- For files you plan to delete, simply change the file ext to `txt`. This way, git will track the change and you can always recover the file if needed.
 
 - If files are large and cause a lint error because of that, consider breaking them down into smaller, more manageable files.
 

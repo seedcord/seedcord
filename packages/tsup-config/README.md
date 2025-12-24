@@ -10,4 +10,4 @@ _This repository is a work in progress._
 - Till a major v1.0.0 release for seedcord, expect breaking changes in minor versions.
 - Documentation will come soon as well!
 
-I'm planning to release the first major version by the end of 2025, or Jan 2026. But till then, if you'd like to try using it, you can check out the code in `mock`
+I'm planning to release the first major version by Q1 2026. But till then, if you'd like to try using it, you can check out the code in `mock`

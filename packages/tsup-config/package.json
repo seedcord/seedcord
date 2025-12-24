@@ -34,8 +34,8 @@
         "coverage": "vitest run --coverage"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:^",
-        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
         "typescript": "catalog:peer"
     },
     "publishConfig": {

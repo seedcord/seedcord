@@ -39,7 +39,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/types": "workspace:^",
+        "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "@seedcord/services": "workspace:*",
         "chalk": "catalog:deps",
@@ -49,9 +49,9 @@
         "reflect-metadata": "catalog:deps"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:^",
-        "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/tsup-config": "workspace:^"
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsup-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",

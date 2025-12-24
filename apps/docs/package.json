@@ -19,8 +19,8 @@
         "@radix-ui/react-slot": "^1.2.4",
         "@radix-ui/react-tooltip": "^1.2.8",
         "@seedcord/docs-engine": "workspace:*",
-        "@seedcord/docs-generator": "workspace:^",
-        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/docs-generator": "workspace:*",
+        "@seedcord/eslint-config": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@tailwindcss/postcss": "^4.1.18",
         "cmdk": "^1.1.1",
@@ -38,7 +38,7 @@
         "zustand": "^5.0.9"
     },
     "devDependencies": {
-        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsconfig": "workspace:*",
         "@types/react": "^19.2.7",
         "@types/react-dom": "^19.2.3",
         "eslint-config-next": "^16.1.0",
