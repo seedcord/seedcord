@@ -110,7 +110,7 @@ export enum SeedcordErrorCode {
     /** Unable to locate a TypeScript config file for builds. */
     CliBuildTsconfigNotFound = 3116,
     /** TypeScript reported diagnostics during emit. */
-    CliBuildFailed = 3118,
+    CliBuildFailed = 3117,
     /** Unable to write the generated bootstrap file. */
-    CliBootstrapWriteFailed = 3119
+    CliBootstrapWriteFailed = 3118
 }
