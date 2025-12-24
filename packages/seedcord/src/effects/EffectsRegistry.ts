@@ -56,7 +56,7 @@ export class EffectsRegistry extends Plugin {
         this.attachEffects();
 
         const totalEffects = Array.from(this.effectsMap.values()).reduce((acc, handlers) => acc + handlers.length, 0);
-        this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.bold.magenta(totalEffects)} side effects`);
+        this.logger.utils.list([`${chalk.bold.magenta(totalEffects)} side effects`], chalk.bold.green('Loaded'));
     }
 
     private async loadEffects(dir: string): Promise<void> {
@@ -68,9 +68,7 @@ export class EffectsRegistry extends Plugin {
                     if (this.isEffectHandler(val)) {
                         const meta = Reflect.getMetadata(EffectMetadataKey, val) as RegisterEffectMetadataEntry;
                         this.registerEffect(val, meta);
-                        this.logger.info(
-                            `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-                        );
+                        this.logger.utils.registration(val.name, relativePath);
                     }
                 }
             },

@@ -1,6 +1,6 @@
 import { Envapter } from 'envapt';
 
-import { Logger } from './Logger';
+import { Logger } from './logger';
 
 /**
  * Configuration options for CooldownManager.
@@ -61,7 +61,8 @@ export class CooldownManager {
         const remaining = this.window - (now - (last ?? 0));
 
         if (Envapter.isDevelopment && remaining > 0) {
-            Logger.Debug('CooldownManager', `${key} - ${remaining}ms remaining`);
+            const logger = new Logger('CooldownManager');
+            logger.debug(`${key} - ${remaining}ms remaining`);
         }
 
         if (last !== undefined && remaining > 0) {

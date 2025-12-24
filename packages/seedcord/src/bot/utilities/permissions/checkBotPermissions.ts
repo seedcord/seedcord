@@ -49,12 +49,12 @@ export function checkBotPermissions(
     const me = target.guild.members.me;
 
     if (!me) {
-        const names = scope.map((bit) => PermissionNames.get(bit) ?? String(bit));
-        const Missing = errors?.missing ?? MissingPermissions;
-        Logger.Warn(
-            'checkBotPermissions',
+        const logger = new Logger('checkBotPermissions');
+        logger.warn(
             `Bot member is unavailable in guild ${target.guild.id} while checking permissions in channel ${target.id}`
         );
+        const names = scope.map((bit) => PermissionNames.get(bit) ?? String(bit));
+        const Missing = errors?.missing ?? MissingPermissions;
         throw new Missing('Missing Permissions', target, names);
     }
 

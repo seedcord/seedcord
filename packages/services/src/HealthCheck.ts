@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { Envapt } from 'envapt';
 
 import { CoordinatedShutdown, ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
-import { Logger } from './Logger';
+import { Logger } from './logger';
 
 import type { IncomingMessage, Server, ServerResponse } from 'http';
 

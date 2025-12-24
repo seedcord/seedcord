@@ -91,18 +91,20 @@ export class InteractionController implements Initializeable {
         this.attachToClient();
 
         this.logger.info(`${chalk.bold.green('Loaded interaction handlers:')}`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.middlewares.length)} middlewares`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.slashMap.size)} slash commands`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.buttonMap.size)} buttons`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.modalMap.size)} modals`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.stringSelectMap.size)} string selects`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.userSelectMap.size)} user selects`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.roleSelectMap.size)} role selects`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.channelSelectMap.size)} channel selects`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.mentionableSelectMap.size)} mentionable selects`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.messageContextMenuMap.size)} message context menus`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.userContextMenuMap.size)} user context menus`);
-        this.logger.info(`→ ${chalk.magenta.bold(this.autocompleteMap.size)} autocomplete`);
+        this.logger.utils.list([
+            `${chalk.magenta.bold(this.middlewares.length)} middlewares`,
+            `${chalk.magenta.bold(this.slashMap.size)} slash commands`,
+            `${chalk.magenta.bold(this.buttonMap.size)} buttons`,
+            `${chalk.magenta.bold(this.modalMap.size)} modals`,
+            `${chalk.magenta.bold(this.stringSelectMap.size)} string selects`,
+            `${chalk.magenta.bold(this.userSelectMap.size)} user selects`,
+            `${chalk.magenta.bold(this.roleSelectMap.size)} role selects`,
+            `${chalk.magenta.bold(this.channelSelectMap.size)} channel selects`,
+            `${chalk.magenta.bold(this.mentionableSelectMap.size)} mentionable selects`,
+            `${chalk.magenta.bold(this.messageContextMenuMap.size)} message context menus`,
+            `${chalk.magenta.bold(this.userContextMenuMap.size)} user context menus`,
+            `${chalk.magenta.bold(this.autocompleteMap.size)} autocomplete`
+        ]);
     }
 
     private async loadHandlers(dir: string): Promise<void> {
@@ -112,9 +114,7 @@ export class InteractionController implements Initializeable {
                 for (const val of Object.values(imported)) {
                     if (!this.isHandlerClass(val)) continue;
                     this.registerHandler(val);
-                    this.logger.info(
-                        `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-                    );
+                    this.logger.utils.registration(val.name, relativePath);
                 }
             },
             this.logger
@@ -148,8 +148,10 @@ export class InteractionController implements Initializeable {
         this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
-        this.logger.info(
-            `${chalk.italic('Registered middleware')} ${chalk.bold.yellow(middlewareCtor.name)} ${chalk.gray(`(priority ${metadata.priority})`)} from ${chalk.gray(relativePath)}`
+        this.logger.utils.registration(
+            `${middlewareCtor.name} ${chalk.gray(`(priority ${metadata.priority})`)}`,
+            relativePath,
+            'middleware'
         );
     }
 
