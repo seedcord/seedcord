@@ -14,7 +14,7 @@ export class BuildCommand {
     public register(program: Command): void {
         program
             .command('build')
-            .description('Compile a Seedcord project using seedcord.config.ts')
+            .description('Compile a Seedcord project from the config file')
             .action(async () => {
                 try {
                     await this.runner.run();

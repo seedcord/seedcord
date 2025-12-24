@@ -14,7 +14,7 @@ export class DevCommand {
     public register(program: Command): void {
         program
             .command('dev')
-            .description('Run a Seedcord instance from seedcord.config.ts')
+            .description('Run a Seedcord instance from the config file (seedcord.config.ts or seedcord.config.mts)')
             .action(async () => {
                 try {
                     await this.runner.run();
