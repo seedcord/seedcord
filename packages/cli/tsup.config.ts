@@ -11,7 +11,6 @@ export default createTsupConfig({
         'jiti',
         'tsx',
         'tsx/esm/api',
-        'seedcord',
         'typescript'
     ],
     banner: {
