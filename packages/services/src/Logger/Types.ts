@@ -75,16 +75,6 @@ export interface LoggerOptions {
 }
 
 /**
- * Configuration for terminal UI features.
- */
-export interface TerminalUIConfig {
-    /** Enable persistent status line at bottom of terminal */
-    statusLine?: boolean;
-    /** Use alternate screen buffer for terminal output */
-    alternateScreen?: boolean;
-}
-
-/**
  * Winston transport type re-export.
  * @internal
  */

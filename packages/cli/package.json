@@ -52,7 +52,8 @@
         "@seedcord/types": "workspace:*",
         "fix-esm-import-path": "^1.10.3",
         "tsx": "catalog:peer",
-        "tsup": "catalog:peer"
+        "tsup": "catalog:peer",
+        "ansi-escapes": "^7.2.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

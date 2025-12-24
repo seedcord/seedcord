@@ -42,12 +42,9 @@
     },
     "dependencies": {
         "@seedcord/types": "workspace:*",
-        "ansi-escapes": "^7.2.0",
         "chalk": "catalog:deps",
         "discord.js": "catalog:deps",
         "envapt": "catalog:deps",
-        "log-update": "^7.0.2",
-        "ora": "^9.0.0",
         "strip-ansi": "^7.1.2",
         "type-fest": "catalog:deps",
         "winston": "^3.19.0"
