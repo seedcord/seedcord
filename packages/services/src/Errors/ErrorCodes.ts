@@ -75,5 +75,42 @@ export enum SeedcordErrorCode {
     /** A migration module failed to export the expected functions. */
     PluginKpgInvalidMigrationModule = 2207,
     /** An arbitrary (non-Error) failure was reported by a migration. */
-    PluginKpgNonErrorFailure = 2208
+    PluginKpgNonErrorFailure = 2208,
+
+    /** Config file default export was not an object. */
+    CliConfigInvalidExport = 3101,
+    /** Config is missing the required instance string. */
+    CliConfigMissingInstance = 3102,
+    /** Config root was provided but not a string. */
+    CliConfigInvalidRoot = 3103,
+    /** Unable to locate a Seedcord config file. */
+    CliConfigNotFound = 3104,
+    /** CLI entry file does not exist. */
+    CliEntryNotFound = 3105,
+    /** tsx failed to import the provided entry file. */
+    CliTsxImportFailed = 3106,
+    /** Native import and jiti fallback both failed. */
+    CliImportFailed = 3107,
+    /** Seedcord instance export is missing a start() method. */
+    CliInstanceInvalid = 3108,
+    /** Seedcord instance threw during startup. */
+    CliStartFailed = 3109,
+    /** Config is missing the required entry string. */
+    CliConfigMissingEntry = 3110,
+    /** Config build options must be an object when provided. */
+    CliConfigInvalidBuild = 3111,
+    /** Config build outDir must be a string when provided. */
+    CliConfigInvalidBuildOutDir = 3112,
+    /** Config build tsconfig must be a string when provided. */
+    CliConfigInvalidBuildTsconfig = 3113,
+    /** Config build bootstrap must be a string when provided. */
+    CliConfigInvalidBuildBootstrap = 3114,
+    /** Entry file must be inside the configured root directory. */
+    CliConfigEntryOutsideRoot = 3115,
+    /** Unable to locate a TypeScript config file for builds. */
+    CliBuildTsconfigNotFound = 3116,
+    /** TypeScript reported diagnostics during emit. */
+    CliBuildFailed = 3117,
+    /** Unable to write the generated bootstrap file. */
+    CliBootstrapWriteFailed = 3118
 }

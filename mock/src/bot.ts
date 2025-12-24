@@ -18,47 +18,43 @@ export class Vars extends Envapter {
     public static readonly dbName: string;
 }
 
-async function main(): Promise<void> {
-    const seedcord = new Seedcord({
-        bot: {
-            clientOptions: {
-                intents: [
-                    GatewayIntentBits.MessageContent,
-                    GatewayIntentBits.GuildMessages,
-                    GatewayIntentBits.Guilds,
-                    GatewayIntentBits.GuildPresences,
-                    GatewayIntentBits.GuildMembers,
-                    GatewayIntentBits.GuildWebhooks
-                ],
-                partials: [Partials.GuildMember, Partials.User]
-            },
-            interactions: {
-                path: resolve(import.meta.dirname, './handlers'),
-                middlewares: resolve(import.meta.dirname, './handlers/middlewares')
-            },
-            commands: {
-                path: resolve(import.meta.dirname, './components/commands')
-            },
-            events: {
-                path: resolve(import.meta.dirname, './events'),
-                middlewares: resolve(import.meta.dirname, './events/middlewares')
-            },
-            emojis: {
-                Confirm: 'confirmation_check',
-                Cancel: 'confirmation_cross'
-            }
+export const seedcord = new Seedcord({
+    bot: {
+        clientOptions: {
+            intents: [
+                GatewayIntentBits.MessageContent,
+                GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildPresences,
+                GatewayIntentBits.GuildMembers,
+                GatewayIntentBits.GuildWebhooks
+            ],
+            partials: [Partials.GuildMember, Partials.User]
         },
-        effects: {
-            path: resolve(import.meta.dirname, './effects')
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers'),
+            middlewares: resolve(import.meta.dirname, './handlers/middlewares')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './components/commands')
+        },
+        events: {
+            path: resolve(import.meta.dirname, './events'),
+            middlewares: resolve(import.meta.dirname, './events/middlewares')
+        },
+        emojis: {
+            Confirm: 'confirmation_check',
+            Cancel: 'confirmation_cross'
         }
-    }).attach('db', Mongo, StartupPhase.Configuration, {
-        dir: resolve(import.meta.dirname, './services'),
-        uri: Vars.mongoUri,
-        name: Vars.dbName
-    });
-
-    await seedcord.start();
-}
+    },
+    effects: {
+        path: resolve(import.meta.dirname, './effects')
+    }
+}).attach('db', Mongo, StartupPhase.Configuration, {
+    dir: resolve(import.meta.dirname, './services'),
+    uri: Vars.mongoUri,
+    name: Vars.dbName
+});
 
 declare module 'seedcord' {
     interface Core {
@@ -71,4 +67,4 @@ declare module 'seedcord' {
     }
 }
 
-await main().catch(() => process.exit(1));
+export default seedcord;
