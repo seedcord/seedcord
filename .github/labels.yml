@@ -25,6 +25,9 @@
 - name: pkg:tsup-config
   color: 196699
   description: Changes related to TSUP config package
+- name: pkg:cli
+  color: 4a90e2
+  description: Changes related to the Seedcord CLI package
 - name: pkg:docs-generator
   color: 85c1e9
   description: Changes related to API docs tooling

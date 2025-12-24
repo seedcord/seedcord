@@ -53,6 +53,12 @@ pkg:tsup-config:
   - issues:
       - title: '/pkg:tsup-config/i'
       - body: '/pkg:tsup-config/i'
+pkg:cli:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/cli/**'
+  - issues:
+      - title: '/pkg:cli/i'
+      - body: '/pkg:cli/i'
 pkg:docs-generator:
   - changed-files:
       - any-glob-to-any-file: 'packages/docs-generator/**'
