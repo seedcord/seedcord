@@ -1,5 +1,5 @@
-import { LoggerChannelRegistry } from './channel';
-import { LoggerUtilitiesAccessor } from './utilities';
+import { LoggerChannelRegistry } from './LoggerChannelRegistry';
+import { LoggerUtilitiesAccessor } from './LoggerUtilities';
 
 import type { LoggerConfiguration, LoggerOptions } from './types';
 import type { ILogger } from '@seedcord/types';
@@ -26,6 +26,7 @@ export class Logger implements ILogger {
     private readonly label: string;
     private channel: string;
     public readonly utils: LoggerUtilitiesAccessor;
+    private readonly registry = LoggerChannelRegistry.instance;
 
     private static readonly instances = new Map<string, Logger>();
 
@@ -39,20 +40,20 @@ export class Logger implements ILogger {
     }
 
     public static configure(config: Partial<LoggerConfiguration>): void {
-        LoggerChannelRegistry.configure(config);
+        LoggerChannelRegistry.instance.configure(config);
         this.instances.clear();
     }
 
     constructor(label: string, options?: LoggerOptions) {
         this.label = label;
-        this.channel = options?.channel ?? LoggerChannelRegistry.getDefaultChannel();
-        this.logger = LoggerChannelRegistry.get(this.channel).child({ label: this.label });
+        this.channel = options?.channel ?? this.registry.getDefaultChannel();
+        this.logger = this.registry.get(this.channel).child({ label: this.label });
         this.utils = new LoggerUtilitiesAccessor(this);
     }
 
     public setChannel(channel: string): void {
         this.channel = channel;
-        this.logger = LoggerChannelRegistry.get(channel).child({ label: this.label });
+        this.logger = this.registry.get(channel).child({ label: this.label });
     }
 
     /**

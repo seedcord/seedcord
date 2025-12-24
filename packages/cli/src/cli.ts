@@ -9,7 +9,9 @@ import { version } from '.';
 const LOGGER_LABEL = 'Seedcord CLI';
 
 async function main(): Promise<void> {
-    process.env.NODE_ENV ??= 'development';
+    if (!process.env.ENV && !process.env.ENVIRONMENT && !process.env.NODE_ENV) {
+        process.env.NODE_ENV = 'development';
+    }
 
     const logger = new Logger(LOGGER_LABEL);
     const program = new Command().name('seedcord').description('Seedcord CLI').version(version);

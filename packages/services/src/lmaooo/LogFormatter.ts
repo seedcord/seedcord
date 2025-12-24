@@ -17,7 +17,7 @@ const SPLAT = Symbol.for('splat');
 const DEFAULT_PADDING = 7;
 
 export class LogFormatter {
-    private static safeString(value: unknown): string {
+    private safeString(value: unknown): string {
         if (typeof value === 'string') return value;
         if (value === undefined || value === null) return '';
         if (typeof (value as { toString?: () => string }).toString === 'function') {
@@ -33,7 +33,7 @@ export class LogFormatter {
         return '';
     }
 
-    private static sanitizeAnsi(value: unknown): unknown {
+    private sanitizeAnsi(value: unknown): unknown {
         if (typeof value === 'string') return stripAnsi(value);
         if (value instanceof Error) {
             const error = value;
@@ -45,24 +45,33 @@ export class LogFormatter {
         return value;
     }
 
-    private static sanitizeExtras(info: Logform.TransformableInfo): unknown[] {
+    private sanitizeExtras(info: Logform.TransformableInfo): unknown[] {
         const raw = (info as unknown as Record<string | symbol, unknown>)[SPLAT];
         const extras = Array.isArray(raw) ? raw : [];
         return extras.map((entry) => this.sanitizeAnsi(entry));
     }
 
-    public static pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
+    public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
         const padding = options.padding ?? DEFAULT_PADDING;
         return [
             format.errors({ stack: true }),
             format.splat(),
             format.colorize({ level: true }),
             format.timestamp({ format: 'D MMM, hh:mm:ss a' }),
+            // eslint-disable-next-line max-statements
             format.printf((info: Logform.TransformableInfo) => {
-                const ts = this.safeString(info.timestamp);
-                const lvl = this.safeString(info.level).padEnd(padding);
-                const lbl = this.safeString(info.label);
-                const msg = this.safeString(info.message);
+                let ts = this.safeString(info.timestamp);
+                let lvl = this.safeString(info.level).padEnd(padding);
+                let lbl = this.safeString(info.label);
+                let msg = this.safeString(info.message);
+
+                // Strip ANSI codes from all components if requested
+                if (options.stripExtras) {
+                    ts = stripAnsi(ts);
+                    lvl = stripAnsi(lvl);
+                    lbl = stripAnsi(lbl);
+                    msg = stripAnsi(msg);
+                }
 
                 const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
                 const extras = this.sanitizeExtras(info);
@@ -70,7 +79,9 @@ export class LogFormatter {
                 let rendered = base;
 
                 if (typeof info.stack === 'string') {
-                    rendered += `\n${this.safeString(info.stack)}`;
+                    let stack = this.safeString(info.stack);
+                    if (options.stripExtras) stack = stripAnsi(stack);
+                    rendered += `\n${stack}`;
                 }
 
                 const cleaned = options.stripExtras ? extras.map((entry) => this.sanitizeAnsi(entry)) : extras;
@@ -100,7 +111,7 @@ export class LogFormatter {
         ];
     }
 
-    public static json(options: JsonFormatOptions = {}): Logform.Format[] {
+    public json(options: JsonFormatOptions = {}): Logform.Format[] {
         const base = [format.timestamp(), format.errors({ stack: true })];
 
         if (options.stripAnsi) {

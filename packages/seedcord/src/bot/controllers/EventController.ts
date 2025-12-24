@@ -117,7 +117,7 @@ export class EventController implements Initializeable {
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
         this.logger.utils.registration(
-            `${middlewareCtor.name} ${chalk.gray(`(priority ${metadata.priority})`)}`,
+            `${middlewareCtor.name} ${chalk.gray(`(${metadata.priority})`)}`,
             relativePath,
             'event middleware'
         );

@@ -1,25 +1,37 @@
 import { Envapter } from 'envapt';
 import { createLogger } from 'winston';
 
-import { TransportFactory } from './transports';
+import { TransportFactory } from './TransportFactory';
 
 import type { ChannelConfig, LoggerConfiguration, LoggerLevel, TransportConfig, WinstonInstance } from './types';
 
 const defaultLevel: LoggerLevel = Envapter.isDevelopment ? 'silly' : Envapter.isStaging ? 'debug' : 'info';
 
 export class LoggerChannelRegistry {
-    private static config: LoggerConfiguration = {
+    private static _instance: LoggerChannelRegistry;
+
+    private config: LoggerConfiguration = {
         defaultChannel: 'default',
         channels: {},
         devFilePattern: 'logs/{channel}-{timestamp}.log',
-        prodFilePattern: 'logs/production-{date}.json',
+        prodFilePattern: 'logs/production-{date}.jsonl',
         fileMaxSizeMB: 10,
         fileMaxFiles: 5
     };
 
-    private static readonly cache = new Map<string, WinstonInstance>();
+    private readonly cache = new Map<string, WinstonInstance>();
+    private readonly transportFactory: TransportFactory;
 
-    private static defaultChannelConfig(name: string): ChannelConfig {
+    private constructor() {
+        this.transportFactory = new TransportFactory();
+    }
+
+    public static get instance(): LoggerChannelRegistry {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        return (this._instance ??= new LoggerChannelRegistry());
+    }
+
+    private getDefaultChannelConfig(name: string): ChannelConfig {
         return {
             name,
             level: defaultLevel,
@@ -27,7 +39,7 @@ export class LoggerChannelRegistry {
                 { type: 'console', level: defaultLevel, format: 'pretty' },
                 {
                     type: 'file',
-                    level: 'debug',
+                    level: Envapter.isDevelopment ? 'debug' : 'info',
                     filename: Envapter.isDevelopment ? this.config.devFilePattern : this.config.prodFilePattern,
                     format: Envapter.isDevelopment ? 'pretty' : 'json',
                     stripAnsi: true,
@@ -38,7 +50,7 @@ export class LoggerChannelRegistry {
         };
     }
 
-    private static mergeChannelConfig(base: ChannelConfig, override?: ChannelConfig): ChannelConfig {
+    private mergeChannelConfig(base: ChannelConfig, override?: ChannelConfig): ChannelConfig {
         if (!override) return base;
 
         const level = override.level ?? base.level;
@@ -56,27 +68,27 @@ export class LoggerChannelRegistry {
         };
     }
 
-    public static configure(config: Partial<LoggerConfiguration>): void {
+    public configure(config: Partial<LoggerConfiguration>): void {
         this.config = { ...this.config, ...config, channels: { ...this.config.channels, ...(config.channels ?? {}) } };
         this.cache.clear();
     }
 
-    public static getDefaultChannel(): string {
+    public getDefaultChannel(): string {
         return this.config.defaultChannel;
     }
 
-    public static get(channel: string): WinstonInstance {
+    public get(channel: string): WinstonInstance {
         const cached = this.cache.get(channel);
         if (cached) return cached;
 
         const channelConfig = this.mergeChannelConfig(
-            this.defaultChannelConfig(channel),
+            this.getDefaultChannelConfig(channel),
             this.config.channels[channel]
         );
 
         const effectiveLevel = channelConfig.level ?? defaultLevel;
         const transports = (channelConfig.transports ?? []).map((transportConfig: TransportConfig) =>
-            TransportFactory.build({
+            this.transportFactory.build({
                 channel,
                 label: channel,
                 level: effectiveLevel,

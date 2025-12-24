@@ -34,7 +34,10 @@
         "bump:deps": "pnpm run bump:deps:pkgs && pnpm run bump:deps:apps",
         "docs:extract": "pnpm --filter @seedcord/docs-generator run smoke -o ./debugging/generated -p ./packages",
         "docs:parse": "pnpm --filter @seedcord/docs-engine run smoke ./debugging/generated -o ./debugging/samples",
-        "docs:smoke": "pnpm docs:extract && pnpm docs:parse"
+        "docs:smoke": "pnpm docs:extract && pnpm docs:parse",
+        "p:stop": "bash scripts/kill-seedcord.sh",
+        "p:stop:list": "bash scripts/kill-seedcord.sh --list",
+        "p:stop:no-ports": "bash scripts/kill-seedcord.sh --no-ports"
     },
     "keywords": [
         "discord",

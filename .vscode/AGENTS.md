@@ -1,5 +1,7 @@
 - Write OOP code where it makes sense to. Favor inheritance and composition over functions. Use interfaces and abstract classes as needed. Although, don't overdo it. If a simple function makes more sense, use that instead. For functions, use function declarations instead of arrow functions unless absolutely necessary.
 
+- classes should not be used like namespaces by relying on the static keyword. static should be used sparingly and only when it makes sense in context.
+
 - DO NOT do any inline imports unless absolutely necessary. For example, `as import('some-package').SomeType`. BAD BAD BAD.
 
 - Do NOT use "any" type unless it makes sense in context.

@@ -1,7 +1,7 @@
 export * from './CooldownManager';
 export * from './Errors';
 export * from './HealthCheck';
-export * from './logger';
+export * from './lmaooo';
 export * from './StrictEventEmitter';
 
 // Lifecycle
