@@ -6,9 +6,13 @@ import { format, transports } from 'winston';
 
 import { LogFormatter } from './LogFormatter';
 
-import type { LoggerFormatMode, LoggerLevel, TransportConfig, WinstonTransport } from './types';
+import type { LoggerFormatMode, LoggerLevel, TransportConfig, WinstonTransport } from './aTypes';
 
-interface TransportBuildInput {
+/**
+ * Input parameters for building a Winston transport.
+ * @internal
+ */
+export interface TransportBuildInput {
     channel: string;
     label: string;
     level: LoggerLevel;
@@ -17,6 +21,13 @@ interface TransportBuildInput {
     stripAnsi: boolean;
 }
 
+/**
+ * Creates Winston transports with proper formatting and file path resolution.
+ *
+ * Handles console and file transports with environment-aware defaults,
+ * filename template expansion, and format selection.
+ * @internal
+ */
 export class TransportFactory {
     private readonly formatter: LogFormatter;
     private readonly MILLISECOND_PAD = 3;
@@ -82,6 +93,15 @@ export class TransportFactory {
         return template.replace('{channel}', channel).replace('{date}', date).replace('{timestamp}', timestamp);
     }
 
+    /**
+     * Builds a Winston transport from configuration.
+     *
+     * Creates either console or file transport with proper formatting,
+     * level filtering, and file rotation settings.
+     *
+     * @param input - Transport configuration parameters
+     * @returns Configured Winston transport instance
+     */
     public build(input: TransportBuildInput): WinstonTransport {
         const effectiveFormat = input.config.format ?? input.defaultFormat;
         const shouldStripAnsi = input.config.stripAnsi ?? input.stripAnsi;

@@ -3,20 +3,38 @@ import { format } from 'winston';
 
 import type { Logform } from 'winston';
 
-interface PrettyFormatOptions {
+/**
+ * Options for pretty log formatting.
+ */
+export interface PrettyFormatOptions {
+    /** Number of spaces to pad the log level to. (default: `7`) */
     padding?: number;
+    /** Whether to strip ANSI codes from extra log data. (default: `false`) */
     stripExtras?: boolean;
 }
 
-interface JsonFormatOptions {
+/**
+ * Options for JSON log formatting.
+ * @internal
+ */
+export interface JsonFormatOptions {
+    /** Whether to strip ANSI codes from log messages and extra data. (default: `false`) */
     stripAnsi?: boolean;
+    /** Whether to produce minimal JSON output without extra fields. (default: `false`) */
     minimal?: boolean;
 }
 
-const SPLAT = Symbol.for('splat');
-const DEFAULT_PADDING = 7;
-
+/**
+ * Handles log formatting for console and file outputs.
+ *
+ * Supports pretty-printed colored logs for development
+ * and JSON logs for production with optional ANSI stripping.
+ * @internal
+ */
 export class LogFormatter {
+    private readonly DEFAULT_PADDING = 7;
+    private readonly SPLAT: symbol = Symbol.for('splat');
+
     private safeString(value: unknown): string {
         if (typeof value === 'string') return value;
         if (value === undefined || value === null) return '';
@@ -46,13 +64,21 @@ export class LogFormatter {
     }
 
     private sanitizeExtras(info: Logform.TransformableInfo): unknown[] {
-        const raw = (info as unknown as Record<string | symbol, unknown>)[SPLAT];
+        const raw = (info as unknown as Record<string | symbol, unknown>)[this.SPLAT];
         const extras = Array.isArray(raw) ? raw : [];
         return extras.map((entry) => this.sanitizeAnsi(entry));
     }
 
+    /**
+     * Creates pretty-printed format with colors and timestamps.
+     *
+     * Ideal for development environments where human readability matters.
+     *
+     * @param options - Formatting options including padding and ANSI stripping
+     * @returns Array of Winston format transformers
+     */
     public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
-        const padding = options.padding ?? DEFAULT_PADDING;
+        const padding = options.padding ?? this.DEFAULT_PADDING;
         return [
             format.errors({ stack: true }),
             format.splat(),
@@ -111,6 +137,14 @@ export class LogFormatter {
         ];
     }
 
+    /**
+     * Creates JSON format for structured logging.
+     *
+     * Best for production environments where logs are parsed by tools.
+     *
+     * @param options - JSON formatting options including ANSI stripping and minimal mode
+     * @returns Array of Winston format transformers
+     */
     public json(options: JsonFormatOptions = {}): Logform.Format[] {
         const base = [format.timestamp(), format.errors({ stack: true })];
 

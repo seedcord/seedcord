@@ -1,32 +1,25 @@
 import { LoggerChannelRegistry } from './LoggerChannelRegistry';
 import { LoggerUtilitiesAccessor } from './LoggerUtilities';
 
-import type { LoggerConfiguration, LoggerOptions } from './types';
+import type { LoggerConfiguration, LoggerOptions } from './aTypes';
 import type { ILogger } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 
 /**
  * Public logging service with channel-aware transports and per-run file output.
  *
- * Backward compatible API that now supports:
  * - Channel separation (e.g., bot, cli, hmr)
  * - Production-safe JSON logs with ANSI stripping
  * - Unique log files per run via filename templates
- *
- * Common utilities are accessed via the `utils` property:
- * - `logger.utils.summary(title, items)` - Log key-value pairs
- * - `logger.utils.list(items, heading)` - Log a list of items
- * - `logger.utils.registration(name, path, type)` - Log component registration
- * - `logger.utils.initialization(name, action)` - Log init start/end
- * - `logger.utils.progress(current, total)` - Log progress
- * - `logger.utils.box(title, content)` - Log in a decorative box
  */
 export class Logger implements ILogger {
     declare private logger: Winston;
     private readonly label: string;
     private channel: string;
-    public readonly utils: LoggerUtilitiesAccessor;
     private readonly registry = LoggerChannelRegistry.instance;
+
+    /* Common logging utilities for structured and formatted output */
+    public readonly utils: LoggerUtilitiesAccessor;
 
     private static readonly instances = new Map<string, Logger>();
 
@@ -39,11 +32,24 @@ export class Logger implements ILogger {
         return instance;
     }
 
+    /**
+     * Configures global logger settings.
+     *
+     * Applies configuration to all channels and clears instance cache.
+     *
+     * @param config - Partial configuration to merge with defaults
+     */
     public static configure(config: Partial<LoggerConfiguration>): void {
         LoggerChannelRegistry.instance.configure(config);
         this.instances.clear();
     }
 
+    /**
+     * Creates a new Logger instance.
+     *
+     * @param label - Prefix/label for all log entries from this logger
+     * @param options - Optional configuration for channel, format, and ANSI handling
+     */
     constructor(label: string, options?: LoggerOptions) {
         this.label = label;
         this.channel = options?.channel ?? this.registry.getDefaultChannel();
@@ -51,6 +57,11 @@ export class Logger implements ILogger {
         this.utils = new LoggerUtilitiesAccessor(this);
     }
 
+    /**
+     * Switches this logger to a different channel.
+     *
+     * @param channel - Channel name to switch to
+     */
     public setChannel(channel: string): void {
         this.channel = channel;
         this.logger = this.registry.get(channel).child({ label: this.label });

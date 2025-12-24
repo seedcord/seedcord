@@ -5,4 +5,4 @@ export * from './LoggerUtilities';
 export * from './TerminalUI';
 export * from './TransportFactory';
 
-export type * from './types';
+export type * from './aTypes';
