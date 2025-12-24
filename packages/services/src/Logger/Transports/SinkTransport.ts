@@ -3,25 +3,55 @@ import TransportStream from 'winston-transport';
 import type { Logform } from 'winston';
 import type { TransportStreamOptions } from 'winston-transport';
 
+/**
+ * Options for creating a SinkTransport.
+ * @internal
+ */
 export interface SinkTransportOptions extends TransportStreamOptions {
     readonly channel: string;
     readonly sink: ILoggerSink;
 }
 
+/**
+ * A log entry passed to custom sinks.
+ */
 export interface LoggerSinkLogEntry {
+    /** Channel the log originated from */
     readonly channel: string;
+    /** Pre-formatted log message ready for display */
     readonly rendered: string;
+    /** Raw Winston log info object */
     readonly info: Logform.TransformableInfo;
 }
 
+/**
+ * Custom sink interface for capturing logger output.
+ *
+ * Implement this to route logs to custom destinations.
+ */
 export interface ILoggerSink {
+    /**
+     * Called when a log entry is emitted.
+     *
+     * @param entry - The log entry with channel, rendered message, and raw info
+     */
     onLog(entry: LoggerSinkLogEntry): void;
 }
 
+/**
+ * Handle for managing a sink's lifecycle.
+ */
 export interface ILoggerSinkHandle {
+    /**
+     * Removes the sink and restores console output if muted.
+     */
     dispose(): void;
 }
 
+/**
+ * Winston transport that forwards logs to custom sinks.
+ * @internal
+ */
 export class SinkTransport extends TransportStream {
     private readonly channelName: string;
     private readonly sink: ILoggerSink;

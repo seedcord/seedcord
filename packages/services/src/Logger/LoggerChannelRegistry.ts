@@ -173,6 +173,15 @@ export class LoggerChannelRegistry {
         return false;
     }
 
+    /**
+     * Installs a custom sink to capture log output across all channels.
+     *
+     * Useful for routing logs to custom destinations like TUIs or remote services.
+     *
+     * @param sink - Custom sink implementation to receive log entries
+     * @param options - Optional configuration for console muting behavior
+     * @returns Handle to dispose the sink when no longer needed
+     */
     public installSink(sink: ILoggerSink, options?: { muteConsole?: boolean }): ILoggerSinkHandle {
         const id = this.nextSinkId;
         this.nextSinkId += 1;

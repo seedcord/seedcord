@@ -23,6 +23,10 @@ export interface TransportBuildInput {
     stripAnsi: boolean;
 }
 
+/**
+ * Input parameters for building a sink transport.
+ * @internal
+ */
 interface BuildInput {
     readonly channel: string;
     readonly label: string;
@@ -142,6 +146,13 @@ export class TransportFactory {
         });
     }
 
+    /**
+     * Builds a sink transport for routing logs to custom destinations.
+     *
+     * @param input - Transport configuration with channel and level info
+     * @param sink - Custom sink to receive log entries
+     * @returns Configured sink transport instance
+     */
     public buildSinkTransport(input: BuildInput, sink: ILoggerSink): WinstonTransport {
         const format = this.buildConsoleFormat(input.label);
 
