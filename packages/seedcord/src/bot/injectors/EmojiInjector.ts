@@ -82,7 +82,8 @@ export class EmojiInjector {
 
         // Check if we have emoji config
         if (!this.core.config.bot.emojis || Object.keys(this.core.config.bot.emojis).length === 0) {
-            this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta.bold('0')} emojis`);
+            // this.logger.utils.list(['0 emojis'], chalk.bold.green('Loaded'));
+            this.logger.info(chalk.bold.yellow('No emojis configured, skipping emoji injection.'));
             return;
         }
 
@@ -111,7 +112,8 @@ export class EmojiInjector {
             );
         }
 
-        this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta.bold(foundCount)} emoji(s)`);
+        // this.logger.utils.list([`${chalk.magenta.bold(foundCount)} emoji(s)`], chalk.bold.green('Loaded'));
+        this.logger.utils.summary('Loaded emojis', { emojis: foundCount });
     }
 
     /**

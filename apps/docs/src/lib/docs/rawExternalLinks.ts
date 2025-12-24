@@ -112,6 +112,7 @@ export const rawExternalLinks = {
     prettier: 'https://prettier.io/docs/api',
     'prettier.io': 'https://prettier.io/docs/api',
     'type-fest': 'https://github.com/sindresorhus/type-fest',
+    winston: 'https://github.com/winstonjs/winston',
     kysely: 'https://kysely.dev/docs/intro',
     pg: 'https://node-postgres.com'
 } as const;

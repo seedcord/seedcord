@@ -1,4 +1,4 @@
-import { Logger, SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 import { filterCirculars } from '@seedcord/utils';
 import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError, SnowflakeUtil } from 'discord.js';
 import { Envapt } from 'envapt';
@@ -47,8 +47,6 @@ function webhookUrlValidator(raw: unknown, _fallback: unknown): string {
  */
 @RegisterEffect('unknownException')
 export class UnknownException extends WebhookLog<'unknownException'> {
-    private static readonly logger = new Logger('Effect: UnknownException');
-
     @Envapt('UNKNOWN_EXCEPTION_WEBHOOK_URL', {
         converter: (raw, fallback) => webhookUrlValidator(raw, fallback)
     })
@@ -72,7 +70,7 @@ export class UnknownException extends WebhookLog<'unknownException'> {
                 files: metadataFile ? [metadataFile] : []
             });
         } catch (error) {
-            UnknownException.logger.error('Failed to send unknown exception webhook', error);
+            this.logger.error('Failed to send unknown exception webhook', error);
         }
     }
 

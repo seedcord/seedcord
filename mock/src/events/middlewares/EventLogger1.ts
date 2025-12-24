@@ -1,5 +1,5 @@
 import { Events } from 'discord.js';
-import { EventMiddleware, Logger, Middleware, MiddlewareType } from 'seedcord';
+import { EventMiddleware, Middleware, MiddlewareType } from 'seedcord';
 
 /**
  * Logs incoming interactions before handlers execute.
@@ -10,10 +10,7 @@ export class MiddlewareLogger1 extends EventMiddleware<
 > {
     public async execute(): Promise<void> {
         const message = this.event[0];
-        Logger.Info(
-            'Event Middleware',
-            `event received → Priority 1 by ${message.author?.username} (${message.author?.id})`
-        );
+        this.logger.info(`event received → Priority 1 by ${message.author?.username} (${message.author?.id})`);
         await message.react('🫀');
 
         await Promise.resolve();

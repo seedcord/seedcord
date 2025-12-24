@@ -45,14 +45,15 @@
     "dependencies": {
         "@clack/prompts": "^0.11.0",
         "@commander-js/extra-typings": "^14.0.0",
-        "chalk": "catalog:deps",
-        "commander": "^14.0.2",
-        "jiti": "^2.6.1",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
+        "ansi-escapes": "^7.2.0",
+        "chalk": "catalog:deps",
+        "commander": "^14.0.2",
         "fix-esm-import-path": "^1.10.3",
-        "tsx": "catalog:peer",
-        "tsup": "catalog:peer"
+        "jiti": "^2.6.1",
+        "tsup": "catalog:peer",
+        "tsx": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

@@ -1,20 +1,26 @@
-/* eslint-disable @typescript-eslint/no-base-to-string */
-/* eslint-disable @typescript-eslint/naming-convention */
-import { Envapter } from 'envapt';
-import { createLogger, format, transports } from 'winston';
+import { LoggerChannelRegistry } from './LoggerChannelRegistry';
+import { LoggerUtilitiesAccessor } from './LoggerUtilities';
 
+import type { LoggerConfiguration, LoggerOptions } from './Types';
 import type { ILogger } from '@seedcord/types';
-import type { Logform, Logger as Winston } from 'winston';
-import type { ConsoleTransportInstance } from 'winston/lib/winston/transports';
+import type { Logger as Winston } from 'winston';
 
 /**
- * Logging service with console and file output support
+ * Public logging service with channel-aware transports and per-run file output.
  *
- * Provides structured logging with timestamps, levels, and labels.
- * Instances are cached by transport name for consistent formatting.
+ * - Channel separation (e.g., bot, cli, hmr)
+ * - Production-safe JSON logs with ANSI stripping
+ * - Unique log files per run via filename templates
  */
 export class Logger implements ILogger {
     declare private logger: Winston;
+    private readonly label: string;
+    private channel: string;
+    private readonly registry = LoggerChannelRegistry.instance;
+
+    /* Common logging utilities for structured and formatted output */
+    public readonly utils: LoggerUtilitiesAccessor;
+
     private static readonly instances = new Map<string, Logger>();
 
     private static instance(prefix: string): Logger {
@@ -26,98 +32,40 @@ export class Logger implements ILogger {
         return instance;
     }
 
-    constructor(transportName: string) {
-        const consoleTransport = this.createConsoleTransport(transportName);
-        this.initializeLogger(consoleTransport);
+    /**
+     * Configures global logger settings.
+     *
+     * Applies configuration to all channels and clears instance cache.
+     *
+     * @param config - Partial configuration to merge with defaults
+     */
+    public static configure(config: Partial<LoggerConfiguration>): void {
+        LoggerChannelRegistry.instance.configure(config);
+        this.instances.clear();
     }
 
-    private getFormatCustomizations(): Logform.Format[] {
-        const padding = 7;
-        return [
-            format.errors({ stack: true }),
-            format.splat(),
-            format.colorize({ level: true }),
-            format.timestamp({ format: 'D MMM, hh:mm:ss a' }),
-            format.printf((info: Logform.TransformableInfo) => {
-                const ts = String(info.timestamp ?? '');
-                const lvl = String(info.level).padEnd(padding);
-                const lbl = String(info.label ?? '');
-                const msg = String(info.message ?? '');
+    /**
+     * Creates a new Logger instance.
+     *
+     * @param label - Prefix/label for all log entries from this logger
+     * @param options - Optional configuration for channel, format, and ANSI handling
+     */
+    constructor(label: string, options?: LoggerOptions) {
+        this.label = label;
+        this.channel = options?.channel ?? this.registry.getDefaultChannel();
+        this.logger = this.registry.get(this.channel).child({ label: this.label, channel: this.channel });
 
-                const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
-
-                const splatSym = Symbol.for('splat');
-                const raw = (info as unknown as Record<string | symbol, unknown>)[splatSym];
-                const extras = Array.isArray(raw) ? raw : [];
-
-                const cleaned = extras
-                    .filter((x) => !(x instanceof Error))
-                    .filter((x) => {
-                        if (!x) return false;
-                        if (typeof x !== 'object') return true;
-                        return Object.keys(x as object).length > 0;
-                    });
-
-                let rendered = base;
-
-                if (typeof info.stack === 'string') {
-                    rendered += `\n${String(info.stack)}`;
-                }
-
-                if (cleaned.length) {
-                    const parts: string[] = [];
-                    for (const x of cleaned) {
-                        if (typeof x === 'string') parts.push(x);
-                        else {
-                            try {
-                                parts.push(JSON.stringify(x, null, 2));
-                            } catch {
-                                parts.push(String(x));
-                            }
-                        }
-                    }
-                    rendered += `\n${parts.join(' ')}`;
-                }
-
-                return rendered;
-            })
-        ];
+        this.utils = new LoggerUtilitiesAccessor(this);
     }
 
-    private createConsoleTransport(transportName: string): ConsoleTransportInstance {
-        return new transports.Console({
-            format: format.combine(format.label({ label: transportName }), ...this.getFormatCustomizations()),
-            level: Envapter.isDevelopment ? 'silly' : Envapter.isStaging ? 'debug' : 'info'
-        });
-    }
-
-    private initializeLogger(consoleTransport: transports.ConsoleTransportInstance): void {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const transportsArray: any[] = [consoleTransport];
-
-        // Add file transport only in non-production environments
-        if (Envapter.isDevelopment) {
-            const maxSizeInMB = 10;
-            transportsArray.push(
-                new transports.File({
-                    filename: 'logs/application.log',
-                    level: 'debug',
-                    format: format.combine(
-                        format.uncolorize(),
-                        format.errors({ stack: true }),
-                        format.timestamp(),
-                        format.json({ bigint: true, space: 2 })
-                    ),
-                    maxsize: maxSizeInMB * 1024 * 1024, // 10MB
-                    maxFiles: 5,
-                    tailable: true
-                })
-            );
-        }
-
-        this.logger = createLogger({
-            transports: transportsArray
-        });
+    /**
+     * Switches this logger to a different channel.
+     *
+     * @param channel - Channel name to switch to
+     */
+    public setChannel(channel: string): void {
+        this.channel = channel;
+        this.logger = this.registry.get(channel).child({ label: this.label, channel });
     }
 
     /**
@@ -198,6 +146,7 @@ export class Logger implements ILogger {
      * @param msg - The error message to log
      * @param args - Additional data to include in the log entry
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public static Error(prefix: string, msg: string, ...args: unknown[]): void {
         const logger = this.instance(prefix);
         logger.error(msg, ...args);
@@ -211,6 +160,7 @@ export class Logger implements ILogger {
      * @param msg - The informational message to log
      * @param args - Additional data to include in the log entry
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public static Info(prefix: string, msg: string, ...args: unknown[]): void {
         const logger = this.instance(prefix);
         logger.info(msg, ...args);
@@ -224,6 +174,7 @@ export class Logger implements ILogger {
      * @param msg - The warning message to log
      * @param args - Additional data to include in the log entry
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public static Warn(prefix: string, msg: string, ...args: unknown[]): void {
         const logger = this.instance(prefix);
         logger.warn(msg, ...args);
@@ -237,6 +188,7 @@ export class Logger implements ILogger {
      * @param msg - The debug message to log
      * @param args - Additional data to include in the log entry
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public static Debug(prefix: string, msg: string, ...args: unknown[]): void {
         const logger = this.instance(prefix);
         logger.debug(msg, ...args);
@@ -250,6 +202,7 @@ export class Logger implements ILogger {
      * @param msg - The silly message to log
      * @param args - Additional data to include in the log entry
      */
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     public static Silly(prefix: string, msg: string, ...args: unknown[]): void {
         const logger = this.instance(prefix);
         logger.silly(msg, ...args);

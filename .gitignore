@@ -45,8 +45,8 @@ Logs/
 # Ignore coverage reports
 coverage/
 
-# Seedcord CLI cache
-.seedcord-cli/
+# Ignore temp files
+temp/
 
 # Ignore temporary files
 *.tmp

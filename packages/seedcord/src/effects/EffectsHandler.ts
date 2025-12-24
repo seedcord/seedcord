@@ -1,3 +1,5 @@
+import { Logger } from '@seedcord/services';
+
 import type { EffectKeys, AllEffects } from './types/Effects';
 import type { Core } from '@interfaces/Core';
 
@@ -10,6 +12,8 @@ import type { Core } from '@interfaces/Core';
  * @typeParam KeyOfEffects - The specific side effect type this handler processes
  */
 export abstract class EffectsHandler<KeyOfEffects extends EffectKeys> {
+    protected readonly logger: Logger;
+
     /**
      * Creates a new effects handler instance.
      *
@@ -22,6 +26,7 @@ export abstract class EffectsHandler<KeyOfEffects extends EffectKeys> {
     ) {
         this.data = data;
         this.core = core;
+        this.logger = new Logger(this.constructor.name);
     }
 
     /**

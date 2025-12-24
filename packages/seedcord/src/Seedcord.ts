@@ -6,7 +6,6 @@ import {
     SeedcordErrorCode,
     StartupPhase
 } from '@seedcord/services';
-import chalk from 'chalk';
 
 import { Bot } from './bot/Bot';
 import { EffectsRegistry } from './effects/EffectsRegistry';
@@ -74,21 +73,21 @@ export class Seedcord extends Pluggable implements Core {
      */
     private registerStartupTasks(): void {
         this.startup.addTask(StartupPhase.Configuration, 'Effect Initialization', async () => {
-            this.effects.logger.info(chalk.bold('Initializing'));
+            this.effects.logger.utils.initialization('Effects', 'start');
             await this.effects.init();
-            this.effects.logger.info(chalk.bold('Initialized'));
+            this.effects.logger.utils.initialization('Effects', 'end');
         });
 
         this.startup.addTask(StartupPhase.Instantiation, 'Bot Initialization', async () => {
-            this.bot.logger.info(chalk.bold('Initializing'));
+            this.bot.logger.utils.initialization('Bot', 'start');
             await this.bot.init();
-            this.bot.logger.info(chalk.bold('Initialized'));
+            this.bot.logger.utils.initialization('Bot', 'end');
         });
 
         this.startup.addTask(StartupPhase.Ready, 'Health Check', async () => {
-            this.healthCheck.logger.info(chalk.bold('Initializing'));
+            this.healthCheck.logger.utils.initialization('HealthCheck', 'start');
             await this.healthCheck.init();
-            this.healthCheck.logger.info(chalk.bold('Initialized'));
+            this.healthCheck.logger.utils.initialization('HealthCheck', 'end');
         });
     }
 
