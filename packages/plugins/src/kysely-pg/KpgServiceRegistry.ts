@@ -38,16 +38,17 @@ export class KpgServiceRegistry<Database extends object> {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
                         const instance = new Service(this.plugin, this.core);
-                        this.logger.info(
-                            `${chalk.italic('Registered')} ${chalk.bold.yellow(instance.constructor.name)} from ${chalk.gray(rel)}`
-                        );
+                        this.logger.utils.registration(instance.constructor.name, rel);
                     }
                 }
             },
             this.logger
         );
 
-        this.logger.info(`${chalk.bold.green('Loaded')}: ${chalk.magenta(Object.keys(this.services).length)} services`);
+        this.logger.utils.list(
+            [`${chalk.magenta(Object.keys(this.services).length)} services`],
+            chalk.bold.green('Loaded')
+        );
     }
 
     private isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {

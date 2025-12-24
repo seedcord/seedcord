@@ -38,11 +38,10 @@ export class CommandRegistry implements Initializeable {
 
         await this.loadCommands(this.core.config.bot.commands.path);
 
-        this.logger.info(
-            `${chalk.bold.green('Loaded')}: ${chalk.magenta.bold(
-                this.globalCommands.length
-            )} global, ${chalk.magenta.bold(this.guildCommands.size)} guild groups`
-        );
+        this.logger.utils.summary('Loaded commands', {
+            global: this.globalCommands.length,
+            'guild groups': this.guildCommands.size
+        });
     }
 
     private async loadCommands(dir: string): Promise<void> {
@@ -77,7 +76,7 @@ export class CommandRegistry implements Initializeable {
 
         if (meta.scope === 'global') {
             this.globalCommands.push(comp);
-            this.logger.info(`${chalk.italic('Registered')} ${chalk.bold.yellow(ctor.name)} from ${chalk.gray(rel)}`);
+            this.logger.utils.registration(ctor.name, rel);
             this.logger.info(`→ Global ${commandType}: ${chalk.bold.cyan(comp.name)}`);
         } else {
             for (const g of meta.guilds) {
@@ -85,7 +84,7 @@ export class CommandRegistry implements Initializeable {
                 arr.push(comp);
                 this.guildCommands.set(g, arr);
             }
-            this.logger.info(`${chalk.italic('Registered')} ${chalk.bold.yellow(ctor.name)} from ${chalk.gray(rel)}`);
+            this.logger.utils.registration(ctor.name, rel);
             this.logger.info(
                 `→ Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
             );
@@ -96,9 +95,9 @@ export class CommandRegistry implements Initializeable {
         if (this.globalCommands.length > 0) {
             await this.core.bot.client.application?.commands.set(this.globalCommands);
             const tag = this.globalCommands.length === 1 ? 'command' : 'commands';
-            this.logger.info(
-                `${chalk.bold.green('Configured')} ${chalk.magenta.bold(this.globalCommands.length)} global ${tag}`
-            );
+            this.logger.utils.summary('Configured global', {
+                [tag]: this.globalCommands.length
+            });
             this.logger.info(`→ ${this.globalCommands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
 
@@ -111,9 +110,9 @@ export class CommandRegistry implements Initializeable {
 
             await guild.commands.set(commands);
             const tag = commands.length === 1 ? 'command' : 'commands';
-            this.logger.info(
-                `${chalk.bold.green('Configured')} ${chalk.magenta.bold(commands.length)} ${tag} for guild ${chalk.bold.yellow(guild.name)}`
-            );
+            this.logger.utils.summary(`Configured commands for ${chalk.bold.yellow(guild.name)}`, {
+                [tag]: commands.length
+            });
             this.logger.info(`→ ${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
     }

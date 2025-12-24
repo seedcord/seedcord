@@ -63,14 +63,12 @@ export class EventController implements Initializeable {
         await this.loadHandlers(handlersDir);
         this.attachToClient();
 
-        this.logger.info(`→ ${chalk.magenta.bold(this.middlewares.length)} middlewares`);
-        const loadedEventsArray: string[] = [];
+        this.logger.info(`${chalk.bold.green('Loaded event handlers:')}`);
+        const eventList: string[] = [`${chalk.magenta.bold(this.middlewares.length)} middlewares`];
         this.eventMap.forEach((handlers, eventName) => {
-            loadedEventsArray.push(`${chalk.magenta.bold(handlers.length)} ${eventName}`);
+            eventList.push(`${chalk.magenta.bold(handlers.length)} ${eventName}`);
         });
-        this.logger.info(
-            `${chalk.bold.green('Loaded')}: ${this.eventMap.size > 0 ? loadedEventsArray.join(', ') : 'none'}`
-        );
+        this.logger.utils.list(eventList);
     }
 
     private async loadHandlers(dir: string): Promise<void> {
@@ -80,9 +78,7 @@ export class EventController implements Initializeable {
                 for (const val of Object.values(imported)) {
                     if (!this.isEventHandlerClass(val)) continue;
                     this.registerHandler(val);
-                    this.logger.info(
-                        `${chalk.italic('Registered')} ${chalk.bold.yellow(val.name)} from ${chalk.gray(relativePath)}`
-                    );
+                    this.logger.utils.registration(val.name, relativePath);
                 }
             },
             this.logger
@@ -120,8 +116,10 @@ export class EventController implements Initializeable {
         });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
-        this.logger.info(
-            `${chalk.italic('Registered event middleware')} ${chalk.bold.yellow(middlewareCtor.name)} ${chalk.gray(`(priority ${metadata.priority})`)} from ${chalk.gray(relativePath)}`
+        this.logger.utils.registration(
+            `${middlewareCtor.name} ${chalk.gray(`(${metadata.priority})`)}`,
+            relativePath,
+            'event middleware'
         );
     }
 

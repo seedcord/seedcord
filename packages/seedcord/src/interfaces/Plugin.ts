@@ -1,5 +1,4 @@
 import { SeedcordError, SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
-import chalk from 'chalk';
 
 import type { Core } from './Core';
 import type {
@@ -129,9 +128,9 @@ export class Pluggable<
             startupPhase,
             `Plugin:${key}`,
             async () => {
-                instance.logger.info(chalk.bold('Initializing'));
+                instance.logger.utils.initialization(key, 'start');
                 await instance.init();
-                instance.logger.info(chalk.bold('Initialized'));
+                instance.logger.utils.initialization(key, 'end');
             },
             Pluggable.PLUGIN_INIT_TIMEOUT_MS
         );
