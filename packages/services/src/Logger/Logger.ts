@@ -1,7 +1,7 @@
 import { LoggerChannelRegistry } from './LoggerChannelRegistry';
 import { LoggerUtilitiesAccessor } from './LoggerUtilities';
 
-import type { LoggerConfiguration, LoggerOptions } from './aTypes';
+import type { LoggerConfiguration, LoggerOptions } from './Types';
 import type { ILogger } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 

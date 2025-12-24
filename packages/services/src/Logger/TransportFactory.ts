@@ -6,7 +6,7 @@ import { format, transports } from 'winston';
 
 import { LogFormatter } from './LogFormatter';
 
-import type { LoggerFormatMode, LoggerLevel, TransportConfig, WinstonTransport } from './aTypes';
+import type { LoggerFormatMode, LoggerLevel, TransportConfig, WinstonTransport } from './Types';
 
 /**
  * Input parameters for building a Winston transport.

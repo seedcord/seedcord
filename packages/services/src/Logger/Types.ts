@@ -52,6 +52,8 @@ export interface LoggerConfiguration {
     channels: Record<string, ChannelConfig>;
     /** Filename pattern for development logs */
     devFilePattern: string;
+    /** Filename pattern for staging logs */
+    stagingFilePattern: string;
     /** Filename pattern for production logs */
     prodFilePattern: string;
     /** Maximum file size in MB for log rotation */

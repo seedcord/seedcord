@@ -3,7 +3,7 @@ import { createLogger } from 'winston';
 
 import { TransportFactory } from './TransportFactory';
 
-import type { ChannelConfig, LoggerConfiguration, LoggerLevel, TransportConfig, WinstonInstance } from './aTypes';
+import type { ChannelConfig, LoggerConfiguration, LoggerLevel, TransportConfig, WinstonInstance } from './Types';
 
 /**
  * Manages Winston logger instances per channel with caching.
@@ -13,7 +13,7 @@ import type { ChannelConfig, LoggerConfiguration, LoggerLevel, TransportConfig, 
  * @internal
  */
 export class LoggerChannelRegistry {
-    private static _instance: LoggerChannelRegistry;
+    private static _instance: LoggerChannelRegistry | null = null;
 
     private readonly DEFAULT_LEVEL: LoggerLevel = Envapter.isDevelopment
         ? 'silly'
@@ -25,10 +25,13 @@ export class LoggerChannelRegistry {
         defaultChannel: 'default',
         channels: {},
         devFilePattern: 'logs/{channel}-{timestamp}.log',
+        stagingFilePattern: 'logs/staging-{date}-{timestamp}.jsonl',
         prodFilePattern: 'logs/production-{date}.jsonl',
         fileMaxSizeMB: 10,
         fileMaxFiles: 5
     };
+
+    private readonly FORMAT = Envapter.isDevelopment ? 'pretty' : 'json';
 
     private readonly cache = new Map<string, WinstonInstance>();
     private readonly transportFactory: TransportFactory;
@@ -41,7 +44,6 @@ export class LoggerChannelRegistry {
      * Gets the singleton instance of the registry.
      */
     public static get instance(): LoggerChannelRegistry {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         return (this._instance ??= new LoggerChannelRegistry());
     }
 
@@ -50,12 +52,16 @@ export class LoggerChannelRegistry {
             name,
             level: this.DEFAULT_LEVEL,
             transports: [
-                { type: 'console', level: this.DEFAULT_LEVEL, format: 'pretty' },
+                { type: 'console', level: this.DEFAULT_LEVEL, format: this.FORMAT, stripAnsi: !Envapter.isDevelopment },
                 {
                     type: 'file',
-                    level: Envapter.isDevelopment ? 'debug' : 'info',
-                    filename: Envapter.isDevelopment ? this.config.devFilePattern : this.config.prodFilePattern,
-                    format: Envapter.isDevelopment ? 'pretty' : 'json',
+                    level: this.DEFAULT_LEVEL,
+                    filename: Envapter.isDevelopment
+                        ? this.config.devFilePattern
+                        : Envapter.isStaging
+                          ? this.config.stagingFilePattern
+                          : this.config.prodFilePattern,
+                    format: this.FORMAT,
                     stripAnsi: true,
                     maxSize: this.config.fileMaxSizeMB * 1024 * 1024,
                     maxFiles: this.config.fileMaxFiles

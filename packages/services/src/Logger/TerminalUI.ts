@@ -2,7 +2,7 @@ import ansiEscapes from 'ansi-escapes';
 import logUpdate from 'log-update';
 import ora, { type Ora } from 'ora';
 
-import type { TerminalUIConfig } from './aTypes';
+import type { TerminalUIConfig } from './Types';
 
 /**
  * Represents a live-updating section in the terminal.
