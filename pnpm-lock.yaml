@@ -58,10 +58,10 @@ importers:
         specifier: ^20.0.0
         version: 20.0.0
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:packages/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:packages/tsconfig
       '@swc/core':
         specifier: ^1.15.3
@@ -133,10 +133,10 @@ importers:
         specifier: workspace:*
         version: link:../../packages/docs-engine
       '@seedcord/docs-generator':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/docs-generator
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/eslint-config
       '@seedcord/types':
         specifier: workspace:*
@@ -185,7 +185,7 @@ importers:
         version: 5.0.9(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/react':
         specifier: ^19.2.7
@@ -224,20 +224,20 @@ importers:
         specifier: catalog:deps
         version: 0.2.2
       seedcord:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../packages/seedcord
       typescript:
         specifier: catalog:peer
         version: 5.9.3
     devDependencies:
       '@seedcord/cli':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../packages/cli
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../packages/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../packages/tsconfig
 
   packages/cli:
@@ -249,10 +249,10 @@ importers:
         specifier: ^14.0.0
         version: 14.0.0(commander@14.0.2)
       '@seedcord/services':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../services
       '@seedcord/types':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../types
       chalk:
         specifier: catalog:deps
@@ -274,13 +274,13 @@ importers:
         version: 4.20.6
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
       typescript:
         specifier: catalog:peer
@@ -299,13 +299,13 @@ importers:
         version: 5.0.10(typedoc@0.28.14(typescript@5.9.3))
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
 
   packages/docs-generator:
@@ -321,13 +321,13 @@ importers:
         version: 5.0.10(typedoc@0.28.14(typescript@5.9.3))
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
 
   packages/eslint-config:
@@ -385,10 +385,10 @@ importers:
   packages/plugins:
     dependencies:
       '@seedcord/types':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../types
       '@seedcord/utils':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../utils
       chalk:
         specifier: catalog:deps
@@ -409,7 +409,7 @@ importers:
         specifier: catalog:deps
         version: 0.2.2
       seedcord:
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../seedcord
       type-fest:
         specifier: catalog:deps
@@ -419,13 +419,13 @@ importers:
         version: 5.9.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
       '@types/pg':
         specifier: ^8.16.0
@@ -434,13 +434,13 @@ importers:
   packages/seedcord:
     dependencies:
       '@seedcord/services':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../services
       '@seedcord/types':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../types
       '@seedcord/utils':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../utils
       chalk:
         specifier: catalog:deps
@@ -462,19 +462,19 @@ importers:
         version: 5.9.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
 
   packages/services:
     dependencies:
       '@seedcord/types':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../types
       chalk:
         specifier: catalog:deps
@@ -496,13 +496,13 @@ importers:
         version: 3.19.0
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
 
   packages/tsconfig: {}
@@ -510,10 +510,10 @@ importers:
   packages/tsup-config:
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       typescript:
         specifier: catalog:peer
@@ -529,22 +529,22 @@ importers:
         version: 5.9.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
 
   packages/utils:
     dependencies:
       '@seedcord/services':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../services
       '@seedcord/types':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../types
       type-fest:
         specifier: catalog:deps
@@ -554,13 +554,13 @@ importers:
         version: 5.9.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsup-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../tsup-config
 
 packages:
