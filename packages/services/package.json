@@ -41,7 +41,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/types": "workspace:^",
+        "@seedcord/types": "workspace:*",
         "chalk": "catalog:deps",
         "discord.js": "catalog:deps",
         "envapt": "catalog:deps",
@@ -49,9 +49,9 @@
         "winston": "^3.19.0"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:^",
-        "@seedcord/tsconfig": "workspace:^",
-        "@seedcord/tsup-config": "workspace:^"
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsup-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",
