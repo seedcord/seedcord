@@ -108,7 +108,10 @@ export class TransportFactory {
 
     private resolveFilename(template: string, channel: string): string {
         const { date, timestamp } = this.buildTimestamp();
-        return template.replace('{channel}', channel).replace('{date}', date).replace('{timestamp}', timestamp);
+        return template
+            .replaceAll('{channel}', channel)
+            .replaceAll('{date}', date)
+            .replaceAll('{timestamp}', timestamp);
     }
 
     /**

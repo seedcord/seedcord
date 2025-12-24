@@ -48,9 +48,7 @@ export class OutputCapture {
         handlers: TuiCaptureHandlers
     ): { stdoutRaw: WriteMethod; stderrRaw: WriteMethod } {
         if (this.installed) {
-            const so = this.stdoutOriginal ?? process.stdout.write.bind(process.stdout);
-            const se = this.stderrOriginal ?? process.stderr.write.bind(process.stderr);
-            return { stdoutRaw: so, stderrRaw: se };
+            throw new Error('OutputCapture is already installed. Call uninstall() before installing again.');
         }
 
         this.stdoutOriginal = process.stdout.write.bind(process.stdout);

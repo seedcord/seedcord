@@ -51,3 +51,5 @@
 - Import order eslint warnings and indentation and spacing eslint warnings can be fixed by running `pnpm lint:fix` after all changes are made.
 
 - Don't directly add dependencies to package.jsons. use the `pnpm add` command so you pull the latest version instead.
+
+- Make sure to check the declaration files for packages when using them to ensure usage of the latest and correct APIs.

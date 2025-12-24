@@ -100,10 +100,10 @@ export class LoggerChannelRegistry {
 
         return {
             name,
-            ...(level ? { level } : {}),
+            ...(level !== undefined ? { level } : {}),
             ...(stripAnsi !== undefined ? { stripAnsi } : {}),
-            ...(format ? { format } : {}),
-            ...(transports ? { transports } : {})
+            ...(format !== undefined ? { format } : {}),
+            ...(transports !== undefined ? { transports } : {})
         };
     }
 

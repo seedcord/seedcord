@@ -39,7 +39,7 @@ export class LogFormatter {
         if (typeof value === 'string') return value;
         if (value === undefined || value === null) return '';
         if (typeof (value as { toString?: () => string }).toString === 'function') {
-            return (value as { toString: () => string }).toString();
+            return String((value as { toString: () => string }).toString());
         }
         if (typeof value === 'object') {
             try {
@@ -63,10 +63,9 @@ export class LogFormatter {
         return value;
     }
 
-    private sanitizeExtras(info: Logform.TransformableInfo): unknown[] {
+    private getExtras(info: Logform.TransformableInfo): unknown[] {
         const raw = (info as unknown as Record<string | symbol, unknown>)[this.SPLAT];
-        const extras = Array.isArray(raw) ? raw : [];
-        return extras.map((entry) => this.sanitizeAnsi(entry));
+        return Array.isArray(raw) ? raw : [];
     }
 
     /**
@@ -100,7 +99,7 @@ export class LogFormatter {
                 }
 
                 const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
-                const extras = this.sanitizeExtras(info);
+                const extras = this.getExtras(info);
 
                 let rendered = base;
 
@@ -153,7 +152,7 @@ export class LogFormatter {
                 format((info) => {
                     info.message = typeof info.message === 'string' ? stripAnsi(info.message) : info.message;
                     if (typeof info.stack === 'string') info.stack = stripAnsi(info.stack);
-                    const extras = this.sanitizeExtras(info);
+                    const extras = this.getExtras(info);
                     if (extras.length)
                         (info as Record<string, unknown>).extras = extras.map((entry) => this.sanitizeAnsi(entry));
                     return info;

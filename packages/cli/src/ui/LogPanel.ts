@@ -44,7 +44,7 @@ export class LogPanel {
         const MAX_LINES = 200;
         const max = this.options.maxLines ?? MAX_LINES;
         if (state.lines.length > max) {
-            state.lines = state.lines.slice(state.lines.length - max);
+            state.lines.splice(0, state.lines.length - max);
         }
     }
 
