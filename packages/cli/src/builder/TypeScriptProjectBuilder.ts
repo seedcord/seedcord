@@ -157,6 +157,16 @@ export class TypeScriptProjectBuilder {
     private resolveEmittedEntry(config: ResolvedSeedcordDevConfig): string {
         const relFromRoot = relative(config.root, config.entry);
         const relNoExt = relFromRoot.slice(0, relFromRoot.length - extname(relFromRoot).length);
-        return resolve(config.build.outDir, `${relNoExt}.js`);
+
+        const basePath = resolve(config.build.outDir, relNoExt);
+        const candidateExts = ['.js', '.mjs', '.cjs'];
+
+        for (const ext of candidateExts) {
+            const candidate = `${basePath}${ext}`;
+            if (existsSync(candidate)) return candidate;
+        }
+
+        // Fallback if no emitted file was found
+        return `${basePath}.js`;
     }
 }
