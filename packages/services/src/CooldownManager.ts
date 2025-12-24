@@ -1,6 +1,6 @@
 import { Envapter } from 'envapt';
 
-import { Logger } from './lmaooo';
+import { Logger } from './Logger';
 
 /**
  * Configuration options for CooldownManager.
