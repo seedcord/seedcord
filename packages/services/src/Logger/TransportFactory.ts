@@ -39,6 +39,7 @@ interface BuildInput {
 export class TransportFactory {
     private readonly formatter: LogFormatter;
     private readonly MILLISECOND_PAD = 3;
+    private cachedSessionTimestamp: { date: string; timestamp: string } | null = null;
 
     constructor() {
         this.formatter = new LogFormatter();
@@ -81,6 +82,10 @@ export class TransportFactory {
     }
 
     private buildTimestamp(): { date: string; timestamp: string } {
+        if (this.cachedSessionTimestamp) {
+            return this.cachedSessionTimestamp;
+        }
+
         const now = new Date();
         const yyyy = now.getFullYear();
         const mm = this.pad(now.getMonth() + 1);
@@ -93,7 +98,8 @@ export class TransportFactory {
         const date = `${yyyy}-${mm}-${dd}`;
         const timestamp = `${date}-${hh}${min}${ss}-${ms}`;
 
-        return { date, timestamp };
+        this.cachedSessionTimestamp = { date, timestamp };
+        return this.cachedSessionTimestamp;
     }
 
     private resolveFilename(template: string, channel: string): string {
