@@ -6,7 +6,7 @@ import {
     SeedcordRangeError,
     SeedcordTypeError,
     isSeedcordError
-} from '../src/Errors';
+} from '../../src/Errors';
 
 describe('Seedcord error constructors', () => {
     it('preserves metadata for parameterless codes', () => {
