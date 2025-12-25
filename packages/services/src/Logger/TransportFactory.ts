@@ -63,6 +63,10 @@ export class TransportFactory {
         );
     }
 
+    public buildPreFormat(): ReturnType<typeof format.combine> {
+        return format.combine(this.formatter.createPreFormat());
+    }
+
     private buildConsoleFormat(label: string): ReturnType<typeof format.combine> {
         // Use JSON format in production, pretty format in development
         if (Envapter.isProduction) {

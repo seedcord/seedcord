@@ -156,7 +156,11 @@ export class LoggerChannelRegistry {
                 })
             );
 
-        const logger = createLogger({ level: effectiveLevel, transports });
+        const logger = createLogger({
+            level: effectiveLevel,
+            format: this.transportFactory.buildPreFormat(),
+            transports
+        });
 
         for (const entry of this.sinks.values()) {
             this.applySinkToCachedLogger(channel, logger, entry);
