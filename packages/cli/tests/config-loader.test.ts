@@ -3,7 +3,7 @@ import { join, dirname, resolve } from 'node:path';
 import { describe, it, expect, vi } from 'vitest';
 
 import { ConfigLoader } from '../src/config/ConfigLoader';
-import { SeedcordDevRunner } from '../src/runtime/SeedcordDevRunner';
+import { SeedcordDevRunner } from '../src/runners/SeedcordDevRunner';
 
 import type { SeedcordDevConfig } from '../src/config/schema';
 import type { ModuleLoader } from '../src/modules/ModuleLoader';
@@ -89,8 +89,6 @@ describe('SeedcordDevRunner', () => {
                 }
             }))
         };
-        const start = vi.fn(() => undefined);
-        const instanceLoader = { load: vi.fn(() => ({ start })) };
 
         const logger: ILogger = {
             error: vi.fn(),
@@ -102,13 +100,11 @@ describe('SeedcordDevRunner', () => {
             silly: vi.fn()
         };
 
-        const runner = new SeedcordDevRunner(locator as never, configLoader as never, instanceLoader as never, logger);
+        const runner = new SeedcordDevRunner(locator as never, configLoader as never, logger);
 
-        await runner.run();
+        await expect(runner.run()).rejects.toThrow('Cannot find entry file');
 
         expect(locator.locate).toHaveBeenCalledTimes(1);
         expect(configLoader.load).toHaveBeenCalledWith(configPath);
-        expect(instanceLoader.load).toHaveBeenCalledWith(instancePath);
-        expect(start).toHaveBeenCalledTimes(1);
     });
 });

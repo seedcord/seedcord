@@ -1,6 +1,6 @@
 import { isSeedcordError } from '@seedcord/services';
 
-import { SeedcordDevRunner } from '../runtime/SeedcordDevRunner';
+import { SeedcordDevRunner } from '../runners/SeedcordDevRunner';
 
 import type { ILogger } from '@seedcord/types';
 import type { Command } from 'commander';
@@ -15,9 +15,10 @@ export class DevCommand {
         program
             .command('dev')
             .description('Run a Seedcord instance from the config file (seedcord.config.ts or seedcord.config.mts)')
-            .action(async () => {
+            .option('--runtime <type>', 'Runtime to use (ts or vite)', 'ts')
+            .action(async (options: { runtime: string }) => {
                 try {
-                    await this.runner.run();
+                    await this.runner.run(options.runtime as 'ts' | 'vite');
                 } catch (error: unknown) {
                     this.logger.error('Seedcord dev failed', error);
                     if (isSeedcordError(error)) process.exitCode = 1;

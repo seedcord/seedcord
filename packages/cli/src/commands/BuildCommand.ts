@@ -1,6 +1,6 @@
 import { isSeedcordError } from '@seedcord/services';
 
-import { SeedcordBuildRunner } from '../runtime/SeedcordBuildRunner';
+import { SeedcordBuildRunner } from '../runners/SeedcordBuildRunner';
 
 import type { ILogger } from '@seedcord/types';
 import type { Command } from 'commander';

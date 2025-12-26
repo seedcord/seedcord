@@ -3,6 +3,7 @@ import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 import { ConfigLoader } from '../config/ConfigLoader';
 import { ConfigLocator } from '../config/ConfigLocator';
 import { TsRuntime } from '../dev/runtime/TsRuntime';
+import { ViteDevRuntime } from '../dev/runtime/ViteDevRuntime';
 import { RuntimeModuleLoader } from '../modules/RuntimeModuleLoader';
 import { resolveDefaultExport } from '../utils/resolveDefaultExport';
 
@@ -60,7 +61,6 @@ export class SeedcordDevRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
-        private readonly runtime: DevRuntime,
         private readonly logger: ILogger
     ) {}
 
@@ -68,14 +68,15 @@ export class SeedcordDevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
-        const runtime = new TsRuntime();
 
-        return new SeedcordDevRunner(locator, configLoader, runtime, logger);
+        return new SeedcordDevRunner(locator, configLoader, logger);
     }
 
-    public async run(): Promise<void> {
+    public async run(runtimeType: 'ts' | 'vite' = 'ts'): Promise<void> {
         const config = await this.loadConfig();
-        const session = new SeedcordDevSession(config, this.runtime, this.logger);
+
+        const runtime = runtimeType === 'vite' ? new ViteDevRuntime() : new TsRuntime();
+        const session = new SeedcordDevSession(config, runtime, this.logger);
 
         try {
             await session.start();

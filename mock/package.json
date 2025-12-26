@@ -10,7 +10,7 @@
         "directory": "mock"
     },
     "scripts": {
-        "dev": "seedcord dev",
+        "dev": "seedcord dev --runtime vite",
         "build": "seedcord build",
         "start": "pnpm build && node dist/index.mjs",
         "clean": "rm -rf dist",
