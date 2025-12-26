@@ -42,6 +42,7 @@ export class EventController implements Initializeable {
 
     private readonly eventMap = new Collection<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
     private readonly middlewares: RegisteredEventMiddleware[] = [];
+    private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
 
     public constructor(protected core: Core) {}
 
@@ -204,43 +205,42 @@ export class EventController implements Initializeable {
                 `Attaching ${chalk.bold.green(eventName)} to the client with ${chalk.gray(handlerEntries.length)} handler(s)`
             );
 
-            for (const entry of handlerEntries) {
-                const register =
-                    entry.frequency === 'once'
-                        ? this.core.bot.client.once.bind(this.core.bot.client)
-                        : this.core.bot.client.on.bind(this.core.bot.client);
-
-                register(eventName, (...args: ClientEvents[typeof eventName]) => {
-                    this.core.bot.emit('any:event', eventName, ...args);
-                    void (async () => {
-                        await this.processEvent(eventName, args, entry.ctor).catch((err: Error) => {
-                            this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                            this.core.bot.emit('error:unhandled:event', err);
-                        });
-                    })();
-                });
-            }
+            // Attach a single listener per event type that looks up handlers from the map
+            this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
+                this.core.bot.emit('any:event', eventName, ...args);
+                void (async () => {
+                    await this.processEvent(eventName, args).catch((err: Error) => {
+                        this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                        this.core.bot.emit('error:unhandled:event', err);
+                    });
+                })();
+            });
         }
     }
 
     private async processEvent<KeyOfEvents extends keyof ClientEvents>(
         eventName: KeyOfEvents,
-        args: ClientEvents[KeyOfEvents],
-        specificHandler?: EventHandlerConstructor
+        args: ClientEvents[KeyOfEvents]
     ): Promise<void> {
-        const shouldContinue = await this.runMiddlewares(eventName, args);
-        if (!shouldContinue) return;
-
-        if (specificHandler) {
-            await this.processHandler(eventName, specificHandler, args);
-            return;
-        }
-
         const handlerEntries = this.eventMap.get(eventName);
         if (!handlerEntries || handlerEntries.length === 0) return;
 
-        for (const entry of handlerEntries) {
+        // Check if there are any handlers that need to execute
+        const handlersToExecute = handlerEntries.filter(
+            (entry) => entry.frequency !== 'once' || !this.executedOnceHandlers.has(entry.ctor)
+        );
+
+        // If no handlers need to execute, skip middlewares and return early
+        if (handlersToExecute.length === 0) return;
+
+        const shouldContinue = await this.runMiddlewares(eventName, args);
+        if (!shouldContinue) return;
+
+        for (const entry of handlersToExecute) {
             await this.processHandler(eventName, entry.ctor, args);
+
+            // Mark 'once' handlers as executed
+            if (entry.frequency === 'once') this.executedOnceHandlers.add(entry.ctor);
         }
     }
 
