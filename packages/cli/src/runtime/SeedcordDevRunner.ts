@@ -1,22 +1,38 @@
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
-import { SeedcordInstanceLoader } from './SeedcordInstanceLoader';
 import { ConfigLoader } from '../config/ConfigLoader';
 import { ConfigLocator } from '../config/ConfigLocator';
+import { TsRuntime } from '../dev/runtime/TsRuntime';
 import { RuntimeModuleLoader } from '../modules/RuntimeModuleLoader';
+import { resolveDefaultExport } from '../utils/resolveDefaultExport';
 
 import type { ResolvedSeedcordDevConfig } from '../config/schema';
+import type { DevRuntime } from '../dev/runtime/DevRuntime';
 import type { ILogger } from '@seedcord/types';
+
+type MaybePromise<TValue> = TValue | Promise<TValue>;
+
+interface SeedcordLike {
+    start: () => MaybePromise<unknown>;
+}
 
 class SeedcordDevSession {
     constructor(
         private readonly config: ResolvedSeedcordDevConfig,
-        private readonly instanceLoader: SeedcordInstanceLoader,
+        private readonly runtime: DevRuntime,
         private readonly logger: ILogger
     ) {}
 
     public async start(): Promise<void> {
-        const instance = await this.instanceLoader.load(this.config.instance);
+        await this.runtime.start({ config: this.config });
+
+        const { module } = await this.runtime.loadEntry();
+        const exported = resolveDefaultExport(module);
+        const instance = await Promise.resolve(exported);
+
+        if (!this.isSeedcordLike(instance)) {
+            throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
+        }
 
         try {
             this.logger.info('Starting Seedcord instance...');
@@ -27,6 +43,14 @@ class SeedcordDevSession {
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
         }
     }
+
+    public async dispose(): Promise<void> {
+        await this.runtime.dispose();
+    }
+
+    private isSeedcordLike(candidate: unknown): candidate is SeedcordLike {
+        return Boolean(candidate) && typeof (candidate as SeedcordLike).start === 'function';
+    }
 }
 
 /**
@@ -36,7 +60,7 @@ export class SeedcordDevRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
-        private readonly instanceLoader: SeedcordInstanceLoader,
+        private readonly runtime: DevRuntime,
         private readonly logger: ILogger
     ) {}
 
@@ -44,15 +68,20 @@ export class SeedcordDevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
-        const instanceLoader = new SeedcordInstanceLoader(moduleLoader, logger);
+        const runtime = new TsRuntime();
 
-        return new SeedcordDevRunner(locator, configLoader, instanceLoader, logger);
+        return new SeedcordDevRunner(locator, configLoader, runtime, logger);
     }
 
     public async run(): Promise<void> {
         const config = await this.loadConfig();
-        const session = new SeedcordDevSession(config, this.instanceLoader, this.logger);
-        await session.start();
+        const session = new SeedcordDevSession(config, this.runtime, this.logger);
+
+        try {
+            await session.start();
+        } finally {
+            await session.dispose();
+        }
     }
 
     private async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
