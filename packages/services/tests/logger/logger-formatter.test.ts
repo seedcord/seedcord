@@ -1,5 +1,6 @@
 import { Writable } from 'node:stream';
 
+import chalk from 'chalk';
 import { describe, it, expect, beforeEach } from 'vitest';
 import winston from 'winston';
 
@@ -176,6 +177,36 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('abc123');
             expect(output[0]).toContain('userId');
             expect(output[0]).toContain('42');
+        });
+
+        it('should preserve error name formatting including ANSI codes', () => {
+            const { logger, output } = createTestLogger(formatter);
+
+            const error = new Error('Test error message');
+            error.name = `${chalk.bold.red('CustomError')}[${chalk.gray('123')}]`;
+            logger.error('Operation failed', error);
+
+            // The error name with ANSI codes should be preserved in the output
+            expect(output[0]).toContain('Operation failed');
+            expect(output[0]).toContain(chalk.bold.red('CustomError'));
+            expect(output[0]).toContain('Test error message');
+        });
+
+        it('should not duplicate error output', () => {
+            const { logger, output } = createTestLogger(formatter);
+
+            const error = new Error('Unique error message');
+            logger.error('Failed', error);
+
+            // Winston's format.errors() interpolates error message into the log message
+            // So we expect "Failed Unique error message" in the base message
+            // And "Error: Unique error message" at the start of the stack trace
+            expect(output[0]).toContain('Failed Unique error message');
+            expect(output[0]).toContain('Error: Unique error message');
+
+            // The error message appears in: base message + stack trace = 2 times (expected)
+            const occurrences = (output[0]?.match(/Unique error message/g) ?? []).length;
+            expect(occurrences).toBe(2);
         });
     });
 });

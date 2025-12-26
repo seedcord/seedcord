@@ -88,6 +88,52 @@ export class LogFormatter {
         return this.markFormatSpecifiers();
     }
 
+    private preserveErrorFormatting(): Logform.Format {
+        return format((info) => {
+            const extras = this.getExtras(info);
+
+            for (const item of extras) {
+                if (item instanceof Error && /\u001b/.test(item.name)) {
+                    const originalName = item.name;
+                    const plainName = stripAnsi(item.name);
+
+                    (item as unknown as Record<string, unknown>).__formattedName = originalName;
+                    (item as unknown as Record<string, unknown>).__plainName = plainName;
+                }
+            }
+
+            return info;
+        })();
+    }
+
+    private restoreErrorFormatting(): Logform.Format {
+        return format((info) => {
+            if (typeof info.stack === 'string') {
+                const extras = this.getExtras(info);
+
+                for (const item of extras) {
+                    if (item instanceof Error) {
+                        const formattedName = (item as unknown as Record<string, unknown>).__formattedName;
+                        const plainName = (item as unknown as Record<string, unknown>).__plainName;
+
+                        if (typeof formattedName === 'string' && typeof plainName === 'string') {
+                            info.stack = (info.stack as string).replace(
+                                new RegExp(`^${this.escapeRegex(plainName)}`, 'm'),
+                                formattedName
+                            );
+                        }
+                    }
+                }
+            }
+
+            return info;
+        })();
+    }
+
+    private escapeRegex(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     /**
      * Creates pretty-printed format with colors and timestamps.
      *
@@ -99,7 +145,9 @@ export class LogFormatter {
     public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
         const padding = options.padding ?? this.DEFAULT_PADDING;
         return [
+            this.preserveErrorFormatting(),
             format.errors({ stack: true }),
+            this.restoreErrorFormatting(),
             format.splat(),
             format.colorize({ level: true }),
             format.timestamp({ format: 'D MMM, hh:mm:ss a' }),
@@ -110,7 +158,6 @@ export class LogFormatter {
                 let lbl = this.safeString(info.label);
                 let msg = this.safeString(info.message);
 
-                // Strip ANSI codes from all components if requested
                 if (options.stripExtras) {
                     ts = stripAnsi(ts);
                     lvl = stripAnsi(lvl);
@@ -134,6 +181,7 @@ export class LogFormatter {
                 const formatSpecifierCount = (info as Record<string | symbol, unknown>)[this.HAD_FORMAT_KEY] as number;
                 const filtered = cleaned.filter((x, index) => {
                     if (x === null || x === undefined) return false;
+                    if (x instanceof Error && typeof info.stack === 'string') return false;
                     if (typeof x !== 'object') {
                         return index >= formatSpecifierCount;
                     }
