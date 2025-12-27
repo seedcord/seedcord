@@ -1,6 +1,7 @@
 import { isSeedcordError } from '@seedcord/services';
 
 import { BaseCommand } from '@core/BaseCommand';
+import { SilentLogger } from '@utils/SilentLogger';
 
 import { DevRunner } from './DevRunner';
 
@@ -11,7 +12,7 @@ export class DevCommand extends BaseCommand {
 
     constructor() {
         super('dev', 'Run a Seedcord instance from the config file', 'CLI:Dev');
-        this.runner = DevRunner.create(this.logger);
+        this.runner = DevRunner.create(new SilentLogger());
     }
 
     public register(program: Command): void {
