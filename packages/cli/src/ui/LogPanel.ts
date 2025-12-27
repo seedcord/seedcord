@@ -55,7 +55,10 @@ export class LogPanel {
         const state = this.channels.get(this.currentChannel);
         const content = state?.lines.length ? state.lines : [placeholder];
 
-        return [title, ...content];
+        const maxVisible = this.options.maxLines ?? 20;
+        const visibleContent = content.length > maxVisible ? content.slice(-maxVisible) : content;
+
+        return [title, ...visibleContent];
     }
 
     private ensureChannel(channel: string): ChannelState {

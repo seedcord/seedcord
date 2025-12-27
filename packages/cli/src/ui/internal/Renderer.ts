@@ -1,15 +1,18 @@
 import ansiEscapes from 'ansi-escapes';
+import { createLogUpdate } from 'log-update';
 
-import { countVisualLines } from './utils';
+import type logUpdate from 'log-update';
 
 export class Renderer {
-    private lastVisualLines = 0;
     private cursorHidden = false;
+    private readonly logUpdate: typeof logUpdate;
 
     public constructor(
-        private readonly stream: NodeJS.WriteStream,
+        stream: NodeJS.WriteStream,
         private readonly rawWrite: (text: string) => void
-    ) {}
+    ) {
+        this.logUpdate = createLogUpdate(stream, { showCursor: false });
+    }
 
     public enterAlternateScreen(): void {
         this.rawWrite(ansiEscapes.enterAlternativeScreen);
@@ -32,29 +35,20 @@ export class Renderer {
     }
 
     public clearRenderedRegion(): void {
-        if (this.lastVisualLines <= 0) return;
-        this.rawWrite(ansiEscapes.cursorUp(this.lastVisualLines));
-        this.rawWrite(ansiEscapes.eraseDown);
-        this.lastVisualLines = 0;
+        this.logUpdate.clear();
     }
 
     public render(text: string): void {
-        this.clearRenderedRegion();
-
         if (!text) {
-            this.lastVisualLines = 0;
+            this.logUpdate.clear();
             return;
         }
 
-        this.rawWrite(text);
-        this.rawWrite('\n');
-
-        const columns = this.stream.columns;
-        this.lastVisualLines = countVisualLines(text, columns) + 1;
+        this.logUpdate(text);
     }
 
     public dispose(): void {
-        this.clearRenderedRegion();
+        this.logUpdate.done();
         this.showCursor();
     }
 }
