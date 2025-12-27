@@ -8,6 +8,7 @@ interface ChannelState {
 export class LogPanel {
     private readonly channels = new Map<string, ChannelState>();
     private currentChannel: string;
+    private changeHandler: ((lines: string[]) => void) | null = null;
 
     public constructor(
         initialChannel: string,
@@ -17,9 +18,14 @@ export class LogPanel {
         this.ensureChannel(initialChannel);
     }
 
+    public setOnChange(handler: ((lines: string[]) => void) | null): void {
+        this.changeHandler = handler;
+    }
+
     public setChannel(channel: string): void {
         this.currentChannel = channel;
         this.ensureChannel(channel);
+        this.emitChange();
     }
 
     public channel(): string {
@@ -34,6 +40,7 @@ export class LogPanel {
         const key = channel ?? this.currentChannel;
         const state = this.channels.get(key);
         if (state) state.lines = [];
+        this.emitChange();
     }
 
     public append(line: string, channel?: string): void {
@@ -46,6 +53,8 @@ export class LogPanel {
         if (state.lines.length > max) {
             state.lines.splice(0, state.lines.length - max);
         }
+
+        this.emitChange();
     }
 
     public renderLines(): string[] {
@@ -68,5 +77,11 @@ export class LogPanel {
         const created: ChannelState = { name: channel, lines: [] };
         this.channels.set(channel, created);
         return created;
+    }
+
+    private emitChange(): void {
+        const handler = this.changeHandler;
+        if (!handler) return;
+        handler(this.renderLines());
     }
 }

@@ -51,7 +51,9 @@
         "chalk": "catalog:deps",
         "commander": "^14.0.2",
         "fix-esm-import-path": "^1.10.3",
+        "ink": "^6.6.0",
         "jiti": "^2.6.1",
+        "react": "^19.2.3",
         "tsup": "catalog:peer",
         "tsx": "catalog:peer",
         "vite": "^7.3.0"
@@ -60,6 +62,7 @@
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsup-config": "workspace:*",
+        "@types/react": "^19.2.7",
         "typescript": "catalog:peer"
     },
     "publishConfig": {
