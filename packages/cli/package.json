@@ -52,6 +52,7 @@
         "commander": "^14.0.2",
         "fix-esm-import-path": "^1.10.3",
         "ink": "^6.6.0",
+        "ink-spinner": "^5.0.0",
         "jiti": "^2.6.1",
         "react": "^19.2.3",
         "tsup": "catalog:peer",
@@ -63,6 +64,8 @@
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsup-config": "workspace:*",
         "@types/react": "^19.2.7",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
         "typescript": "catalog:peer"
     },
     "publishConfig": {
