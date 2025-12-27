@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
-import { LogStore } from '../stores/LogStore';
+import { LogStore } from '@ui/stores/LogStore';
 
-import type { LogEntry } from '../stores/LogStore';
+import type { LogEntry } from '@ui/stores/LogStore';
 
 export function useLogs(channel?: string): readonly LogEntry[] {
     const store = LogStore.instance;

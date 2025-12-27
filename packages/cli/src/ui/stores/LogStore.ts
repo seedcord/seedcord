@@ -1,6 +1,4 @@
-import { EventEmitter } from 'node:events';
-
-import { LoggerChannelRegistry } from '@seedcord/services';
+import { LoggerChannelRegistry, StrictEventEmitter } from '@seedcord/services';
 
 import type { ILoggerSink, ILoggerSinkHandle, LoggerSinkLogEntry } from '@seedcord/services';
 
@@ -11,7 +9,11 @@ export interface LogEntry {
     timestamp: number;
 }
 
-export class LogStore extends EventEmitter implements ILoggerSink {
+interface LogStoreEvents {
+    change: [];
+}
+
+export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILoggerSink {
     private static _instance: LogStore | null = null;
 
     private entries: LogEntry[] = [];
@@ -44,7 +46,6 @@ export class LogStore extends EventEmitter implements ILoggerSink {
     }
 
     public onLog(entry: LoggerSinkLogEntry): void {
-        // Split multiline logs into separate entries for easier rendering
         const lines = entry.rendered.split(/\r?\n/);
         const now = Date.now();
 
@@ -81,7 +82,6 @@ export class LogStore extends EventEmitter implements ILoggerSink {
         this.pendingUpdate = true;
         const fpsCap = 32;
 
-        // Throttle updates to ~30fps to keep UI responsive under load
         setTimeout(() => {
             this.pendingUpdate = false;
 

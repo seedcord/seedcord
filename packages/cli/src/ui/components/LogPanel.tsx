@@ -1,6 +1,6 @@
 import { Box, Text } from 'ink';
 
-import { useLogs } from '../hooks/useLogs';
+import { useLogs } from '@ui/hooks/useLogs';
 
 import type { ReactElement } from 'react';
 
