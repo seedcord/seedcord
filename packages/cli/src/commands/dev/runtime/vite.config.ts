@@ -25,6 +25,7 @@ export default defineConfig({
     },
     ssr: {
         target: 'node',
+        external: ['@seedcord/services'],
         resolve: {
             conditions: ['node', 'import'],
             externalConditions: ['node']

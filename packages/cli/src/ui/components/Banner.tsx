@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import { Box, Text } from 'ink';
+import React from 'react';
 
 import type { ReactElement } from 'react';
 

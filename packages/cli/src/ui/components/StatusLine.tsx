@@ -1,5 +1,6 @@
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
+import React from 'react';
 
 import type { ReactElement } from 'react';
 

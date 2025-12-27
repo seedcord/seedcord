@@ -21,7 +21,9 @@ class SeedcordDevSession {
     constructor(
         private readonly config: ResolvedSeedcordDevConfig,
         private readonly runtime: DevRuntime,
-        private readonly logger: ILogger
+        // @ts-expect-error - logger is used in other methods if we revert to standard logging, keeping for interface consistency
+        private readonly logger: ILogger,
+        private readonly onStatus?: (status: string) => void
     ) {}
 
     public async start(): Promise<void> {
@@ -36,9 +38,19 @@ class SeedcordDevSession {
         }
 
         try {
-            this.logger.info('Starting Seedcord instance...');
+            this.onStatus?.('Starting Seedcord instance...');
             await instance.start();
-            this.logger.info('Seedcord is running.');
+            this.onStatus?.('Seedcord is running.');
+
+            await new Promise<void>((resolve) => {
+                const cleanup = (): void => {
+                    process.off('SIGINT', cleanup);
+                    process.off('SIGTERM', cleanup);
+                    resolve();
+                };
+                process.on('SIGINT', cleanup);
+                process.on('SIGTERM', cleanup);
+            });
         } catch (error: unknown) {
             const reason = error instanceof Error ? error.message : 'Unknown error';
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
@@ -72,11 +84,11 @@ export class DevRunner {
         return new DevRunner(locator, configLoader, logger);
     }
 
-    public async run(): Promise<void> {
+    public async run(onStatus?: (status: string) => void): Promise<void> {
         const config = await this.loadConfig();
 
         const runtime = new ViteDevRuntime();
-        const session = new SeedcordDevSession(config, runtime, this.logger);
+        const session = new SeedcordDevSession(config, runtime, this.logger, onStatus);
 
         try {
             await session.start();

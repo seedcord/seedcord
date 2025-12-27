@@ -3,7 +3,7 @@
 import { Logger } from '@seedcord/services';
 import chalk from 'chalk';
 import { Box, Text } from 'ink';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { LogPanel, StatusLine } from '@ui/components';
 import { LogStore } from '@ui/stores/LogStore';
