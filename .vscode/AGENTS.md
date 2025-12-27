@@ -22,6 +22,8 @@
 
 - After completing tasks, cd into the packages you've updated and run `pnpm tc` and `pnpm lint:fix` to ensure there are no type errors or linting issues.
 
+- Remember to `pnpm tc` BEFORE you run code. Then run code to test changes. Then at the end you can run `pnpm tc` and `pnpm lint:fix` again to ensure everything is good.
+
 - ALWAYS, I repeat, ALWAYS first cd into the package or app's directory, then run the command via pnpm.
 
 - For most eslint issues, after you make multiple file changes, just run lint:fix regularly instead of trying to fix each file individually. eslint will let you know if there are any remaining issues.

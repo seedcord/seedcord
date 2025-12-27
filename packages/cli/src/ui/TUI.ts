@@ -1,5 +1,3 @@
-import ansiEscapes from 'ansi-escapes';
-
 import { OutputCapture } from './internal/OutputCapture';
 import { Renderer } from './internal/Renderer';
 import { Sections } from './internal/Sections';
@@ -138,7 +136,11 @@ export class TUI {
         this.spinner = new Spinner(text);
 
         const interval = this.config.spinnerIntervalMs ?? DEFAULT_SPINNER_INTERVAL_MS;
-        this.spinnerTick = setInterval(() => this.render(), interval);
+        this.spinnerTick = setInterval(() => {
+            if (!this.spinner) return;
+            this.spinner.advance();
+            this.render();
+        }, interval);
         this.render();
     }
 
@@ -170,9 +172,7 @@ export class TUI {
     }
 
     public moveCursor(x: number, y: number): void {
-        this.renderer?.render('');
-        const w = this.renderer ? this.stream.write.bind(this.stream) : this.stream.write.bind(this.stream);
-        w(ansiEscapes.cursorMove(x, y));
+        this.renderer?.moveCursor(x, y);
     }
 
     private onCapturedLine(line: string): void {
@@ -193,31 +193,27 @@ export class TUI {
         const renderer = this.renderer;
         if (!renderer) return;
 
-        const snapshots = this.sections.snapshotOrdered();
-        const lines: string[] = [];
-
-        for (const s of snapshots) {
-            lines.push(...s.lines);
-        }
-
+        const sections = this.sections.snapshotOrdered();
+        const statusLines: string[] = [];
         const showStatusLine = this.config.statusLine !== false;
+
         if (showStatusLine) {
             const status = this.statusLine;
 
             if (status || this.spinner) {
-                lines.push('');
+                statusLines.push('');
 
                 if (this.spinner && status) {
-                    lines.push(`${this.spinner.frame()} ${status}`);
+                    statusLines.push(`${this.spinner.current()} ${status}`);
                 } else if (this.spinner) {
-                    lines.push(`${this.spinner.frame()} ${this.spinner.text}`);
+                    statusLines.push(`${this.spinner.current()} ${this.spinner.text}`);
                 } else if (status) {
-                    lines.push(status);
+                    statusLines.push(status);
                 }
             }
         }
 
-        renderer.render(lines.join('\n'));
+        renderer.render({ sections, statusLines });
     }
 
     private sectionsCreateIfMissing(id: string): void {

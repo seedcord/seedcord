@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { Envapter } from 'envapt';
 import winston, { createLogger } from 'winston';
 
@@ -136,7 +138,7 @@ export class LoggerChannelRegistry {
 
         for (const transport of logger.transports) {
             if (transport instanceof winston.transports.File) {
-                return transport.filename;
+                return path.resolve(transport.dirname, transport.filename);
             }
         }
 

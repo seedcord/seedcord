@@ -5,12 +5,18 @@ export class Spinner {
 
     private readonly frames: readonly string[] = this.staticFrames();
     private index = 0;
+    private currentFrame: string;
 
-    public constructor(public text: string) {}
+    public constructor(public text: string) {
+        this.currentFrame = this.frames[0] ?? '';
+    }
 
-    public frame(): string {
-        const f = this.frames[this.index] ?? this.frames[0] ?? '';
+    public current(): string {
+        return this.currentFrame;
+    }
+
+    public advance(): void {
         this.index = (this.index + 1) % this.frames.length;
-        return f;
+        this.currentFrame = this.frames[this.index] ?? '';
     }
 }

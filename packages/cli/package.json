@@ -52,7 +52,6 @@
         "commander": "^14.0.2",
         "fix-esm-import-path": "^1.10.3",
         "jiti": "^2.6.1",
-        "log-update": "^7.0.2",
         "tsup": "catalog:peer",
         "tsx": "catalog:peer",
         "vite": "^7.3.0"
