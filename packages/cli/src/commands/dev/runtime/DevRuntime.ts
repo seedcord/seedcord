@@ -1,4 +1,4 @@
-import type { ResolvedSeedcordDevConfig } from '../../config/schema';
+import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 
 /**
  * Discriminated union of events that a DevRuntime can emit during its lifecycle.

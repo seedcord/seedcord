@@ -2,16 +2,17 @@ import { existsSync } from 'node:fs';
 
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
-import { BootstrapWriter } from '../builder/BootstrapWriter';
-import { TypeScriptProjectBuilder } from '../builder/TypeScriptProjectBuilder';
-import { ConfigLoader } from '../config/ConfigLoader';
-import { ConfigLocator } from '../config/ConfigLocator';
-import { RuntimeModuleLoader } from '../modules/RuntimeModuleLoader';
+import { ConfigLoader } from '@core/config/ConfigLoader';
+import { ConfigLocator } from '@core/config/ConfigLocator';
+import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
 
-import type { ResolvedSeedcordDevConfig } from '../config/schema';
+import { BootstrapWriter } from './builder/BootstrapWriter';
+import { TypeScriptProjectBuilder } from './builder/TypeScriptProjectBuilder';
+
+import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
-export class SeedcordBuildRunner {
+export class BuildRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
@@ -20,14 +21,14 @@ export class SeedcordBuildRunner {
         private readonly logger: ILogger
     ) {}
 
-    public static create(logger: ILogger): SeedcordBuildRunner {
+    public static create(logger: ILogger): BuildRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
         const builder = new TypeScriptProjectBuilder(logger);
         const bootstrapWriter = new BootstrapWriter(logger);
 
-        return new SeedcordBuildRunner(locator, configLoader, builder, bootstrapWriter, logger);
+        return new BuildRunner(locator, configLoader, builder, bootstrapWriter, logger);
     }
 
     public async run(): Promise<void> {

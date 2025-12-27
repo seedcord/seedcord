@@ -6,7 +6,7 @@ import { dirname, extname, relative, resolve } from 'node:path';
 
 import { isSeedcordError, SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
-import type { ResolvedSeedcordDevConfig } from '../config/schema';
+import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 export interface BuildResult {

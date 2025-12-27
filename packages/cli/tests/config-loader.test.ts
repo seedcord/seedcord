@@ -2,11 +2,11 @@ import { join, dirname, resolve } from 'node:path';
 
 import { describe, it, expect, vi } from 'vitest';
 
-import { ConfigLoader } from '../src/config/ConfigLoader';
-import { SeedcordDevRunner } from '../src/runners/SeedcordDevRunner';
+import { DevRunner } from '@commands/dev/DevRunner';
+import { ConfigLoader } from '@core/config/ConfigLoader';
 
-import type { SeedcordDevConfig } from '../src/config/schema';
-import type { ModuleLoader } from '../src/modules/ModuleLoader';
+import type { SeedcordDevConfig } from '@core/config/schema';
+import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 const silentLogger: ILogger = {
@@ -71,7 +71,7 @@ describe('ConfigLoader', () => {
     });
 });
 
-describe('SeedcordDevRunner', () => {
+describe('DevRunner', () => {
     it('loads and starts the Seedcord instance', async () => {
         const configPath = join(process.cwd(), 'seedcord.config.ts');
         const instancePath = join(process.cwd(), 'src/bot.ts');
@@ -100,7 +100,7 @@ describe('SeedcordDevRunner', () => {
             silly: vi.fn()
         };
 
-        const runner = new SeedcordDevRunner(locator as never, configLoader as never, logger);
+        const runner = new DevRunner(locator as never, configLoader as never, logger);
 
         await expect(runner.run()).rejects.toThrow('Cannot find entry file');
 

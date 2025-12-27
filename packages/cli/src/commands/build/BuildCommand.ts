@@ -1,20 +1,23 @@
 import { isSeedcordError } from '@seedcord/services';
 
-import { SeedcordBuildRunner } from '../runners/SeedcordBuildRunner';
+import { BaseCommand } from '@core/BaseCommand';
 
-import type { ILogger } from '@seedcord/types';
+import { BuildRunner } from './BuildRunner';
+
 import type { Command } from 'commander';
 
-export class BuildCommand {
-    constructor(
-        private readonly runner: SeedcordBuildRunner,
-        private readonly logger: ILogger
-    ) {}
+export class BuildCommand extends BaseCommand {
+    private readonly runner: BuildRunner;
+
+    constructor() {
+        super('build', 'Compile a Seedcord project from the config file', 'CLI:Build');
+        this.runner = BuildRunner.create(this.logger);
+    }
 
     public register(program: Command): void {
         program
-            .command('build')
-            .description('Compile a Seedcord project from the config file')
+            .command(this.name)
+            .description(this.description)
             .action(async () => {
                 try {
                     await this.runner.run();
@@ -24,9 +27,5 @@ export class BuildCommand {
                     else process.exit(1);
                 }
             });
-    }
-
-    public static create(logger: ILogger): BuildCommand {
-        return new BuildCommand(SeedcordBuildRunner.create(logger), logger);
     }
 }

@@ -3,7 +3,7 @@ import { dirname, relative } from 'node:path';
 
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
-import type { ResolvedSeedcordDevConfig } from '../config/schema';
+import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 export class BootstrapWriter {

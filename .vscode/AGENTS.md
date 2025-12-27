@@ -26,6 +26,8 @@
 
 - ALWAYS, I repeat, ALWAYS first cd into the package or app's directory, then run the command via pnpm.
 
+- If a terminal command is failing with the error saying 'No such file or directory', check to see if you're already in the correct directory. If not, cd into the correct directory first.
+
 - For most eslint issues, after you make multiple file changes, just run lint:fix regularly instead of trying to fix each file individually. eslint will let you know if there are any remaining issues.
 
 - If the linter it executes without finding any problems and you’re done with all tasks, just proceed to the summary section.

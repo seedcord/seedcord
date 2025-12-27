@@ -2,7 +2,7 @@ import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
-import { resolveDefaultExport } from '../utils/resolveDefaultExport';
+import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
 import type {
     ResolvedSeedcordBuildConfig,
@@ -10,7 +10,7 @@ import type {
     SeedcordBuildConfig,
     SeedcordDevConfig
 } from './schema';
-import type { ModuleLoader } from '../modules/ModuleLoader';
+import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 export class ConfigLoader {

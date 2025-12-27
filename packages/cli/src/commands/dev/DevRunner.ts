@@ -1,14 +1,14 @@
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
-import { ConfigLoader } from '../config/ConfigLoader';
-import { ConfigLocator } from '../config/ConfigLocator';
-import { TsRuntime } from '../dev/runtime/TsRuntime';
-import { ViteDevRuntime } from '../dev/runtime/ViteDevRuntime';
-import { RuntimeModuleLoader } from '../modules/RuntimeModuleLoader';
-import { resolveDefaultExport } from '../utils/resolveDefaultExport';
+import { ConfigLoader } from '@core/config/ConfigLoader';
+import { ConfigLocator } from '@core/config/ConfigLocator';
+import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
+import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
-import type { ResolvedSeedcordDevConfig } from '../config/schema';
-import type { DevRuntime } from '../dev/runtime/DevRuntime';
+import { ViteDevRuntime } from './runtime/ViteDevRuntime';
+
+import type { DevRuntime } from './runtime/DevRuntime';
+import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 type MaybePromise<TValue> = TValue | Promise<TValue>;
@@ -57,25 +57,25 @@ class SeedcordDevSession {
 /**
  * Coordinates config discovery, loading, and starting a Seedcord instance.
  */
-export class SeedcordDevRunner {
+export class DevRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
         private readonly logger: ILogger
     ) {}
 
-    public static create(logger: ILogger): SeedcordDevRunner {
+    public static create(logger: ILogger): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
 
-        return new SeedcordDevRunner(locator, configLoader, logger);
+        return new DevRunner(locator, configLoader, logger);
     }
 
-    public async run(runtimeType: 'ts' | 'vite' = 'ts'): Promise<void> {
+    public async run(): Promise<void> {
         const config = await this.loadConfig();
 
-        const runtime = runtimeType === 'vite' ? new ViteDevRuntime() : new TsRuntime();
+        const runtime = new ViteDevRuntime();
         const session = new SeedcordDevSession(config, runtime, this.logger);
 
         try {

@@ -19,7 +19,6 @@ certs/
 
 # Ignore build output directories
 dist/
-build/
 
 # Ignore IDE specific files
 **/.idea
