@@ -15,6 +15,7 @@ export class LogStore extends EventEmitter implements ILoggerSink {
     private static _instance: LogStore | null = null;
 
     private entries: LogEntry[] = [];
+    private buffer: LogEntry[] = [];
     private nextId = 1;
     private sinkHandle: ILoggerSinkHandle | null = null;
     private pendingUpdate = false;
@@ -48,16 +49,12 @@ export class LogStore extends EventEmitter implements ILoggerSink {
         const now = Date.now();
 
         for (const line of lines) {
-            this.entries.push({
+            this.buffer.push({
                 id: this.nextId++,
                 channel: entry.channel,
                 text: line,
                 timestamp: now
             });
-        }
-
-        if (this.entries.length > this.MAX_LOGS) {
-            this.entries = this.entries.slice(-this.MAX_LOGS);
         }
 
         this.scheduleUpdate();
@@ -71,8 +68,10 @@ export class LogStore extends EventEmitter implements ILoggerSink {
     public clear(channel?: string): void {
         if (channel) {
             this.entries = this.entries.filter((e) => e.channel !== channel);
+            this.buffer = this.buffer.filter((e) => e.channel !== channel);
         } else {
             this.entries = [];
+            this.buffer = [];
         }
         this.emit('change');
     }
@@ -85,7 +84,19 @@ export class LogStore extends EventEmitter implements ILoggerSink {
         // Throttle updates to ~30fps to keep UI responsive under load
         setTimeout(() => {
             this.pendingUpdate = false;
-            this.emit('change');
+
+            if (this.buffer.length > 0) {
+                const newEntries = [...this.entries, ...this.buffer];
+                this.buffer = [];
+
+                if (newEntries.length > this.MAX_LOGS) {
+                    this.entries = newEntries.slice(-this.MAX_LOGS);
+                } else {
+                    this.entries = newEntries;
+                }
+
+                this.emit('change');
+            }
         }, fpsCap);
     }
 }
