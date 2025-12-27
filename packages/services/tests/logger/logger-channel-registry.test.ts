@@ -252,6 +252,52 @@ describe('LoggerChannelRegistry', () => {
             }).not.toThrow();
         });
     });
+
+    describe('getLogFilePath', () => {
+        it('should return null for non-existent channel', () => {
+            const logFilePath = registry.getLogFilePath('nonexistent-channel');
+            expect(logFilePath).toBeNull();
+        });
+
+        it('should return log file path for channel with file transport', () => {
+            const logger = new Logger('file-path-test', { channel: 'default' });
+            logger.info('Test message to ensure channel is created');
+
+            const logFilePath = registry.getLogFilePath('default');
+            expect(logFilePath).toBeTruthy();
+            expect(typeof logFilePath).toBe('string');
+            expect(logFilePath).toContain('.log');
+        });
+
+        it('should return correct path for custom channel with file transport', () => {
+            registry.configure({
+                channels: {
+                    'custom-file-channel': {
+                        name: 'custom-file-channel',
+                        level: 'debug'
+                    }
+                }
+            });
+
+            const logger = new Logger('custom-file-test', { channel: 'custom-file-channel' });
+            logger.debug('Custom channel message');
+
+            const logFilePath = registry.getLogFilePath('custom-file-channel');
+            expect(logFilePath).toBeTruthy();
+            expect(typeof logFilePath).toBe('string');
+            expect(logFilePath).toContain('.log');
+        });
+
+        it('should return same path when called multiple times for same channel', () => {
+            const logger = new Logger('same-path-test', { channel: 'default' });
+            logger.info('Test message');
+
+            const logFilePath1 = registry.getLogFilePath('default');
+            const logFilePath2 = registry.getLogFilePath('default');
+
+            expect(logFilePath1).toBe(logFilePath2);
+        });
+    });
 });
 
 class TestSink implements ILoggerSink, ILoggerSinkHandle {

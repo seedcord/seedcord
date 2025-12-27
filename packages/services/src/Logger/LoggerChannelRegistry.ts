@@ -125,6 +125,25 @@ export class LoggerChannelRegistry {
     }
 
     /**
+     * Gets the log file path for a specific channel, if one exists.
+     *
+     * @param channel - Channel name to get log file path for
+     * @returns The log file path, or null if no file transport exists
+     */
+    public getLogFilePath(channel: string): string | null {
+        const logger = this.cache.get(channel);
+        if (!logger) return null;
+
+        for (const transport of logger.transports) {
+            if (transport instanceof winston.transports.File) {
+                return transport.filename;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Gets or creates a Winston logger instance for the given channel.
      *
      * @param channel - Channel name to get logger for

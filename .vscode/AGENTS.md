@@ -54,4 +54,6 @@
 
 - Make sure to check the declaration files for packages when using them to ensure usage of the latest and correct APIs.
 
-- Check the closest package.json file to see if it has scripts you can use. For example a dev script.
+- Check the closest package.json file to see if it has scripts you can use. For example a dev script. Don't hallucinate scripts.
+
+- Make sure to build packages after making changes before using those changes in other packages or apps.
