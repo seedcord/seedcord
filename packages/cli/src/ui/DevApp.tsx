@@ -1,7 +1,7 @@
 import { useInput } from 'ink';
 import React, { useEffect, useState } from 'react';
 
-import { Banner, ErrorDisplay, Help, LogPanel, StatusLine } from '@ui/components';
+import { Banner, ChannelSelector, ErrorDisplay, Help, LogPanel, StatusLine } from '@ui/components';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { ReactElement } from 'react';
@@ -26,8 +26,12 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
     const [error, setError] = useState<Error | null>(null);
     const [isBusy, setBusy] = useState(true);
     const [showHelp, setShowHelp] = useState(false);
+    const [showChannels, setShowChannels] = useState(false);
+    const [selectedChannel, setSelectedChannel] = useState<string | undefined>(undefined);
 
     useInput((input) => {
+        if (showChannels) return; // Let ChannelSelector handle input
+
         if (input === 'q') {
             setStatus('Quitting...');
             void onQuit?.();
@@ -47,7 +51,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
         }
 
         if (input === 'c') {
-            setStatus('Channels option pressed (Not implemented yet)');
+            setShowChannels(true);
         }
 
         if (input === 'h') {
@@ -71,7 +75,15 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
             {error && <ErrorDisplay error={error} />}
             {showHelp && <Help />}
             <StatusLine text={status} spinner={isBusy} />
-            <LogPanel height={logHeight} />
+            {showChannels ? (
+                <ChannelSelector
+                    currentChannel={selectedChannel}
+                    onSelect={setSelectedChannel}
+                    onClose={() => setShowChannels(false)}
+                />
+            ) : (
+                <LogPanel height={logHeight} channel={selectedChannel} />
+            )}
         </>
     );
 }

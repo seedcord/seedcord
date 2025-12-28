@@ -39,7 +39,8 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "type-fest": "catalog:deps"
+        "type-fest": "catalog:deps",
+        "discord.js": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

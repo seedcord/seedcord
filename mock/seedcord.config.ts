@@ -7,5 +7,5 @@ export default defineConfig({
     build: {
         tsconfig: './tsconfig.build.json'
     },
-    logHeight: 50
+    logHeight: 35
 });

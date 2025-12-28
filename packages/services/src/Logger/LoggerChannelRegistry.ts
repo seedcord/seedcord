@@ -127,6 +127,16 @@ export class LoggerChannelRegistry {
     }
 
     /**
+     * Returns a list of all known channels (configured or cached).
+     */
+    public getChannels(): string[] {
+        const configuredChannels = Object.keys(this.config.channels);
+        const cachedChannels = Array.from(this.cache.keys());
+        const allChannels = new Set([...configuredChannels, ...cachedChannels, this.config.defaultChannel]);
+        return Array.from(allChannels).sort();
+    }
+
+    /**
      * Gets the log file path for a specific channel, if one exists.
      *
      * @param channel - Channel name to get log file path for

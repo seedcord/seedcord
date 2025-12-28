@@ -24,6 +24,8 @@ export class DevCommand extends BaseCommand {
             .description(this.description)
             .action(async () => {
                 try {
+                    // eslint-disable-next-line no-console
+                    console.clear();
                     let preventCtrlC = false;
                     let logHeight = 30;
 

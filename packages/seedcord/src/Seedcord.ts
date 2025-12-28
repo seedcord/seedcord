@@ -11,8 +11,8 @@ import { Bot } from './bot/Bot';
 import { EffectsRegistry } from './effects/EffectsRegistry';
 import { Pluggable } from './interfaces/Plugin';
 
-import type { Config } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
+import type { Config } from '@seedcord/types';
 
 /**
  * Main Seedcord bot framework class

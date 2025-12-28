@@ -6,7 +6,7 @@ import { useLogs } from '@ui/hooks/useLogs';
 import type { ReactElement } from 'react';
 
 interface LogPanelProps {
-    readonly channel?: string;
+    readonly channel?: string | undefined;
     readonly title?: string;
     readonly height?: number;
     readonly borderColor?: string;

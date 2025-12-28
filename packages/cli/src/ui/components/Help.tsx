@@ -5,9 +5,9 @@ import type { ReactElement } from 'react';
 
 export function Help(): ReactElement {
     return (
-        <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={1}>
+        <Box flexDirection="column" borderStyle="round" borderColor="blue" padding={0.5}>
             <Text bold>Available Commands:</Text>
-            <Box flexDirection="column" marginLeft={2}>
+            <Box flexDirection="column" marginLeft={2} marginTop={-1}>
                 <Text>
                     <Text color="cyan" bold>
                         q
@@ -30,7 +30,7 @@ export function Help(): ReactElement {
                     <Text color="cyan" bold>
                         c
                     </Text>{' '}
-                    - Show Channels (Not implemented)
+                    - Switch log channels
                 </Text>
                 <Text>
                     <Text color="cyan" bold>

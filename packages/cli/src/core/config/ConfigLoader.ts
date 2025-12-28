@@ -53,7 +53,7 @@ export class ConfigLoader {
         } satisfies ResolvedSeedcordDevConfig;
     }
 
-    // eslint-disable-next-line complexity
+    // eslint-disable-next-line complexity, max-statements
     private async unwrapConfig(raw: unknown): Promise<SeedcordDevConfig> {
         const resolved = await Promise.resolve(raw);
         if (!resolved || typeof resolved !== 'object') {
@@ -94,6 +94,8 @@ export class ConfigLoader {
         const normalized: SeedcordDevConfig = { instance: cfg.instance, entry: cfg.entry };
         if (typeof cfg.root === 'string') normalized.root = cfg.root;
         if (cfg.build) normalized.build = cfg.build;
+        if (typeof cfg.preventCtrlC === 'boolean') normalized.preventCtrlC = cfg.preventCtrlC;
+        if (typeof cfg.logHeight === 'number') normalized.logHeight = cfg.logHeight;
 
         return normalized;
     }

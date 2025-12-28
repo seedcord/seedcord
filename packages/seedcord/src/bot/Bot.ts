@@ -1,4 +1,5 @@
 import { Logger, SeedcordError, SeedcordErrorCode, ShutdownPhase } from '@seedcord/services';
+import { EmojiMap } from '@seedcord/types';
 import chalk from 'chalk';
 import { Client, ClientEvents, Interaction } from 'discord.js';
 import { Envapt } from 'envapt';
@@ -8,7 +9,7 @@ import { EventController } from '@bControllers/EventController';
 import { InteractionController } from '@bControllers/InteractionController';
 import { Plugin } from '@interfaces/Plugin';
 
-import { EmojiInjector, Emojis, type EmojiMap } from './injectors/EmojiInjector';
+import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
 import type { Core } from '@interfaces/Core';
 

@@ -545,6 +545,9 @@ importers:
 
   packages/types:
     dependencies:
+      discord.js:
+        specifier: catalog:deps
+        version: 14.25.1
       type-fest:
         specifier: catalog:deps
         version: 5.3.1

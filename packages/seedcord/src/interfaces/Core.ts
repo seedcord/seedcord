@@ -1,21 +1,15 @@
-import type { Config } from './Config';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { Plugin } from './Plugin';
 import type { Bot } from '@bot/Bot';
 import type { EffectsRegistry } from '@effects/EffectsRegistry';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
+import type { Config } from '@seedcord/types';
 
 /** Base interface defining core Seedcord functionality
  *
  * @internal
  */
 export interface BaseCore {
-    readonly bot: Bot;
-    readonly effects: EffectsRegistry;
     readonly shutdown: CoordinatedShutdown;
     readonly startup: CoordinatedStartup;
-
-    readonly config: Config;
 
     start(): Promise<this>;
 }
@@ -37,4 +31,8 @@ export interface BaseCore {
  * }
  * ```
  * */
-export interface Core extends BaseCore {}
+export interface Core extends BaseCore {
+    readonly bot: Bot;
+    readonly effects: EffectsRegistry;
+    readonly config: Config;
+}

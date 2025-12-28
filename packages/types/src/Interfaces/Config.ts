@@ -1,4 +1,4 @@
-import type { EmojiMap } from '@bot/injectors/EmojiInjector';
+import type { EmojiMap } from './EmojiMap';
 import type { ClientOptions } from 'discord.js';
 
 // interactions, events, commands, services, effects
