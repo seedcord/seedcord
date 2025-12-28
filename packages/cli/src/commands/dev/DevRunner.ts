@@ -14,7 +14,7 @@ import { TscRunner } from './TscRunner';
 
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type { ILogger } from '@seedcord/types';
+import type { Config, ILogger } from '@seedcord/types';
 
 type MaybePromise<TValue> = TValue | Promise<TValue>;
 
@@ -27,6 +27,7 @@ interface SeedcordLike {
     startup?: {
         abort: () => void;
     };
+    config?: Config;
 }
 
 class SeedcordDevSession {
@@ -39,7 +40,7 @@ class SeedcordDevSession {
     constructor(
         private readonly config: ResolvedSeedcordDevConfig,
         private readonly runtime: DevRuntime,
-        private readonly onStatus?: (status: string) => void
+        private readonly actions: DevRunnerActions
     ) {}
 
     private async loadInstanceModule(): Promise<unknown> {
@@ -72,8 +73,12 @@ class SeedcordDevSession {
 
         this.instance = instance;
 
+        if (this.instance.config) {
+            this.actions.setConfig(this.instance.config);
+        }
+
         try {
-            this.onStatus?.('Starting Seedcord instance...');
+            this.actions.setStatus('Starting Seedcord instance...');
             this.startupPromise = Promise.resolve(instance.start());
             await this.startupPromise;
 
@@ -81,7 +86,7 @@ class SeedcordDevSession {
                 return;
             }
 
-            this.onStatus?.('Seedcord is running.');
+            this.actions.setStatus('Seedcord is running.');
             onReady?.();
 
             await new Promise<void>((resolve) => {
@@ -134,6 +139,7 @@ export interface DevRunnerActions {
     setStatus: (status: string) => void;
     setError: (error: Error) => void;
     setBusy: (isBusy: boolean) => void;
+    setConfig: (config: Config) => void;
 }
 
 /**
@@ -194,7 +200,7 @@ export class DevRunner {
         actions.setBusy(true);
         const config = await this.loadConfig();
         const runtime = new ViteDevRuntime();
-        this.currentSession = new SeedcordDevSession(config, runtime, actions.setStatus);
+        this.currentSession = new SeedcordDevSession(config, runtime, actions);
 
         try {
             await this.currentSession.start(() => actions.setBusy(false));

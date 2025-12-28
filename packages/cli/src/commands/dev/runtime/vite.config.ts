@@ -3,7 +3,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     server: {
         middlewareMode: true,
-        hmr: false,
+        hmr: true,
         watch: {
             usePolling: false,
             ignored: ['**/node_modules/**', '**/dist/**']

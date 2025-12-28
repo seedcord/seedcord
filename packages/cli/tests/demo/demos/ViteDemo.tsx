@@ -225,7 +225,7 @@ export function ViteDemo({ onComplete }: ViteDemoProps): ReactElement {
 
     return (
         <Box flexDirection="column">
-            <Banner />
+            <Banner config={null} />
             <Box marginY={1} flexDirection="column" minHeight={10}>
                 {content}
             </Box>

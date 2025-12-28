@@ -4,12 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { Banner, ChannelSelector, ErrorDisplay, Help, LogPanel, StatusLine } from '@ui/components';
 import { LogStore } from '@ui/stores/LogStore';
 
+import type { Config } from '@seedcord/types';
 import type { ReactElement } from 'react';
 
 interface DevAppActions {
     setStatus: (status: string) => void;
     setError: (error: Error) => void;
     setBusy: (isBusy: boolean) => void;
+    setConfig: (config: Config) => void;
 }
 
 interface DevAppProps {
@@ -25,6 +27,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     const [status, setStatus] = useState('Initializing...');
     const [error, setError] = useState<Error | null>(null);
     const [isBusy, setBusy] = useState(true);
+    const [config, setConfig] = useState<Config | null>(null);
     const [showHelp, setShowHelp] = useState(false);
     const [showChannels, setShowChannels] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<string | undefined>('default');
@@ -49,8 +52,9 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
         };
     }, [stdout]);
 
-    const staticOverhead = 10;
-    const helpOverhead = showHelp ? 10 : 0;
+    const staticOverhead = 14;
+    // eslint-disable-next-line no-magic-numbers
+    const helpOverhead = showHelp ? 8 : 0;
     const errorOverhead = error ? 10 : 0;
     const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead;
     const effectiveLogHeight = Math.max(0, availableHeight);
@@ -92,7 +96,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     useEffect(() => {
         LogStore.instance.clear();
         LogStore.instance.mount();
-        onReady({ setStatus, setError, setBusy });
+        onReady({ setStatus, setError, setBusy, setConfig });
 
         return () => {
             LogStore.instance.unmount();
@@ -101,7 +105,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
 
     return (
         <Box flexDirection="column" key={resizeKey}>
-            <Banner />
+            <Banner config={config} />
             {error && <ErrorDisplay error={error} />}
             {showHelp && <Help />}
             <StatusLine text={status} spinner={isBusy} />

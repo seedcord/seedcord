@@ -2,6 +2,7 @@ import { relative } from 'node:path';
 
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 
+import { HmrPlugin } from './HmrPlugin';
 import viteConfig from './vite.config';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeEventHandler, DevRuntimeLoadResult } from './DevRuntime';
@@ -26,7 +27,8 @@ export class ViteDevRuntime implements DevRuntime {
         this.emit({ type: 'module-loading', path: projectRoot });
 
         const config = mergeConfig(viteConfig, {
-            root: projectRoot
+            root: projectRoot,
+            plugins: [new HmrPlugin().plugin]
         });
 
         this.viteServer = await createServer(config);
