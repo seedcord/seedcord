@@ -30,10 +30,14 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
     const [selectedChannel, setSelectedChannel] = useState<string | undefined>(undefined);
 
     const { stdout } = useStdout();
-    const [terminalHeight, setTerminalHeight] = useState(stdout.rows);
+    const DEFAULT_ROWS = 24;
+    const [terminalHeight, setTerminalHeight] = useState(stdout.rows || DEFAULT_ROWS);
     const [resizeKey, setResizeKey] = useState(0);
 
     useEffect(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (!stdout) return;
+
         const onResize = (): void => {
             setTerminalHeight(stdout.rows);
             setResizeKey((prev) => prev + 1);

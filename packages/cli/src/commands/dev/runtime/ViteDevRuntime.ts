@@ -26,13 +26,7 @@ export class ViteDevRuntime implements DevRuntime {
         this.emit({ type: 'module-loading', path: projectRoot });
 
         const config = mergeConfig(viteConfig, {
-            root: projectRoot,
-            configFile: false,
-            server: {
-                middlewareMode: true,
-                hmr: false
-            },
-            logLevel: 'error'
+            root: projectRoot
         });
 
         this.viteServer = await createServer(config);

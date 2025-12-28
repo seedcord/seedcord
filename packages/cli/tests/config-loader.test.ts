@@ -92,13 +92,19 @@ describe('DevRunner', () => {
 
         const runner = new DevRunner(locator as never, configLoader as never);
 
+        // Spy on private method handleError to rethrow error so we can assert it
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        vi.spyOn(runner as any, 'handleError').mockImplementation((_actions: unknown, error: unknown) => {
+            throw error;
+        });
+
         const actions = {
             setStatus: vi.fn(),
             setError: vi.fn(),
             setBusy: vi.fn()
         };
 
-        await expect(runner.run(actions)).rejects.toThrow('Cannot find entry file');
+        await expect(runner.run(actions)).rejects.toThrow(/Failed to load url/);
 
         expect(locator.locate).toHaveBeenCalledTimes(1);
         expect(configLoader.load).toHaveBeenCalledWith(configPath);

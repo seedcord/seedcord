@@ -3,9 +3,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     server: {
         middlewareMode: true,
-        hmr: {
-            protocol: 'ws'
-        },
+        hmr: false,
         watch: {
             usePolling: false,
             ignored: ['**/node_modules/**', '**/dist/**']
@@ -44,6 +42,6 @@ export default defineConfig({
         removePluginHookHandleHotUpdate: 'warn'
     },
     clearScreen: false,
-    logLevel: 'info',
+    logLevel: 'error',
     appType: 'custom'
 });

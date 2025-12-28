@@ -80,7 +80,7 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
     private scheduleUpdate(): void {
         if (this.pendingUpdate) return;
         this.pendingUpdate = true;
-        const fpsCap = 32;
+        const TARGET_FPS = 30;
 
         setTimeout(() => {
             this.pendingUpdate = false;
@@ -97,6 +97,6 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
 
                 this.emit('change');
             }
-        }, fpsCap);
+        }, TARGET_FPS);
     }
 }
