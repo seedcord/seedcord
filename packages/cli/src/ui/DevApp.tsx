@@ -1,4 +1,4 @@
-import { useInput } from 'ink';
+import { Box, useInput, useStdout } from 'ink';
 import React, { useEffect, useState } from 'react';
 
 import { Banner, ChannelSelector, ErrorDisplay, Help, LogPanel, StatusLine } from '@ui/components';
@@ -29,8 +29,27 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
     const [showChannels, setShowChannels] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<string | undefined>(undefined);
 
+    const { stdout } = useStdout();
+    const [terminalHeight, setTerminalHeight] = useState(stdout.rows);
+    const [resizeKey, setResizeKey] = useState(0);
+
+    useEffect(() => {
+        const onResize = (): void => {
+            setTerminalHeight(stdout.rows);
+            setResizeKey((prev) => prev + 1);
+        };
+
+        stdout.on('resize', onResize);
+        return () => {
+            stdout.off('resize', onResize);
+        };
+    }, [stdout]);
+
+    const staticHeight = 10;
+    const effectiveLogHeight = Math.min(logHeight, Math.max(5, terminalHeight - staticHeight));
+
     useInput((input) => {
-        if (showChannels) return; // Let ChannelSelector handle input
+        if (showChannels) return; // ChannelSelector will handle input
 
         if (input === 'q') {
             setStatus('Quitting...');
@@ -70,7 +89,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
     }, [onReady]);
 
     return (
-        <>
+        <Box flexDirection="column" key={resizeKey}>
             <Banner />
             {error && <ErrorDisplay error={error} />}
             {showHelp && <Help />}
@@ -82,8 +101,8 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
                     onClose={() => setShowChannels(false)}
                 />
             ) : (
-                <LogPanel height={logHeight} channel={selectedChannel} />
+                effectiveLogHeight > 0 && <LogPanel height={effectiveLogHeight} channel={selectedChannel} />
             )}
-        </>
+        </Box>
     );
 }

@@ -18,7 +18,7 @@ export function Banner(): ReactElement {
             </Text>
             <Text></Text>
             {logPath && (
-                <Text>
+                <Text wrap="truncate">
                     <Text color="green">➜</Text> Logs: {chalk.dim(logPath)}
                 </Text>
             )}

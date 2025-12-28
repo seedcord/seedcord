@@ -20,7 +20,9 @@ export function StatusLine({ spinner, text, color = 'white' }: StatusLineProps):
                     <Spinner type="balloon2" />{' '}
                 </Text>
             )}
-            <Text color={color}>{text}</Text>
+            <Text color={color} wrap="truncate">
+                {text}
+            </Text>
         </Box>
     );
 }
