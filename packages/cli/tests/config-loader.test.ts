@@ -102,7 +102,12 @@ describe('DevRunner', () => {
 
         const runner = new DevRunner(locator as never, configLoader as never, logger);
 
-        await expect(runner.run()).rejects.toThrow('Cannot find entry file');
+        const actions = {
+            setStatus: vi.fn(),
+            setError: vi.fn()
+        };
+
+        await expect(runner.run(actions)).rejects.toThrow('Cannot find entry file');
 
         expect(locator.locate).toHaveBeenCalledTimes(1);
         expect(configLoader.load).toHaveBeenCalledWith(configPath);

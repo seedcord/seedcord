@@ -52,6 +52,8 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
 
     private isShuttingDown = false;
     private exitCode = 0;
+    private onSigTerm: (() => void) | null = null;
+    private onSigInt: (() => void) | null = null;
 
     public constructor() {
         super('CoordinatedShutdown', PHASE_ORDER, ShutdownPhase);
@@ -77,33 +79,36 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         tasks: LifecycleTask[]
     ): Promise<PromiseSettledResult<void>[]> {
         // Execute all tasks in parallel (unlike startup which uses sequential)
-        const results: PromiseSettledResult<void>[] = [];
-        for (const task of tasks) {
-            results.push(
-                await Promise.resolve()
-                    .then(() => this.runTaskWithTimeout(phase, task))
-                    .then(
-                        () => ({ status: 'fulfilled', value: undefined }) satisfies PromiseSettledResult<void>,
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                        (reason) => ({ status: 'rejected', reason }) satisfies PromiseSettledResult<void>
-                    )
-            );
-        }
-        return results;
+        const promises = tasks.map((task) => this.runTaskWithTimeout(phase, task));
+        return Promise.allSettled(promises);
     }
 
     private registerSignalHandlers(): void {
         if (!this.isShutdownEnabled) return;
 
-        process.on('SIGTERM', () => {
+        this.onSigTerm = () => {
             this.logger.info(`Received ${chalk.yellow.bold('SIGTERM')} signal`);
             void this.run(0);
-        });
+        };
 
-        process.on('SIGINT', () => {
+        this.onSigInt = () => {
             this.logger.info(`Received ${chalk.yellow.bold('SIGINT')} signal`);
             void this.run(0);
-        });
+        };
+
+        process.on('SIGTERM', this.onSigTerm);
+        process.on('SIGINT', this.onSigInt);
+    }
+
+    private removeSignalHandlers(): void {
+        if (this.onSigTerm) {
+            process.off('SIGTERM', this.onSigTerm);
+            this.onSigTerm = null;
+        }
+        if (this.onSigInt) {
+            process.off('SIGINT', this.onSigInt);
+            this.onSigInt = null;
+        }
     }
 
     /**
@@ -137,6 +142,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
      * Process exits with the specified code when complete.
      *
      * @param exitCode - Process exit code (default: `0`)
+     * @param exitProcess - Whether to exit the process after shutdown (default: `true`)
      * @returns Promise that resolves when shutdown is complete
      * @example
      * ```typescript
@@ -144,7 +150,9 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
      * await shutdown.run(0); // Graceful shutdown
      * ```
      */
-    public async run(exitCode = 0): Promise<void> {
+    public async run(exitCode = 0, exitProcess = true): Promise<void> {
+        this.removeSignalHandlers();
+
         if (this.isShuttingDown) {
             this.logger.warn('Shutdown sequence already in progress');
             return;
@@ -169,10 +177,15 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
             this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`);
             this.emit('shutdown:error', error);
         } finally {
-            this.logger.info(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);
-            setTimeout(() => {
-                process.exit(this.exitCode);
-            }, LOG_FLUSH_DELAY_MS);
+            if (exitProcess) {
+                this.logger.info(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);
+                setTimeout(() => {
+                    process.exit(this.exitCode);
+                }, LOG_FLUSH_DELAY_MS);
+            } else {
+                this.logger.info(`${chalk.bold.yellow('Skipping')} process exit (dev mode)`);
+                this.isShuttingDown = false; // Reset for next run if needed
+            }
         }
     }
 

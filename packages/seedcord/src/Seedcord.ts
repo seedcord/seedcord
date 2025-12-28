@@ -68,6 +68,14 @@ export class Seedcord extends Pluggable implements Core {
     }
 
     /**
+     * Resets the singleton state.
+     * @internal
+     */
+    public static reset(): void {
+        Seedcord.isInstantiated = false;
+    }
+
+    /**
      * Registers default startup tasks
      * @internal
      */

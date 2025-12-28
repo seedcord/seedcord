@@ -12,7 +12,7 @@ interface StatusLineProps {
 
 export function StatusLine({ spinner, text, color = 'white' }: StatusLineProps): ReactElement {
     return (
-        <Box>
+        <Box paddingY={1}>
             {spinner && (
                 <Text color="yellow">
                     <Spinner type="dots" />{' '}

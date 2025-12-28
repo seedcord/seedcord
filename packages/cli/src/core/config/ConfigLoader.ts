@@ -30,6 +30,9 @@ export class ConfigLoader {
         const entry = this.resolveWithinRoot(root, config.entry);
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
+        const preventCtrlC = config.preventCtrlC ?? false;
+        const DEFAULT_LOG_HEIGHT = 30;
+        const logHeight = config.logHeight ?? DEFAULT_LOG_HEIGHT;
 
         this.logger.info(`Loaded configuration from ${configPath}`);
         this.logger.debug(`Resolved root: ${root}`);
@@ -39,7 +42,15 @@ export class ConfigLoader {
         if (build.tsconfig) this.logger.debug(`Resolved build tsconfig: ${build.tsconfig}`);
         this.logger.debug(`Resolved bootstrap: ${build.bootstrap}`);
 
-        return { instance, root, configFile: configPath, entry, build } satisfies ResolvedSeedcordDevConfig;
+        return {
+            instance,
+            root,
+            configFile: configPath,
+            entry,
+            build,
+            preventCtrlC,
+            logHeight
+        } satisfies ResolvedSeedcordDevConfig;
     }
 
     // eslint-disable-next-line complexity

@@ -88,6 +88,12 @@ export class Mongo extends Plugin {
     }
 
     private async disconnect(): Promise<void> {
+        const modelNames = Object.keys(this.connection.models);
+        if (modelNames.length > 0) {
+            this.logger.debug(`Clearing ${modelNames.length} mongoose models`);
+            for (const name of modelNames) this.connection.deleteModel(name);
+        }
+
         await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))

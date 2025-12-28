@@ -61,3 +61,5 @@
 - Check the closest package.json file to see if it has scripts you can use. For example a dev script. Don't hallucinate scripts.
 
 - Make sure to build packages after making changes before using those changes in other packages or apps.
+
+- After linting, the only acceptable result is 0 errors and 0 warnings.

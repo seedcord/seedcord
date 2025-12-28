@@ -58,7 +58,13 @@ export class Bot extends Plugin<BotEvents> {
         this.commands = new CommandRegistry(core);
         this.emojiInjector = new EmojiInjector(core);
 
-        core.shutdown.addTask(ShutdownPhase.DiscordCleanup, 'stop-bot', async () => await this.stop());
+        const BOT_SHUTDOWN_TIMEOUT = 2000;
+        core.shutdown.addTask(
+            ShutdownPhase.DiscordCleanup,
+            'stop-bot',
+            async () => await this.stop(),
+            BOT_SHUTDOWN_TIMEOUT
+        );
     }
 
     /**

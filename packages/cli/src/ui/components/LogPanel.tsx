@@ -15,11 +15,12 @@ interface LogPanelProps {
 export function LogPanel({ channel, title = 'Logs', height = 10, borderColor = 'gray' }: LogPanelProps): ReactElement {
     const logs = useLogs(channel);
     const visibleLogs = logs.slice(-height);
+    const displayTitle = channel ? `${title} - ${channel}` : title;
 
     return (
         <Box flexDirection="column" borderStyle="round" borderColor={borderColor} height={height + 2}>
             <Box marginTop={-1} marginLeft={1}>
-                <Text bold> {title} </Text>
+                <Text bold> {displayTitle} </Text>
             </Box>
             <Box flexDirection="column" flexGrow={1} overflow="hidden">
                 {visibleLogs.length === 0 ? (

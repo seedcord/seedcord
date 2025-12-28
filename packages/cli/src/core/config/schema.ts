@@ -30,6 +30,15 @@ export interface SeedcordDevConfig {
      */
     entry: string;
     /**
+     * Whether to prevent the CLI from exiting on Ctrl+C. (default: `false`).
+     */
+    preventCtrlC?: boolean;
+    /**
+     * Height of the log panel in the TUI. (default: `30`).
+     */
+    logHeight?: number;
+    /**
+
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;

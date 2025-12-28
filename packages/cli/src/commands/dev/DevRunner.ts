@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';
@@ -15,14 +16,22 @@ type MaybePromise<TValue> = TValue | Promise<TValue>;
 
 interface SeedcordLike {
     start: () => MaybePromise<unknown>;
+    shutdown?: {
+        run: (exitCode?: number, exitProcess?: boolean) => Promise<void>;
+    };
+    startup?: {
+        abort: () => void;
+    };
 }
 
 class SeedcordDevSession {
+    private stopResolve?: () => void;
+    private instance?: SeedcordLike;
+    private isStopped = false;
+
     constructor(
         private readonly config: ResolvedSeedcordDevConfig,
         private readonly runtime: DevRuntime,
-        // @ts-expect-error - logger is used in other methods if we revert to standard logging, keeping for interface consistency
-        private readonly logger: ILogger,
         private readonly onStatus?: (status: string) => void
     ) {}
 
@@ -37,10 +46,16 @@ class SeedcordDevSession {
             throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
         }
 
+        this.instance = instance;
+
         try {
             this.onStatus?.('Starting Seedcord instance...');
             await instance.start();
             this.onStatus?.('Seedcord is running.');
+
+            if (this.isStopped) {
+                return;
+            }
 
             await new Promise<void>((resolve) => {
                 const cleanup = (): void => {
@@ -48,6 +63,7 @@ class SeedcordDevSession {
                     process.off('SIGTERM', cleanup);
                     resolve();
                 };
+                this.stopResolve = cleanup;
                 process.on('SIGINT', cleanup);
                 process.on('SIGTERM', cleanup);
             });
@@ -55,6 +71,17 @@ class SeedcordDevSession {
             const reason = error instanceof Error ? error.message : 'Unknown error';
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
         }
+    }
+
+    public async stop(): Promise<void> {
+        this.isStopped = true;
+        if (this.instance?.startup) {
+            this.instance.startup.abort();
+        }
+        if (this.instance?.shutdown) {
+            await this.instance.shutdown.run(0, false);
+        }
+        this.stopResolve?.();
     }
 
     public async dispose(): Promise<void> {
@@ -66,14 +93,23 @@ class SeedcordDevSession {
     }
 }
 
+export interface DevRunnerActions {
+    setStatus: (status: string) => void;
+    setError: (error: Error) => void;
+}
+
 /**
  * Coordinates config discovery, loading, and starting a Seedcord instance.
  */
 export class DevRunner {
+    private currentSession: SeedcordDevSession | null = null;
+    private signalResolve?: () => void;
+    private shouldQuit = false;
+    private isDisconnected = false;
+
     constructor(
         private readonly locator: ConfigLocator,
-        private readonly configLoader: ConfigLoader,
-        private readonly logger: ILogger
+        private readonly configLoader: ConfigLoader
     ) {}
 
     public static create(logger: ILogger): DevRunner {
@@ -81,23 +117,76 @@ export class DevRunner {
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
 
-        return new DevRunner(locator, configLoader, logger);
+        return new DevRunner(locator, configLoader);
     }
 
-    public async run(onStatus?: (status: string) => void): Promise<void> {
-        const config = await this.loadConfig();
+    public async run(actions: DevRunnerActions): Promise<void> {
+        while (true) {
+            try {
+                if (this.shouldQuit) break;
 
-        const runtime = new ViteDevRuntime();
-        const session = new SeedcordDevSession(config, runtime, this.logger, onStatus);
+                if (this.isDisconnected) {
+                    actions.setStatus('Disconnected. Press r to restart.');
+                    await this.waitForSignal();
+                    if (this.shouldQuit) break;
+                    this.isDisconnected = false;
+                    continue;
+                }
 
-        try {
-            await session.start();
-        } finally {
-            await session.dispose();
+                const config = await this.loadConfig();
+                const runtime = new ViteDevRuntime();
+                this.currentSession = new SeedcordDevSession(config, runtime, actions.setStatus);
+
+                try {
+                    await this.currentSession.start();
+                } finally {
+                    await this.currentSession.dispose();
+                    this.currentSession = null;
+                }
+
+                if (this.shouldQuit) break;
+                // If session ended naturally (e.g. internal stop), loop again (restart)
+            } catch (error: unknown) {
+                if (this.shouldQuit) break;
+
+                if (error instanceof Error) {
+                    actions.setError(error);
+                } else {
+                    actions.setError(new Error(String(error)));
+                }
+
+                actions.setStatus('Error occurred. Press r to restart.');
+                await this.waitForSignal();
+                if (this.shouldQuit) break;
+            }
         }
     }
 
-    private async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
+    public async quit(): Promise<void> {
+        this.shouldQuit = true;
+        await this.currentSession?.stop();
+        this.signalResolve?.();
+    }
+
+    public async restart(): Promise<void> {
+        this.isDisconnected = false;
+        await this.currentSession?.stop();
+        this.signalResolve?.();
+    }
+
+    public async disconnect(): Promise<void> {
+        this.isDisconnected = true;
+        await this.currentSession?.stop();
+        this.signalResolve?.();
+    }
+
+    private async waitForSignal(): Promise<void> {
+        return new Promise<void>((resolve) => {
+            this.signalResolve = resolve;
+        });
+    }
+
+    public async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
         const configPath = this.locator.locate();
         return this.configLoader.load(configPath);
     }
