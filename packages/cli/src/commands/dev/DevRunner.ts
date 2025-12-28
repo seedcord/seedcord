@@ -2,6 +2,7 @@
 import { dirname } from 'node:path';
 
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordBrand } from '@seedcord/utils';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
@@ -18,6 +19,7 @@ import type { ILogger } from '@seedcord/types';
 type MaybePromise<TValue> = TValue | Promise<TValue>;
 
 interface SeedcordLike {
+    [SeedcordBrand]?: boolean;
     start: () => MaybePromise<unknown>;
     shutdown?: {
         run: (exitCode?: number, exitProcess?: boolean) => Promise<void>;
@@ -111,7 +113,7 @@ class SeedcordDevSession {
     }
 
     private isSeedcordLike(candidate: unknown): candidate is SeedcordLike {
-        return Boolean(candidate) && typeof (candidate as SeedcordLike).start === 'function';
+        return Boolean(candidate) && (candidate as SeedcordLike)[SeedcordBrand] === true;
     }
 }
 

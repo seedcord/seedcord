@@ -38,10 +38,6 @@ export interface SeedcordDevConfig {
      */
     preventCtrlC?: boolean;
     /**
-     * Height of the log panel in the TUI. (default: `30`).
-     */
-    logHeight?: number;
-    /**
 
      * Optional build configuration overrides.
      */

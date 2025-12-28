@@ -32,8 +32,6 @@ export class ConfigLoader {
         const build = this.resolveBuildOptions(configDir, config.build);
         const tsconfig = config.tsconfig ? resolve(root, config.tsconfig) : undefined;
         const preventCtrlC = config.preventCtrlC ?? false;
-        const DEFAULT_LOG_HEIGHT = 30;
-        const logHeight = config.logHeight ?? DEFAULT_LOG_HEIGHT;
 
         this.logger.info(`Loaded configuration from ${configPath}`);
         this.logger.debug(`Resolved root: ${root}`);
@@ -51,8 +49,7 @@ export class ConfigLoader {
             entry,
             build,
             tsconfig,
-            preventCtrlC,
-            logHeight
+            preventCtrlC
         } satisfies ResolvedSeedcordDevConfig;
     }
 
@@ -103,7 +100,6 @@ export class ConfigLoader {
         if (typeof cfg.tsconfig === 'string') normalized.tsconfig = cfg.tsconfig;
         if (cfg.build) normalized.build = cfg.build;
         if (typeof cfg.preventCtrlC === 'boolean') normalized.preventCtrlC = cfg.preventCtrlC;
-        if (typeof cfg.logHeight === 'number') normalized.logHeight = cfg.logHeight;
 
         return normalized;
     }

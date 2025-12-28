@@ -6,6 +6,7 @@ import {
     SeedcordErrorCode,
     StartupPhase
 } from '@seedcord/services';
+import { SeedcordBrand } from '@seedcord/utils';
 
 import { Bot } from './bot/Bot';
 import { EffectsRegistry } from './effects/EffectsRegistry';
@@ -21,6 +22,7 @@ import type { Config } from '@seedcord/types';
  * Manages component lifecycle and provides plugin support.
  */
 export class Seedcord extends Pluggable implements Core {
+    public readonly [SeedcordBrand] = true;
     private static isInstantiated = false;
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;

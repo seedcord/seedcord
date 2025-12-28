@@ -27,12 +27,10 @@ export class DevCommand extends BaseCommand {
                     // eslint-disable-next-line no-console
                     console.clear();
                     let preventCtrlC = false;
-                    let logHeight = 30;
 
                     try {
                         const config = await this.runner.loadConfig();
                         preventCtrlC = config.preventCtrlC;
-                        logHeight = config.logHeight;
                     } catch {
                         // Ignore error, will be handled in runner
                     }
@@ -40,7 +38,6 @@ export class DevCommand extends BaseCommand {
                     const { unmount, waitUntilExit } = render(
                         React.createElement(DevApp, {
                             preventCtrlC,
-                            logHeight,
                             onQuit: () => this.runner.quit(),
                             onDisconnect: () => this.runner.disconnect(),
                             onRestart: () => this.runner.restart(),

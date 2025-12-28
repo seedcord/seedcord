@@ -1,4 +1,4 @@
-import { Box, useInput, useStdout } from 'ink';
+import { Box, Text, useInput, useStdout } from 'ink';
 import React, { useEffect, useState } from 'react';
 
 import { Banner, ChannelSelector, ErrorDisplay, Help, LogPanel, StatusLine } from '@ui/components';
@@ -15,13 +15,13 @@ interface DevAppActions {
 interface DevAppProps {
     readonly onReady: (actions: DevAppActions) => void;
     readonly preventCtrlC?: boolean;
-    readonly logHeight?: number;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
 }
 
-export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 30 }: DevAppProps): ReactElement {
+// eslint-disable-next-line max-lines-per-function
+export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps): ReactElement {
     const [status, setStatus] = useState('Initializing...');
     const [error, setError] = useState<Error | null>(null);
     const [isBusy, setBusy] = useState(true);
@@ -49,8 +49,11 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
         };
     }, [stdout]);
 
-    const staticHeight = 10;
-    const effectiveLogHeight = Math.min(logHeight, Math.max(5, terminalHeight - staticHeight));
+    const staticOverhead = 10;
+    const helpOverhead = showHelp ? 10 : 0;
+    const errorOverhead = error ? 5 : 0;
+    const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead;
+    const effectiveLogHeight = Math.max(0, availableHeight);
 
     useInput((input) => {
         if (showChannels) return; // ChannelSelector will handle input
@@ -104,8 +107,13 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
                     onSelect={setSelectedChannel}
                     onClose={() => setShowChannels(false)}
                 />
+            ) : effectiveLogHeight >= 5 ? (
+                <LogPanel height={effectiveLogHeight} channel={selectedChannel} />
             ) : (
-                effectiveLogHeight > 0 && <LogPanel height={effectiveLogHeight} channel={selectedChannel} />
+                <Box borderStyle="round" borderColor="yellow" flexDirection="column" padding={1}>
+                    <Text color="yellow">Terminal too small to show logs.</Text>
+                    <Text dimColor>Please increase terminal height.</Text>
+                </Box>
             )}
         </Box>
     );

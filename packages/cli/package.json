@@ -46,6 +46,7 @@
         "@commander-js/extra-typings": "^14.0.0",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
+        "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "commander": "^14.0.2",
         "fix-esm-import-path": "^1.10.3",
