@@ -90,21 +90,12 @@ describe('DevRunner', () => {
             }))
         };
 
-        const logger: ILogger = {
-            error: vi.fn(),
-            warn: vi.fn(),
-            info: vi.fn(),
-            http: vi.fn(),
-            verbose: vi.fn(),
-            debug: vi.fn(),
-            silly: vi.fn()
-        };
-
-        const runner = new DevRunner(locator as never, configLoader as never, logger);
+        const runner = new DevRunner(locator as never, configLoader as never);
 
         const actions = {
             setStatus: vi.fn(),
-            setError: vi.fn()
+            setError: vi.fn(),
+            setBusy: vi.fn()
         };
 
         await expect(runner.run(actions)).rejects.toThrow('Cannot find entry file');

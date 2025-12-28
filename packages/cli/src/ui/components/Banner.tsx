@@ -3,13 +3,11 @@ import chalk from 'chalk';
 import { Box, Text } from 'ink';
 import React, { useState } from 'react';
 
+import { accentA, accentB } from './shared';
+
 import type { ReactElement } from 'react';
 
 export function Banner(): ReactElement {
-    const accentA = chalk.hex('f04e36').bold;
-    const accentB = chalk.hex('6fab49').bold;
-    const helpLine = chalk.dim('Press ') + chalk.reset.bold.white('h') + chalk.reset.dim(' to show help');
-
     const [logPath] = useState(() => LoggerChannelRegistry.instance.getLogFilePath('default'));
 
     return (
@@ -25,7 +23,12 @@ export function Banner(): ReactElement {
                 </Text>
             )}
             <Text>
-                <Text color="green">➜</Text> {helpLine}
+                <Text color="green">➜</Text>
+                <Text color="gray"> Press </Text>
+                <Text bold color="white">
+                    h
+                </Text>
+                <Text color="gray"> to show help</Text>
             </Text>
         </Box>
     );

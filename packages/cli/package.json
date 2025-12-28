@@ -54,6 +54,7 @@
         "jiti": "^2.6.1",
         "react": "^19.2.3",
         "tsup": "catalog:peer",
+        "tsx": "^4.21.0",
         "vite": "^7.3.0"
     },
     "devDependencies": {

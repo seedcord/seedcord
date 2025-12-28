@@ -28,6 +28,7 @@ class SeedcordDevSession {
     private stopResolve?: () => void;
     private instance?: SeedcordLike;
     private isStopped = false;
+    private startupPromise?: Promise<unknown>;
 
     constructor(
         private readonly config: ResolvedSeedcordDevConfig,
@@ -35,7 +36,7 @@ class SeedcordDevSession {
         private readonly onStatus?: (status: string) => void
     ) {}
 
-    public async start(): Promise<void> {
+    public async start(onReady?: () => void): Promise<void> {
         await this.runtime.start({ config: this.config });
 
         const { module } = await this.runtime.loadEntry();
@@ -50,12 +51,15 @@ class SeedcordDevSession {
 
         try {
             this.onStatus?.('Starting Seedcord instance...');
-            await instance.start();
-            this.onStatus?.('Seedcord is running.');
+            this.startupPromise = Promise.resolve(instance.start());
+            await this.startupPromise;
 
             if (this.isStopped) {
                 return;
             }
+
+            this.onStatus?.('Seedcord is running.');
+            onReady?.();
 
             await new Promise<void>((resolve) => {
                 const cleanup = (): void => {
@@ -78,6 +82,15 @@ class SeedcordDevSession {
         if (this.instance?.startup) {
             this.instance.startup.abort();
         }
+
+        if (this.startupPromise) {
+            try {
+                await this.startupPromise;
+            } catch {
+                // Ignore errors from aborted startup
+            }
+        }
+
         if (this.instance?.shutdown) {
             await this.instance.shutdown.run(0, false);
         }
@@ -96,6 +109,7 @@ class SeedcordDevSession {
 export interface DevRunnerActions {
     setStatus: (status: string) => void;
     setError: (error: Error) => void;
+    setBusy: (isBusy: boolean) => void;
 }
 
 /**
@@ -126,40 +140,58 @@ export class DevRunner {
                 if (this.shouldQuit) break;
 
                 if (this.isDisconnected) {
-                    actions.setStatus('Disconnected. Press r to restart.');
-                    await this.waitForSignal();
+                    await this.handleDisconnected(actions);
                     if (this.shouldQuit) break;
-                    this.isDisconnected = false;
                     continue;
                 }
 
-                const config = await this.loadConfig();
-                const runtime = new ViteDevRuntime();
-                this.currentSession = new SeedcordDevSession(config, runtime, actions.setStatus);
-
-                try {
-                    await this.currentSession.start();
-                } finally {
-                    await this.currentSession.dispose();
-                    this.currentSession = null;
-                }
+                await this.runSession(actions);
 
                 if (this.shouldQuit) break;
-                // If session ended naturally (e.g. internal stop), loop again (restart)
             } catch (error: unknown) {
                 if (this.shouldQuit) break;
-
-                if (error instanceof Error) {
-                    actions.setError(error);
-                } else {
-                    actions.setError(new Error(String(error)));
-                }
-
-                actions.setStatus('Error occurred. Press r to restart.');
-                await this.waitForSignal();
+                await this.handleError(actions, error);
                 if (this.shouldQuit) break;
             }
         }
+    }
+
+    private async handleDisconnected(actions: DevRunnerActions): Promise<void> {
+        actions.setStatus('Disconnected. Press r to restart.');
+        actions.setBusy(false);
+        await this.waitForSignal();
+        actions.setBusy(true);
+        if (!this.shouldQuit) {
+            this.isDisconnected = false;
+        }
+    }
+
+    private async runSession(actions: DevRunnerActions): Promise<void> {
+        actions.setBusy(true);
+        const config = await this.loadConfig();
+        const runtime = new ViteDevRuntime();
+        this.currentSession = new SeedcordDevSession(config, runtime, actions.setStatus);
+
+        try {
+            await this.currentSession.start(() => actions.setBusy(false));
+        } finally {
+            actions.setBusy(true);
+            await this.currentSession.dispose();
+            this.currentSession = null;
+        }
+    }
+
+    private async handleError(actions: DevRunnerActions, error: unknown): Promise<void> {
+        if (error instanceof Error) {
+            actions.setError(error);
+        } else {
+            actions.setError(new Error(String(error)));
+        }
+
+        actions.setStatus('Error occurred. Press r to restart.');
+        actions.setBusy(false);
+        await this.waitForSignal();
+        actions.setBusy(true);
     }
 
     public async quit(): Promise<void> {

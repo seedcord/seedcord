@@ -9,6 +9,7 @@ import type { ReactElement } from 'react';
 interface DevAppActions {
     setStatus: (status: string) => void;
     setError: (error: Error) => void;
+    setBusy: (isBusy: boolean) => void;
 }
 
 interface DevAppProps {
@@ -23,6 +24,7 @@ interface DevAppProps {
 export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 30 }: DevAppProps): ReactElement {
     const [status, setStatus] = useState('Initializing...');
     const [error, setError] = useState<Error | null>(null);
+    const [isBusy, setBusy] = useState(true);
     const [showHelp, setShowHelp] = useState(false);
 
     useInput((input) => {
@@ -31,11 +33,15 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
             void onQuit?.();
         }
 
+        if (isBusy) return;
+
         if (input === 'd') {
+            setBusy(true);
             void onDisconnect?.();
         }
 
         if (input === 'r') {
+            setBusy(true);
             setStatus('Restarting...');
             void onRestart?.();
         }
@@ -52,7 +58,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
     useEffect(() => {
         LogStore.instance.clear();
         LogStore.instance.mount();
-        onReady({ setStatus, setError });
+        onReady({ setStatus, setError, setBusy });
 
         return () => {
             LogStore.instance.unmount();
@@ -64,7 +70,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
             <Banner />
             {error && <ErrorDisplay error={error} />}
             {showHelp && <Help />}
-            <StatusLine text={status} spinner={false} />
+            <StatusLine text={status} spinner={isBusy} />
             <LogPanel height={logHeight} />
         </>
     );

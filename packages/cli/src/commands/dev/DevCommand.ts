@@ -69,6 +69,7 @@ export class DevCommand extends BaseCommand {
                     }
 
                     await waitUntilExit();
+                    process.exit(0);
                 } catch (error: unknown) {
                     this.logger.error('Seedcord dev failed', error);
                     if (isSeedcordError(error)) process.exitCode = 1;
