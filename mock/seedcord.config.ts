@@ -6,6 +6,5 @@ export default defineConfig({
     entry: './index.ts',
     build: {
         tsconfig: './tsconfig.build.json'
-    },
-    logHeight: 35
+    }
 });

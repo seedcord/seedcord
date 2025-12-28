@@ -51,7 +51,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
 
     const staticOverhead = 10;
     const helpOverhead = showHelp ? 10 : 0;
-    const errorOverhead = error ? 5 : 0;
+    const errorOverhead = error ? 10 : 0;
     const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead;
     const effectiveLogHeight = Math.max(0, availableHeight);
 
@@ -67,12 +67,16 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
 
         if (input === 'd') {
             setBusy(true);
+
+            if (error) setError(null);
+            setStatus('Disconnecting...');
             void onDisconnect?.();
         }
 
         if (input === 'r') {
             setBusy(true);
             setStatus('Restarting...');
+            if (error) setError(null);
             void onRestart?.();
         }
 

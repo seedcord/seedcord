@@ -70,6 +70,7 @@ export class Mongo extends Plugin {
     }
 
     private async connect(): Promise<void> {
+        this.clearModels();
         this.connection = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
@@ -87,12 +88,16 @@ export class Mongo extends Plugin {
             });
     }
 
-    private async disconnect(): Promise<void> {
-        const modelNames = Object.keys(this.connection.models);
+    private clearModels(): void {
+        const modelNames = Object.keys(mongoose.models);
         if (modelNames.length > 0) {
             this.logger.debug(`Clearing ${modelNames.length} mongoose models`);
-            for (const name of modelNames) this.connection.deleteModel(name);
+            for (const name of modelNames) mongoose.deleteModel(name);
         }
+    }
+
+    private async disconnect(): Promise<void> {
+        this.clearModels();
 
         await this.connection
             .disconnect()

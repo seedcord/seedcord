@@ -42,14 +42,27 @@ class SeedcordDevSession {
         private readonly onStatus?: (status: string) => void
     ) {}
 
+    private async loadInstanceModule(): Promise<unknown> {
+        await this.runtime.start({ config: this.config });
+
+        try {
+            const { module } = await this.runtime.loadEntry();
+            return module;
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            if (message.includes('Does the file exist')) {
+                throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.config.instance]);
+            }
+            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, message]);
+        }
+    }
+
     public async start(onReady?: () => void): Promise<void> {
         const cwd = dirname(this.config.configFile);
         this.tscRunner = new TscRunner(this.config.tsconfig, cwd);
         this.tscRunner.start();
 
-        await this.runtime.start({ config: this.config });
-
-        const { module } = await this.runtime.loadEntry();
+        const module = await this.loadInstanceModule();
         const exported = resolveDefaultExport(module);
         const instance = await Promise.resolve(exported);
 
