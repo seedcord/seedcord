@@ -10,7 +10,8 @@
             "@ui/*": ["./src/ui/*"],
             "@core/*": ["./src/core/*"],
             "@commands/*": ["./src/commands/*"],
-            "@utils/*": ["./src/utils/*"]
+            "@utils/*": ["./src/utils/*"],
+            "@api/*": ["./src/api/*"]
         },
         "types": ["react", "vite/client"],
         "jsx": "react"

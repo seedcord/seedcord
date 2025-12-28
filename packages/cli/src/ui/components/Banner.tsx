@@ -1,3 +1,5 @@
+import { relative } from 'node:path';
+
 import { LoggerChannelRegistry } from '@seedcord/services';
 import chalk from 'chalk';
 import { Box, Text } from 'ink';
@@ -15,6 +17,10 @@ interface BannerProps {
 export function Banner({ config }: BannerProps): ReactElement {
     const [logPath] = useState(() => LoggerChannelRegistry.instance.getLogFilePath('default'));
 
+    const formatPath = (path: string): string => {
+        return relative(process.cwd(), path);
+    };
+
     return (
         <Box flexDirection="column" paddingBottom={1}>
             <Text>
@@ -25,10 +31,10 @@ export function Banner({ config }: BannerProps): ReactElement {
             {config && (
                 <Box flexDirection="column" paddingBottom={1}>
                     <Text>
-                        <Text color="blue">➜</Text> Interactions: {chalk.dim(config.bot.interactions.path)}
+                        <Text color="blue">➜</Text> Interactions: {chalk.dim(formatPath(config.bot.interactions.path))}
                     </Text>
                     <Text>
-                        <Text color="blue">➜</Text> Events: {chalk.dim(config.bot.events.path)}
+                        <Text color="blue">➜</Text> Events: {chalk.dim(formatPath(config.bot.events.path))}
                     </Text>
                 </Box>
             )}

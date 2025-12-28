@@ -14,7 +14,8 @@ export default mergeConfig(
                 '@ui': path.resolve(__dirname, './src/ui'),
                 '@core': path.resolve(__dirname, './src/core'),
                 '@commands': path.resolve(__dirname, './src/commands'),
-                '@utils': path.resolve(__dirname, './src/utils')
+                '@utils': path.resolve(__dirname, './src/utils'),
+                '@api': path.resolve(__dirname, './src/api')
             }
         },
         test: {
