@@ -112,5 +112,7 @@ export enum SeedcordErrorCode {
     /** TypeScript reported diagnostics during emit. */
     CliBuildFailed = 3117,
     /** Unable to write the generated bootstrap file. */
-    CliBootstrapWriteFailed = 3118
+    CliBootstrapWriteFailed = 3118,
+    /** Config tsconfig must be a string when provided. */
+    CliConfigInvalidTsconfig = 3119
 }

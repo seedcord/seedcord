@@ -96,7 +96,8 @@ const messages = {
         `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
-        `Failed to write bootstrap file at ${targetPath}: ${reason}.`
+        `Failed to write bootstrap file at ${targetPath}: ${reason}.`,
+    [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.'
 } satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**

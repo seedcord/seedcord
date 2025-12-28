@@ -30,6 +30,10 @@ export interface SeedcordDevConfig {
      */
     entry: string;
     /**
+     * Optional tsconfig path to use for type checking in dev mode. Defaults to the nearest tsconfig.json.
+     */
+    tsconfig?: string;
+    /**
      * Whether to prevent the CLI from exiting on Ctrl+C. (default: `false`).
      */
     preventCtrlC?: boolean;
@@ -53,7 +57,7 @@ export interface ResolvedSeedcordBuildConfig {
 /**
  * Fully resolved configuration with absolute file system paths.
  */
-export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build'>> {
+export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'tsconfig'>> {
     /**
      * Absolute path to the config file that produced this resolution.
      */
@@ -62,6 +66,10 @@ export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConf
      * Resolved build options with absolute paths.
      */
     build: ResolvedSeedcordBuildConfig;
+    /**
+     * Optional tsconfig path to use for type checking in dev mode.
+     */
+    tsconfig?: string | undefined;
 }
 
 /**

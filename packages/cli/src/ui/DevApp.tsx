@@ -27,7 +27,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, logHeight = 3
     const [isBusy, setBusy] = useState(true);
     const [showHelp, setShowHelp] = useState(false);
     const [showChannels, setShowChannels] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<string | undefined>(undefined);
+    const [selectedChannel, setSelectedChannel] = useState<string | undefined>('default');
 
     const { stdout } = useStdout();
     const DEFAULT_ROWS = 24;

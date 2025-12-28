@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { dirname } from 'node:path';
+
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';
@@ -7,6 +9,7 @@ import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
+import { TscRunner } from './TscRunner';
 
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
@@ -29,6 +32,7 @@ class SeedcordDevSession {
     private instance?: SeedcordLike;
     private isStopped = false;
     private startupPromise?: Promise<unknown>;
+    private tscRunner?: TscRunner;
 
     constructor(
         private readonly config: ResolvedSeedcordDevConfig,
@@ -37,6 +41,10 @@ class SeedcordDevSession {
     ) {}
 
     public async start(onReady?: () => void): Promise<void> {
+        const cwd = dirname(this.config.configFile);
+        this.tscRunner = new TscRunner(this.config.tsconfig, cwd);
+        this.tscRunner.start();
+
         await this.runtime.start({ config: this.config });
 
         const { module } = await this.runtime.loadEntry();
@@ -79,6 +87,7 @@ class SeedcordDevSession {
 
     public async stop(): Promise<void> {
         this.isStopped = true;
+        this.tscRunner?.stop();
         if (this.instance?.startup) {
             this.instance.startup.abort();
         }

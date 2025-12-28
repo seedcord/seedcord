@@ -30,6 +30,7 @@ export class ConfigLoader {
         const entry = this.resolveWithinRoot(root, config.entry);
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
+        const tsconfig = config.tsconfig ? resolve(root, config.tsconfig) : undefined;
         const preventCtrlC = config.preventCtrlC ?? false;
         const DEFAULT_LOG_HEIGHT = 30;
         const logHeight = config.logHeight ?? DEFAULT_LOG_HEIGHT;
@@ -40,6 +41,7 @@ export class ConfigLoader {
         this.logger.debug(`Resolved entry: ${entry}`);
         this.logger.debug(`Resolved build outDir: ${build.outDir}`);
         if (build.tsconfig) this.logger.debug(`Resolved build tsconfig: ${build.tsconfig}`);
+        if (tsconfig) this.logger.debug(`Resolved dev tsconfig: ${tsconfig}`);
         this.logger.debug(`Resolved bootstrap: ${build.bootstrap}`);
 
         return {
@@ -48,6 +50,7 @@ export class ConfigLoader {
             configFile: configPath,
             entry,
             build,
+            tsconfig,
             preventCtrlC,
             logHeight
         } satisfies ResolvedSeedcordDevConfig;
@@ -72,6 +75,10 @@ export class ConfigLoader {
             throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
         }
 
+        if (typeof cfg.tsconfig !== 'undefined' && typeof cfg.tsconfig !== 'string') {
+            throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
+        }
+
         if (typeof cfg.build !== 'undefined' && typeof cfg.build !== 'object') {
             throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuild);
         }
@@ -93,6 +100,7 @@ export class ConfigLoader {
 
         const normalized: SeedcordDevConfig = { instance: cfg.instance, entry: cfg.entry };
         if (typeof cfg.root === 'string') normalized.root = cfg.root;
+        if (typeof cfg.tsconfig === 'string') normalized.tsconfig = cfg.tsconfig;
         if (cfg.build) normalized.build = cfg.build;
         if (typeof cfg.preventCtrlC === 'boolean') normalized.preventCtrlC = cfg.preventCtrlC;
         if (typeof cfg.logHeight === 'number') normalized.logHeight = cfg.logHeight;
