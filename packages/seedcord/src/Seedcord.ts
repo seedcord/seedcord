@@ -7,6 +7,7 @@ import {
     StartupPhase
 } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/utils';
+import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
 import { EffectsRegistry } from './effects/EffectsRegistry';
@@ -88,13 +89,7 @@ export class Seedcord extends Pluggable implements Core {
      * @internal
      */
     private registerStartupTasks(): void {
-        this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
-            this.hmrManager.register(this.bot);
-            for (const plugin of this.plugins) {
-                this.hmrManager.register(plugin);
-            }
-            await Promise.resolve();
-        });
+        if (Envapter.isDevelopment) this.registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'Effect Initialization', async () => {
             this.effects.logger.utils.initialization('Effects', 'start');
@@ -123,5 +118,15 @@ export class Seedcord extends Pluggable implements Core {
     public async start(): Promise<this> {
         await super.init();
         return this;
+    }
+
+    private registerHmrAwareModules(): void {
+        this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
+            this.hmrManager.register(this.bot);
+            for (const plugin of this.plugins) {
+                this.hmrManager.register(plugin);
+            }
+            await Promise.resolve();
+        });
     }
 }

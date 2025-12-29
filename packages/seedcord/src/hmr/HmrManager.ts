@@ -1,25 +1,24 @@
 import { HMR_EVENT_NAME } from '@seedcord/cli';
 import { Logger } from '@seedcord/services';
 import { formatFilePath } from '@seedcord/utils';
+import chalk from 'chalk';
 
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 
 export class HmrManager {
-    private readonly logger = new Logger('HMR');
+    private readonly logger = new Logger('HMR', { channel: 'hmr' });
     private readonly listeners = new Set<HmrAware>();
 
     constructor() {}
 
     public init(): void {
         if (import.meta.hot) {
-            this.logger.inChannel('hmr').info('HMR enabled');
+            this.logger.info('HMR enabled');
 
             import.meta.hot.on(HMR_EVENT_NAME, (payload: HmrUpdateEvent) => {
-                this.logger
-                    .inChannel('hmr')
-                    .debug(`Received HMR update for ${formatFilePath(payload.file)} (${payload.type})`);
+                this.logger.debug(`Received HMR update for ${formatFilePath(payload.file)} (${payload.type})`);
                 if (payload.affectedModules) {
-                    this.logger.inChannel('hmr').utils.list(
+                    this.logger.utils.list(
                         payload.affectedModules.map((mod) => formatFilePath(mod)),
                         'Affected modules:'
                     );
@@ -42,9 +41,7 @@ export class HmrManager {
             try {
                 await listener.onHmr(event);
             } catch (error) {
-                this.logger
-                    .inChannel('hmr')
-                    .error(`Error in HMR listener: ${error instanceof Error ? error.message : String(error)}`);
+                this.logger.error(`Error handling HMR update in ${chalk.bold(listener.name)}: `, error);
             }
         });
 

@@ -26,6 +26,11 @@ export const HMR_EVENT_NAME = 'seedcord:hmr';
  */
 export interface HmrAware {
     /**
+     * A name to identify the HMR-aware module (for logging/debugging purposes).
+     */
+    readonly name: string;
+
+    /**
      * Method that is called on HMR update and receives the full update event.
      */
     onHmr(event: HmrUpdateEvent): Promise<void>;

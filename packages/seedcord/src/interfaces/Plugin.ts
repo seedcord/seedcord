@@ -30,6 +30,8 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
     /** Logger instance for this plugin - must be implemented by subclasses */
     public abstract logger: Logger;
 
+    public name: string = this.constructor.name;
+
     constructor(protected pluggable: Core) {
         super();
     }
