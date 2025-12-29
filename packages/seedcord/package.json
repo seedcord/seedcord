@@ -52,7 +52,8 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsup-config": "workspace:*"
+        "@seedcord/tsup-config": "workspace:*",
+        "vite": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

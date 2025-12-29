@@ -225,8 +225,6 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
     }
 
     get component(): InstantiatedBuilder<BuilderKey> {
-        // TODO: Add checks for specific builders that make sure mandatory fields are set
-
         return this.instance;
     }
 }
@@ -241,7 +239,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
 export abstract class RowComponent<RowKey extends ActionRowComponentType> extends BaseComponent<
     InstantiatedActionRow<RowKey>
 > {
-    protected constructor(type: RowKey) {
+    protected constructor(public readonly type: RowKey) {
         const ComponentClass = RowTypes[type] as unknown;
         super(ComponentClass as new () => InstantiatedActionRow<RowKey>);
     }

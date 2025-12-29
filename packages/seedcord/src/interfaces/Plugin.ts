@@ -1,6 +1,7 @@
 import { SeedcordError, SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
 
 import type { Core } from './Core';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 import type {
     SENoEvents,
     CoordinatedShutdown,
@@ -24,7 +25,7 @@ export interface Initializeable {
  */
 export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents> = SENoEvents>
     extends StrictEventEmitter<TPluginEvents>
-    implements Initializeable
+    implements Initializeable, HmrAware
 {
     /** Logger instance for this plugin - must be implemented by subclasses */
     public abstract logger: Logger;
@@ -38,6 +39,16 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
      * @virtual Override this method in your plugin classes
      */
     abstract init(): Promise<void>;
+
+    /**
+     * Handle HMR updates
+     * @param _event - The HMR update event
+     * @virtual Override this method to handle HMR updates
+     */
+    public onHmr(_event: HmrUpdateEvent): Promise<void> {
+        // Default implementation does nothing
+        return Promise.resolve();
+    }
 }
 
 /**
@@ -64,6 +75,7 @@ export class Pluggable<
     protected isInitialized = false;
     protected readonly shutdown: CoordinatedShutdown;
     protected readonly startup: CoordinatedStartup;
+    protected readonly plugins: Plugin[] = [];
 
     private static readonly PLUGIN_INIT_TIMEOUT_MS = 15000;
 
@@ -119,6 +131,7 @@ export class Pluggable<
         }
 
         const instance = new Plugin(this as unknown as Core, ...args);
+        this.plugins.push(instance);
 
         const entry = {
             [key]: instance

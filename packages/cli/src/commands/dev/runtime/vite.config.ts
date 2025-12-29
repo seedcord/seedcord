@@ -39,7 +39,14 @@ export default defineConfig({
     },
     future: {
         removeSsrLoadModule: 'warn',
-        removePluginHookHandleHotUpdate: 'warn'
+        removePluginHookHandleHotUpdate: 'warn',
+        removePluginHookSsrArgument: 'warn',
+        removeServerModuleGraph: 'warn',
+        removeServerReloadModule: 'warn',
+        removeServerPluginContainer: 'warn',
+        removeServerHot: 'warn',
+        removeServerTransformRequest: 'warn',
+        removeServerWarmupRequest: 'warn'
     },
     clearScreen: false,
     logLevel: 'error',

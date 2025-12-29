@@ -55,7 +55,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     const staticOverhead = 14;
     // eslint-disable-next-line no-magic-numbers
     const helpOverhead = showHelp ? 8 : 0;
-    const errorOverhead = error ? 10 : 0;
+    const errorOverhead = error ? (error.stack?.split('\n').length ?? 0) + 5 : 0;
     const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead;
     const effectiveLogHeight = Math.max(0, availableHeight);
 

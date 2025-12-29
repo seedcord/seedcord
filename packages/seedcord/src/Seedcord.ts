@@ -10,6 +10,7 @@ import { SeedcordBrand } from '@seedcord/utils';
 
 import { Bot } from './bot/Bot';
 import { EffectsRegistry } from './effects/EffectsRegistry';
+import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
 
 import type { Core } from './interfaces/Core';
@@ -39,6 +40,9 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link HealthCheck} */
     private readonly healthCheck: HealthCheck;
 
+    /** @see {@link HmrManager} */
+    private readonly hmrManager: HmrManager;
+
     /**
      * Creates a new Seedcord instance
      *
@@ -62,6 +66,8 @@ export class Seedcord extends Pluggable implements Core {
         }
         Seedcord.isInstantiated = true;
 
+        this.hmrManager = new HmrManager();
+        this.hmrManager.init();
         this.effects = new EffectsRegistry(this as unknown as Core);
         this.bot = new Bot(this as unknown as Core);
         this.healthCheck = new HealthCheck(this.shutdown);
@@ -82,6 +88,14 @@ export class Seedcord extends Pluggable implements Core {
      * @internal
      */
     private registerStartupTasks(): void {
+        this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
+            this.hmrManager.register(this.bot);
+            for (const plugin of this.plugins) {
+                this.hmrManager.register(plugin);
+            }
+            await Promise.resolve();
+        });
+
         this.startup.addTask(StartupPhase.Configuration, 'Effect Initialization', async () => {
             this.effects.logger.utils.initialization('Effects', 'start');
             await this.effects.init();
@@ -110,4 +124,10 @@ export class Seedcord extends Pluggable implements Core {
         await super.init();
         return this;
     }
+}
+
+if (import.meta.hot) {
+    import.meta.hot.accept(() => {
+        // Prevent full reload, let HmrManager handle events
+    });
 }

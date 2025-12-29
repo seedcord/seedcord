@@ -2,8 +2,7 @@
     "$schema": "https://json.schemastore.org/tsconfig.json",
     "extends": "@seedcord/tsconfig/base",
     "compilerOptions": {
-        "rootDir": "./",
-        "types": ["vite/client"]
+        "rootDir": "./"
     },
     "exclude": ["node_modules", "packages", "apps", "mock"]
 }

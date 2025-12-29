@@ -12,6 +12,7 @@ import { Plugin } from '@interfaces/Plugin';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
 import type { Core } from '@interfaces/Core';
+import type { HmrUpdateEvent } from '@seedcord/cli';
 
 /**
  * Bot event types
@@ -47,6 +48,10 @@ export class Bot extends Plugin<BotEvents> {
     public readonly commands: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
     public readonly emojis: EmojiMap = Emojis;
+
+    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.interactions.onHmr(event);
+    }
 
     constructor(protected core: Core) {
         super(core);
