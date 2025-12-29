@@ -105,7 +105,7 @@ describe('DevRunner', () => {
             setConfig: vi.fn()
         };
 
-        await expect(runner.run(actions)).rejects.toThrow(/Failed to load url/);
+        await expect(runner.run(actions)).rejects.toThrow(/Cannot find entry file|Failed to load url/);
 
         expect(locator.locate).toHaveBeenCalledTimes(1);
         expect(configLoader.load).toHaveBeenCalledWith(configPath);

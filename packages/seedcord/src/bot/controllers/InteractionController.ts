@@ -276,13 +276,13 @@ export class InteractionController implements Initializeable, HmrAware {
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         const { file } = event;
 
-        const handlersDir = this.core.config.bot.interactions.path;
-        const middlewareDir = this.core.config.bot.interactions.middlewares;
+        // const handlersDir = this.core.config.bot.interactions.path;
+        // const middlewareDir = this.core.config.bot.interactions.middlewares;
 
-        const isHandler = file.startsWith(handlersDir);
-        const isMiddleware = middlewareDir && file.startsWith(middlewareDir);
+        // const isHandler = file.startsWith(handlersDir);
+        // const isMiddleware = middlewareDir && file.startsWith(middlewareDir);
 
-        if (!isHandler && !isMiddleware) return;
+        // if (!isHandler && !isMiddleware) return;
 
         this.logger.inChannel('hmr').info(`[HMR] Interaction update detected: ${file}`);
         await Promise.resolve();

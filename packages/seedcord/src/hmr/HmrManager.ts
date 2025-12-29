@@ -1,5 +1,6 @@
 import { HMR_EVENT_NAME } from '@seedcord/cli';
 import { Logger } from '@seedcord/services';
+import { formatFilePath } from '@seedcord/utils';
 
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 
@@ -14,9 +15,14 @@ export class HmrManager {
             this.logger.inChannel('hmr').info('HMR enabled');
 
             import.meta.hot.on(HMR_EVENT_NAME, (payload: HmrUpdateEvent) => {
-                this.logger.inChannel('hmr').debug(`Received HMR update for ${payload.file} (${payload.type})`);
+                this.logger
+                    .inChannel('hmr')
+                    .debug(`Received HMR update for ${formatFilePath(payload.file)} (${payload.type})`);
                 if (payload.affectedModules) {
-                    this.logger.inChannel('hmr').utils.list(payload.affectedModules);
+                    this.logger.inChannel('hmr').utils.list(
+                        payload.affectedModules.map((mod) => formatFilePath(mod)),
+                        'Affected modules:'
+                    );
                 }
                 void this.handleUpdate(payload);
             });

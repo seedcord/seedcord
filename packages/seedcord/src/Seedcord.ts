@@ -125,9 +125,3 @@ export class Seedcord extends Pluggable implements Core {
         return this;
     }
 }
-
-if (import.meta.hot) {
-    import.meta.hot.accept(() => {
-        // Prevent full reload, let HmrManager handle events
-    });
-}

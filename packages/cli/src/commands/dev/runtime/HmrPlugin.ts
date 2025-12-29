@@ -51,13 +51,13 @@ export class HmrPlugin {
         hot.send(HMR_EVENT_NAME, payload);
     }
 
-    private hotUpdate(ctx: HmrContext): void {
+    private hotUpdate(ctx: HmrContext): ModuleNode[] {
         const { file, server, modules } = ctx;
         const now = Date.now();
 
         // Debounce rapid updates to the same file
         if (this.lastUpdate?.file === file && now - this.lastUpdate.time < DEBOUNCE_MS) {
-            return;
+            return [];
         }
         this.lastUpdate = { file, time: now };
 
@@ -75,6 +75,9 @@ export class HmrPlugin {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         const hot = server.environments?.ssr?.hot ?? server.hot;
         hot.send(HMR_EVENT_NAME, payload);
+
+        // Return empty array to prevent default HMR update (which causes full reload)
+        return [];
     }
 
     private getAffectedModules(modules: ModuleNode[]): string[] {
