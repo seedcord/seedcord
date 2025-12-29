@@ -3,6 +3,7 @@ import * as path from 'node:path';
 
 import type { Logger } from '@seedcord/services';
 import type * as fs from 'node:fs';
+
 /**
  * Determines if a directory entry is a TypeScript or JavaScript file.
  *
@@ -50,4 +51,29 @@ export async function traverseDirectory(
             await callback(fullPath, relativePath, imported);
         }
     }
+}
+
+/**
+ * Options for formatting file paths.
+ */
+export interface FormatFileOptions {
+    /** Whether to return only the directory part of the path. (default: `false`) */
+    onlyDir?: boolean;
+    /** A prefix to prepend to the formatted path.(default: `'./'`) */
+    prefix?: string;
+}
+
+/**
+ * Formats a file path relative to the current working directory.
+ * @param filePath - The file path to format.
+ * @param options - Formatting options.
+ * @returns The formatted file path.
+ */
+export function formatFilePath(filePath: string, options: FormatFileOptions = {}): string {
+    const { onlyDir = false, prefix = './' } = options;
+
+    const resolved = onlyDir
+        ? path.relative(process.cwd(), filePath.replace(/\/[^/]*$/, ''))
+        : path.relative(process.cwd(), filePath);
+    return `${prefix}${resolved}`;
 }

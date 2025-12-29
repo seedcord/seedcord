@@ -1,5 +1,4 @@
-import { relative } from 'node:path';
-
+import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Box, Text } from 'ink';
 import React from 'react';
@@ -14,10 +13,6 @@ interface BannerProps {
 }
 
 export function Banner({ config }: BannerProps): ReactElement {
-    const formatPath = (path: string): string => {
-        return relative(process.cwd(), path);
-    };
-
     return (
         <Box flexDirection="column" paddingBottom={1}>
             <Text>
@@ -28,10 +23,11 @@ export function Banner({ config }: BannerProps): ReactElement {
             {config && (
                 <Box flexDirection="column" paddingBottom={1}>
                     <Text>
-                        <Text color="blue">➜</Text> Interactions: {chalk.dim(formatPath(config.bot.interactions.path))}
+                        <Text color="blue">➜</Text> Interactions:{' '}
+                        {chalk.dim(formatFilePath(config.bot.interactions.path))}
                     </Text>
                     <Text>
-                        <Text color="blue">➜</Text> Events: {chalk.dim(formatPath(config.bot.events.path))}
+                        <Text color="blue">➜</Text> Events: {chalk.dim(formatFilePath(config.bot.events.path))}
                     </Text>
                 </Box>
             )}

@@ -1,6 +1,5 @@
-import { relative } from 'node:path';
-
 import { LoggerChannelRegistry } from '@seedcord/services';
+import { formatFilePath } from '@seedcord/utils';
 import { Box, Text } from 'ink';
 import React, { useState } from 'react';
 
@@ -20,18 +19,11 @@ export function LogPanel({ channel, title = 'Logs', height = 10, borderColor = '
     const visibleLogs = logs.slice(-height);
     const [logPath] = useState(() => LoggerChannelRegistry.instance.getLogFilePath(channel ?? 'default'));
 
-    function formatPath(path: string, onlyDir = false): string {
-        const resolved = onlyDir
-            ? relative(process.cwd(), path.replace(/\/[^/]*$/, ''))
-            : relative(process.cwd(), path);
-        return `./${resolved}`;
-    }
-
     const mainTitle = channel ? `${title} - ${channel}` : title;
     const pathTitle = logPath
         ? channel
-            ? `(${formatPath(logPath)})`
-            : formatPath(logPath, true)
+            ? `(${formatFilePath(logPath)})`
+            : formatFilePath(logPath, { onlyDir: true })
         : channel
           ? ''
           : 'no log file';
