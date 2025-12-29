@@ -51,6 +51,7 @@ export class Bot extends Plugin<BotEvents> {
 
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.interactions.onHmr(event);
+        await this.events.onHmr(event);
     }
 
     constructor(protected core: Core) {

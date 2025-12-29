@@ -1,10 +1,11 @@
 import { Logger } from '@seedcord/services';
-import { traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
 
 import { EventMetadataKey } from '@bDecorators/Events';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { EventHandler, EventMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
@@ -14,6 +15,7 @@ import type { Core } from '@interfaces/Core';
 import type { EventHandlerConstructor, EventMiddlewareConstructor, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;
@@ -36,15 +38,42 @@ interface RegisteredEventHandlerEntry {
  *
  * @internal
  */
-export class EventController implements Initializeable {
+export class EventController implements Initializeable, HmrAware {
     private readonly logger = new Logger('Events');
     private isInitialized = false;
+
+    public readonly name = 'Events';
 
     private readonly eventMap = new Collection<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
     private readonly middlewares: RegisteredEventMiddleware[] = [];
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
+    private readonly attachedEvents = new Set<keyof ClientEvents>();
 
-    public constructor(protected core: Core) {}
+    private readonly hmrHandler: HmrModuleHandler<EventHandlerConstructor, EventMiddlewareConstructor>;
+
+    public constructor(protected core: Core) {
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: this.core.config.bot.events.path,
+            ...(this.core.config.bot.events.middlewares
+                ? { middlewaresDir: this.core.config.bot.events.middlewares }
+                : {}),
+            isHandler: this.isEventHandlerClass.bind(this),
+            isMiddleware: this.isMiddlewareClass.bind(this),
+            registerHandler: (handler) => this.registerHandler(handler),
+            registerMiddleware: (middleware, file) => {
+                const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middleware) as
+                    | MiddlewareMetadata
+                    | undefined;
+                if (metadata?.type === MiddlewareType.Event) {
+                    this.registerMiddleware(middleware, metadata, formatFilePath(file));
+                }
+            },
+            unregisterHandler: this.unregisterHandler.bind(this),
+            unregisterMiddleware: this.unregisterMiddleware.bind(this),
+            logger: this.logger,
+            name: 'Event'
+        });
+    }
 
     public async init(): Promise<void> {
         if (this.isInitialized) {
@@ -75,10 +104,11 @@ export class EventController implements Initializeable {
     private async loadHandlers(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isEventHandlerClass(val)) continue;
                     this.registerHandler(val);
+                    this.hmrHandler.trackHandler(fullPath, val);
                     this.logger.utils.registration(val.name, relativePath);
                 }
             },
@@ -89,17 +119,39 @@ export class EventController implements Initializeable {
     private async loadMiddlewares(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isMiddlewareClass(val)) continue;
                     const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
                     if (metadata?.type !== MiddlewareType.Event) continue;
 
                     this.registerMiddleware(val, metadata, relativePath);
+                    this.hmrHandler.trackMiddleware(fullPath, val);
                 }
             },
             this.logger
         );
+    }
+
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.hmrHandler.handle(event);
+    }
+
+    private unregisterHandler(handlerClass: EventHandlerConstructor): void {
+        for (const handlers of this.eventMap.values()) {
+            const index = handlers.findIndex((h) => h.ctor === handlerClass);
+            if (index !== -1) {
+                handlers.splice(index, 1);
+            }
+        }
+        this.executedOnceHandlers.delete(handlerClass);
+    }
+
+    private unregisterMiddleware(middlewareCtor: EventMiddlewareConstructor): void {
+        const index = this.middlewares.findIndex((entry) => entry.ctor === middlewareCtor);
+        if (index !== -1) {
+            this.middlewares.splice(index, 1);
+        }
     }
 
     private registerMiddleware(
@@ -162,20 +214,27 @@ export class EventController implements Initializeable {
     private registerHandler(handlerClass: EventHandlerConstructor): void {
         const raw = Reflect.getMetadata(EventMetadataKey, handlerClass) as unknown;
 
+        const register = (key: keyof ClientEvents, frequency: EventFrequency): void => {
+            let handlers = this.eventMap.get(key);
+            if (!handlers) {
+                handlers = [];
+                this.eventMap.set(key, handlers);
+            }
+
+            handlers.push({
+                ctor: handlerClass,
+                frequency
+            });
+
+            // If HMR adds a new event type, ensure listener is attached
+            if (this.isInitialized && !this.attachedEvents.has(key)) {
+                this.attachListener(key);
+            }
+        };
+
         if (Array.isArray(raw)) {
             for (const entry of raw as RegisterEventMetadataEntry<keyof ClientEvents>[]) {
-                const key = entry.event;
-
-                let handlers = this.eventMap.get(key);
-                if (!handlers) {
-                    handlers = [];
-                    this.eventMap.set(key, handlers);
-                }
-
-                handlers.push({
-                    ctor: handlerClass,
-                    frequency: entry.frequency
-                });
+                register(entry.event, entry.frequency);
             }
             return;
         }
@@ -185,37 +244,35 @@ export class EventController implements Initializeable {
         if (names.length === 0) return;
 
         for (const name of names) {
-            const key = name as keyof ClientEvents;
-
-            let handlers = this.eventMap.get(key);
-            if (!handlers) {
-                handlers = [];
-                this.eventMap.set(key, handlers);
-            }
-            handlers.push({
-                ctor: handlerClass,
-                frequency: 'on'
-            });
+            register(name as keyof ClientEvents, 'on');
         }
     }
 
     private attachToClient(): void {
-        for (const [eventName, handlerEntries] of this.eventMap) {
-            this.logger.debug(
-                `Attaching ${chalk.bold.green(eventName)} to the client with ${chalk.gray(handlerEntries.length)} handler(s)`
-            );
-
-            // Attach a single listener per event type that looks up handlers from the map
-            this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
-                this.core.bot.emit('any:event', eventName, ...args);
-                void (async () => {
-                    await this.processEvent(eventName, args).catch((err: Error) => {
-                        this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                        this.core.bot.emit('error:unhandled:event', err);
-                    });
-                })();
-            });
+        for (const [eventName] of this.eventMap) {
+            this.attachListener(eventName);
         }
+    }
+
+    private attachListener(eventName: keyof ClientEvents): void {
+        if (this.attachedEvents.has(eventName)) return;
+        this.attachedEvents.add(eventName);
+
+        const handlerEntries = this.eventMap.get(eventName);
+        this.logger.debug(
+            `Attaching ${chalk.bold.green(eventName)} to the client with ${chalk.gray(handlerEntries?.length ?? 0)} handler(s)`
+        );
+
+        // Attach a single listener per event type that looks up handlers from the map
+        this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
+            this.core.bot.emit('any:event', eventName, ...args);
+            void (async () => {
+                await this.processEvent(eventName, args).catch((err: Error) => {
+                    this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                    this.core.bot.emit('error:unhandled:event', err);
+                });
+            })();
+        });
     }
 
     private async processEvent<KeyOfEvents extends keyof ClientEvents>(

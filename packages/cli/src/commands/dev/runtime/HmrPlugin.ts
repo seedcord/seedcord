@@ -91,10 +91,6 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         const combinedModules = new Set([...modules, ...allModules]);
         const affectedModules = this.getAffectedModules(Array.from(combinedModules));
 
-        this.logger.debug(
-            `File changed: ${chalk.bold(relPath)}. Modules: ${combinedModules.size}, Affected: ${affectedModules.length}`
-        );
-
         // Invalidate the changed file and all affected modules
         const filesToInvalidate = new Set([file, ...affectedModules]);
 

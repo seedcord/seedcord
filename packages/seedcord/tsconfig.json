@@ -7,6 +7,7 @@
         "paths": {
             "@bot/*": ["./src/bot/*"],
             "@effects/*": ["./src/effects/*"],
+            "@hmr/*": ["./src/hmr/*"],
             "@interfaces/*": ["./src/interfaces/*"],
             "@miscellaneous/*": ["./src/miscellaneous/*"],
 

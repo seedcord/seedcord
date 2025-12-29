@@ -1,6 +1,4 @@
 /* eslint-disable max-lines */
-import { resolve } from 'node:path';
-
 import { Logger } from '@seedcord/services';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -9,6 +7,7 @@ import { Collection, Events } from 'discord.js';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
+import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
@@ -69,12 +68,50 @@ export class InteractionController implements Initializeable, HmrAware {
 
     private readonly middlewares: RegisteredMiddleware[] = [];
 
+    private readonly hmrHandler: HmrModuleHandler<HandlerConstructor, InteractionMiddlewareConstructor>;
+
+    private readonly routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
+        [InteractionRoutes.Slash, this.slashMap],
+        [InteractionRoutes.Button, this.buttonMap],
+        [InteractionRoutes.Modal, this.modalMap],
+        [InteractionRoutes.StringMenu, this.stringSelectMap],
+        [InteractionRoutes.UserMenu, this.userSelectMap],
+        [InteractionRoutes.RoleMenu, this.roleSelectMap],
+        [InteractionRoutes.ChannelMenu, this.channelSelectMap],
+        [InteractionRoutes.MentionableMenu, this.mentionableSelectMap],
+        [InteractionRoutes.MessageContextMenu, this.messageContextMenuMap],
+        [InteractionRoutes.UserContextMenu, this.userContextMenuMap],
+        [InteractionRoutes.Autocomplete, this.autocompleteMap]
+    ];
+
     constructor(protected core: Core) {
         // Add ignored keys from config
         const ignoredKeysFromConfig = this.core.config.bot.interactions.ignoreCustomIds;
         if (ignoredKeysFromConfig) {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
+
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: this.core.config.bot.interactions.path,
+            ...(this.core.config.bot.interactions.middlewares
+                ? { middlewaresDir: this.core.config.bot.interactions.middlewares }
+                : {}),
+            isHandler: this.isHandlerClass.bind(this),
+            isMiddleware: this.isMiddlewareClass.bind(this),
+            registerHandler: (handler) => this.registerHandler(handler),
+            registerMiddleware: (middleware, file) => {
+                const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middleware) as
+                    | MiddlewareMetadata
+                    | undefined;
+                if (metadata?.type === MiddlewareType.Interaction) {
+                    this.registerMiddleware(middleware, metadata, formatFilePath(file));
+                }
+            },
+            unregisterHandler: this.unregisterHandler.bind(this),
+            unregisterMiddleware: this.unregisterMiddleware.bind(this),
+            logger: this.logger,
+            name: 'Interaction'
+        });
     }
 
     public async init(): Promise<void> {
@@ -114,10 +151,11 @@ export class InteractionController implements Initializeable, HmrAware {
     private async loadHandlers(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isHandlerClass(val)) continue;
                     this.registerHandler(val);
+                    this.hmrHandler.trackHandler(fullPath, val);
                     this.logger.utils.registration(val.name, relativePath);
                 }
             },
@@ -128,13 +166,14 @@ export class InteractionController implements Initializeable, HmrAware {
     private async loadMiddlewares(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isMiddlewareClass(val)) continue;
                     const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
                     if (metadata?.type !== MiddlewareType.Interaction) continue;
 
                     this.registerMiddleware(val, metadata, relativePath);
+                    this.hmrHandler.trackMiddleware(fullPath, val);
                 }
             },
             this.logger
@@ -177,20 +216,7 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     private registerHandler(handlerClass: HandlerConstructor): void {
-        const routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
-            [InteractionRoutes.Slash, this.slashMap],
-            [InteractionRoutes.Button, this.buttonMap],
-            [InteractionRoutes.Modal, this.modalMap],
-            [InteractionRoutes.StringMenu, this.stringSelectMap],
-            [InteractionRoutes.UserMenu, this.userSelectMap],
-            [InteractionRoutes.RoleMenu, this.roleSelectMap],
-            [InteractionRoutes.ChannelMenu, this.channelSelectMap],
-            [InteractionRoutes.MentionableMenu, this.mentionableSelectMap],
-            [InteractionRoutes.MessageContextMenu, this.messageContextMenuMap],
-            [InteractionRoutes.UserContextMenu, this.userContextMenuMap],
-            [InteractionRoutes.Autocomplete, this.autocompleteMap]
-        ];
-        for (const [routeType, map] of routeTypes) {
+        for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
             if (!areRoutes(meta)) continue;
 
@@ -200,53 +226,23 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        const { file, affectedModules } = event;
+        await this.hmrHandler.handle(event);
+    }
 
-        this.logger.inChannel('hmr').info(`[HMR] Interaction update detected: ${formatFilePath(file)}`);
-        if (affectedModules && affectedModules.length > 0) {
-            this.logger
-                .inChannel('hmr')
-                .debug(`[HMR] Affected modules: ${affectedModules.map((f) => formatFilePath(f)).join(', ')}`);
-        }
+    private unregisterHandler(handlerClass: HandlerConstructor): void {
+        for (const [routeType, map] of this.routeTypes) {
+            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            if (!areRoutes(meta)) continue;
 
-        const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
-        const handlersDir = resolve(process.cwd(), this.core.config.bot.interactions.path);
-        const middlewaresDir = this.core.config.bot.interactions.middlewares
-            ? resolve(process.cwd(), this.core.config.bot.interactions.middlewares)
-            : null;
-
-        for (const fileToReload of filesToReload) {
-            const isHandler = fileToReload.startsWith(handlersDir);
-            const isMiddleware = middlewaresDir ? fileToReload.startsWith(middlewaresDir) : false;
-
-            if (!isHandler && !isMiddleware) {
-                this.logger
-                    .inChannel('hmr')
-                    .debug(`Skipping registration for ${formatFilePath(fileToReload)} (not in handler/middleware dir)`);
-                continue;
-            }
-
-            await this.reloadFile(fileToReload);
+            const routes = meta;
+            routes.forEach((route) => map.delete(route));
         }
     }
 
-    private async reloadFile(file: string): Promise<void> {
-        try {
-            const imported = (await import(file)) as Record<string, unknown>;
-
-            for (const val of Object.values(imported)) {
-                if (this.isHandlerClass(val)) {
-                    this.registerHandler(val);
-                    this.logger.utils.registration(val.name, formatFilePath(file));
-                } else if (this.isMiddlewareClass(val)) {
-                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
-                    if (metadata?.type === MiddlewareType.Interaction) {
-                        this.registerMiddleware(val, metadata, formatFilePath(file));
-                    }
-                }
-            }
-        } catch (error) {
-            this.logger.error(`Failed to reload interaction file: ${file}`, error as Error);
+    private unregisterMiddleware(middlewareCtor: InteractionMiddlewareConstructor): void {
+        const index = this.middlewares.findIndex((entry) => entry.ctor === middlewareCtor);
+        if (index !== -1) {
+            this.middlewares.splice(index, 1);
         }
     }
 
