@@ -31,7 +31,7 @@ interface RegisteredEffectHandlerEntry {
  *
  * @internal Accessed via core.effects, not directly instantiated
  */
-export class EffectsRegistry extends Plugin {
+export class EffectsController extends Plugin {
     public readonly logger = new Logger('Effects');
     private isInitialized = false;
     private readonly effectsMap = new Collection<EffectKeys, RegisteredEffectHandlerEntry[]>();

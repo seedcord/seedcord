@@ -1,5 +1,5 @@
 import type { Bot } from '@bot/Bot';
-import type { EffectsRegistry } from '@effects/EffectsRegistry';
+import type { EffectsController } from '@effects/EffectsRegistry';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 import type { Config } from '@seedcord/types';
 
@@ -33,6 +33,6 @@ export interface BaseCore {
  * */
 export interface Core extends BaseCore {
     readonly bot: Bot;
-    readonly effects: EffectsRegistry;
+    readonly effects: EffectsController;
     readonly config: Config;
 }

@@ -10,9 +10,10 @@ interface StatusLineProps {
     readonly spinner?: boolean;
     readonly text: string;
     readonly color?: string;
+    readonly restartRequired?: boolean;
 }
 
-export function StatusLine({ spinner, text, color = 'white' }: StatusLineProps): ReactElement {
+export function StatusLine({ spinner, text, color = 'white', restartRequired }: StatusLineProps): ReactElement {
     return (
         <Box paddingY={1}>
             {spinner && (
@@ -20,7 +21,7 @@ export function StatusLine({ spinner, text, color = 'white' }: StatusLineProps):
                     <Spinner type="balloon2" />{' '}
                 </Text>
             )}
-            <Text color={color} wrap="truncate">
+            <Text color={restartRequired ? 'red' : color} wrap="truncate" bold={restartRequired ?? false}>
                 {text}
             </Text>
         </Box>

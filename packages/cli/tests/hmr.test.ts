@@ -30,10 +30,22 @@ vi.mock('@seedcord/services', () => {
 
 describe('HmrPlugin', () => {
     let hmrPlugin: HmrPlugin;
+    const mockConfig = {
+        root: '/test/root',
+        configFile: 'seedcord.config.ts',
+        entry: 'src/index.ts',
+        instance: 'src/Seedcord.ts',
+        tsconfig: 'tsconfig.json',
+        preventCtrlC: false,
+        build: {
+            outDir: 'dist',
+            bootstrap: 'bootstrap.js'
+        }
+    };
 
     beforeEach(() => {
         vi.clearAllMocks();
-        hmrPlugin = new HmrPlugin();
+        hmrPlugin = new HmrPlugin(mockConfig);
     });
 
     it('should have correct name and hooks', () => {

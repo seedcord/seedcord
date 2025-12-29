@@ -1,6 +1,7 @@
 import { relative } from 'node:path';
 
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
+import { EvaluatedModules } from 'vite/module-runner';
 
 import { HmrPlugin } from './HmrPlugin';
 import viteConfig from './vite.config';
@@ -17,6 +18,7 @@ export class ViteDevRuntime implements DevRuntime {
     private viteServer: ViteDevServer | null = null;
     private moduleRunner: ModuleRunner | null = null;
     private eventHandler: DevRuntimeEventHandler | null = null;
+    private evaluatedModules: EvaluatedModules | null = null;
 
     public async start(context: DevRuntimeContext): Promise<void> {
         this.context = context;
@@ -26,14 +28,32 @@ export class ViteDevRuntime implements DevRuntime {
 
         this.emit({ type: 'module-loading', path: projectRoot });
 
+        const hmrPlugin = new HmrPlugin(this.context.config);
+
         const config = mergeConfig(viteConfig, {
             root: projectRoot,
-            plugins: [new HmrPlugin().plugin]
+            plugins: [hmrPlugin.plugin]
         });
 
         this.viteServer = await createServer(config);
 
-        this.moduleRunner = createServerModuleRunner(this.viteServer.environments.ssr);
+        this.evaluatedModules = new EvaluatedModules();
+        this.moduleRunner = createServerModuleRunner(this.viteServer.environments.ssr, {
+            evaluatedModules: this.evaluatedModules
+        });
+
+        hmrPlugin.on('invalidate', (file) => {
+            const relPath = relative(projectRoot, file);
+            const moduleId = `/${relPath}`;
+            const moduleNode = this.evaluatedModules?.getModuleById(moduleId);
+            if (moduleNode) {
+                this.evaluatedModules?.invalidateModule(moduleNode);
+            }
+        });
+
+        hmrPlugin.on('restart-needed', () => {
+            this.emit({ type: 'restart-required' });
+        });
 
         this.emit({ type: 'module-loaded', path: projectRoot });
         this.emit({ type: 'ready' });

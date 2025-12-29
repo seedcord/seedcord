@@ -10,7 +10,7 @@ import { SeedcordBrand } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { EffectsRegistry } from './effects/EffectsRegistry';
+import { EffectsController } from './effects/EffectsRegistry';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
 
@@ -32,8 +32,8 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link CoordinatedStartup} */
     public override readonly startup: CoordinatedStartup;
 
-    /** @see {@link EffectsRegistry} */
-    public readonly effects: EffectsRegistry;
+    /** @see {@link EffectsController} */
+    public readonly effects: EffectsController;
 
     /** @see {@link Bot} */
     public readonly bot: Bot;
@@ -69,7 +69,7 @@ export class Seedcord extends Pluggable implements Core {
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
-        this.effects = new EffectsRegistry(this as unknown as Core);
+        this.effects = new EffectsController(this as unknown as Core);
         this.bot = new Bot(this as unknown as Core);
         this.healthCheck = new HealthCheck(this.shutdown);
 

@@ -1,20 +1,27 @@
-import { relative } from 'node:path';
+import { relative, resolve } from 'node:path';
 
-import { Logger } from '@seedcord/services';
+import { Logger, StrictEventEmitter } from '@seedcord/services';
 import chalk from 'chalk';
 
 import { HMR_EVENT_NAME } from '@api/Hmr';
 
 import type { HmrEventType, HmrUpdateEvent } from '@api/Hmr';
-import type { HmrContext, ModuleNode, Plugin, ViteDevServer } from 'vite';
+import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { EnvironmentModuleNode, HotUpdateOptions, ModuleNode, Plugin, ViteDevServer } from 'vite';
 
 const DEBOUNCE_MS = 250;
 
-export class HmrPlugin {
+export interface HmrPluginEvents {
+    invalidate: [file: string];
+    'restart-needed': [file: string];
+}
+
+export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private readonly logger: Logger;
     private lastUpdate: { file: string; time: number } | null = null;
 
-    constructor() {
+    constructor(private readonly config: ResolvedSeedcordDevConfig) {
+        super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
     }
 
@@ -22,7 +29,7 @@ export class HmrPlugin {
         return {
             name: 'seedcord:hmr',
             configureServer: this.configureServer.bind(this),
-            handleHotUpdate: this.hotUpdate.bind(this)
+            hotUpdate: this.hotUpdate.bind(this)
         };
     }
 
@@ -51,8 +58,9 @@ export class HmrPlugin {
         hot.send(HMR_EVENT_NAME, payload);
     }
 
-    private hotUpdate(ctx: HmrContext): ModuleNode[] {
-        const { file, server, modules } = ctx;
+    // eslint-disable-next-line max-statements
+    private hotUpdate(ctx: HotUpdateOptions): EnvironmentModuleNode[] {
+        const { file, modules, server } = ctx;
         const now = Date.now();
 
         // Debounce rapid updates to the same file
@@ -67,24 +75,80 @@ export class HmrPlugin {
 
         this.logger.info(`${typeColor(type.toUpperCase())} ${chalk.gray(relPath)}`);
 
-        const affectedModules = this.getAffectedModules(modules);
+        // Check for critical files
+        if (this.isCriticalFile(file)) {
+            this.logger.warn(`Critical file changed: ${chalk.bold(relPath)}. Restart required.`);
+            this.emit('restart-needed', file);
+            return [];
+        }
+
+        // Get all modules associated with this file from the graph
+        const moduleGraph = server.moduleGraph;
+        const fileModules = moduleGraph.getModulesByFile(file);
+        const allModules = fileModules ? Array.from(fileModules) : [];
+
+        // Combine with modules provided by hotUpdate context
+        const combinedModules = new Set([...modules, ...allModules]);
+        const affectedModules = this.getAffectedModules(Array.from(combinedModules));
+
+        this.logger.debug(
+            `File changed: ${chalk.bold(relPath)}. Modules: ${combinedModules.size}, Affected: ${affectedModules.length}`
+        );
+
+        // Invalidate the changed file and all affected modules
+        const filesToInvalidate = new Set([file, ...affectedModules]);
+
+        for (const fileToInvalidate of filesToInvalidate) {
+            const mods = moduleGraph.getModulesByFile(fileToInvalidate);
+            if (mods) {
+                for (const mod of mods) {
+                    moduleGraph.invalidateModule(mod);
+                }
+            }
+        }
+
+        // Emit invalidate event to runtime
+        this.emit('invalidate', file);
+
         const payload: HmrUpdateEvent = { file, type, affectedModules };
 
         // Send custom event to the client/runner
-        // Try sending to ssr environment if available, otherwise default hot
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const hot = server.environments?.ssr?.hot ?? server.hot;
+        const hot = server.environments.ssr.hot;
         hot.send(HMR_EVENT_NAME, payload);
 
-        // Return empty array to prevent default HMR update (which causes full reload)
+        // Return empty array to prevent default HMR update
         return [];
     }
 
-    private getAffectedModules(modules: ModuleNode[]): string[] {
+    private isCriticalFile(file: string): boolean {
+        const root = this.config.root;
+
+        // Config files
+        if (
+            file === this.config.configFile ||
+            file.endsWith('package.json') ||
+            file.endsWith('tsconfig.json') ||
+            file.endsWith('.env')
+        ) {
+            return true;
+        }
+
+        // Entry points
+        const entryPath = resolve(root, this.config.entry);
+        const instancePath = resolve(root, this.config.instance);
+
+        if (file === entryPath || file === instancePath) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private getAffectedModules(modules: (EnvironmentModuleNode | ModuleNode)[]): string[] {
         const affected = new Set<string>();
         const seen = new Set<string>();
 
-        const traverse = (mod: ModuleNode): void => {
+        const traverse = (mod: EnvironmentModuleNode | ModuleNode): void => {
             if (mod.file && !seen.has(mod.file)) {
                 seen.add(mod.file);
                 affected.add(mod.file);

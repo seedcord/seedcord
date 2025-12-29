@@ -44,7 +44,15 @@ class SeedcordDevSession {
     ) {}
 
     private async loadInstanceModule(): Promise<unknown> {
-        await this.runtime.start({ config: this.config });
+        await this.runtime.start({
+            config: this.config,
+            onEvent: (event) => {
+                if (event.type === 'restart-required') {
+                    this.actions.setStatus('Restart required. Press r to restart.');
+                    this.actions.setRestartRequired(true);
+                }
+            }
+        });
 
         try {
             const { module } = await this.runtime.loadEntry();
@@ -140,6 +148,7 @@ export interface DevRunnerActions {
     setError: (error: Error) => void;
     setBusy: (isBusy: boolean) => void;
     setConfig: (config: Config) => void;
+    setRestartRequired: (required: boolean) => void;
 }
 
 /**

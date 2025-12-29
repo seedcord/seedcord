@@ -12,6 +12,7 @@ interface DevAppActions {
     setError: (error: Error) => void;
     setBusy: (isBusy: boolean) => void;
     setConfig: (config: Config) => void;
+    setRestartRequired: (required: boolean) => void;
 }
 
 interface DevAppProps {
@@ -31,6 +32,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     const [showHelp, setShowHelp] = useState(false);
     const [showChannels, setShowChannels] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<string | undefined>('default');
+    const [restartRequired, setRestartRequired] = useState(false);
 
     const { stdout } = useStdout();
     const DEFAULT_ROWS = 24;
@@ -67,10 +69,11 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
             void onQuit?.();
         }
 
-        if (isBusy) return;
+        if (isBusy && !restartRequired) return;
 
         if (input === 'd') {
             setBusy(true);
+            setRestartRequired(false);
 
             if (error) setError(null);
             setStatus('Disconnecting...');
@@ -79,6 +82,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
 
         if (input === 'r') {
             setBusy(true);
+            setRestartRequired(false);
             setStatus('Restarting...');
             if (error) setError(null);
             void onRestart?.();
@@ -96,7 +100,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     useEffect(() => {
         LogStore.instance.clear();
         LogStore.instance.mount();
-        onReady({ setStatus, setError, setBusy, setConfig });
+        onReady({ setStatus, setError, setBusy, setConfig, setRestartRequired });
 
         return () => {
             LogStore.instance.unmount();
@@ -108,7 +112,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
             <Banner config={config} />
             {error && <ErrorDisplay error={error} />}
             {showHelp && <Help />}
-            <StatusLine text={status} spinner={isBusy} />
+            <StatusLine text={status} spinner={isBusy} restartRequired={restartRequired} />
             {showChannels ? (
                 <ChannelSelector
                     currentChannel={selectedChannel}

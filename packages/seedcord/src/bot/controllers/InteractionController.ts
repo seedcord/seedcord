@@ -1,3 +1,6 @@
+/* eslint-disable max-lines */
+import { resolve } from 'node:path';
+
 import { Logger } from '@seedcord/services';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -111,10 +114,10 @@ export class InteractionController implements Initializeable, HmrAware {
     private async loadHandlers(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (fullPath, relativePath, imported) => {
+            (_fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isHandlerClass(val)) continue;
-                    this.registerHandler(val, fullPath);
+                    this.registerHandler(val);
                     this.logger.utils.registration(val.name, relativePath);
                 }
             },
@@ -125,13 +128,13 @@ export class InteractionController implements Initializeable, HmrAware {
     private async loadMiddlewares(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (fullPath, relativePath, imported) => {
+            (_fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isMiddlewareClass(val)) continue;
                     const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
                     if (metadata?.type !== MiddlewareType.Interaction) continue;
 
-                    this.registerMiddleware(val, metadata, relativePath, fullPath);
+                    this.registerMiddleware(val, metadata, relativePath);
                 }
             },
             this.logger
@@ -141,13 +144,16 @@ export class InteractionController implements Initializeable, HmrAware {
     private registerMiddleware(
         middlewareCtor: InteractionMiddlewareConstructor,
         metadata: MiddlewareMetadata,
-        relativePath: string,
-        _filePath?: string
+        relativePath: string
     ): void {
-        const alreadyRegistered = this.middlewares.some((entry) => entry.ctor === middlewareCtor);
-        if (alreadyRegistered) return;
+        const existingIndex = this.middlewares.findIndex((entry) => entry.ctor.name === middlewareCtor.name);
 
-        this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        if (existingIndex !== -1) {
+            this.middlewares[existingIndex] = { ctor: middlewareCtor, priority: metadata.priority };
+        } else {
+            this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        }
+
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
         this.logger.utils.registration(
@@ -170,7 +176,7 @@ export class InteractionController implements Initializeable, HmrAware {
         return obj.prototype instanceof InteractionMiddleware && Reflect.hasMetadata(MiddlewareMetadataKey, obj);
     }
 
-    private registerHandler(handlerClass: HandlerConstructor, _filePath?: string): void {
+    private registerHandler(handlerClass: HandlerConstructor): void {
         const routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
             [InteractionRoutes.Slash, this.slashMap],
             [InteractionRoutes.Button, this.buttonMap],
@@ -194,10 +200,54 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        const { file } = event;
+        const { file, affectedModules } = event;
 
         this.logger.inChannel('hmr').info(`[HMR] Interaction update detected: ${formatFilePath(file)}`);
-        await Promise.resolve();
+        if (affectedModules && affectedModules.length > 0) {
+            this.logger
+                .inChannel('hmr')
+                .debug(`[HMR] Affected modules: ${affectedModules.map((f) => formatFilePath(f)).join(', ')}`);
+        }
+
+        const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
+        const handlersDir = resolve(process.cwd(), this.core.config.bot.interactions.path);
+        const middlewaresDir = this.core.config.bot.interactions.middlewares
+            ? resolve(process.cwd(), this.core.config.bot.interactions.middlewares)
+            : null;
+
+        for (const fileToReload of filesToReload) {
+            const isHandler = fileToReload.startsWith(handlersDir);
+            const isMiddleware = middlewaresDir ? fileToReload.startsWith(middlewaresDir) : false;
+
+            if (!isHandler && !isMiddleware) {
+                this.logger
+                    .inChannel('hmr')
+                    .debug(`Skipping registration for ${formatFilePath(fileToReload)} (not in handler/middleware dir)`);
+                continue;
+            }
+
+            await this.reloadFile(fileToReload);
+        }
+    }
+
+    private async reloadFile(file: string): Promise<void> {
+        try {
+            const imported = (await import(file)) as Record<string, unknown>;
+
+            for (const val of Object.values(imported)) {
+                if (this.isHandlerClass(val)) {
+                    this.registerHandler(val);
+                    this.logger.utils.registration(val.name, formatFilePath(file));
+                } else if (this.isMiddlewareClass(val)) {
+                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
+                    if (metadata?.type === MiddlewareType.Interaction) {
+                        this.registerMiddleware(val, metadata, formatFilePath(file));
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.error(`Failed to reload interaction file: ${file}`, error as Error);
+        }
     }
 
     private attachToClient(): void {
