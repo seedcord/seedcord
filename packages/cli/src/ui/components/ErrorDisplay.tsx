@@ -18,7 +18,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
             <Text>{error.message}</Text>
             {error.stack && (
                 <Box marginTop={1}>
-                    <Text dimColor>{error.stack.split('\n').slice(1).join('\n')}</Text>
+                    <Text dimColor>{error.stack}</Text>
                 </Box>
             )}
         </Box>

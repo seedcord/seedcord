@@ -1,9 +1,8 @@
 import { relative } from 'node:path';
 
-import { LoggerChannelRegistry } from '@seedcord/services';
 import chalk from 'chalk';
 import { Box, Text } from 'ink';
-import React, { useState } from 'react';
+import React from 'react';
 
 import { accentA, accentB } from './shared';
 
@@ -15,8 +14,6 @@ interface BannerProps {
 }
 
 export function Banner({ config }: BannerProps): ReactElement {
-    const [logPath] = useState(() => LoggerChannelRegistry.instance.getLogFilePath('default'));
-
     const formatPath = (path: string): string => {
         return relative(process.cwd(), path);
     };
@@ -37,11 +34,6 @@ export function Banner({ config }: BannerProps): ReactElement {
                         <Text color="blue">➜</Text> Events: {chalk.dim(formatPath(config.bot.events.path))}
                     </Text>
                 </Box>
-            )}
-            {logPath && (
-                <Text wrap="truncate">
-                    <Text color="green">➜</Text> Logs: {chalk.dim(logPath)}
-                </Text>
             )}
             <Text>
                 <Text color="green">➜</Text>
