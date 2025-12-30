@@ -36,7 +36,9 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
 
     const { stdout } = useStdout();
     const DEFAULT_ROWS = 24;
+    const DEFAULT_COLUMNS = 80;
     const [terminalHeight, setTerminalHeight] = useState(stdout.rows || DEFAULT_ROWS);
+    const [terminalWidth, setTerminalWidth] = useState(stdout.columns || DEFAULT_COLUMNS);
     const [resizeKey, setResizeKey] = useState(0);
 
     useEffect(() => {
@@ -45,6 +47,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
 
         const onResize = (): void => {
             setTerminalHeight(stdout.rows);
+            setTerminalWidth(stdout.columns);
             setResizeKey((prev) => prev + 1);
         };
 
@@ -108,7 +111,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     }, [onReady]);
 
     return (
-        <Box flexDirection="column" key={resizeKey}>
+        <Box flexDirection="column" key={resizeKey} width={terminalWidth} height={terminalHeight}>
             <Banner config={config} />
             {error && <ErrorDisplay error={error} />}
             {showHelp && <Help />}
