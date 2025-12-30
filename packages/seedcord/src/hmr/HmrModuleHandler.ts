@@ -1,6 +1,8 @@
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { formatFilePath } from '@seedcord/utils';
+import chalk from 'chalk';
 
 import type { HmrUpdateEvent } from '@seedcord/cli';
 import type { Logger } from '@seedcord/services';
@@ -31,6 +33,12 @@ export class HmrModuleHandler<THandler, TMiddleware> {
         logger.info(`[HMR] ${name} update detected: ${formatFilePath(file)}`);
 
         if (type === 'delete' || type === 'deleteDir') {
+            this.unload(file);
+            return;
+        }
+
+        if (type === 'update' && !existsSync(file)) {
+            logger.info(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
             this.unload(file);
             return;
         }
@@ -99,6 +107,12 @@ export class HmrModuleHandler<THandler, TMiddleware> {
 
     private async reloadFile(file: string): Promise<void> {
         const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.options;
+
+        if (!existsSync(file)) {
+            logger.info(`File does not exist, skipping reload: ${formatFilePath(file)}`);
+            return;
+        }
+
         try {
             const imported = (await import(file)) as Record<string, unknown>;
 
@@ -107,10 +121,16 @@ export class HmrModuleHandler<THandler, TMiddleware> {
                     registerHandler(val, file);
                     this.trackHandler(file, val);
                     const name = (val as { name?: string }).name ?? 'Handler';
-                    logger.utils.registration(name, formatFilePath(file));
+                    logger.info(
+                        `${chalk.blue.bold('Reloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
+                    );
                 } else if (isMiddleware(val)) {
                     registerMiddleware(val, file);
                     this.trackMiddleware(file, val);
+                    const name = (val as { name?: string }).name ?? 'Middleware';
+                    logger.info(
+                        `${chalk.blue.bold('Reloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
+                    );
                 }
             }
         } catch (error) {
