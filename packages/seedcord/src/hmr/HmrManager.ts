@@ -2,6 +2,7 @@ import { HMR_EVENT_NAME } from '@seedcord/cli';
 import { Logger } from '@seedcord/services';
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
+import { Envapter } from 'envapt';
 
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 
@@ -12,17 +13,20 @@ export class HmrManager {
     constructor() {}
 
     public init(): void {
-        if (import.meta.hot) {
-            this.logger.info('HMR enabled');
+        if (import.meta.hot && Envapter.isDevelopment) {
+            this.logger.info('Enabled');
 
             import.meta.hot.on(HMR_EVENT_NAME, (payload: HmrUpdateEvent) => {
-                this.logger.debug(`Received HMR update for ${formatFilePath(payload.file)} (${payload.type})`);
+                const affected = payload.affectedModules?.length ?? 0;
+                this.logger.info(`${chalk.bold('1')} module changed, ${chalk.bold(affected)} affected modules`);
+
                 if (payload.affectedModules) {
                     this.logger.utils.list(
                         payload.affectedModules.map((mod) => formatFilePath(mod)),
-                        'Affected modules:'
+                        'Affected modules: '
                     );
                 }
+
                 void this.handleUpdate(payload);
             });
         }

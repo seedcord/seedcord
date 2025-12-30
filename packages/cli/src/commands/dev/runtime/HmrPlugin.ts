@@ -41,6 +41,13 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     }
 
     private handleFileEvent(server: ViteDevServer, file: string, type: HmrEventType): void {
+        // Debounce rapid updates to the same file
+        const now = Date.now();
+        if (this.lastUpdate?.file === file && now - this.lastUpdate.time < DEBOUNCE_MS) {
+            return;
+        }
+        this.lastUpdate = { file, time: now };
+
         const relPath = relative(process.cwd(), file);
         const typeColor =
             type === 'create' || type === 'createDir'

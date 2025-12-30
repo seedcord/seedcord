@@ -28,9 +28,7 @@ export class HmrModuleHandler<THandler, TMiddleware> {
 
     public async handle(event: HmrUpdateEvent): Promise<void> {
         const { file, affectedModules, type } = event;
-        const { logger, handlersDir, middlewaresDir, name } = this.options;
-
-        logger.info(`[HMR] ${name} update detected: ${formatFilePath(file)}`);
+        const { logger, handlersDir, middlewaresDir } = this.options;
 
         if (type === 'delete' || type === 'deleteDir') {
             this.unload(file);
@@ -38,13 +36,11 @@ export class HmrModuleHandler<THandler, TMiddleware> {
         }
 
         if (type === 'update' && !existsSync(file)) {
-            logger.info(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
-            this.unload(file);
+            if (this.isTracked(file)) {
+                logger.info(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
+                this.unload(file);
+            }
             return;
-        }
-
-        if (affectedModules && affectedModules.length > 0) {
-            logger.debug(`[HMR] Affected modules: ${affectedModules.map((f) => formatFilePath(f)).join(', ')}`);
         }
 
         const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
@@ -56,9 +52,6 @@ export class HmrModuleHandler<THandler, TMiddleware> {
             const isMiddleware = absMiddlewaresDir ? fileToReload.startsWith(absMiddlewaresDir) : false;
 
             if (!isHandler && !isMiddleware) {
-                logger.debug(
-                    `Skipping registration for ${formatFilePath(fileToReload)} (not in handler/middleware dir)`
-                );
                 continue;
             }
 
@@ -87,11 +80,20 @@ export class HmrModuleHandler<THandler, TMiddleware> {
         set.add(middleware);
     }
 
+    private isTracked(file: string): boolean {
+        return this.fileToHandlers.has(file) || this.fileToMiddlewares.has(file);
+    }
+
     private unload(file: string): void {
+        const { logger } = this.options;
         const handlers = this.fileToHandlers.get(file);
         if (handlers) {
             for (const handler of handlers) {
                 this.options.unregisterHandler(handler);
+                const name = (handler as { name?: string }).name ?? 'Handler';
+                logger.info(
+                    `${chalk.red.bold('Unloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
+                );
             }
             this.fileToHandlers.delete(file);
         }
@@ -100,6 +102,10 @@ export class HmrModuleHandler<THandler, TMiddleware> {
         if (middlewares) {
             for (const middleware of middlewares) {
                 this.options.unregisterMiddleware(middleware);
+                const name = (middleware as { name?: string }).name ?? 'Middleware';
+                logger.info(
+                    `${chalk.red.bold('Unloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
+                );
             }
             this.fileToMiddlewares.delete(file);
         }
