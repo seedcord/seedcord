@@ -28,7 +28,7 @@ export class HmrModuleHandler<THandler, TMiddleware> {
         const { file, affectedModules, type } = event;
         const { logger, handlersDir, middlewaresDir, name } = this.options;
 
-        logger.inChannel('hmr').info(`[HMR] ${name} update detected: ${formatFilePath(file)}`);
+        logger.info(`[HMR] ${name} update detected: ${formatFilePath(file)}`);
 
         if (type === 'delete' || type === 'deleteDir') {
             this.unload(file);
@@ -36,9 +36,7 @@ export class HmrModuleHandler<THandler, TMiddleware> {
         }
 
         if (affectedModules && affectedModules.length > 0) {
-            logger
-                .inChannel('hmr')
-                .debug(`[HMR] Affected modules: ${affectedModules.map((f) => formatFilePath(f)).join(', ')}`);
+            logger.debug(`[HMR] Affected modules: ${affectedModules.map((f) => formatFilePath(f)).join(', ')}`);
         }
 
         const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
@@ -50,9 +48,9 @@ export class HmrModuleHandler<THandler, TMiddleware> {
             const isMiddleware = absMiddlewaresDir ? fileToReload.startsWith(absMiddlewaresDir) : false;
 
             if (!isHandler && !isMiddleware) {
-                logger
-                    .inChannel('hmr')
-                    .debug(`Skipping registration for ${formatFilePath(fileToReload)} (not in handler/middleware dir)`);
+                logger.debug(
+                    `Skipping registration for ${formatFilePath(fileToReload)} (not in handler/middleware dir)`
+                );
                 continue;
             }
 

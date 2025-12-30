@@ -109,7 +109,7 @@ export class InteractionController implements Initializeable, HmrAware {
             },
             unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
-            logger: this.logger,
+            logger: this.logger.inChannel('hmr'),
             name: 'Interaction'
         });
     }
