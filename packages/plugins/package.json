@@ -41,6 +41,7 @@
     "dependencies": {
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
+        "@seedcord/cli": "workspace:*",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps",
         "kysely": "^0.28.9",
