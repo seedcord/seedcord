@@ -13,6 +13,13 @@ export interface SeedcordBuildConfig {
     bootstrap?: string;
 }
 
+export interface SeedcordHmrConfig {
+    /**
+     * Glob patterns for files that should trigger a full restart when changed.
+     */
+    restart?: string[];
+}
+
 /**
  * Configuration used by the Seedcord CLI when running `seedcord dev` or `seedcord build`.
  */
@@ -38,10 +45,13 @@ export interface SeedcordDevConfig {
      */
     preventCtrlC?: boolean;
     /**
-
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;
+    /**
+     * Optional HMR configuration.
+     */
+    hmr?: SeedcordHmrConfig;
 }
 
 export interface ResolvedSeedcordBuildConfig {
@@ -53,7 +63,7 @@ export interface ResolvedSeedcordBuildConfig {
 /**
  * Fully resolved configuration with absolute file system paths.
  */
-export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'tsconfig'>> {
+export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'tsconfig' | 'hmr'>> {
     /**
      * Absolute path to the config file that produced this resolution.
      */
@@ -66,6 +76,10 @@ export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConf
      * Optional tsconfig path to use for type checking in dev mode.
      */
     tsconfig?: string | undefined;
+    /**
+     * Optional HMR configuration.
+     */
+    hmr?: SeedcordHmrConfig;
 }
 
 /**

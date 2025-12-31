@@ -64,6 +64,11 @@ export class KyselyPg<Database extends object> extends Plugin {
         );
 
         if (!Envapter.isDevelopment) return; // HMR only in development
+
+        // Register migrations directory as critical
+        const relPaths = this.options.migrations.path;
+        super.registerCriticalFiles(Array.isArray(relPaths) ? relPaths : [relPaths]);
+
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
             isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),

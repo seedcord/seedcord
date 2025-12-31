@@ -2,6 +2,7 @@ import { relative, resolve } from 'node:path';
 
 import { Logger, StrictEventEmitter } from '@seedcord/services';
 import chalk from 'chalk';
+import { minimatch } from 'minimatch';
 
 import { HMR_EVENT_NAME } from '@api/Hmr';
 
@@ -21,6 +22,7 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private readonly logger: Logger;
     private lastUpdate: { file: string; time: number } | null = null;
     private server: ViteDevServer | null = null;
+    private readonly dynamicRestartPatterns = new Set<string>();
 
     constructor(private readonly config: ResolvedSeedcordDevConfig) {
         super();
@@ -54,6 +56,13 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         const hot = server.environments?.ssr?.hot ?? server.hot;
         hot.on('seedcord:commands-update-prompt', (data: { file: string }) => {
             this.emit('command-update-prompt', data.file);
+        });
+
+        hot.on('seedcord:register-critical-files', (data: { patterns: string[] }) => {
+            for (const pattern of data.patterns) {
+                this.dynamicRestartPatterns.add(pattern);
+            }
+            this.logger.debug(`Registered critical file patterns: ${data.patterns.join(', ')}`);
         });
     }
 
@@ -142,6 +151,23 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
     private isCriticalFile(file: string): boolean {
         const root = this.config.root;
+        const relPath = relative(root, file);
+
+        // Check user configured restart patterns
+        if (this.config.hmr?.restart) {
+            for (const pattern of this.config.hmr.restart) {
+                if (minimatch(relPath, pattern)) {
+                    return true;
+                }
+            }
+        }
+
+        // Check dynamic restart patterns
+        for (const pattern of this.dynamicRestartPatterns) {
+            if (minimatch(relPath, pattern)) {
+                return true;
+            }
+        }
 
         // Config files
         if (

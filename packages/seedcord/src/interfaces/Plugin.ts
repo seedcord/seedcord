@@ -51,6 +51,16 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
         // Default implementation does nothing
         return Promise.resolve();
     }
+
+    /**
+     * Registers critical file patterns that should trigger a full restart when changed in Dev HMR.
+     * @param patterns - Glob patterns relative to the project root
+     */
+    protected registerCriticalFiles(patterns: string[]): void {
+        if (import.meta.hot) {
+            import.meta.hot.send('seedcord:register-critical-files', { patterns });
+        }
+    }
 }
 
 /**
