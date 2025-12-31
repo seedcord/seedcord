@@ -1,4 +1,4 @@
-import { Logger, SeedcordError, SeedcordErrorCode, ShutdownPhase } from '@seedcord/services';
+import { Logger, ShutdownPhase } from '@seedcord/services';
 import { EmojiMap } from '@seedcord/types';
 import chalk from 'chalk';
 import { Client, ClientEvents, Interaction } from 'discord.js';
@@ -8,6 +8,7 @@ import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventController } from '@bControllers/EventController';
 import { InteractionController } from '@bControllers/InteractionController';
 import { Plugin } from '@interfaces/Plugin';
+import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
@@ -30,12 +31,7 @@ export interface BotEvents {
  */
 export class Bot extends Plugin<BotEvents> {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
-        converter(raw, _fallback) {
-            if (typeof raw !== 'string') {
-                throw new SeedcordError(SeedcordErrorCode.ConfigMissingDiscordToken);
-            }
-            return raw;
-        }
+        converter: (raw) => validateDiscordToken(raw)
     })
     declare public readonly botToken: string;
 

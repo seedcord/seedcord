@@ -7,6 +7,7 @@ import { SeedcordErrorCode } from './ErrorCodes';
  */
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
+    [SeedcordErrorCode.ConfigIncorrectDiscordToken]: () => 'Invalid DISCORD_BOT_TOKEN value.',
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing]: () =>
         'Missing UNKNOWN_EXCEPTION_WEBHOOK_URL environment variable.',
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid]: () => 'Invalid UNKNOWN_EXCEPTION_WEBHOOK_URL value.',

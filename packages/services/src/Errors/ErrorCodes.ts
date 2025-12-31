@@ -6,6 +6,8 @@
 export enum SeedcordErrorCode {
     /** DISCORD_BOT_TOKEN is not present in the environment. */
     ConfigMissingDiscordToken = 1001,
+    /** DISCORD_BOT_TOKEN is present but fails validation. */
+    ConfigIncorrectDiscordToken = 1004,
     /** UNKNOWN_EXCEPTION_WEBHOOK_URL is missing when configuring the reporter. */
     ConfigUnknownExceptionWebhookMissing = 1002,
     /** UNKNOWN_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
