@@ -24,6 +24,9 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs",
             "default": "./dist/index.mjs"
+        },
+        "./vite-hmr": {
+            "types": "./dist/api/vite-hmr.d.ts"
         }
     },
     "scripts": {

@@ -3,11 +3,12 @@ import { join } from 'node:path';
 
 import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HMR_EVENT_NAME } from '@api/Hmr';
 import { HmrPlugin } from '@commands/dev/runtime/HmrPlugin';
 
 import type { HmrUpdateEvent } from '@api/Hmr';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
+
+const HMR_EVENT_NAME = 'seedcord:hmr';
 
 // Mock Logger
 const loggerSpies = {
@@ -64,12 +65,20 @@ describe('HmrPlugin', () => {
         beforeEach(() => {
             watcher = new EventEmitter();
             hotSendMock = vi.fn();
+
+            // Mock this.hot
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({
+                send: hotSendMock,
+                on: vi.fn()
+            });
+
             serverMock = {
                 watcher,
                 environments: {
                     ssr: {
                         hot: {
-                            send: hotSendMock,
+                            send: vi.fn(),
                             on: vi.fn()
                         }
                     }
@@ -138,11 +147,19 @@ describe('HmrPlugin', () => {
 
         beforeEach(() => {
             hotSendMock = vi.fn();
+
+            // Mock this.hot
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({
+                send: hotSendMock,
+                on: vi.fn()
+            });
+
             serverMock = {
                 environments: {
                     ssr: {
                         hot: {
-                            send: hotSendMock
+                            send: vi.fn()
                         }
                     }
                 },

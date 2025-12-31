@@ -17,11 +17,6 @@ export interface HmrUpdateEvent {
 }
 
 /**
- * Event name for Seedcord HMR updates.
- */
-export const HMR_EVENT_NAME = 'seedcord:hmr';
-
-/**
  * Interface for HMR handlers that can process hot updates for specific modules.
  */
 export interface HmrAware {

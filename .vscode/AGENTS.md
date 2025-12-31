@@ -8,9 +8,11 @@
 
 - DO NOT type cast 'as unknown as ...' if the type is already correct.
 
+- DO NOT USE `as any` UNLESS ABSOLUTELY NECESSARY. TRY TO AVOID IT AT ALL COSTS. Use proper types instead.
+
 - USE optional chaining and nullish coalescing instead of type casting.
 
-- USE Utility Types from TypeScript or from @seedcord/types like TypedOmit, TypedPick, etc. to avoid type casting.
+- USE Utility Types from TypeScript or from @seedcord/types like TypedOmit, TypedPick, etc. to avoid type casting. type-fest is also installed if you need more utility types.
 
 - Try to avoid type casting unless absolutely necessary.
 

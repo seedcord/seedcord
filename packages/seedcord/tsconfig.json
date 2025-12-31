@@ -18,7 +18,7 @@
             "@bControllers/*": ["./src/bot/controllers/*"],
             "@bDecorators/*": ["./src/bot/decorators/*"]
         },
-        "types": ["vite/client"]
+        "types": ["vite/client", "@seedcord/cli/vite-hmr"]
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]

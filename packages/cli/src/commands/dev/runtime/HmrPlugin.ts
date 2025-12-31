@@ -4,11 +4,10 @@ import { Logger, StrictEventEmitter } from '@seedcord/services';
 import chalk from 'chalk';
 import { minimatch } from 'minimatch';
 
-import { HMR_EVENT_NAME } from '@api/Hmr';
-
 import type { HmrEventType, HmrUpdateEvent } from '@api/Hmr';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { EnvironmentModuleNode, HotUpdateOptions, ModuleNode, Plugin, ViteDevServer } from 'vite';
+import type { ViteHotContext } from 'vite/types/hot.js';
 
 const DEBOUNCE_MS = 250;
 
@@ -23,6 +22,11 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private lastUpdate: { file: string; time: number } | null = null;
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
+
+    // Helper for testing
+    protected get hot(): ViteHotContext | undefined {
+        return import.meta.hot;
+    }
 
     constructor(private readonly config: ResolvedSeedcordDevConfig) {
         super();
@@ -39,34 +43,34 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
     public sendRefreshCommands(): void {
         if (this.server) {
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-            const hot = this.server.environments?.ssr?.hot ?? this.server.hot;
-            hot.send('seedcord:refresh-commands');
+            if (this.hot) {
+                this.hot.send('seedcord:refresh-commands');
+            }
         }
     }
 
     private configureServer(server: ViteDevServer): void {
         this.server = server;
-        server.watcher.on('add', (file) => this.handleFileEvent(server, file, 'create'));
-        server.watcher.on('unlink', (file) => this.handleFileEvent(server, file, 'delete'));
-        server.watcher.on('addDir', (file) => this.handleFileEvent(server, file, 'createDir'));
-        server.watcher.on('unlinkDir', (file) => this.handleFileEvent(server, file, 'deleteDir'));
+        server.watcher.on('add', (file) => this.handleFileEvent(file, 'create'));
+        server.watcher.on('unlink', (file) => this.handleFileEvent(file, 'delete'));
+        server.watcher.on('addDir', (file) => this.handleFileEvent(file, 'createDir'));
+        server.watcher.on('unlinkDir', (file) => this.handleFileEvent(file, 'deleteDir'));
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const hot = server.environments?.ssr?.hot ?? server.hot;
-        hot.on('seedcord:commands-update-prompt', (data: { file: string }) => {
-            this.emit('command-update-prompt', data.file);
-        });
+        if (this.hot) {
+            this.hot.on('seedcord:commands-update-prompt', (data) => {
+                this.emit('command-update-prompt', data.file);
+            });
 
-        hot.on('seedcord:register-critical-files', (data: { patterns: string[] }) => {
-            for (const pattern of data.patterns) {
-                this.dynamicRestartPatterns.add(pattern);
-            }
-            this.logger.debug(`Registered critical file patterns: ${data.patterns.join(', ')}`);
-        });
+            this.hot.on('seedcord:register-critical-files', (data) => {
+                for (const pattern of data.patterns) {
+                    this.dynamicRestartPatterns.add(pattern);
+                }
+                this.logger.debug(`Registered critical file patterns: ${data.patterns.join(', ')}`);
+            });
+        }
     }
 
-    private handleFileEvent(server: ViteDevServer, file: string, type: HmrEventType): void {
+    private handleFileEvent(file: string, type: HmrEventType): void {
         // Debounce rapid updates to the same file
         const now = Date.now();
         if (this.lastUpdate?.file === file && now - this.lastUpdate.time < DEBOUNCE_MS) {
@@ -86,9 +90,9 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
         const payload: HmrUpdateEvent = { file, type };
 
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const hot = server.environments?.ssr?.hot ?? server.hot;
-        hot.send(HMR_EVENT_NAME, payload);
+        if (this.hot) {
+            this.hot.send('seedcord:hmr', payload);
+        }
     }
 
     // eslint-disable-next-line max-statements
@@ -141,9 +145,9 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
         const payload: HmrUpdateEvent = { file, type, affectedModules };
 
-        // Send custom event to the client/runner
-        const hot = server.environments.ssr.hot;
-        hot.send(HMR_EVENT_NAME, payload);
+        if (this.hot) {
+            this.hot.send('seedcord:hmr', payload);
+        }
 
         // Return empty array to prevent default HMR update
         return [];
