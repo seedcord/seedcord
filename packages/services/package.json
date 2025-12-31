@@ -42,6 +42,7 @@
     },
     "dependencies": {
         "@seedcord/types": "workspace:*",
+        "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "discord.js": "catalog:deps",
         "envapt": "catalog:deps",

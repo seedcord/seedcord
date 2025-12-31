@@ -42,6 +42,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
+    private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
 
     public constructor(private readonly core: Core) {
         const commandsDir = this.core.config.bot.commands.path;
@@ -78,9 +79,18 @@ export class CommandRegistry implements Initializeable, HmrAware {
         });
 
         if (import.meta.hot) {
-            import.meta.hot.on('seedcord:refresh-commands', () => {
+            import.meta.hot.on('seedcord:refresh-commands', (data) => {
+                if (!data.shouldRefresh) {
+                    this.logger.info(chalk.italic('Command refresh cancelled.'));
+                    this.pendingEvents.clear();
+                    return;
+                }
                 void (async () => {
-                    this.logger.info('Refreshing commands...');
+                    this.logger.info(chalk.italic('Refreshing commands...'));
+                    for (const event of this.pendingEvents.values()) {
+                        await this.hmrHandler?.handle(event);
+                    }
+                    this.pendingEvents.clear();
                     await this.setCommands();
                 })();
             });
@@ -88,15 +98,17 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler?.handle(event);
-
         const commandsDir = this.core.config.bot.commands.path;
         if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {
+            this.pendingEvents.delete(event.file);
+            this.pendingEvents.set(event.file, event);
             if (import.meta.hot) {
                 import.meta.hot.send('seedcord:commands-update-prompt', {
-                    file: formatFilePath(event.file)
+                    files: Array.from(this.pendingEvents.keys()).map((f) => formatFilePath(f))
                 });
             }
+        } else {
+            await this.hmrHandler?.handle(event);
         }
     }
 

@@ -1,7 +1,16 @@
 import { Box, Text, useInput, useStdout } from 'ink';
 import React, { useEffect, useState } from 'react';
 
-import { Banner, ChannelSelector, ErrorDisplay, Help, LogPanel, StatusLine } from '@ui/components';
+import {
+    Banner,
+    ChannelSelector,
+    CommandRefreshPrompt,
+    ErrorDisplay,
+    Help,
+    HELP_HEIGHT,
+    LogPanel,
+    StatusLine
+} from '@ui/components';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { Config } from '@seedcord/types';
@@ -13,7 +22,7 @@ interface DevAppActions {
     setBusy: (isBusy: boolean) => void;
     setConfig: (config: Config) => void;
     setRestartRequired: (required: boolean) => void;
-    setCommandUpdatePrompt: (file: string | null) => void;
+    setCommandUpdatePrompt: (files: string[] | null) => void;
 }
 
 interface DevAppProps {
@@ -22,7 +31,7 @@ interface DevAppProps {
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
-    readonly onRefreshCommands?: () => Promise<void> | void;
+    readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
 }
 
 // eslint-disable-next-line max-lines-per-function
@@ -35,7 +44,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
     const [showChannels, setShowChannels] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<string | undefined>('default');
     const [restartRequired, setRestartRequired] = useState(false);
-    const [commandUpdatePrompt, setCommandUpdatePrompt] = useState<string | null>(null);
+    const [commandUpdatePrompt, setCommandUpdatePrompt] = useState<string[] | null>(null);
 
     const { stdout } = useStdout();
     const DEFAULT_ROWS = 24;
@@ -60,12 +69,12 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
         };
     }, [stdout]);
 
-    const staticOverhead = 14;
+    const staticOverhead = 13;
 
-    const helpOverhead = showHelp ? 10 : 0;
+    const helpOverhead = showHelp ? HELP_HEIGHT : 0;
     const errorOverhead = error ? (error.stack?.split('\n').length ?? 0) + 5 : 0;
     // eslint-disable-next-line no-magic-numbers
-    const promptOverhead = commandUpdatePrompt ? 4 : 0;
+    const promptOverhead = commandUpdatePrompt ? commandUpdatePrompt.length + 4 : 0;
     const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead - promptOverhead;
     const effectiveLogHeight = Math.max(0, availableHeight);
 
@@ -74,9 +83,10 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
         (input) => {
             if (commandUpdatePrompt) {
                 if (input === 'y') {
-                    void onRefreshCommands?.();
+                    void onRefreshCommands?.(true);
                     setCommandUpdatePrompt(null);
                 } else if (input === 'n') {
+                    void onRefreshCommands?.(false);
                     setCommandUpdatePrompt(null);
                 }
                 return;
@@ -141,12 +151,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
         <Box flexDirection="column" key={resizeKey} width={terminalWidth} height={terminalHeight}>
             <Banner config={config} />
             {error && <ErrorDisplay error={error} />}
-            {commandUpdatePrompt && (
-                <Box borderStyle="round" borderColor="yellow" flexDirection="column" paddingX={1}>
-                    <Text>Command updated: {commandUpdatePrompt}</Text>
-                    <Text>Refresh commands? (y/n)</Text>
-                </Box>
-            )}
+            {commandUpdatePrompt && <CommandRefreshPrompt files={commandUpdatePrompt} />}
             {showHelp && <Help />}
             <StatusLine text={status} spinner={isBusy} restartRequired={restartRequired} />
             {showChannels ? (

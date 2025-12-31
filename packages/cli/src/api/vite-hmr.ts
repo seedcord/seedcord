@@ -6,7 +6,7 @@ import type { HmrUpdateEvent } from './Hmr';
  */
 export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
-    'seedcord:commands-update-prompt': { file: string };
+    'seedcord:commands-update-prompt': { files: string[] };
 }
 
 /**
@@ -14,7 +14,7 @@ export interface SeedcordFrameworkEvents {
  */
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
-    'seedcord:refresh-commands': {};
+    'seedcord:refresh-commands': { shouldRefresh: boolean };
 }
 
 declare module 'vite/types/customEvent.d.ts' {

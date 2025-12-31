@@ -34,6 +34,10 @@ export function Banner({ config }: BannerProps): ReactElement {
                             ? chalk.dim(formatFilePath(config.bot.events.path))
                             : chalk.gray('Disabled')}
                     </Text>
+                    <Text>
+                        <Text color="blue">➜</Text> Effects:{' '}
+                        {config.effects.path ? chalk.dim(formatFilePath(config.effects.path)) : chalk.gray('Disabled')}
+                    </Text>
                 </Box>
             )}
             <Text>

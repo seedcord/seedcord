@@ -48,3 +48,5 @@ export function Help(): ReactElement {
         </Box>
     );
 }
+
+export const HELP_HEIGHT = 8;

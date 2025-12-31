@@ -68,12 +68,12 @@ export class ViteDevRuntime implements DevRuntime {
         this.emit({ type: 'restart-required' });
     }
 
-    private handleCommandUpdatePrompt(file: string): void {
-        this.emit({ type: 'command-update-prompt', file });
+    private handleCommandUpdatePrompt(files: string[]): void {
+        this.emit({ type: 'command-update-prompt', files });
     }
 
-    public refreshCommands(): void {
-        this.hmrPlugin?.sendRefreshCommands();
+    public refreshCommands(shouldRefresh: boolean): void {
+        this.hmrPlugin?.sendRefreshCommands(shouldRefresh);
     }
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {

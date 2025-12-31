@@ -10,7 +10,7 @@ export type DevRuntimeEvent =
     | { type: 'file-change'; path: string }
     | { type: 'restart-required' }
     | { type: 'ready' }
-    | { type: 'command-update-prompt'; file: string };
+    | { type: 'command-update-prompt'; files: string[] };
 
 /**
  * Callback signature for runtime events.
@@ -57,7 +57,7 @@ export interface DevRuntime {
     /**
      * Refreshes commands.
      */
-    refreshCommands?(): void;
+    refreshCommands?(shouldRefresh: boolean): void;
 }
 
 /**

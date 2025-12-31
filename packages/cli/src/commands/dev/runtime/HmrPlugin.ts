@@ -6,15 +6,21 @@ import { minimatch } from 'minimatch';
 
 import type { HmrEventType, HmrUpdateEvent } from '@api/Hmr';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type { EnvironmentModuleNode, HotUpdateOptions, ModuleNode, Plugin, ViteDevServer } from 'vite';
-import type { ViteHotContext } from 'vite/types/hot.js';
+import type {
+    EnvironmentModuleNode,
+    HotUpdateOptions,
+    ModuleNode,
+    NormalizedHotChannel,
+    Plugin,
+    ViteDevServer
+} from 'vite';
 
 const DEBOUNCE_MS = 250;
 
 export interface HmrPluginEvents {
     invalidate: [file: string];
     'restart-needed': [file: string];
-    'command-update-prompt': [file: string];
+    'command-update-prompt': [files: string[]];
 }
 
 export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
@@ -24,8 +30,9 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private readonly dynamicRestartPatterns = new Set<string>();
 
     // Helper for testing
-    protected get hot(): ViteHotContext | undefined {
-        return import.meta.hot;
+    protected get hot(): NormalizedHotChannel | undefined {
+        // return import.meta.hot;
+        return this.server?.environments.ssr.hot;
     }
 
     constructor(private readonly config: ResolvedSeedcordDevConfig) {
@@ -41,10 +48,10 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         };
     }
 
-    public sendRefreshCommands(): void {
+    public sendRefreshCommands(shouldRefresh: boolean): void {
         if (this.server) {
             if (this.hot) {
-                this.hot.send('seedcord:refresh-commands');
+                this.hot.send('seedcord:refresh-commands', { shouldRefresh });
             }
         }
     }
@@ -58,7 +65,7 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
         if (this.hot) {
             this.hot.on('seedcord:commands-update-prompt', (data) => {
-                this.emit('command-update-prompt', data.file);
+                this.emit('command-update-prompt', data.files);
             });
 
             this.hot.on('seedcord:register-critical-files', (data) => {
