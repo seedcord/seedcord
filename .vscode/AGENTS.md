@@ -24,7 +24,7 @@
 
 - Remember to `pnpm tc` BEFORE you run code. Then run code to test changes. Then at the end you can run `pnpm tc` and `pnpm lint:fix` again to ensure everything is good.
 
-- ALWAYS, I repeat, ALWAYS first cd into the package or app's directory, then run the command via pnpm.
+- ALWAYS, I repeat, ALWAYS first cd into the package or app's directory, then run the command via pnpm. Note: If you've already cd'ed into the package or app's directory, you don't need to cd again. Just confirm what directory you're in IF needed on the "No such file or directory" error using `pwd`.
 
 - If a terminal command is failing with the error saying 'No such file or directory', check to see if you're already in the correct directory. If not, cd into the correct directory first.
 

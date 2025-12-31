@@ -171,6 +171,9 @@ export class EventController implements Initializeable, HmrAware {
             const index = handlers.findIndex((h) => h.ctor === handlerClass);
             if (index !== -1) {
                 handlers.splice(index, 1);
+                if (handlers.length === 0) {
+                    this.eventMap.delete(event as keyof ClientEvents);
+                }
             }
         }
         this.executedOnceHandlers.delete(handlerClass);

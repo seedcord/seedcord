@@ -96,12 +96,13 @@ export class EffectsController extends Plugin {
     private async loadEffects(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const exportName of Object.keys(imported)) {
                     const val = imported[exportName];
                     if (this.isEffectHandler(val)) {
                         const meta = Reflect.getMetadata(EffectMetadataKey, val) as RegisterEffectMetadataEntry;
                         this.registerEffect(val, meta);
+                        this.hmrHandler?.trackHandler(fullPath, val);
                         this.logger.utils.registration(val.name, relativePath);
                     }
                 }

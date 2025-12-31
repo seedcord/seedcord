@@ -34,11 +34,14 @@ export class KpgServiceRegistry<Database extends object> {
 
         await traverseDirectory(
             dir,
-            (_full, rel, mod) => {
+            (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
                         const instance = new Service(this.plugin, this.core);
                         this.logger.utils.registration(instance.constructor.name, rel);
+
+                        // @ts-expect-error - private access on hmrHandler
+                        this.plugin.hmrHandler?.trackHandler(fullPath, Service);
                     }
                 }
             },

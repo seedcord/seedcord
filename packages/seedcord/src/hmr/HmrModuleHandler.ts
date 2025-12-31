@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -190,7 +191,12 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         }
 
         try {
-            const imported = (await import(file)) as Record<string, unknown>;
+            let fileUrl = pathToFileURL(file).href;
+            // In the vitest environment, we need to bust the cache manually because
+            // we are simulating HMR without a real Vite server handling the module graph updates.
+            if (process.env.VITEST === 'true') fileUrl += `?update=${Date.now()}`;
+
+            const imported = (await import(fileUrl)) as Record<string, unknown>;
 
             for (const val of Object.values(imported)) {
                 if (isHandler(val)) {

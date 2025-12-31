@@ -143,11 +143,12 @@ export class Mongo extends Plugin {
 
         await traverseDirectory(
             servicesDir,
-            (_full, rel, mod) => {
+            (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
                         const instance = new Service(this, this.core);
                         this.logger.utils.registration(instance.constructor.name, rel);
+                        this.hmrHandler?.trackHandler(fullPath, Service);
                     }
                 }
             },
