@@ -24,10 +24,15 @@ export function Banner({ config }: BannerProps): ReactElement {
                 <Box flexDirection="column" paddingBottom={1}>
                     <Text>
                         <Text color="blue">➜</Text> Interactions:{' '}
-                        {chalk.dim(formatFilePath(config.bot.interactions.path))}
+                        {config.bot.interactions.path
+                            ? chalk.dim(formatFilePath(config.bot.interactions.path))
+                            : chalk.gray('Disabled')}
                     </Text>
                     <Text>
-                        <Text color="blue">➜</Text> Events: {chalk.dim(formatFilePath(config.bot.events.path))}
+                        <Text color="blue">➜</Text> Events:{' '}
+                        {config.bot.events.path
+                            ? chalk.dim(formatFilePath(config.bot.events.path))
+                            : chalk.gray('Disabled')}
                     </Text>
                 </Box>
             )}

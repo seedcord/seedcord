@@ -13,6 +13,7 @@ interface DevAppActions {
     setBusy: (isBusy: boolean) => void;
     setConfig: (config: Config) => void;
     setRestartRequired: (required: boolean) => void;
+    setCommandUpdatePrompt: (file: string | null) => void;
 }
 
 interface DevAppProps {
@@ -21,10 +22,11 @@ interface DevAppProps {
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
+    readonly onRefreshCommands?: () => Promise<void> | void;
 }
 
 // eslint-disable-next-line max-lines-per-function
-export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps): ReactElement {
+export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshCommands }: DevAppProps): ReactElement {
     const [status, setStatus] = useState('Initializing...');
     const [error, setError] = useState<Error | null>(null);
     const [isBusy, setBusy] = useState(true);
@@ -33,6 +35,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     const [showChannels, setShowChannels] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<string | undefined>('default');
     const [restartRequired, setRestartRequired] = useState(false);
+    const [commandUpdatePrompt, setCommandUpdatePrompt] = useState<string | null>(null);
 
     const { stdout } = useStdout();
     const DEFAULT_ROWS = 24;
@@ -58,52 +61,76 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
     }, [stdout]);
 
     const staticOverhead = 14;
-    // eslint-disable-next-line no-magic-numbers
-    const helpOverhead = showHelp ? 8 : 0;
+
+    const helpOverhead = showHelp ? 10 : 0;
     const errorOverhead = error ? (error.stack?.split('\n').length ?? 0) + 5 : 0;
-    const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead;
+    // eslint-disable-next-line no-magic-numbers
+    const promptOverhead = commandUpdatePrompt ? 4 : 0;
+    const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead - promptOverhead;
     const effectiveLogHeight = Math.max(0, availableHeight);
 
-    useInput((input) => {
-        if (showChannels) return; // ChannelSelector will handle input
+    useInput(
+        // eslint-disable-next-line max-statements, complexity
+        (input) => {
+            if (commandUpdatePrompt) {
+                if (input === 'y') {
+                    void onRefreshCommands?.();
+                    setCommandUpdatePrompt(null);
+                } else if (input === 'n') {
+                    setCommandUpdatePrompt(null);
+                }
+                return;
+            }
 
-        if (input === 'q') {
-            setStatus('Quitting...');
-            void onQuit?.();
+            if (showChannels) return; // ChannelSelector will handle input
+
+            if (input === 'q') {
+                setStatus('Quitting...');
+                void onQuit?.();
+                return;
+            }
+
+            if (isBusy && !restartRequired) return;
+
+            if (input === 'd') {
+                setBusy(true);
+                setRestartRequired(false);
+
+                if (error) setError(null);
+                setStatus('Disconnecting...');
+                void onDisconnect?.();
+                return;
+            }
+
+            if (input === 'r') {
+                setBusy(true);
+                setRestartRequired(false);
+                setStatus('Restarting...');
+                if (error) setError(null);
+                void onRestart?.();
+                return;
+            }
+
+            if (input === 'c') {
+                setShowChannels(true);
+                return;
+            }
+
+            if (input === 'h') {
+                setShowHelp((prev) => !prev);
+                return;
+            }
+
+            if (input === 'l') {
+                LogStore.instance.clear(selectedChannel);
+            }
         }
-
-        if (isBusy && !restartRequired) return;
-
-        if (input === 'd') {
-            setBusy(true);
-            setRestartRequired(false);
-
-            if (error) setError(null);
-            setStatus('Disconnecting...');
-            void onDisconnect?.();
-        }
-
-        if (input === 'r') {
-            setBusy(true);
-            setRestartRequired(false);
-            setStatus('Restarting...');
-            if (error) setError(null);
-            void onRestart?.();
-        }
-
-        if (input === 'c') {
-            setShowChannels(true);
-        }
-
-        if (input === 'h') {
-            setShowHelp((prev) => !prev);
-        }
-    });
+    );
 
     useEffect(() => {
         LogStore.instance.clear();
         LogStore.instance.mount();
-        onReady({ setStatus, setError, setBusy, setConfig, setRestartRequired });
+        onReady({ setStatus, setError, setBusy, setConfig, setRestartRequired, setCommandUpdatePrompt });
 
         return () => {
             LogStore.instance.unmount();
@@ -114,6 +141,12 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart }: DevAppProps
         <Box flexDirection="column" key={resizeKey} width={terminalWidth} height={terminalHeight}>
             <Banner config={config} />
             {error && <ErrorDisplay error={error} />}
+            {commandUpdatePrompt && (
+                <Box borderStyle="round" borderColor="yellow" flexDirection="column" paddingX={1}>
+                    <Text>Command updated: {commandUpdatePrompt}</Text>
+                    <Text>Refresh commands? (y/n)</Text>
+                </Box>
+            )}
             {showHelp && <Help />}
             <StatusLine text={status} spinner={isBusy} restartRequired={restartRequired} />
             {showChannels ? (

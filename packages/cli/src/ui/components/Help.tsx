@@ -38,6 +38,12 @@ export function Help(): ReactElement {
                     </Text>{' '}
                     - Toggle Help
                 </Text>
+                <Text>
+                    <Text color="cyan" bold>
+                        l
+                    </Text>{' '}
+                    - Clear All Logs
+                </Text>
             </Box>
         </Box>
     );

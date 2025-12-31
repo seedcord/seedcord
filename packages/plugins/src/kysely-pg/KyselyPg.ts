@@ -3,17 +3,24 @@ import 'reflect-metadata';
 import chalk from 'chalk';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig } from 'pg';
-import { keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
+import { HmrModuleHandler, keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
 
+import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
 import { KpgMigrationManager } from './KpgMigrationManager';
 import { KpgServiceRegistry } from './KpgServiceRegistry';
 
+import type { KyselyServiceConstructor } from './KpgService';
 import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigration';
 import type { KpgOptions } from './types/KpgOptions';
 import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
+import type { HmrUpdateEvent } from '@seedcord/cli';
 import type { MigrationInfo } from 'kysely';
 import type { Core } from 'seedcord';
+
+export interface KyselyArtifact {
+    key?: string;
+}
 
 /**
  * Postgres plugin using Kysely.
@@ -32,6 +39,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     private readonly serviceRegistry: KpgServiceRegistry<Database>;
     private readonly databaseBootstrapper: KpgDatabaseBootstrapper;
     private databaseName: string | null = null;
+    private readonly hmrHandler: HmrModuleHandler<KyselyServiceConstructor<Database>, void, KyselyArtifact>;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
@@ -53,6 +61,24 @@ export class KyselyPg<Database extends object> extends Plugin {
             async () => await this.stop(),
             this.options.timeout
         );
+
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: this.options.dir,
+            isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
+
+            registerHandler: (Service) => new Service(this, this.core),
+            unregisterHandler: (Service, artifacts) => this.serviceRegistry.unregister(Service, artifacts),
+            getArtifacts: (Service) => {
+                const key = Reflect.getMetadata(PgServiceMetadataKey, Service) as string | undefined;
+                return key ? { key } : {};
+            },
+            logger: this.logger.inChannel('hmr'),
+            name: 'KyselyPg'
+        });
+    }
+
+    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.hmrHandler.handle(event);
     }
 
     /**

@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { Logger } from '@seedcord/services';
-import { formatFilePath, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
 
@@ -30,6 +30,11 @@ import type {
     UserContextMenuCommandInteraction,
     UserSelectMenuInteraction
 } from 'discord.js';
+
+interface InteractionArtifact {
+    routeType: InteractionRoutes;
+    routes: string[];
+}
 
 interface RegisteredMiddleware {
     readonly ctor: InteractionMiddlewareConstructor;
@@ -68,7 +73,11 @@ export class InteractionController implements Initializeable, HmrAware {
 
     private readonly middlewares: RegisteredMiddleware[] = [];
 
-    private readonly hmrHandler: HmrModuleHandler<HandlerConstructor, InteractionMiddlewareConstructor>;
+    private readonly hmrHandler: HmrModuleHandler<
+        HandlerConstructor,
+        InteractionMiddlewareConstructor,
+        InteractionArtifact[]
+    >;
 
     private readonly routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
         [InteractionRoutes.Slash, this.slashMap],
@@ -86,14 +95,23 @@ export class InteractionController implements Initializeable, HmrAware {
 
     constructor(protected core: Core) {
         // Add ignored keys from config
-        const ignoredKeysFromConfig = this.core.config.bot.interactions.ignoreCustomIds;
+        const ignoredKeysFromConfig = hasKeys(this.core.config.bot.interactions, ['ignoreCustomIds'])
+            ? this.core.config.bot.interactions.ignoreCustomIds
+            : undefined;
         if (ignoredKeysFromConfig) {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
 
+        const interactionsDir = this.core.config.bot.interactions.path;
+        if (!interactionsDir) {
+            // This should never happen as InteractionController is only instantiated if path is set. But if it does, it should stop the whole process.
+            throw new Error('InteractionController instantiated without interactions path');
+        }
+
         this.hmrHandler = new HmrModuleHandler({
-            handlersDir: this.core.config.bot.interactions.path,
-            ...(this.core.config.bot.interactions.middlewares
+            handlersDir: interactionsDir,
+            ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&
+            this.core.config.bot.interactions.middlewares
                 ? { middlewaresDir: this.core.config.bot.interactions.middlewares }
                 : {}),
             isHandler: this.isHandlerClass.bind(this),
@@ -107,8 +125,18 @@ export class InteractionController implements Initializeable, HmrAware {
                     this.registerMiddleware(middleware, metadata, formatFilePath(file));
                 }
             },
-            unregisterHandler: this.unregisterHandler.bind(this),
+            unregisterHandler: (handler, artifacts) => this.unregisterHandler(handler, artifacts),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
+            getArtifacts: (handler) => {
+                const artifacts: InteractionArtifact[] = [];
+                for (const [routeType] of this.routeTypes) {
+                    const meta: unknown = Reflect.getMetadata(routeType, handler);
+                    if (areRoutes(meta)) {
+                        artifacts.push({ routeType, routes: meta });
+                    }
+                }
+                return artifacts;
+            },
             logger: this.logger.inChannel('hmr'),
             name: 'Interaction'
         });
@@ -120,9 +148,14 @@ export class InteractionController implements Initializeable, HmrAware {
         this.isInitialized = true;
 
         const handlersDir = this.core.config.bot.interactions.path;
+        // Already checked in constructor
+        if (!handlersDir) return;
+
         this.logger.info(chalk.bold(handlersDir));
 
-        const middlewareDir = this.core.config.bot.interactions.middlewares;
+        const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
+            ? this.core.config.bot.interactions.middlewares
+            : undefined;
         if (middlewareDir) {
             this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
             await this.loadMiddlewares(middlewareDir);
@@ -229,7 +262,17 @@ export class InteractionController implements Initializeable, HmrAware {
         await this.hmrHandler.handle(event);
     }
 
-    private unregisterHandler(handlerClass: HandlerConstructor): void {
+    private unregisterHandler(handlerClass: HandlerConstructor, artifacts?: InteractionArtifact[]): void {
+        if (artifacts) {
+            for (const { routeType, routes } of artifacts) {
+                const map = this.routeTypes.find(([type]) => type === routeType)?.[1];
+                if (map) {
+                    routes.forEach((route) => map.delete(route));
+                }
+            }
+            return;
+        }
+
         for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
             if (!areRoutes(meta)) continue;

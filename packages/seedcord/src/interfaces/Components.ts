@@ -124,7 +124,6 @@ export type InstantiatedActionRow<RowKey extends ActionRowComponentType> = Insta
 export abstract class BaseComponent<TComponent> {
     private readonly _component: TComponent;
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected constructor(ComponentClass: new () => TComponent) {
         this._component = new ComponentClass();
     }

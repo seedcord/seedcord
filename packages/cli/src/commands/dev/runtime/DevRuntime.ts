@@ -9,7 +9,8 @@ export type DevRuntimeEvent =
     | { type: 'module-error'; path: string; error: unknown }
     | { type: 'file-change'; path: string }
     | { type: 'restart-required' }
-    | { type: 'ready' };
+    | { type: 'ready' }
+    | { type: 'command-update-prompt'; file: string };
 
 /**
  * Callback signature for runtime events.
@@ -32,25 +33,7 @@ export interface DevRuntimeContext {
 }
 
 /**
- * Result of loading an entry module.
- */
-export interface DevRuntimeLoadResult<TModule = unknown> {
-    /**
-     * The loaded module export.
-     */
-    readonly module: TModule;
-
-    /**
-     * Optional metadata about the load operation.
-     */
-    readonly metadata?: {
-        readonly loadTime?: number;
-        readonly dependencies?: string[];
-    };
-}
-
-/**
- * Abstraction for how the CLI boots and runs a dev session.
+ * Interface for a development runtime.
  */
 export interface DevRuntime {
     /**
@@ -70,4 +53,27 @@ export interface DevRuntime {
      * Called when the dev session ends.
      */
     dispose(): Promise<void>;
+
+    /**
+     * Refreshes commands.
+     */
+    refreshCommands?(): void;
+}
+
+/**
+ * Result of loading an entry module.
+ */
+export interface DevRuntimeLoadResult<TModule = unknown> {
+    /**
+     * The loaded module export.
+     */
+    readonly module: TModule;
+
+    /**
+     * Optional metadata about the load operation.
+     */
+    readonly metadata?: {
+        readonly loadTime?: number;
+        readonly dependencies?: string[];
+    };
 }

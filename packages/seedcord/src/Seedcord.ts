@@ -10,7 +10,7 @@ import { SeedcordBrand } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { EffectsController } from './effects/EffectsRegistry';
+import { EffectsController } from './effects/EffectsController';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
 

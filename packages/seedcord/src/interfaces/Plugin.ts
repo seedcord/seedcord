@@ -120,7 +120,7 @@ export class Pluggable<
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
         key: Key,
-        // eslint-disable-next-line @typescript-eslint/naming-convention
+
         Plugin: Ctor,
         startupPhase: StartupPhase,
         ...args: PluginArgs<Ctor>

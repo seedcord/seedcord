@@ -22,7 +22,10 @@ export * from '@bot/defaults/index';
 export * from '@interfaces/index';
 
 // Effects exports
-export * from './effects';
+export * from '@effects/index';
+
+// HMR exports
+export * from '@hmr/index';
 
 // Export seedcord
 export * from './Seedcord';

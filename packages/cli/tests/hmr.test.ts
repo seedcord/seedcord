@@ -69,12 +69,14 @@ describe('HmrPlugin', () => {
                 environments: {
                     ssr: {
                         hot: {
-                            send: hotSendMock
+                            send: hotSendMock,
+                            on: vi.fn()
                         }
                     }
                 },
                 hot: {
-                    send: vi.fn() // Fallback
+                    send: vi.fn(), // Fallback
+                    on: vi.fn()
                 }
             } as unknown as ViteDevServer;
 

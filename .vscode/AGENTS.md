@@ -63,3 +63,5 @@
 - Make sure to build packages after making changes before using those changes in other packages or apps.
 
 - After linting, the only acceptable result is 0 errors and 0 warnings.
+
+- Make sure to run `pnpm test` in the relevant package or app after making changes to ensure nothing is broken.

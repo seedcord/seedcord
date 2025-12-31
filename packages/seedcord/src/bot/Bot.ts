@@ -43,15 +43,16 @@ export class Bot extends Plugin<BotEvents> {
     private isInitialized = false;
 
     private readonly _client: Client;
-    private readonly interactions: InteractionController;
-    private readonly events: EventController;
-    public readonly commands: CommandRegistry;
+    private readonly interactions?: InteractionController;
+    private readonly events?: EventController;
+    public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
     public readonly emojis: EmojiMap = Emojis;
 
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.interactions.onHmr(event);
-        await this.events.onHmr(event);
+        if (this.interactions) await this.interactions.onHmr(event);
+        if (this.events) await this.events.onHmr(event);
+        if (this.commands) await this.commands.onHmr(event);
     }
 
     constructor(protected core: Core) {
@@ -59,10 +60,16 @@ export class Bot extends Plugin<BotEvents> {
 
         this._client = new Client(core.config.bot.clientOptions);
 
-        this.interactions = new InteractionController(core);
-        this.events = new EventController(core);
+        if (core.config.bot.interactions.path) {
+            this.interactions = new InteractionController(core);
+        }
+        if (core.config.bot.events.path) {
+            this.events = new EventController(core);
+        }
 
-        this.commands = new CommandRegistry(core);
+        if (core.config.bot.commands.path) {
+            this.commands = new CommandRegistry(core);
+        }
         this.emojiInjector = new EmojiInjector(core);
 
         const BOT_SHUTDOWN_TIMEOUT = 2000;
@@ -84,13 +91,15 @@ export class Bot extends Plugin<BotEvents> {
         }
         this.isInitialized = true;
 
-        await this.interactions.init();
-        await this.events.init();
+        if (this.interactions) await this.interactions.init();
+        if (this.events) await this.events.init();
 
         await this.login();
 
-        await this.commands.init();
-        await this.commands.setCommands();
+        if (this.commands) {
+            await this.commands.init();
+            await this.commands.setCommands();
+        }
 
         await this.emojiInjector.init();
     }

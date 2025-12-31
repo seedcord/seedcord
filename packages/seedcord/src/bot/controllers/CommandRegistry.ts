@@ -1,17 +1,27 @@
+import { resolve } from 'node:path';
+
 import { Logger } from '@seedcord/services';
-import { traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
 
 import { CommandMetadataKey } from '@bDecorators/Command';
+import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { BuilderComponent } from '@interfaces/Components';
 
 import type { CommandMeta } from '@bDecorators/Command';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 import type { ContextMenuCommandBuilder } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
+
+interface CommandArtifact {
+    name: string;
+    scope: 'global' | 'guild';
+    guilds?: string[];
+}
 
 /**
  * Manages Discord application command registration and deployment.
@@ -21,27 +31,71 @@ type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
  *
  * @internal
  */
-export class CommandRegistry implements Initializeable {
+export class CommandRegistry implements Initializeable, HmrAware {
+    public readonly name = 'Commands';
     private readonly logger = new Logger('Commands');
     private isInitialised = false;
 
     public readonly globalCommands: (SlashCommandBuilder | ContextMenuCommandBuilder)[] = [];
     public readonly guildCommands = new Collection<string, (SlashCommandBuilder | ContextMenuCommandBuilder)[]>();
 
-    public constructor(private readonly core: Core) {}
+    private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
+    private readonly hmrHandler: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
+
+    public constructor(private readonly core: Core) {
+        const commandsDir = this.core.config.bot.commands.path;
+        if (!commandsDir) {
+            throw new Error('CommandRegistry instantiated without commands path');
+        }
+
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: commandsDir,
+            isHandler: this.isCommandClass.bind(this),
+            registerHandler: (handler, file) => this.registerCommand(handler, file),
+            unregisterHandler: (handler, artifacts) => this.unregisterCommand(handler, artifacts),
+            getArtifacts: (handler) => this.ctorToCommand.get(handler),
+            logger: this.logger.inChannel('hmr'),
+            name: 'Commands'
+        });
+    }
 
     public async init(): Promise<void> {
         if (this.isInitialised) return;
         this.isInitialised = true;
 
-        this.logger.info(chalk.bold(this.core.config.bot.commands.path));
+        const commandsDir = this.core.config.bot.commands.path;
+        if (!commandsDir) return;
 
-        await this.loadCommands(this.core.config.bot.commands.path);
+        this.logger.info(chalk.bold(commandsDir));
+
+        await this.loadCommands(commandsDir);
 
         this.logger.utils.summary('Loaded commands', {
             global: this.globalCommands.length,
             'guild groups': this.guildCommands.size
         });
+
+        if (import.meta.hot) {
+            import.meta.hot.on('seedcord:refresh-commands', () => {
+                void (async () => {
+                    this.logger.info('Refreshing commands...');
+                    await this.setCommands();
+                })();
+            });
+        }
+    }
+
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.hmrHandler.handle(event);
+
+        const commandsDir = this.core.config.bot.commands.path;
+        if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {
+            if (import.meta.hot) {
+                import.meta.hot.send('seedcord:commands-update-prompt', {
+                    file: formatFilePath(event.file)
+                });
+            }
+        }
     }
 
     private async loadCommands(dir: string): Promise<void> {
@@ -86,6 +140,30 @@ export class CommandRegistry implements Initializeable {
                 `→ Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
             );
         }
+        this.ctorToCommand.set(ctor, {
+            name: comp.name,
+            scope: meta.scope,
+            ...(meta.scope === 'guild' ? { guilds: meta.guilds } : {})
+        });
+    }
+
+    private unregisterCommand(ctor: CommandCtor, artifacts?: CommandArtifact): void {
+        const info = artifacts ?? this.ctorToCommand.get(ctor);
+        if (!info) return;
+
+        if (info.scope === 'global') {
+            const idx = this.globalCommands.findIndex((c) => c.name === info.name);
+            if (idx !== -1) this.globalCommands.splice(idx, 1);
+        } else {
+            for (const g of info.guilds ?? []) {
+                const arr = this.guildCommands.get(g);
+                if (arr) {
+                    const idx = arr.findIndex((c) => c.name === info.name);
+                    if (idx !== -1) arr.splice(idx, 1);
+                }
+            }
+        }
+        this.ctorToCommand.delete(ctor);
     }
 
     public async setCommands(): Promise<void> {

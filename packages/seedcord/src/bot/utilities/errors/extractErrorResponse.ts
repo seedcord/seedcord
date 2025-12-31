@@ -59,7 +59,7 @@ export function extractErrorResponse(
         };
     }
 
-    const showStack = core.config.bot.errorStack;
+    const showStack = core.config.errorStack;
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}`);
 

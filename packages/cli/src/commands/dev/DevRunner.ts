@@ -50,6 +50,8 @@ class SeedcordDevSession {
                 if (event.type === 'restart-required') {
                     this.actions.setStatus('Restart required. Press r to restart.');
                     this.actions.setRestartRequired(true);
+                } else if (event.type === 'command-update-prompt') {
+                    this.actions.setCommandUpdatePrompt(event.file);
                 }
             }
         });
@@ -138,6 +140,10 @@ class SeedcordDevSession {
         await this.runtime.dispose();
     }
 
+    public refreshCommands(): void {
+        this.runtime.refreshCommands?.();
+    }
+
     private isSeedcordLike(candidate: unknown): candidate is SeedcordLike {
         return Boolean(candidate) && (candidate as SeedcordLike)[SeedcordBrand] === true;
     }
@@ -149,6 +155,7 @@ export interface DevRunnerActions {
     setBusy: (isBusy: boolean) => void;
     setConfig: (config: Config) => void;
     setRestartRequired: (required: boolean) => void;
+    setCommandUpdatePrompt: (file: string | null) => void;
 }
 
 /**
@@ -249,6 +256,10 @@ export class DevRunner {
         this.isDisconnected = true;
         await this.currentSession?.stop();
         this.signalResolve?.();
+    }
+
+    public refreshCommands(): void {
+        this.currentSession?.refreshCommands();
     }
 
     private async waitForSignal(): Promise<void> {

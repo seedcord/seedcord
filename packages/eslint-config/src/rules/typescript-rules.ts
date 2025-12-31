@@ -97,7 +97,7 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
         },
         {
             selector: 'parameter',
-            format: ['camelCase'],
+            format: ['camelCase', 'PascalCase'],
             leadingUnderscore: 'allow'
         },
         {

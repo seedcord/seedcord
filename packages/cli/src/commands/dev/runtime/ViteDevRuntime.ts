@@ -19,6 +19,7 @@ export class ViteDevRuntime implements DevRuntime {
     private moduleRunner: ModuleRunner | null = null;
     private eventHandler: DevRuntimeEventHandler | null = null;
     private evaluatedModules: EvaluatedModules | null = null;
+    private hmrPlugin: HmrPlugin | null = null;
 
     public async start(context: DevRuntimeContext): Promise<void> {
         this.context = context;
@@ -29,6 +30,7 @@ export class ViteDevRuntime implements DevRuntime {
         this.emit({ type: 'module-loading', path: projectRoot });
 
         const hmrPlugin = new HmrPlugin(this.context.config);
+        this.hmrPlugin = hmrPlugin;
 
         const config = mergeConfig(viteConfig, {
             root: projectRoot,
@@ -42,21 +44,36 @@ export class ViteDevRuntime implements DevRuntime {
             evaluatedModules: this.evaluatedModules
         });
 
-        hmrPlugin.on('invalidate', (file) => {
-            const relPath = relative(projectRoot, file);
-            const moduleId = `/${relPath}`;
-            const moduleNode = this.evaluatedModules?.getModuleById(moduleId);
-            if (moduleNode) {
-                this.evaluatedModules?.invalidateModule(moduleNode);
-            }
-        });
-
-        hmrPlugin.on('restart-needed', () => {
-            this.emit({ type: 'restart-required' });
-        });
+        hmrPlugin.on('invalidate', this.handleInvalidate.bind(this));
+        hmrPlugin.on('restart-needed', this.handleRestartNeeded.bind(this));
+        hmrPlugin.on('command-update-prompt', this.handleCommandUpdatePrompt.bind(this));
 
         this.emit({ type: 'module-loaded', path: projectRoot });
         this.emit({ type: 'ready' });
+    }
+
+    private handleInvalidate(file: string): void {
+        const projectRoot = this.context?.config.root;
+        if (!projectRoot || !this.evaluatedModules) return;
+
+        const relPath = relative(projectRoot, file);
+        const moduleId = `/${relPath}`;
+        const moduleNode = this.evaluatedModules.getModuleById(moduleId);
+        if (moduleNode) {
+            this.evaluatedModules.invalidateModule(moduleNode);
+        }
+    }
+
+    private handleRestartNeeded(): void {
+        this.emit({ type: 'restart-required' });
+    }
+
+    private handleCommandUpdatePrompt(file: string): void {
+        this.emit({ type: 'command-update-prompt', file });
+    }
+
+    public refreshCommands(): void {
+        this.hmrPlugin?.sendRefreshCommands();
     }
 
     public async loadEntry(): Promise<DevRuntimeLoadResult> {

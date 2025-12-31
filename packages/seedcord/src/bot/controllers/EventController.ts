@@ -1,5 +1,5 @@
 import { Logger } from '@seedcord/services';
-import { formatFilePath, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
 
@@ -28,6 +28,8 @@ interface RegisteredEventHandlerEntry {
     readonly frequency: EventFrequency;
 }
 
+type EventArtifact = string;
+
 /**
  * Manages Discord event handler registration and execution.
  *
@@ -49,12 +51,18 @@ export class EventController implements Initializeable, HmrAware {
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
-    private readonly hmrHandler: HmrModuleHandler<EventHandlerConstructor, EventMiddlewareConstructor>;
+    private readonly hmrHandler: HmrModuleHandler<EventHandlerConstructor, EventMiddlewareConstructor, EventArtifact[]>;
 
     public constructor(protected core: Core) {
+        const eventsDir = this.core.config.bot.events.path;
+        if (!eventsDir) {
+            // This should never happen as EventController is only instantiated if path is set. But if it does, it should stop the whole process.
+            throw new Error('EventController instantiated without events path');
+        }
+
         this.hmrHandler = new HmrModuleHandler({
-            handlersDir: this.core.config.bot.events.path,
-            ...(this.core.config.bot.events.middlewares
+            handlersDir: eventsDir,
+            ...(hasKeys(this.core.config.bot.events, ['middlewares'])
                 ? { middlewaresDir: this.core.config.bot.events.middlewares }
                 : {}),
             isHandler: this.isEventHandlerClass.bind(this),
@@ -68,8 +76,15 @@ export class EventController implements Initializeable, HmrAware {
                     this.registerMiddleware(middleware, metadata, formatFilePath(file));
                 }
             },
-            unregisterHandler: this.unregisterHandler.bind(this),
+            unregisterHandler: (handler, artifacts) => this.unregisterHandler(handler, artifacts),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
+            getArtifacts: (handler) => {
+                const events: EventArtifact[] = [];
+                for (const [event, handlers] of this.eventMap.entries()) {
+                    if (handlers.some((h) => h.ctor === handler)) events.push(event);
+                }
+                return events;
+            },
             logger: this.logger.inChannel('hmr'),
             name: 'Event'
         });
@@ -82,9 +97,14 @@ export class EventController implements Initializeable, HmrAware {
         this.isInitialized = true;
 
         const handlersDir = this.core.config.bot.events.path;
+        if (!handlersDir) {
+            return;
+        }
         this.logger.info(chalk.bold(handlersDir));
 
-        const middlewareDir = this.core.config.bot.events.middlewares;
+        const middlewareDir = hasKeys(this.core.config.bot.events, ['middlewares'])
+            ? this.core.config.bot.events.middlewares
+            : undefined;
         if (middlewareDir) {
             this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
             await this.loadMiddlewares(middlewareDir);
@@ -137,8 +157,11 @@ export class EventController implements Initializeable, HmrAware {
         await this.hmrHandler.handle(event);
     }
 
-    private unregisterHandler(handlerClass: EventHandlerConstructor): void {
-        for (const handlers of this.eventMap.values()) {
+    private unregisterHandler(handlerClass: EventHandlerConstructor, artifacts?: EventArtifact[]): void {
+        const events = artifacts ?? Array.from(this.eventMap.keys());
+        for (const event of events) {
+            const handlers = this.eventMap.get(event as keyof ClientEvents);
+            if (!handlers) continue;
             const index = handlers.findIndex((h) => h.ctor === handlerClass);
             if (index !== -1) {
                 handlers.splice(index, 1);

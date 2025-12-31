@@ -103,7 +103,8 @@ describe('DevRunner', () => {
             setError: vi.fn(),
             setBusy: vi.fn(),
             setConfig: vi.fn(),
-            setRestartRequired: vi.fn()
+            setRestartRequired: vi.fn(),
+            setCommandUpdatePrompt: vi.fn()
         };
 
         await expect(runner.run(actions)).rejects.toThrow(/Cannot find entry file|Failed to load url/);

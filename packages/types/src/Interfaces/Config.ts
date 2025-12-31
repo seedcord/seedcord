@@ -7,54 +7,74 @@ import type { ClientOptions } from 'discord.js';
  * Djs Interactions handlers
  *
  */
-export interface InteractionsConfig {
-    /**
-     * Path to dir containing interaction handlers.
-     */
-    path: string;
-    /**
-     * Optional array of custom IDs or regex patterns to ignore in interaction handling
-     */
-    ignoreCustomIds?: (string | RegExp)[];
-    /**
-     * Optional path to interaction middleware directory
-     */
-    middlewares?: string;
-}
+export type InteractionsConfig =
+    | {
+          /**
+           * Path to dir containing interaction handlers.
+           */
+          path: string;
+          /**
+           * Optional array of custom IDs or regex patterns to ignore in interaction handling
+           */
+          ignoreCustomIds?: (string | RegExp)[];
+          /**
+           * Optional path to interaction middleware directory
+           */
+          middlewares?: string;
+      }
+    | {
+          /** No interactions configured */
+          path: null;
+      };
 
 /**
  * Djs Events handlers
  */
-export interface EventsConfig {
-    /**
-     * Path to dir containing event handlers.
-     */
-    path: string;
-    /**
-     * Optional path to event middleware directory
-     */
-    middlewares?: string;
-}
+export type EventsConfig =
+    | {
+          /**
+           * Path to dir containing event handlers.
+           */
+          path: string;
+          /**
+           * Optional path to event middleware directory
+           */
+          middlewares?: string;
+      }
+    | {
+          /** No events configured */
+          path: null;
+      };
 
 /**
  * Djs SlashCommands and ContextMenuCommands
  */
-export interface CommandsConfig {
-    /**
-     * Path to dir containing commands and context menus to register.
-     */
-    path: string;
-}
+export type CommandsConfig =
+    | {
+          /**
+           * Path to dir containing commands and context menus to register.
+           */
+          path: string;
+      }
+    | {
+          /** No commands configured */
+          path: null;
+      };
 
 /**
  * Application side effects configuration
  */
-export interface EffectsConfig {
-    /**
-     * Path to dir of user defined side effects.
-     */
-    path: string;
-}
+export type EffectsConfig =
+    | {
+          /**
+           * Path to dir of user defined side effects.
+           */
+          path: string;
+      }
+    | {
+          /** No effects configured (except the default effects) */
+          path: null;
+      };
 
 /**
  * Discord bot configuration
@@ -102,6 +122,12 @@ export interface BotConfig {
      * ```
      */
     emojis?: EmojiMap;
+}
+
+/** Main configuration object for Seedcord bot */
+export interface Config {
+    bot: BotConfig;
+    effects: EffectsConfig;
 
     /**
      * Whether to show the error stack trace in the terminal in errors caught by the `@Catchable` decorator
@@ -109,10 +135,4 @@ export interface BotConfig {
      * `false` by default
      */
     errorStack?: boolean;
-}
-
-/** Main configuration object for Seedcord bot */
-export interface Config {
-    bot: BotConfig;
-    effects: EffectsConfig;
 }

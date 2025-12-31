@@ -41,6 +41,7 @@ export class DevCommand extends BaseCommand {
                             onQuit: () => this.runner.quit(),
                             onDisconnect: () => this.runner.disconnect(),
                             onRestart: () => this.runner.restart(),
+                            onRefreshCommands: () => this.runner.refreshCommands(),
                             onReady: (actions) => {
                                 void this.runner
                                     .run(actions)

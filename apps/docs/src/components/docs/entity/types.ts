@@ -15,11 +15,7 @@ import type { RenameKey } from '@seedcord/types';
 export type MemberAccessorType = 'getter' | 'setter' | 'accessor';
 
 export interface MemberSignatureDetail
-    extends WithCode,
-        WithDocs<'documentation', 'examples'>,
-        WithSourceUrl,
-        WithThrows,
-        WithDeprecationStatus {
+    extends WithCode, WithDocs<'documentation', 'examples'>, WithSourceUrl, WithThrows, WithDeprecationStatus {
     id: string;
     anchor: string;
 }

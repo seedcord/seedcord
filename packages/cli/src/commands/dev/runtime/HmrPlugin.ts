@@ -14,11 +14,13 @@ const DEBOUNCE_MS = 250;
 export interface HmrPluginEvents {
     invalidate: [file: string];
     'restart-needed': [file: string];
+    'command-update-prompt': [file: string];
 }
 
 export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private readonly logger: Logger;
     private lastUpdate: { file: string; time: number } | null = null;
+    private server: ViteDevServer | null = null;
 
     constructor(private readonly config: ResolvedSeedcordDevConfig) {
         super();
@@ -33,11 +35,26 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         };
     }
 
+    public sendRefreshCommands(): void {
+        if (this.server) {
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            const hot = this.server.environments?.ssr?.hot ?? this.server.hot;
+            hot.send('seedcord:refresh-commands');
+        }
+    }
+
     private configureServer(server: ViteDevServer): void {
+        this.server = server;
         server.watcher.on('add', (file) => this.handleFileEvent(server, file, 'create'));
         server.watcher.on('unlink', (file) => this.handleFileEvent(server, file, 'delete'));
         server.watcher.on('addDir', (file) => this.handleFileEvent(server, file, 'createDir'));
         server.watcher.on('unlinkDir', (file) => this.handleFileEvent(server, file, 'deleteDir'));
+
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        const hot = server.environments?.ssr?.hot ?? server.hot;
+        hot.on('seedcord:commands-update-prompt', (data: { file: string }) => {
+            this.emit('command-update-prompt', data.file);
+        });
     }
 
     private handleFileEvent(server: ViteDevServer, file: string, type: HmrEventType): void {

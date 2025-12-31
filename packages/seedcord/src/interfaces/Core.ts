@@ -1,5 +1,5 @@
 import type { Bot } from '@bot/Bot';
-import type { EffectsController } from '@effects/EffectsRegistry';
+import type { EffectsController } from '@effects/EffectsController';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 import type { Config } from '@seedcord/types';
 

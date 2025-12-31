@@ -5,7 +5,7 @@ import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgService } from './KpgService';
 
 import type { KyselyServiceConstructor } from './KpgService';
-import type { KyselyPg } from './KyselyPg';
+import type { KyselyArtifact, KyselyPg } from './KyselyPg';
 import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
 import type { Core, Logger } from 'seedcord';
 
@@ -51,7 +51,15 @@ export class KpgServiceRegistry<Database extends object> {
         );
     }
 
-    private isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {
+    public unregister(Service: KyselyServiceConstructor<Database>, artifacts?: KyselyArtifact): void {
+        const key = artifacts?.key ?? (Reflect.getMetadata(PgServiceMetadataKey, Service) as string | undefined);
+        if (key && (this.services as Record<string, unknown>)[key]) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete (this.services as Record<string, unknown>)[key];
+        }
+    }
+
+    public isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {
         return (
             typeof obj === 'function' &&
             obj.prototype instanceof KpgService &&
