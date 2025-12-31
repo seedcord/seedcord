@@ -9,11 +9,10 @@ import { Plugin } from '@interfaces/Plugin';
 
 import { EffectMetadataKey } from './decorators/RegisterEffect';
 import { UnknownException } from './default/UnknownException';
-import { EffectsEmitter } from './EffectsEmitter';
 import { EffectsHandler } from './EffectsHandler';
 
 import type { RegisterEffectMetadataEntry } from './decorators/RegisterEffect';
-import type { AllEffects, EffectKeys } from './types/Effects';
+import type { AllEffects, EffectKeys, EffectsEvents } from './types/Effects';
 import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { HmrUpdateEvent } from '@seedcord/cli';
@@ -36,13 +35,12 @@ type EffectArtifact = EffectKeys[];
  *
  * @internal Accessed via core.effects, not directly instantiated
  */
-export class EffectsController extends Plugin {
+export class EffectsController extends Plugin<EffectsEvents> {
     public readonly logger = new Logger('Effects');
     public override readonly name = 'Effects';
     private isInitialized = false;
     private readonly effectsMap = new Collection<EffectKeys, RegisteredEffectHandlerEntry[]>();
     private readonly executedOnceHandlers = new Set<EffectConstructor>();
-    private readonly emitter = new EffectsEmitter();
     private readonly hmrHandler?: HmrModuleHandler<EffectConstructor, void, EffectArtifact>;
 
     constructor(protected core: Core) {
@@ -143,7 +141,7 @@ export class EffectsController extends Plugin {
         data: AllEffects[KeyOfEffects]
     ): boolean {
         void this.processEffect(event, data);
-        return this.emitter.emit(event, data);
+        return super.emit(event, data);
     }
 
     private async processEffect<KeyOfEffects extends EffectKeys>(

@@ -1,5 +1,4 @@
 export * from './EffectsController';
-export * from './EffectsEmitter';
 export * from './EffectsHandler';
 
 // Decorators

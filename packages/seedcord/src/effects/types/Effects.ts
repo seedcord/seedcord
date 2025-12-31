@@ -50,3 +50,12 @@ export type EffectKeys = keyof AllEffects;
  * @typeParam KeyOfEffects - The effect event name
  */
 export type EffectParams<KeyOfEffects extends EffectKeys> = AllEffects[KeyOfEffects];
+
+/**
+ * Event map for EffectsController, compatible with StrictEventEmitter.
+ *
+ * @internal
+ */
+export type EffectsEvents = {
+    [K in EffectKeys]: [AllEffects[K]];
+};
