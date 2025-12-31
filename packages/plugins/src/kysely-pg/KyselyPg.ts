@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import chalk from 'chalk';
+import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig } from 'pg';
 import { HmrModuleHandler, keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
@@ -39,7 +40,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     private readonly serviceRegistry: KpgServiceRegistry<Database>;
     private readonly databaseBootstrapper: KpgDatabaseBootstrapper;
     private databaseName: string | null = null;
-    private readonly hmrHandler: HmrModuleHandler<KyselyServiceConstructor<Database>, void, KyselyArtifact>;
+    private readonly hmrHandler?: HmrModuleHandler<KyselyServiceConstructor<Database>, void, KyselyArtifact>;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
@@ -62,6 +63,7 @@ export class KyselyPg<Database extends object> extends Plugin {
             this.options.timeout
         );
 
+        if (!Envapter.isDevelopment) return; // HMR only in development
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
             isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
@@ -78,7 +80,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     }
 
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler.handle(event);
+        await this.hmrHandler?.handle(event);
     }
 
     /**

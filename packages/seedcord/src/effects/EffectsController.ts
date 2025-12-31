@@ -2,6 +2,7 @@ import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection } from 'discord.js';
+import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { Plugin } from '@interfaces/Plugin';
@@ -48,6 +49,7 @@ export class EffectsController extends Plugin {
         super(core);
 
         if (this.core.config.effects.path) {
+            if (!Envapter.isDevelopment) return; // HMR only in development
             this.hmrHandler = new HmrModuleHandler({
                 handlersDir: this.core.config.effects.path,
                 isHandler: this.isEffectHandler.bind(this),

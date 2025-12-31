@@ -3,6 +3,7 @@ import { Logger } from '@seedcord/services';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
+import { Envapter } from 'envapt';
 
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
@@ -73,7 +74,7 @@ export class InteractionController implements Initializeable, HmrAware {
 
     private readonly middlewares: RegisteredMiddleware[] = [];
 
-    private readonly hmrHandler: HmrModuleHandler<
+    private readonly hmrHandler?: HmrModuleHandler<
         HandlerConstructor,
         InteractionMiddlewareConstructor,
         InteractionArtifact[]
@@ -108,6 +109,7 @@ export class InteractionController implements Initializeable, HmrAware {
             throw new Error('InteractionController instantiated without interactions path');
         }
 
+        if (!Envapter.isDevelopment) return; // HMR only in development
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: interactionsDir,
             ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&
@@ -188,7 +190,7 @@ export class InteractionController implements Initializeable, HmrAware {
                 for (const val of Object.values(imported)) {
                     if (!this.isHandlerClass(val)) continue;
                     this.registerHandler(val);
-                    this.hmrHandler.trackHandler(fullPath, val);
+                    this.hmrHandler?.trackHandler(fullPath, val);
                     this.logger.utils.registration(val.name, relativePath);
                 }
             },
@@ -206,7 +208,7 @@ export class InteractionController implements Initializeable, HmrAware {
                     if (metadata?.type !== MiddlewareType.Interaction) continue;
 
                     this.registerMiddleware(val, metadata, relativePath);
-                    this.hmrHandler.trackMiddleware(fullPath, val);
+                    this.hmrHandler?.trackMiddleware(fullPath, val);
                 }
             },
             this.logger
@@ -259,7 +261,7 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler.handle(event);
+        await this.hmrHandler?.handle(event);
     }
 
     private unregisterHandler(handlerClass: HandlerConstructor, artifacts?: InteractionArtifact[]): void {

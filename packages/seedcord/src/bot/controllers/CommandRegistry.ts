@@ -4,6 +4,7 @@ import { Logger } from '@seedcord/services';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
+import { Envapter } from 'envapt';
 
 import { CommandMetadataKey } from '@bDecorators/Command';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
@@ -40,7 +41,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public readonly guildCommands = new Collection<string, (SlashCommandBuilder | ContextMenuCommandBuilder)[]>();
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
-    private readonly hmrHandler: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
+    private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
 
     public constructor(private readonly core: Core) {
         const commandsDir = this.core.config.bot.commands.path;
@@ -48,6 +49,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             throw new Error('CommandRegistry instantiated without commands path');
         }
 
+        if (!Envapter.isDevelopment) return; // HMR only in development
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: commandsDir,
             isHandler: this.isCommandClass.bind(this),
@@ -86,7 +88,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler.handle(event);
+        await this.hmrHandler?.handle(event);
 
         const commandsDir = this.core.config.bot.commands.path;
         if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {

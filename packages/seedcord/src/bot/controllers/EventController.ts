@@ -2,6 +2,7 @@ import { Logger } from '@seedcord/services';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
+import { Envapter } from 'envapt';
 
 import { EventMetadataKey } from '@bDecorators/Events';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
@@ -51,7 +52,11 @@ export class EventController implements Initializeable, HmrAware {
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
-    private readonly hmrHandler: HmrModuleHandler<EventHandlerConstructor, EventMiddlewareConstructor, EventArtifact[]>;
+    private readonly hmrHandler?: HmrModuleHandler<
+        EventHandlerConstructor,
+        EventMiddlewareConstructor,
+        EventArtifact[]
+    >;
 
     public constructor(protected core: Core) {
         const eventsDir = this.core.config.bot.events.path;
@@ -60,6 +65,7 @@ export class EventController implements Initializeable, HmrAware {
             throw new Error('EventController instantiated without events path');
         }
 
+        if (!Envapter.isDevelopment) return; // HMR only in development
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: eventsDir,
             ...(hasKeys(this.core.config.bot.events, ['middlewares'])
@@ -128,7 +134,7 @@ export class EventController implements Initializeable, HmrAware {
                 for (const val of Object.values(imported)) {
                     if (!this.isEventHandlerClass(val)) continue;
                     this.registerHandler(val);
-                    this.hmrHandler.trackHandler(fullPath, val);
+                    this.hmrHandler?.trackHandler(fullPath, val);
                     this.logger.utils.registration(val.name, relativePath);
                 }
             },
@@ -146,7 +152,7 @@ export class EventController implements Initializeable, HmrAware {
                     if (metadata?.type !== MiddlewareType.Event) continue;
 
                     this.registerMiddleware(val, metadata, relativePath);
-                    this.hmrHandler.trackMiddleware(fullPath, val);
+                    this.hmrHandler?.trackMiddleware(fullPath, val);
                 }
             },
             this.logger
@@ -154,7 +160,7 @@ export class EventController implements Initializeable, HmrAware {
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler.handle(event);
+        await this.hmrHandler?.handle(event);
     }
 
     private unregisterHandler(handlerClass: EventHandlerConstructor, artifacts?: EventArtifact[]): void {

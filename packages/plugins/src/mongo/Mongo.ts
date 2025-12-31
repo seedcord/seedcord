@@ -49,7 +49,7 @@ export class Mongo extends Plugin {
 
     /** Exposed Mongoose instance once `init` completes. */
     declare public connection: Mongoose;
-    private readonly hmrHandler: HmrModuleHandler<MongoServiceConstructor, void, MongoArtifact>;
+    private readonly hmrHandler?: HmrModuleHandler<MongoServiceConstructor, void, MongoArtifact>;
 
     constructor(
         public readonly core: Core,
@@ -65,6 +65,7 @@ export class Mongo extends Plugin {
             this.options.timeout
         );
 
+        if (!Envapter.isDevelopment) return; // HMR only in development
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
             isHandler: this.isServiceClass.bind(this),
@@ -85,7 +86,7 @@ export class Mongo extends Plugin {
     }
 
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
-        await this.hmrHandler.handle(event);
+        await this.hmrHandler?.handle(event);
     }
 
     public async init(): Promise<void> {
