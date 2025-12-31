@@ -137,6 +137,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         try {
             // Execute each phase in order
             for (const phase of PHASE_ORDER) {
+                // This can be set to false in case of an abort initiated by the cli
                 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                 if (!this.isStartingUp) {
                     this.logger.warn('Startup sequence aborted');
@@ -149,6 +150,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
             this.logger.info(`${chalk.bold.green('Coordinated startup completed')} successfully`);
             this.emit('startup:complete');
         } catch (error) {
+            // This can be set to false in case of an abort initiated by the cli
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
             if (!this.isStartingUp) {
                 this.logger.warn('Startup sequence aborted during error handling');

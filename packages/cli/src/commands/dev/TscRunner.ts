@@ -1,4 +1,4 @@
-import { spawn, type ChildProcess } from 'child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 
 import { Logger } from '@seedcord/services';
 
@@ -10,7 +10,7 @@ export class TscRunner {
         private readonly tsconfigPath?: string,
         private readonly cwd?: string
     ) {
-        this.logger = new Logger('tsc', { channel: 'tsc' });
+        this.logger = new Logger('Typecheck', { channel: 'tsc' });
     }
 
     public start(): void {

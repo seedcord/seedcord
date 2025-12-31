@@ -40,7 +40,7 @@ export class KpgServiceRegistry<Database extends object> {
                         const instance = new Service(this.plugin, this.core);
                         this.logger.utils.registration(instance.constructor.name, rel);
 
-                        // @ts-expect-error - private access on hmrHandler
+                        // @ts-expect-error - private access on hmrHandler. hmrHandler is private as it's a development only api used by hmr
                         this.plugin.hmrHandler?.trackHandler(fullPath, Service);
                     }
                 }

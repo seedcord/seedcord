@@ -93,8 +93,8 @@ describe('DevRunner', () => {
         const runner = new DevRunner(locator as never, configLoader as never);
 
         // Spy on private method handleError to rethrow error so we can assert it
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vi.spyOn(runner as any, 'handleError').mockImplementation((_actions: unknown, error: unknown) => {
+        // @ts-expect-error accessing private method
+        vi.spyOn(runner, 'handleError').mockImplementation((_actions: unknown, error: unknown) => {
             throw error;
         });
 
