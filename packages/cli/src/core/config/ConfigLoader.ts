@@ -31,7 +31,6 @@ export class ConfigLoader {
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
         const tsconfig = config.tsconfig ? resolve(root, config.tsconfig) : undefined;
-        const preventCtrlC = config.preventCtrlC ?? false;
 
         this.logger.info(`Loaded configuration from ${configPath}`);
         this.logger.debug(`Resolved root: ${root}`);
@@ -48,8 +47,7 @@ export class ConfigLoader {
             configFile: configPath,
             entry,
             build,
-            tsconfig,
-            preventCtrlC
+            tsconfig
         } satisfies ResolvedSeedcordDevConfig;
     }
 
@@ -99,7 +97,6 @@ export class ConfigLoader {
         if (typeof cfg.root === 'string') normalized.root = cfg.root;
         if (typeof cfg.tsconfig === 'string') normalized.tsconfig = cfg.tsconfig;
         if (cfg.build) normalized.build = cfg.build;
-        if (typeof cfg.preventCtrlC === 'boolean') normalized.preventCtrlC = cfg.preventCtrlC;
 
         return normalized;
     }

@@ -38,7 +38,6 @@ describe('HmrPlugin', () => {
         entry: 'src/index.ts',
         instance: 'src/Seedcord.ts',
         tsconfig: 'tsconfig.json',
-        preventCtrlC: false,
         build: {
             outDir: 'dist',
             bootstrap: 'bootstrap.js'

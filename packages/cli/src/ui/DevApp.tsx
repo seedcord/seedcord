@@ -27,7 +27,6 @@ interface DevAppActions {
 
 interface DevAppProps {
     readonly onReady: (actions: DevAppActions) => void;
-    readonly preventCtrlC?: boolean;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
@@ -80,7 +79,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
 
     useInput(
         // eslint-disable-next-line max-statements, complexity
-        (input) => {
+        (input, key) => {
             if (commandUpdatePrompt) {
                 if (input === 'y') {
                     void onRefreshCommands?.(true);
@@ -121,7 +120,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
                 return;
             }
 
-            if (input === 'c') {
+            if (input === 'c' && !key.ctrl) {
                 setShowChannels(true);
                 return;
             }

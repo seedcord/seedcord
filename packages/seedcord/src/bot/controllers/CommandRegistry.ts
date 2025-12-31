@@ -80,21 +80,24 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         if (import.meta.hot) {
             import.meta.hot.on('seedcord:refresh-commands', (data) => {
-                if (!data.shouldRefresh) {
-                    this.logger.info(chalk.italic('Command refresh cancelled.'));
-                    this.pendingEvents.clear();
-                    return;
-                }
-                void (async () => {
-                    this.logger.info(chalk.italic('Refreshing commands...'));
-                    for (const event of this.pendingEvents.values()) {
-                        await this.hmrHandler?.handle(event);
-                    }
-                    this.pendingEvents.clear();
-                    await this.setCommands();
-                })();
+                void this.refresh(data.shouldRefresh);
             });
         }
+    }
+
+    public async refresh(shouldRefresh = true): Promise<void> {
+        if (!shouldRefresh) {
+            this.logger.info(chalk.italic('Command refresh cancelled.'));
+            this.pendingEvents.clear();
+            return;
+        }
+
+        this.logger.info(chalk.italic('Refreshing commands...'));
+        for (const event of this.pendingEvents.values()) {
+            await this.hmrHandler?.handle(event);
+        }
+        this.pendingEvents.clear();
+        await this.setCommands();
     }
 
     public async onHmr(event: HmrUpdateEvent): Promise<void> {

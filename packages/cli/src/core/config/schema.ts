@@ -41,10 +41,6 @@ export interface SeedcordDevConfig {
      */
     tsconfig?: string;
     /**
-     * Whether to prevent the CLI from exiting on Ctrl+C. (default: `false`).
-     */
-    preventCtrlC?: boolean;
-    /**
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;

@@ -1,4 +1,3 @@
-import { hexToNumber } from '@seedcord/utils';
 import {
     ActionRowBuilder,
     ButtonBuilder,
@@ -28,6 +27,7 @@ import {
 import { Envapt } from 'envapt';
 import { Join, NonEmptyTuple } from 'type-fest';
 
+import { hexToNumber } from '@miscellaneous/hexToNumber';
 import { parseEnvColor } from '@miscellaneous/parseEnvColor';
 
 import type { ColorResolvable } from 'discord.js';

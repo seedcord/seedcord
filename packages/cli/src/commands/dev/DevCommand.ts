@@ -26,18 +26,9 @@ export class DevCommand extends BaseCommand {
                 try {
                     // eslint-disable-next-line no-console
                     console.clear();
-                    let preventCtrlC = false;
-
-                    try {
-                        const config = await this.runner.loadConfig();
-                        preventCtrlC = config.preventCtrlC;
-                    } catch {
-                        // Ignore error, will be handled in runner
-                    }
 
                     const { unmount, waitUntilExit } = render(
                         React.createElement(DevApp, {
-                            preventCtrlC,
                             onQuit: () => this.runner.quit(),
                             onDisconnect: () => this.runner.disconnect(),
                             onRestart: () => this.runner.restart(),
@@ -62,11 +53,9 @@ export class DevCommand extends BaseCommand {
                         }
                     );
 
-                    if (!preventCtrlC) {
-                        process.on('SIGINT', () => {
-                            void this.runner.quit();
-                        });
-                    }
+                    process.on('SIGINT', () => {
+                        void this.runner.quit();
+                    });
 
                     await waitUntilExit();
                     process.exit(0);

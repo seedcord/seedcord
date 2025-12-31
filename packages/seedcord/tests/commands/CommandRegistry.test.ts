@@ -121,6 +121,8 @@ describe('CommandRegistry Integration', () => {
             type: 'update'
         });
 
+        await seedcord.bot.commands.refresh();
+
         expect(seedcord.bot.commands.globalCommands).toHaveLength(1);
         expect(seedcord.bot.commands.globalCommands[0]?.name).toBe('pong');
     });

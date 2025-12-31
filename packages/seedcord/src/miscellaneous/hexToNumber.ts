@@ -1,11 +1,5 @@
 import { SeedcordError, SeedcordErrorCode, SeedcordTypeError } from '@seedcord/services';
 
-/**
- * Converts hexcode to number
- *
- * @param hex - The hex code to convert.
- * @returns The converted number.
- */
 export function hexToNumber(hex: string): number {
     if (typeof hex !== 'string') {
         throw new SeedcordTypeError(SeedcordErrorCode.UtilHexInputType);

@@ -1,7 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import type { Logger } from '@seedcord/services';
+import type { ILogger } from '@seedcord/types';
 import type * as fs from 'node:fs';
 
 /**
@@ -29,7 +29,7 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
 export async function traverseDirectory(
     dir: string,
     callback: (fullPath: string, relativePath: string, imported: Record<string, unknown>) => Promise<void> | void,
-    logger: Logger
+    logger: ILogger
 ): Promise<void> {
     let entries: fs.Dirent[];
 

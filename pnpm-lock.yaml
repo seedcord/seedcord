@@ -591,9 +591,6 @@ importers:
 
   packages/utils:
     dependencies:
-      '@seedcord/services':
-        specifier: workspace:*
-        version: link:../services
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
