@@ -21,7 +21,7 @@ function DesktopSearchButton(): ReactElement {
     return (
         <Button
             variant="ghost"
-            className="group shadow-soft w-full max-w-70 items-center justify-between rounded-xl border border-(--border-mix-accent-a-12) bg-(--bg-surface-light) px-3 py-2 text-sm text-(--text) transition hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle) focus:border-(--border-accent-a-moderate) focus:ring-2 focus:ring-(--outline-accent-a-moderate) focus:ring-offset-2 focus:ring-offset-(--bg-surface-moderate-transparent) focus:outline-none"
+            className="group shadow-soft w-full max-w-70 items-center justify-between rounded-xl border border-(--bg-surface-light) bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) transition hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle) focus:border-(--border-accent-a-moderate) focus:ring-2 focus:ring-(--outline-accent-a-moderate) focus:ring-offset-2 focus:ring-offset-(--bg-surface-moderate-transparent) focus:outline-none"
             onClick={handleClick}
             aria-label="Search documentation"
         >
