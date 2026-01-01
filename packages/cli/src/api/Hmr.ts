@@ -1,0 +1,32 @@
+/**
+ * Type of HMR event.
+ */
+export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'deleteDir';
+
+/**
+ * Payload for the HMR update event.
+ */
+export interface HmrUpdateEvent {
+    file: string;
+    type: HmrEventType;
+    /**
+     * List of files that are affected by this update (e.g., importers).
+     * Only populated for 'update' events.
+     */
+    affectedModules?: string[];
+}
+
+/**
+ * Interface for HMR handlers that can process hot updates for specific modules.
+ */
+export interface HmrAware {
+    /**
+     * A name to identify the HMR-aware module (for logging/debugging purposes).
+     */
+    readonly name: string;
+
+    /**
+     * Method that is called on HMR update and receives the full update event.
+     */
+    onHmr(event: HmrUpdateEvent): Promise<void>;
+}

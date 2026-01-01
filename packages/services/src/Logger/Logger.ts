@@ -23,11 +23,12 @@ export class Logger implements ILogger {
 
     private static readonly instances = new Map<string, Logger>();
 
-    private static instance(prefix: string): Logger {
-        let instance = this.instances.get(prefix);
+    private static instance(prefix: string, channel?: string): Logger {
+        const key = channel ? `${channel}::${prefix}` : prefix;
+        let instance = this.instances.get(key);
         if (!instance) {
-            instance = new Logger(prefix);
-            this.instances.set(prefix, instance);
+            instance = new Logger(prefix, channel ? { channel } : undefined);
+            this.instances.set(key, instance);
         }
         return instance;
     }
@@ -66,6 +67,15 @@ export class Logger implements ILogger {
     public setChannel(channel: string): void {
         this.channel = channel;
         this.logger = this.registry.get(channel).child({ label: this.label, channel });
+    }
+
+    /**
+     * Returns a new Logger instance configured for the specified channel. Loggers are cached per (label, channel) pair.
+     *
+     * @param channel - Channel name to use
+     */
+    public inChannel(channel: string): Logger {
+        return Logger.instance(this.label, channel);
     }
 
     /**

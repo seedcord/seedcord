@@ -5,8 +5,10 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
+            "@src/*": ["./src/*"],
             "@bot/*": ["./src/bot/*"],
             "@effects/*": ["./src/effects/*"],
+            "@hmr/*": ["./src/hmr/*"],
             "@interfaces/*": ["./src/interfaces/*"],
             "@miscellaneous/*": ["./src/miscellaneous/*"],
 
@@ -15,8 +17,9 @@
             "@bUtilities/*": ["./src/bot/utilities/*"],
             "@bControllers/*": ["./src/bot/controllers/*"],
             "@bDecorators/*": ["./src/bot/decorators/*"]
-        }
+        },
+        "types": ["vite/client"]
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

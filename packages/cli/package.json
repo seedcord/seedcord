@@ -24,16 +24,19 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.mjs",
             "default": "./dist/index.mjs"
+        },
+        "./vite-hmr": {
+            "types": "./dist/api/vite-hmr.d.ts"
         }
     },
     "scripts": {
         "dev": "tsx src/cli.ts",
         "build": "tsup",
         "clean": "rm -rf dist",
-        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "tc": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
@@ -43,22 +46,28 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@clack/prompts": "^0.11.0",
         "@commander-js/extra-typings": "^14.0.0",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
-        "ansi-escapes": "^7.2.0",
+        "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "commander": "^14.0.2",
         "fix-esm-import-path": "^1.10.3",
+        "ink": "^6.6.0",
+        "ink-spinner": "^5.0.0",
         "jiti": "^2.6.1",
-        "tsup": "catalog:peer",
-        "tsx": "catalog:peer"
+        "minimatch": "^10.1.1",
+        "react": "catalog:deps",
+        "tsx": "catalog:peer",
+        "vite": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsup-config": "workspace:*",
+        "@types/react": "catalog:deps",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^7.0.1",
         "typescript": "catalog:peer"
     },
     "publishConfig": {

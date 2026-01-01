@@ -1,4 +1,3 @@
-import { hexToNumber } from '@seedcord/utils';
 import {
     ActionRowBuilder,
     ButtonBuilder,
@@ -28,6 +27,7 @@ import {
 import { Envapt } from 'envapt';
 import { Join, NonEmptyTuple } from 'type-fest';
 
+import { hexToNumber } from '@miscellaneous/hexToNumber';
 import { parseEnvColor } from '@miscellaneous/parseEnvColor';
 
 import type { ColorResolvable } from 'discord.js';
@@ -124,7 +124,6 @@ export type InstantiatedActionRow<RowKey extends ActionRowComponentType> = Insta
 export abstract class BaseComponent<TComponent> {
     private readonly _component: TComponent;
 
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     protected constructor(ComponentClass: new () => TComponent) {
         this._component = new ComponentClass();
     }
@@ -225,8 +224,6 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
     }
 
     get component(): InstantiatedBuilder<BuilderKey> {
-        // TODO: Add checks for specific builders that make sure mandatory fields are set
-
         return this.instance;
     }
 }
@@ -241,7 +238,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
 export abstract class RowComponent<RowKey extends ActionRowComponentType> extends BaseComponent<
     InstantiatedActionRow<RowKey>
 > {
-    protected constructor(type: RowKey) {
+    protected constructor(public readonly type: RowKey) {
         const ComponentClass = RowTypes[type] as unknown;
         super(ComponentClass as new () => InstantiatedActionRow<RowKey>);
     }

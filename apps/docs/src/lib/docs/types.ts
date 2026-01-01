@@ -128,7 +128,8 @@ export interface CategoryConfig {
 export type EntityKind = EntityTone;
 
 export interface BaseEntityModel
-    extends WithCode<'signature'>,
+    extends
+        WithCode<'signature'>,
         WithDocs<'summary', 'summaryExamples'>,
         WithSourceUrl,
         WithDeprecationStatus,
@@ -152,10 +153,7 @@ export interface ClassLikeEntityModel extends BaseEntityModel {
 }
 
 export interface EnumMemberModel
-    extends WithCode<'signature'>,
-        WithSummary<'summary'>,
-        WithSourceUrl,
-        WithDeprecationStatus {
+    extends WithCode<'signature'>, WithSummary<'summary'>, WithSourceUrl, WithDeprecationStatus {
     id: string;
     label: string;
     value?: DocNode['defaultValue'];

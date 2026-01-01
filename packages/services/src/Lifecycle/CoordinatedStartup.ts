@@ -98,20 +98,9 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         phase: StartupPhase,
         tasks: LifecycleTask[]
     ): Promise<PromiseSettledResult<void>[]> {
-        // Execute all tasks in sequence
-        const results: PromiseSettledResult<void>[] = [];
-        for (const task of tasks) {
-            results.push(
-                await Promise.resolve()
-                    .then(() => this.runTaskWithTimeout(phase, task))
-                    .then(
-                        () => ({ status: 'fulfilled', value: undefined }) satisfies PromiseSettledResult<void>,
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                        (reason) => ({ status: 'rejected', reason }) satisfies PromiseSettledResult<void>
-                    )
-            );
-        }
-        return results;
+        // Execute all tasks in parallel
+        const promises = tasks.map((task) => this.runTaskWithTimeout(phase, task));
+        return Promise.allSettled(promises);
     }
 
     /**
@@ -147,17 +136,79 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
 
         try {
             // Execute each phase in order
-            for (const phase of PHASE_ORDER) await this.runPhase(phase);
+            for (const phase of PHASE_ORDER) {
+                // This can be set to false in case of an abort initiated by the cli
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                if (!this.isStartingUp) {
+                    this.logger.warn('Startup sequence aborted');
+                    return;
+                }
+                await this.runPhase(phase);
+            }
 
             this.hasStarted = true;
             this.logger.info(`${chalk.bold.green('Coordinated startup completed')} successfully`);
             this.emit('startup:complete');
         } catch (error) {
+            // This can be set to false in case of an abort initiated by the cli
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            if (!this.isStartingUp) {
+                this.logger.warn('Startup sequence aborted during error handling');
+                return;
+            }
             this.logger.error(`${chalk.bold.red('Coordinated startup failed')}`);
             this.emit('startup:error', error);
             throw error;
         } finally {
             this.isStartingUp = false;
+        }
+    }
+
+    protected override async runTaskWithTimeout(phase: StartupPhase, task: LifecycleTask): Promise<void> {
+        this.logger.info(
+            `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}`
+        );
+
+        let timeoutId: NodeJS.Timeout | undefined;
+
+        try {
+            // Create a race between the task and a timeout
+            await Promise.race([
+                task.task(),
+                new Promise<void>((_, reject) => {
+                    timeoutId = setTimeout(() => {
+                        reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [task.name, task.timeout]));
+                    }, task.timeout);
+                })
+            ]);
+
+            this.logger.info(
+                `${chalk.italic('Completed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}`
+            );
+        } catch (error) {
+            if (!this.isStartingUp) {
+                return;
+            }
+
+            this.logger.error(
+                `${chalk.italic('Failed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}:`,
+                error
+            );
+            throw error;
+        } finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+        }
+    }
+
+    /**
+     * Aborts the startup sequence if it is currently running.
+     */
+    public abort(): void {
+        if (this.isStartingUp) {
+            this.isStartingUp = false;
+            this.logger.warn('Aborting coordinated startup sequence');
         }
     }
 

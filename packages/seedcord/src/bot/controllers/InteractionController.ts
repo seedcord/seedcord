@@ -1,20 +1,23 @@
+/* eslint-disable max-lines */
 import { Logger } from '@seedcord/services';
-import { traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
+import { Envapter } from 'envapt';
 
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { UnhandledEvent } from '@bot/defaults';
 import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
+import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
-
-import { UnhandledEvent } from '../defaults/UnhandledEvent';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { Core } from '@interfaces/Core';
 import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,
@@ -29,6 +32,11 @@ import type {
     UserContextMenuCommandInteraction,
     UserSelectMenuInteraction
 } from 'discord.js';
+
+interface InteractionArtifact {
+    routeType: InteractionRoutes;
+    routes: string[];
+}
 
 interface RegisteredMiddleware {
     readonly ctor: InteractionMiddlewareConstructor;
@@ -45,9 +53,11 @@ interface RegisteredMiddleware {
  *
  * @internal
  */
-export class InteractionController implements Initializeable {
+export class InteractionController implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions');
     private isInitialized = false;
+
+    public readonly name: string = 'Interactions';
 
     private readonly slashMap = new Collection<string, HandlerConstructor>();
     private readonly buttonMap = new Collection<string, HandlerConstructor>();
@@ -65,12 +75,67 @@ export class InteractionController implements Initializeable {
 
     private readonly middlewares: RegisteredMiddleware[] = [];
 
+    private readonly hmrHandler?: HmrModuleHandler<
+        HandlerConstructor,
+        InteractionMiddlewareConstructor,
+        InteractionArtifact[]
+    >;
+
+    private readonly routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
+        [InteractionRoutes.Slash, this.slashMap],
+        [InteractionRoutes.Button, this.buttonMap],
+        [InteractionRoutes.Modal, this.modalMap],
+        [InteractionRoutes.StringMenu, this.stringSelectMap],
+        [InteractionRoutes.UserMenu, this.userSelectMap],
+        [InteractionRoutes.RoleMenu, this.roleSelectMap],
+        [InteractionRoutes.ChannelMenu, this.channelSelectMap],
+        [InteractionRoutes.MentionableMenu, this.mentionableSelectMap],
+        [InteractionRoutes.MessageContextMenu, this.messageContextMenuMap],
+        [InteractionRoutes.UserContextMenu, this.userContextMenuMap],
+        [InteractionRoutes.Autocomplete, this.autocompleteMap]
+    ];
+
     constructor(protected core: Core) {
         // Add ignored keys from config
-        const ignoredKeysFromConfig = this.core.config.bot.interactions.ignoreCustomIds;
+        const ignoredKeysFromConfig = hasKeys(this.core.config.bot.interactions, ['ignoreCustomIds'])
+            ? this.core.config.bot.interactions.ignoreCustomIds
+            : undefined;
         if (ignoredKeysFromConfig) {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
+
+        const interactionsDir = this.core.config.bot.interactions.path;
+        if (!interactionsDir) {
+            // This should never happen as InteractionController is only instantiated if path is set. But if it does, it should stop the whole process.
+            throw new Error('InteractionController instantiated without interactions path');
+        }
+
+        if (!Envapter.isDevelopment) return; // HMR only in development
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: interactionsDir,
+            ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&
+            this.core.config.bot.interactions.middlewares
+                ? { middlewaresDir: this.core.config.bot.interactions.middlewares }
+                : {}),
+            isHandler: this.isHandlerClass.bind(this),
+            isMiddleware: this.isMiddlewareClass.bind(this),
+            registerHandler: this.registerHandler.bind(this),
+            registerMiddleware: this.registerMiddleware.bind(this),
+            unregisterHandler: this.unregisterHandler.bind(this),
+            unregisterMiddleware: this.unregisterMiddleware.bind(this),
+            getArtifacts: this.getArtifacts.bind(this),
+            logger: this.logger,
+            name: 'Interaction'
+        });
+    }
+
+    private getArtifacts(handlerClass: HandlerConstructor): InteractionArtifact[] {
+        const artifacts: InteractionArtifact[] = [];
+        for (const [routeType] of this.routeTypes) {
+            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            if (areRoutes(meta)) artifacts.push({ routeType, routes: meta });
+        }
+        return artifacts;
     }
 
     public async init(): Promise<void> {
@@ -79,9 +144,14 @@ export class InteractionController implements Initializeable {
         this.isInitialized = true;
 
         const handlersDir = this.core.config.bot.interactions.path;
+        // Already checked in constructor
+        if (!handlersDir) return;
+
         this.logger.info(chalk.bold(handlersDir));
 
-        const middlewareDir = this.core.config.bot.interactions.middlewares;
+        const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
+            ? this.core.config.bot.interactions.middlewares
+            : undefined;
         if (middlewareDir) {
             this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
             await this.loadMiddlewares(middlewareDir);
@@ -110,11 +180,11 @@ export class InteractionController implements Initializeable {
     private async loadHandlers(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isHandlerClass(val)) continue;
-                    this.registerHandler(val);
-                    this.logger.utils.registration(val.name, relativePath);
+                    this.registerHandler(val, relativePath);
+                    this.hmrHandler?.trackHandler(fullPath, val);
                 }
             },
             this.logger
@@ -124,28 +194,30 @@ export class InteractionController implements Initializeable {
     private async loadMiddlewares(dir: string): Promise<void> {
         await traverseDirectory(
             dir,
-            (_fullPath, relativePath, imported) => {
+            (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isMiddlewareClass(val)) continue;
-                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
-                    if (metadata?.type !== MiddlewareType.Interaction) continue;
 
-                    this.registerMiddleware(val, metadata, relativePath);
+                    this.registerMiddleware(val, relativePath);
+                    this.hmrHandler?.trackMiddleware(fullPath, val);
                 }
             },
             this.logger
         );
     }
 
-    private registerMiddleware(
-        middlewareCtor: InteractionMiddlewareConstructor,
-        metadata: MiddlewareMetadata,
-        relativePath: string
-    ): void {
-        const alreadyRegistered = this.middlewares.some((entry) => entry.ctor === middlewareCtor);
-        if (alreadyRegistered) return;
+    private registerMiddleware(middlewareCtor: InteractionMiddlewareConstructor, relativePath: string): void {
+        const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middlewareCtor) as MiddlewareMetadata | undefined;
+        if (metadata?.type !== MiddlewareType.Interaction) return;
 
-        this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        const existingIndex = this.middlewares.findIndex((entry) => entry.ctor.name === middlewareCtor.name);
+
+        if (existingIndex !== -1) {
+            this.middlewares[existingIndex] = { ctor: middlewareCtor, priority: metadata.priority };
+        } else {
+            this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        }
+
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
         this.logger.utils.registration(
@@ -168,26 +240,46 @@ export class InteractionController implements Initializeable {
         return obj.prototype instanceof InteractionMiddleware && Reflect.hasMetadata(MiddlewareMetadataKey, obj);
     }
 
-    private registerHandler(handlerClass: HandlerConstructor): void {
-        const routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
-            [InteractionRoutes.Slash, this.slashMap],
-            [InteractionRoutes.Button, this.buttonMap],
-            [InteractionRoutes.Modal, this.modalMap],
-            [InteractionRoutes.StringMenu, this.stringSelectMap],
-            [InteractionRoutes.UserMenu, this.userSelectMap],
-            [InteractionRoutes.RoleMenu, this.roleSelectMap],
-            [InteractionRoutes.ChannelMenu, this.channelSelectMap],
-            [InteractionRoutes.MentionableMenu, this.mentionableSelectMap],
-            [InteractionRoutes.MessageContextMenu, this.messageContextMenuMap],
-            [InteractionRoutes.UserContextMenu, this.userContextMenuMap],
-            [InteractionRoutes.Autocomplete, this.autocompleteMap]
-        ];
-        for (const [routeType, map] of routeTypes) {
+    private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
+        for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
             if (!areRoutes(meta)) continue;
 
             const routes = meta;
             routes.forEach((route) => map.set(route, handlerClass));
+
+            this.logger.utils.registration(handlerClass.name, formatFilePath(relativePath));
+        }
+    }
+
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.hmrHandler?.handle(event);
+    }
+
+    private unregisterHandler(handlerClass: HandlerConstructor, artifacts?: InteractionArtifact[]): void {
+        if (artifacts) {
+            for (const { routeType, routes } of artifacts) {
+                const map = this.routeTypes.find(([type]) => type === routeType)?.[1];
+                if (map) {
+                    routes.forEach((route) => map.delete(route));
+                }
+            }
+            return;
+        }
+
+        for (const [routeType, map] of this.routeTypes) {
+            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            if (!areRoutes(meta)) continue;
+
+            const routes = meta;
+            routes.forEach((route) => map.delete(route));
+        }
+    }
+
+    private unregisterMiddleware(middlewareCtor: InteractionMiddlewareConstructor): void {
+        const index = this.middlewares.findIndex((entry) => entry.ctor === middlewareCtor);
+        if (index !== -1) {
+            this.middlewares.splice(index, 1);
         }
     }
 

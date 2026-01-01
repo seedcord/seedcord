@@ -231,7 +231,7 @@ export class KpgMigrationManager<Database extends object> {
 
         this.ctx.logger.info('Loading migration file(s):');
         for (const file of files) {
-            this.ctx.logger.info(`→ ${chalk.yellow(this.relativePath(file))}`);
+            this.ctx.logger.utils.item(`${chalk.yellow(this.relativePath(file))}`);
         }
     }
 
@@ -240,7 +240,7 @@ export class KpgMigrationManager<Database extends object> {
 
         this.ctx.logger.info('Prepared migrations:');
         for (const [name] of entries) {
-            this.ctx.logger.info(`→ ${chalk.green(name)}`);
+            this.ctx.logger.utils.item(`${chalk.green(name)}`);
         }
     }
 

@@ -26,10 +26,10 @@
     "scripts": {
         "build": "tsup",
         "clean": "rm -rf dist",
-        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "tc": "tsc --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
@@ -40,7 +40,6 @@
     },
     "dependencies": {
         "@seedcord/types": "workspace:*",
-        "@seedcord/services": "workspace:*",
         "type-fest": "catalog:deps"
     },
     "devDependencies": {

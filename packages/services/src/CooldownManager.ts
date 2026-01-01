@@ -61,8 +61,7 @@ export class CooldownManager {
         const remaining = this.window - (now - (last ?? 0));
 
         if (Envapter.isDevelopment && remaining > 0) {
-            const logger = new Logger('CooldownManager');
-            logger.debug(`${key} - ${remaining}ms remaining`);
+            Logger.Debug('CooldownManager', `${key} - ${remaining}ms remaining`);
         }
 
         if (last !== undefined && remaining > 0) {

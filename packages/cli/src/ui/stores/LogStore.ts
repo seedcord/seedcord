@@ -1,0 +1,102 @@
+import { LoggerChannelRegistry, StrictEventEmitter } from '@seedcord/services';
+
+import type { ILoggerSink, ILoggerSinkHandle, LoggerSinkLogEntry } from '@seedcord/services';
+
+export interface LogEntry {
+    id: number;
+    channel: string;
+    text: string;
+    timestamp: number;
+}
+
+interface LogStoreEvents {
+    change: [];
+}
+
+export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILoggerSink {
+    private static _instance: LogStore | null = null;
+
+    private entries: LogEntry[] = [];
+    private buffer: LogEntry[] = [];
+    private nextId = 1;
+    private sinkHandle: ILoggerSinkHandle | null = null;
+    private pendingUpdate = false;
+    private readonly MAX_LOGS = 1000;
+
+    private constructor() {
+        super();
+    }
+
+    public static get instance(): LogStore {
+        LogStore._instance ??= new LogStore();
+        return LogStore._instance;
+    }
+
+    public mount(): void {
+        if (this.sinkHandle) return;
+        this.sinkHandle = LoggerChannelRegistry.instance.installSink(this, {
+            muteConsole: true
+        });
+    }
+
+    public unmount(): void {
+        if (!this.sinkHandle) return;
+        this.sinkHandle.dispose();
+        this.sinkHandle = null;
+    }
+
+    public onLog(entry: LoggerSinkLogEntry): void {
+        const lines = entry.rendered.split(/\r?\n/);
+        const now = Date.now();
+
+        for (const line of lines) {
+            this.buffer.push({
+                id: this.nextId++,
+                channel: entry.channel,
+                text: line,
+                timestamp: now
+            });
+        }
+
+        this.scheduleUpdate();
+    }
+
+    public getLogs(channel?: string): readonly LogEntry[] {
+        if (!channel) return this.entries;
+        return this.entries.filter((e) => e.channel === channel);
+    }
+
+    public clear(channel?: string): void {
+        if (channel) {
+            this.entries = this.entries.filter((e) => e.channel !== channel);
+            this.buffer = this.buffer.filter((e) => e.channel !== channel);
+        } else {
+            this.entries = [];
+            this.buffer = [];
+        }
+        this.emit('change');
+    }
+
+    private scheduleUpdate(): void {
+        if (this.pendingUpdate) return;
+        this.pendingUpdate = true;
+        const TARGET_FPS = 30;
+
+        setTimeout(() => {
+            this.pendingUpdate = false;
+
+            if (this.buffer.length > 0) {
+                const newEntries = [...this.entries, ...this.buffer];
+                this.buffer = [];
+
+                if (newEntries.length > this.MAX_LOGS) {
+                    this.entries = newEntries.slice(-this.MAX_LOGS);
+                } else {
+                    this.entries = newEntries;
+                }
+
+                this.emit('change');
+            }
+        }, TARGET_FPS);
+    }
+}

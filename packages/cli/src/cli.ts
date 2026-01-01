@@ -1,8 +1,8 @@
 import { Logger } from '@seedcord/services';
 import { Command } from 'commander';
 
-import { BuildCommand } from './commands/BuildCommand';
-import { DevCommand } from './commands/DevCommand';
+import { BuildCommand } from '@commands/build/BuildCommand';
+import { DevCommand } from '@commands/dev/DevCommand';
 
 import { version } from '.';
 
@@ -13,11 +13,10 @@ async function main(): Promise<void> {
         process.env.NODE_ENV = 'development';
     }
 
-    const logger = new Logger(LOGGER_LABEL);
     const program = new Command().name('seedcord').description('Seedcord CLI').version(version);
 
-    DevCommand.create(logger).register(program);
-    BuildCommand.create(logger).register(program);
+    new DevCommand().register(program);
+    new BuildCommand().register(program);
 
     await program.parseAsync(process.argv);
 }

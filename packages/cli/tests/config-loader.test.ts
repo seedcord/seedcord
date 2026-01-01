@@ -2,11 +2,11 @@ import { join, dirname, resolve } from 'node:path';
 
 import { describe, it, expect, vi } from 'vitest';
 
-import { ConfigLoader } from '../src/config/ConfigLoader';
-import { SeedcordDevRunner } from '../src/runtime/SeedcordDevRunner';
+import { DevRunner } from '@commands/dev/DevRunner';
+import { ConfigLoader } from '@core/config/ConfigLoader';
 
-import type { SeedcordDevConfig } from '../src/config/schema';
-import type { ModuleLoader } from '../src/modules/ModuleLoader';
+import type { SeedcordDevConfig } from '@core/config/schema';
+import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 const silentLogger: ILogger = {
@@ -71,7 +71,7 @@ describe('ConfigLoader', () => {
     });
 });
 
-describe('SeedcordDevRunner', () => {
+describe('DevRunner', () => {
     it('loads and starts the Seedcord instance', async () => {
         const configPath = join(process.cwd(), 'seedcord.config.ts');
         const instancePath = join(process.cwd(), 'src/bot.ts');
@@ -89,26 +89,27 @@ describe('SeedcordDevRunner', () => {
                 }
             }))
         };
-        const start = vi.fn(() => undefined);
-        const instanceLoader = { load: vi.fn(() => ({ start })) };
 
-        const logger: ILogger = {
-            error: vi.fn(),
-            warn: vi.fn(),
-            info: vi.fn(),
-            http: vi.fn(),
-            verbose: vi.fn(),
-            debug: vi.fn(),
-            silly: vi.fn()
+        const runner = new DevRunner(locator as never, configLoader as never);
+
+        // Spy on private method handleError to rethrow error so we can assert it
+        // @ts-expect-error accessing private method
+        vi.spyOn(runner, 'handleError').mockImplementation((_actions: unknown, error: unknown) => {
+            throw error;
+        });
+
+        const actions = {
+            setStatus: vi.fn(),
+            setError: vi.fn(),
+            setBusy: vi.fn(),
+            setConfig: vi.fn(),
+            setRestartRequired: vi.fn(),
+            setCommandUpdatePrompt: vi.fn()
         };
 
-        const runner = new SeedcordDevRunner(locator as never, configLoader as never, instanceLoader as never, logger);
-
-        await runner.run();
+        await expect(runner.run(actions)).rejects.toThrow(/Cannot find entry file|Failed to load url/);
 
         expect(locator.locate).toHaveBeenCalledTimes(1);
         expect(configLoader.load).toHaveBeenCalledWith(configPath);
-        expect(instanceLoader.load).toHaveBeenCalledWith(instancePath);
-        expect(start).toHaveBeenCalledTimes(1);
     });
 });

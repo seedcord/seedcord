@@ -1,3 +1,4 @@
+import type { Writable } from 'node:stream';
 import type { Logger as WinstonLogger, transport } from 'winston';
 
 /** Log level defining severity of a message */
@@ -7,24 +8,62 @@ export type LoggerLevel = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debu
 export type LoggerFormatMode = 'pretty' | 'json' | 'minimal';
 
 /**
- * Configuration for a logger transport (console or file).
+ * Base configuration shared by all transport types.
  */
-export interface TransportConfig {
-    /** Transport type: console or file output */
-    type: 'console' | 'file';
+interface BaseTransportConfig {
     /** Minimum log level for this transport */
     level?: LoggerLevel;
-    /** File path for file transports (supports `{channel}`, `{date}`, `{timestamp}` placeholders) */
-    filename?: string;
     /** Output format mode */
     format?: LoggerFormatMode;
     /** Whether to strip ANSI color codes from output */
     stripAnsi?: boolean;
+}
+
+/**
+ * Console transport configuration.
+ *
+ * Logs to stdout/stderr for terminal output.
+ */
+export interface ConsoleTransportConfig extends BaseTransportConfig {
+    /** Transport type */
+    type: 'console';
+}
+
+/**
+ * File transport configuration.
+ *
+ * Logs to rotating files with automatic directory creation.
+ */
+export interface FileTransportConfig extends BaseTransportConfig {
+    /** Transport type */
+    type: 'file';
+    /** File path (supports `{channel}`, `{date}`, `{timestamp}` placeholders) */
+    filename?: string;
     /** Maximum file size in bytes before rotation */
     maxSize?: number;
     /** Maximum number of rotated log files to keep */
     maxFiles?: number;
 }
+
+/**
+ * Stream transport configuration.
+ *
+ * Logs to any writable stream for custom destinations.
+ * Use this for logging to databases, network sockets, or custom handlers.
+ */
+export interface StreamTransportConfig extends BaseTransportConfig {
+    /** Transport type */
+    type: 'stream';
+    /** Writable stream to log to */
+    stream: Writable;
+}
+
+/**
+ * Configuration for a logger transport.
+ *
+ * Discriminated union ensuring type-safe transport configuration.
+ */
+export type TransportConfig = ConsoleTransportConfig | FileTransportConfig | StreamTransportConfig;
 
 /**
  * Configuration for a named logger channel.

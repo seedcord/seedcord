@@ -48,7 +48,7 @@ export const seedcord = new Seedcord({
         }
     },
     effects: {
-        path: resolve(import.meta.dirname, './effects')
+        path: null
     }
 }).attach('db', Mongo, StartupPhase.Configuration, {
     dir: resolve(import.meta.dirname, './services'),

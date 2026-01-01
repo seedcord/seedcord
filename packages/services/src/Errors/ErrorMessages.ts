@@ -7,6 +7,7 @@ import { SeedcordErrorCode } from './ErrorCodes';
  */
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
+    [SeedcordErrorCode.ConfigIncorrectDiscordToken]: () => 'Invalid DISCORD_BOT_TOKEN value.',
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing]: () =>
         'Missing UNKNOWN_EXCEPTION_WEBHOOK_URL environment variable.',
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid]: () => 'Invalid UNKNOWN_EXCEPTION_WEBHOOK_URL value.',
@@ -96,7 +97,8 @@ const messages = {
         `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
-        `Failed to write bootstrap file at ${targetPath}: ${reason}.`
+        `Failed to write bootstrap file at ${targetPath}: ${reason}.`,
+    [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.'
 } satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**
