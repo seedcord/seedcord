@@ -38,6 +38,14 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/eslint-config': {
         displayName: 'eslint-config',
         aliases: ['eslint', '@seedcord/eslint-config']
+    },
+    '@seedcord/tsup-config': {
+        displayName: 'tsup-config',
+        aliases: ['tsup', '@seedcord/tsup-config']
+    },
+    '@seedcord/cli': {
+        displayName: 'cli',
+        aliases: ['cli', '@seedcord/cli']
     }
 };
 
