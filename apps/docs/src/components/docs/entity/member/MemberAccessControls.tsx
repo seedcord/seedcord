@@ -41,7 +41,7 @@ function MemberAccessControls({
             <div
                 role="radiogroup"
                 aria-label={showLegend ? undefined : 'Member access level'}
-                className="border-border/60 bg-surface-97 inline-flex overflow-hidden rounded-full border"
+                className="border-border/60 bg-surface-subtle inline-flex overflow-hidden rounded-full border"
             >
                 {MEMBER_ACCESS_LEVELS.map((level, index) => {
                     const isActive = (initialLevel ?? memberAccessLevel) === level;
@@ -53,10 +53,10 @@ function MemberAccessControls({
                             aria-checked={isActive}
                             onClick={() => setMemberAccessLevel(level)}
                             className={cn(
-                                'relative px-3 py-1.5 text-xs font-medium transition-colors focus-visible:z-1 focus-visible:ring-1 focus-visible:ring-[color-mix(in_oklab,var(--accent-b)_35%,transparent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[color-mix(in_oklab,var(--surface)_98%,transparent)] focus-visible:outline-none',
+                                'relative px-3 py-1.5 text-xs font-medium transition-colors focus-visible:z-1 focus-visible:ring-1 focus-visible:ring-(--outline-accent-b-subtle) focus-visible:ring-offset-1 focus-visible:ring-offset-(--bg-surface-subtle-transparent) focus-visible:outline-none',
                                 index > 0 && 'border-border/50 border-l',
                                 isActive
-                                    ? 'bg-[color-mix(in_oklab,var(--accent-b)_15%,var(--surface)_85%)] text-[color-mix(in_oklab,var(--text)_92%,var(--accent-b)_8%)]'
+                                    ? 'bg-(--surface-accent-b-moderate) text-(--text-accent-b-faint)'
                                     : 'text-subtle hover:text-(--text)'
                             )}
                         >

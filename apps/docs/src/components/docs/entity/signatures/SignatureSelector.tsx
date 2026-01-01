@@ -33,8 +33,8 @@ function SignatureSelector({
                             className={cn(
                                 'cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition',
                                 checked
-                                    ? 'border-[color-mix(in_oklab,var(--accent-b)_48%,var(--border))] bg-[color-mix(in_oklab,var(--accent-b)_12%,var(--surface)_88%)] text-(--text)'
-                                    : 'border-border/70 text-subtle hover:border-[color-mix(in_oklab,var(--accent-b)_32%,var(--border))]'
+                                    ? 'border-(--border-accent-b-moderate) bg-(--surface-accent-b-moderate) text-(--text)'
+                                    : 'border-border/70 text-subtle hover:border-(--border-accent-b-subtle)'
                             )}
                         >
                             <input

@@ -18,7 +18,7 @@ interface CommandHeaderProps {
 function CommandHeader({ inputRef, onClose, onValueChange, searchValue }: CommandHeaderProps): ReactElement {
     return (
         <div className="border-border border-b px-4 py-3">
-            <div className="bg-surface-96 flex items-center gap-2 rounded-lg border border-(--border)/80 px-3 py-2 transition focus-within:border-[color-mix(in_oklab,var(--accent-b)_35%,var(--border))] focus-within:bg-[color-mix(in_oklab,var(--surface)_96%,var(--accent-b)_4%)]">
+            <div className="bg-surface-subtle flex items-center gap-2 rounded-lg border border-(--border)/80 px-3 py-2 transition focus-within:border-(--border-accent-b-subtle) focus-within:bg-(--surface-accent-b-subtle)">
                 <Icon icon={Search} size={16} className="text-subtle" aria-hidden />
 
                 <Command.Input
@@ -44,7 +44,7 @@ function CommandHeader({ inputRef, onClose, onValueChange, searchValue }: Comman
                     type="button"
                     onClick={onClose}
                     aria-label="Close command palette"
-                    className="bg-surface-96 text-subtle hidden items-center gap-1 rounded-md border border-(--border)/70 px-2 py-1 text-[0.7rem] font-semibold tracking-wide uppercase transition hover:border-[color-mix(in_oklab,var(--accent-b)_35%,var(--border))] hover:bg-[color-mix(in_oklab,var(--surface)_96%,var(--accent-b)_6%)] hover:text-[color-mix(in_oklab,var(--text)_85%,transparent)] sm:inline-flex"
+                    className="bg-surface-subtle text-subtle hidden items-center gap-1 rounded-md border border-(--border)/70 px-2 py-1 text-[0.7rem] font-semibold tracking-wide uppercase transition hover:border-(--border-accent-b-subtle) hover:bg-(--surface-accent-b-subtle) hover:text-(--text-muted-light) sm:inline-flex"
                 >
                     Esc
                 </button>

@@ -79,7 +79,7 @@ function CommandListItem({ action, onSelect }: CommandListItemProps): ReactEleme
             </span>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate font-medium transition-colors group-data-[selected=true]/item:text-[color-mix(in_oklab,var(--text)_85%,var(--accent-b)_15%)]">
+                    <span className="truncate font-medium transition-colors group-data-[selected=true]/item:text-(--text-accent-b-subtle)">
                         {action.label}
                     </span>
                 </div>

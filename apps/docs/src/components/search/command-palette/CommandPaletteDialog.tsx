@@ -42,7 +42,7 @@ function CommandListContent({
         );
     } else if (errorMessage) {
         emptyContent = (
-            <div className="mx-2 rounded-xl border border-[color-mix(in_oklab,var(--accent-b)_32%,var(--border))] bg-[color-mix(in_oklab,var(--accent-b)_10%,var(--surface)_90%)] px-3 py-2 text-sm text-[color-mix(in_oklab,var(--text)_85%,var(--accent-b)_15%)]">
+            <div className="mx-2 rounded-xl border border-(--border-accent-b-subtle) bg-(--surface-accent-b-subtle) px-3 py-2 text-sm text-(--text-accent-b-subtle)">
                 {errorMessage}
             </div>
         );

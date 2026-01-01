@@ -17,7 +17,7 @@ function DesktopSidebarFrame({ sidebar }: { sidebar: ReactNode }): ReactElement 
                     height: 'calc(100dvh - var(--nav-h))'
                 }}
             >
-                <div className="border-border/60 flex h-full flex-col overflow-hidden border-r bg-[color-mix(in_oklab,var(--surface)_90%,transparent)]">
+                <div className="border-border/60 flex h-full flex-col overflow-hidden border-r bg-(--bg-surface-moderate-transparent)">
                     {sidebar}
                 </div>
             </div>

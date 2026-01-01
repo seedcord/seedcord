@@ -95,7 +95,9 @@ function HeaderTop({
                 </Pill>
                 <Pill className="border-border surface-pill text-subtle">{pkg}</Pill>
                 {version ? (
-                    <Pill className="border-border/80 bg-surface-92 text-subtle">{formatVersionLabel(version)}</Pill>
+                    <Pill className="border-border/80 bg-surface-strong text-subtle">
+                        {formatVersionLabel(version)}
+                    </Pill>
                 ) : null}
                 <TagPills tags={tags} />
             </div>
@@ -218,7 +220,7 @@ function EntityHeader({
     return (
         <header className="min-w-0">
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <div className="card bg-surface-96 shadow-soft space-y-4 p-4 sm:p-5">{headerContent}</div>
+                <div className="card bg-surface-subtle shadow-soft space-y-4 p-4 sm:p-5">{headerContent}</div>
             </DeprecatedEntity>
         </header>
     );

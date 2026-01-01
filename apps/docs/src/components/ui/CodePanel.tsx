@@ -14,7 +14,7 @@ const CODE_CONTAINER_CLASS = 'code-scroll-area panel px-3 py-2 text-sm text-(--t
 
 function CodePanel({ representation, title, description, className }: CodePanelProps): ReactElement {
     return (
-        <section className={cn('card bg-surface-98 shadow-soft space-y-3 p-4 sm:p-5', className)}>
+        <section className={cn('card bg-surface-subtle shadow-soft space-y-3 p-4 sm:p-5', className)}>
             {title ? (
                 <header className="space-y-1">
                     <h2 className="text-lg font-semibold text-(--text)">{title}</h2>

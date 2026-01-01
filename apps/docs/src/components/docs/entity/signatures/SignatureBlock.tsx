@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 
 function SignatureBlock({ signature }: { signature: CodeRepresentation }): ReactElement {
     const containerClassName =
-        'code-scroll-area card bg-surface-96 px-2.5 py-2 text-sm text-(--text) shadow-soft md:px-3 md:py-2.5';
+        'code-scroll-area card bg-surface-subtle px-2.5 py-2 text-sm text-(--text) shadow-soft md:px-3 md:py-2.5';
 
     if (signature.html) {
         return (

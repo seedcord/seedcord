@@ -2,6 +2,8 @@
 :root {
     --color-bg: #f8f6e8;
     --color-text: #070917;
+    --color-base-dark: #070917;
+    --color-base-slate: #0f172a;
     --color-surface: rgba(0, 0, 0, 0.02);
     --overlay: rgba(0, 0, 0, 0.6);
 
@@ -45,12 +47,9 @@
 :root {
     --bg-dim: color-mix(in oklab, var(--color-bg) 94%, black 6%);
 
-    --surface-98: color-mix(in oklab, var(--color-surface) 98%, transparent);
-    --surface-97: color-mix(in oklab, var(--color-surface) 97%, transparent);
-    --surface-96: color-mix(in oklab, var(--color-surface) 96%, transparent);
-    --surface-95: color-mix(in oklab, var(--color-surface) 95%, transparent);
-    --surface-94: color-mix(in oklab, var(--color-surface) 94%, transparent);
-    --surface-92: color-mix(in oklab, var(--color-surface) 92%, transparent);
+    --surface-faint: color-mix(in oklab, var(--color-surface) 98%, transparent);
+    --surface-subtle: color-mix(in oklab, var(--color-surface) 95%, transparent);
+    --surface-moderate: color-mix(in oklab, var(--color-surface) 92%, transparent);
 
     --accent-a-hover: color-mix(in oklab, var(--accent-a) 88%, black);
     --accent-b-hover: color-mix(in oklab, var(--accent-b) 92%, black 8%);
@@ -116,4 +115,65 @@
     --tone-var-badge-border: color-mix(in oklab, var(--entity-variable) 35%, transparent);
     --tone-var-tag-bg: color-mix(in oklab, var(--entity-variable) 12%, transparent);
     --tone-var-tag-text: color-mix(in oklab, var(--entity-variable) 70%, var(--color-text));
+
+    /* Text Mixes */
+    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
+    --text-muted-light: color-mix(in oklab, var(--color-text) 85%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
+    --text-accent-b-subtle: color-mix(in oklab, var(--color-text) 85%, var(--accent-b) 15%);
+    --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
+    --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--accent-b) 35%);
+    --text-accent-b-intense: color-mix(in oklab, var(--accent-b) 80%, var(--color-text) 20%);
+    --text-accent-a-subtle: color-mix(in oklab, var(--color-text) 90%, var(--accent-a) 10%);
+    --text-enum-mix-72: color-mix(in oklab, var(--entity-enum) 72%, var(--color-text));
+    --text-function-mix-72: color-mix(in oklab, var(--entity-function) 72%, var(--color-text));
+
+    /* Background Mixes */
+    --bg-surface-subtle: color-mix(in oklab, var(--bg) 95%, var(--surface) 5%);
+    --bg-surface-moderate: color-mix(in oklab, var(--bg) 90%, var(--surface) 10%);
+
+    --bg-accent-b-subtle: color-mix(in oklab, var(--bg) 94%, var(--accent-b) 6%);
+    --bg-accent-b-moderate: color-mix(in oklab, var(--bg) 85%, var(--accent-b) 15%);
+    --bg-accent-b-strong: color-mix(in oklab, var(--bg) 76%, var(--accent-b) 24%);
+
+    --bg-accent-a-subtle: color-mix(in oklab, var(--bg) 94%, var(--accent-a) 6%);
+    --bg-accent-a-moderate: color-mix(in oklab, var(--bg) 82%, var(--accent-a) 18%);
+
+    /* Surface Mixes */
+    --surface-accent-b-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-b) 8%);
+    --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--accent-b) 15%);
+    --surface-accent-a-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-a) 8%);
+    --surface-accent-a-moderate: color-mix(in oklab, var(--surface) 86%, var(--accent-a) 14%);
+
+    /* Border Mixes */
+    --border-70-transparent: color-mix(in oklab, var(--border) 70%, transparent);
+    --border-mix-accent-a-12: color-mix(in oklab, var(--border) 88%, var(--accent-a) 12%);
+    --border-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, var(--border));
+    --border-accent-b-moderate: color-mix(in oklab, var(--accent-b) 45%, var(--border));
+    --border-accent-b-strong: color-mix(in oklab, var(--accent-b) 60%, var(--border));
+    --border-accent-a-subtle: color-mix(in oklab, var(--accent-a) 38%, var(--border));
+    --border-accent-a-moderate: color-mix(in oklab, var(--accent-a) 55%, var(--border));
+
+    /* Outline/Ring Mixes */
+    --outline-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, transparent);
+    --outline-accent-b-moderate: color-mix(in oklab, var(--accent-b) 48%, transparent);
+    --outline-accent-a-subtle: color-mix(in oklab, var(--accent-a) 42%, transparent);
+    --outline-accent-a-moderate: color-mix(in oklab, var(--accent-a) 52%, transparent);
+
+    /* Specific Component Mixes */
+    --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
+    --bg-navbar: color-mix(in oklab, var(--bg) 97%, white 3%);
+    --bg-surface-dark-mix: color-mix(in oklab, var(--surface) 86%, var(--color-base-slate) 28%);
+    --bg-surface-light: color-mix(in oklab, var(--surface) 90%, white 10%);
+    --bg-light-moderate: color-mix(in oklab, var(--bg) 92%, white 8%);
+    --overlay-dim: color-mix(in oklab, var(--bg) 72%, color-mix(in srgb, var(--color-base-slate), transparent 20%) 28%);
+    --bg-dim-subtle: color-mix(in oklab, var(--bg) 96%, var(--color-base-slate) 4%);
+
+    /* Transparent Background Mixes */
+    --bg-accent-a-transparent-subtle: color-mix(in oklab, var(--accent-a) 12%, transparent);
+    --bg-accent-a-transparent-moderate: color-mix(in oklab, var(--accent-a) 18%, transparent);
+    --bg-accent-b-transparent-subtle: color-mix(in oklab, var(--accent-b) 12%, transparent);
+    --bg-surface-subtle-transparent: color-mix(in oklab, var(--surface) 96%, transparent);
+    --bg-surface-moderate-transparent: color-mix(in oklab, var(--surface) 86%, transparent);
+    --bg-transparent-subtle: color-mix(in oklab, var(--bg) 96%, transparent);
 }

@@ -9,7 +9,7 @@ import type { ReactElement } from 'react';
 
 function SignatureCard({ signature }: { signature: FunctionSignatureModel }): ReactElement {
     return (
-        <article className="card bg-surface-97 shadow-soft space-y-3 p-4 sm:p-5">
+        <article className="card bg-surface-subtle shadow-soft space-y-3 p-4 sm:p-5">
             <header className="flex flex-wrap items-center justify-between gap-3">
                 {signature.sourceUrl ? (
                     <Button
@@ -38,7 +38,7 @@ function SignatureCard({ signature }: { signature: FunctionSignatureModel }): Re
                         {signature.parameters.map((parameter) => (
                             <li
                                 key={parameter.name}
-                                className="bg-surface-96 text-subtle rounded-lg border border-(--border)/60 p-3 text-sm"
+                                className="bg-surface-subtle text-subtle rounded-lg border border-(--border)/60 p-3 text-sm"
                             >
                                 <div className="flex flex-wrap items-start justify-between gap-2">
                                     {renderParameterBadge(parameter)}
