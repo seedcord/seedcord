@@ -1,5 +1,5 @@
 import { highlightToHtml } from '@lib/shiki';
-import { cn } from '@lib/utils';
+import { cn, tw } from '@lib/utils';
 
 import CopyButton from './CopyButton';
 
@@ -22,7 +22,7 @@ async function CodeBlock({
     label
 }: CodeBlockProps): Promise<ReactElement> {
     const highlightedHtml = await highlightToHtml(code, lang);
-    const codeContainerClass = 'code-scroll-area px-4 py-4 text-sm leading-relaxed text-[var(--text)]';
+    const codeContainerClass = tw`code-scroll-area px-4 py-4 text-sm leading-relaxed text-[var(--text)]`;
 
     const showHeader = Boolean(label ?? !hideCopyButton);
 

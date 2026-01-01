@@ -3,7 +3,7 @@
 import { ArrowUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { cn } from '@lib/utils';
+import { cn, tw } from '@lib/utils';
 
 import Button from './Button';
 
@@ -69,8 +69,8 @@ function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactElement 
             className={cn(
                 'border-border/80 shadow-soft h-12 w-12 rounded-full border bg-(--bg-surface-dark-mix) text-(--text) transition-all duration-300 hover:-translate-y-1 hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-moderate)',
                 visible
-                    ? 'pointer-events-auto transform-[translate3d(0,0,0)] opacity-100'
-                    : 'pointer-events-none transform-[translate3d(0,16px,0)] opacity-0',
+                    ? tw`pointer-events-auto transform-[translate3d(0,0,0)] opacity-100`
+                    : tw`pointer-events-none transform-[translate3d(0,16px,0)] opacity-0`,
                 className
             )}
         >
