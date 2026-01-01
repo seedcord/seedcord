@@ -36,7 +36,7 @@ function Home(): ReactElement {
                         </div>
                     </div>
                     <div className="relative hidden items-center justify-center lg:flex lg:max-w-md lg:flex-1">
-                        <div className="bg-surface-96 shadow-soft-token relative flex aspect-square w-32 items-center justify-center overflow-hidden rounded-3xl border border-(--border)/80 p-4 sm:w-40 md:w-52 lg:w-64">
+                        <div className="bg-surface-subtle shadow-soft-token relative flex aspect-square w-32 items-center justify-center overflow-hidden rounded-3xl border border-(--border)/80 p-4 sm:w-40 md:w-52 lg:w-64">
                             <Image
                                 src="/logo.svg"
                                 alt="Seedcord logo"

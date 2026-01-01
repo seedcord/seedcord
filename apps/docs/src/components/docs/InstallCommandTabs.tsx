@@ -44,15 +44,15 @@ function InstallCommandTabs({ commands }: InstallCommandTabsProps): ReactElement
                         className={cn(
                             'rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide uppercase transition',
                             command.id === activeCommand.id
-                                ? 'border-[color-mix(in_oklab,var(--accent-a)_55%,var(--border))] bg-[color-mix(in_oklab,var(--accent-a)_18%,transparent)] text-(--text)'
-                                : 'bg-surface-96 text-subtle border-(--border) hover:border-(--accent-a)/30 hover:text-(--text)'
+                                ? 'border-(--border-accent-a-moderate) bg-(--bg-accent-a-transparent-moderate) text-(--text)'
+                                : 'bg-surface-subtle text-subtle border-(--border) hover:border-(--accent-a)/30 hover:text-(--text)'
                         )}
                     >
                         {command.label}
                     </button>
                 ))}
             </div>
-            <div className="card bg-surface-95 shadow-soft relative overflow-hidden">
+            <div className="card bg-surface-moderate shadow-soft relative overflow-hidden">
                 <CopyButton
                     value={activeCommand.code}
                     ariaLabel={`Copy ${activeCommand.label} install command`}

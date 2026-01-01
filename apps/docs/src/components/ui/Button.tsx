@@ -12,9 +12,9 @@ const BASE_STYLES =
 
 const VARIANTS = {
     primary: 'bg-(--accent-a) text-white shadow-soft hover:bg-(--accent-a-hover) focus-visible:outline-(--accent-a)',
-    secondary: 'bg-[var(--accent-b)] text-black shadow-soft hover:bg-[color-mix(in_oklab,var(--accent-b)_92%,black)]',
-    outline: 'border-(--border) bg-transparent text-(--text) hover:border-(--accent-a)/60 hover:bg-surface-96',
-    ghost: 'bg-transparent text-[var(--text)] hover:bg-[color-mix(in_oklab,var(--accent-a)_12%,transparent)]'
+    secondary: 'bg-(--accent-b) text-black shadow-soft hover:bg-(--accent-b-hover)',
+    outline: 'border-(--border) bg-transparent text-(--text) hover:border-(--accent-a)/60 hover:bg-surface-subtle',
+    ghost: 'bg-transparent text-(--text) hover:bg-(--bg-accent-a-transparent-subtle)'
 } satisfies Record<string, string>;
 
 const SIZES = {

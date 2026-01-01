@@ -108,7 +108,7 @@ export function Sidebar({
             className={cn(
                 'flex h-full flex-col p-4',
                 isDesktop
-                    ? 'rounded-none border-0 bg-[color-mix(in_oklab,var(--surface)_82%,transparent)] shadow-none'
+                    ? 'rounded-none border-0 bg-(--bg-surface-moderate-transparent) shadow-none'
                     : 'card bg-surface shadow-soft',
                 className
             )}

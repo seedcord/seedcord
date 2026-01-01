@@ -17,9 +17,7 @@ function EnumMembersSection({ members }: EnumMembersSectionProps): ReactElement 
     return (
         <section className="space-y-4">
             <header className="space-y-1">
-                <h2 className="text-xl font-semibold text-[color-mix(in_oklab,var(--entity-enum-color)_72%,var(--text))]">
-                    Members
-                </h2>
+                <h2 className="text-xl font-semibold text-(--text-enum-mix-72)">Members</h2>
             </header>
             <div className={cn('grid gap-4', members.length > 1 ? 'lg:grid-cols-2' : undefined)}>
                 {members.map((member) => (

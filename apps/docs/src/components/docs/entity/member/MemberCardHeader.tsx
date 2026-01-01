@@ -25,7 +25,7 @@ function MemberCardHeader({ member, anchorId, tags, prefix }: MemberCardHeaderPr
                         {tags.map((tag) => (
                             <li
                                 key={tag}
-                                className="border-border bg-surface-94 rounded-full border px-3 py-0.5 font-semibold"
+                                className="border-border bg-surface-moderate rounded-full border px-3 py-0.5 font-semibold"
                             >
                                 {tag}
                             </li>
@@ -52,7 +52,7 @@ function MemberCardHeader({ member, anchorId, tags, prefix }: MemberCardHeaderPr
                                 href={member.sourceUrl}
                                 target="_blank"
                                 rel="noreferrer noopener"
-                                className="text-subtle inline-flex h-8 w-8 items-center justify-center transition hover:text-(--text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color-mix(in_oklab,var(--accent-b)_48%,var(--text))]"
+                                className="text-subtle inline-flex h-8 w-8 items-center justify-center transition hover:text-(--text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-b-moderate)"
                                 aria-label={`Open source for ${member.label} in a new tab`}
                             >
                                 <Icon icon={Code} size={16} />

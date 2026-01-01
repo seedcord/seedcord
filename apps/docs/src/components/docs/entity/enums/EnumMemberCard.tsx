@@ -88,7 +88,7 @@ function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
     return (
         <article id={anchorId} className="group/name relative min-w-0">
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <div className="group/name card bg-surface-97 shadow-soft relative min-w-0 p-4 sm:p-5">
+                <div className="group/name card bg-surface-subtle shadow-soft relative min-w-0 p-4 sm:p-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0 flex-1 space-y-3">
                             <div className="group/name relative flex min-w-0 items-center">

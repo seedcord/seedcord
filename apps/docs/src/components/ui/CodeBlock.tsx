@@ -27,9 +27,9 @@ async function CodeBlock({
     const showHeader = Boolean(label ?? !hideCopyButton);
 
     return (
-        <figure className={cn('card bg-surface-96 shadow-soft relative', className)}>
+        <figure className={cn('card bg-surface-subtle shadow-soft relative', className)}>
             {showHeader ? (
-                <figcaption className="border-border/70 text-subtle flex items-center justify-between gap-3 border-b bg-[color-mix(in_oklab,var(--surface)_90%,#ffffff_10%)] px-4 py-2 text-xs font-semibold tracking-wide uppercase">
+                <figcaption className="border-border/70 text-subtle flex items-center justify-between gap-3 border-b bg-(--bg-surface-light) px-4 py-2 text-xs font-semibold tracking-wide uppercase">
                     <span className="truncate">{label}</span>
                     {!hideCopyButton ? <CopyButton value={code} ariaLabel="Copy code block" /> : null}
                 </figcaption>

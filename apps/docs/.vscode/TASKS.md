@@ -8,15 +8,11 @@
 
 [ ] 55. In the sidebar, when hovering over a package name, the tooltip shows the full package name but it has weird line breaks in it. It should be a single line with no breaks.
 
-[ ] 56. Refactor all renaming styling across the project to use latest Tailwind features and reduce redundancy. Also, use more consistent styling with color mixing instead of the arbitrary percentages.
-
 [ ] 57. Update pre-rendering to not load the documentation jsons during build time, but instead load them on-demand at runtime with caching.
 
 [ ] 58. Make hyperlinking in code signatures case-sensitive IF a ref isn't found in internal documentation.
 
 [ ] 60. For interfaces that have nested objects in them but those nested objects aren't documented entities, render those nested objects correctly instead of "files: {…}". That is, expand them to show their properties. Because "…" is not helpful.
-
-[ ] 61. Throughout the whole project, there are many scattered uses of ok_lab colormix. I need you to search through this api/docs directory using rg for these usages, look for patterns (and values that are very close but different so can be merged to one), and add these to the styles folder in .css files. Then update all usages to use these new styles from the styles folder. The goal is to have a consistent color scheme across the whole project and reduce redundancy.
 
 [ ] 42. Render @throws comment similar to Inherits from and See also sections. This is mostly done because we have a bunch of code and the types etc to handle it, but I don't see it rendered on the website. Also, please check kind-function-haspermstoassign.txt. You can see that it has an array for throws. Use the type from docs-engine package that's exported and access this array instead of looking for `@throws` tags.
 

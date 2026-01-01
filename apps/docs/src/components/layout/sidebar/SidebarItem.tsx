@@ -21,9 +21,7 @@ function SidebarItem({ item, tone, isActive }: SidebarItemProps): ReactElement {
             className={cn(
                 'flex w-full items-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-2 text-left text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2',
                 toneStyles.item,
-                isActive
-                    ? 'border-[color-mix(in_oklab,var(--accent-b)_45%,var(--border))] bg-[color-mix(in_oklab,var(--accent-b)_14%,var(--bg)_86%)]'
-                    : null
+                isActive ? 'border-(--border-accent-b-moderate) bg-(--bg-accent-b-moderate)' : null
             )}
             onClick={() => {
                 log('Sidebar item activated', { label, tone, href });

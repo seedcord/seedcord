@@ -67,7 +67,7 @@ function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactElement 
             onClick={handleClick}
             aria-label="Jump to top"
             className={cn(
-                'border-border/80 shadow-soft h-12 w-12 rounded-full border bg-[color-mix(in_oklab,var(--surface)_86%,#0f172a_28%)] text-(--text) transition-all duration-300 hover:-translate-y-1 hover:border-[color-mix(in_oklab,var(--accent-a)_38%,var(--border))] hover:bg-[color-mix(in_oklab,var(--surface)_80%,#6366f144_18%)]',
+                'border-border/80 shadow-soft h-12 w-12 rounded-full border bg-(--bg-surface-dark-mix) text-(--text) transition-all duration-300 hover:-translate-y-1 hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-moderate)',
                 visible
                     ? 'pointer-events-auto transform-[translate3d(0,0,0)] opacity-100'
                     : 'pointer-events-none transform-[translate3d(0,16px,0)] opacity-0',

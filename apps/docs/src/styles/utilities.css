@@ -1,6 +1,6 @@
 @layer utilities {
     .text-subtle {
-        @apply text-[color-mix(in_oklab,var(--color-text)_70%,transparent)];
+        @apply text-(--text-muted);
     }
 
     .bg-page {
@@ -22,27 +22,27 @@
 
 @layer utilities {
     .bg-surface-98 {
-        @apply bg-(--surface-98);
+        @apply bg-(--surface-faint);
     }
 
     .bg-surface-97 {
-        @apply bg-(--surface-97);
+        @apply bg-(--surface-faint);
     }
 
     .bg-surface-96 {
-        @apply bg-(--surface-96);
+        @apply bg-(--surface-subtle);
     }
 
     .bg-surface-95 {
-        @apply bg-(--surface-95);
+        @apply bg-(--surface-subtle);
     }
 
     .bg-surface-94 {
-        @apply bg-(--surface-94);
+        @apply bg-(--surface-subtle);
     }
 
     .bg-surface-92 {
-        @apply bg-(--surface-92);
+        @apply bg-(--surface-moderate);
     }
 
     .card {
@@ -50,15 +50,15 @@
     }
 
     .panel {
-        @apply rounded-xl border border-(--border) bg-(--surface-96);
+        @apply rounded-xl border border-(--border) bg-(--surface-subtle);
     }
 
     .surface-pill {
-        @apply bg-(--surface-94);
+        @apply bg-(--surface-subtle);
     }
 
     .surface-chip {
-        @apply rounded-sm bg-(--surface-92);
+        @apply rounded-sm bg-(--surface-moderate);
     }
 }
 
