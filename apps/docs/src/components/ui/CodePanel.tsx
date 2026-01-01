@@ -1,4 +1,4 @@
-import { cn } from '@lib/utils';
+import { cn, tw } from '@lib/utils';
 
 import type { CodeRepresentation } from '@lib/docs/types';
 import type { ReactElement } from 'react';
@@ -10,7 +10,7 @@ interface CodePanelProps {
     className?: string;
 }
 
-const CODE_CONTAINER_CLASS = 'code-scroll-area panel px-3 py-2 text-sm text-(--text) sm:px-4 sm:py-3';
+const CODE_CONTAINER_CLASS = tw`code-scroll-area panel px-3 py-2 text-sm text-(--text) sm:px-4 sm:py-3`;
 
 function CodePanel({ representation, title, description, className }: CodePanelProps): ReactElement {
     return (
