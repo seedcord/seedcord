@@ -1,5 +1,5 @@
 import { Box, Text, useInput, useStdout } from 'ink';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
     Banner,
@@ -33,7 +33,7 @@ interface DevAppProps {
     readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function, max-statements
 export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshCommands }: DevAppProps): ReactElement {
     const [status, setStatus] = useState('Initializing...');
     const [error, setError] = useState<Error | null>(null);
@@ -51,6 +51,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
     const [terminalHeight, setTerminalHeight] = useState(stdout.rows || DEFAULT_ROWS);
     const [terminalWidth, setTerminalWidth] = useState(stdout.columns || DEFAULT_COLUMNS);
     const [resizeKey, setResizeKey] = useState(0);
+    const isInitialized = useRef(false);
 
     useEffect(() => {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -137,6 +138,9 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
     );
 
     useEffect(() => {
+        if (isInitialized.current) return;
+        isInitialized.current = true;
+
         LogStore.instance.clear();
         LogStore.instance.mount();
         onReady({ setStatus, setError, setBusy, setConfig, setRestartRequired, setCommandUpdatePrompt });
