@@ -147,7 +147,6 @@
 
     /* Border Mixes */
     --border-70-transparent: color-mix(in oklab, var(--border) 70%, transparent);
-    --border-mix-accent-a-12: color-mix(in oklab, var(--border) 88%, var(--accent-a) 12%);
     --border-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, var(--border));
     --border-accent-b-moderate: color-mix(in oklab, var(--accent-b) 45%, var(--border));
     --border-accent-b-strong: color-mix(in oklab, var(--accent-b) 60%, var(--border));
@@ -163,7 +162,6 @@
     /* Specific Component Mixes */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
     --bg-navbar: color-mix(in oklab, var(--bg) 97%, white 3%);
-    --bg-surface-dark-mix: color-mix(in oklab, var(--surface) 86%, var(--color-base-slate) 28%);
     --bg-surface-light: color-mix(in oklab, var(--surface) 90%, white 10%);
     --bg-light-moderate: color-mix(in oklab, var(--bg) 92%, white 8%);
     --overlay-dim: color-mix(in oklab, var(--bg) 72%, color-mix(in srgb, var(--color-base-slate), transparent 20%) 28%);

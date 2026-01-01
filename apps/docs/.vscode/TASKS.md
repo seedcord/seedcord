@@ -12,7 +12,7 @@
 
 [ ] 58. Make hyperlinking in code signatures case-sensitive IF a ref isn't found in internal documentation.
 
-[ ] 60. For interfaces that have nested objects in them but those nested objects aren't documented entities, render those nested objects correctly instead of "files: {…}". That is, expand them to show their properties. Because "…" is not helpful.
+[ ] 60. For interfaces that have nested objects in them but those nested objects aren't documented entities, render those nested objects correctly instead of "files: {…}". That is, expand them to show their properties. Because "…" is not helpful. Same for some variables. Like "const BuilderTypes: {…}". You can check what the actual json reflection is in the debugging/generated folder at root.
 
 [ ] 42. Render @throws comment similar to Inherits from and See also sections. This is mostly done because we have a bunch of code and the types etc to handle it, but I don't see it rendered on the website. Also, please check kind-function-haspermstoassign.txt. You can see that it has an array for throws. Use the type from docs-engine package that's exported and access this array instead of looking for `@throws` tags.
 
