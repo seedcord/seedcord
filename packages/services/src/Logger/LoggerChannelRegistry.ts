@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { Envapter } from 'envapt';
 import winston, { createLogger } from 'winston';
 
@@ -125,6 +127,35 @@ export class LoggerChannelRegistry {
     }
 
     /**
+     * Returns a list of all known channels (configured or cached).
+     */
+    public getChannels(): string[] {
+        const configuredChannels = Object.keys(this.config.channels);
+        const cachedChannels = Array.from(this.cache.keys());
+        const allChannels = new Set([...configuredChannels, ...cachedChannels, this.config.defaultChannel]);
+        return Array.from(allChannels).sort();
+    }
+
+    /**
+     * Gets the log file path for a specific channel, if one exists.
+     *
+     * @param channel - Channel name to get log file path for
+     * @returns The log file path, or null if no file transport exists
+     */
+    public getLogFilePath(channel: string): string | null {
+        const logger = this.cache.get(channel);
+        if (!logger) return null;
+
+        for (const transport of logger.transports) {
+            if (transport instanceof winston.transports.File) {
+                return path.resolve(transport.dirname, transport.filename);
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Gets or creates a Winston logger instance for the given channel.
      *
      * @param channel - Channel name to get logger for
@@ -156,7 +187,11 @@ export class LoggerChannelRegistry {
                 })
             );
 
-        const logger = createLogger({ level: effectiveLevel, transports });
+        const logger = createLogger({
+            level: effectiveLevel,
+            format: this.transportFactory.buildPreFormat(),
+            transports
+        });
 
         for (const entry of this.sinks.values()) {
             this.applySinkToCachedLogger(channel, logger, entry);

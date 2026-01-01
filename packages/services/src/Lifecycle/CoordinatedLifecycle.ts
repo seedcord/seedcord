@@ -130,12 +130,14 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
             `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
         );
 
+        let timeoutId: NodeJS.Timeout | undefined;
+
         try {
             // Create a race between the task and a timeout
             await Promise.race([
                 task.task(),
                 new Promise<void>((_, reject) => {
-                    setTimeout(() => {
+                    timeoutId = setTimeout(() => {
                         reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [task.name, task.timeout]));
                     }, task.timeout);
                 })
@@ -150,6 +152,10 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
                 error
             );
             throw error;
+        } finally {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
         }
     }
 

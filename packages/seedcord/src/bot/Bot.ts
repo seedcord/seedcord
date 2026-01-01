@@ -1,4 +1,5 @@
-import { Logger, SeedcordError, SeedcordErrorCode, ShutdownPhase } from '@seedcord/services';
+import { Logger, ShutdownPhase } from '@seedcord/services';
+import { EmojiMap } from '@seedcord/types';
 import chalk from 'chalk';
 import { Client, ClientEvents, Interaction } from 'discord.js';
 import { Envapt } from 'envapt';
@@ -7,10 +8,12 @@ import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventController } from '@bControllers/EventController';
 import { InteractionController } from '@bControllers/InteractionController';
 import { Plugin } from '@interfaces/Plugin';
+import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 
-import { EmojiInjector, Emojis, type EmojiMap } from './injectors/EmojiInjector';
+import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
 import type { Core } from '@interfaces/Core';
+import type { HmrUpdateEvent } from '@seedcord/cli';
 
 /**
  * Bot event types
@@ -28,12 +31,7 @@ export interface BotEvents {
  */
 export class Bot extends Plugin<BotEvents> {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
-        converter(raw, _fallback) {
-            if (typeof raw !== 'string') {
-                throw new SeedcordError(SeedcordErrorCode.ConfigMissingDiscordToken);
-            }
-            return raw;
-        }
+        converter: (raw) => validateDiscordToken(raw)
     })
     declare public readonly botToken: string;
 
@@ -41,24 +39,42 @@ export class Bot extends Plugin<BotEvents> {
     private isInitialized = false;
 
     private readonly _client: Client;
-    private readonly interactions: InteractionController;
-    private readonly events: EventController;
-    public readonly commands: CommandRegistry;
+    private readonly interactions?: InteractionController;
+    private readonly events?: EventController;
+    public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
     public readonly emojis: EmojiMap = Emojis;
+
+    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+        if (this.interactions) await this.interactions.onHmr(event);
+        if (this.events) await this.events.onHmr(event);
+        if (this.commands) await this.commands.onHmr(event);
+    }
 
     constructor(protected core: Core) {
         super(core);
 
         this._client = new Client(core.config.bot.clientOptions);
 
-        this.interactions = new InteractionController(core);
-        this.events = new EventController(core);
+        if (core.config.bot.interactions.path) {
+            this.interactions = new InteractionController(core);
+        }
+        if (core.config.bot.events.path) {
+            this.events = new EventController(core);
+        }
 
-        this.commands = new CommandRegistry(core);
+        if (core.config.bot.commands.path) {
+            this.commands = new CommandRegistry(core);
+        }
         this.emojiInjector = new EmojiInjector(core);
 
-        core.shutdown.addTask(ShutdownPhase.DiscordCleanup, 'stop-bot', async () => await this.stop());
+        const BOT_SHUTDOWN_TIMEOUT = 2000;
+        core.shutdown.addTask(
+            ShutdownPhase.DiscordCleanup,
+            'stop-bot',
+            async () => await this.stop(),
+            BOT_SHUTDOWN_TIMEOUT
+        );
     }
 
     /**
@@ -71,13 +87,15 @@ export class Bot extends Plugin<BotEvents> {
         }
         this.isInitialized = true;
 
-        await this.interactions.init();
-        await this.events.init();
+        if (this.interactions) await this.interactions.init();
+        if (this.events) await this.events.init();
 
         await this.login();
 
-        await this.commands.init();
-        await this.commands.setCommands();
+        if (this.commands) {
+            await this.commands.init();
+            await this.commands.setCommands();
+        }
 
         await this.emojiInjector.init();
     }

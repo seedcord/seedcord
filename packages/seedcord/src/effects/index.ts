@@ -1,6 +1,5 @@
-export * from './EffectsEmitter';
+export * from './EffectsController';
 export * from './EffectsHandler';
-export * from './EffectsRegistry';
 
 // Decorators
 export * from './decorators/RegisterEffect';

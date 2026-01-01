@@ -3,8 +3,12 @@
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "paths": {
+            "@src/*": ["./src/*"],
+            "@shared/*": ["./src/shared*"]
+        }
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

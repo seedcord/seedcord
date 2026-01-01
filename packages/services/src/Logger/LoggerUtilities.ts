@@ -1,3 +1,4 @@
+import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 
 import type { ILogger } from '@seedcord/types';
@@ -10,6 +11,14 @@ export class LoggerUtilitiesAccessor {
 
     private arrow(text: string): string {
         return `${chalk.gray('→')} ${text}`;
+    }
+
+    /**
+     * Logs a single item with an arrow prefix.
+     * @param text - The text to log
+     */
+    public item(text: string): void {
+        this.logger.info(this.arrow(text));
     }
 
     /**
@@ -47,7 +56,7 @@ export class LoggerUtilitiesAccessor {
     public registration(name: string, from: string, type?: string): void {
         const scope = type ? `${type} ` : '';
         this.logger.info(
-            `${chalk.italic('Registered')} ${chalk.bold.yellow(scope)}${chalk.cyan.bold(name)} from ${chalk.gray(from)}`
+            `${chalk.italic('Registered')} ${chalk.bold.yellow(scope)}${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(from))}`
         );
     }
 

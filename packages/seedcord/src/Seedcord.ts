@@ -6,13 +6,16 @@ import {
     SeedcordErrorCode,
     StartupPhase
 } from '@seedcord/services';
+import { SeedcordBrand } from '@seedcord/utils';
+import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { EffectsRegistry } from './effects/EffectsRegistry';
+import { EffectsController } from './effects/EffectsController';
+import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
 
-import type { Config } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
+import type { Config } from '@seedcord/types';
 
 /**
  * Main Seedcord bot framework class
@@ -21,6 +24,7 @@ import type { Core } from './interfaces/Core';
  * Manages component lifecycle and provides plugin support.
  */
 export class Seedcord extends Pluggable implements Core {
+    public readonly [SeedcordBrand] = true;
     private static isInstantiated = false;
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;
@@ -28,14 +32,17 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link CoordinatedStartup} */
     public override readonly startup: CoordinatedStartup;
 
-    /** @see {@link EffectsRegistry} */
-    public readonly effects: EffectsRegistry;
+    /** @see {@link EffectsController} */
+    public readonly effects: EffectsController;
 
     /** @see {@link Bot} */
     public readonly bot: Bot;
 
     /** @see {@link HealthCheck} */
     private readonly healthCheck: HealthCheck;
+
+    /** @see {@link HmrManager} */
+    private readonly hmrManager: HmrManager;
 
     /**
      * Creates a new Seedcord instance
@@ -60,7 +67,9 @@ export class Seedcord extends Pluggable implements Core {
         }
         Seedcord.isInstantiated = true;
 
-        this.effects = new EffectsRegistry(this as unknown as Core);
+        this.hmrManager = new HmrManager();
+        this.hmrManager.init();
+        this.effects = new EffectsController(this as unknown as Core);
         this.bot = new Bot(this as unknown as Core);
         this.healthCheck = new HealthCheck(this.shutdown);
 
@@ -68,10 +77,20 @@ export class Seedcord extends Pluggable implements Core {
     }
 
     /**
+     * Resets the singleton state.
+     * @internal
+     */
+    public static reset(): void {
+        Seedcord.isInstantiated = false;
+    }
+
+    /**
      * Registers default startup tasks
      * @internal
      */
     private registerStartupTasks(): void {
+        if (Envapter.isDevelopment) this.registerHmrAwareModules();
+
         this.startup.addTask(StartupPhase.Configuration, 'Effect Initialization', async () => {
             this.effects.logger.utils.initialization('Effects', 'start');
             await this.effects.init();
@@ -99,5 +118,15 @@ export class Seedcord extends Pluggable implements Core {
     public async start(): Promise<this> {
         await super.init();
         return this;
+    }
+
+    private registerHmrAwareModules(): void {
+        this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
+            this.hmrManager.register(this.bot);
+            for (const plugin of this.plugins) {
+                this.hmrManager.register(plugin);
+            }
+            await Promise.resolve();
+        });
     }
 }

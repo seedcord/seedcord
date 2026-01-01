@@ -5,7 +5,7 @@ import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgService } from './KpgService';
 
 import type { KyselyServiceConstructor } from './KpgService';
-import type { KyselyPg } from './KyselyPg';
+import type { KyselyArtifact, KyselyPg } from './KyselyPg';
 import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
 import type { Core, Logger } from 'seedcord';
 
@@ -34,11 +34,13 @@ export class KpgServiceRegistry<Database extends object> {
 
         await traverseDirectory(
             dir,
-            (_full, rel, mod) => {
+            (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
-                        const instance = new Service(this.plugin, this.core);
-                        this.logger.utils.registration(instance.constructor.name, rel);
+                        this.initializeService(Service, rel);
+
+                        // @ts-expect-error - private access on hmrHandler. hmrHandler is private as it's a development only api used by hmr
+                        this.plugin.hmrHandler?.trackHandler(fullPath, Service);
                     }
                 }
             },
@@ -51,7 +53,20 @@ export class KpgServiceRegistry<Database extends object> {
         );
     }
 
-    private isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {
+    public unregister(Service: KyselyServiceConstructor<Database>, artifacts?: KyselyArtifact): void {
+        const key = artifacts?.key ?? (Reflect.getMetadata(PgServiceMetadataKey, Service) as string | undefined);
+        if (key && (this.services as Record<string, unknown>)[key]) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete (this.services as Record<string, unknown>)[key];
+        }
+    }
+
+    public initializeService(Service: KyselyServiceConstructor<Database>, relativePath: string): void {
+        const instance = new Service(this.plugin, this.core);
+        this.logger.utils.registration(instance.constructor.name, relativePath);
+    }
+
+    public isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {
         return (
             typeof obj === 'function' &&
             obj.prototype instanceof KpgService &&

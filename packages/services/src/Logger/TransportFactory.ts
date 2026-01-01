@@ -63,6 +63,10 @@ export class TransportFactory {
         );
     }
 
+    public buildPreFormat(): ReturnType<typeof format.combine> {
+        return format.combine(this.formatter.createPreFormat());
+    }
+
     private buildConsoleFormat(label: string): ReturnType<typeof format.combine> {
         // Use JSON format in production, pretty format in development
         if (Envapter.isProduction) {
@@ -76,6 +80,17 @@ export class TransportFactory {
         mode: LoggerFormatMode,
         stripAnsi: boolean
     ): ReturnType<typeof format.combine> {
+        const formats =
+            mode === 'pretty' ? this.formatter.pretty({ stripExtras: stripAnsi }) : this.formatter.json({ stripAnsi });
+        return format.combine(this.withDefaultLabel(label), ...formats);
+    }
+
+    private buildStreamFormat(
+        label: string,
+        mode: LoggerFormatMode,
+        stripAnsi: boolean
+    ): ReturnType<typeof format.combine> {
+        // Stream transport uses similar formatting to file transport
         const formats =
             mode === 'pretty' ? this.formatter.pretty({ stripExtras: stripAnsi }) : this.formatter.json({ stripAnsi });
         return format.combine(this.withDefaultLabel(label), ...formats);
@@ -117,7 +132,7 @@ export class TransportFactory {
     /**
      * Builds a Winston transport from configuration.
      *
-     * Creates either console or file transport with proper formatting,
+     * Creates console, file, or stream transport with proper formatting,
      * level filtering, and file rotation settings.
      *
      * @param input - Transport configuration parameters
@@ -132,6 +147,14 @@ export class TransportFactory {
             return new transports.Console({
                 level,
                 format: this.buildConsoleFormat(input.label)
+            });
+        }
+
+        if (input.config.type === 'stream') {
+            return new transports.Stream({
+                level,
+                stream: input.config.stream,
+                format: this.buildStreamFormat(input.label, effectiveFormat, shouldStripAnsi)
             });
         }
 

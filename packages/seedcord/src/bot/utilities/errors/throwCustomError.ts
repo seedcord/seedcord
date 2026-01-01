@@ -28,7 +28,6 @@ import type { CustomErrorConstructor } from '@interfaces/Components';
 export function throwCustomError<Ctor extends CustomErrorConstructor>(
     error: unknown,
     message: string,
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     CustomError: Ctor
 ): never {
     const uuid = crypto.randomUUID();

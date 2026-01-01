@@ -29,7 +29,7 @@
         "next-themes": "^0.4.6",
         "postcss": "^8.5.6",
         "prettier": "catalog:deps",
-        "react": "^19.2.3",
+        "react": "catalog:deps",
         "react-dom": "^19.2.3",
         "shiki": "^3.20.0",
         "tailwindcss": "^4.1.18",
@@ -39,7 +39,7 @@
     },
     "devDependencies": {
         "@seedcord/tsconfig": "workspace:*",
-        "@types/react": "^19.2.7",
+        "@types/react": "catalog:deps",
         "@types/react-dom": "^19.2.3",
         "eslint-config-next": "^16.1.0",
         "eslint-plugin-jsx-a11y": "^6.10.2",

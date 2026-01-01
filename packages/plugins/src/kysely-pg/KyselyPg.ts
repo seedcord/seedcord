@@ -1,19 +1,27 @@
 import 'reflect-metadata';
 
 import chalk from 'chalk';
+import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig } from 'pg';
-import { keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
+import { HmrModuleHandler, keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
 
+import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
 import { KpgMigrationManager } from './KpgMigrationManager';
 import { KpgServiceRegistry } from './KpgServiceRegistry';
 
+import type { KyselyServiceConstructor } from './KpgService';
 import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigration';
 import type { KpgOptions } from './types/KpgOptions';
 import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
+import type { HmrUpdateEvent } from '@seedcord/cli';
 import type { MigrationInfo } from 'kysely';
 import type { Core } from 'seedcord';
+
+export interface KyselyArtifact {
+    key?: string;
+}
 
 /**
  * Postgres plugin using Kysely.
@@ -32,6 +40,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     private readonly serviceRegistry: KpgServiceRegistry<Database>;
     private readonly databaseBootstrapper: KpgDatabaseBootstrapper;
     private databaseName: string | null = null;
+    private readonly hmrHandler?: HmrModuleHandler<KyselyServiceConstructor<Database>, void, KyselyArtifact>;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
@@ -53,6 +62,31 @@ export class KyselyPg<Database extends object> extends Plugin {
             async () => await this.stop(),
             this.options.timeout
         );
+
+        if (!Envapter.isDevelopment) return; // HMR only in development
+
+        // Register migrations directory as critical
+        const relPaths = this.options.migrations.path;
+        super.registerCriticalFiles(Array.isArray(relPaths) ? relPaths : [relPaths]);
+
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: this.options.dir,
+            isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
+            registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
+            unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
+            getArtifacts: this.getArtifacts.bind(this),
+            logger: this.logger,
+            name: 'KyselyPg'
+        });
+    }
+
+    private getArtifacts(ctor: KyselyServiceConstructor<Database>): KyselyArtifact {
+        const key = Reflect.getMetadata(PgServiceMetadataKey, ctor) as string | undefined;
+        return key ? { key } : {};
+    }
+
+    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.hmrHandler?.handle(event);
     }
 
     /**

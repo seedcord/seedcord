@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 import {
+    HmrModuleHandler,
     keepDefined,
     Logger,
     Plugin,
@@ -13,14 +14,21 @@ import {
     traverseDirectory
 } from 'seedcord';
 
+import { ModelMetadataKey } from './decorators/RegisterMongoModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 import { MongoService } from './MongoService';
 
 import type { MongoServiceConstructor } from './MongoService';
 import type { MongoOptions } from './types/MongoOptions';
 import type { MongoServices } from './types/MongoServices';
+import type { HmrUpdateEvent } from '@seedcord/cli';
 import type { Mongoose } from 'mongoose';
 import type { Core } from 'seedcord';
+
+interface MongoArtifact {
+    key?: string;
+    modelName?: string;
+}
 
 /**
  * MongoDB integration plugin for Seedcord.
@@ -41,6 +49,7 @@ export class Mongo extends Plugin {
 
     /** Exposed Mongoose instance once `init` completes. */
     declare public connection: Mongoose;
+    private readonly hmrHandler?: HmrModuleHandler<MongoServiceConstructor, void, MongoArtifact>;
 
     constructor(
         public readonly core: Core,
@@ -55,6 +64,30 @@ export class Mongo extends Plugin {
             async () => await this.stop(),
             this.options.timeout
         );
+
+        if (!Envapter.isDevelopment) return; // HMR only in development
+        this.hmrHandler = new HmrModuleHandler({
+            handlersDir: this.options.dir,
+            isHandler: this.isServiceClass.bind(this),
+            registerHandler: this.initializeService.bind(this),
+            unregisterHandler: this.unregister.bind(this),
+            getArtifacts: this.getArtifacts.bind(this),
+            logger: this.logger,
+            name: 'Mongo'
+        });
+    }
+
+    private getArtifacts(ctor: MongoServiceConstructor): MongoArtifact {
+        const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
+        const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<unknown> | undefined;
+        return {
+            ...(key ? { key } : {}),
+            ...(model?.modelName ? { modelName: model.modelName } : {})
+        };
+    }
+
+    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+        await this.hmrHandler?.handle(event);
     }
 
     public async init(): Promise<void> {
@@ -70,6 +103,7 @@ export class Mongo extends Plugin {
     }
 
     private async connect(): Promise<void> {
+        this.clearModels();
         this.connection = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
@@ -87,7 +121,17 @@ export class Mongo extends Plugin {
             });
     }
 
+    private clearModels(): void {
+        const modelNames = Object.keys(mongoose.models);
+        if (modelNames.length > 0) {
+            this.logger.debug(`Clearing ${modelNames.length} mongoose models`);
+            for (const name of modelNames) mongoose.deleteModel(name);
+        }
+    }
+
     private async disconnect(): Promise<void> {
+        this.clearModels();
+
         await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
@@ -100,11 +144,11 @@ export class Mongo extends Plugin {
 
         await traverseDirectory(
             servicesDir,
-            (_full, rel, mod) => {
+            (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
-                        const instance = new Service(this, this.core);
-                        this.logger.utils.registration(instance.constructor.name, rel);
+                        this.initializeService(Service, rel);
+                        this.hmrHandler?.trackHandler(fullPath, Service);
                     }
                 }
             },
@@ -115,6 +159,11 @@ export class Mongo extends Plugin {
             [`${chalk.magenta(Object.keys(this.services).length)} services`],
             chalk.bold.green('Loaded')
         );
+    }
+
+    private initializeService(Service: MongoServiceConstructor, relativePath: string): void {
+        const instance = new Service(this, this.core);
+        this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
     private isServiceClass(obj: unknown): obj is MongoServiceConstructor {
@@ -132,5 +181,21 @@ export class Mongo extends Plugin {
      */
     _register<SKey extends keyof MongoServices>(key: SKey, instance: MongoServices[SKey]): void {
         this.services[key] = instance;
+    }
+
+    private unregister(Service: MongoServiceConstructor, artifacts?: { key?: string; modelName?: string }): void {
+        const key = artifacts?.key ?? (Reflect.getMetadata(ServiceMetadataKey, Service) as string | undefined);
+        const modelName =
+            artifacts?.modelName ??
+            (Reflect.getMetadata(ModelMetadataKey, Service) as mongoose.Model<unknown> | undefined)?.modelName;
+
+        if (key && (this.services as Record<string, unknown>)[key]) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete (this.services as Record<string, unknown>)[key];
+        }
+
+        if (modelName) {
+            mongoose.deleteModel(modelName);
+        }
     }
 }

@@ -68,6 +68,72 @@ export class LogFormatter {
         return Array.isArray(raw) ? raw : [];
     }
 
+    private readonly FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
+    private readonly HAD_FORMAT_KEY = Symbol.for('hadFormatSpecifiers');
+    private readonly SAVED_SPLAT_KEY = Symbol.for('savedSplat');
+
+    private markFormatSpecifiers(): Logform.Format {
+        return format((info) => {
+            const msg = typeof info.message === 'string' ? info.message : '';
+            const extras = this.getExtras(info);
+            const matches = msg.match(this.FORMAT_SPECIFIERS);
+            const formatCount = matches ? matches.length : 0;
+            (info as Record<string | symbol, unknown>)[this.HAD_FORMAT_KEY] = formatCount;
+            (info as Record<string | symbol, unknown>)[this.SAVED_SPLAT_KEY] = [...extras];
+            return info;
+        })();
+    }
+
+    public createPreFormat(): Logform.Format {
+        return this.markFormatSpecifiers();
+    }
+
+    private preserveErrorFormatting(): Logform.Format {
+        return format((info) => {
+            const extras = this.getExtras(info);
+
+            for (const item of extras) {
+                if (item instanceof Error && /\u001b/.test(item.name)) {
+                    const originalName = item.name;
+                    const plainName = stripAnsi(item.name);
+
+                    (item as unknown as Record<string, unknown>).__formattedName = originalName;
+                    (item as unknown as Record<string, unknown>).__plainName = plainName;
+                }
+            }
+
+            return info;
+        })();
+    }
+
+    private restoreErrorFormatting(): Logform.Format {
+        return format((info) => {
+            if (typeof info.stack === 'string') {
+                const extras = this.getExtras(info);
+
+                for (const item of extras) {
+                    if (item instanceof Error) {
+                        const formattedName = (item as unknown as Record<string, unknown>).__formattedName;
+                        const plainName = (item as unknown as Record<string, unknown>).__plainName;
+
+                        if (typeof formattedName === 'string' && typeof plainName === 'string') {
+                            info.stack = (info.stack as string).replace(
+                                new RegExp(`^${this.escapeRegex(plainName)}`, 'm'),
+                                formattedName
+                            );
+                        }
+                    }
+                }
+            }
+
+            return info;
+        })();
+    }
+
+    private escapeRegex(str: string): string {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
     /**
      * Creates pretty-printed format with colors and timestamps.
      *
@@ -79,7 +145,9 @@ export class LogFormatter {
     public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
         const padding = options.padding ?? this.DEFAULT_PADDING;
         return [
+            this.preserveErrorFormatting(),
             format.errors({ stack: true }),
+            this.restoreErrorFormatting(),
             format.splat(),
             format.colorize({ level: true }),
             format.timestamp({ format: 'D MMM, hh:mm:ss a' }),
@@ -90,7 +158,6 @@ export class LogFormatter {
                 let lbl = this.safeString(info.label);
                 let msg = this.safeString(info.message);
 
-                // Strip ANSI codes from all components if requested
                 if (options.stripExtras) {
                     ts = stripAnsi(ts);
                     lvl = stripAnsi(lvl);
@@ -99,7 +166,8 @@ export class LogFormatter {
                 }
 
                 const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
-                const extras = this.getExtras(info);
+                const savedExtras = (info as Record<string | symbol, unknown>)[this.SAVED_SPLAT_KEY] as unknown[];
+                const extras = Array.isArray(savedExtras) ? savedExtras : this.getExtras(info);
 
                 let rendered = base;
 
@@ -110,25 +178,38 @@ export class LogFormatter {
                 }
 
                 const cleaned = options.stripExtras ? extras.map((entry) => this.sanitizeAnsi(entry)) : extras;
-                const filtered = cleaned.filter((x) => {
-                    if (!x) return false;
-                    if (typeof x !== 'object') return true;
+                const formatSpecifierCount = (info as Record<string | symbol, unknown>)[this.HAD_FORMAT_KEY] as number;
+                const filtered = cleaned.filter((x, index) => {
+                    if (x === null || x === undefined) return false;
+                    if (x instanceof Error && typeof info.stack === 'string') return false;
+                    if (typeof x !== 'object') {
+                        return index >= formatSpecifierCount;
+                    }
                     return Object.keys(x).length > 0;
                 });
 
                 if (filtered.length) {
-                    const parts: string[] = [];
+                    const primitives: string[] = [];
+                    const objects: string[] = [];
+
                     for (const x of filtered) {
-                        if (typeof x === 'string') parts.push(x);
-                        else {
+                        if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean') {
+                            primitives.push(String(x));
+                        } else {
                             try {
-                                parts.push(JSON.stringify(x, null, 2));
+                                objects.push(JSON.stringify(x, null, 2));
                             } catch {
-                                parts.push(String(x));
+                                objects.push(String(x));
                             }
                         }
                     }
-                    rendered += `\n${parts.join(' ')}`;
+
+                    if (primitives.length) {
+                        rendered += ` ${primitives.join(' ')}`;
+                    }
+                    if (objects.length) {
+                        rendered += `\n${objects.join('\n')}`;
+                    }
                 }
 
                 return rendered;

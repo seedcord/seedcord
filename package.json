@@ -14,6 +14,7 @@
         "format:check": "turbo format:check",
         "tc": "turbo tc",
         "test": "turbo test",
+        "prePush": "pnpm build && pnpm tc && pnpm lint && pnpm test",
         "lint-staged": "lint-staged",
         "clean": "turbo clean",
         "clean:node": "find . -name node_modules -type d -prune -exec rm -rf '{}' +",
@@ -45,7 +46,8 @@
         "bot",
         "framework",
         "oop",
-        "typescript"
+        "typescript",
+        "cli"
     ],
     "author": "Dhruv <materwelondhruv@gmail.com>",
     "license": "Apache-2.0",
@@ -65,12 +67,13 @@
         "lint-staged": "^16.2.7",
         "nodemon": "^3.1.11",
         "prettier": "catalog:deps",
+        "tsd": "^0.33.0",
         "tsup": "catalog:peer",
         "tsx": "catalog:peer",
         "turbo": "^2.6.1",
         "typescript": "catalog:peer",
-        "vitest": "^4.0.13",
-        "tsd": "^0.33.0"
+        "vite": "catalog:deps",
+        "vitest": "^4.0.13"
     },
     "engines": {
         "node": ">=22.12.0"
