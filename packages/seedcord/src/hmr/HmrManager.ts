@@ -15,7 +15,7 @@ export class HmrManager {
         if (import.meta.hot && Envapter.isDevelopment) {
             this.logger.info('Enabled');
 
-            import.meta.hot.on('seedcord:hmr', (payload: HmrUpdateEvent) => {
+            import.meta.hot.on('seedcord:hmr', (payload) => {
                 const affected = payload.affectedModules?.length ?? 0;
                 this.logger.info(`${chalk.bold('1')} module changed, ${chalk.bold(affected)} affected modules`);
 

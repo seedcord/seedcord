@@ -29,9 +29,7 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
 
-    // Helper for testing
     protected get hot(): NormalizedHotChannel | undefined {
-        // return import.meta.hot;
         return this.server?.environments.ssr.hot;
     }
 
@@ -72,7 +70,8 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
                 for (const pattern of data.patterns) {
                     this.dynamicRestartPatterns.add(pattern);
                 }
-                this.logger.debug(`Registered critical file patterns: ${data.patterns.join(', ')}`);
+
+                this.logger.utils.list(data.patterns, 'Registered critical file patterns:');
             });
         }
     }
@@ -115,13 +114,12 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
         const relPath = relative(process.cwd(), file);
         const type = 'update';
-        const typeColor = chalk.blue;
 
-        this.logger.info(`${typeColor(type.toUpperCase())} ${chalk.gray(relPath)}`);
+        this.logger.info(`${chalk.blue(type.toUpperCase())} ${chalk.gray(relPath)}`);
 
         // Check for critical files
         if (this.isCriticalFile(file)) {
-            this.logger.warn(`Critical file changed: ${chalk.bold(relPath)}. Restart required.`);
+            this.logger.warn(`${chalk.red('Critical file changed:')} ${chalk.bold(relPath)}. Restart required.`);
             this.emit('restart-needed', file);
             return [];
         }

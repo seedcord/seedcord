@@ -72,16 +72,17 @@ export class KyselyPg<Database extends object> extends Plugin {
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
             isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
-
-            registerHandler: (Service) => new Service(this, this.core),
-            unregisterHandler: (Service, artifacts) => this.serviceRegistry.unregister(Service, artifacts),
-            getArtifacts: (Service) => {
-                const key = Reflect.getMetadata(PgServiceMetadataKey, Service) as string | undefined;
-                return key ? { key } : {};
-            },
+            registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
+            unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
+            getArtifacts: this.getArtifacts.bind(this),
             logger: this.logger.inChannel('hmr'),
             name: 'KyselyPg'
         });
+    }
+
+    private getArtifacts(ctor: KyselyServiceConstructor<Database>): KyselyArtifact {
+        const key = Reflect.getMetadata(PgServiceMetadataKey, ctor) as string | undefined;
+        return key ? { key } : {};
     }
 
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {

@@ -69,20 +69,21 @@ export class Mongo extends Plugin {
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
             isHandler: this.isServiceClass.bind(this),
-
-            registerHandler: (Service) => new Service(this, this.core),
-            unregisterHandler: (Service, artifacts) => this.unregister(Service, artifacts),
-            getArtifacts: (Service) => {
-                const key = Reflect.getMetadata(ServiceMetadataKey, Service) as string | undefined;
-                const model = Reflect.getMetadata(ModelMetadataKey, Service) as mongoose.Model<unknown> | undefined;
-                return {
-                    ...(key ? { key } : {}),
-                    ...(model?.modelName ? { modelName: model.modelName } : {})
-                };
-            },
+            registerHandler: this.initializeService.bind(this),
+            unregisterHandler: this.unregister.bind(this),
+            getArtifacts: this.getArtifacts.bind(this),
             logger: this.logger.inChannel('hmr'),
             name: 'Mongo'
         });
+    }
+
+    private getArtifacts(ctor: MongoServiceConstructor): MongoArtifact {
+        const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
+        const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<unknown> | undefined;
+        return {
+            ...(key ? { key } : {}),
+            ...(model?.modelName ? { modelName: model.modelName } : {})
+        };
     }
 
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
@@ -146,8 +147,7 @@ export class Mongo extends Plugin {
             (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
-                        const instance = new Service(this, this.core);
-                        this.logger.utils.registration(instance.constructor.name, rel);
+                        this.initializeService(Service, rel);
                         this.hmrHandler?.trackHandler(fullPath, Service);
                     }
                 }
@@ -159,6 +159,11 @@ export class Mongo extends Plugin {
             [`${chalk.magenta(Object.keys(this.services).length)} services`],
             chalk.bold.green('Loaded')
         );
+    }
+
+    private initializeService(Service: MongoServiceConstructor, relativePath: string): void {
+        const instance = new Service(this, this.core);
+        this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
     private isServiceClass(obj: unknown): obj is MongoServiceConstructor {

@@ -30,7 +30,7 @@ export class ConfigLoader {
         const entry = this.resolveWithinRoot(root, config.entry);
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
-        const tsconfig = config.tsconfig ? resolve(root, config.tsconfig) : undefined;
+        const tsconfig = config.hmr?.tsconfig ? resolve(root, config.hmr.tsconfig) : undefined;
 
         this.logger.info(`Loaded configuration from ${configPath}`);
         this.logger.debug(`Resolved root: ${root}`);
@@ -70,7 +70,7 @@ export class ConfigLoader {
             throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
         }
 
-        if (typeof cfg.tsconfig !== 'undefined' && typeof cfg.tsconfig !== 'string') {
+        if (typeof cfg.hmr?.tsconfig !== 'undefined' && typeof cfg.hmr.tsconfig !== 'string') {
             throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
         }
 
@@ -95,7 +95,7 @@ export class ConfigLoader {
 
         const normalized: SeedcordDevConfig = { instance: cfg.instance, entry: cfg.entry };
         if (typeof cfg.root === 'string') normalized.root = cfg.root;
-        if (typeof cfg.tsconfig === 'string') normalized.tsconfig = cfg.tsconfig;
+        if (typeof cfg.hmr?.tsconfig === 'string') normalized.hmr = { tsconfig: cfg.hmr.tsconfig };
         if (cfg.build) normalized.build = cfg.build;
 
         return normalized;

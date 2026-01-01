@@ -40,7 +40,7 @@ export interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifact
     unregisterMiddleware?: (middleware: TMiddleware) => void;
     /** Function to extract artifacts from a handler to be stored across hmr cache invalidations. */
     getArtifacts?: (handler: THandler) => TArtifacts;
-    /** Logger instance for logging HMR activities. Make sure to pass this logger using the {@link Logger.inChannel} method */
+    /** Logger instance for logging HMR activities. Make sure to pass this logger using the {@link Logger.inChannel} method with channel name `hmr`. */
     logger: Logger;
     /** Name of the module handler, used in logging. */
     name: string;

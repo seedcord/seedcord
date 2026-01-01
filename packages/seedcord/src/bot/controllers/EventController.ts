@@ -1,5 +1,5 @@
 import { Logger } from '@seedcord/services';
-import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
+import { hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
 import { Envapter } from 'envapt';
@@ -66,6 +66,7 @@ export class EventController implements Initializeable, HmrAware {
         }
 
         if (!Envapter.isDevelopment) return; // HMR only in development
+
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: eventsDir,
             ...(hasKeys(this.core.config.bot.events, ['middlewares'])
@@ -73,27 +74,22 @@ export class EventController implements Initializeable, HmrAware {
                 : {}),
             isHandler: this.isEventHandlerClass.bind(this),
             isMiddleware: this.isMiddlewareClass.bind(this),
-            registerHandler: (handler) => this.registerHandler(handler),
-            registerMiddleware: (middleware, file) => {
-                const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middleware) as
-                    | MiddlewareMetadata
-                    | undefined;
-                if (metadata?.type === MiddlewareType.Event) {
-                    this.registerMiddleware(middleware, metadata, formatFilePath(file));
-                }
-            },
-            unregisterHandler: (handler, artifacts) => this.unregisterHandler(handler, artifacts),
+            registerHandler: this.registerHandler.bind(this),
+            registerMiddleware: this.registerMiddleware.bind(this),
+            unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
-            getArtifacts: (handler) => {
-                const events: EventArtifact[] = [];
-                for (const [event, handlers] of this.eventMap.entries()) {
-                    if (handlers.some((h) => h.ctor === handler)) events.push(event);
-                }
-                return events;
-            },
+            getArtifacts: this.getArtifacts.bind(this),
             logger: this.logger.inChannel('hmr'),
             name: 'Event'
         });
+    }
+
+    private getArtifacts(ctor: EventHandlerConstructor): EventArtifact[] {
+        const events: EventArtifact[] = [];
+        for (const [event, handlers] of this.eventMap.entries()) {
+            if (handlers.some((h) => h.ctor === ctor)) events.push(event);
+        }
+        return events;
     }
 
     public async init(): Promise<void> {
@@ -133,9 +129,8 @@ export class EventController implements Initializeable, HmrAware {
             (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isEventHandlerClass(val)) continue;
-                    this.registerHandler(val);
+                    this.registerHandler(val, relativePath);
                     this.hmrHandler?.trackHandler(fullPath, val);
-                    this.logger.utils.registration(val.name, relativePath);
                 }
             },
             this.logger
@@ -148,10 +143,8 @@ export class EventController implements Initializeable, HmrAware {
             (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isMiddlewareClass(val)) continue;
-                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
-                    if (metadata?.type !== MiddlewareType.Event) continue;
 
-                    this.registerMiddleware(val, metadata, relativePath);
+                    this.registerMiddleware(val, relativePath);
                     this.hmrHandler?.trackMiddleware(fullPath, val);
                 }
             },
@@ -186,11 +179,10 @@ export class EventController implements Initializeable, HmrAware {
         }
     }
 
-    private registerMiddleware(
-        middlewareCtor: EventMiddlewareConstructor,
-        metadata: MiddlewareMetadata,
-        relativePath: string
-    ): void {
+    private registerMiddleware(middlewareCtor: EventMiddlewareConstructor, relativePath: string): void {
+        const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middlewareCtor) as MiddlewareMetadata | undefined;
+        if (metadata?.type !== MiddlewareType.Event) return;
+
         const alreadyRegistered = this.middlewares.some((entry) => entry.ctor === middlewareCtor);
         if (alreadyRegistered) return;
 
@@ -243,7 +235,7 @@ export class EventController implements Initializeable, HmrAware {
         return obj.prototype instanceof EventMiddleware && Reflect.hasMetadata(MiddlewareMetadataKey, obj);
     }
 
-    private registerHandler(handlerClass: EventHandlerConstructor): void {
+    private registerHandler(handlerClass: EventHandlerConstructor, relativePath: string): void {
         const raw = Reflect.getMetadata(EventMetadataKey, handlerClass) as unknown;
 
         const register = (key: keyof ClientEvents, frequency: EventFrequency): void => {
@@ -268,16 +260,15 @@ export class EventController implements Initializeable, HmrAware {
             for (const entry of raw as RegisterEventMetadataEntry<keyof ClientEvents>[]) {
                 register(entry.event, entry.frequency);
             }
-            return;
+        } else {
+            const names = areRoutes(raw) ? raw : typeof raw === 'string' ? [raw] : [];
+
+            for (const name of names) {
+                register(name as keyof ClientEvents, 'on');
+            }
         }
 
-        const names = areRoutes(raw) ? raw : typeof raw === 'string' ? [raw] : [];
-
-        if (names.length === 0) return;
-
-        for (const name of names) {
-            register(name as keyof ClientEvents, 'on');
-        }
+        this.logger.utils.registration(handlerClass.name, relativePath);
     }
 
     private attachToClient(): void {

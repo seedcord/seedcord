@@ -1,4 +1,3 @@
-import 'vite';
 import type { HmrUpdateEvent } from './Hmr';
 
 /**

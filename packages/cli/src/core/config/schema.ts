@@ -18,6 +18,11 @@ export interface SeedcordHmrConfig {
      * Glob patterns for files that should trigger a full restart when changed.
      */
     restart?: string[];
+
+    /**
+     * Optional tsconfig path to use for type checking in dev mode. Defaults to the nearest tsconfig.json.
+     */
+    tsconfig?: string;
 }
 
 /**
@@ -36,10 +41,6 @@ export interface SeedcordDevConfig {
      * Entry file that should be executed when starting the bot (and copied into the build output).
      */
     entry: string;
-    /**
-     * Optional tsconfig path to use for type checking in dev mode. Defaults to the nearest tsconfig.json.
-     */
-    tsconfig?: string;
     /**
      * Optional build configuration overrides.
      */

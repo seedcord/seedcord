@@ -51,19 +51,18 @@ export class EffectsController extends Plugin<EffectsEvents> {
             this.hmrHandler = new HmrModuleHandler({
                 handlersDir: this.core.config.effects.path,
                 isHandler: this.isEffectHandler.bind(this),
-                registerHandler: (handler) => {
-                    const meta = Reflect.getMetadata(EffectMetadataKey, handler) as RegisterEffectMetadataEntry;
-                    this.registerEffect(handler, meta);
-                },
-                unregisterHandler: (handler, artifacts) => this.unregisterEffect(handler, artifacts),
-                getArtifacts: (handler) => {
-                    const meta = Reflect.getMetadata(EffectMetadataKey, handler) as RegisterEffectMetadataEntry;
-                    return [meta.effect];
-                },
+                registerHandler: this.registerEffect.bind(this),
+                unregisterHandler: this.unregisterEffect.bind(this),
+                getArtifacts: this.getArtifacts.bind(this),
                 logger: this.logger.inChannel('hmr'),
                 name: 'Effects'
             });
         }
+    }
+
+    private getArtifacts(ctor: EffectConstructor): EffectArtifact {
+        const meta = Reflect.getMetadata(EffectMetadataKey, ctor) as RegisterEffectMetadataEntry;
+        return [meta.effect];
     }
 
     public async init(): Promise<void> {
@@ -71,7 +70,7 @@ export class EffectsController extends Plugin<EffectsEvents> {
 
         this.isInitialized = true;
 
-        this.registerEffect(UnknownException, { effect: 'unknownException', frequency: 'on' });
+        this.registerEffect(UnknownException);
 
         const effectsDir = this.core.config.effects.path;
         if (effectsDir) {
@@ -98,8 +97,7 @@ export class EffectsController extends Plugin<EffectsEvents> {
                 for (const exportName of Object.keys(imported)) {
                     const val = imported[exportName];
                     if (this.isEffectHandler(val)) {
-                        const meta = Reflect.getMetadata(EffectMetadataKey, val) as RegisterEffectMetadataEntry;
-                        this.registerEffect(val, meta);
+                        this.registerEffect(val);
                         this.hmrHandler?.trackHandler(fullPath, val);
                         this.logger.utils.registration(val.name, relativePath);
                     }
@@ -109,7 +107,9 @@ export class EffectsController extends Plugin<EffectsEvents> {
         );
     }
 
-    private registerEffect(handler: EffectConstructor, options: RegisterEffectMetadataEntry): void {
+    private registerEffect(handler: EffectConstructor): void {
+        const options = Reflect.getMetadata(EffectMetadataKey, handler) as RegisterEffectMetadataEntry;
+
         let handlers = this.effectsMap.get(options.effect);
         if (!handlers) {
             handlers = [];

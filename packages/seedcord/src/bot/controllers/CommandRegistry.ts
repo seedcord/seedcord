@@ -51,15 +51,19 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
 
         if (!Envapter.isDevelopment) return; // HMR only in development
-        this.hmrHandler = new HmrModuleHandler({
+        this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
             handlersDir: commandsDir,
             isHandler: this.isCommandClass.bind(this),
-            registerHandler: (handler, file) => this.registerCommand(handler, file),
-            unregisterHandler: (handler, artifacts) => this.unregisterCommand(handler, artifacts),
-            getArtifacts: (handler) => this.ctorToCommand.get(handler),
+            registerHandler: this.registerCommand.bind(this),
+            unregisterHandler: this.unregisterCommand.bind(this),
+            getArtifacts: this.getArtifacts.bind(this),
             logger: this.logger.inChannel('hmr'),
             name: 'Commands'
         });
+    }
+
+    private getArtifacts(ctor: CommandCtor): CommandArtifact | undefined {
+        return this.ctorToCommand.get(ctor);
     }
 
     public async init(): Promise<void> {
@@ -148,7 +152,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         if (meta.scope === 'global') {
             this.globalCommands.push(comp);
             this.logger.utils.registration(ctor.name, rel);
-            this.logger.info(`→ Global ${commandType}: ${chalk.bold.cyan(comp.name)}`);
+            this.logger.utils.item(`Global ${commandType}: ${chalk.bold.cyan(comp.name)}`);
         } else {
             for (const g of meta.guilds) {
                 const arr = this.guildCommands.get(g) ?? [];
@@ -156,8 +160,8 @@ export class CommandRegistry implements Initializeable, HmrAware {
                 this.guildCommands.set(g, arr);
             }
             this.logger.utils.registration(ctor.name, rel);
-            this.logger.info(
-                `→ Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
+            this.logger.utils.item(
+                `Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
             );
         }
         this.ctorToCommand.set(ctor, {
@@ -193,7 +197,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             this.logger.utils.summary('Configured global', {
                 [tag]: this.globalCommands.length
             });
-            this.logger.info(`→ ${this.globalCommands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
+            this.logger.utils.item(`${this.globalCommands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
 
         for (const [guildId, commands] of this.guildCommands.entries()) {
@@ -208,7 +212,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             this.logger.utils.summary(`Configured commands for ${chalk.bold.yellow(guild.name)}`, {
                 [tag]: commands.length
             });
-            this.logger.info(`→ ${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
+            this.logger.utils.item(`${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
     }
 }

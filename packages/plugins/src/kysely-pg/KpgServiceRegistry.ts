@@ -37,8 +37,7 @@ export class KpgServiceRegistry<Database extends object> {
             (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
-                        const instance = new Service(this.plugin, this.core);
-                        this.logger.utils.registration(instance.constructor.name, rel);
+                        this.initializeService(Service, rel);
 
                         // @ts-expect-error - private access on hmrHandler. hmrHandler is private as it's a development only api used by hmr
                         this.plugin.hmrHandler?.trackHandler(fullPath, Service);
@@ -60,6 +59,11 @@ export class KpgServiceRegistry<Database extends object> {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete (this.services as Record<string, unknown>)[key];
         }
+    }
+
+    public initializeService(Service: KyselyServiceConstructor<Database>, relativePath: string): void {
+        const instance = new Service(this.plugin, this.core);
+        this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
     public isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {

@@ -7,6 +7,7 @@ import { Envapter } from 'envapt';
 
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { UnhandledEvent } from '@bot/defaults';
 import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
@@ -118,30 +119,23 @@ export class InteractionController implements Initializeable, HmrAware {
                 : {}),
             isHandler: this.isHandlerClass.bind(this),
             isMiddleware: this.isMiddlewareClass.bind(this),
-            registerHandler: (handler) => this.registerHandler(handler),
-            registerMiddleware: (middleware, file) => {
-                const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middleware) as
-                    | MiddlewareMetadata
-                    | undefined;
-                if (metadata?.type === MiddlewareType.Interaction) {
-                    this.registerMiddleware(middleware, metadata, formatFilePath(file));
-                }
-            },
-            unregisterHandler: (handler, artifacts) => this.unregisterHandler(handler, artifacts),
+            registerHandler: this.registerHandler.bind(this),
+            registerMiddleware: this.registerMiddleware.bind(this),
+            unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
-            getArtifacts: (handler) => {
-                const artifacts: InteractionArtifact[] = [];
-                for (const [routeType] of this.routeTypes) {
-                    const meta: unknown = Reflect.getMetadata(routeType, handler);
-                    if (areRoutes(meta)) {
-                        artifacts.push({ routeType, routes: meta });
-                    }
-                }
-                return artifacts;
-            },
+            getArtifacts: this.getArtifacts.bind(this),
             logger: this.logger.inChannel('hmr'),
             name: 'Interaction'
         });
+    }
+
+    private getArtifacts(handlerClass: HandlerConstructor): InteractionArtifact[] {
+        const artifacts: InteractionArtifact[] = [];
+        for (const [routeType] of this.routeTypes) {
+            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            if (areRoutes(meta)) artifacts.push({ routeType, routes: meta });
+        }
+        return artifacts;
     }
 
     public async init(): Promise<void> {
@@ -189,9 +183,8 @@ export class InteractionController implements Initializeable, HmrAware {
             (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isHandlerClass(val)) continue;
-                    this.registerHandler(val);
+                    this.registerHandler(val, relativePath);
                     this.hmrHandler?.trackHandler(fullPath, val);
-                    this.logger.utils.registration(val.name, relativePath);
                 }
             },
             this.logger
@@ -204,10 +197,8 @@ export class InteractionController implements Initializeable, HmrAware {
             (fullPath, relativePath, imported) => {
                 for (const val of Object.values(imported)) {
                     if (!this.isMiddlewareClass(val)) continue;
-                    const metadata = Reflect.getMetadata(MiddlewareMetadataKey, val) as MiddlewareMetadata | undefined;
-                    if (metadata?.type !== MiddlewareType.Interaction) continue;
 
-                    this.registerMiddleware(val, metadata, relativePath);
+                    this.registerMiddleware(val, relativePath);
                     this.hmrHandler?.trackMiddleware(fullPath, val);
                 }
             },
@@ -215,11 +206,10 @@ export class InteractionController implements Initializeable, HmrAware {
         );
     }
 
-    private registerMiddleware(
-        middlewareCtor: InteractionMiddlewareConstructor,
-        metadata: MiddlewareMetadata,
-        relativePath: string
-    ): void {
+    private registerMiddleware(middlewareCtor: InteractionMiddlewareConstructor, relativePath: string): void {
+        const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middlewareCtor) as MiddlewareMetadata | undefined;
+        if (metadata?.type !== MiddlewareType.Interaction) return;
+
         const existingIndex = this.middlewares.findIndex((entry) => entry.ctor.name === middlewareCtor.name);
 
         if (existingIndex !== -1) {
@@ -250,13 +240,15 @@ export class InteractionController implements Initializeable, HmrAware {
         return obj.prototype instanceof InteractionMiddleware && Reflect.hasMetadata(MiddlewareMetadataKey, obj);
     }
 
-    private registerHandler(handlerClass: HandlerConstructor): void {
+    private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
         for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
             if (!areRoutes(meta)) continue;
 
             const routes = meta;
             routes.forEach((route) => map.set(route, handlerClass));
+
+            this.logger.utils.registration(handlerClass.name, formatFilePath(relativePath));
         }
     }
 
@@ -355,7 +347,6 @@ export class InteractionController implements Initializeable, HmrAware {
         if (!HandlerCtor) {
             // Automatically fallback to UnhandledEvent
             this.logger.warn(`No handler found for key ${chalk.bold.cyan(key)}. Falling back to UnhandledEvent.`);
-            const { UnhandledEvent } = await import('../defaults/UnhandledEvent');
             HandlerCtor = UnhandledEvent;
         }
 

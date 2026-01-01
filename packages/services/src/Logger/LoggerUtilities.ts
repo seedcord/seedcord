@@ -14,6 +14,14 @@ export class LoggerUtilitiesAccessor {
     }
 
     /**
+     * Logs a single item with an arrow prefix.
+     * @param text - The text to log
+     */
+    public item(text: string): void {
+        this.logger.info(this.arrow(text));
+    }
+
+    /**
      * Logs a list of items with optional heading.
      *
      * @param items - Array of items to log as a list

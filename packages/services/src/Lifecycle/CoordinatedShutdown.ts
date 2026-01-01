@@ -78,7 +78,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         phase: ShutdownPhase,
         tasks: LifecycleTask[]
     ): Promise<PromiseSettledResult<void>[]> {
-        // Execute all tasks in parallel (unlike startup which uses sequential)
+        // Execute all tasks in parallel
         const promises = tasks.map((task) => this.runTaskWithTimeout(phase, task));
         return Promise.allSettled(promises);
     }
