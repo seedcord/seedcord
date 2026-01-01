@@ -23,7 +23,7 @@ export class TscRunner {
 
         this.logger.info('Starting tsc --watch...');
 
-        this.process = spawn(`tsc ${args.join(' ')}`, {
+        this.process = spawn('tsc', args, {
             cwd: this.cwd ?? process.cwd(),
             shell: true,
             stdio: ['ignore', 'pipe', 'pipe']

@@ -137,6 +137,7 @@ class SeedcordDevSession {
     }
 
     public async dispose(): Promise<void> {
+        await this.stop();
         await this.runtime.dispose();
     }
 
@@ -166,6 +167,7 @@ export class DevRunner {
     private signalResolve?: () => void;
     private shouldQuit = false;
     private isDisconnected = false;
+    private isRunning = false;
 
     constructor(
         private readonly locator: ConfigLocator,
@@ -181,24 +183,31 @@ export class DevRunner {
     }
 
     public async run(actions: DevRunnerActions): Promise<void> {
-        while (true) {
-            try {
-                if (this.shouldQuit) break;
+        if (this.isRunning) return;
+        this.isRunning = true;
 
-                if (this.isDisconnected) {
-                    await this.handleDisconnected(actions);
+        try {
+            while (true) {
+                try {
                     if (this.shouldQuit) break;
-                    continue;
+
+                    if (this.isDisconnected) {
+                        await this.handleDisconnected(actions);
+                        if (this.shouldQuit) break;
+                        continue;
+                    }
+
+                    await this.runSession(actions);
+
+                    if (this.shouldQuit) break;
+                } catch (error: unknown) {
+                    if (this.shouldQuit) break;
+                    await this.handleError(actions, error);
+                    if (this.shouldQuit) break;
                 }
-
-                await this.runSession(actions);
-
-                if (this.shouldQuit) break;
-            } catch (error: unknown) {
-                if (this.shouldQuit) break;
-                await this.handleError(actions, error);
-                if (this.shouldQuit) break;
             }
+        } finally {
+            this.isRunning = false;
         }
     }
 
