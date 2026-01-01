@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   deps:
+    '@types/react':
+      specifier: 19.2.7
+      version: 19.2.7
     chalk:
       specifier: 5.6.2
       version: 5.6.2
@@ -21,6 +24,9 @@ catalogs:
     prettier:
       specifier: 3.7.4
       version: 3.7.4
+    react:
+      specifier: 19.2.3
+      version: 19.2.3
     reflect-metadata:
       specifier: 0.2.2
       version: 0.2.2
@@ -169,7 +175,7 @@ importers:
         specifier: catalog:deps
         version: 3.7.4
       react:
-        specifier: ^19.2.3
+        specifier: catalog:deps
         version: 19.2.3
       react-dom:
         specifier: ^19.2.3
@@ -194,7 +200,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/react':
-        specifier: ^19.2.7
+        specifier: catalog:deps
         version: 19.2.7
       '@types/react-dom':
         specifier: ^19.2.3
@@ -266,9 +272,6 @@ importers:
       commander:
         specifier: ^14.0.2
         version: 14.0.2
-      envapt:
-        specifier: catalog:deps
-        version: 4.1.0
       fix-esm-import-path:
         specifier: ^1.10.3
         version: 1.10.3
@@ -285,7 +288,7 @@ importers:
         specifier: ^10.1.1
         version: 10.1.1
       react:
-        specifier: ^19.2.3
+        specifier: catalog:deps
         version: 19.2.3
       tsx:
         specifier: catalog:peer
@@ -304,7 +307,7 @@ importers:
         specifier: workspace:*
         version: link:../tsup-config
       '@types/react':
-        specifier: ^19.2.7
+        specifier: catalog:deps
         version: 19.2.7
       eslint-plugin-react:
         specifier: ^7.37.5
