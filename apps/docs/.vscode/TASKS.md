@@ -14,6 +14,10 @@
 
 [ ] 58. Make hyperlinking in code signatures case-sensitive IF a ref isn't found in internal documentation.
 
+[ ] 60. For interfaces that have nested objects in them but those nested objects aren't documented entities, render those nested objects correctly instead of "files: {…}". That is, expand them to show their properties. Because "…" is not helpful.
+
+[ ] 61. Throughout the whole project, there are many scattered uses of ok_lab colormix. I need you to search through this api/docs directory using rg for these usages, look for patterns (and values that are very close but different so can be merged to one), and add these to the styles folder in .css files. Then update all usages to use these new styles from the styles folder. The goal is to have a consistent color scheme across the whole project and reduce redundancy.
+
 [ ] 42. Render @throws comment similar to Inherits from and See also sections. This is mostly done because we have a bunch of code and the types etc to handle it, but I don't see it rendered on the website. Also, please check kind-function-haspermstoassign.txt. You can see that it has an array for throws. Use the type from docs-engine package that's exported and access this array instead of looking for `@throws` tags.
 
 [ ] 37. In type param rendered comments on entity pages, the type param comment duplicates itself above and below the signature.
@@ -32,8 +36,8 @@
 
 [ ] 46. Something about tooltips in the sidebar feels off. Also, tooltips in general across the app. Lets use the tooltip component from that ui library we're using, but make our own custom component using it so we have consistent styling. I don't like how the tooltips are transparent background. So first thing is fixing that.
 
-[ ] 47. Browser navigation popup on mobile doesn't close when I click an option in it. Also, when scrolling in this popup on mobile, the scroll doesn't keep scrolling when I lift my finger. It stops immediately. It should have some momentum.
+[ ] 47. Browser navigation popup on mobile doesn't close when I click an option in it. Also, when scrolling in this popup on mobile, the scroll doesn't keep scrolling when I lift my finger. It stops immediately. It should have some momentum/intertia.
 
-[ ] 48. Rendering for virtual and remarks.
+[ ] 48. Rendering for `@virtual` and `@remarks`.
 
-[ ] 49. Render markdown in comments.
+[ ] 49. Render markdown in comments. Lists, bold, and italics.

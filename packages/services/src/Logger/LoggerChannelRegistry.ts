@@ -45,11 +45,15 @@ export class LoggerChannelRegistry {
     private config: LoggerConfiguration = {
         defaultChannel: 'default',
         channels: {},
-        devFilePattern: 'logs/{channel}-{timestamp}.log',
-        stagingFilePattern: 'logs/staging-{date}-{timestamp}.jsonl',
-        prodFilePattern: 'logs/production-{date}.jsonl',
-        fileMaxSizeMB: 10,
-        fileMaxFiles: 5
+        files: {
+            maxSizeMB: 10,
+            maxFiles: 5,
+            patterns: {
+                dev: 'logs/{channel}-{timestamp}.log',
+                staging: 'logs/staging-{date}-{timestamp}.jsonl',
+                prod: 'logs/production-{date}.jsonl'
+            }
+        }
     };
 
     private readonly FORMAT = Envapter.isDevelopment ? 'pretty' : 'json';
@@ -78,14 +82,14 @@ export class LoggerChannelRegistry {
                     type: 'file',
                     level: this.DEFAULT_LEVEL,
                     filename: Envapter.isDevelopment
-                        ? this.config.devFilePattern
+                        ? this.config.files.patterns.dev
                         : Envapter.isStaging
-                          ? this.config.stagingFilePattern
-                          : this.config.prodFilePattern,
+                          ? this.config.files.patterns.staging
+                          : this.config.files.patterns.prod,
                     format: this.FORMAT,
                     stripAnsi: true,
-                    maxSize: this.config.fileMaxSizeMB * 1024 * 1024,
-                    maxFiles: this.config.fileMaxFiles
+                    maxSize: this.config.files.maxSizeMB * 1024 * 1024,
+                    maxFiles: this.config.files.maxFiles
                 }
             ]
         };

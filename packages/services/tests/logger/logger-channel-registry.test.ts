@@ -27,11 +27,15 @@ describe('LoggerChannelRegistry', () => {
                 registry.configure({
                     defaultChannel: 'test-channel',
                     channels: {},
-                    devFilePattern: 'logs/{channel}.log',
-                    stagingFilePattern: 'logs/staging.log',
-                    prodFilePattern: 'logs/prod.log',
-                    fileMaxSizeMB: 10,
-                    fileMaxFiles: 5
+                    files: {
+                        maxSizeMB: 10,
+                        maxFiles: 5,
+                        patterns: {
+                            dev: 'logs/{channel}.log',
+                            staging: 'logs/staging.log',
+                            prod: 'logs/prod.log'
+                        }
+                    }
                 });
             }).not.toThrow();
         });

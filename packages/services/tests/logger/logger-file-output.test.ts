@@ -114,11 +114,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('file-creation-test', { channel: 'file-test' });
@@ -150,11 +154,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('channel-test', { channel: 'channel-name-test' });
@@ -187,11 +195,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('pretty-logger', { channel: 'pretty-test' });
@@ -231,11 +243,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('levels-logger', { channel: 'levels-test' });
@@ -274,11 +290,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('extras-logger', { channel: 'extras-test' });
@@ -321,11 +341,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('json-logger', { channel: 'json-test' });
@@ -365,11 +389,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('json-fields-logger', { channel: 'json-fields-test' });
@@ -419,11 +447,15 @@ describe('Logger File Output', () => {
                         ]
                     }
                 },
-                devFilePattern: 'logs/logs-test/{channel}-{timestamp}.log',
-                stagingFilePattern: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
-                prodFilePattern: 'logs/logs-test/production-{date}.jsonl',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/logs-test/{channel}-{timestamp}.log',
+                        staging: 'logs/logs-test/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/logs-test/production-{date}.jsonl'
+                    }
+                }
             });
 
             const loggerA = new Logger('logger-a', { channel: 'channel-a' });

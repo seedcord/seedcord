@@ -9,11 +9,15 @@ describe('Logger', () => {
         Logger.configure({
             defaultChannel: 'test',
             channels: {},
-            devFilePattern: 'logs/{channel}-{timestamp}.log',
-            stagingFilePattern: 'logs/staging-{date}-{timestamp}.jsonl',
-            prodFilePattern: 'logs/production-{date}.jsonl',
-            fileMaxSizeMB: 10,
-            fileMaxFiles: 5
+            files: {
+                maxSizeMB: 10,
+                maxFiles: 5,
+                patterns: {
+                    dev: 'logs/{channel}-{timestamp}.log',
+                    staging: 'logs/staging-{date}-{timestamp}.jsonl',
+                    prod: 'logs/production-{date}.jsonl'
+                }
+            }
         });
     });
 
@@ -153,11 +157,15 @@ describe('Logger', () => {
                         transports: [{ type: 'console', level: 'debug' }]
                     }
                 },
-                devFilePattern: 'logs/custom-{timestamp}.log',
-                stagingFilePattern: 'logs/staging.jsonl',
-                prodFilePattern: 'logs/prod.jsonl',
-                fileMaxSizeMB: 20,
-                fileMaxFiles: 10
+                files: {
+                    maxSizeMB: 20,
+                    maxFiles: 10,
+                    patterns: {
+                        dev: 'logs/custom-{timestamp}.log',
+                        staging: 'logs/staging.jsonl',
+                        prod: 'logs/prod.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('configured-logger');
@@ -170,11 +178,15 @@ describe('Logger', () => {
             Logger.configure({
                 defaultChannel: 'new-default',
                 channels: {},
-                devFilePattern: 'logs/{channel}.log',
-                stagingFilePattern: 'logs/staging.log',
-                prodFilePattern: 'logs/prod.log',
-                fileMaxSizeMB: 5,
-                fileMaxFiles: 3
+                files: {
+                    maxSizeMB: 5,
+                    maxFiles: 3,
+                    patterns: {
+                        dev: 'logs/{channel}.log',
+                        staging: 'logs/staging.log',
+                        prod: 'logs/prod.log'
+                    }
+                }
             });
 
             Logger.Info('cache-test', 'After configure');
@@ -199,11 +211,15 @@ describe('Logger', () => {
                         transports: [{ type: 'console', level: 'warn' }]
                     }
                 },
-                devFilePattern: 'logs/{channel}.log',
-                stagingFilePattern: 'logs/staging.log',
-                prodFilePattern: 'logs/prod.log',
-                fileMaxSizeMB: 10,
-                fileMaxFiles: 5
+                files: {
+                    maxSizeMB: 10,
+                    maxFiles: 5,
+                    patterns: {
+                        dev: 'logs/{channel}-{timestamp}.log',
+                        staging: 'logs/staging-{date}-{timestamp}.jsonl',
+                        prod: 'logs/production-{date}.jsonl'
+                    }
+                }
             });
 
             const logger = new Logger('special-test', { channel: 'special' });

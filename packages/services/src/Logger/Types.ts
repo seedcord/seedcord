@@ -10,7 +10,7 @@ export type LoggerFormatMode = 'pretty' | 'json' | 'minimal';
 /**
  * Base configuration shared by all transport types.
  */
-interface BaseTransportConfig {
+export interface BaseTransportConfig {
     /** Minimum log level for this transport */
     level?: LoggerLevel;
     /** Output format mode */
@@ -84,21 +84,45 @@ export interface ChannelConfig {
 /**
  * Global logger configuration.
  */
+// export interface LoggerConfiguration {
+//     /** Name of the default channel to use when none is specified */
+//     defaultChannel: string;
+//     /** Channel configurations keyed by channel name */
+//     channels: Record<string, ChannelConfig>;
+//     /** Filename pattern for development logs */
+//     devFilePattern: string;
+//     /** Filename pattern for staging logs */
+//     stagingFilePattern: string;
+//     /** Filename pattern for production logs */
+//     prodFilePattern: string;
+//     /** Maximum file size in MB for log rotation */
+//     fileMaxSizeMB: number;
+//     /** Maximum number of log files to retain */
+//     fileMaxFiles: number;
+// }
+
+/**
+ * Global logger configuration.
+ */
 export interface LoggerConfiguration {
     /** Name of the default channel to use when none is specified */
     defaultChannel: string;
+    files: {
+        /** Maximum file size in MB for log rotation */
+        maxSizeMB: number;
+        /** Maximum number of log files to retain */
+        maxFiles: number;
+        patterns: {
+            /** Filename pattern for development logs */
+            dev: string;
+            /** Filename pattern for staging logs */
+            staging: string;
+            /** Filename pattern for production logs */
+            prod: string;
+        };
+    };
     /** Channel configurations keyed by channel name */
     channels: Record<string, ChannelConfig>;
-    /** Filename pattern for development logs */
-    devFilePattern: string;
-    /** Filename pattern for staging logs */
-    stagingFilePattern: string;
-    /** Filename pattern for production logs */
-    prodFilePattern: string;
-    /** Maximum file size in MB for log rotation */
-    fileMaxSizeMB: number;
-    /** Maximum number of log files to retain */
-    fileMaxFiles: number;
 }
 
 /**
