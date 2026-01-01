@@ -29,7 +29,7 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
 
-    protected get hot(): NormalizedHotChannel | undefined {
+    private get hot(): NormalizedHotChannel | undefined {
         return this.server?.environments.ssr.hot;
     }
 

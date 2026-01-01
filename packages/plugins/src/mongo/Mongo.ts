@@ -72,7 +72,7 @@ export class Mongo extends Plugin {
             registerHandler: this.initializeService.bind(this),
             unregisterHandler: this.unregister.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger.inChannel('hmr'),
+            logger: this.logger,
             name: 'Mongo'
         });
     }

@@ -14,6 +14,7 @@
         "format:check": "turbo format:check",
         "tc": "turbo tc",
         "test": "turbo test",
+        "prePush": "pnpm build && pnpm tc && pnpm lint && pnpm test",
         "lint-staged": "lint-staged",
         "clean": "turbo clean",
         "clean:node": "find . -name node_modules -type d -prune -exec rm -rf '{}' +",

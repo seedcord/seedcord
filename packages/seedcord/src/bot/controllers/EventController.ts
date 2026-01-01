@@ -79,7 +79,7 @@ export class EventController implements Initializeable, HmrAware {
             unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger.inChannel('hmr'),
+            logger: this.logger,
             name: 'Event'
         });
     }

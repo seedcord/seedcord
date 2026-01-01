@@ -54,7 +54,7 @@ export class EffectsController extends Plugin<EffectsEvents> {
                 registerHandler: this.registerEffect.bind(this),
                 unregisterHandler: this.unregisterEffect.bind(this),
                 getArtifacts: this.getArtifacts.bind(this),
-                logger: this.logger.inChannel('hmr'),
+                logger: this.logger,
                 name: 'Effects'
             });
         }

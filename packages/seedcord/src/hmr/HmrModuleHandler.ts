@@ -40,7 +40,7 @@ export interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifact
     unregisterMiddleware?: (middleware: TMiddleware) => void;
     /** Function to extract artifacts from a handler to be stored across hmr cache invalidations. */
     getArtifacts?: (handler: THandler) => TArtifacts;
-    /** Logger instance for logging HMR activities. Make sure to pass this logger using the {@link Logger.inChannel} method with channel name `hmr`. */
+    /** Logger instance for logging HMR activities.*/
     logger: Logger;
     /** Name of the module handler, used in logging. */
     name: string;
@@ -55,6 +55,8 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     private readonly store: HmrStore<THandler, TMiddleware, TArtifacts>;
 
     constructor(private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
+        options.logger = options.logger.inChannel('hmr');
+
         if (import.meta.hot) {
             const data = import.meta.hot.data as HmrData;
             data.hmr ??= {};

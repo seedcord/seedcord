@@ -57,7 +57,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             registerHandler: this.registerCommand.bind(this),
             unregisterHandler: this.unregisterCommand.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger.inChannel('hmr'),
+            logger: this.logger,
             name: 'Commands'
         });
     }

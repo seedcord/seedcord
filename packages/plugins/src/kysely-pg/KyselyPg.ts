@@ -75,7 +75,7 @@ export class KyselyPg<Database extends object> extends Plugin {
             registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
             unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger.inChannel('hmr'),
+            logger: this.logger,
             name: 'KyselyPg'
         });
     }
