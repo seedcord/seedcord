@@ -67,3 +67,5 @@
 - After linting, the only acceptable result is 0 errors and 0 warnings.
 
 - Make sure to run `pnpm test` in the relevant package or app after making changes to ensure nothing is broken.
+
+- The "rg" command is available for searching through files. So make use of it to find usages of things across the codebase based on patterns.
