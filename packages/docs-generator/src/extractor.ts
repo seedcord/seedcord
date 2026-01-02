@@ -12,7 +12,7 @@ import type { PackageDocResult } from './types';
 const EXTERNAL_PLUGINS = ['typedoc-plugin-mdn-links', 'typedoc-plugin-dt-links'];
 let externalPluginsLoaded = false;
 
-const addVersionToJson = async (outputPath: string, version: string): Promise<void> => {
+async function addVersionToJson(outputPath: string, version: string): Promise<void> {
     const raw = await readFile(outputPath, 'utf8');
     const parsed = JSON.parse(raw) as unknown;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -38,10 +38,10 @@ const addVersionToJson = async (outputPath: string, version: string): Promise<vo
 
     const output = Object.fromEntries(ordered);
     await writeFile(outputPath, JSON.stringify(output, null, 2), 'utf8');
-};
+}
 
 /**
- * run typedoc for one package and collect the status, warnings, and output location
+ * Run typedoc for one package and collect the status, warnings, and output location
  */
 // eslint-disable-next-line max-statements
 export async function extractPackageDocs(
@@ -109,7 +109,7 @@ export async function extractPackageDocs(
         await addVersionToJson(outputPath, manifest.version);
         succeeded = true;
     } else if (await pathExists(outputPath)) {
-        // if something failed and we had stale output, clean it up so nobody trusts old data
+        // if something failed clean it up
         await rm(outputPath, { force: true });
     }
 

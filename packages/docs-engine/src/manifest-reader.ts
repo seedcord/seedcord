@@ -43,7 +43,7 @@ export class ManifestReader {
     }
 }
 
-const normalizePackage = (value: unknown): DocManifestPackage | null => {
+function normalizePackage(value: unknown): DocManifestPackage | null {
     if (!value || typeof value !== 'object') {
         return null;
     }
@@ -81,9 +81,9 @@ const normalizePackage = (value: unknown): DocManifestPackage | null => {
         errorCount,
         succeeded: Boolean(pkg.succeeded)
     } satisfies DocManifestPackage;
-};
+}
 
-const parseRepository = (value: unknown): DocManifest['repository'] | undefined => {
+function parseRepository(value: unknown): DocManifest['repository'] | undefined {
     if (!value || typeof value !== 'object') {
         return undefined;
     }
@@ -110,4 +110,4 @@ const parseRepository = (value: unknown): DocManifest['repository'] | undefined 
     }
 
     return result;
-};
+}

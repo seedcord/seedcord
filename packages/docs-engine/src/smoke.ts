@@ -36,14 +36,14 @@ const FLAG_ALIASES: Record<string, string> = {
     '-h': '--help'
 };
 
-const resolvePath = (value: string): string => {
+function resolvePath(value: string): string {
     if (path.isAbsolute(value)) {
         return path.normalize(value);
     }
 
     const base = INITIAL_CWD ?? process.cwd();
     return path.normalize(path.resolve(base, value));
-};
+}
 
 const normalizeFlag = (value: string): string => FLAG_ALIASES[value] ?? value;
 type FlagHandler = (value: string, options: SmokeOptions) => void;
@@ -57,15 +57,15 @@ const FLAG_HANDLERS = new Map<string, FlagHandler>([
     ]
 ]);
 
-const assignPositional = (current: string | undefined, value: string): string => {
+function assignPositional(current: string | undefined, value: string): string {
     if (current) {
         throw new Error('Too many positional arguments provided. Expected at most one.');
     }
 
     return value;
-};
+}
 
-const parseArgs = (args: string[]): SmokeOptions => {
+function parseArgs(args: string[]): SmokeOptions {
     const options: SmokeOptions = { showHelp: false };
     let positional: string | undefined;
 
@@ -105,7 +105,7 @@ const parseArgs = (args: string[]): SmokeOptions => {
     }
 
     return options;
-};
+}
 
 const sanitizeFileSegment = (segment: string): string =>
     segment
@@ -120,25 +120,25 @@ type SampleResult =
     | { status: 'written'; query: string; filePath: string; packageName?: string }
     | { status: MissingStatus; query: string; packageName?: string };
 
-const ensureSegment = (value: string): string => {
+function ensureSegment(value: string): string {
     const segment = sanitizeFileSegment(value);
     return segment.length > 0 ? segment : 'entry';
-};
+}
 
-const createSamplePath = (samplesDir: string, node: DocNode, query: string): string => {
+function createSamplePath(samplesDir: string, node: DocNode, query: string): string {
     const label =
         typeof node.kindLabel === 'string' && node.kindLabel.length > 0 ? node.kindLabel : `kind-${node.kind}`;
     const kindSegment = ensureSegment(label);
     const nameSegment = ensureSegment(query);
     return path.join(samplesDir, `${kindSegment}-${nameSegment}.txt`);
-};
+}
 
-const attemptCustomSearch = async (
+async function attemptCustomSearch(
     query: string,
     packageName: string | undefined,
     engine: DocsEngine,
     samplesDir: string
-): Promise<SampleResult> => {
+): Promise<SampleResult> {
     const results = engine.search(query, packageName);
     if (results.length === 0) {
         if (packageName) {
@@ -175,21 +175,21 @@ const attemptCustomSearch = async (
     }
 
     return { status: 'written', query, filePath };
-};
+}
 
-const formatScope = (packageName: string | undefined): string => packageName ?? 'all packages';
+function formatScope(packageName: string | undefined): string {
+    return packageName ?? 'all packages';
+}
 
-const formatRelative = (target: string): string => {
+function formatRelative(target: string): string {
     const relative = path.relative(process.cwd(), target);
     return relative.length > 0 ? relative : '.';
-};
+}
 
 type WrittenSampleResult = Extract<SampleResult, { status: 'written' }>;
 type MissedSampleResult = Extract<SampleResult, { status: MissingStatus }>;
 
-const summarizeResults = (
-    results: SampleResult[]
-): { written: WrittenSampleResult[]; missed: MissedSampleResult[] } => {
+function summarizeResults(results: SampleResult[]): { written: WrittenSampleResult[]; missed: MissedSampleResult[] } {
     const written: WrittenSampleResult[] = [];
     const missed: MissedSampleResult[] = [];
 
@@ -202,9 +202,9 @@ const summarizeResults = (
     }
 
     return { written, missed };
-};
+}
 
-const runSmoke = async (parsed: SmokeOptions): Promise<void> => {
+async function runSmoke(parsed: SmokeOptions): Promise<void> {
     const generatedRoot = parsed.generatedDir ?? resolveGeneratedDir();
     const samplesDir = parsed.outputDir ?? DEFAULT_SAMPLES_DIR;
 
@@ -235,9 +235,9 @@ const runSmoke = async (parsed: SmokeOptions): Promise<void> => {
 
     const duration = Math.round(performance.now() - start);
     console.log(`Completed: ${written.length}/${results.length} samples in ${duration}ms.`);
-};
+}
 
-const main = async (): Promise<void> => {
+async function main(): Promise<void> {
     const args = process.argv.slice(2);
 
     let parsed: SmokeOptions;
@@ -257,7 +257,7 @@ Argument parsing error: ${message}`);
     }
 
     await runSmoke(parsed);
-};
+}
 
 main().catch((error: unknown) => {
     console.error('\n❌ smoke.ts encountered an error:\n');

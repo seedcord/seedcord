@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 
 type PageParams = Record<string, string | string[] | undefined>;
 
-const decodeParam = (value: string | string[] | undefined): string => {
+function decodeParam(value: string | string[] | undefined): string {
     if (!value) return '';
     const raw = Array.isArray(value) ? value[0] : value;
     const safe = raw ?? '';
@@ -23,11 +23,11 @@ const decodeParam = (value: string | string[] | undefined): string => {
     } catch {
         return safe;
     }
-};
+}
 
-const getCatalogContext = async (
+async function getCatalogContext(
     params: PageParams
-): Promise<{ entry: PackageCatalogEntry; version: PackageVersionCatalog }> => {
+): Promise<{ entry: PackageCatalogEntry; version: PackageVersionCatalog }> {
     const catalog = await loadDocsCatalog();
     const decodedPackageId = decodeParam(params.packageId);
 
@@ -42,9 +42,9 @@ const getCatalogContext = async (
     if (!version) notFound();
 
     return { entry, version };
-};
+}
 
-const renderCategory = (category: NavigationCategory): ReactElement => {
+function renderCategory(category: NavigationCategory): ReactElement {
     const toneStyles = getToneConfig(category.tone).styles;
 
     return (
@@ -76,7 +76,7 @@ const renderCategory = (category: NavigationCategory): ReactElement => {
             </ul>
         </div>
     );
-};
+}
 
 function PackageVersionOverview({
     entry,
@@ -109,11 +109,12 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
     const { entry, version } = await getCatalogContext(resolvedParams);
 
     const rawSegments = resolvedParams.entitySegments;
-    const normalizedSegments: string[] | undefined = (() => {
-        if (Array.isArray(rawSegments)) return rawSegments;
-        if (typeof rawSegments === 'string') return [rawSegments];
+    function normalizeSegments(raw: typeof rawSegments): string[] | undefined {
+        if (Array.isArray(raw)) return raw;
+        if (typeof raw === 'string') return [raw];
         return undefined;
-    })();
+    }
+    const normalizedSegments: string[] | undefined = normalizeSegments(rawSegments);
 
     if (!normalizedSegments || normalizedSegments.length === 0) {
         return <PackageVersionOverview entry={entry} version={version} />;

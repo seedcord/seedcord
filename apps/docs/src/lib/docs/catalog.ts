@@ -39,7 +39,7 @@ const createNavigationItem = (
     href: buildEntityHref({ name: manifestPackage, version, slug, tone })
 });
 
-const buildCategories = (directory: GetPackageDirectoryReturn): NavigationCategory[] => {
+function buildCategories(directory: GetPackageDirectoryReturn): NavigationCategory[] {
     if (!directory) {
         return [];
     }
@@ -69,13 +69,13 @@ const buildCategories = (directory: GetPackageDirectoryReturn): NavigationCatego
             } satisfies NavigationCategory
         ];
     });
-};
+}
 
-const buildPackageEntry = (
+function buildPackageEntry(
     manifestPackage: string,
     version: string,
     directory: GetPackageDirectoryReturn
-): PackageCatalogEntry => {
+): PackageCatalogEntry {
     const displayName = formatDisplayPackageName(manifestPackage);
     const description = `Reference documentation for ${displayName}.`;
     const versionLabel = formatVersionLabel(version);
@@ -97,7 +97,7 @@ const buildPackageEntry = (
         description,
         versions: [versionCatalog]
     } satisfies PackageCatalogEntry;
-};
+}
 
 const sortCatalogEntries = (entries: PackageCatalogEntry[]): PackageCatalogEntry[] =>
     entries.sort((a, b) => {
@@ -130,19 +130,19 @@ export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
 export const findCatalogEntry = (catalog: DocsCatalog, packageId: string): PackageCatalogEntry | undefined =>
     catalog.find((entry) => entry.id === packageId);
 
-const parseSemver = (v: string): [number, number, number] => {
+function parseSemver(v: string): [number, number, number] {
     const s = v.replace(/^v/, '');
     const parts = s.split('.').map((p) => Number(p.replace(/[^0-9]/g, '')) || 0);
     return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
-};
+}
 
-const compareSemver = (a: string, b: string): number => {
+function compareSemver(a: string, b: string): number {
     const [am, an, ap] = parseSemver(a);
     const [bm, bn, bp] = parseSemver(b);
     if (am !== bm) return am - bm;
     if (an !== bn) return an - bn;
     return ap - bp;
-};
+}
 
 export const findCatalogVersion = (
     entry: PackageCatalogEntry,

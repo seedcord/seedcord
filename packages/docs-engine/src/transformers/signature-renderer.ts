@@ -29,7 +29,7 @@ interface RenderedTypeParameter {
     default?: InlineType;
 }
 
-const renderParameter = (ctx: TransformContext, parameter: DocSignatureParameter): RenderedParameter => {
+function renderParameter(ctx: TransformContext, parameter: DocSignatureParameter): RenderedParameter {
     const result: RenderedParameter = {
         name: parameter.name,
         optional: Boolean(parameter.flags.isOptional)
@@ -47,9 +47,9 @@ const renderParameter = (ctx: TransformContext, parameter: DocSignatureParameter
     }
 
     return result;
-};
+}
 
-const renderTypeParameter = (ctx: TransformContext, parameter: DocTypeParameter): RenderedTypeParameter => {
+function renderTypeParameter(ctx: TransformContext, parameter: DocTypeParameter): RenderedTypeParameter {
     const rendered: RenderedTypeParameter = { name: parameter.name };
 
     if (parameter.constraint) {
@@ -67,9 +67,9 @@ const renderTypeParameter = (ctx: TransformContext, parameter: DocTypeParameter)
     }
 
     return rendered;
-};
+}
 
-export const renderSignatureView = (ctx: TransformContext, signature: DocSignature): RenderedSignature => {
+export function renderSignatureView(ctx: TransformContext, signature: DocSignature): RenderedSignature {
     const parameters = signature.parameters.map((parameter) => renderParameter(ctx, parameter));
     const view: RenderedSignature = {
         name: [textPart(signature.name)],
@@ -86,7 +86,7 @@ export const renderSignatureView = (ctx: TransformContext, signature: DocSignatu
     }
 
     return view;
-};
+}
 
 interface DeclarationHeaderOptions {
     kind: ReflectionKind;
@@ -96,7 +96,7 @@ interface DeclarationHeaderOptions {
     valueType?: DocType | null | undefined;
 }
 
-const declarationKeywordForKind = (kind: ReflectionKind, flags: DocFlags): string | null => {
+function declarationKeywordForKind(kind: ReflectionKind, flags: DocFlags): string | null {
     switch (kind) {
         case ReflectionKind.Class:
             return 'class';
@@ -116,9 +116,9 @@ const declarationKeywordForKind = (kind: ReflectionKind, flags: DocFlags): strin
         default:
             return null;
     }
-};
+}
 
-const renderHeritage = (ctx: TransformContext, list?: DocType[]): InlineType[] | undefined => {
+function renderHeritage(ctx: TransformContext, list?: DocType[]): InlineType[] | undefined {
     if (!list || list.length === 0) {
         return undefined;
     }
@@ -128,9 +128,9 @@ const renderHeritage = (ctx: TransformContext, list?: DocType[]): InlineType[] |
         .filter((entry): entry is InlineType => Boolean(entry));
 
     return rendered.length > 0 ? rendered : undefined;
-};
+}
 
-const applyModifiers = (flags: DocFlags): string[] => {
+function applyModifiers(flags: DocFlags): string[] {
     const modifiers: string[] = [];
     if (flags.access) {
         modifiers.push(flags.access);
@@ -149,13 +149,13 @@ const applyModifiers = (flags: DocFlags): string[] => {
     }
 
     return modifiers;
-};
+}
 
-export const renderDeclarationHeader = (
+export function renderDeclarationHeader(
     ctx: TransformContext,
     name: string,
     options: DeclarationHeaderOptions
-): RenderedDeclarationHeader => {
+): RenderedDeclarationHeader {
     const keyword = declarationKeywordForKind(options.kind, options.flags);
     const header: RenderedDeclarationHeader = {
         name,
@@ -195,9 +195,9 @@ export const renderDeclarationHeader = (
     }
 
     return header;
-};
+}
 
-export const formatRenderedDeclarationHeader = (header: RenderedDeclarationHeader): string => {
+export function formatRenderedDeclarationHeader(header: RenderedDeclarationHeader): string {
     const segments: string[] = [];
     if (header.modifiers.length > 0) {
         segments.push(header.modifiers.join(' '));
@@ -248,11 +248,11 @@ export const formatRenderedDeclarationHeader = (header: RenderedDeclarationHeade
         .filter((segment) => segment.length > 0)
         .join(' ')
         .trim();
-};
+}
 
 export { renderInlineType };
 
-export const sigPartsToText = (parts: SigPart[]): string => {
+export function sigPartsToText(parts: SigPart[]): string {
     let result = '';
     for (const part of parts) {
         if (part.kind === 'space') {
@@ -266,11 +266,13 @@ export const sigPartsToText = (parts: SigPart[]): string => {
     }
 
     return result.trim();
-};
+}
 
-export const inlineTypeToText = (inline?: InlineType): string => (inline ? sigPartsToText(inline.parts) : '');
+export function inlineTypeToText(inline?: InlineType): string {
+    return inline ? sigPartsToText(inline.parts) : '';
+}
 
-export const formatRenderedSignature = (render: RenderedSignature): string => {
+export function formatRenderedSignature(render: RenderedSignature): string {
     const nameText = sigPartsToText(render.name);
     const typeParams =
         render.typeParams && render.typeParams.length > 0
@@ -287,4 +289,4 @@ export const formatRenderedSignature = (render: RenderedSignature): string => {
     const returnType = render.returnType ? `: ${inlineTypeToText(render.returnType)}` : '';
 
     return `${nameText}${typeParams}(${parameters})${returnType}`.trim();
-};
+}

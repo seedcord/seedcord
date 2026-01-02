@@ -23,7 +23,7 @@ export interface PackageLookups {
     byAlias: Map<string, DocManifestPackage>;
 }
 
-const buildIndexes = (root: DocNode, manifest: DocManifestPackage): DocIndexes => {
+function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     const byId = new Map<number, DocNode>();
     const bySlug = new Map<string, DocNode>();
     const byQName = new Map<string, DocNode>();
@@ -51,9 +51,9 @@ const buildIndexes = (root: DocNode, manifest: DocManifestPackage): DocIndexes =
     visit(root);
 
     return { byId, bySlug, byQName, byKind, search };
-};
+}
 
-const createSearchEntry = (node: DocNode, manifest: DocManifestPackage): DocSearchEntry => {
+function createSearchEntry(node: DocNode, manifest: DocManifestPackage): DocSearchEntry {
     const summary = node.comment?.summary ?? '';
     const nodeAliases = collectAliases(node);
     const signatureAliases = node.signatures.flatMap((signature) => {
@@ -93,9 +93,9 @@ const createSearchEntry = (node: DocNode, manifest: DocManifestPackage): DocSear
     }
 
     return entry;
-};
+}
 
-const collectAliases = (node: DocNode): string[] => {
+function collectAliases(node: DocNode): string[] {
     const comment = node.comment;
     if (!comment) {
         return [];
@@ -105,9 +105,9 @@ const collectAliases = (node: DocNode): string[] => {
     const values = aliasTags.map((tag) => tag.text.trim()).filter((text) => text.length > 0);
 
     return Array.from(new Set(values));
-};
+}
 
-const collectSignatureAliases = (signature: DocSignature): string[] => {
+function collectSignatureAliases(signature: DocSignature): string[] {
     const comment = signature.comment;
     if (!comment) {
         return [];
@@ -117,9 +117,9 @@ const collectSignatureAliases = (signature: DocSignature): string[] => {
     const values = aliasTags.map((tag) => tag.text.trim()).filter((text) => text.length > 0);
 
     return Array.from(new Set(values));
-};
+}
 
-const addTokensFromText = (tokens: Set<string>, value: string | undefined): void => {
+function addTokensFromText(tokens: Set<string>, value: string | undefined): void {
     if (!value) {
         return;
     }
@@ -132,9 +132,9 @@ const addTokensFromText = (tokens: Set<string>, value: string | undefined): void
     for (const part of normalized) {
         tokens.add(part.toLowerCase());
     }
-};
+}
 
-const addTokensFromSigParts = (tokens: Set<string>, parts: SigPart[]): void => {
+function addTokensFromSigParts(tokens: Set<string>, parts: SigPart[]): void {
     for (const part of parts) {
         if (part.kind === 'space') {
             continue;
@@ -144,16 +144,16 @@ const addTokensFromSigParts = (tokens: Set<string>, parts: SigPart[]): void => {
             addTokensFromText(tokens, text);
         }
     }
-};
+}
 
-const addTokensFromInlineType = (tokens: Set<string>, inline?: InlineType): void => {
+function addTokensFromInlineType(tokens: Set<string>, inline?: InlineType): void {
     if (!inline) {
         return;
     }
     addTokensFromSigParts(tokens, inline.parts);
-};
+}
 
-const addTokensFromRenderedSignature = (tokens: Set<string>, render?: RenderedSignature): void => {
+function addTokensFromRenderedSignature(tokens: Set<string>, render?: RenderedSignature): void {
     if (!render) {
         return;
     }
@@ -173,9 +173,9 @@ const addTokensFromRenderedSignature = (tokens: Set<string>, render?: RenderedSi
     }
 
     addTokensFromInlineType(tokens, render.returnType);
-};
+}
 
-const sigPartsToText = (parts: SigPart[]): string => {
+function sigPartsToText(parts: SigPart[]): string {
     let result = '';
     for (const part of parts) {
         if (part.kind === 'space') {
@@ -187,11 +187,11 @@ const sigPartsToText = (parts: SigPart[]): string => {
         result += part.text;
     }
     return result.trim();
-};
+}
 
 const inlineTypeToText = (inline?: InlineType): string => (inline ? sigPartsToText(inline.parts) : '');
 
-const formatSignatureLabel = (signature: DocSignature): string => {
+function formatSignatureLabel(signature: DocSignature): string {
     if (signature.renderText && signature.renderText.length > 0) {
         return signature.renderText;
     }
@@ -216,9 +216,9 @@ const formatSignatureLabel = (signature: DocSignature): string => {
     const returnType = render.returnType ? `: ${inlineTypeToText(render.returnType)}` : '';
 
     return `${nameText}${typeParams}(${parameters})${returnType}`.trim();
-};
+}
 
-const collectSignatureTokens = (signature: DocSignature, aliases: string[]): string[] => {
+function collectSignatureTokens(signature: DocSignature, aliases: string[]): string[] {
     const tokens = new Set<string>();
 
     addTokensFromText(tokens, signature.name);
@@ -242,9 +242,9 @@ const collectSignatureTokens = (signature: DocSignature, aliases: string[]): str
     addTokensFromText(tokens, signatureSummary);
 
     return Array.from(tokens);
-};
+}
 
-const collectTokens = (node: DocNode, summary: string, file: string | undefined, aliases: string[]): string[] => {
+function collectTokens(node: DocNode, summary: string, file: string | undefined, aliases: string[]): string[] {
     const tokens = new Set<string>();
 
     const textSources = [node.name, ...node.path, node.qualifiedName, summary, ...aliases];
@@ -272,7 +272,7 @@ const collectTokens = (node: DocNode, summary: string, file: string | undefined,
     }
 
     return Array.from(tokens);
-};
+}
 
 export const buildPackage = async (
     pkg: DocManifestPackage,

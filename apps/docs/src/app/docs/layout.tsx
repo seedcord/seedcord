@@ -18,7 +18,7 @@ interface DocsLayoutProps {
     params: Promise<DocsLayoutParams>;
 }
 
-const decodeParam = (value?: string): string | undefined => {
+function decodeParam(value?: string): string | undefined {
     if (!value) {
         return undefined;
     }
@@ -28,7 +28,7 @@ const decodeParam = (value?: string): string | undefined => {
     } catch {
         return value;
     }
-};
+}
 
 const resolveActiveSelection = (
     catalog: DocsCatalog,

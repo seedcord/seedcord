@@ -19,10 +19,10 @@ export interface TransformContext {
     packagesByAlias: Map<string, DocManifestPackage>;
 }
 
-export const createTransformContext = (
+export function createTransformContext(
     manifest: DocManifestPackage,
     options: TransformContextOptions = {}
-): TransformContext => {
+): TransformContext {
     return {
         manifest,
         slugger: options.slugger ?? new Slugger(),
@@ -31,8 +31,8 @@ export const createTransformContext = (
         packagesByName: options.packagesByName ?? new Map<string, DocManifestPackage>(),
         packagesByAlias: options.packagesByAlias ?? new Map<string, DocManifestPackage>()
     };
-};
+}
 
-export const registerNode = (context: TransformContext, node: DocNode): void => {
+export function registerNode(context: TransformContext, node: DocNode): void {
     context.nodes.set(node.id, node);
-};
+}

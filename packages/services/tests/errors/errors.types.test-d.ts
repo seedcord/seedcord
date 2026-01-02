@@ -35,11 +35,11 @@ if (isSeedcordError(maybeError, 'SeedcordTypeError', SeedcordErrorCode.Decorator
     expectType<SeedcordErrorCode.DecoratorInvalidMiddlewarePriority>(maybeError.code);
 }
 
-const narrowByCode = (error: unknown): void => {
+function narrowByCode(error: unknown): void {
     if (isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginKeyExists)) {
         expectType<SeedcordErrorTypeString>(error.type);
         expectType<SeedcordErrorCode.CorePluginKeyExists>(error.code);
     }
-};
+}
 
 narrowByCode(new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, ['logger']));

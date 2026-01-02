@@ -132,7 +132,7 @@ export class DocsEngine {
             }
         }
 
-        const score = (entry: DocSearchEntry): number => {
+        function score(entry: DocSearchEntry): number {
             let value = 0;
             const slugTokens = tokenizeSlug(entry.slug);
 
@@ -149,7 +149,7 @@ export class DocsEngine {
             }
 
             return value;
-        };
+        }
 
         return source
             .map((entry) => ({ entry, value: score(entry) }))
@@ -202,7 +202,7 @@ export class DocsEngine {
     }
 }
 
-const scoreToken = (entry: DocSearchEntry, token: string, slugTokens: Set<string>): number => {
+function scoreToken(entry: DocSearchEntry, token: string, slugTokens: Set<string>): number {
     let value = 0;
 
     if (safeEquals(entry.name, token)) {
@@ -240,7 +240,7 @@ const scoreToken = (entry: DocSearchEntry, token: string, slugTokens: Set<string
     }
 
     return value;
-};
+}
 
 const tokenizeQuery = (query: string): string[] =>
     query
@@ -288,7 +288,7 @@ const collator = new Intl.Collator(undefined, { sensitivity: 'accent', usage: 's
 const safeEquals = (value: string | undefined, token: string): boolean =>
     typeof value === 'string' && value.length > 0 && collator.compare(value.toLowerCase(), token) === 0;
 
-const tokenizeSlug = (slug: string): Set<string> => {
+function tokenizeSlug(slug: string): Set<string> {
     if (!slug) {
         return new Set();
     }
@@ -299,9 +299,9 @@ const tokenizeSlug = (slug: string): Set<string> => {
         .map((part) => part.toLowerCase());
 
     return new Set(parts);
-};
+}
 
-const hasSlugPrefix = (tokens: Set<string>, candidate: string): boolean => {
+function hasSlugPrefix(tokens: Set<string>, candidate: string): boolean {
     for (const token of tokens) {
         if (token.startsWith(candidate)) {
             return true;
@@ -309,18 +309,18 @@ const hasSlugPrefix = (tokens: Set<string>, candidate: string): boolean => {
     }
 
     return false;
-};
+}
 
 const getKindWeight = (kind: ReflectionKind): number => KIND_SCORE_TABLE[kind] ?? KIND_SCORE_DEFAULT;
 
 const aggregateSearchIndex = (collection: DocCollection): DocSearchEntry[] =>
     collection.packages.flatMap((pkg) => pkg.indexes.search);
 
-const orderedPackageCandidates = (
+function orderedPackageCandidates(
     currentPackage: string,
     hintedPackage: string | undefined,
     available: string[]
-): string[] => {
+): string[] {
     const ordered = new Set<string>();
 
     if (hintedPackage) {
@@ -336,17 +336,17 @@ const orderedPackageCandidates = (
     }
 
     return Array.from(ordered);
-};
+}
 
-const resolveWorkspaceRoot = (explicit: string | undefined, anchor: string): string => {
+function resolveWorkspaceRoot(explicit: string | undefined, anchor: string): string {
     if (explicit) {
         return path.resolve(explicit);
     }
 
     return findWorkspaceRoot(anchor);
-};
+}
 
-const findWorkspaceRoot = (startDir: string): string => {
+function findWorkspaceRoot(startDir: string): string {
     const origin = path.resolve(startDir);
     let cursor = origin;
     let lastPackageDir: string | null = null;
@@ -369,9 +369,9 @@ const findWorkspaceRoot = (startDir: string): string => {
 
         cursor = parent;
     }
-};
+}
 
-const resolveWithinPackage = (reference: DocReference, pkg: DocPackageModel): DocNode | null => {
+function resolveWithinPackage(reference: DocReference, pkg: DocPackageModel): DocNode | null {
     if (reference.qualifiedName) {
         const byQName = pkg.indexes.byQName.get(reference.qualifiedName);
         if (byQName) {
@@ -384,9 +384,9 @@ const resolveWithinPackage = (reference: DocReference, pkg: DocPackageModel): Do
     }
 
     return null;
-};
+}
 
-const findByQualifiedName = (packages: DocPackageModel[], qualifiedName: string): DocNode | null => {
+function findByQualifiedName(packages: DocPackageModel[], qualifiedName: string): DocNode | null {
     for (const pkg of packages) {
         const node = pkg.indexes.byQName.get(qualifiedName);
         if (node) {
@@ -395,4 +395,4 @@ const findByQualifiedName = (packages: DocPackageModel[], qualifiedName: string)
     }
 
     return null;
-};
+}

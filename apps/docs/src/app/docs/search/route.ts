@@ -56,10 +56,10 @@ const KIND_TO_RESULT = new Map<string, SearchResultKind>([
     ['parameter', 'parameter']
 ]);
 
-const getResultKind = (kind: number): SearchResultKind => {
+function getResultKind(kind: number): SearchResultKind {
     const key = kindName(kind);
     return KIND_TO_RESULT.get(key) ?? 'page';
-};
+}
 
 const encodeSlug = (slug: string): string =>
     slug
@@ -67,7 +67,7 @@ const encodeSlug = (slug: string): string =>
         .map((segment) => encodeURIComponent(segment))
         .join('/');
 
-const buildBreadcrumb = (entry: DocSearchEntry): string => {
+function buildBreadcrumb(entry: DocSearchEntry): string {
     const versionLabel = entry.packageVersion ? `@${entry.packageVersion}` : undefined;
     const qualifiedLabel = entry.qualifiedName && entry.qualifiedName !== entry.name ? entry.qualifiedName : undefined;
 
@@ -81,7 +81,7 @@ const buildBreadcrumb = (entry: DocSearchEntry): string => {
     }
 
     return parts.filter(Boolean).join(' · ');
-};
+}
 
 const ENTITY_RESULT_KINDS = new Set<SearchResultKind>(['class', 'interface', 'enum', 'type', 'function', 'variable']);
 
@@ -93,15 +93,15 @@ const MEMBER_ANCHOR_PREFIX: Partial<Record<SearchResultKind, string>> = {
     enumMember: 'enum-member'
 };
 
-const getParentSlug = (slug: string): string | null => {
+function getParentSlug(slug: string): string | null {
     const segments = slug.split('/');
     if (segments.length <= 1) {
         return null;
     }
     return segments.slice(0, -1).join('/');
-};
+}
 
-const findEntityNode = (engine: Awaited<ReturnType<typeof getDocsEngine>>, entry: DocSearchEntry): DocNode | null => {
+function findEntityNode(engine: Awaited<ReturnType<typeof getDocsEngine>>, entry: DocSearchEntry): DocNode | null {
     const segments = entry.slug.split('/');
 
     for (let index = segments.length; index > 0; index -= 1) {
@@ -118,7 +118,7 @@ const findEntityNode = (engine: Awaited<ReturnType<typeof getDocsEngine>>, entry
     }
 
     return null;
-};
+}
 
 const buildEntityUrl = (node: DocNode, fallbackVersion: string | null): string =>
     buildEntityHref({
@@ -128,7 +128,7 @@ const buildEntityUrl = (node: DocNode, fallbackVersion: string | null): string =
         tone: kindName(node.kind)
     });
 
-const createBasePayload = (entry: DocSearchEntry, kind: SearchResultKind): CommandActionPayload => {
+function createBasePayload(entry: DocSearchEntry, kind: SearchResultKind): CommandActionPayload {
     const payload: CommandActionPayload = {
         id: `${entry.packageName}:${entry.slug}:${entry.kind}`,
         label: entry.name,
@@ -142,12 +142,12 @@ const createBasePayload = (entry: DocSearchEntry, kind: SearchResultKind): Comma
     }
 
     return payload;
-};
+}
 
-const buildPageHref = (entry: DocSearchEntry, version: string | null): string => {
+function buildPageHref(entry: DocSearchEntry, version: string | null): string {
     const basePath = buildPackageBasePath(entry.packageName, version);
     return `${basePath}/${encodeSlug(entry.slug)}`;
-};
+}
 
 const buildParameterHref = (
     engine: Awaited<ReturnType<typeof getDocsEngine>>,
