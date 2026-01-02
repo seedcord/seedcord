@@ -1,9 +1,10 @@
+import { tw } from '@lib/utils';
+
 import type { CodeRepresentation } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 function SignatureBlock({ signature }: { signature: CodeRepresentation }): ReactElement {
-    const containerClassName =
-        'code-scroll-area card bg-surface-subtle px-2.5 py-2 text-sm text-(--text) shadow-soft md:px-3 md:py-2.5';
+    const containerClassName = tw`code-scroll-area card bg-surface-strong shadow-soft px-2.5 py-2 text-sm text-(--text) md:px-3 md:py-2.5`;
 
     if (signature.html) {
         return (

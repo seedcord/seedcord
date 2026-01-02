@@ -40,7 +40,7 @@ function MemberDetailGroup({
                     onClick={() => {
                         setExpanded((previous) => !previous);
                     }}
-                    className="hover:border-border/60 hover:bg-surface-moderate flex w-full items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-b-moderate)"
+                    className="hover:bg-surface-moderate flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2 text-left transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-b-moderate)"
                     aria-expanded={expanded}
                     aria-controls={panelId}
                 >

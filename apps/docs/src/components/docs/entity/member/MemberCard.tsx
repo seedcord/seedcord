@@ -43,7 +43,7 @@ function MemberCard({ member, prefix, isLast, parentDeprecationStatus }: MemberC
         <article
             id={anchorId}
             className={cn(
-                'w-full max-w-full min-w-0 lg:scroll-mt-32',
+                'relative w-full max-w-full min-w-0 lg:scroll-mt-32',
                 hasTags ? 'pt-4' : 'pt-3',
                 isLast ? 'pb-4' : 'pb-6'
             )}

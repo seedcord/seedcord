@@ -9,7 +9,7 @@ import { cn } from '@lib/utils';
 import type { SidebarItemProps } from './types';
 import type { ReactElement } from 'react';
 
-function SidebarItem({ item, tone, isActive }: SidebarItemProps): ReactElement {
+function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps): ReactElement {
     const toneConfig = getToneConfig(tone);
     const ItemIcon = toneConfig.icon;
     const toneStyles = toneConfig.styles;
@@ -21,10 +21,11 @@ function SidebarItem({ item, tone, isActive }: SidebarItemProps): ReactElement {
             className={cn(
                 'flex w-full items-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-2 text-left text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2',
                 toneStyles.item,
-                isActive ? 'border-(--border-accent-b-moderate) bg-(--bg-accent-b-moderate)' : null
+                isActive ? toneStyles.badge : null
             )}
             onClick={() => {
                 log('Sidebar item activated', { label, tone, href });
+                onSelect?.();
             }}
         >
             <span

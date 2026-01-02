@@ -1,5 +1,5 @@
 'use client';
-import { type WheelEvent, type UIEvent, type TouchEvent, useRef, useCallback } from 'react';
+import { type TouchEvent, type UIEvent, useCallback, type WheelEvent } from 'react';
 
 import { applyScrollDelta } from './applyScrollDelta';
 import { normalizeWheelDelta } from './normalizeWheelDelta';
@@ -11,8 +11,6 @@ export function useSidebarScrollGuards(): {
     handleTouchMove: (event: TouchEvent<HTMLDivElement>) => void;
     handleTouchEnd: () => void;
 } {
-    const lastTouchYRef = useRef<number | null>(null);
-
     const handleWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
         event.stopPropagation();
 
@@ -31,49 +29,16 @@ export function useSidebarScrollGuards(): {
         event.stopPropagation();
     }, []);
 
-    const handleTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
-        const touch = event.touches[0];
-
-        if (!touch) {
-            return;
-        }
-
-        lastTouchYRef.current = touch.clientY;
+    const handleTouchStart = useCallback((_event: TouchEvent<HTMLDivElement>) => {
+        // Native scrolling is preferred for momentum
     }, []);
 
-    const handleTouchMove = useCallback((event: TouchEvent<HTMLDivElement>) => {
-        event.stopPropagation();
-
-        const viewport = event.currentTarget;
-
-        if (viewport.scrollHeight <= viewport.clientHeight) {
-            return;
-        }
-
-        const touch = event.touches[0];
-
-        if (!touch) {
-            return;
-        }
-
-        const previousY = lastTouchYRef.current;
-
-        if (previousY === null) {
-            lastTouchYRef.current = touch.clientY;
-            return;
-        }
-
-        const deltaY = previousY - touch.clientY;
-
-        if (deltaY !== 0) {
-            applyScrollDelta(viewport, deltaY);
-        }
-
-        lastTouchYRef.current = touch.clientY;
+    const handleTouchMove = useCallback((_event: TouchEvent<HTMLDivElement>) => {
+        // Native scrolling is preferred for momentum
     }, []);
 
     const handleTouchEnd = useCallback(() => {
-        lastTouchYRef.current = null;
+        // Native scrolling is preferred for momentum
     }, []);
 
     return {

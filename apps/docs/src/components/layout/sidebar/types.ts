@@ -17,18 +17,21 @@ export interface SidebarProps {
     activeVersionId: string;
     variant?: SidebarVariant;
     className?: string;
+    onSelect?: () => void;
 }
 
 export interface SidebarCategoryListProps {
     categories: readonly NavigationCategory[];
     activeHref: string;
     storageKey?: string;
+    onSelect?: () => void;
 }
 
 export interface SidebarItemProps {
     item: NavigationEntityItem;
     tone: EntityTone;
     isActive: boolean;
+    onSelect?: () => void;
 }
 
 export type SidebarHeaderPackageOption = PackageCatalogEntry;

@@ -1,4 +1,5 @@
-import { highlightInlineToHtml } from '../../../shiki';
+import { highlightInlineToHtml } from '@lib/shiki';
+
 import { normalizeInlineCode, escapeHtml } from '../cleaners';
 import { DOUBLE_NEWLINE, DEFAULT_INLINE_LANG } from '../constants';
 import { createParagraphAccumulator } from '../creators';

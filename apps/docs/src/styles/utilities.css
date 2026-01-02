@@ -45,6 +45,10 @@
         @apply bg-(--surface-moderate);
     }
 
+    .bg-surface-strong {
+        @apply bg-black/5 dark:bg-white/5;
+    }
+
     .card {
         @apply rounded-2xl border border-(--border);
     }
@@ -84,7 +88,6 @@
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
         -ms-overflow-style: none;
     }
 
@@ -110,34 +113,6 @@
 
     .code-scroll-area .shiki code {
         width: max-content;
-    }
-
-    .code-scroll-area::-webkit-scrollbar {
-        height: 10px;
-    }
-
-    .code-scroll-area::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .code-scroll-area::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.22);
-        border-radius: 9999px;
-        opacity: 0;
-        transition: opacity 220ms ease;
-    }
-
-    .code-scroll-area.show-scrollbar::-webkit-scrollbar-thumb,
-    .code-scroll-area:hover::-webkit-scrollbar-thumb {
-        opacity: 1;
-    }
-
-    .code-scroll-area.show-scrollbar {
-        scrollbar-width: thin;
-    }
-
-    .code-scroll-area.show-scrollbar {
-        --scrollbar-thumb-opacity: 1;
     }
 
     .shiki {

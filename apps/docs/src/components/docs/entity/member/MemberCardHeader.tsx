@@ -1,5 +1,6 @@
 import { Code } from 'lucide-react';
 
+import { cn } from '@lib/utils';
 // access label formatting is now shown in signatures; import removed
 import CopyAnchorButton from '@ui/CopyAnchorButton';
 import Icon from '@ui/Icon';
@@ -37,10 +38,11 @@ function MemberCardHeader({ member, anchorId, tags, prefix }: MemberCardHeaderPr
                         <CopyAnchorButton
                             anchorId={anchorId}
                             label={member.label}
-                            className={
-                                'absolute top-1/2 -left-8 flex h-8 w-8 -translate-y-1/2 items-center justify-center opacity-0 transition-opacity ' +
-                                'text-subtle group-focus-within/name:opacity-100 group-hover/name:opacity-100 group-active/name:opacity-100 hover:text-(--text)'
-                            }
+                            className={cn(
+                                'text-subtle z-10 flex h-8 w-8 items-center justify-center transition-opacity hover:text-(--text)',
+                                'static order-last opacity-100',
+                                'md:absolute md:top-1/2 md:-left-8 md:-translate-y-1/2 md:opacity-0 md:group-focus-within/name:opacity-100 md:group-hover/name:opacity-100 md:group-active/name:opacity-100'
+                            )}
                         />
                         <h3 className="truncate text-base font-semibold text-(--text) sm:text-lg">
                             {prefix === 'method' ? `${member.label}()` : member.label}
