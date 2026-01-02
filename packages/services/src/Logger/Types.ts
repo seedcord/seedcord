@@ -81,25 +81,24 @@ export interface ChannelConfig {
     stripAnsi?: boolean;
 }
 
-/**
- * Global logger configuration.
- */
-// export interface LoggerConfiguration {
-//     /** Name of the default channel to use when none is specified */
-//     defaultChannel: string;
-//     /** Channel configurations keyed by channel name */
-//     channels: Record<string, ChannelConfig>;
-//     /** Filename pattern for development logs */
-//     devFilePattern: string;
-//     /** Filename pattern for staging logs */
-//     stagingFilePattern: string;
-//     /** Filename pattern for production logs */
-//     prodFilePattern: string;
-//     /** Maximum file size in MB for log rotation */
-//     fileMaxSizeMB: number;
-//     /** Maximum number of log files to retain */
-//     fileMaxFiles: number;
-// }
+export interface LoggerFilePatternsConfig {
+    /** Filename pattern for development logs */
+    dev: string;
+    /** Filename pattern for staging logs */
+    staging: string;
+    /** Filename pattern for production logs */
+    prod: string;
+}
+
+/* General configs for FileTransports in the logger */
+export interface LoggerFileConfig {
+    /** Maximum file size in MB for log rotation */
+    maxSizeMB: number;
+    /** Maximum number of log files to retain */
+    maxFiles: number;
+    /** Filename patterns for different environments */
+    patterns: LoggerFilePatternsConfig;
+}
 
 /**
  * Global logger configuration.
@@ -107,20 +106,8 @@ export interface ChannelConfig {
 export interface LoggerConfiguration {
     /** Name of the default channel to use when none is specified */
     defaultChannel: string;
-    files: {
-        /** Maximum file size in MB for log rotation */
-        maxSizeMB: number;
-        /** Maximum number of log files to retain */
-        maxFiles: number;
-        patterns: {
-            /** Filename pattern for development logs */
-            dev: string;
-            /** Filename pattern for staging logs */
-            staging: string;
-            /** Filename pattern for production logs */
-            prod: string;
-        };
-    };
+    /* General configs for FileTransports in the logger */
+    files: LoggerFileConfig;
     /** Channel configurations keyed by channel name */
     channels: Record<string, ChannelConfig>;
 }
