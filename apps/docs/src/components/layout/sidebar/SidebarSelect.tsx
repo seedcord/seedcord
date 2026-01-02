@@ -47,7 +47,7 @@ function SidebarSelect({ id, label, value, options, onChange }: SidebarSelectPro
                         aria-labelledby={labelId}
                         aria-expanded={open}
                         className={cn(
-                            'border-border/80 shadow-soft flex w-full items-center justify-between rounded-lg border bg-(--bg-surface-subtle) px-3 py-2 text-sm font-medium text-(--text) transition duration-0',
+                            'border-border/80 shadow-soft flex w-full items-center justify-between rounded-lg border bg-(--bg-surface-subtle) px-4 py-2 text-sm font-medium text-(--text) transition duration-0',
                             'focus:border-(--border-accent-b-moderate) focus:bg-(--bg-accent-b-subtle) focus:ring-2 focus:ring-(--outline-accent-b-subtle) focus:ring-offset-2 focus:ring-offset-(--bg-transparent-subtle) focus:outline-none',
                             open
                                 ? 'border-(--border-accent-b-strong) bg-(--bg-accent-b-moderate) shadow-[0_10px_35px_-20px_var(--outline-accent-b-moderate)]'
@@ -64,6 +64,7 @@ function SidebarSelect({ id, label, value, options, onChange }: SidebarSelectPro
                         />
                     </button>
                 </DropdownMenu.Trigger>
+
                 <DropdownMenu.Portal>
                     <DropdownMenu.Content
                         align="start"

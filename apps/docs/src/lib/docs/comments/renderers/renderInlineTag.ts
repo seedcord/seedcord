@@ -1,4 +1,5 @@
-import { highlightInlineToHtml } from '../../../shiki';
+import { highlightInlineToHtml } from '@lib/shiki';
+
 import { escapeAttribute, sanitizeInternalHref, escapeHtml } from '../cleaners';
 import { DEFAULT_INLINE_LANG } from '../constants';
 import { resolveInlineHref } from '../resolvers';

@@ -9,7 +9,7 @@ import { useUIStore, type UIStore } from '@store/ui';
 
 import MemberDetailGroup from './member/MemberDetailGroup';
 import MemberList from './member/MemberList';
-import { renderMemberOverview } from './utils/renderers/renderMemberOverview';
+import MemberOverview from './member/MemberOverview';
 import { shouldIncludeMember } from './utils/shouldIncludeMember';
 import { useMemberNavigation } from './utils/useMemberNavigation';
 
@@ -70,7 +70,11 @@ function EntityMembersSection({
                 prefix="constructor"
                 parentDeprecationStatus={parentDeprecationStatus}
             />
-            {renderMemberOverview(quickPanelColumns, effectiveMemberAccessLevel, showAccessControls)}
+            <MemberOverview
+                columns={quickPanelColumns}
+                memberAccessLevel={effectiveMemberAccessLevel}
+                showAccessControls={showAccessControls}
+            />
 
             <div className="min-w-0 space-y-8">
                 <MemberDetailGroup

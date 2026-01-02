@@ -72,8 +72,7 @@ export function collectExamplesFromBlockTags(comment: DocComment): DocCommentExa
 
         let contentText: string | undefined;
         if (tag.content.length) {
-            const first = tag.content[0];
-            if (first?.text.length) contentText = first.text;
+            contentText = tag.content.map((c) => c.text).join('');
         }
 
         const value = text ?? contentText;

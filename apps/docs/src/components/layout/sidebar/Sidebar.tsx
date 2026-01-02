@@ -25,7 +25,8 @@ export function Sidebar({
     activePackageId,
     activeVersionId,
     variant = 'desktop',
-    className
+    className,
+    onSelect
 }: SidebarProps): ReactElement {
     const pathname = usePathname();
     const containerStyles = getContainerStyles(variant);
@@ -139,6 +140,7 @@ export function Sidebar({
                     categories={activeVersion.categories}
                     activeHref={pathname}
                     storageKey={collapsedStorageKey}
+                    onSelect={onSelect}
                 />
             </div>
         </nav>

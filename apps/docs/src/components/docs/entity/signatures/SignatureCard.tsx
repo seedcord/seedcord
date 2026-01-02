@@ -22,11 +22,11 @@ function SignatureCard({ signature }: { signature: FunctionSignatureModel }): Re
                 ) : null}
             </header>
             {signature.code.html ? (
-                <div className="code-scroll-area panel px-3 py-2 text-xs text-(--text) sm:text-sm">
+                <div className="code-scroll-area panel bg-surface-moderate px-3 py-2 text-xs text-(--text) sm:text-sm">
                     <div className="code-scroll-content" dangerouslySetInnerHTML={{ __html: signature.code.html }} />
                 </div>
             ) : (
-                <div className="code-scroll-area panel px-3 py-2 text-xs text-(--text) sm:text-sm">
+                <div className="code-scroll-area panel bg-surface-moderate px-3 py-2 text-xs text-(--text) sm:text-sm">
                     <pre className="code-scroll-content whitespace-pre-wrap">{signature.code.text}</pre>
                 </div>
             )}

@@ -18,6 +18,7 @@ interface SidebarCategoryProps {
     isCollapsed: boolean;
     onToggle: (key: string) => void;
     activeHref: string;
+    onSelect?: () => void;
 }
 
 function SidebarCategory({
@@ -25,7 +26,8 @@ function SidebarCategory({
     categoryKey,
     isCollapsed,
     onToggle,
-    activeHref
+    activeHref,
+    onSelect
 }: SidebarCategoryProps): ReactElement {
     const toneConfig = getToneConfig(category.tone);
     const toneStyles = toneConfig.styles;
@@ -59,6 +61,7 @@ function SidebarCategory({
                         item={item}
                         tone={category.tone}
                         isActive={item.href === activeHref}
+                        onSelect={onSelect}
                     />
                 ))}
             </div>
@@ -66,7 +69,7 @@ function SidebarCategory({
     );
 }
 
-function SidebarCategoryList({ categories, activeHref, storageKey }: SidebarCategoryListProps): ReactElement {
+function SidebarCategoryList({ categories, activeHref, storageKey, onSelect }: SidebarCategoryListProps): ReactElement {
     // Start with an empty object so server and initial client render match.
     const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
@@ -109,6 +112,7 @@ function SidebarCategoryList({ categories, activeHref, storageKey }: SidebarCate
                     isCollapsed={collapsedCategories[`${category.title}-${category.tone}`] ?? false}
                     onToggle={toggleCategory}
                     activeHref={activeHref}
+                    onSelect={onSelect}
                 />
             ))}
         </div>

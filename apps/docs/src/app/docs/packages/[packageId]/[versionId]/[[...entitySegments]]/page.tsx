@@ -62,11 +62,11 @@ const renderCategory = (category: NavigationCategory): ReactElement => {
                     <li key={item.id}>
                         <Link
                             href={item.href}
-                            className="bg-surface-moderate shadow-soft flex items-center justify-between rounded-xl border border-transparent px-3 py-2 text-sm font-medium text-(--text) transition hover:border-(--outline-accent-b-moderate) hover:bg-(--surface-accent-b-moderate)"
+                            className="bg-surface-moderate shadow-soft border-border flex items-center justify-between rounded-xl border px-3 py-2 text-sm font-medium text-(--text) transition hover:border-(--outline-accent-b-moderate) hover:bg-(--surface-accent-b-moderate)"
                         >
                             <span>{item.label}</span>
                             <span
-                                className={`${toneStyles.badge} inline-flex h-6 min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs font-semibold`}
+                                className={`inline-flex h-6 min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs font-semibold ${toneStyles.badge}`}
                             >
                                 {category.tone}
                             </span>

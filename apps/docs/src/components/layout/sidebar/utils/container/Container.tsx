@@ -36,8 +36,9 @@ function Container({ sidebar, children, className }: ContainerProps): ReactNode 
         });
 
         const mobile = cloneElement<SidebarComponentProps>(sidebarElement, {
-            className: cn(mergedClassName, 'border-transparent bg-transparent p-0 shadow-none'),
-            variant: 'mobile'
+            className: cn(mergedClassName, 'h-auto overflow-visible border-transparent bg-transparent shadow-none'),
+            variant: 'mobile',
+            onSelect: () => setNavigationOpen(false)
         });
 
         return { desktop, mobile };

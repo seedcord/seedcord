@@ -1,4 +1,7 @@
+'use client';
+
 import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 import { cn } from '@lib/utils';
 import Icon from '@ui/Icon';
@@ -15,23 +18,33 @@ interface CommentExamplesProps {
 const codeContainerClass = 'code-scroll-area panel mb-2 px-3 py-2 text-xs text-(--text) sm:text-sm';
 
 function CommentExamples({ examples, className, open = false }: CommentExamplesProps): ReactElement | null {
+    const [isOpen, setIsOpen] = useState(open);
+
     if (!examples.length) return null;
 
     return (
-        <details className={cn('group space-y-3', className)} open={open}>
-            <summary className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-(--text)">
+        <div className={cn('space-y-3', className)}>
+            <button
+                type="button"
+                onClick={() => setIsOpen((prev) => !prev)}
+                className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-(--text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-b-moderate)"
+                aria-expanded={isOpen}
+            >
                 <span className="flex items-center">
                     <Icon
                         icon={ChevronDown}
                         size={18}
-                        className="text-subtle transition-transform duration-200 group-open:rotate-180"
+                        className={cn(
+                            'text-subtle transition-transform duration-200',
+                            isOpen ? 'rotate-0' : '-rotate-90'
+                        )}
                         aria-hidden
                     />
                 </span>
                 <span>Examples</span>
-            </summary>
+            </button>
 
-            <div className="pt-2">
+            <div className={cn('pt-2', isOpen ? 'block' : 'hidden')}>
                 {examples.map((example, index) => {
                     const representation = example.code;
                     const key = example.caption ?? representation.html ?? `example-${index}`;
@@ -59,7 +72,7 @@ function CommentExamples({ examples, className, open = false }: CommentExamplesP
                     );
                 })}
             </div>
-        </details>
+        </div>
     );
 }
 

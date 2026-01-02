@@ -1,4 +1,5 @@
-import { cn } from '../../../../lib/utils';
+import { cn } from '@lib/utils';
+
 import CommentExamples from '../comments/CommentExamples';
 import CommentParagraphs from '../comments/CommentParagraphs';
 import DeprecatedEntity from '../DeprecatedEntity';
