@@ -61,7 +61,7 @@ function SidebarCategory({
                         item={item}
                         tone={category.tone}
                         isActive={item.href === activeHref}
-                        onSelect={onSelect}
+                        {...(onSelect ? { onSelect } : {})}
                     />
                 ))}
             </div>
@@ -112,7 +112,7 @@ function SidebarCategoryList({ categories, activeHref, storageKey, onSelect }: S
                     isCollapsed={collapsedCategories[`${category.title}-${category.tone}`] ?? false}
                     onToggle={toggleCategory}
                     activeHref={activeHref}
-                    onSelect={onSelect}
+                    {...(onSelect ? { onSelect } : {})}
                 />
             ))}
         </div>
