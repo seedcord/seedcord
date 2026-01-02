@@ -39,6 +39,7 @@
         "LICENSE"
     ],
     "dependencies": {
+        "@leeoniya/ufuzzy": "^1.0.19",
         "typedoc": "catalog:deps",
         "typedoc-plugin-dt-links": "^2.0.34",
         "typedoc-plugin-mdn-links": "^5.0.10"

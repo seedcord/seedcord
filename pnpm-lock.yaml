@@ -66,6 +66,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^20.0.0
         version: 20.0.0
+      '@seedcord/docs-generator':
+        specifier: workspace:*
+        version: link:packages/docs-generator
       '@seedcord/eslint-config':
         specifier: workspace:*
         version: link:packages/eslint-config
@@ -330,6 +333,9 @@ importers:
 
   packages/docs-engine:
     dependencies:
+      '@leeoniya/ufuzzy':
+        specifier: ^1.0.19
+        version: 1.0.19
       typedoc:
         specifier: catalog:deps
         version: 0.28.15(typescript@5.9.3)
@@ -1438,6 +1444,9 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@leeoniya/ufuzzy@1.0.19':
+    resolution: {integrity: sha512-0pikDeYt0IHEUPza5RTCDXc/17S1pTrYnReEMp8Aa6k1ovzw5QdZLwicW8TjljwEZRb6oYag0xmALohrcq/yOQ==}
 
   '@manypkg/find-root@1.1.0':
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
@@ -6425,6 +6434,8 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@leeoniya/ufuzzy@1.0.19': {}
 
   '@manypkg/find-root@1.1.0':
     dependencies:

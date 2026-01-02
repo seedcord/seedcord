@@ -1,10 +1,11 @@
+/* eslint-disable no-console */
 import path from 'node:path';
 
-import { ApiDocsGenerator } from './generator';
+import { ApiDocsGenerator } from '@seedcord/docs-generator';
 
-import type { ApiDocsGeneratorOptions, ApiDocsGeneratorResult } from './generator';
+import type { ApiDocsGeneratorOptions, ApiDocsGeneratorResult } from '@seedcord/docs-generator';
 
-const HELP_TEXT = `Usage: tsx smoke.ts [options]
+const HELP_TEXT = `Usage: tsx extract-docs.ts [options]
 
 Options:
     --output <dir>    Directory where generated JSON files will be written.

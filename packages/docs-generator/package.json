@@ -29,7 +29,6 @@
     "scripts": {
         "build": "tsup",
         "clean": "rm -rf dist",
-        "smoke": "tsx src/smoke.ts",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
