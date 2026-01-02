@@ -170,6 +170,7 @@ function EntityHeader({
 
     const headerSummary = active?.summary.length ? active.summary : summary;
     const headerExamples = getHeaderExamples(active, summaryExamples);
+    const headerThrows = active?.throws?.length ? active.throws : throws;
     const summaryNodes = buildSummaryNodes(
         headerSummary,
         'Review the generated signature below while we finish migrating full TypeDoc content into the reference UI.'
@@ -190,12 +191,12 @@ function EntityHeader({
                 sourceUrl={sourceUrl}
             />
 
-            {throws?.length ? (
+            {headerThrows?.length ? (
                 <div>
                     <p className="text-subtle flex flex-wrap items-baseline gap-2">
                         <span className="font-semibold text-(--text)">Throws:</span>
                     </p>
-                    <CommentParagraphs paragraphs={throws} />
+                    <CommentParagraphs paragraphs={headerThrows} />
                 </div>
             ) : null}
 

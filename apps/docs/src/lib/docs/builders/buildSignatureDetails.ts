@@ -9,9 +9,16 @@ import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { formatSignature, highlightCode } from '../formatting';
 
-import type { CodeRepresentation, CommentExample, CommentParagraph, FormatContext, FormattedComment } from '../types';
+import type {
+    CodeRepresentation,
+    CommentDisplayPart,
+    CommentExample,
+    CommentParagraph,
+    FormatContext,
+    FormattedComment
+} from '../types';
 import type { EntityMemberSummary } from '@components/docs/entity/types';
-import type { DocSignature, DocNode } from '@seedcord/docs-engine';
+import type { DocSignature, DocNode, DocCommentBlockTag, DocComment } from '@seedcord/docs-engine';
 
 interface SignatureDetailsOptions {
     node: DocNode;
@@ -97,6 +104,7 @@ export async function buildSignatureDetails({
             const sig = signature;
             await appendParameterComments(sig, context, documentation);
             await appendTypeParameterComments(sig, context, documentation);
+            await appendThrowsComments(sig, node, context, documentation);
 
             const examples = cloneExamples(comment?.examples ?? []);
 
@@ -105,8 +113,7 @@ export async function buildSignatureDetails({
                 anchor: ensureSignatureAnchor(signature),
                 code,
                 documentation,
-                examples,
-                throws: comment?.throws ?? []
+                examples
             };
 
             const sigDep = buildDeprecationStatusFromNodeLike(signature as unknown as DocNode);
@@ -158,6 +165,43 @@ async function appendTypeParameterComments(
                 });
                 documentation.push(...formatted.paragraphs);
             }
+        }
+    }
+}
+
+async function appendThrowsComments(
+    sig: DocSignature,
+    node: DocNode,
+    context: FormatContext,
+    documentation: CommentParagraph[]
+): Promise<void> {
+    const tags = [...(sig.throws ?? [])];
+
+    if (node.comment?.blockTags) {
+        for (const tag of node.comment.blockTags) {
+            if (tag.tag === '@throws' || tag.tag === '@exception') {
+                tags.push(tag);
+            }
+        }
+    }
+
+    if (!tags.length) return;
+
+    const uniqueTags = new Map<string, DocCommentBlockTag>();
+    tags.forEach((t) => uniqueTags.set(t.text, t));
+
+    for (const tag of uniqueTags.values()) {
+        const fakeComment: DocComment = {
+            summary: '',
+            summaryParts: [{ kind: 'text', text: '**Throws:** ' } as CommentDisplayPart, ...tag.content],
+            blockTags: [],
+            modifierTags: [],
+            examples: []
+        };
+
+        const formatted = await formatCommentRich(fakeComment, context);
+        if (formatted.paragraphs.length) {
+            documentation.push(...formatted.paragraphs);
         }
     }
 }

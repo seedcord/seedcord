@@ -31,6 +31,14 @@ export function renderSigParts(parts: SigPart[], context: FormatContext): string
                 break;
             }
             default: {
+                if (
+                    (part.text.startsWith('"') && part.text.endsWith('"')) ||
+                    (part.text.startsWith("'") && part.text.endsWith("'"))
+                ) {
+                    result += part.text;
+                    break;
+                }
+
                 const external = resolveExternalPackageUrl(part.text);
                 if (external) {
                     result += `[${part.text}](${external})`;

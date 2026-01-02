@@ -114,9 +114,20 @@ export function collectMemberTags(node: DocNode): string[] {
 
     addFlags(node.flags);
 
+    if (node.comment?.modifierTags) {
+        for (const tag of node.comment.modifierTags) {
+            if (tag === '@virtual') tags.add('virtual');
+        }
+    }
+
     if (Array.isArray(node.signatures) && node.signatures.length > 0) {
         for (const sig of node.signatures) {
             addFlags(sig.flags);
+            if (sig.comment?.modifierTags) {
+                for (const tag of sig.comment.modifierTags) {
+                    if (tag === '@virtual') tags.add('virtual');
+                }
+            }
         }
     }
 
