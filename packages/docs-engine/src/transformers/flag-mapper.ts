@@ -10,20 +10,20 @@ import {
 
 import type { DocFlags } from '../types';
 
-const hasModifier = (comment: Comment | null, modifier: '@internal' | '@external'): boolean => {
+function hasModifier(comment: Comment | null, modifier: '@internal' | '@external'): boolean {
     const modifiers = comment?.modifierTags;
     return modifiers?.has(modifier) ?? false;
-};
+}
 
-const hasDecoratorBlockTag = (comment: Comment | null): boolean => {
+function hasDecoratorBlockTag(comment: Comment | null): boolean {
     const blockTags = comment?.blockTags;
     return Array.isArray(blockTags) ? blockTags.some((tag) => tag.tag === '@decorator') : false;
-};
+}
 
-const hasDecoratorMetadata = (reflection: Reflection | ParameterReflection): boolean => {
+function hasDecoratorMetadata(reflection: Reflection | ParameterReflection): boolean {
     const decorators = (reflection as { decorators?: unknown[] }).decorators;
     return Array.isArray(decorators) && decorators.length > 0;
-};
+}
 
 const CALLABLE_KINDS: ReflectionKind[] = [
     ReflectionKind.Function,
@@ -43,10 +43,12 @@ interface AsyncDetectionContext {
     signatures: Set<SignatureReflection>;
 }
 
-const createAsyncDetectionContext = (): AsyncDetectionContext => ({
-    types: new Set<SomeType>(),
-    signatures: new Set<SignatureReflection>()
-});
+function createAsyncDetectionContext(): AsyncDetectionContext {
+    return {
+        types: new Set<SomeType>(),
+        signatures: new Set<SignatureReflection>()
+    };
+}
 
 function resolveIsAsync(reflection: Reflection | ParameterReflection): boolean {
     if (Boolean((reflection.flags as { isAsync?: boolean }).isAsync)) {
@@ -108,7 +110,7 @@ function signatureIsAsync(signature: SignatureReflection | undefined, context: A
     return returnsPromise(signature.type, context);
 }
 
-const hasDeprecatedTag = (comment: Comment | null): boolean => {
+function hasDeprecatedTag(comment: Comment | null): boolean {
     if (!comment) return false;
     if (comment.getTag('@deprecated')) return true;
 
@@ -117,15 +119,15 @@ const hasDeprecatedTag = (comment: Comment | null): boolean => {
 
     const mods = comment.modifierTags;
     return mods.has('@deprecated');
-};
+}
 
-const isSignatureDeprecated = (sig: SignatureReflection | undefined): boolean => {
+function isSignatureDeprecated(sig: SignatureReflection | undefined): boolean {
     if (!sig) return false;
     if (hasDeprecatedTag(sig.comment ?? null)) return true;
     return Boolean((sig.flags as { isDeprecated?: boolean }).isDeprecated);
-};
+}
 
-const isDeclarationDeprecated = (decl: DeclarationReflection): boolean => {
+function isDeclarationDeprecated(decl: DeclarationReflection): boolean {
     if (hasDeprecatedTag(decl.comment ?? null)) return true;
     if (Boolean((decl.flags as { isDeprecated?: boolean }).isDeprecated)) return true;
 
@@ -133,7 +135,7 @@ const isDeclarationDeprecated = (decl: DeclarationReflection): boolean => {
     if (sigs.length === 0) return false;
 
     return sigs.every((s) => isSignatureDeprecated(s));
-};
+}
 
 function resolveIsDeprecated(reflection: Reflection | ParameterReflection): boolean {
     if (hasDeprecatedTag(reflection.comment ?? null)) {
@@ -267,7 +269,7 @@ function namedTupleMemberHasPromise(
     return returnsPromise(member.element ?? member.type, context);
 }
 
-const resolveAccessor = (reflection: Reflection | ParameterReflection): DocFlags['accessor'] => {
+function resolveAccessor(reflection: Reflection | ParameterReflection): DocFlags['accessor'] {
     if (!('kind' in reflection) || reflection.kind !== ReflectionKind.Accessor) {
         return null;
     }
@@ -286,9 +288,9 @@ const resolveAccessor = (reflection: Reflection | ParameterReflection): DocFlags
         return 'setter';
     }
     return null;
-};
+}
 
-const isInheritedReflection = (reflection: Reflection | ParameterReflection): boolean => {
+function isInheritedReflection(reflection: Reflection | ParameterReflection): boolean {
     if ('inheritedFrom' in reflection && reflection.inheritedFrom) {
         return true;
     }
@@ -299,16 +301,16 @@ const isInheritedReflection = (reflection: Reflection | ParameterReflection): bo
         return true;
     }
     return false;
-};
+}
 
-const isOverwritingReflection = (reflection: Reflection | ParameterReflection): boolean => {
+function isOverwritingReflection(reflection: Reflection | ParameterReflection): boolean {
     if ('overwrites' in reflection && reflection.overwrites) {
         return true;
     }
     return false;
-};
+}
 
-export const mapFlags = (reflection: Reflection | ParameterReflection): DocFlags => {
+export function mapFlags(reflection: Reflection | ParameterReflection): DocFlags {
     const flags = reflection.flags;
     const access = flags.isPrivate ? 'private' : flags.isProtected ? 'protected' : flags.isPublic ? 'public' : null;
     const comment = (reflection as { comment?: Comment | null }).comment ?? null;
@@ -333,4 +335,4 @@ export const mapFlags = (reflection: Reflection | ParameterReflection): DocFlags
         isExternal: Boolean((flags as { isExternal?: boolean }).isExternal) || hasModifier(comment, '@external'),
         isOverwriting: isOverwritingReflection(reflection)
     };
-};
+}

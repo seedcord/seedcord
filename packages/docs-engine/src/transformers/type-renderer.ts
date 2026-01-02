@@ -20,7 +20,7 @@ interface ReferenceLike {
     url?: string;
 }
 
-const literalToText = (value: unknown): string => {
+function literalToText(value: unknown): string {
     switch (typeof value) {
         case 'string':
             return JSON.stringify(value);
@@ -32,30 +32,30 @@ const literalToText = (value: unknown): string => {
         default:
             return value === null ? 'null' : 'unknown';
     }
-};
+}
 
 const getReferenceName = (ref: ReferenceLike): string | undefined =>
     typeof ref.name === 'string' && ref.name.length > 0 ? ref.name : undefined;
 
-const resolvePackageName = (ctx: TransformContext, ref: ReferenceLike): string | undefined => {
+function resolvePackageName(ctx: TransformContext, ref: ReferenceLike): string | undefined {
     if (typeof ref.packageName === 'string' && ref.packageName.length > 0) return ref.packageName;
     if (typeof ref.package === 'string' && ref.package.length > 0) return ref.package;
     return ctx.manifest.name;
-};
+}
 
-const resolveExternalUrl = (ref: ReferenceLike): string | undefined => {
+function resolveExternalUrl(ref: ReferenceLike): string | undefined {
     if (typeof ref.externalUrl === 'string' && ref.externalUrl.length > 0) return ref.externalUrl;
     if (typeof ref.url === 'string' && ref.url.length > 0) return ref.url;
     return undefined;
-};
+}
 
-const applyQualifiedName = (ref: ReferenceLike, reference: DocReference): void => {
+function applyQualifiedName(ref: ReferenceLike, reference: DocReference): void {
     if (typeof ref.qualifiedName === 'string' && ref.qualifiedName.length > 0) {
         reference.qualifiedName = ref.qualifiedName;
     }
-};
+}
 
-const applyTargetMetadata = (ctx: TransformContext, ref: ReferenceLike, reference: DocReference): void => {
+function applyTargetMetadata(ctx: TransformContext, ref: ReferenceLike, reference: DocReference): void {
     const target = ref.target;
     if (typeof target === 'number') {
         reference.targetKey = toGlobalId(reference.packageName ?? ctx.manifest.name, target);
@@ -78,9 +78,9 @@ const applyTargetMetadata = (ctx: TransformContext, ref: ReferenceLike, referenc
     if (maybePackage && maybePackage.length > 0) {
         reference.packageName = maybePackage;
     }
-};
+}
 
-const buildReference = (ctx: TransformContext, ref: ReferenceLike): DocReference | undefined => {
+function buildReference(ctx: TransformContext, ref: ReferenceLike): DocReference | undefined {
     const name = getReferenceName(ref);
     if (!name) {
         return undefined;
@@ -102,9 +102,9 @@ const buildReference = (ctx: TransformContext, ref: ReferenceLike): DocReference
     applyTargetMetadata(ctx, ref, reference);
 
     return reference;
-};
+}
 
-const renderReferenceType: TypeRenderer = (ctx, type, parts) => {
+function renderReferenceType(ctx: TransformContext, type: DocType, parts: SigPart[]): void {
     const referenceType = type as JSONOutput.ReferenceType;
     let label = 'unknown';
     if (typeof referenceType.name === 'string' && referenceType.name.length > 0) {
@@ -138,23 +138,23 @@ const renderReferenceType: TypeRenderer = (ctx, type, parts) => {
         renderTypeNode(ctx, argument, parts);
     });
     parts.push(punctPart('>'));
-};
+}
 
-const renderSeparatedTypes = (
+function renderSeparatedTypes(
     ctx: TransformContext,
     nodes: readonly DocType[],
     separator: string,
     parts: SigPart[]
-): void => {
+): void {
     nodes.forEach((entry, index) => {
         if (index > 0) {
             parts.push(punctPart(separator));
         }
         renderTypeNode(ctx, entry, parts);
     });
-};
+}
 
-const renderTupleType: TypeRenderer = (ctx, type, parts) => {
+function renderTupleType(ctx: TransformContext, type: DocType, parts: SigPart[]): void {
     parts.push(punctPart('['));
     const elements = (type as JSONOutput.TupleType).elements ?? [];
     elements.forEach((element, index) => {
@@ -179,9 +179,9 @@ const renderTupleType: TypeRenderer = (ctx, type, parts) => {
         renderTypeNode(ctx, element as DocType, parts);
     });
     parts.push(punctPart(']'));
-};
+}
 
-const renderConditionalType: TypeRenderer = (ctx, type, parts) => {
+function renderConditionalType(ctx: TransformContext, type: DocType, parts: SigPart[]): void {
     const conditional = type as JSONOutput.ConditionalType;
     renderTypeNode(ctx, conditional.checkType, parts);
     parts.push(spacePart());
@@ -194,9 +194,9 @@ const renderConditionalType: TypeRenderer = (ctx, type, parts) => {
     parts.push(spacePart());
     parts.push(punctPart(': '));
     renderTypeNode(ctx, conditional.falseType, parts);
-};
+}
 
-const renderTemplateLiteralType: TypeRenderer = (ctx, type, parts) => {
+function renderTemplateLiteralType(ctx: TransformContext, type: DocType, parts: SigPart[]): void {
     const template = type as JSONOutput.TemplateLiteralType;
     const spans = (template as { spans?: JSONOutput.SomeType[] }).spans ?? [];
     const tails = Array.isArray(template.tail) ? template.tail : [];
@@ -223,9 +223,9 @@ const renderTemplateLiteralType: TypeRenderer = (ctx, type, parts) => {
     });
 
     parts.push(punctPart('`'));
-};
+}
 
-const renderReflectionType: TypeRenderer = (ctx, type, parts) => {
+function renderReflectionType(ctx: TransformContext, type: DocType, parts: SigPart[]): void {
     const reflection = type as JSONOutput.ReflectionType;
     const declaration = reflection.declaration;
     const signatures = Array.isArray(declaration.signatures) ? declaration.signatures : [];
@@ -277,7 +277,7 @@ const renderReflectionType: TypeRenderer = (ctx, type, parts) => {
     }
 
     parts.push(textPart('{…}'));
-};
+}
 
 const TYPE_RENDERERS: Record<string, TypeRenderer> = {
     intrinsic: (_ctx, type, parts) => parts.push(textPart((type as JSONOutput.IntrinsicType).name)),
@@ -345,7 +345,7 @@ const TYPE_RENDERERS: Record<string, TypeRenderer> = {
     }
 };
 
-const renderTypeNode = (ctx: TransformContext, type: DocType, parts: SigPart[]): void => {
+function renderTypeNode(ctx: TransformContext, type: DocType, parts: SigPart[]): void {
     const renderer = TYPE_RENDERERS[type.type];
     if (renderer) {
         renderer(ctx, type, parts);
@@ -353,9 +353,9 @@ const renderTypeNode = (ctx: TransformContext, type: DocType, parts: SigPart[]):
     }
     const label = typeof type.type === 'string' && type.type.length > 0 ? type.type : 'unknown';
     parts.push(textPart(label));
-};
+}
 
-export const renderInlineType = (ctx: TransformContext, type?: DocType | null): InlineType | undefined => {
+export function renderInlineType(ctx: TransformContext, type?: DocType | null): InlineType | undefined {
     if (!type) {
         return undefined;
     }
@@ -368,4 +368,4 @@ export const renderInlineType = (ctx: TransformContext, type?: DocType | null): 
     }
 
     return { parts };
-};
+}

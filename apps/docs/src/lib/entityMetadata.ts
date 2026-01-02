@@ -153,7 +153,7 @@ const SINGLE_CHARACTER = 1;
 const DOUBLE_CHARACTER = 2;
 const TRIPLE_CHARACTER = 3;
 
-const buildToneCandidates = (value: string): string[] => {
+function buildToneCandidates(value: string): string[] {
     const candidates = new Set<string>([value]);
 
     if (value.endsWith('s')) {
@@ -178,7 +178,7 @@ const buildToneCandidates = (value: string): string[] => {
     }
 
     return [...candidates];
-};
+}
 
 export function getToneConfig(tone: EntityTone): EntityToneConfig {
     return ENTITIES[tone];

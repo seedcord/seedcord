@@ -1,6 +1,6 @@
 import type { DocNode, DocSignature } from '../types';
 
-const identityForNode = (node: DocNode): string | null => {
+function identityForNode(node: DocNode): string | null {
     const qualified = node.qualifiedName.trim();
     if (qualified.length > 0) {
         return `${node.kind}:${qualified}`;
@@ -17,9 +17,9 @@ const identityForNode = (node: DocNode): string | null => {
     }
 
     return null;
-};
+}
 
-const identityForSignature = (signature: DocSignature): string | null => {
+function identityForSignature(signature: DocSignature): string | null {
     const name = signature.name.trim();
     if (name.length === 0) {
         return null;
@@ -29,9 +29,9 @@ const identityForSignature = (signature: DocSignature): string | null => {
     const parameters = signature.parameters.map((param) => param.name.trim()).join(',');
 
     return `${signature.kind}:${name}#${signature.overloadIndex}#${typeParams}#${parameters}`;
-};
+}
 
-const findSignatureSourceUrl = (signature: DocSignature): string | undefined => {
+function findSignatureSourceUrl(signature: DocSignature): string | undefined {
     if (signature.sourceUrl && signature.sourceUrl.length > 0) {
         return signature.sourceUrl;
     }
@@ -43,9 +43,9 @@ const findSignatureSourceUrl = (signature: DocSignature): string | undefined => 
     }
 
     return undefined;
-};
+}
 
-const findNodeSourceUrl = (node: DocNode): string | undefined => {
+function findNodeSourceUrl(node: DocNode): string | undefined {
     if (node.sourceUrl && node.sourceUrl.length > 0) {
         return node.sourceUrl;
     }
@@ -64,9 +64,9 @@ const findNodeSourceUrl = (node: DocNode): string | undefined => {
     }
 
     return undefined;
-};
+}
 
-const visit = (node: DocNode, buckets: Map<string, DocNode[]>): void => {
+function visit(node: DocNode, buckets: Map<string, DocNode[]>): void {
     const identity = identityForNode(node);
     if (identity) {
         const bucket = buckets.get(identity);
@@ -80,9 +80,9 @@ const visit = (node: DocNode, buckets: Map<string, DocNode[]>): void => {
     for (const child of node.children) {
         visit(child, buckets);
     }
-};
+}
 
-const propagateSignatureSources = (nodes: DocNode[], nodeFallback: string | undefined): void => {
+function propagateSignatureSources(nodes: DocNode[], nodeFallback: string | undefined): void {
     const signatureBuckets = new Map<string, DocSignature[]>();
 
     for (const node of nodes) {
@@ -121,9 +121,9 @@ const propagateSignatureSources = (nodes: DocNode[], nodeFallback: string | unde
             }
         }
     }
-};
+}
 
-export const propagateSourceInformation = (roots: DocNode[]): void => {
+export function propagateSourceInformation(roots: DocNode[]): void {
     const buckets = new Map<string, DocNode[]>();
 
     for (const root of roots) {
@@ -145,4 +145,4 @@ export const propagateSourceInformation = (roots: DocNode[]): void => {
 
         propagateSignatureSources(nodes, fallback);
     }
-};
+}

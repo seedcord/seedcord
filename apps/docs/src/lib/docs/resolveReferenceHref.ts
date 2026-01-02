@@ -20,11 +20,11 @@ const MEMBER_ANCHOR_PREFIX: Record<string, string> = {
     enumMember: 'enum-member'
 };
 
-const getParentSlug = (slug: string): string | null => {
+function getParentSlug(slug: string): string | null {
     const segments = String(slug).split('/');
     if (segments.length <= 1) return null;
     return segments.slice(0, -1).join('/');
-};
+}
 
 function findEntityNode(engine: DocsEngine, packageName: string, slug: string): DocNode | null {
     const segments = String(slug).split('/');

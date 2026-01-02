@@ -1,4 +1,4 @@
-export const clearDocsHistory = (): void => {
+export function clearDocsHistory(): void {
     try {
         if (typeof window === 'undefined') return;
 
@@ -7,7 +7,7 @@ export const clearDocsHistory = (): void => {
             .filter((k) => k.startsWith('docs.'))
             .forEach((k) => window.localStorage.removeItem(k));
 
-        // Best-effort: expire cookies visible to this path
+        // expire cookies visible to this path
         try {
             const cookies = document.cookie
                 .split(';')
@@ -25,6 +25,6 @@ export const clearDocsHistory = (): void => {
     } catch {
         // ignore overall failures
     }
-};
+}
 
 export default clearDocsHistory;

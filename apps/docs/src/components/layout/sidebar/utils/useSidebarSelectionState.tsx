@@ -5,10 +5,10 @@ import { resolveRestSegments } from './resolveRestSegments';
 import type { SidebarProps } from '../types';
 import type { PendingSidebarSelection } from './useSidebarPersistence';
 
-const trimTrailingSlash = (value: string): string => {
+function trimTrailingSlash(value: string): string {
     if (value.length > 1 && value.endsWith('/')) return value.slice(0, -1);
     return value;
-};
+}
 
 interface SidebarSelectionState {
     restSegments: readonly string[];

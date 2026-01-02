@@ -1,4 +1,4 @@
-const slugifySegment = (segment: string): string => {
+function slugifySegment(segment: string): string {
     const withoutGenerics = segment.replace(/<.*?>/g, '');
     const normalized = withoutGenerics
         .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
@@ -7,7 +7,7 @@ const slugifySegment = (segment: string): string => {
         .replace(/^-|-$/g, '')
         .toLowerCase();
     return normalized || 'item';
-};
+}
 
 export class Slugger {
     private readonly seen = new Map<string, number>();

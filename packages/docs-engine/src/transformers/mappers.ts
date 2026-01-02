@@ -41,14 +41,14 @@ interface ReferenceCandidate {
     url?: string;
     sources?: { url?: string }[];
 }
-const selectPackageName = (candidate: ReferenceCandidate, fallback: string): string | undefined => {
+function selectPackageName(candidate: ReferenceCandidate, fallback: string): string | undefined {
     const pkg = candidate.packageName ?? candidate.package;
     if (typeof pkg === 'string' && pkg.length > 0) {
         return pkg;
     }
     return fallback.length > 0 ? fallback : undefined;
-};
-const pickReferenceUrl = (candidate: ReferenceCandidate): string | undefined => {
+}
+function pickReferenceUrl(candidate: ReferenceCandidate): string | undefined {
     if (candidate.externalUrl && candidate.externalUrl.length > 0) {
         return candidate.externalUrl;
     }
@@ -65,8 +65,8 @@ const pickReferenceUrl = (candidate: ReferenceCandidate): string | undefined => 
     }
 
     return undefined;
-};
-const pickReferenceTarget = (candidate: ReferenceCandidate): number | undefined => {
+}
+function pickReferenceTarget(candidate: ReferenceCandidate): number | undefined {
     if (typeof candidate.target === 'number') {
         return candidate.target;
     }
@@ -76,8 +76,8 @@ const pickReferenceTarget = (candidate: ReferenceCandidate): number | undefined 
     }
 
     return undefined;
-};
-export const mapType = (context: TransformContext, type: SomeType | ReflectionType | undefined): DocType | null => {
+}
+export function mapType(context: TransformContext, type: SomeType | ReflectionType | undefined): DocType | null {
     const out = toDocType(type);
     try {
         if (out && typeof out === 'object' && out.type === 'reference') {
@@ -94,12 +94,12 @@ export const mapType = (context: TransformContext, type: SomeType | ReflectionTy
     }
 
     return out;
-};
+}
 
 export const mapComment = (context: TransformContext, comment?: Comment | null): DocComment | null =>
     context.commentTransformer.toDocComment(comment ?? undefined);
 
-export const mapSources = (sources: SourceReference[] | undefined): DocSource[] => {
+export function mapSources(sources: SourceReference[] | undefined): DocSource[] {
     if (!Array.isArray(sources)) {
         return [];
     }
@@ -116,16 +116,16 @@ export const mapSources = (sources: SourceReference[] | undefined): DocSource[] 
 
         return result;
     });
-};
+}
 export const primaryUrlFromSources = (sources?: SourceReference[]): string | undefined =>
     Array.isArray(sources)
         ? sources.find((source) => typeof source.url === 'string' && source.url.length > 0)?.url
         : undefined;
 
-export const mapSignatureParameters = (
+export function mapSignatureParameters(
     context: TransformContext,
     parameters: readonly ParameterReflection[] | undefined
-): DocSignatureParameter[] => {
+): DocSignatureParameter[] {
     if (!parameters) return [];
 
     return parameters.map((parameter) => {
@@ -144,12 +144,12 @@ export const mapSignatureParameters = (
 
         return result;
     });
-};
+}
 
-export const mapTypeParameters = (
+export function mapTypeParameters(
     context: TransformContext,
     parameters: readonly TypeParameterReflection[] | undefined
-): DocTypeParameter[] => {
+): DocTypeParameter[] {
     if (!parameters) return [];
 
     return parameters.map((parameter) => {
@@ -185,9 +185,9 @@ export const mapTypeParameters = (
 
         return out;
     });
-};
+}
 
-export const mapReference = (context: TransformContext, reference: unknown): DocReference | null => {
+export function mapReference(context: TransformContext, reference: unknown): DocReference | null {
     if (!reference || typeof reference !== 'object') {
         return null;
     }
@@ -227,9 +227,9 @@ export const mapReference = (context: TransformContext, reference: unknown): Doc
     }
 
     return result;
-};
+}
 
-export const mapGroups = (group: ReflectionGroup, packageName: string): DocGroup => {
+export function mapGroups(group: ReflectionGroup, packageName: string): DocGroup {
     const childIds = Array.isArray(group.children) ? group.children : [];
     const childKeys: GlobalId[] = [];
 
@@ -250,7 +250,7 @@ export const mapGroups = (group: ReflectionGroup, packageName: string): DocGroup
         kind: 'kind' in group ? ((group as { kind?: ReflectionKind }).kind ?? null) : null,
         childKeys
     };
-};
+}
 
 function sigFragment(signature: SignatureReflection): string {
     const HASH_BASE = 36;
@@ -264,14 +264,14 @@ function sigFragment(signature: SignatureReflection): string {
     return `${name}-${(hash >>> 0).toString(HASH_BASE)}`;
 }
 
-const mapSignatureComments = (
+function mapSignatureComments(
     context: TransformContext,
     signature: SignatureReflection
 ): {
     comment: DocComment | null;
     returnsComment: DocCommentBlockTag | null;
     throws: DocCommentBlockTag[];
-} => {
+} {
     const comment = mapComment(context, signature.comment);
     const returnsTag = signature.comment?.getTag('@returns') ?? null;
     const throwsTags = signature.comment?.getTags('@throws') ?? [];
@@ -281,9 +281,9 @@ const mapSignatureComments = (
         returnsComment: returnsTag ? context.commentTransformer.toBlockTag(returnsTag) : null,
         throws: throwsTags.map((tag) => context.commentTransformer.toBlockTag(tag))
     };
-};
+}
 
-const registerSignatureFragment = (signature: SignatureReflection, registry?: Set<string>): string => {
+function registerSignatureFragment(signature: SignatureReflection, registry?: Set<string>): string {
     const fragment = sigFragment(signature);
     if (!registry) {
         return fragment;
@@ -297,15 +297,15 @@ const registerSignatureFragment = (signature: SignatureReflection, registry?: Se
     }
     registry.add(candidate);
     return candidate;
-};
+}
 
-export const mapSignature = (
+export function mapSignature(
     context: TransformContext,
     signature: SignatureReflection,
     parent: { id: number; name: string; slug: string },
     index: number,
     fragmentRegistry?: Set<string>
-): DocSignature => {
+): DocSignature {
     const { comment, returnsComment, throws } = mapSignatureComments(context, signature);
     const fragment = registerSignatureFragment(signature, fragmentRegistry);
     const anchor = `${parent.slug}#${fragment}`;
@@ -347,19 +347,19 @@ export const mapSignature = (
     docSignature.renderText = formatRenderedSignature(renderedSignature);
 
     return docSignature;
-};
+}
 
-const mapDocTypeArray = (
+function mapDocTypeArray(
     context: TransformContext,
     types: readonly (SomeType | ReflectionType)[] | undefined
-): DocType[] => {
+): DocType[] {
     const out: DocType[] = [];
     for (const type of types ?? []) {
         const mapped = mapType(context, type);
         if (mapped) out.push(mapped);
     }
     return out;
-};
+}
 
 export const mapInheritance = (context: TransformContext, reflection: DeclarationReflection): DocInheritance => ({
     extends: mapDocTypeArray(context, reflection.extendedTypes),

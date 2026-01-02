@@ -9,7 +9,7 @@ export const DEFAULT_VERSION_SEGMENT = 'latest';
 
 const encodeSegment = (segment: string): string => encodeURIComponent(segment);
 
-export const buildEntityHref = ({ name, slug, version, tone }: BuildEntityHrefOptions): Route => {
+export function buildEntityHref({ name, slug, version, tone }: BuildEntityHrefOptions): Route {
     const resolvedTone = tone ? resolveEntityTone(tone) : null;
     const packageSegment = encodeSegment(formatDisplayPackageName(name));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
@@ -22,14 +22,14 @@ export const buildEntityHref = ({ name, slug, version, tone }: BuildEntityHrefOp
     segments.push(encodeSegment(slug));
 
     return segments.join('/') as Route;
-};
+}
 
-export const buildPackageBasePath = (manifestPackage: string, version: string | null | undefined): Route => {
+export function buildPackageBasePath(manifestPackage: string, version: string | null | undefined): Route {
     const packageSegment = encodeSegment(formatDisplayPackageName(manifestPackage));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
 
     return `/docs/packages/${packageSegment}/${versionSegment}` as Route;
-};
+}
 
 export interface ParsedEntityPath {
     tone: EntityTone | null;
@@ -37,7 +37,7 @@ export interface ParsedEntityPath {
     rawSegments: string[];
 }
 
-export const parseEntityPathSegments = (segments?: string[] | null): ParsedEntityPath => {
+export function parseEntityPathSegments(segments?: string[] | null): ParsedEntityPath {
     if (!segments?.length) {
         return {
             tone: null,
@@ -64,6 +64,6 @@ export const parseEntityPathSegments = (segments?: string[] | null): ParsedEntit
         slug,
         rawSegments: segments
     } satisfies ParsedEntityPath;
-};
+}
 
 export const getEntityRouteSegment = (tone: EntityTone): string => toneToDirectory(tone);

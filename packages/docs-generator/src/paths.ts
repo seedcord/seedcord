@@ -10,7 +10,7 @@ const DEFAULT_PACKAGES_DIR = path.join(DEFAULT_REPO_ROOT, 'packages');
 const DEFAULT_OUTPUT_DIR = path.join(DEFAULT_PACKAGE_ROOT, 'generated');
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : undefined;
 
-const resolveWithBases = (input: string, bases: (string | undefined)[]): string => {
+function resolveWithBases(input: string, bases: (string | undefined)[]): string {
     if (path.isAbsolute(input)) {
         return path.normalize(input);
     }
@@ -21,7 +21,7 @@ const resolveWithBases = (input: string, bases: (string | undefined)[]): string 
     }
 
     return path.normalize(path.resolve(input));
-};
+}
 
 export interface ApiDocsPathConfig {
     packageRoot?: string;

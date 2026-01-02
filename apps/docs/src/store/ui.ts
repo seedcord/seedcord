@@ -31,7 +31,7 @@ interface Snapshot {
     memberAccessLevel?: MemberAccessLevel | undefined;
 }
 
-const readSnapshotFromWindow = (): Snapshot => {
+function readSnapshotFromWindow(): Snapshot {
     if (typeof window === 'undefined') return {};
 
     try {
@@ -45,7 +45,7 @@ const readSnapshotFromWindow = (): Snapshot => {
     } catch {
         return {};
     }
-};
+}
 
 export const useUIStore = create<UIStore>((set) => {
     const snapshot = readSnapshotFromWindow();

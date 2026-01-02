@@ -5,7 +5,7 @@ import type { ReflectionType, SomeType } from 'typedoc';
 
 const serializer = new Serializer();
 
-export const typeToken = (type: SomeType | ReflectionType | undefined): string => {
+export function typeToken(type: SomeType | ReflectionType | undefined): string {
     if (!type) return 't';
 
     try {
@@ -17,9 +17,9 @@ export const typeToken = (type: SomeType | ReflectionType | undefined): string =
     }
 
     return 't';
-};
+}
 
-export const toDocType = (type: SomeType | ReflectionType | undefined): DocType | null => {
+export function toDocType(type: SomeType | ReflectionType | undefined): DocType | null {
     if (!type) return null;
 
     try {
@@ -27,7 +27,7 @@ export const toDocType = (type: SomeType | ReflectionType | undefined): DocType 
     } catch {
         return type as unknown as DocType;
     }
-};
+}
 
 interface ReferenceTypeLike {
     type?: string;

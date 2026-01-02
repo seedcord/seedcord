@@ -9,7 +9,7 @@ import type { DocCollection, DocManifest, DocManifestPackage, DocPackageModel } 
 
 const normalizeAlias = (value: string): string => value.trim().toLowerCase();
 
-const computeAliases = (name: string): string[] => {
+function computeAliases(name: string): string[] {
     const aliases = new Set<string>();
 
     const add = (candidate: string | null | undefined): void => {
@@ -30,9 +30,9 @@ const computeAliases = (name: string): string[] => {
     }
 
     return Array.from(aliases);
-};
+}
 
-const createPackageLookups = (packages: DocManifestPackage[]): PackageLookups => {
+function createPackageLookups(packages: DocManifestPackage[]): PackageLookups {
     const byName = new Map<string, DocManifestPackage>();
     const byAlias = new Map<string, DocManifestPackage>();
 
@@ -48,7 +48,7 @@ const createPackageLookups = (packages: DocManifestPackage[]): PackageLookups =>
     }
 
     return { byName, byAlias } satisfies PackageLookups;
-};
+}
 
 export interface ResolveOptions {
     workspaceRoot?: string;
@@ -57,7 +57,7 @@ export interface ResolveOptions {
     manifestOutputDir: string;
 }
 
-const collectBaseCandidates = (options: ResolveOptions): string[] => {
+function collectBaseCandidates(options: ResolveOptions): string[] {
     const ordered = new Set<string>();
 
     if (options.generatedRoot) {
@@ -76,13 +76,13 @@ const collectBaseCandidates = (options: ResolveOptions): string[] => {
     }
 
     return Array.from(ordered);
-};
+}
 
-const resolvePackageJsonPath = (
+function resolvePackageJsonPath(
     pkg: DocManifestPackage,
     baseCandidates: string[],
     options: ResolveOptions
-): string | null => {
+): string | null {
     const output = pkg.output?.trim();
     if (!output) {
         return null;
@@ -107,9 +107,9 @@ const resolvePackageJsonPath = (
     }
 
     return first.endsWith('.json') ? first : path.join(first, 'project.json');
-};
+}
 
-const collectOutputCandidates = (output: string, baseCandidates: string[], options: ResolveOptions): string[] => {
+function collectOutputCandidates(output: string, baseCandidates: string[], options: ResolveOptions): string[] {
     const ordered = new Set<string>();
 
     const addCandidate = (value: string | null | undefined): void => {
@@ -144,9 +144,9 @@ const collectOutputCandidates = (output: string, baseCandidates: string[], optio
     }
 
     return Array.from(ordered);
-};
+}
 
-const resolveManifestOutputBase = (options: ResolveOptions): string | null => {
+function resolveManifestOutputBase(options: ResolveOptions): string | null {
     const trimmed = options.manifestOutputDir.trim();
     if (trimmed.length === 0) {
         return null;
@@ -158,9 +158,9 @@ const resolveManifestOutputBase = (options: ResolveOptions): string | null => {
 
     const base = options.workspaceRoot ?? options.manifestDir;
     return path.resolve(base, trimmed);
-};
+}
 
-const relativizeFromManifestOutput = (output: string, manifestOutputDir: string): string | null => {
+function relativizeFromManifestOutput(output: string, manifestOutputDir: string): string | null {
     const trimmedManifest = manifestOutputDir.trim();
     if (trimmedManifest.length === 0) {
         return null;
@@ -172,9 +172,9 @@ const relativizeFromManifestOutput = (output: string, manifestOutputDir: string)
     }
 
     return relative;
-};
+}
 
-export const buildCollection = async (manifest: DocManifest, options: ResolveOptions): Promise<DocCollection> => {
+export async function buildCollection(manifest: DocManifest, options: ResolveOptions): Promise<DocCollection> {
     const baseCandidates = collectBaseCandidates(options);
     const packageLookups = createPackageLookups(manifest.packages);
     const packages: DocPackageModel[] = [];
@@ -189,14 +189,11 @@ export const buildCollection = async (manifest: DocManifest, options: ResolveOpt
         packages.push(model);
     }
 
-    // const roots = packages.map((pkg) => pkg.root);
-    // propagateSourceInformation(roots);
-
     const { byKey, byGlobalSlug } = buildGlobalMaps(packages);
     return { manifest, packages, byKey, byGlobalSlug };
-};
+}
 
-const buildGlobalMaps = (packages: DocPackageModel[]): Pick<DocCollection, 'byKey' | 'byGlobalSlug'> => {
+function buildGlobalMaps(packages: DocPackageModel[]): Pick<DocCollection, 'byKey' | 'byGlobalSlug'> {
     const byKey = new Map<GlobalId, DocPackageModel['root']>();
     const byGlobalSlug = new Map<string, DocPackageModel['root']>();
 
@@ -209,4 +206,4 @@ const buildGlobalMaps = (packages: DocPackageModel[]): Pick<DocCollection, 'byKe
     }
 
     return { byKey, byGlobalSlug };
-};
+}

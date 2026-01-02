@@ -26,7 +26,7 @@ import { hasRefType, hasSources, hasVariant } from './type-helpers';
 
 import type { DocInheritance, DocManifestPackage, DocNode, SourcePackage } from '../types';
 
-const formatLiteralValue = (value: unknown): string | undefined => {
+function formatLiteralValue(value: unknown): string | undefined {
     if (value === undefined) return undefined;
     if (value === null) return 'null';
     if (typeof value === 'string') return JSON.stringify(value);
@@ -34,12 +34,9 @@ const formatLiteralValue = (value: unknown): string | undefined => {
     if (typeof value === 'boolean') return value ? 'true' : 'false';
     if (typeof value === 'bigint') return `${value.toString()}n`;
     return undefined;
-};
+}
 
-const extractEnumLiteralValue = (
-    reflection: DeclarationReflection,
-    mappedType: DocNode['type']
-): string | undefined => {
+function extractEnumLiteralValue(reflection: DeclarationReflection, mappedType: DocNode['type']): string | undefined {
     const literalFromReflection = (reflection.type as { type?: string; value?: unknown } | undefined) ?? null;
     if (literalFromReflection?.type === 'literal' && 'value' in literalFromReflection) {
         const formatted = formatLiteralValue(literalFromReflection.value);
@@ -52,26 +49,30 @@ const extractEnumLiteralValue = (
     }
 
     return undefined;
-};
+}
 
-const buildPathSegments = (
+function buildPathSegments(
     reflection: ProjectReflection | DeclarationReflection,
     _context: TransformContext,
     parentPath: readonly string[]
-): string[] => {
+): string[] {
     const label = typeof reflection.name === 'string' && reflection.name.length > 0 ? reflection.name : 'anonymous';
     if (reflection.kind === ReflectionKind.Project) return [];
     return parentPath.length === 0 ? [label] : [...parentPath, label];
-};
+}
 
-const kindLabelOf = (kind: ReflectionKind): string => kindLabel(kind);
+function kindLabelOf(kind: ReflectionKind): string {
+    return kindLabel(kind);
+}
 
-const createEmptyInheritance = (): DocInheritance => ({
-    extends: [],
-    implements: [],
-    extendedBy: [],
-    implementedBy: []
-});
+function createEmptyInheritance(): DocInheritance {
+    return {
+        extends: [],
+        implements: [],
+        extendedBy: [],
+        implementedBy: []
+    };
+}
 
 interface CreateNodeParams {
     reflection: ProjectReflection | DeclarationReflection;

@@ -4,6 +4,9 @@ import type { DocComment, DocCommentBlockTag, DocCommentExample } from '../types
 import type { CommentDisplayPart, CommentTag, JSONOutput } from 'typedoc';
 
 export class CommentTransformer {
+    private readonly combineJsonParts = (parts: JSONOutput.CommentDisplayPart[]): string =>
+        parts.map((part) => part.text).join('');
+
     toDocComment(comment?: Comment | null): DocComment | null {
         if (!comment) {
             return null;
@@ -27,7 +30,7 @@ export class CommentTransformer {
 
     toBlockTag(tag: CommentTag): DocCommentBlockTag {
         const content = this.cloneParts(tag.content);
-        const text = combineJsonParts(content).trim();
+        const text = this.combineJsonParts(content).trim();
 
         return {
             tag: tag.tag,
@@ -45,7 +48,7 @@ export class CommentTransformer {
             content: (codePart?.text ?? block.text).trim()
         };
 
-        const captionText = combineJsonParts(textParts).trim();
+        const captionText = this.combineJsonParts(textParts).trim();
         const caption = captionText || block.name;
         if (caption) {
             example.caption = caption;
@@ -59,5 +62,3 @@ export class CommentTransformer {
         return Comment.serializeDisplayParts(cloned);
     }
 }
-
-const combineJsonParts = (parts: JSONOutput.CommentDisplayPart[]): string => parts.map((part) => part.text).join('');
