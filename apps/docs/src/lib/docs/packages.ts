@@ -67,8 +67,7 @@ function sanitizeExternalKey(value: string): string {
         .replace(/<.*>/g, '') // remove generics
         .replace(/\[\]/g, '') // remove array brackets
         .replace(/\|.*/g, '') // remove union tails
-        .trim() // trim whitespace
-        .toLowerCase(); // normalize case
+        .trim(); // trim whitespace
 }
 
 export function resolveExternalPackageUrl(packageName?: string | null): string | null {
@@ -81,12 +80,8 @@ export function resolveExternalPackageUrl(packageName?: string | null): string |
     const sanitized = sanitizeExternalKey(packageName);
     if (sanitized) candidates.add(sanitized);
 
-    const rawLower = packageName.trim().toLowerCase();
-    if (rawLower) candidates.add(rawLower);
-
     if (sanitized.length > 0) {
         const cap = sanitized.charAt(0).toUpperCase() + sanitized.slice(1);
-        candidates.add(cap.toLowerCase());
         candidates.add(cap);
     }
     const stripped = packageName

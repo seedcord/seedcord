@@ -140,7 +140,7 @@ export function Sidebar({
                     categories={activeVersion.categories}
                     activeHref={pathname}
                     storageKey={collapsedStorageKey}
-                    onSelect={onSelect}
+                    {...(onSelect ? { onSelect } : {})}
                 />
             </div>
         </nav>

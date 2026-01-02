@@ -132,14 +132,20 @@ const renderHeritage = (ctx: TransformContext, list?: DocType[]): InlineType[] |
 
 const applyModifiers = (flags: DocFlags): string[] => {
     const modifiers: string[] = [];
+    if (flags.access) {
+        modifiers.push(flags.access);
+    }
+    if (flags.isReadonly) {
+        modifiers.push('readonly');
+    }
     if (flags.isAbstract) {
         modifiers.push('abstract');
     }
+    if (flags.isStatic) {
+        modifiers.push('static');
+    }
     if (flags.isAsync) {
         modifiers.push('async');
-    }
-    if (flags.access) {
-        modifiers.push(flags.access);
     }
 
     return modifiers;

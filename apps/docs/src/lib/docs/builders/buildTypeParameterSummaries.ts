@@ -52,7 +52,7 @@ export async function buildTypeParameterSummaries(
                 id: `type-${param.name}`,
                 label: param.name,
                 description,
-                sharedDocumentation: documentation,
+                sharedDocumentation: [],
                 sharedExamples: examples,
                 signatures: [
                     {

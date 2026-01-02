@@ -21,11 +21,11 @@ function DesktopSearchButton(): ReactElement {
     return (
         <Button
             variant="ghost"
-            className="group shadow-soft w-full max-w-70 items-center justify-between rounded-xl border border-(--bg-surface-light) bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) transition hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle) focus:border-(--border-accent-a-moderate) focus:ring-2 focus:ring-(--outline-accent-a-moderate) focus:ring-offset-2 focus:ring-offset-(--bg-surface-moderate-transparent) focus:outline-none"
+            className="group shadow-soft w-full max-w-70 items-center justify-between rounded-xl border border-(--bg-surface-light) bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle) focus:border-(--border-accent-a-moderate) focus:ring-2 focus:ring-(--outline-accent-a-moderate) focus:ring-offset-2 focus:ring-offset-(--bg-surface-moderate-transparent) focus:outline-none"
             onClick={handleClick}
             aria-label="Search documentation"
         >
-            <span className="text-subtle flex items-center gap-2 transition group-hover:text-(--text) group-focus:text-(--text)">
+            <span className="text-subtle ease flex items-center gap-2 transition-colors duration-200 group-hover:text-(--text) group-focus:text-(--text)">
                 <Icon icon={Search} size={16} />
                 <span>Search docs</span>
             </span>
