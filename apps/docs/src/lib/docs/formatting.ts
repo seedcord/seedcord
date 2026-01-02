@@ -1,3 +1,5 @@
+import { format } from 'prettier';
+
 import { highlightToHtml } from '@lib/shiki';
 
 import { renderInlineType } from './comments/renderers/renderInlineType';
@@ -5,6 +7,43 @@ import { renderSigParts } from './comments/renderers/renderSigParts';
 
 import type { CodeRepresentation, FormatContext } from './types';
 import type { DocComment, RenderedDeclarationHeader, RenderedSignature } from '@seedcord/docs-engine';
+import type { Options } from 'prettier';
+
+async function tryFormat(text: string): Promise<string> {
+    const options = {
+        parser: 'typescript',
+        printWidth: 80,
+        tabWidth: 4,
+        semi: true,
+        trailingComma: 'none' as const
+    } satisfies Options;
+
+    try {
+        return (await format(text, options)).trim();
+    } catch {
+        try {
+            const wrapped = `class _ {\n${text}\n}`;
+            const formatted = await format(wrapped, options);
+            const match = formatted.match(/class _ \{([\s\S]*)\}/);
+            if (match) {
+                const body = match[1];
+                if (typeof body === 'string') {
+                    const lines = body.split('\n');
+                    if (lines.length > 0 && lines[0]?.trim() === '') lines.shift();
+                    if (lines.length > 0 && lines[lines.length - 1]?.trim() === '') lines.pop();
+                    return lines
+                        .map((line) => line.replace(/^\s{4}/, ''))
+                        .join('\n')
+                        .trim();
+                }
+            }
+        } catch {
+            // Ignore
+        }
+    }
+
+    return text;
+}
 
 export async function formatDeclarationHeader(
     header: RenderedDeclarationHeader,
@@ -58,7 +97,7 @@ export async function formatDeclarationHeader(
         segments.push(`implements ${clause}`);
     }
 
-    const text = segments.join(' ').trim();
+    const text = await tryFormat(segments.join(' ').trim());
 
     return {
         text,
@@ -103,7 +142,7 @@ export async function formatSignature(
         .join(', ');
 
     const returnType = signature.returnType ? `: ${renderInlineType(signature.returnType, context)}` : '';
-    const text = `${name}${typeParams}(${parameters})${returnType}`.trim();
+    const text = await tryFormat(`${name}${typeParams}(${parameters})${returnType}`.trim());
 
     return {
         text,

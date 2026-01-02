@@ -11,6 +11,7 @@ npm-debug.*
 *.tsbuildinfo
 
 # misc
+generated/
 debugging/
 **/.DS_Store
 

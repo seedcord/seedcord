@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
+import uFuzzy from '@leeoniya/ufuzzy';
 import { ReflectionKind } from 'typedoc';
 
 import { buildCollection, type ResolveOptions } from './builders/collection-builder';
@@ -21,10 +22,17 @@ export interface DocsEngineOptions {
 export class DocsEngine {
     private readonly searchIndex: DocSearchEntry[];
     private readonly directories: Map<string, PackageDirectory>;
+    private readonly uf: uFuzzy;
+    private readonly namesHaystack: string[];
+    private readonly qualifiedNamesHaystack: string[];
 
     private constructor(private readonly collection: DocCollection) {
         this.searchIndex = aggregateSearchIndex(collection);
         this.directories = new Map(collection.packages.map((pkg) => [pkg.manifest.name, pkg.directory] as const));
+
+        this.uf = new uFuzzy({ intraMode: 1 });
+        this.namesHaystack = this.searchIndex.map((e) => e.name.toLowerCase());
+        this.qualifiedNamesHaystack = this.searchIndex.map((e) => e.qualifiedName.toLowerCase());
     }
 
     static async create(options: DocsEngineOptions): Promise<DocsEngine> {
@@ -107,44 +115,33 @@ export class DocsEngine {
 
         const source = pkgName ? (this.getPackage(pkgName)?.indexes.search ?? []) : this.searchIndex;
 
+        const [nameIdxs] = this.uf.search(this.namesHaystack, query.toLowerCase());
+        const [qNameIdxs] = this.uf.search(this.qualifiedNamesHaystack, query.toLowerCase());
+
+        const fuzzyMatches = new Set<DocSearchEntry>();
+        if (nameIdxs) {
+            for (const idx of nameIdxs) {
+                const entry = this.searchIndex[idx];
+                if (entry) fuzzyMatches.add(entry);
+            }
+        }
+        if (qNameIdxs) {
+            for (const idx of qNameIdxs) {
+                const entry = this.searchIndex[idx];
+                if (entry) fuzzyMatches.add(entry);
+            }
+        }
+
         const score = (entry: DocSearchEntry): number => {
             let value = 0;
             const slugTokens = tokenizeSlug(entry.slug);
 
+            if (fuzzyMatches.has(entry)) {
+                value += SCORE_FUZZY_MATCH;
+            }
+
             for (const token of tokens) {
-                if (safeEquals(entry.name, token)) {
-                    value += SCORE_NAME_EXACT;
-                }
-
-                if (safeEquals(entry.qualifiedName, token)) {
-                    value += SCORE_QNAME_EXACT;
-                }
-
-                if (entry.tokens.includes(token)) {
-                    value += SCORE_TOKEN_MATCH;
-                }
-
-                if (entry.tokens.some((candidate) => candidate.startsWith(token))) {
-                    value += SCORE_TOKEN_PREFIX;
-                }
-
-                if (entry.aliases?.some((alias) => safeEquals(alias, token))) {
-                    value += SCORE_ALIAS_EXACT;
-                }
-
-                if (entry.file && safeEquals(entry.file, token)) {
-                    value += SCORE_FILE_EXACT;
-                }
-
-                if (safeEquals(entry.packageName, token) || safeEquals(entry.packageVersion, token)) {
-                    value += SCORE_PACKAGE_MATCH;
-                }
-
-                if (slugTokens.has(token)) {
-                    value += SCORE_SLUG_EXACT;
-                } else if (hasSlugPrefix(slugTokens, token)) {
-                    value += SCORE_SLUG_PREFIX;
-                }
+                value += scoreToken(entry, token, slugTokens);
             }
 
             if (value > 0) {
@@ -205,6 +202,46 @@ export class DocsEngine {
     }
 }
 
+const scoreToken = (entry: DocSearchEntry, token: string, slugTokens: Set<string>): number => {
+    let value = 0;
+
+    if (safeEquals(entry.name, token)) {
+        value += SCORE_NAME_EXACT;
+    }
+
+    if (safeEquals(entry.qualifiedName, token)) {
+        value += SCORE_QNAME_EXACT;
+    }
+
+    if (entry.tokens.includes(token)) {
+        value += SCORE_TOKEN_MATCH;
+    }
+
+    if (entry.tokens.some((candidate) => candidate.startsWith(token))) {
+        value += SCORE_TOKEN_PREFIX;
+    }
+
+    if (entry.aliases?.some((alias) => safeEquals(alias, token))) {
+        value += SCORE_ALIAS_EXACT;
+    }
+
+    if (entry.file && safeEquals(entry.file, token)) {
+        value += SCORE_FILE_EXACT;
+    }
+
+    if (safeEquals(entry.packageName, token) || safeEquals(entry.packageVersion, token)) {
+        value += SCORE_PACKAGE_MATCH;
+    }
+
+    if (slugTokens.has(token)) {
+        value += SCORE_SLUG_EXACT;
+    } else if (hasSlugPrefix(slugTokens, token)) {
+        value += SCORE_SLUG_PREFIX;
+    }
+
+    return value;
+};
+
 const tokenizeQuery = (query: string): string[] =>
     query
         .replace(/([a-z0-9])([A-Z])/gu, '$1 $2')
@@ -212,6 +249,7 @@ const tokenizeQuery = (query: string): string[] =>
         .filter(Boolean)
         .map((token) => token.toLowerCase());
 
+const SCORE_FUZZY_MATCH = 5;
 const SCORE_NAME_EXACT = 8;
 const SCORE_QNAME_EXACT = 10;
 const SCORE_TOKEN_MATCH = 4;
