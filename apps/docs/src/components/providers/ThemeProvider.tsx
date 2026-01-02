@@ -10,7 +10,13 @@ interface ThemeProviderProps {
 
 function ThemeProvider({ children }: ThemeProviderProps): ReactElement {
     return (
-        <NextThemesProvider attribute="data-theme" defaultTheme="system" enableSystem storageKey="theme">
+        <NextThemesProvider
+            attribute="data-theme"
+            defaultTheme="system"
+            enableSystem
+            storageKey="theme"
+            disableTransitionOnChange
+        >
             {children}
         </NextThemesProvider>
     );
