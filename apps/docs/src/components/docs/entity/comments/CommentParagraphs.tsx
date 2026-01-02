@@ -18,12 +18,12 @@ function CommentParagraphs({ paragraphs, className, paragraphClassName }: Commen
     return (
         <div className={cn('text-subtle space-y-2 text-sm leading-relaxed', className)}>
             {entries.map((paragraph, index) => {
-                const key = paragraph.html || paragraph.plain || `paragraph-${index}`;
+                const key = `${index}-${paragraph.html || paragraph.plain || 'empty'}`;
                 if (paragraph.html) {
                     return (
-                        <p
+                        <div
                             key={key}
-                            className={cn('min-w-0', paragraphClassName)}
+                            className={cn('min-w-0 [&_p+p]:mt-2', paragraphClassName)}
                             dangerouslySetInnerHTML={{ __html: paragraph.html }}
                         />
                     );

@@ -18,7 +18,7 @@ export async function formatCommentRich(
         renderParagraphs(comment, context),
         renderExamples(comment),
         Promise.resolve(renderSeeAlso(comment, context)),
-        Promise.resolve(renderThrows(comment))
+        renderThrows(comment, context)
     ]);
 
     return {

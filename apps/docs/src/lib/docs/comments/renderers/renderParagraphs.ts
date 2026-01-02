@@ -1,12 +1,28 @@
-import { highlightInlineToHtml } from '@lib/shiki';
+import { marked } from 'marked';
 
-import { normalizeInlineCode, escapeHtml } from '../cleaners';
-import { DOUBLE_NEWLINE, DEFAULT_INLINE_LANG } from '../constants';
-import { createParagraphAccumulator } from '../creators';
-import { renderInlineTag } from './renderInlineTag';
+import { highlightToHtml, highlightInlineToHtml } from '@lib/shiki';
 
-import type { FormatContext, CommentParagraph, CommentDisplayPart, ParagraphAccumulator } from '../../types';
+import { resolveInlineHref } from '../resolvers';
+
+import type { FormatContext, CommentParagraph, CommentDisplayPart } from '../../types';
 import type { DocComment } from '@seedcord/docs-engine';
+
+marked.use({
+    async: true,
+    walkTokens: async (token) => {
+        if (token.type === 'code') {
+            const html = await highlightToHtml(token.text, token.lang);
+            if (html) {
+                Object.assign(token, { type: 'html', text: html });
+            }
+        } else if (token.type === 'codespan') {
+            const html = await highlightInlineToHtml(token.text);
+            if (html) {
+                Object.assign(token, { type: 'html', text: html });
+            }
+        }
+    }
+});
 
 export async function renderParagraphs(comment: DocComment, context: FormatContext): Promise<CommentParagraph[]> {
     const parts = collectSummaryParts(comment);
@@ -14,82 +30,62 @@ export async function renderParagraphs(comment: DocComment, context: FormatConte
         return [];
     }
 
-    const accumulator = createParagraphAccumulator();
+    let markdown = '';
 
     for (const part of parts) {
-        await appendPart(part, accumulator, context);
-    }
-
-    return accumulator.toParagraphs();
-}
-
-// helpers
-
-async function appendPart(
-    part: CommentDisplayPart,
-    accumulator: ParagraphAccumulator,
-    context: FormatContext
-): Promise<void> {
-    switch (part.kind) {
-        case 'text': {
-            const text = typeof part.text === 'string' ? part.text : '';
-            if (!text) return;
-            const segments = text.split(DOUBLE_NEWLINE);
-
-            segments.forEach((segment, index) => {
-                if (index > 0) {
-                    accumulator.breakParagraph();
+        switch (part.kind) {
+            case 'text':
+                markdown += part.text;
+                break;
+            case 'code':
+                markdown += `\`${part.text}\``;
+                break;
+            case 'inline-tag': {
+                if (part.tag === '@link' || part.tag === '@linkcode' || part.tag === '@linkplain') {
+                    const href = resolveInlineHref(part, context);
+                    const label = (part.text || href) ?? '';
+                    if (href) {
+                        markdown += `[\`${label}\`](${href})`;
+                    } else {
+                        markdown += label;
+                    }
+                } else {
+                    markdown += part.text || '';
                 }
-                const rendered = convertSingleNewlines(segment);
-                accumulator.append(rendered.plain, rendered.html);
-            });
-            return;
-        }
-        case 'code': {
-            const raw = normalizeInlineCode(typeof part.text === 'string' ? part.text : '');
-            if (!raw) return;
-
-            const highlighted =
-                (await highlightInlineToHtml(raw, DEFAULT_INLINE_LANG)) ?? `<code>${escapeHtml(raw)}</code>`;
-            accumulator.append(raw, highlighted);
-            return;
-        }
-        case 'inline-tag': {
-            const rendered = await renderInlineTag(part, context);
-            accumulator.append(rendered.plain, rendered.html);
-            return;
-        }
-        default: {
-            const fallback = part.text;
-            if (!fallback) return;
-            const segments = fallback.split(DOUBLE_NEWLINE);
-            segments.forEach((segment, index) => {
-                if (index > 0) {
-                    accumulator.breakParagraph();
-                }
-                const rendered = convertSingleNewlines(segment);
-                accumulator.append(rendered.plain, rendered.html);
-            });
+                break;
+            }
+            default:
+                markdown += part.text || '';
+                break;
         }
     }
+
+    const html = await marked.parse(markdown, { async: true });
+
+    return [
+        {
+            plain: markdown,
+            html: html
+        }
+    ];
 }
 
-export function convertSingleNewlines(segment: string): { plain: string; html: string } {
-    if (!segment) {
-        return { plain: '', html: '' };
-    }
-    const plain = segment.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-    const html = escapeHtml(segment).replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
-    return { plain, html };
-}
 export function collectSummaryParts(comment: DocComment): CommentDisplayPart[] {
+    const parts: CommentDisplayPart[] = [];
+
     if (comment.summaryParts.length) {
-        return comment.summaryParts;
+        parts.push(...comment.summaryParts);
+    } else if (comment.summary.length) {
+        parts.push({ kind: 'text', text: comment.summary });
     }
 
-    if (comment.summary.length) {
-        return [{ kind: 'text', text: comment.summary }];
+    const remarksTag = comment.blockTags.find((t) => t.tag === '@remarks');
+    if (remarksTag) {
+        if (parts.length > 0) {
+            parts.push({ kind: 'text', text: '\n\n' });
+        }
+        parts.push(...remarksTag.content);
     }
 
-    return [];
+    return parts;
 }

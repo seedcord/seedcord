@@ -33,14 +33,6 @@ function SignaturePanel({ signature, isActive, parentDeprecationStatus }: Signat
             </div>
             {signature.documentation.length ? <CommentParagraphs paragraphs={signature.documentation} /> : null}
             {signature.examples.length ? <CommentExamples examples={signature.examples} /> : null}
-            {signature.throws?.length ? (
-                <div>
-                    <p className="text-subtle flex flex-wrap items-baseline gap-2">
-                        <span className="font-semibold text-(--text)">Throws:</span>
-                    </p>
-                    <CommentParagraphs paragraphs={signature.throws} />
-                </div>
-            ) : null}
         </section>
     );
 

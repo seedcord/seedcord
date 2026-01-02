@@ -1,25 +1,5 @@
-[ ] 50. The panel dropdowns for the constructor, or props, or methods for example in member pages, are missing a hover effect. Add a subtle background color change on hover. If you think there is one right now already, some thing is overriding it because I don't see it.
+[ ] 57. Update pre-rendering to not load the documentation jsons during build time, but instead load them on-demand at runtime with caching. Add CI/CD steps to pre-generate the documentation jsons and upload them as artifacts for the deployment step to download and use. It should upload them to another repository that serves as a storage for these artifacts. This way, we can avoid the long build times due to loading all the documentation jsons during build time.
 
-[ ] 51. Settings clear doesn't have feedback on click. Maybe make a timed feedback button component.
+[ ] 61. The "throws" rendering in comments has a few issues. (1) It doesn't render if it's part of the signature block at the top itself (like @throws on function comments). (2). I'm not sure it it renders multiple throws correctly (all under the same "Throws:"). You already made some changes to attempt to fix this, but it didn't work. So first, check if your fixes are working. Make a temporary file in apps/docs/src/temp and write some code to test this specifically. once you confirm that it's working as intended, update whatever code in the actual files is needed to make it work. Finally, remove the temporary file. You should check if it's working correctly for the hasPermsToAssign function. It has 3 throws tags and is a function, so it should be part of the signature block.
 
-[ ] 54. public abstract abstract public logger: Logger; - double abstract keyword in signature
-
-[ ] 57. Update pre-rendering to not load the documentation jsons during build time, but instead load them on-demand at runtime with caching.
-
-[ ] 58. Make hyperlinking in code signatures case-sensitive IF a ref isn't found in internal documentation.
-
-[ ] 60. For interfaces that have nested objects in them but those nested objects aren't documented entities, render those nested objects correctly instead of "files: {…}". That is, expand them to show their properties. Because "…" is not helpful. Same for some variables. Like "const BuilderTypes: {…}". You can check what the actual json reflection is in the debugging/generated folder at root.
-
-[ ] 42. Render @throws comment similar to Inherits from and See also sections. This is mostly done because we have a bunch of code and the types etc to handle it, but I don't see it rendered on the website. Also, please check kind-function-haspermstoassign.txt. You can see that it has an array for throws. Use the type from docs-engine package that's exported and access this array instead of looking for `@throws` tags.
-
-[ ] 37. In type param rendered comments on entity pages, the type param comment duplicates itself above and below the signature.
-
-[ ] 38. The param and typeparam section in methods below signature and above example can be a dropdown like examples. closed by default.
-
-[ ] 44. In tsdoc comments, if there are bullet points or numbered lists, (-, •, 1., 2., etc.), render them as actual lists in the rendered comments. Not just plain text with those characters.
-
-[ ] 45. If a text is specifically a string (inside "" or '') in the signature of any entity, don't attempt to hyperlink it. Because right now for example, `type LifecycleAction = "start" | "complete" | "error"`, the "error" is hyperlinked to the mdn Error page.
-
-[ ] 48. Rendering for `@virtual` and `@remarks`.
-
-[ ] 49. Render markdown in comments. Lists, bold, and italics.
+[ ] 62. Rendering is now fixed. Just one more change. Line breaks are working now. But, for line breaks that have a blank line in between them, it ignores that line break and just puts them in the next line. If there is a blank line in between two line breaks in the original comment, it should render that as a blank line in between as well.

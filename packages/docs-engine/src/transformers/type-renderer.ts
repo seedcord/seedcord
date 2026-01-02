@@ -227,33 +227,56 @@ const renderTemplateLiteralType: TypeRenderer = (ctx, type, parts) => {
 
 const renderReflectionType: TypeRenderer = (ctx, type, parts) => {
     const reflection = type as JSONOutput.ReflectionType;
-    const signatures = Array.isArray(reflection.declaration.signatures) ? reflection.declaration.signatures : [];
-    if (signatures.length === 0) {
-        parts.push(textPart('{…}'));
-        return;
-    }
-    const signature = signatures[0];
-    if (!signature) {
-        parts.push(textPart('{…}'));
+    const declaration = reflection.declaration;
+    const signatures = Array.isArray(declaration.signatures) ? declaration.signatures : [];
+
+    if (signatures.length > 0) {
+        const signature = signatures[0];
+        if (!signature) {
+            parts.push(textPart('{…}'));
+            return;
+        }
+
+        parts.push(punctPart('('));
+        (signature.parameters ?? []).forEach((parameter, index) => {
+            if (index > 0) parts.push(punctPart(', '));
+            parts.push(textPart(parameter.name));
+            if (parameter.flags.isOptional) {
+                parts.push(punctPart('?'));
+            }
+            if (parameter.type) {
+                parts.push(punctPart(': '));
+                renderTypeNode(ctx, parameter.type, parts);
+            }
+        });
+        parts.push(punctPart(') => '));
+        if (signature.type) {
+            renderTypeNode(ctx, signature.type, parts);
+        }
         return;
     }
 
-    parts.push(punctPart('('));
-    (signature.parameters ?? []).forEach((parameter, index) => {
-        if (index > 0) parts.push(punctPart(', '));
-        parts.push(textPart(parameter.name));
-        if (parameter.flags.isOptional) {
-            parts.push(punctPart('?'));
-        }
-        if (parameter.type) {
+    const children = Array.isArray(declaration.children) ? declaration.children : [];
+    if (children.length > 0) {
+        parts.push(punctPart('{ '));
+        children.forEach((child, index) => {
+            if (index > 0) parts.push(punctPart('; '));
+            parts.push(textPart(child.name));
+            if (child.flags.isOptional) {
+                parts.push(punctPart('?'));
+            }
             parts.push(punctPart(': '));
-            renderTypeNode(ctx, parameter.type, parts);
-        }
-    });
-    parts.push(punctPart(') => '));
-    if (signature.type) {
-        renderTypeNode(ctx, signature.type, parts);
+            if (child.type) {
+                renderTypeNode(ctx, child.type, parts);
+            } else {
+                parts.push(textPart('any'));
+            }
+        });
+        parts.push(punctPart(' }'));
+        return;
     }
+
+    parts.push(textPart('{…}'));
 };
 
 const TYPE_RENDERERS: Record<string, TypeRenderer> = {

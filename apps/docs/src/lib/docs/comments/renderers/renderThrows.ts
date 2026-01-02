@@ -1,24 +1,28 @@
-import type { CommentParagraph } from '../../types';
+import { renderParagraphs } from './renderParagraphs';
+
+import type { CommentParagraph, FormatContext } from '../../types';
 import type { DocComment } from '@seedcord/docs-engine';
 
-export function renderThrows(comment: DocComment): CommentParagraph[] | undefined {
-    if (!comment.blockTags.length) return undefined;
+export async function renderThrows(
+    comment: DocComment,
+    context: FormatContext
+): Promise<CommentParagraph[] | undefined> {
+    const tags = comment.blockTags.filter((t) => t.tag === '@throws' || t.tag === '@exception');
+    if (!tags.length) return undefined;
 
-    const collected: string[] = [];
-    for (const tag of comment.blockTags) {
-        if (tag.tag !== '@throws' && tag.tag !== '@exception') continue;
-        const text = tag.text.trim();
-        if (text.length) {
-            collected.push(text);
-            continue;
-        }
+    const paragraphs: CommentParagraph[] = [];
 
-        const first = tag.content[0];
-        const firstText = first?.text.trim();
-        if (firstText?.length) collected.push(firstText);
+    for (const tag of tags) {
+        const fakeComment: DocComment = {
+            summary: '',
+            summaryParts: tag.content,
+            blockTags: [],
+            modifierTags: [],
+            examples: []
+        };
+        const rendered = await renderParagraphs(fakeComment, context);
+        paragraphs.push(...rendered);
     }
 
-    if (!collected.length) return undefined;
-
-    return collected.map((c) => ({ plain: c.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim(), html: c }));
+    return paragraphs.length ? paragraphs : undefined;
 }
