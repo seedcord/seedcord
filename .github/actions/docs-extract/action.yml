@@ -1,10 +1,10 @@
 name: "Docs Extract"
-description: "Composite action to run the repository `docs:extract` command and produce debugging/generated/manifest.json"
+description: "Composite action to run the repository `docs:extract` command and produce generated/manifest.json"
 inputs:
     output-dir:
         description: "Output directory for generated JSON files"
         required: false
-        default: "./debugging/generated"
+        default: "./generated"
     packages-dir:
         description: "Directory containing packages to extract from"
         required: false
