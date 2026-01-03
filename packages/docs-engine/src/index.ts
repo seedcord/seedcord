@@ -7,4 +7,5 @@ export { PackageDirectory, type DirectoryEntity, type DirectorySnapshot } from '
 export { DEFAULT_SEARCH_TARGETS } from './search-targets';
 export type * from './types';
 
+/** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

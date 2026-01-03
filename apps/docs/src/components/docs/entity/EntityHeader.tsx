@@ -171,10 +171,7 @@ function EntityHeader({
     const headerSummary = active?.summary.length ? active.summary : summary;
     const headerExamples = getHeaderExamples(active, summaryExamples);
     const headerThrows = active?.throws?.length ? active.throws : throws;
-    const summaryNodes = buildSummaryNodes(
-        headerSummary,
-        'Review the generated signature below while we finish migrating full TypeDoc content into the reference UI.'
-    );
+    const summaryNodes = buildSummaryNodes(headerSummary, '');
     const activeIsDeprecated = Boolean(active?.deprecationStatus?.isDeprecated);
 
     const headerContent = (

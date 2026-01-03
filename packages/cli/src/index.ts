@@ -2,9 +2,11 @@ export {
     defineConfig,
     SEEDCORD_CONFIG_FILENAMES,
     type SeedcordBuildConfig,
-    type SeedcordDevConfig
+    type SeedcordDevConfig,
+    type SeedcordHmrConfig
 } from '@core/config/schema';
 
 export type * from '@api/Hmr';
 
+/** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
