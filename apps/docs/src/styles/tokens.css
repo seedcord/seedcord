@@ -21,13 +21,7 @@
     --entity-enum: #d93c62;
     --entity-variable: #1770ac;
 
-    --glow: radial-gradient(
-        circle at center,
-        color-mix(in oklab, var(--color-text) 12%, var(--color-surface)) 0%,
-        transparent 70%
-    );
     --shadow-soft: 0 28px 60px -36px color-mix(in oklab, var(--color-text) 28%, transparent);
-    --shadow-outline: 0 0 0 4px color-mix(in oklab, var(--accent-b) 16%, transparent);
 }
 
 [data-theme='dark'] {
@@ -124,20 +118,15 @@
     --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
     --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--accent-b) 35%);
     --text-accent-b-intense: color-mix(in oklab, var(--accent-b) 80%, var(--color-text) 20%);
-    --text-accent-a-subtle: color-mix(in oklab, var(--color-text) 90%, var(--accent-a) 10%);
     --text-enum-mix-72: color-mix(in oklab, var(--entity-enum) 72%, var(--color-text));
     --text-function-mix-72: color-mix(in oklab, var(--entity-function) 72%, var(--color-text));
 
     /* Background Mixes */
     --bg-surface-subtle: color-mix(in oklab, var(--bg) 95%, var(--surface) 5%);
     --bg-surface-moderate: color-mix(in oklab, var(--bg) 90%, var(--surface) 10%);
-
     --bg-accent-b-subtle: color-mix(in oklab, var(--bg) 94%, var(--accent-b) 6%);
     --bg-accent-b-moderate: color-mix(in oklab, var(--bg) 85%, var(--accent-b) 15%);
     --bg-accent-b-strong: color-mix(in oklab, var(--bg) 76%, var(--accent-b) 24%);
-
-    --bg-accent-a-subtle: color-mix(in oklab, var(--bg) 94%, var(--accent-a) 6%);
-    --bg-accent-a-moderate: color-mix(in oklab, var(--bg) 82%, var(--accent-a) 18%);
 
     /* Surface Mixes */
     --surface-accent-b-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-b) 8%);
@@ -170,7 +159,6 @@
     /* Transparent Background Mixes */
     --bg-accent-a-transparent-subtle: color-mix(in oklab, var(--accent-a) 12%, transparent);
     --bg-accent-a-transparent-moderate: color-mix(in oklab, var(--accent-a) 18%, transparent);
-    --bg-accent-b-transparent-subtle: color-mix(in oklab, var(--accent-b) 12%, transparent);
     --bg-surface-subtle-transparent: color-mix(in oklab, var(--surface) 96%, transparent);
     --bg-surface-moderate-transparent: color-mix(in oklab, var(--surface) 86%, transparent);
     --bg-transparent-subtle: color-mix(in oklab, var(--bg) 96%, transparent);

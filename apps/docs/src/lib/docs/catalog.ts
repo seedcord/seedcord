@@ -144,10 +144,7 @@ function compareSemver(a: string, b: string): number {
     return ap - bp;
 }
 
-export const findCatalogVersion = (
-    entry: PackageCatalogEntry,
-    versionId: string
-): PackageVersionCatalog | undefined => {
+export function findCatalogVersion(entry: PackageCatalogEntry, versionId: string): PackageVersionCatalog | undefined {
     if (!entry.versions.length) return undefined;
 
     if (versionId === DEFAULT_VERSION) {
@@ -155,4 +152,4 @@ export const findCatalogVersion = (
     }
 
     return entry.versions.find((version) => version.id === versionId);
-};
+}

@@ -68,4 +68,6 @@
 
 - Make sure to run `pnpm test` in the relevant package or app after making changes to ensure nothing is broken.
 
-- The "rg" command is available for searching through files. So make use of it to find usages of things across the codebase based on patterns.
+- The "rg" command is available for searching through files. Make use of it to find usages of things across the codebase based on patterns.
+
+- Don't use arrow functions unless a function can either be written in a single line (without {}), or if the function needs to be defined inside a class method or another function (to prevent incorrect use of "this").
