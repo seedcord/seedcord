@@ -77,7 +77,7 @@ jobs:
             - name: Generate docs manifest
               uses: ./.github/actions/docs-extract
               with:
-                  output-dir: ./debugging/generated
+                  output-dir: ./generated
                   packages-dir: ./packages
 
             - name: Build
