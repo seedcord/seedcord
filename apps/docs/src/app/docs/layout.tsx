@@ -30,13 +30,13 @@ function decodeParam(value?: string): string | undefined {
     }
 }
 
-const resolveActiveSelection = (
+function resolveActiveSelection(
     catalog: DocsCatalog,
     params: DocsLayoutParams
 ): {
     activePackage: PackageCatalogEntry | null;
     activeVersion: PackageVersionCatalog | null;
-} => {
+} {
     if (!catalog.length) {
         return { activePackage: null, activeVersion: null };
     }
@@ -57,7 +57,7 @@ const resolveActiveSelection = (
         activePackage,
         activeVersion
     };
-};
+}
 
 async function DocsLayout({ children, params }: DocsLayoutProps): Promise<ReactNode> {
     const catalog = await loadDocsCatalog();

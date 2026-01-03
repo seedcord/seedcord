@@ -74,7 +74,7 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
 }
 
 // eslint-disable-next-line complexity
-export function collectSeeAlsoFromBlockTags(comment: DocComment): SeeAlsoEntry[] | undefined {
+function collectSeeAlsoFromBlockTags(comment: DocComment): SeeAlsoEntry[] | undefined {
     if (comment.blockTags.length === 0) return undefined;
 
     const collected: SeeAlsoEntryWithoutTarget[] = [];

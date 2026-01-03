@@ -61,7 +61,8 @@ function extractExample(example: DocCommentExample): { code: string; language: s
         language: languageValue.toLowerCase()
     };
 }
-export function collectExamplesFromBlockTags(comment: DocComment): DocCommentExample[] | undefined {
+
+function collectExamplesFromBlockTags(comment: DocComment): DocCommentExample[] | undefined {
     if (comment.blockTags.length === 0) return undefined;
 
     const collected: DocCommentExample[] = [];

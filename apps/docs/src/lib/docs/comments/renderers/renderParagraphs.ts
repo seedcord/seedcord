@@ -70,7 +70,7 @@ export async function renderParagraphs(comment: DocComment, context: FormatConte
     ];
 }
 
-export function collectSummaryParts(comment: DocComment): CommentDisplayPart[] {
+function collectSummaryParts(comment: DocComment): CommentDisplayPart[] {
     const parts: CommentDisplayPart[] = [];
 
     if (comment.summaryParts.length) {

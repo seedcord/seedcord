@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
     title: 'seedcord',
-    description: 'Interactive documentation prototype for the Seedcord ecosystem',
+    description: 'Api documentation for the Seedcord Bot Framework for Discord.js',
     icons: {
         icon: '/icon.svg'
     }
