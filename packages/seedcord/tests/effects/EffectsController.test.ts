@@ -25,6 +25,7 @@ describe('EffectsController Integration', () => {
     let seedcord: Seedcord;
 
     beforeEach(async () => {
+        // @ts-expect-error: Accessing private method for testing
         Seedcord.reset();
         testEnv = new TestEnvironment('effects-test-');
         await testEnv.setup();

@@ -30,6 +30,7 @@ describe('InteractionController Integration', () => {
     let seedcord: Seedcord;
 
     beforeEach(async () => {
+        // @ts-expect-error: Accessing private method for testing
         Seedcord.reset();
         testEnv = new TestEnvironment('interactions-test-');
         await testEnv.setup();
