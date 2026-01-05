@@ -87,7 +87,8 @@ export class Seedcord extends Pluggable implements Core {
      * Resets the singleton state.
      * @internal
      */
-    public static reset(): void {
+    // @ts-expect-error: Used only for testing purposes
+    private static reset(): void {
         Seedcord.isInstantiated = false;
     }
 
