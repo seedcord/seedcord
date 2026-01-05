@@ -5,6 +5,8 @@ import { defineConfig } from 'tsup';
 
 import type { Options } from 'tsup';
 
+export type TsupOptions = Options;
+
 let cachedVersion: string | undefined;
 
 function readPackageVersion(): string {
@@ -32,7 +34,7 @@ function readPackageVersion(): string {
  * @returns A configured tsup configuration
  */
 // eslint-disable-next-line complexity
-function createTsupConfig({
+export function createTsupConfig({
     format = ['esm', 'cjs'],
     entry = ['src/index.ts'],
     dts = true,
@@ -60,7 +62,7 @@ function createTsupConfig({
     define = {},
     env = {},
     ...rest
-}: Options = {}): Options {
+}: TsupOptions = {}): TsupOptions {
     const packageVersion = readPackageVersion();
 
     return defineConfig({
@@ -91,9 +93,6 @@ function createTsupConfig({
         ...rest
     }) as Options;
 }
-
-export { createTsupConfig };
-export type { Options };
 
 /** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
