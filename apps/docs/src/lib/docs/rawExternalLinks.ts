@@ -114,5 +114,7 @@ export const rawExternalLinks = {
     'type-fest': 'https://github.com/sindresorhus/type-fest',
     winston: 'https://github.com/winstonjs/winston',
     kysely: 'https://kysely.dev/docs/intro',
-    pg: 'https://node-postgres.com'
+    pg: 'https://node-postgres.com',
+    tsup: 'https://tsup.egoist.dev',
+    eslint: 'https://eslint.org/docs/latest/'
 } as const;
