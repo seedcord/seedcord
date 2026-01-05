@@ -47,6 +47,7 @@ coverage/
 
 # Ignore temp files
 temp/
+TASKS.md
 
 # Ignore temporary files
 *.tmp

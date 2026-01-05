@@ -77,7 +77,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     }
 
     /**
-     * Handles an HMR update event by reloading affected modules based on the event details and config. It receives an ${@link HmrUpdateEvent}, then checks the type of update.
+     * Handles an HMR update event by reloading affected modules based on the event details and config. It receives an {@link HmrUpdateEvent}, then checks the type of update.
      *
      * - If it's a deletion, it unloads the module.
      * - If it's an update/creation, it checks if the file is tracked, unloads it if so, then reloads the file if it is in the handlers or middlewares directory and is a valid handler/middleware.
