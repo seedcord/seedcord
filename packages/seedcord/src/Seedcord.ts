@@ -24,7 +24,13 @@ import type { Config } from '@seedcord/types';
  * Manages component lifecycle and provides plugin support.
  */
 export class Seedcord extends Pluggable implements Core {
+    /**
+     * Brands this instance as a Seedcord instance using {@link SeedcordBrand}
+     *
+     * @internal
+     * */
     public readonly [SeedcordBrand] = true;
+
     private static isInstantiated = false;
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;
@@ -48,9 +54,15 @@ export class Seedcord extends Pluggable implements Core {
      * Creates a new Seedcord instance
      *
      * @param config - Bot configuration including paths and Discord client options
-     * @throws An {@link SeedcordError} When attempting to create multiple instances (singleton)
+     * @throws A {@link SeedcordError} When attempting to create multiple instances (singleton)
      */
     constructor(public readonly config: Config) {
+        if (Seedcord.isInstantiated) {
+            throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
+        }
+
+        Seedcord.isInstantiated = true;
+
         // Create lifecycle instances
         const shutdown = new CoordinatedShutdown();
         const startup = new CoordinatedStartup();
@@ -61,11 +73,6 @@ export class Seedcord extends Pluggable implements Core {
         // Store references for public access
         this.shutdown = shutdown;
         this.startup = startup;
-
-        if (Seedcord.isInstantiated) {
-            throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
-        }
-        Seedcord.isInstantiated = true;
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
