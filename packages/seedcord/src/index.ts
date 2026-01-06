@@ -7,9 +7,6 @@ export * from '@bot/Bot';
 // Bot decorators exports
 export * from '@bDecorators/index';
 
-// Bot Controller exports
-export * from '@bControllers/index';
-
 // Bot Injectors exports
 export * from '@bot/injectors/EmojiInjector';
 

@@ -27,7 +27,8 @@ export interface BotEvents {
 
 /**
  * Discord bot implementation that manages client and controllers
- * @internal - Accessed via core.bot, not directly instantiated by users
+ *
+ * Don't instantiate this class directly. Use `core.bot` instead.
  */
 export class Bot extends Plugin<BotEvents> {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
@@ -35,6 +36,7 @@ export class Bot extends Plugin<BotEvents> {
     })
     declare public readonly botToken: string;
 
+    /** @internal */
     public readonly logger = new Logger('Bot');
     private isInitialized = false;
 
@@ -45,12 +47,14 @@ export class Bot extends Plugin<BotEvents> {
     private readonly emojiInjector: EmojiInjector;
     public readonly emojis: EmojiMap = Emojis;
 
+    /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.interactions) await this.interactions.onHmr(event);
         if (this.events) await this.events.onHmr(event);
         if (this.commands) await this.commands.onHmr(event);
     }
 
+    /** @internal */
     constructor(protected core: Core) {
         super(core);
 
@@ -134,10 +138,7 @@ export class Bot extends Plugin<BotEvents> {
     /**
      * Emits with correlation between a Discord event key and its exact arg tuple.
      *
-     * @typeParam TKey - Discord event name
-     * @param event - Must be the literal `any:event`
-     * @param name - Concrete Discord event name
-     * @param args - Exact tuple for that Discord event
+     * @internal
      */
     override emit<TKey extends keyof ClientEvents>(
         event: 'any:event',
@@ -148,9 +149,7 @@ export class Bot extends Plugin<BotEvents> {
     /**
      * Fallback for other BotEvents keys.
      *
-     * @typeParam TEventKey - Bot event key
-     * @param event - Bot event key
-     * @param args - Tuple payload for the key
+     * @internal
      */
     override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
 

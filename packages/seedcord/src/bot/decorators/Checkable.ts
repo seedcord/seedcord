@@ -1,11 +1,5 @@
 import type { Handler } from '@interfaces/Handler';
-
-/**
- * Constructor type for handler classes.
- *
- * @internal
- */
-export type HandlerCtor = new (...args: any[]) => Handler;
+import type { Constructor } from 'type-fest';
 
 /**
  * Marks a handler class as requiring check execution.
@@ -26,7 +20,7 @@ export type HandlerCtor = new (...args: any[]) => Handler;
  * }
  * ```
  */
-export function Checkable<TypeHandler extends HandlerCtor>(ctor: TypeHandler): TypeHandler {
+export function Checkable<TypeHandler extends Constructor<Handler>>(ctor: TypeHandler): TypeHandler {
     return class extends ctor {
         static override name = ctor.name;
         checkable = true as const;

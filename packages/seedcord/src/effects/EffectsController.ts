@@ -84,6 +84,7 @@ export class EffectsController extends Plugin<EffectsEvents> {
         }
     }
 
+    /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.hmrHandler) {
             await this.hmrHandler.handle(event);

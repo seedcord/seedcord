@@ -32,6 +32,8 @@ export interface MiddlewareOptions<MType extends MiddlewareType> {
 
 /**
  * Metadata stored for middleware registration
+ *
+ * @internal
  */
 export interface MiddlewareMetadata {
     /**

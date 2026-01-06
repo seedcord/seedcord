@@ -61,6 +61,24 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
             import.meta.hot.send('seedcord:register-critical-files', { patterns });
         }
     }
+
+    /** @internal */
+    override setMaxListeners(n: number): this {
+        return super.setMaxListeners(n);
+    }
+
+    /** @internal */
+    override removeListener<TEventKey extends Extract<keyof TPluginEvents, string | symbol>>(
+        event: TEventKey,
+        listener: (...args: TPluginEvents[TEventKey]) => void
+    ): this {
+        return super.removeListener(event, listener);
+    }
+
+    /** @internal */
+    override removeAllListeners(eventName?: string | symbol): this {
+        return super.removeAllListeners(eventName);
+    }
 }
 
 /**
@@ -161,5 +179,23 @@ export class Pluggable<
         );
 
         return Object.assign(this, entry);
+    }
+
+    /** @internal */
+    override setMaxListeners(n: number): this {
+        return super.setMaxListeners(n);
+    }
+
+    /** @internal */
+    override removeListener<TEventKey extends Extract<keyof TPluggableEvents, string | symbol>>(
+        event: TEventKey,
+        listener: (...args: TPluggableEvents[TEventKey]) => void
+    ): this {
+        return super.removeListener(event, listener);
+    }
+
+    /** @internal */
+    override removeAllListeners(eventName?: string | symbol): this {
+        return super.removeAllListeners(eventName);
     }
 }

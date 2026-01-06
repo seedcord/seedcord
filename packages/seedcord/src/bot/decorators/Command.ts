@@ -1,6 +1,7 @@
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 
 import type { BuilderComponent } from '@interfaces/Components';
+import type { Constructor } from 'type-fest';
 
 /**
  * Metadata key for command registration information.
@@ -14,7 +15,7 @@ export const CommandMetadataKey = Symbol('command:metadata');
  *
  * @internal
  */
-export type CommandCtor = new (...args: any[]) => BuilderComponent<'command' | 'context_menu'>;
+export type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;
 
 /**
  * Metadata for global command registration.
@@ -80,13 +81,6 @@ export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
  */
 export function RegisterCommand(scope: 'guild', guilds: string[]): (ctor: CommandCtor) => void;
 
-/**
- * Registers a command with Discord's application command system.
- *
- * @param scope - Registration scope: 'global' or 'guild'
- * @param guilds - Guild IDs for guild-scoped registration if applicable
- * @decorator
- */
 export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
     return (ctor: CommandCtor): void => {
         const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };

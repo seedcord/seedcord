@@ -1,8 +1,16 @@
-export * from './Catchable';
-export * from './Checkable';
-export * from './Command';
+export { type CatchableOptions, Catchable } from './Catchable';
+export { Checkable } from './Checkable';
+export { RegisterCommand } from './Command';
 export * from './Confirmable';
-export * from './EventCatchable';
-export * from './Events';
-export * from './Interactions';
-export * from './Middlewares';
+export { EventCatchable, type EventCatchableOptions } from './EventCatchable';
+export { RegisterEvent, type EventSpec, type RegisterEventOptions } from './Events';
+export {
+    AutocompleteRoute,
+    ButtonRoute,
+    ContextMenuRoute,
+    ModalRoute,
+    SelectMenuRoute,
+    SelectMenuType,
+    SlashRoute
+} from './Interactions';
+export { Middleware, MiddlewareType, type MiddlewareOptions } from './Middlewares';
