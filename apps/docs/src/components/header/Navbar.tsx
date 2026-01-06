@@ -45,11 +45,7 @@ function Navbar(): ReactElement {
                                 aria-label="Open GitHub repository"
                                 className="text-(--text)"
                             >
-                                <Link
-                                    href="https://github.com/materwelondhruv/seedcord"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >
+                                <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
                                     <Icon icon={GithubIcon} size={20} />
                                 </Link>
                             </Button>

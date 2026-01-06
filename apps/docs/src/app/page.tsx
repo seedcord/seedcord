@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import type { ReactElement } from 'react';
 
-const GUIDE_URL = 'https://github.com/materwelonDhruv/seedcord-guide';
+const GUIDE_URL = 'https://github.com/seedcord/seedcord-guide';
 
 function Home(): ReactElement {
     return (
