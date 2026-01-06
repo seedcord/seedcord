@@ -6,6 +6,7 @@ import type { KyselyPg } from './KyselyPg';
 import type { AnyKpgService, KpgServices } from './types/KpgServices';
 import type { Kysely } from 'kysely';
 import type { Core, TypedConstructor } from 'seedcord';
+import type { LiteralUnion } from 'type-fest';
 
 /**
  * Base class for KyselyPg services.
@@ -32,7 +33,7 @@ import type { Core, TypedConstructor } from 'seedcord';
  * const user = await this.core.db.services.users.findById('abc');
  * ```
  */
-export abstract class KpgService<Database extends object, TTable extends keyof Database & string> {
+export abstract class KpgService<Database extends object, TTable extends LiteralUnion<keyof Database, string>> {
     public readonly table: TTable;
 
     public constructor(

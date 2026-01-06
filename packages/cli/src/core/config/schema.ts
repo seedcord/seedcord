@@ -1,3 +1,6 @@
+/**
+ * Build configuration used by the Seedcord CLI.
+ */
 export interface SeedcordBuildConfig {
     /**
      * Directory where build artifacts should be emitted. Defaults to ./dist relative to the config directory.
@@ -13,6 +16,9 @@ export interface SeedcordBuildConfig {
     bootstrap?: string;
 }
 
+/**
+ * HMR configuration used by the Seedcord CLI.
+ */
 export interface SeedcordHmrConfig {
     /**
      * Glob patterns for files that should trigger a full restart when changed.

@@ -19,6 +19,8 @@ export interface KpgServices {}
 
 /**
  * Union of all registered service keys.
+ *
+ * @internal
  */
 export type KpgServiceKeys = keyof KpgServices;
 

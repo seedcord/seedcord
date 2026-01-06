@@ -86,6 +86,7 @@ export class Mongo extends Plugin {
         };
     }
 
+    /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
     }

@@ -19,6 +19,8 @@ import type { Stats } from 'node:fs';
 
 /**
  * Migration tooling for KyselyPg.
+ *
+ * @sealed
  */
 export class KpgMigrationManager<Database extends object> {
     constructor(private readonly ctx: MigrationManagerContext<Database>) {}

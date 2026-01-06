@@ -2,6 +2,8 @@ import type { HmrUpdateEvent } from './Hmr';
 
 /**
  * Map of HMR events sent from the framework (client) to the CLI (server).
+ *
+ * @internal
  */
 export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
@@ -10,6 +12,8 @@ export interface SeedcordFrameworkEvents {
 
 /**
  * Map of HMR events sent from the CLI (server) to the framework (client).
+ *
+ * @internal
  */
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;

@@ -1,2 +1,2 @@
 // Decorators
-export * from './WrapDatabaseError';
+export { WrapDatabaseError } from './WrapDatabaseError';

@@ -21,8 +21,6 @@ export interface MigrationModule {
 
 /**
  * Target migration identifier used to indicate no migrations should be run. Uses Kysely's built-in `NO_MIGRATIONS` constant.
- *
- * @internal
  */
 export type MigrationTarget = string | typeof NO_MIGRATIONS;
 

@@ -1,14 +1,11 @@
-export * from './KpgDatabaseBootstrapper';
-export * from './KpgMigrationManager';
-export * from './KpgService';
-export * from './KpgServiceRegistry';
-export * from './KyselyPg';
+export { KpgService } from './KpgService';
+export { KyselyPg } from './KyselyPg';
 
 // Decorators
-export * from './decorators/RegisterKpgService';
+export { RegisterKpgService } from './decorators/RegisterKpgService';
 
 // Types
-export type * from './types/KpgMigration';
-export type * from './types/KpgOptions';
-export type * from './types/KpgServiceRegistrationOptions';
-export type * from './types/KpgServices';
+export type { MigrationOptions, MigrationTarget, StepMigrationOptions } from './types/KpgMigration';
+export type { KpgOptions, KpgMigrationsOptions } from './types/KpgOptions';
+export type { KpgServiceRegistrationOptions } from './types/KpgServiceRegistrationOptions';
+export type { KpgServices } from './types/KpgServices';

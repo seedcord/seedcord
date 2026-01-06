@@ -85,6 +85,7 @@ export class KyselyPg<Database extends object> extends Plugin {
         return key ? { key } : {};
     }
 
+    /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
     }
