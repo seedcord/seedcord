@@ -238,9 +238,3 @@ export interface BuildEntityHrefOptions {
     version?: string | null;
     tone?: string | null;
 }
-
-export interface ParagraphAccumulator {
-    append(plain: string, html: string): void;
-    breakParagraph(): void;
-    toParagraphs(): CommentParagraph[];
-}

@@ -84,12 +84,16 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
 /**
  * Constructor type for plugins that can accept additional arguments after Core
  * @typeParam TPlugin - The plugin type being constructed
+ *
+ * @internal
  */
 export type PluginCtor<TPlugin extends Plugin = Plugin> = new (core: Core, ...args: any[]) => TPlugin;
 
 /**
  * Extracts the argument types for a plugin constructor (excluding the Core parameter)
  * @typeParam Ctor - The plugin constructor to extract arguments from
+ *
+ * @internal
  */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
 
@@ -98,6 +102,8 @@ export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Cto
  *
  * Provides plugin attachment capabilities and lifecycle management.
  * Plugins are attached during configuration and initialized during startup.
+ *
+ * @internal
  */
 export class Pluggable<
     TPluggableEvents extends SEEventMapLike<TPluggableEvents> = SENoEvents

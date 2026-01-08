@@ -104,6 +104,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         await this.setCommands();
     }
 
+    /** @internal For use in dev mode */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         const commandsDir = this.core.config.bot.commands.path;
         if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {

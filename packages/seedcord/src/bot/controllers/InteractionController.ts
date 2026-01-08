@@ -252,6 +252,7 @@ export class InteractionController implements Initializeable, HmrAware {
         }
     }
 
+    /** @internal For use in dev mode */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
     }
@@ -335,14 +336,17 @@ export class InteractionController implements Initializeable, HmrAware {
         }
 
         // Run middlewares first
-        for (const { ctor } of this.middlewares) {
-            const middleware = new ctor(interaction as Repliables, this.core, args);
-            if (middleware.hasChecks()) await middleware.runChecks();
-            if (middleware.shouldBreak() || middleware.hasErrors()) return;
+        if (!interaction.isAutocomplete()) {
+            for (const { ctor } of this.middlewares) {
+                const middleware = new ctor(interaction as Repliables, this.core, args);
+                if (middleware.hasChecks()) await middleware.runChecks();
+                if (middleware.shouldBreak() || middleware.hasErrors()) return;
 
-            await middleware.execute();
-            if (middleware.shouldBreak() || middleware.hasErrors()) return;
+                await middleware.execute();
+                if (middleware.shouldBreak() || middleware.hasErrors()) return;
+            }
         }
+
         let HandlerCtor = getHandler(key);
         if (!HandlerCtor) {
             // Automatically fallback to UnhandledEvent

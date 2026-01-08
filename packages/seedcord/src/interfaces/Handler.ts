@@ -14,7 +14,7 @@ import type {
     ModalSubmitInteraction
 } from 'discord.js';
 
-/** All valid Discord.js interaction types that can be handled */
+/** All valid Discord.js interaction types that seedcord can handle */
 export type ValidInteractionTypes =
     | ChatInputCommandInteraction
     | ButtonInteraction
@@ -23,13 +23,11 @@ export type ValidInteractionTypes =
     | AnySelectMenuInteraction
     | ContextMenuCommandInteraction;
 
+/** All keys of {@link ClientEvents} that are not an interaction */
 export type ValidNonInteractionKeys = Exclude<keyof ClientEvents, Events.InteractionCreate>;
 
-/** All valid Discord.js client events except interaction events */
-export type ValidNonInteractionTypes = ClientEvents[ValidNonInteractionKeys];
-
 /** All event types that can be handled (interactions and client events) */
-export type ValidEventTypes = ValidInteractionTypes | ValidNonInteractionTypes;
+export type ValidEventTypes = ValidInteractionTypes | ClientEvents[ValidNonInteractionKeys];
 
 /** Interaction types that can receive replies (excludes autocomplete) */
 export type Repliables = Exclude<ValidInteractionTypes, AutocompleteInteraction>;
@@ -52,6 +50,7 @@ export interface Handler {
  *
  * @see {@link Checkable}
  * @see {@link Catchable}
+ * @see {@link EventCatchable}
  */
 export interface WithChecks {
     /**
@@ -77,12 +76,15 @@ export interface HandlerWithChecks extends WithChecks, Handler {}
  * @internal
  */
 export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
+    /** @internal */
     protected checkable = false;
-    protected break = false;
-    protected errored = false;
-    protected event: ValidEvent;
-    protected args: string[] = [];
-    protected logger: Logger;
+
+    private break = false;
+    private errored = false;
+
+    protected readonly event: ValidEvent;
+    protected readonly args: string[] = [];
+    protected readonly logger: Logger;
 
     protected constructor(
         event: ValidEvent,
@@ -105,24 +107,38 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     /**
      * Populates the handler with necessary data before execution. Override this method in your handler classes to customize population logic. This method is called at the end of the constructor before all async operations.
      */
-    protected populate(): void {}
+    protected populate(): void {
+        // Does nothing unless overriden
+    }
 
+    /** @internal */
     public hasChecks(): this is HandlerWithChecks {
         return this.checkable;
     }
 
+    /** @internal */
     public hasErrors(): boolean {
         return this.errored;
     }
 
+    /** @internal */
     public setErrored(): void {
         this.errored = true;
     }
 
+    /**
+     * Use this method when you want to stop the execution of a handler after a `runChecks()` call without throwing an error. It's checked after the runChecks executes. And no, you don't need to write the Handler `WithChecks`.
+     */
+    public setBreak(): void {
+        this.break = true;
+    }
+
+    /** @internal */
     public shouldBreak(): boolean {
         return this.break;
     }
 
+    /** @internal */
     public getEvent(): ValidEvent {
         return this.event;
     }
@@ -182,28 +198,17 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
 }
 
 /**
- * Base class for Discord event middleware
- *
- * Middleware runs before event handlers and can modify behavior or block execution.
- */
-export abstract class EventMiddleware<EventName extends ValidNonInteractionKeys>
-    extends BaseHandler<ClientEvents[EventName]>
-    implements Handler
-{
-    constructor(event: ClientEvents[EventName], core: Core, args?: string[]) {
-        super(event, core, args);
-    }
-}
-
-/**
  * Handler for Discord autocomplete interactions
  *
  * Extend this class to provide autocomplete suggestions for slash command options.
  * The focused option is automatically available via the `focused` property.
+ *
+ * Middlewares do not work on Autocomplete Interactions.
  */
 export abstract class AutocompleteHandler extends BaseHandler<AutocompleteInteraction> implements Handler {
-    /** The currently focused autocomplete option (Based on what you set in `@AutocompleteRoute`) */
+    /** The currently focused autocomplete option (Based on what you set in {@link AutocompleteRoute}) */
     protected readonly focused: AutocompleteFocusedOption;
+
     constructor(event: AutocompleteInteraction, core: Core, args?: string[]) {
         super(event, core, args);
         this.focused = this.event.options.getFocused(true);
@@ -227,18 +232,39 @@ export abstract class EventHandler<Repliable extends ValidNonInteractionKeys>
     }
 }
 
-// A generic type alias for a handler constructor
-/** Constructor type for interaction and autocomplete handlers */
+/**
+ * Base class for Discord event middleware
+ *
+ * Middleware runs before event handlers and can modify behavior or block execution.
+ */
+export abstract class EventMiddleware<EventName extends ValidNonInteractionKeys>
+    extends BaseHandler<ClientEvents[EventName]>
+    implements Handler
+{
+    constructor(event: ClientEvents[EventName], core: Core, args?: string[]) {
+        super(event, core, args);
+    }
+}
+
+/**
+ * Constructor type for interaction and autocomplete handlers
+ *
+ * @internal
+ */
 export type HandlerConstructor = TypedConstructor<typeof InteractionHandler | typeof AutocompleteHandler>;
 
-/** Constructor type for interaction middleware */
-export type InteractionMiddlewareConstructor = TypedConstructor<typeof InteractionMiddleware> &
-    (new (event: Repliables, core: Core, args?: string[]) => InteractionMiddleware<Repliables>);
+/**
+ * Constructor type for interaction middleware
+ *
+ * @internal
+ */
+export type InteractionMiddlewareConstructor = TypedConstructor<typeof InteractionMiddleware>;
 
-/** Constructor type for legacy interaction middleware */
-export type MiddlewareConstructor = InteractionMiddlewareConstructor;
-
-/** Constructor type for event middleware */
+/**
+ * Constructor type for event middleware
+ *
+ * @internal
+ */
 export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware> &
     (new <EventName extends ValidNonInteractionKeys>(
         event: ClientEvents[EventName],
@@ -246,9 +272,17 @@ export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware
         args?: string[]
     ) => EventMiddleware<EventName>);
 
-/** Constructor type for autocomplete handlers */
+/**
+ * Constructor type for autocomplete handlers
+ *
+ * @internal
+ */
 export type AutocompleteHandlerConstructor = TypedConstructor<typeof AutocompleteHandler> &
     (new (event: AutocompleteInteraction, core: Core, args?: string[]) => AutocompleteHandler);
 
-/** Constructor type for Discord client event handlers */
+/**
+ * Constructor type for Discord client event handlers
+ *
+ * @internal
+ */
 export type EventHandlerConstructor = TypedConstructor<typeof EventHandler>;

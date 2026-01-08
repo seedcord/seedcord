@@ -3,17 +3,6 @@ import type { EffectsController } from '@effects/EffectsController';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 import type { Config } from '@seedcord/types';
 
-/** Base interface defining core Seedcord functionality
- *
- * @internal
- */
-export interface BaseCore {
-    readonly shutdown: CoordinatedShutdown;
-    readonly startup: CoordinatedStartup;
-
-    start(): Promise<this>;
-}
-
 /**
  * Main interface for Seedcord core functionality
  *
@@ -31,8 +20,13 @@ export interface BaseCore {
  * }
  * ```
  * */
-export interface Core extends BaseCore {
+export interface Core {
+    readonly shutdown: CoordinatedShutdown;
+    readonly startup: CoordinatedStartup;
+
     readonly bot: Bot;
     readonly effects: EffectsController;
     readonly config: Config;
+
+    start(): Promise<this>;
 }

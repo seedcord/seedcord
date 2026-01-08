@@ -20,6 +20,8 @@ interface HmrData {
 
 /**
  * Options for configuring the HmrModuleHandler.
+ *
+ * This is only useful during development.
  */
 export interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unknown> {
     /** Directory containing handler modules. */
@@ -50,6 +52,8 @@ export interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifact
  * Handles Hot Module Replacement (HMR) for modules of type THandler and optional TMiddleware.
  *
  * You can either implement a custom `onHmr()` method in your class by extending `HmrAware`, or if it's a plugin, override the existing `onHmr()` with fully custom logic. Or, use this class's `handle()` method inside your `onHmr()` to get standard HMR handling for your modules based on the provided options you give to the constructor.
+ *
+ * This is only useful during development.
  */
 export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown> {
     private readonly store: HmrStore<THandler, TMiddleware, TArtifacts>;

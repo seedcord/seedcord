@@ -16,7 +16,7 @@ import type { Core } from '@interfaces/Core';
 import type { HmrUpdateEvent } from '@seedcord/cli';
 
 /**
- * Bot event types
+ * Types of events emitted by the {@link Core.bot} instance.
  */
 export interface BotEvents {
     'error:unhandled:interaction': [error: Error];

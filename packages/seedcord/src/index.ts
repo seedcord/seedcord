@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
 // Bot export
-export * from '@bot/Bot';
+export type { BotEvents } from '@bot/Bot';
 
 // Bot decorators exports
 export * from '@bDecorators/index';

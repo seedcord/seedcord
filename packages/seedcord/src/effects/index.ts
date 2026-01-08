@@ -1,14 +1,11 @@
-export * from './EffectsController';
-export * from './EffectsHandler';
+// The class users will extend to create effect handlers
+export { EffectsHandler } from './EffectsHandler';
 
 // Decorators
-export * from './decorators/RegisterEffect';
-
-// Default
-export * from './default/UnknownException';
+export { RegisterEffect, type RegisterEffectOptions } from './decorators/RegisterEffect';
 
 // Abstracts and Bases
-export * from './bases/WebhookLog';
+export { WebhookLog } from './bases/WebhookLog';
 
 // Types
-export type * from './types/Effects';
+export type { Effects } from './types/Effects';

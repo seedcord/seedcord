@@ -2,7 +2,7 @@ import { Logger } from '@seedcord/services';
 
 import { DatabaseError } from '@bot/defaults/errors/Database';
 
-import type { CustomErrorConstructor } from '@interfaces/Components';
+import type { CustomError } from '@interfaces/Components';
 
 /**
  * Throws a custom error with a formatted message and optional UUID.
@@ -27,7 +27,7 @@ import type { CustomErrorConstructor } from '@interfaces/Components';
  *
  * @internal
  */
-export function throwCustomError<Ctor extends CustomErrorConstructor>(
+export function throwCustomError<Ctor extends new (message: string, ...args: any[]) => CustomError>(
     error: unknown,
     message: string,
     CustomError: Ctor

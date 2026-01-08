@@ -152,6 +152,7 @@ export class EventController implements Initializeable, HmrAware {
         );
     }
 
+    /** @internal For use in dev mode */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
     }

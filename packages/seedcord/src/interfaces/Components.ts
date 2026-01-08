@@ -252,6 +252,8 @@ export abstract class RowComponent<RowKey extends ActionRowComponentType> extend
  * Pre-configured error embed with default styling
  *
  * This is bundled in {@link CustomError}s as the response.
+ *
+ * @internal
  */
 export class BaseErrorEmbed extends BuilderComponent<'embed'> {
     /**
@@ -297,6 +299,3 @@ export abstract class CustomError extends Error {
         this._emit = value;
     }
 }
-
-/** Constructor type for custom error classes */
-export type CustomErrorConstructor = new (message: string, ...args: any[]) => CustomError;
