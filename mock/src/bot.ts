@@ -36,7 +36,7 @@ export const seedcord = new Seedcord({
             middlewares: resolve(import.meta.dirname, './handlers/middlewares')
         },
         commands: {
-            path: resolve(import.meta.dirname, './components/commands')
+            path: resolve(import.meta.dirname, './commands')
         },
         events: {
             path: resolve(import.meta.dirname, './events'),

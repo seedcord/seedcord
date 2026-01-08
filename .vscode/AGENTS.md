@@ -6,6 +6,8 @@
 
 - Do NOT use "any" type unless it makes sense in context.
 
+- You will NOT be able to cast to "any" unless it actually makes sense. ESLint WILL automatically change it to "unknown" if you try to use "any".
+
 - DO NOT type cast 'as unknown as ...' if the type is already correct.
 
 - DO NOT USE `as any` UNLESS ABSOLUTELY NECESSARY. TRY TO AVOID IT AT ALL COSTS. Use proper types instead.
@@ -71,3 +73,5 @@
 - The "rg" command is available for searching through files. Make use of it to find usages of things across the codebase based on patterns.
 
 - Don't use arrow functions unless a function can either be written in a single line (without {}), or if the function needs to be defined inside a class method or another function (to prevent incorrect use of "this").
+
+- The user might add additional context mid prompt in a file the agent is about to run the linter on which will throw a linting error. It will start with "Note for Agent: ". Make sure to read that content and act as per the instructions in it before resuming whatever you were doing. You can remove those notes after doing what they say.

@@ -2,17 +2,17 @@ import type { BuilderComponent, RowComponent } from '@interfaces/Components';
 import type { RepliableInteractionHandler, Repliables } from '@interfaces/Handler';
 import type { TypedOmit } from '@seedcord/types';
 import type {
+    ButtonInteraction,
+    ChannelSelectMenuInteraction,
+    ComponentType,
+    MentionableSelectMenuInteraction,
     MessageComponentInteraction,
     MessageComponentType,
-    ComponentType,
-    ButtonInteraction,
-    StringSelectMenuInteraction,
-    UserSelectMenuInteraction,
     RoleSelectMenuInteraction,
-    MentionableSelectMenuInteraction,
-    ChannelSelectMenuInteraction
+    StringSelectMenuInteraction,
+    UserSelectMenuInteraction
 } from 'discord.js';
-import type { Promisable, TupleOf, IntClosedRange, NonEmptyTuple } from 'type-fest';
+import type { IntClosedRange, NonEmptyTuple, Promisable, TupleOf } from 'type-fest';
 
 /**
  * Context object supplied to Confirmable factory callbacks.
@@ -93,18 +93,6 @@ export interface ComponentsV2Payload {
 export type ConfirmablePayload = ClassicPayload | ComponentsV2Payload;
 
 /**
- * Information supplied to the optional onResolved callback.
- */
-export interface ConfirmableResolution extends ConfirmableContext {
-    /** Whether the user confirmed the action. */
-    confirmed: boolean;
-    /** Whether the confirmation UI timed out without a response. */
-    timedOut: boolean;
-    /** Interaction that resolved the decision, if any. */
-    button?: MessageComponentInteraction;
-}
-
-/**
  * Maps a message component type to the corresponding interaction subtype.
  *
  * @internal
@@ -125,14 +113,76 @@ export type ComponentInteractionFor<TComponentType extends MessageComponentType>
                   : MessageComponentInteraction;
 
 /**
+ * Information supplied to the optional onResolved callback.
+ */
+export interface ConfirmableResolution<
+    TComponentType extends MessageComponentType = ComponentType.Button
+> extends ConfirmableContext {
+    /** Whether the user confirmed the action. */
+    confirmed: boolean;
+    /** Whether the confirmation UI timed out without a response. */
+    timedOut: boolean;
+    /** Interaction that resolved the decision, if any. */
+    button?: ComponentInteractionFor<TComponentType>;
+}
+
+/**
+ * Strategy for resolving a user's decision via a custom resolver function.
+ */
+export interface ConfirmableDecisionByResolver<TComponentType extends MessageComponentType> {
+    kind: 'resolver';
+    /** Message component type expected by the resolver. */
+    componentType: TComponentType;
+    /** Resolves whether the user confirmed the prompt. */
+    resolve: (i: ComponentInteractionFor<TComponentType>) => Promisable<boolean>;
+}
+
+/**
+ * Strategy for resolving a user's decision via strict custom ID matching.
+ */
+export interface ConfirmableDecisionByCustomIds<TComponentType extends MessageComponentType> {
+    kind: 'customIds';
+    /** Custom IDs that should resolve the confirmation as accepted. */
+    confirm: readonly string[];
+    /** Optional custom IDs that should resolve the confirmation as rejected. */
+    cancel?: readonly string[];
+    /** The component type to listen for. (default: Button if omitted) */
+    componentType?: TComponentType;
+}
+
+/**
+ * Discriminated union of strategies for determining the confirmation outcome.
+ */
+export type ConfirmableDecision<TComponentType extends MessageComponentType> =
+    | ConfirmableDecisionByResolver<TComponentType>
+    | ConfirmableDecisionByCustomIds<TComponentType>;
+
+/**
  * Confirmable configuration shared across the classic and component V2 modes.
  */
 export interface ConfirmableSharedOptions<TComponentType extends MessageComponentType = ComponentType.Button> {
+    /**
+     * whether the response should be ephemeral. (default: `true`)
+     */
     ephemeral?: boolean;
+    /**
+     * Timeout in milliseconds before the prompt is considered timed out. (default: `10000`)
+     */
     timeoutMs?: number;
-    componentType?: TComponentType;
-    onResolved?: (r: ConfirmableResolution) => Promisable<void>;
+    /**
+     * Callback invoked after the decision is resolved and UI is cleared/replaced.
+     * This runs before the decorated method (if confirmed).
+     */
+    onResolved?: (r: ConfirmableResolution<TComponentType>) => Promisable<void>;
+    /**
+     * Whether to defer the interaction automatically. (default: `true`)
+     */
     defer?: boolean;
+    /**
+     * Strategy for deciding if the user confirmed or cancelled.
+     * If omitted, implementation defaults are not specified here (but handled in logic).
+     */
+    decision: ConfirmableDecision<TComponentType>;
 }
 
 /**
@@ -145,7 +195,7 @@ export type MaybeClearedClassic = TypedOmit<ClassicPayload, 'components'> & {
 /**
  * Outcome UI factories used by classic message component rows.
  */
-export interface OutcomeUiClassic {
+export interface ConfirmableOutcomeUiClassic {
     /** Factory invoked when the user cancels the prompt. */
     onCancel: ConfirmableFactory<MaybeClearedClassic>;
     /** Factory invoked when the prompt times out. */
@@ -157,7 +207,7 @@ export interface OutcomeUiClassic {
 /**
  * Outcome UI factories used by the Component V2 container API.
  */
-export interface OutcomeUiV2 {
+export interface ConfirmableOutcomeUiV2 {
     /** Factory invoked when the user cancels the prompt. */
     onCancel: ConfirmableFactory<ComponentsV2Payload>;
     /** Factory invoked when the prompt times out. */
@@ -167,53 +217,32 @@ export interface OutcomeUiV2 {
 }
 
 /**
- * Source definition that resolves a confirmation decision from a component interaction.
- */
-export interface ResolverSource<TComponentType extends MessageComponentType> {
-    /** Message component type expected by the resolver. */
-    componentType: TComponentType;
-    /** Resolves whether the user confirmed the prompt. */
-    resolveDecision: (i: ComponentInteractionFor<TComponentType>) => Promisable<boolean>;
-}
-
-/**
- * Source definition that lists custom IDs for confirm and cancel actions.
- */
-export interface CustomIdSource {
-    /** Custom IDs that should resolve the confirmation as accepted. */
-    confirmCustomIds: readonly string[];
-    /** Optional custom IDs that should resolve the confirmation as rejected. */
-    cancelCustomIds?: readonly string[];
-}
-
-/**
  * Configuration for Confirmable when using classic message component rows.
  */
-export type ConfirmableClassicOptions<TComponentType extends MessageComponentType = ComponentType.Button> =
-    ConfirmableSharedOptions<TComponentType> &
-        (ResolverSource<TComponentType> | CustomIdSource) & {
-            /** Prompt content or embed factory shown to the user. */
-            prompt: ConfirmableFactory<BuilderComponent<'embed'> | string>;
-            /** Action row factory producing confirm and cancel components. */
-            rows: ConfirmableFactory<NonEmptyTuple<RowLike>>;
-            container?: never;
-            /** Outcome UI factories applied once the decision is resolved. */
-            outcomeUi: OutcomeUiClassic;
-        };
+export interface ConfirmableClassicOptions<
+    TComponentType extends MessageComponentType = ComponentType.Button
+> extends ConfirmableSharedOptions<TComponentType> {
+    mode: 'classic';
+    /** Prompt content or embed factory shown to the user. */
+    prompt: ConfirmableFactory<BuilderComponent<'embed'> | string>;
+    /** Action row factory producing confirm and cancel components. */
+    rows: ConfirmableFactory<NonEmptyTuple<RowLike>>;
+    /** Outcome UI factories applied once the decision is resolved. */
+    outcomeUi?: ConfirmableOutcomeUiClassic;
+}
 
 /**
  * Configuration for Confirmable when using the Component V2 container API.
  */
-export type ConfirmableComponentsV2Options<TComponentType extends MessageComponentType = ComponentType.Button> =
-    ConfirmableSharedOptions<TComponentType> &
-        (ResolverSource<TComponentType> | CustomIdSource) & {
-            /** Container factory that renders the confirmation UI. */
-            container: ConfirmableFactory<BuilderComponent<'container'>>;
-            prompt?: never;
-            rows?: never;
-            /** Outcome UI factories applied once the decision is resolved. */
-            outcomeUi: OutcomeUiV2;
-        };
+export interface ConfirmableComponentsV2Options<
+    TComponentType extends MessageComponentType = ComponentType.Button
+> extends ConfirmableSharedOptions<TComponentType> {
+    mode: 'v2';
+    /** Container factory that renders the confirmation UI. */
+    container: ConfirmableFactory<BuilderComponent<'container'>>;
+    /** Outcome UI factories applied once the decision is resolved. */
+    outcomeUi?: ConfirmableOutcomeUiV2;
+}
 
 /**
  * Union of supported Confirmable configuration variants.
@@ -224,5 +253,7 @@ export type ConfirmableOptions<TComponentType extends MessageComponentType = Com
 
 /**
  * Supported signature for the question argument passed to {@link Confirmable}.
+ *
+ * Can either be a static string or a factory that resolves the question dynamically (the handler context is bound to `this` and passed as the first argument).
  */
-export type QuestionInput = string | (() => Promise<string>);
+export type ConfirmableQuestionInput = string | ((this: RepliableInteractionHandler) => Promisable<string>);

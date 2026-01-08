@@ -1,4 +1,3 @@
-import type { SeedcordFrameworkEvents, SeedcordCliEvents } from '@seedcord/cli/vite-hmr';
 import 'reflect-metadata';
 
 // Bot export
@@ -35,7 +34,3 @@ export * from '@seedcord/utils';
 
 /** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
-
-declare module 'vite/types/customEvent.d.ts' {
-    interface CustomEventMap extends SeedcordFrameworkEvents, SeedcordCliEvents {}
-}

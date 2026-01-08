@@ -1,4 +1,4 @@
-export { type CatchableOptions, Catchable } from './Catchable';
+export { Catchable, type CatchableOptions } from './Catchable';
 export { Checkable } from './Checkable';
 export { RegisterCommand } from './Command';
 export * from './Confirmable';
