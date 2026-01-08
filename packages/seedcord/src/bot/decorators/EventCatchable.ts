@@ -1,7 +1,7 @@
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 import { Message } from 'discord.js';
 
-import { extractErrorResponse } from '@bUtilities/errors/extractErrorResponse';
+import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
 import type { CustomError } from '@interfaces/Components';
 import type { EventHandler, RepliableEventHandler } from '@interfaces/Handler';

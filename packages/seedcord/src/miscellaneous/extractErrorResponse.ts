@@ -15,6 +15,8 @@ const logger = new Logger('ErrorsHandling');
 
 /**
  * Structure representing the extracted error response.
+ *
+ * @internal
  */
 export interface ExtractedErrorResponse {
     /** The unique identifier for the error instance */
@@ -34,6 +36,8 @@ export interface ExtractedErrorResponse {
  * @param guild - The guild where the error occurred (if any)
  * @param user - The user who triggered the error (if any)
  * @returns Object containing UUID and formatted error response embed
+ *
+ * @internal
  */
 export function extractErrorResponse(
     error: Error,

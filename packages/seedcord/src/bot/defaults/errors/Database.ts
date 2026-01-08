@@ -7,6 +7,8 @@ import type { UUID } from 'crypto';
  *
  * Thrown for various database operation failures and includes
  * a UUID for error tracking and debugging purposes.
+ *
+ * @internal
  */
 export class DatabaseError extends CustomError {
     /**

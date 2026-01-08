@@ -24,6 +24,8 @@ import type { CustomErrorConstructor } from '@interfaces/Components';
  *   throwCustomError(e, "Something went wrong", MyCustomError);
  * }
  * ```
+ *
+ * @internal
  */
 export function throwCustomError<Ctor extends CustomErrorConstructor>(
     error: unknown,

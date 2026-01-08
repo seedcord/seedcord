@@ -60,6 +60,3 @@ export function checkBotPermissions(
 
     checkPermissions(me, target, scope, inverse, errors);
 }
-
-/** Alias for {@link checkBotPermissions} */
-export const ensureBotPermissions = checkBotPermissions;

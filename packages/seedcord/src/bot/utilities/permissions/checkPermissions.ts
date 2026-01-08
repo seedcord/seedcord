@@ -229,6 +229,3 @@ export function checkPermissions(
         throw new Missing('Missing Any/All/No Permissions', pIn, names(missingBits));
     }
 }
-
-/** Alias for {@link checkPermissions} */
-export const ensurePermissions = checkPermissions;

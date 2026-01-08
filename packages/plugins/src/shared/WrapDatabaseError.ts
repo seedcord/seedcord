@@ -1,4 +1,5 @@
-import { CustomError, DatabaseError, SeedcordError, SeedcordErrorCode, throwCustomError } from 'seedcord';
+import { CustomError, SeedcordError, SeedcordErrorCode, throwCustomError } from 'seedcord';
+import { DatabaseError } from 'seedcord/internal';
 
 /**
  * Catches and wraps database operation errors.

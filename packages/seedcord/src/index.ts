@@ -12,9 +12,6 @@ export * from '@bot/injectors/index';
 // Bot Utilities exports
 export * from '@bUtilities/index';
 
-// Bot Default exports
-export * from '@bot/defaults/index';
-
 // Interfaces exports
 export * from '@interfaces/index';
 

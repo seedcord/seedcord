@@ -1,7 +1,7 @@
 import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
 import { MessageFlags } from 'discord.js';
 
-import { extractErrorResponse } from '@bUtilities/errors/extractErrorResponse';
+import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
 import type { RepliableInteractionHandler } from '@interfaces/Handler';
 
