@@ -35,23 +35,18 @@ describe('Mongo Plugin Integration', () => {
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongoService, RegisterMongoService, ModelMetadataKey } from '${pluginsPath}';
+            import { MongoService, RegisterMongoService, RegisterMongoModel } from '${pluginsPath}';
             import mongoose from 'mongoose';
-
-            const schema = new mongoose.Schema({ name: String });
-            const model = mongoose.model('users', schema);
 
             @RegisterMongoService('users')
             export class UserService extends MongoService {
-                public static schema = schema;
+                @RegisterMongoModel('users')
+                public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
                     return 'user';
                 }
             }
-
-            // This would be done by the decorator in a real scenario
-            Reflect.defineMetadata(ModelMetadataKey, model, UserService);
             `
         );
 
@@ -71,23 +66,18 @@ describe('Mongo Plugin Integration', () => {
         const filePath = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongoService, RegisterMongoService, ModelMetadataKey } from '${pluginsPath}';
+            import { MongoService, RegisterMongoService, RegisterMongoModel } from '${pluginsPath}';
             import mongoose from 'mongoose';
-
-            const schema = new mongoose.Schema({ name: String });
-            const model = mongoose.model('users', schema);
 
             @RegisterMongoService('users')
             export class UserService extends MongoService {
-                public static schema = schema;
+                @RegisterMongoModel('users')
+                public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
                     return 'user';
                 }
             }
-
-            // This would be done by the decorator in a real scenario
-            Reflect.defineMetadata(ModelMetadataKey, model, UserService);
             `
         );
 
@@ -105,23 +95,18 @@ describe('Mongo Plugin Integration', () => {
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongoService, RegisterMongoService, ModelMetadataKey } from '${pluginsPath}';
+            import { MongoService, RegisterMongoService, RegisterMongoModel } from '${pluginsPath}';
             import mongoose from 'mongoose';
-
-            const schema = new mongoose.Schema({ name: String });
-            const model = mongoose.model('admins', schema);
 
             @RegisterMongoService('admins')
             export class UserService extends MongoService {
-                public static schema = schema;
+                @RegisterMongoModel('admins')
+                public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
                     return 'admin';
                 }
             }
-
-            // This would be done by the decorator in a real scenario
-            Reflect.defineMetadata(ModelMetadataKey, model, UserService);
             `
         );
 
