@@ -12,7 +12,11 @@ export type SavedEmojiType = GuildEmoji | ApplicationEmoji | string;
 
 const emojiStorage: Record<string, SavedEmojiType> = {};
 
-/** Emoji config values can be either a plain name or a tuple [name, guildId] */
+/**
+ * Emoji config values can be either a plain name or a tuple [name, guildId]
+ *
+ * @internal
+ */
 export type EmojiConfigValue = string | readonly [string, string];
 
 function isEmojiTuple(v: unknown): v is readonly [string, string] {
@@ -37,6 +41,8 @@ export const Emojis = emojiStorage as InjectedEmojiMap;
  * Emoji Injector responsible for loading and injecting emojis based on bot configuration.
  *
  * For emojis injected from specific guilds, ensure that the Guilds intent is provided in client options.
+ *
+ * @internal
  */
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis');
