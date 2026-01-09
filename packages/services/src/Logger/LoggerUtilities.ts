@@ -1,12 +1,13 @@
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 
+import type { LoggerLevel } from './Types';
 import type { ILogger } from '@seedcord/types';
 
 /**
  * Provides access to common logging utilities.
  */
-export class LoggerUtilitiesAccessor {
+export class LoggerUtilities {
     constructor(private readonly logger: ILogger) {}
 
     private arrow(text: string): string {
@@ -17,8 +18,8 @@ export class LoggerUtilitiesAccessor {
      * Logs a single item with an arrow prefix.
      * @param text - The text to log
      */
-    public item(text: string): void {
-        this.logger.info(this.arrow(text));
+    public item(text: string, level: LoggerLevel = 'info'): void {
+        this.logger[level](this.arrow(text));
     }
 
     /**
@@ -27,10 +28,10 @@ export class LoggerUtilitiesAccessor {
      * @param items - Array of items to log as a list
      * @param heading - Optional heading to display above the list
      */
-    public list(items: string[], heading?: string): void {
-        if (heading) this.logger.info(heading);
+    public list(items: string[], heading?: string, level: LoggerLevel = 'info'): void {
+        if (heading) this.logger[level](heading);
         for (const item of items) {
-            this.logger.info(this.arrow(item));
+            this.logger[level](this.arrow(item));
         }
     }
 
@@ -41,9 +42,9 @@ export class LoggerUtilitiesAccessor {
      * @param title - The title of the summary
      * @param items - Object with counts/values to display
      */
-    public summary(title: string, items: Record<string, number | string>): void {
+    public summary(title: string, items: Record<string, number | string>, level: LoggerLevel = 'info'): void {
         const entries = Object.entries(items).map(([key, value]) => `${chalk.magenta.bold(String(value))} ${key}`);
-        this.logger.info(`${chalk.bold.green(title)}: ${entries.join(', ')}`);
+        this.logger[level](`${chalk.bold.green(title)}: ${entries.join(', ')}`);
     }
 
     /**
@@ -53,9 +54,9 @@ export class LoggerUtilitiesAccessor {
      * @param from - File path the component is from
      * @param type - Optional type label (e.g., 'middleware', 'handler')
      */
-    public registration(name: string, from: string, type?: string): void {
+    public registration(name: string, from: string, type?: string, level: LoggerLevel = 'info'): void {
         const scope = type ? `${type} ` : '';
-        this.logger.info(
+        this.logger[level](
             `${chalk.italic('Registered')} ${chalk.bold.yellow(scope)}${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(from))}`
         );
     }
@@ -66,9 +67,9 @@ export class LoggerUtilitiesAccessor {
      * @param component - Name of the component
      * @param action - 'start' or 'end' to indicate initialization phase
      */
-    public initialization(component: string, action: 'start' | 'end'): void {
+    public initialization(component: string, action: 'start' | 'end', level: LoggerLevel = 'info'): void {
         const verb = action === 'start' ? 'Initializing' : 'Initialized';
-        this.logger.info(chalk.bold(`${verb} ${component}`));
+        this.logger[level](chalk.bold(`${verb} ${component}`));
     }
 
     /**
@@ -78,10 +79,10 @@ export class LoggerUtilitiesAccessor {
      * @param total - Total count
      * @param item - Optional item label to append
      */
-    public progress(current: number, total: number, item?: string): void {
+    public progress(current: number, total: number, item?: string, level: LoggerLevel = 'info'): void {
         const base = `[${current}/${total}]`;
         const suffix = item ? ` ${item}` : '';
-        this.logger.info(`${chalk.cyan(base)}${suffix}`);
+        this.logger[level](`${chalk.cyan(base)}${suffix}`);
     }
 
     /**
@@ -90,14 +91,14 @@ export class LoggerUtilitiesAccessor {
      * @param title - Title to display in the box
      * @param content - Lines of content to display in the box
      */
-    public box(title: string, content: string[]): void {
+    public box(title: string, content: string[], level: LoggerLevel = 'info'): void {
         const width = Math.max(title.length, ...content.map((line) => line.length)) + 2;
         const horizontal = '─'.repeat(width);
-        this.logger.info(`╭${horizontal}╮`);
-        this.logger.info(`│ ${title.padEnd(width - 1, ' ')}│`);
+        this.logger[level](`╭${horizontal}╮`);
+        this.logger[level](`│ ${title.padEnd(width - 1, ' ')}│`);
         for (const line of content) {
-            this.logger.info(`│ ${line.padEnd(width - 1, ' ')}│`);
+            this.logger[level](`│ ${line.padEnd(width - 1, ' ')}│`);
         }
-        this.logger.info(`╰${horizontal}╯`);
+        this.logger[level](`╰${horizontal}╯`);
     }
 }

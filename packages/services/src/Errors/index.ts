@@ -1,3 +1,2 @@
-export * from './ErrorCodes';
-export * from './ErrorMessages';
-export * from './SeedcordError';
+export { SeedcordErrorCode } from './ErrorCodes';
+export { isSeedcordError, type BaseSeedcordError, type SeedcordErrorTypeString } from './SeedcordError';

@@ -1,5 +1,5 @@
 import { LoggerChannelRegistry } from './LoggerChannelRegistry';
-import { LoggerUtilitiesAccessor } from './LoggerUtilities';
+import { LoggerUtilities } from './LoggerUtilities';
 
 import type { LoggerConfiguration, LoggerOptions } from './Types';
 import type { ILogger } from '@seedcord/types';
@@ -19,7 +19,7 @@ export class Logger implements ILogger {
     private readonly registry = LoggerChannelRegistry.instance;
 
     /* Common logging utilities for structured and formatted output */
-    public readonly utils: LoggerUtilitiesAccessor;
+    public readonly utils: LoggerUtilities;
 
     private static readonly instances = new Map<string, Logger>();
 
@@ -56,7 +56,7 @@ export class Logger implements ILogger {
         this.channel = options?.channel ?? this.registry.getDefaultChannel();
         this.logger = this.registry.get(this.channel).child({ label: this.label, channel: this.channel });
 
-        this.utils = new LoggerUtilitiesAccessor(this);
+        this.utils = new LoggerUtilities(this);
     }
 
     /**

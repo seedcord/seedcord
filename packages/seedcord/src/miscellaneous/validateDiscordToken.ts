@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
 /**
  * Checks if the token is present, is a string, and matches the general format of a Discord token.

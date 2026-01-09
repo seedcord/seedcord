@@ -1,8 +1,9 @@
+import type { ILogger } from '@seedcord/types';
 import type { Writable } from 'node:stream';
 import type { Logger as WinstonLogger, transport } from 'winston';
 
 /** Log level defining severity of a message */
-export type LoggerLevel = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
+export type LoggerLevel = keyof ILogger;
 
 /** Format mode for log output */
 export type LoggerFormatMode = 'pretty' | 'json' | 'minimal';

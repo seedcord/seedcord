@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode, SeedcordTypeError } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/services/internal';
 
 export function hexToNumber(hex: string): number {
     if (typeof hex !== 'string') {

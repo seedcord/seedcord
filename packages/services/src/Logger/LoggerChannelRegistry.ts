@@ -20,7 +20,6 @@ import type {
  *
  * Handles channel configuration, transport creation,
  * and environment-aware defaults.
- * @internal
  */
 export class LoggerChannelRegistry {
     private static _instance: LoggerChannelRegistry | null = null;

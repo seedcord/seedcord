@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
 import type { BuilderComponent } from '@interfaces/Components';
 import type { Constructor } from 'type-fest';

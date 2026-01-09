@@ -15,6 +15,12 @@
             "import": "./dist/index.mjs",
             "require": "./dist/index.cjs",
             "default": "./dist/index.mjs"
+        },
+        "./internal": {
+            "types": "./dist/internal.index.d.ts",
+            "import": "./dist/internal.index.mjs",
+            "require": "./dist/internal.index.cjs",
+            "default": "./dist/internal.index.mjs"
         }
     },
     "files": [

@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 
+import { SeedcordError } from '@seedcord/services/internal';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
@@ -8,7 +9,6 @@ import {
     keepDefined,
     Logger,
     Plugin,
-    SeedcordError,
     SeedcordErrorCode,
     ShutdownPhase,
     traverseDirectory

@@ -1,6 +1,7 @@
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 

@@ -76,7 +76,7 @@ export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeE
  *
  * @internal
  */
-export interface SeedcordErrorBase {
+export interface BaseSeedcordError {
     readonly code: SeedcordErrorCode;
     readonly identifier: SeedcordErrorIdentifier;
     readonly type: SeedcordErrorTypeString;
@@ -89,7 +89,7 @@ export interface SeedcordErrorBase {
  */
 export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends Error
-    implements SeedcordErrorBase
+    implements BaseSeedcordError
 {
     public readonly code: Code;
     public readonly identifier: SeedcordErrorIdentifier;
@@ -116,7 +116,7 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
  */
 export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends TypeError
-    implements SeedcordErrorBase
+    implements BaseSeedcordError
 {
     public readonly code: Code;
     public readonly identifier: SeedcordErrorIdentifier;
@@ -143,7 +143,7 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
  */
 export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends RangeError
-    implements SeedcordErrorBase
+    implements BaseSeedcordError
 {
     public readonly code: Code;
     public readonly identifier: SeedcordErrorIdentifier;
@@ -162,15 +162,6 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
         }
     }
 }
-
-/**
- * Collection of Seedcord error classes.
- */
-export const SeedcordErrors = {
-    Error: SeedcordError,
-    TypeError: SeedcordTypeError,
-    RangeError: SeedcordRangeError
-} as const;
 
 /**
  * Variant type for Seedcord error classes.

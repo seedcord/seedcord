@@ -7,7 +7,8 @@ import { EventEmitter } from 'node:events';
 
 import chalk from 'chalk';
 
-import { SeedcordError, SeedcordErrorCode } from '../Errors';
+import { SeedcordErrorCode } from '../Errors';
+import { SeedcordError } from '../Errors/SeedcordError';
 import { Logger } from '../Logger';
 
 import type { LifecycleTask } from './LifecycleTypes';

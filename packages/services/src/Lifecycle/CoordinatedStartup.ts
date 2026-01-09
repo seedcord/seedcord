@@ -1,7 +1,8 @@
 import chalk from 'chalk';
 
-import { SeedcordError, SeedcordErrorCode } from '../Errors';
+import { SeedcordErrorCode } from '../Errors';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
+import { SeedcordError } from '../Errors/SeedcordError';
 
 import type { LifecycleTask, PhaseEvents } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';

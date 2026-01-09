@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { Logger } from '../../src/Logger/Logger';
-import { LoggerUtilitiesAccessor } from '../../src/Logger/LoggerUtilities';
+import { LoggerUtilities } from '../../src/Logger/LoggerUtilities';
 
 describe('LoggerUtilities', () => {
     let logger: Logger;
@@ -188,7 +188,7 @@ describe('LoggerUtilities', () => {
 
     describe('utilities accessor', () => {
         it('should be accessible from logger instance', () => {
-            expect(logger.utils).toBeInstanceOf(LoggerUtilitiesAccessor);
+            expect(logger.utils).toBeInstanceOf(LoggerUtilities);
         });
 
         it('should have all utility methods', () => {

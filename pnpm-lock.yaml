@@ -435,6 +435,9 @@ importers:
       '@seedcord/cli':
         specifier: workspace:*
         version: link:../cli
+      '@seedcord/services':
+        specifier: workspace:*
+        version: link:../services
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types

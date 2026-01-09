@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { filterCirculars } from '@seedcord/utils';
 import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError, SnowflakeUtil } from 'discord.js';
 import { Envapt } from 'envapt';

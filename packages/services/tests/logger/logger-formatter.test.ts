@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { describe, it, expect, beforeEach } from 'vitest';
 import winston from 'winston';
 
-import { LogFormatter } from '../../src';
+import { LogFormatter } from '../../src/Logger/LogFormatter';
 
 function createTestLogger(formatter: LogFormatter, level = 'info'): { logger: winston.Logger; output: string[] } {
     const output: string[] = [];

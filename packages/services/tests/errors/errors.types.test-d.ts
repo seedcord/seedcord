@@ -1,8 +1,9 @@
 import { expectAssignable, expectError, expectType } from 'tsd';
 
-import { SeedcordError, SeedcordErrorCode, SeedcordTypeError, isSeedcordError } from '../../src/Errors';
+import { SeedcordErrorCode, isSeedcordError } from '../../src/Errors';
 
 import type { SeedcordErrorTypeString } from '../../src/Errors';
+import { SeedcordError, SeedcordTypeError } from '../../src/Errors/SeedcordError';
 
 const singletonError = new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
 expectType<'SeedcordError'>(singletonError.type);

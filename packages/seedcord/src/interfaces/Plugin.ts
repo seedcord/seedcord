@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
+import { SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
 import type { Core } from './Core';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';

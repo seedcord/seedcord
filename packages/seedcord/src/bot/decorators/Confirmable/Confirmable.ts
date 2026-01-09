@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
 import { createAdapter } from './adapters';
 import { decide } from './decision';
@@ -78,6 +79,7 @@ import type { MessageComponentType, ComponentType } from 'discord.js';
  * @param question - Static string or lazy factory that resolves the prompt question.
  * @param options - Confirmation flow configuration.
  * @decorator
+ * @beta
  */
 export function Confirmable<TComponent extends MessageComponentType = ComponentType.Button>(
     question: ConfirmableQuestionInput,

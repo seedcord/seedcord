@@ -1,17 +1,23 @@
-export type { BuilderType, ActionRowComponentType, BuilderComponent, RowComponent, CustomError } from './Components';
+export {
+    BuilderComponent,
+    CustomError,
+    RowComponent,
+    type ActionRowComponentType,
+    type BuilderType
+} from './Components';
 export {
     AutocompleteHandler,
     EventHandler,
+    EventMiddleware,
     InteractionHandler,
     InteractionMiddleware,
-    EventMiddleware,
     type Repliables,
     type ValidEventTypes,
     type ValidInteractionTypes,
     type ValidNonInteractionKeys,
     type WithChecks
 } from './Handler';
-export { type Initializeable, Plugin, type PluginCtor, type PluginArgs, Pluggable } from './Plugin';
+export { Pluggable, Plugin, type Initializeable, type PluginArgs, type PluginCtor } from './Plugin';
 
 // Type exports
 export type * from './Core';

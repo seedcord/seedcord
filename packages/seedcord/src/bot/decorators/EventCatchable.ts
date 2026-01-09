@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { Message } from 'discord.js';
 
 import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';

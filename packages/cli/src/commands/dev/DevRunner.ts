@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { dirname } from 'node:path';
 
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { SeedcordBrand } from '@seedcord/utils';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';

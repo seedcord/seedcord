@@ -3,10 +3,11 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { inspect } from 'node:util';
 
+import { SeedcordError, SeedcordRangeError } from '@seedcord/services/internal';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
 import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely';
-import { SeedcordError, SeedcordErrorCode, SeedcordRangeError } from 'seedcord';
+import { SeedcordErrorCode } from 'seedcord';
 
 import type {
     MigrationManagerContext,

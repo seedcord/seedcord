@@ -1,4 +1,5 @@
-import { SeedcordError, SeedcordErrorCode } from 'seedcord';
+import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from 'seedcord';
 
 import { PgServiceMetadataKey, PgTableMetadataKey } from './decorators/RegisterKpgService';
 

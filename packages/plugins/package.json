@@ -39,6 +39,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "@seedcord/cli": "workspace:*",

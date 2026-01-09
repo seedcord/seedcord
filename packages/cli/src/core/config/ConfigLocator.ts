@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
 import { SEEDCORD_CONFIG_FILENAMES } from './schema';
 

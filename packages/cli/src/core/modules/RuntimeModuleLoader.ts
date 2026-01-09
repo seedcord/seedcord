@@ -2,7 +2,8 @@ import { existsSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { SeedcordError, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { createJiti } from 'jiti';
 import { tsImport } from 'tsx/esm/api';
 

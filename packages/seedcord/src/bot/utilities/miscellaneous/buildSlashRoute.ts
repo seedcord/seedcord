@@ -1,4 +1,5 @@
-import { SeedcordErrorCode, SeedcordTypeError } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordTypeError } from '@seedcord/services/internal';
 import { ChatInputCommandInteraction, AutocompleteInteraction } from 'discord.js';
 /**
  * Route string computed from provided parts.
