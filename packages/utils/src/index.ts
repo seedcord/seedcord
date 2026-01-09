@@ -1,4 +1,3 @@
-export * from './brand';
 export * from './misc';
 export * from './numbers';
 export * from './objects';

@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
-import { SeedcordBrand } from '@seedcord/utils';
+import { SeedcordBrand } from '@seedcord/utils/internal';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
