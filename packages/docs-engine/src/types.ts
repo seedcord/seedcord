@@ -1,5 +1,5 @@
-import type { PackageDirectory } from './directory';
 import type { GlobalId } from './ids';
+import type { PackageDirectory } from './PackageDirectory';
 import type { JSONOutput, ProjectReflection, ReflectionKind, VarianceModifier } from 'typedoc';
 
 export type SigPart =

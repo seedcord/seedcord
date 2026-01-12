@@ -1,8 +1,8 @@
 import path from 'node:path';
 
-import { PackageDirectory } from '../directory';
-import { ProjectLoader } from '../project-loader';
-import { NodeTransformer } from '../transformers/node-transformer';
+import { PackageDirectory } from '../PackageDirectory';
+import { ProjectLoader } from '../ProjectLoader';
+import { NodeTransformer } from '../transformers/NodeTransformer';
 import { createTransformContext } from '../transformers/transform-context';
 
 import type {

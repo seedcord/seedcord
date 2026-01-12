@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 
 import { resolveGeneratedDir } from './constants';
-import { DocsEngine, type DocsEngineOptions } from './engine';
+import { DocsEngine, type DocsEngineOptions } from './DocsEngine';
 import { DEFAULT_SEARCH_TARGETS } from './search-targets';
 
 import type { DocNode } from './types';

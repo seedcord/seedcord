@@ -6,10 +6,10 @@ import { ReflectionKind } from 'typedoc';
 
 import { buildCollection, type ResolveOptions } from './builders/collection-builder';
 import { resolveManifestPath } from './constants';
-import { ManifestReader } from './manifest-reader';
+import { ManifestReader } from './ManifestReader';
 
-import type { DirectorySnapshot, PackageDirectory } from './directory';
 import type { GlobalId } from './ids';
+import type { DirectorySnapshot, PackageDirectory } from './PackageDirectory';
 import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocReference, DocSearchEntry } from './types';
 
 export interface DocsEngineOptions {

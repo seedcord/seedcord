@@ -1,5 +1,5 @@
-import { Slugger } from '../slugger';
-import { CommentTransformer } from './comment-transformer';
+import { Slugger } from '../Slugger';
+import { CommentTransformer } from './CommentTransformer';
 
 import type { DocManifestPackage, DocNode } from '../types';
 

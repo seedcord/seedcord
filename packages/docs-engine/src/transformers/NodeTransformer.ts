@@ -8,7 +8,7 @@ import {
 
 import { toGlobalId } from '../ids';
 import { kindLabel } from '../kinds';
-import { slugForNode } from '../slugger';
+import { slugForNode } from '../Slugger';
 import { mapFlags } from './flag-mapper';
 import {
     mapGroups,

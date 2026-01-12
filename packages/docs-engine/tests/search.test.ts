@@ -1,7 +1,7 @@
 import { ReflectionKind } from 'typedoc';
 import { describe, it, expect } from 'vitest';
 
-import { DocsEngine } from '../src/engine';
+import { DocsEngine } from '../src/DocsEngine';
 
 import type { DocCollection, DocPackageModel, DocSearchEntry, DocManifest } from '../src/types';
 

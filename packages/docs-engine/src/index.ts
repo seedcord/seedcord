@@ -1,9 +1,9 @@
-export { DocsEngine, type DocsEngineOptions } from './engine';
-export { ManifestReader, type ManifestReaderOptions } from './manifest-reader';
+export { DocsEngine, type DocsEngineOptions } from './DocsEngine';
+export { ManifestReader, type ManifestReaderOptions } from './ManifestReader';
 export { resolveGeneratedDir, resolveManifestPath, MANIFEST_FILENAME } from './constants';
-export * from './slugger';
+export * from './Slugger';
 export { kindLabel, kindKey, kindName } from './kinds';
-export { PackageDirectory, type DirectoryEntity, type DirectorySnapshot } from './directory';
+export { PackageDirectory, type DirectoryEntity, type DirectorySnapshot } from './PackageDirectory';
 export { DEFAULT_SEARCH_TARGETS } from './search-targets';
 export type * from './types';
 
