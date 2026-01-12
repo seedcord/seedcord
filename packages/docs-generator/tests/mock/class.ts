@@ -1,0 +1,138 @@
+/**
+ * Represents a complex mock class for testing documentation generation.
+ *
+ * This class demonstrates various TypeScript features including modifiers,
+ * generics, method overloading, and different property types.
+ *
+ * @typeParam TypeT - The generic type parameter T.
+ * @typeParam TypeU - The generic type parameter U, constrained to number.
+ *
+ * @example
+ * ```typescript
+ * const instance = new MockClass<string, number>('hello', 42);
+ * instance.publicMethod();
+ * ```
+ * @deprecated Use {@link NewMockClass} instead.
+ * @see {@link MockEnum} for related enum.
+ * @see {@link MockInterface} for interface examples.
+ * @see {@link MockType} for type definitions.
+ */
+export class MockClass<TypeT, TypeU extends number> {
+    /**
+     * A public readonly property.
+     */
+    public readonly publicReadonlyProp: TypeT;
+
+    /**
+     * A private static property.
+     */
+    private static readonly privateStaticProp = 'static';
+
+    /**
+     * A protected property with default value.
+     */
+    protected protectedProp: TypeU = 0 as TypeU;
+
+    /**
+     * A public optional property.
+     * @public
+     */
+    public _optionalProp?: string | undefined;
+
+    /**
+     * Creates an instance of MockClass.
+     *
+     * @param publicReadonlyProp - The value for the public readonly property.
+     * @param protectedProp - The initial value for the protected property.
+     * @throws An {@link Error} If the protected prop is invalid.
+     */
+    constructor(publicReadonlyProp: TypeT, protectedProp: TypeU) {
+        this.publicReadonlyProp = publicReadonlyProp;
+        this.protectedProp = protectedProp;
+    }
+
+    /**
+     * A public method with overloads.
+     *
+     * @param param - The parameter.
+     * @returns The result.
+     */
+    public publicMethod(param1: TypeT, param2: TypeU): string;
+    /**
+     * @param param - The numeric parameter.
+     * @returns The numeric result.
+     */
+    public publicMethod(param: TypeU): number;
+    /**
+     * @param param - The parameter of type TypeT or TypeU.
+     * @returns The result.
+     */
+    public publicMethod(param: TypeT | TypeU, _param2?: TypeU): string | number {
+        if (typeof param === 'number') {
+            return param * 2;
+        }
+        void this.privateMethod(param);
+        return MockClass.privateStaticProp;
+    }
+
+    /**
+     * A private method.
+     *
+     * @param value - The value to process.
+     * @returns The processed value.
+     * @internal
+     */
+    private privateMethod(value: TypeT): TypeT {
+        return value;
+    }
+
+    /**
+     * A protected static method.
+     *
+     * @param input - The input value. {@default ''}
+     * @returns The static result.
+     * @internal
+     */
+    protected static protectedStaticMethod(input = ''): string {
+        return input.toUpperCase();
+    }
+
+    /**
+     * A getter for a computed property.
+     *
+     * @returns The computed value.
+     */
+    get computedProp(): string {
+        return `${String(this.publicReadonlyProp)}-${String(this.protectedProp)}`;
+    }
+
+    /**
+     * A setter for the optional property.
+     *
+     * @param value - The value to set.
+     */
+    set optionalProp(value: string | undefined) {
+        this._optionalProp = value;
+    }
+
+    /**
+     * An async method.
+     *
+     * @param delay - The delay in milliseconds.
+     * @returns A promise that resolves after the delay.
+     */
+    public async asyncMethod(delay: number): Promise<void> {
+        await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+
+    /**
+     * A method with rest parameters.
+     *
+     * @param first - The first parameter.
+     * @param rest - The rest of the parameters.
+     * @returns The concatenated result.
+     */
+    public restMethod(first: string, ...rest: string[]): string {
+        return [first, ...rest].join('-');
+    }
+}

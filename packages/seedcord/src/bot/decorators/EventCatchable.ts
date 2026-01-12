@@ -13,10 +13,10 @@ import type { NonEmptyTuple } from 'type-fest';
  * Configuration options for the EventCatchable decorator.
  */
 export interface EventCatchableOptions {
-    /** Whether to log errors to console using console.error (default: `false`) */
+    /** Whether to log errors to console using console.error {@default false} */
     log?: boolean;
     /**
-     * Whether to fail silently without trying to send a message (default: `false`).
+     * Whether to fail silently without trying to send a message {@default false}.
      *
      * Can pass a list of {@link CustomError} types to only silence those specific errors.
      */

@@ -146,7 +146,7 @@ export interface ConfirmableDecisionByCustomIds<TComponentType extends MessageCo
     confirm: readonly string[];
     /** Optional custom IDs that should resolve the confirmation as rejected. */
     cancel?: readonly string[];
-    /** The component type to listen for. (default: Button if omitted) */
+    /** The component type to listen for. {@default MessageComponentType.Button} */
     componentType?: TComponentType;
 }
 
@@ -162,11 +162,11 @@ export type ConfirmableDecision<TComponentType extends MessageComponentType> =
  */
 export interface ConfirmableSharedOptions<TComponentType extends MessageComponentType = ComponentType.Button> {
     /**
-     * whether the response should be ephemeral. (default: `true`)
+     * whether the response should be ephemeral. {@default `true`}
      */
     ephemeral?: boolean;
     /**
-     * Timeout in milliseconds before the prompt is considered timed out. (default: `10000`)
+     * Timeout in milliseconds before the prompt is considered timed out. {@default `10000`}
      */
     timeoutMs?: number;
     /**
@@ -175,7 +175,7 @@ export interface ConfirmableSharedOptions<TComponentType extends MessageComponen
      */
     onResolved?: (r: ConfirmableResolution<TComponentType>) => Promisable<void>;
     /**
-     * Whether to defer the interaction automatically. (default: `true`)
+     * Whether to defer the interaction automatically. {@default `true`}
      */
     defer?: boolean;
     /**

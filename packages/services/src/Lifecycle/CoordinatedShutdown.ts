@@ -117,7 +117,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
      * @param phase - The shutdown phase from {@link ShutdownPhase}
      * @param taskName - Unique identifier for the task
      * @param task - Async function to execute
-     * @param timeoutMs - Task timeout in milliseconds (default: 5000)
+     * @param timeoutMs - Task timeout in milliseconds {@default 5000}
      */
     public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
         super.addTask(phase, taskName, task, timeoutMs);
@@ -141,8 +141,8 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
      * Tasks within each phase are executed in parallel for faster shutdown.
      * Process exits with the specified code when complete.
      *
-     * @param exitCode - Process exit code (default: `0`)
-     * @param exitProcess - Whether to exit the process after shutdown (default: `true`)
+     * @param exitCode - Process exit code {@default 0}
+     * @param exitProcess - Whether to exit the process after shutdown {@default true}
      * @returns Promise that resolves when shutdown is complete
      * @example
      * ```typescript

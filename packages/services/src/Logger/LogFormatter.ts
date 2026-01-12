@@ -7,9 +7,9 @@ import type { Logform } from 'winston';
  * Options for pretty log formatting.
  */
 export interface PrettyFormatOptions {
-    /** Number of spaces to pad the log level to. (default: `7`) */
+    /** Number of spaces to pad the log level to. {@default `7`} */
     padding?: number;
-    /** Whether to strip ANSI codes from extra log data. (default: `false`) */
+    /** Whether to strip ANSI codes from extra log data. {@default false} */
     stripExtras?: boolean;
 }
 
@@ -18,9 +18,9 @@ export interface PrettyFormatOptions {
  * @internal
  */
 export interface JsonFormatOptions {
-    /** Whether to strip ANSI codes from log messages and extra data. (default: `false`) */
+    /** Whether to strip ANSI codes from log messages and extra data. {@default false} */
     stripAnsi?: boolean;
-    /** Whether to produce minimal JSON output without extra fields. (default: `false`) */
+    /** Whether to produce minimal JSON output without extra fields. {@default false} */
     minimal?: boolean;
 }
 

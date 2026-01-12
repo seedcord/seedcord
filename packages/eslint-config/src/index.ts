@@ -51,7 +51,7 @@ type FlatConfigItem = Linter.Config;
  *
  */
 interface CreateConfigOptions {
-    /** Root directory for TypeScript configuration (default: `process.cwd()`) */
+    /** Root directory for TypeScript configuration {@default `process.cwd()`} */
     tsconfigRootDir?: string;
 
     /** Additional glob patterns to extend the shared ignore list */
@@ -60,19 +60,19 @@ interface CreateConfigOptions {
     /** Additional user-defined ESLint configuration items to merge */
     userConfigs?: FlatConfigItem[];
 
-    /** Toggle registration of the `eslint-plugin-import` plugin (default: `true`) */
+    /** Toggle registration of the `eslint-plugin-import` plugin {@default true} */
     registerImportPlugin?: boolean;
 
-    /** Toggle registration of the `eslint-plugin-prettier` plugin (default: `true`) */
+    /** Toggle registration of the `eslint-plugin-prettier` plugin {@default true} */
     registerPrettierPlugin?: boolean;
 
-    /** Toggle registration of the `eslint-plugin-security` plugin (default: `true`) */
+    /** Toggle registration of the `eslint-plugin-security` plugin {@default true} */
     registerSecurityPlugin?: boolean;
 
-    /** Toggle registration of the `eslint-plugin-tsdoc` plugin (default: `true`) */
+    /** Toggle registration of the `eslint-plugin-tsdoc` plugin {@default true} */
     registerTsdocPlugin?: boolean;
 
-    /** Toggle registration of TypeScript ESLint configs (default: `true`) */
+    /** Toggle registration of TypeScript ESLint configs {@default true} */
     registerTypescriptConfigs?: boolean;
 }
 

@@ -83,8 +83,7 @@ export async function extractPackageDocs(
 
     externalPluginsLoaded = true;
 
-    const blockTags = (app.options.getValue('blockTags') as string[] | undefined) ?? [];
-    if (!blockTags.includes('@decorator')) app.options.setValue('blockTags', [...blockTags, '@decorator']);
+    setTags(app);
 
     const originalLog = app.logger.log.bind(app.logger);
     app.logger.log = (message, level, ...rest) => {
@@ -122,4 +121,11 @@ export async function extractPackageDocs(
         errors,
         succeeded
     };
+}
+
+function setTags(app: Application): void {
+    const blockTags = (app.options.getValue('blockTags') as string[] | undefined) ?? [];
+    const inlineTags = (app.options.getValue('inlineTags') as string[] | undefined) ?? [];
+    if (!blockTags.includes('@decorator')) app.options.setValue('blockTags', [...blockTags, '@decorator']);
+    if (!inlineTags.includes('@default')) app.options.setValue('inlineTags', [...inlineTags, '@default']);
 }
