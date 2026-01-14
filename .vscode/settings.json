@@ -98,5 +98,6 @@
         "MD030": false,
         "MD007": { "indent": 4 }
     },
-    "prettier.prettierPath": "node_modules/prettier"
+    "prettier.prettierPath": "node_modules/prettier",
+    "vitest.disableWorkspaceWarning": true
 }

@@ -6,7 +6,7 @@
 
 - Do NOT use "any" type unless it makes sense in context.
 
-- You will NOT be able to cast to "any" unless it actually makes sense. ESLint WILL automatically change it to "unknown" if you try to use "any".
+- VERY IMPORTANT FOR TESTS: You will NOT be able to cast to "any" unless it actually makes sense. ESLint WILL automatically change it to "unknown" if you try to use "any". CAST TO THE CORRECT TYPE INSTEAD.
 
 - DO NOT type cast 'as unknown as ...' if the type is already correct.
 

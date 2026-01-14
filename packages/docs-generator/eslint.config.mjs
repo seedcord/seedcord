@@ -7,6 +7,13 @@ export default createConfig({
             rules: {
                 'no-console': 'off'
             }
+        },
+        {
+            files: ['tests/**/*.ts'],
+            rules: {
+                '@typescript-eslint/no-non-null-assertion': 'off',
+                'max-nested-callbacks': ['warn', 5]
+            }
         }
     ]
 });
