@@ -42,7 +42,7 @@ export class MockClass<TypeT, TypeU extends number> {
     /**
      * Creates an instance of MockClass.
      *
-     * @param publicReadonlyProp - The value for the public readonly property.
+     * @param publicReadonlyProp - The value for the public readonly property. {@link TypeT}
      * @param protectedProp - The initial value for the protected property.
      * @throws An {@link Error} If the protected prop is invalid.
      */

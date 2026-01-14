@@ -48,7 +48,7 @@ export type MockMapped<TypeT> = {
 export type MockConditional<TypeT> = TypeT extends string ? string[] : number[];
 
 /**
- * A recursive type.
+ * A recursive interface.
  */
 export interface MockRecursive {
     value: string;

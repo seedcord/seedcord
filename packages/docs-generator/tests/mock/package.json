@@ -1,0 +1,10 @@
+{
+    "name": "@seedcord/mock-docs",
+    "version": "0.0.0",
+    "private": false,
+    "seedcordDocs": {
+        "entryPoints": [
+            "index.ts"
+        ]
+    }
+}

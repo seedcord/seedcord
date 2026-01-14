@@ -1,14 +1,19 @@
 import { vi } from 'vitest';
 
-vi.mock('mongoose', async () => {
-    const actual = await vi.importActual('mongoose');
-    return {
-        ...actual,
-        connect: vi.fn().mockResolvedValue({
-            disconnect: vi.fn().mockResolvedValue(undefined)
-        }),
-        models: {}
+vi.mock('mongoose', () => {
+    const core = {
+        Schema: class Schema {
+            constructor(_def: unknown) {}
+        },
+        connect: vi
+            .fn()
+            .mockResolvedValue({ connection: { name: 'mock' }, disconnect: vi.fn().mockResolvedValue(undefined) }),
+        model: (name: string) => ({ modelName: name }),
+        models: {},
+        deleteModel: vi.fn()
     };
+
+    return { default: core, ...core };
 });
 
 vi.mock('kysely', async () => {

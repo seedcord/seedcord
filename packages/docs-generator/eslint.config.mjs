@@ -9,7 +9,7 @@ export default createConfig({
             }
         },
         {
-            files: ['tests/**/*.ts'],
+            files: ['**/*.test.ts', '**/tests/**/*.ts'],
             rules: {
                 '@typescript-eslint/no-non-null-assertion': 'off',
                 'max-nested-callbacks': ['warn', 5]
