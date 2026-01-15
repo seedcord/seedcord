@@ -1,4 +1,14 @@
 /**
+ * Base class used to test inheritance documentation.
+ */
+export class BaseClass {
+    /**
+     * A property on the base class.
+     */
+    public baseProp = 'base';
+}
+
+/**
  * Represents a complex mock class for testing documentation generation.
  *
  * This class demonstrates various TypeScript features including modifiers,
@@ -17,7 +27,7 @@
  * @see {@link MockInterface} for interface examples.
  * @see {@link MockType} for type definitions.
  */
-export class MockClass<TypeT, TypeU extends number> {
+export class MockClass<TypeT, TypeU extends number> extends BaseClass {
     /**
      * A public readonly property.
      */
@@ -47,6 +57,7 @@ export class MockClass<TypeT, TypeU extends number> {
      * @throws An {@link Error} If the protected prop is invalid.
      */
     constructor(publicReadonlyProp: TypeT, protectedProp: TypeU) {
+        super();
         this.publicReadonlyProp = publicReadonlyProp;
         this.protectedProp = protectedProp;
     }

@@ -3,9 +3,11 @@
  *
  * This module exports various TypeScript entities with complex TSDoc comments
  * to test the docs-generator functionality.
+ *
+ * @packageDocumentation
  */
 
-export { MockClass } from './class';
+export { BaseClass, MockClass } from './class';
 export { MockEnum } from './enum';
 export { mockFunction, mockFunctionWithRest, asyncMockFunction, LogDecorator } from './function';
 export type { MockInterface, RecursiveInterface, IndexableInterface, ExtendedInterface } from './interface';

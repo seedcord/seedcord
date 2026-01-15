@@ -17,6 +17,12 @@ describe('ApiDocsGenerator Integration', () => {
         expect((docs as unknown as { version: string }).version).toBe('0.0.0');
     });
 
+    it('should include package-level documentation from index.ts', () => {
+        const summary = getSummaryText(docs.comment);
+        expect(summary).toBeDefined();
+        expect(summary).toContain('Mock entities for testing documentation generation.');
+    });
+
     it('should structure MockClass correctly (Generics, TypeParams)', () => {
         const mockClass = findChild(docs, 'MockClass');
         expect(mockClass).toBeDefined();

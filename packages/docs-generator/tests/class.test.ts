@@ -9,6 +9,7 @@ import {
     checkHasSources,
     checkSignatureParameters,
     checkTypeParameters,
+    checkInheritance,
     findChild,
     hasFlag
 } from './utils';
@@ -99,6 +100,17 @@ describe('Class Tests', () => {
             const childNames = mockClass.children?.map((c) => c.name);
             expect(childNames).not.toContain('privateStaticProp');
             expect(childNames).not.toContain('privateMethod');
+        });
+
+        it('should document class inheritance', () => {
+            const baseClass = findChild(docs, 'BaseClass');
+            expect(baseClass).toBeDefined();
+
+            // MockClass should extend BaseClass
+            checkInheritance(mockClass, ['BaseClass']);
+
+            // BaseClass should list MockClass as extending it
+            checkInheritance(baseClass!, undefined, ['MockClass']);
         });
     });
 
