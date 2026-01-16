@@ -150,7 +150,7 @@ const s = x;
 
 ---
 
-- Run lint/typecheck/tests ALWAYS after changes. `pnpm -C <pkg> tc && pnpm -C <pkg> lint:fix && pnpm -C <pkg> test (if tests are available)
+- Run lint/typecheck/tests ALWAYS after changes. `pnpm -C <pkg> tc && pnpm -C <pkg> lint:fix && pnpm -C <pkg> test (if tests are available). You must not run tests before first ensuring lint/typecheck pass without errors, even for the test files themselves.
 
 ```sh
 pnpm -C packages/foo lint:fix

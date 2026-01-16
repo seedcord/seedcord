@@ -45,6 +45,7 @@
         "typedoc-plugin-mdn-links": "^5.0.10"
     },
     "devDependencies": {
+        "@seedcord/docs-generator": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsup-config": "workspace:*"

@@ -48,6 +48,8 @@ coverage/
 # Ignore temp files
 temp/
 TASKS.md
+STATUS.json
+PROGRESS.md
 
 # Ignore temporary files
 *.tmp
