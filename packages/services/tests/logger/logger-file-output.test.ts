@@ -1,10 +1,11 @@
-/* eslint-disable max-nested-callbacks, @typescript-eslint/no-non-null-assertion, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 import fs from 'node:fs';
 import path from 'node:path';
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { Logger } from '../../src/Logger/Logger';
+
+import type { LogEntry } from 'winston';
 
 const LOGS_DIR = path.join(__dirname, '../../logs');
 const TEST_LOGS_DIR = path.join(__dirname, '../../logs/logs-test');
@@ -365,7 +366,7 @@ describe('Logger File Output', () => {
             const lines = content.trim().split('\n');
             expect(lines.length).toBeGreaterThan(0);
 
-            const firstLog = JSON.parse(lines[0]!);
+            const firstLog = JSON.parse(lines[0]!) as LogEntry;
             expect(firstLog).toHaveProperty('level');
             expect(firstLog).toHaveProperty('message');
             expect(firstLog).toHaveProperty('timestamp');
@@ -409,7 +410,7 @@ describe('Logger File Output', () => {
             const logFile = path.join(TEST_LOGS_DIR, files[0]!);
             const content = fs.readFileSync(logFile, 'utf-8');
 
-            const log = JSON.parse(content.trim());
+            const log = JSON.parse(content.trim()) as LogEntry;
             expect(log.level).toBe('info');
             expect(log.message).toContain('Test message with data');
             expect(log.label).toBe('json-fields-logger');

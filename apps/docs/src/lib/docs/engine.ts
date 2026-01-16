@@ -5,8 +5,6 @@ import { cache } from 'react';
 
 const GENERATED_ROOT = path.resolve(process.cwd(), '../../generated');
 
-export const getDocsEngine = cache(async () => {
-    return DocsEngine.create({ generatedRoot: GENERATED_ROOT });
-});
+export const getDocsEngine = cache(async () => DocsEngine.create({ generatedRoot: GENERATED_ROOT }));
 
 export type { DocsEngine };

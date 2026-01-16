@@ -2,6 +2,7 @@ import { vi } from 'vitest';
 
 vi.mock('mongoose', () => {
     const core = {
+        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
         Schema: class Schema {
             constructor(_def: unknown) {}
         },

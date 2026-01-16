@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks, @typescript-eslint/no-non-null-assertion, @typescript-eslint/restrict-template-expressions */
 import { describe, it, expect, beforeEach } from 'vitest';
 import winston from 'winston';
 
@@ -355,9 +354,8 @@ describe('SinkTransport', () => {
                 level: 'info',
                 format: winston.format.combine(
                     winston.format.timestamp(),
-                    winston.format.printf(({ timestamp, level, message }) => {
-                        return `[${timestamp}] ${level}: ${message}`;
-                    })
+                    // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+                    winston.format.printf(({ timestamp, level, message }) => `[${timestamp}] ${level}: ${message}`)
                 ),
                 transports: [transport]
             });

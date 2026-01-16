@@ -62,7 +62,28 @@ export const GENERAL_RULES: Linter.RulesRecord = {
     'no-with': 'error',
     'prefer-const': 'error',
     'prefer-template': 'error',
-    radix: 'error'
+    radix: 'error',
+
+    'func-style': ['error', 'declaration', { allowArrowFunctions: true }],
+
+    // Prefer concise arrow bodies when possible (no unnecessary braces/returns)
+    'arrow-body-style': ['error', 'as-needed', { requireReturnForObjectLiteral: false }],
+
+    // Disallow exported arrow functions with block bodies. Exported helpers should either be concise arrow expressions or regular function declarations for more complex logic.
+    'no-restricted-syntax': [
+        'error',
+        {
+            selector:
+                "Program > ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression[body.type='BlockStatement']",
+            message:
+                'Avoid block-bodied exported arrow functions; use a function declaration or a concise arrow expression instead.'
+        },
+        {
+            selector: "Program > ExportDefaultDeclaration > ArrowFunctionExpression[body.type='BlockStatement']",
+            message:
+                'Avoid block-bodied default-exported arrow functions; use a function declaration or concise arrow expression.'
+        }
+    ]
 };
 
 // Security rules

@@ -51,9 +51,9 @@ function buildCategories(directory: GetPackageDirectoryReturn): NavigationCatego
         }
 
         const items = entries
-            .map(([slug, node]) => {
-                return createNavigationItem(node.sourcePackage.name, node.sourcePackage.version, slug, node.name, tone);
-            })
+            .map(([slug, node]) =>
+                createNavigationItem(node.sourcePackage.name, node.sourcePackage.version, slug, node.name, tone)
+            )
             .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
 
         if (!items.length) {

@@ -1,4 +1,3 @@
-/* eslint-disable max-nested-callbacks, @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { Logger } from '../../src/Logger/Logger';
@@ -106,6 +105,7 @@ describe('LoggerChannelRegistry', () => {
         it('should install a sink', () => {
             const handle = registry.installSink(testSink);
             expect(handle).toBeDefined();
+            // eslint-disable-next-line @typescript-eslint/unbound-method
             expect(handle.dispose).toBeDefined();
             handle.dispose();
         });

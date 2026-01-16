@@ -25,7 +25,7 @@ export function toDocType(type: SomeType | ReflectionType | undefined): DocType 
     try {
         return serializer.toObject(type);
     } catch {
-        return type as unknown as DocType;
+        return type as DocType;
     }
 }
 

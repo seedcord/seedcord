@@ -289,7 +289,7 @@ export class NodeTransformer {
         node.inheritedFrom = mapReference(this.context, reflection.inheritedFrom);
         node.implementationOf = mapReference(this.context, reflection.implementationOf);
 
-        const def = (reflection as unknown as { defaultValue?: string }).defaultValue;
+        const def = reflection.defaultValue;
         if (typeof def === 'string' && def.length > 0) node.defaultValue = def;
 
         if (node.defaultValue === undefined && reflection.kind === ReflectionKind.EnumMember) {

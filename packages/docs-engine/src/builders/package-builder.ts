@@ -274,11 +274,11 @@ function collectTokens(node: DocNode, summary: string, file: string | undefined,
     return Array.from(tokens);
 }
 
-export const buildPackage = async (
+export async function buildPackage(
     pkg: DocManifestPackage,
     projectPath: string,
     lookups: PackageLookups
-): Promise<DocPackageModel> => {
+): Promise<DocPackageModel> {
     const loader = new ProjectLoader();
     const project = await loader.fromFile(projectPath);
     const context = createTransformContext(pkg, {
@@ -298,4 +298,4 @@ export const buildPackage = async (
         indexes,
         directory
     };
-};
+}

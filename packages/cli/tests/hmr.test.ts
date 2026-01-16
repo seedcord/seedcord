@@ -18,17 +18,15 @@ const loggerSpies = {
     debug: vi.fn()
 };
 
-vi.mock('@seedcord/services', () => {
-    return {
-        Logger: class {
-            public info = loggerSpies.info;
-            public warn = loggerSpies.warn;
-            public error = loggerSpies.error;
-            public debug = loggerSpies.debug;
-        },
-        StrictEventEmitter: EventEmitter
-    };
-});
+vi.mock('@seedcord/services', () => ({
+    Logger: class {
+        public info = loggerSpies.info;
+        public warn = loggerSpies.warn;
+        public error = loggerSpies.error;
+        public debug = loggerSpies.debug;
+    },
+    StrictEventEmitter: EventEmitter
+}));
 
 describe('HmrPlugin', () => {
     let hmrPlugin: HmrPlugin;
@@ -226,7 +224,6 @@ describe('HmrPlugin', () => {
             } as unknown as EnvironmentModuleNode;
 
             // Mock moduleGraph
-            // eslint-disable-next-line max-nested-callbacks
             const getModulesByFileMock = vi.fn().mockImplementation((f) => {
                 if (f === file) return new Set([fileNode]);
                 if (f === importerFile) return new Set([importerNode]);

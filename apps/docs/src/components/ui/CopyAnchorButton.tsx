@@ -21,13 +21,14 @@ function CopyAnchorButton({
     const [copied, setCopied] = useState(false);
     const copyTimerRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        return () => {
+    useEffect(
+        () => () => {
             if (copyTimerRef.current !== null) {
                 window.clearTimeout(copyTimerRef.current);
             }
-        };
-    }, []);
+        },
+        []
+    );
 
     const handleCopyLink = useCallback(() => {
         try {

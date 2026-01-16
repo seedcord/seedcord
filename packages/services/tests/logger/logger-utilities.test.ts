@@ -1,4 +1,4 @@
-/* eslint-disable max-nested-callbacks, @typescript-eslint/unbound-method */
+/* eslint-disable @typescript-eslint/unbound-method */
 import { describe, it, expect, beforeEach } from 'vitest';
 
 import { Logger } from '../../src/Logger/Logger';

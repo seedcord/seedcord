@@ -30,7 +30,22 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
     '@typescript-eslint/no-non-null-assertion': 'warn',
     '@typescript-eslint/prefer-nullish-coalescing': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
-    '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+    '@typescript-eslint/no-unnecessary-type-assertion': 'error',
+
+    'no-restricted-syntax': [
+        'error',
+        {
+            selector: 'TSImportType',
+            message: "Avoid inline import types; use `import type { T } from 'pkg'` instead."
+        },
+        {
+            selector: "TSAsExpression[expression.type='TSAsExpression']",
+            message:
+                'Avoid redundant double-casts (e.g. `as unknown as Type`); prefer proper narrowing or a single cast with justification.'
+        }
+    ],
+
+    '@typescript-eslint/no-extraneous-class': 'error',
     '@typescript-eslint/no-unnecessary-condition': 'warn',
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/await-thenable': 'error',
@@ -115,7 +130,6 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
             trailingUnderscore: 'allow'
         }
     ],
-    '@typescript-eslint/no-extraneous-class': 'off',
     '@typescript-eslint/no-useless-constructor': 'off',
     '@typescript-eslint/no-empty-function': 'off',
     '@typescript-eslint/unified-signatures': 'warn',

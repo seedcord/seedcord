@@ -206,7 +206,10 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
                 'max-lines-per-function': 'off',
                 'no-magic-numbers': 'off',
                 'no-unused-expressions': 'off',
-                'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }]
+                'no-restricted-syntax': 'off',
+                'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
+                '@typescript-eslint/no-non-null-assertion': 'off',
+                'max-nested-callbacks': ['warn', 5]
             }
         },
 
