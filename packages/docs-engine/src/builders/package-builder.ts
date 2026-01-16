@@ -289,11 +289,13 @@ export async function buildPackage(
     const root = transformer.transform(project);
     const indexes = buildIndexes(root, pkg);
     const directory = PackageDirectory.fromIndexes(indexes);
+    const packageDocumentation = root.comment ?? null;
 
     return {
         manifest: pkg,
         project,
         root,
+        packageDocumentation,
         nodes: context.nodes,
         indexes,
         directory

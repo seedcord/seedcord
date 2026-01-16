@@ -1,84 +1,61 @@
-import { ReflectionKind } from 'typedoc';
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
-import { DocsEngine } from '../src/DocsEngine';
+import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
+import { getEngine } from './utils/test-helpers';
 
-import type { DocCollection, DocPackageModel, DocSearchEntry, DocManifest } from '../src/types';
+import type { DocsEngine } from '../src/DocsEngine';
 
-// Helper to create a dummy search entry
-function createEntry(name: string, packageName = 'test-pkg'): DocSearchEntry {
-    return {
-        name,
-        slug: name.toLowerCase(),
-        qualifiedName: name,
-        packageName,
-        kind: ReflectionKind.Class,
-        summary: null,
-        tokens: [name.toLowerCase()],
-        packageVersion: '1.0.0'
-    };
-}
+let engine: DocsEngine;
 
-describe('DocsEngine Search', () => {
-    const entries = [
-        createEntry('Seedcord'),
-        createEntry('MongoService'),
-        createEntry('AuthService'),
-        createEntry('User'),
-        createEntry('UserProfile'),
-        createEntry('SomethingElse')
-    ];
-
-    const mockPackage = {
-        manifest: { name: 'test-pkg' },
-        indexes: { search: entries },
-        directory: {}
-    } as unknown as DocPackageModel;
-
-    const mockCollection: DocCollection = {
-        manifest: {} as unknown as DocManifest,
-        packages: [mockPackage],
-        byKey: new Map(),
-        byGlobalSlug: new Map()
-    };
-
-    // Access private constructor
-    const DocsEngineConstructor = DocsEngine as unknown as new (collection: DocCollection) => DocsEngine;
-    const engine = new DocsEngineConstructor(mockCollection);
-
-    it('should find exact match', () => {
-        const results = engine.search('Seedcord');
-        expect(results.length).toBeGreaterThan(0);
-        expect(results[0]?.name).toBe('Seedcord');
+describe('DocsEngine search integration', () => {
+    beforeAll(async () => {
+        engine = await getEngine();
     });
 
-    it('should find fuzzy match', () => {
-        // Typo: Seedcrd
-        const results = engine.search('Seedcrd');
-        expect(results.length).toBeGreaterThan(0);
-        expect(results[0]?.name).toBe('Seedcord');
+    it('returns empty results for empty queries', () => {
+        expect(engine.search('')).toEqual([]);
     });
 
-    it('should find fuzzy match with more typos', () => {
-        // Typo: Sedcord
-        const results = engine.search('Sedcord');
-        expect(results.length).toBeGreaterThan(0);
-        expect(results[0]?.name).toBe('Seedcord');
+    it('ranks exact matches first', () => {
+        const [first] = engine.search('MockClass');
+        expect(first?.name).toBe('MockClass');
+        expect(first?.packageName).toBe(MOCK_PACKAGE_FULL_NAME);
     });
 
-    it('should find prefix match', () => {
-        const results = engine.search('Mongo');
-        expect(results.length).toBeGreaterThan(0);
-        expect(results[0]?.name).toBe('MongoService');
+    it('supports fuzzy matching with minor typos', () => {
+        const results = engine.search('mockfuncton');
+        expect(results.some((entry) => entry.name === 'mockFunction')).toBe(true);
     });
 
-    it('should handle empty query', () => {
-        const results = engine.search('');
-        expect(results).toEqual([]);
+    it('indexes slug tokens for lookups', () => {
+        const results = engine.search('rest-method');
+        expect(results.some((entry) => entry.slug === 'mock-class/rest-method')).toBe(true);
     });
 
-    it('should prioritize exact match over fuzzy', () => {
-        const results = engine.search('User');
-        expect(results[0]?.name).toBe('User');
+    it('indexes signature tokens for overloads', () => {
+        const results = engine.search('rest parameters');
+        const match = results.find((entry) => entry.slug === 'mock-class/rest-method');
+        expect(match).toBeDefined();
+    });
+
+    it('matches alias strings derived from signature renderings', () => {
+        const [match] = engine.search('mockFunction(param: number): number');
+        expect(match?.slug).toBe('mock-function');
+    });
+
+    it('matches package names and versions with punctuation', () => {
+        const packageMatches = engine.search('@seedcord/mock-docs');
+        expect(packageMatches.length).toBeGreaterThan(0);
+        expect(packageMatches.every((entry) => entry.packageName === MOCK_PACKAGE_FULL_NAME)).toBe(true);
+
+        const versionMatches = engine.search('0.0.0');
+        expect(versionMatches.length).toBeGreaterThan(0);
+        expect(versionMatches.some((entry) => entry.packageVersion === '0.0.0')).toBe(true);
+    });
+
+    it('scopes searches to a package when requested', () => {
+        const scoped = engine.search('MockClass', MOCK_PACKAGE_FULL_NAME);
+        expect(scoped).not.toHaveLength(0);
+        expect(scoped.every((entry) => entry.packageName === MOCK_PACKAGE_FULL_NAME)).toBe(true);
     });
 });

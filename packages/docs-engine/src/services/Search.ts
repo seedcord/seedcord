@@ -53,12 +53,23 @@ export class DocSearch {
     private readonly aggregateSearchIndex = (collection: DocCollection): DocSearchEntry[] =>
         collection.packages.flatMap((pkg) => pkg.indexes.search);
 
-    private readonly tokenizeQuery = (query: string): string[] =>
-        query
+    private readonly tokenizeQuery = (query: string): string[] => {
+        const normalized = query.trim().toLowerCase();
+        if (!normalized) {
+            return [];
+        }
+
+        const tokens = normalized
             .replace(/([a-z0-9])([A-Z])/gu, '$1 $2')
             .split(/[^a-zA-Z0-9]+/gu)
-            .filter(Boolean)
-            .map((token) => token.toLowerCase());
+            .filter(Boolean);
+
+        if (!tokens.includes(normalized)) {
+            tokens.unshift(normalized);
+        }
+
+        return tokens;
+    };
 
     constructor(private readonly collection: DocCollection) {
         this.searchIndex = this.aggregateSearchIndex(collection);

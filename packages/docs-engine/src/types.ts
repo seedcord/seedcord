@@ -244,6 +244,7 @@ export interface DocPackageModel {
     manifest: DocManifestPackage;
     project: ProjectReflection;
     root: DocNode;
+    packageDocumentation: DocComment | null;
     nodes: Map<number, DocNode>;
     indexes: DocIndexes;
     directory: PackageDirectory;
