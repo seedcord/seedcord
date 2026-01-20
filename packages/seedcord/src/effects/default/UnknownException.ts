@@ -5,6 +5,7 @@ import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError
 import { Envapt } from 'envapt';
 
 import { BuilderComponent } from '@interfaces/Components';
+import { hexToNumber } from '@miscellaneous/hexToNumber';
 
 import { WebhookLog } from '../bases/WebhookLog';
 import { RegisterEffect } from '../decorators/RegisterEffect';
@@ -101,6 +102,7 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
         const { uuid, error, guild, user, metadata } = data;
 
         this.instance
+            .setAccentColor(hexToNumber('#ef4860'))
             .addTextDisplayComponents((text) =>
                 text.setContent(
                     `### An unknown exception was thrown\n` +
