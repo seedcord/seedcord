@@ -3,8 +3,11 @@
         // Essential formatting and linting
         "esbenp.prettier-vscode",
         "dbaeumer.vscode-eslint",
-        "editorconfig.editorconfig",
+        "EditorConfig.EditorConfig",
         "DavidAnson.vscode-markdownlint",
+
+        // Tailwind CSS IntelliSense
+        "bradlc.vscode-tailwindcss",
 
         // TypeScript/JavaScript development
         "christian-kohler.path-intellisense",
@@ -13,8 +16,9 @@
 
         // Git and AI assistance
         "eamodio.gitlens",
-        "github.copilot",
-        "github.copilot-chat",
+        "GitHub.copilot-chat",
+        "github.vscode-github-actions",
+        "GitHub.vscode-pull-request-github",
 
         // Project-specific tools
         // Use the official MongoDB Compass app for MongoDB management
@@ -24,7 +28,15 @@
         // Development productivity
         "gruntfuggly.todo-tree",
 
-        // Icon themes (so we can use the custom seedcord icon)
-        "PKief.material-icon-theme"
+        // Syntax highlighting
+        "kennylong.kubernetes-yaml-formatter",
+        "mikestead.dotenv",
+        "redhat.vscode-yaml",
+
+        // Mermaid
+        "MermaidChart.vscode-mermaid-chart",
+
+        // Vitest
+        "vitest.explorer"
     ]
 }
