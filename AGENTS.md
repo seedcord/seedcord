@@ -1,9 +1,39 @@
-- Prefer object-oriented design (inheritance & composition) for complex domain logic; prefer plain functions for small, stateless utilities.
+# Seedcord Agent Guidelines
+
+> Pre-1.0 framework — breaking changes are accepted between minors. Add a `changeset` for every published-package change.
+
+---
+
+## Repository Policy
+
+**Zero Technical Debt.** No workarounds, hacks, or temporary compatibility layers. Choose the cleanest architecture; break things if needed to get it right. After making changes that affect the framework's public surface, regenerate docs (`pnpm docs:extract`, or `pnpm docs:smoke` to extract + run the docs-engine smoke pass).
+
+**Scope discipline.** Only implement what was explicitly asked. Surface additions as a question before implementing — never silently add config tweaks, optimizations, feature flags, or abstractions not in the task description.
+
+**No dead code.** No commented-out code, half-finished `// TODO: complete later` implementations, or unused exports. Before adding `export` to a symbol, verify it is consumed outside the file. If it isn't, drop the `export`. If nothing uses it, delete it.
+
+**Do not edit `AGENTS.md`, `TASKS.md`, or any file in `.changeset/` without explicit permission.**
+
+**Respect `Note for Agent:` comments.** The user may add these mid-flight as deliberately-failing type errors or lint errors so they surface when you run checks. Read and honor them before continuing; remove the comment when done.
+
+```ts
+// This will cause a lint error
+('Note for Agent: switch to the new effects API');
+
+type NoteForAgentAddedByTheUser = 'switch to the new effects API';
+const x: NoteForAgentAddedByTheUser = 42; // forces a type error
+```
+
+---
+
+## Design Patterns
+
+- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface (`packages/seedcord`, `packages/services`, `packages/plugins`) leans on classes — extend or compose them rather than re-implementing parallel function pipelines.
 
 ```ts
 // Bad
-export function a() {}
-export function b() {}
+export function createUser() {}
+export function updateUser() {}
 
 // Good
 export class UserService {
@@ -12,9 +42,7 @@ export class UserService {
 }
 ```
 
----
-
-- Avoid using classes purely as namespaces (static-only classes). Prefer named exports or plain objects.
+- **No static-only classes as namespaces.** Use named exports instead.
 
 ```ts
 // Bad
@@ -26,286 +54,7 @@ export class Utils {
 export function foo() {}
 ```
 
----
-
-- Prefer `import type { T } from 'pkg'` for type imports; avoid inline `import('pkg').T` unless documented. Same goes for regular imports as well
-
-```ts
-// Bad
-type X = import('pkg').Type;
-const C: import('pkg').Class;
-
-// Good
-import type { Type as X } from 'pkg';
-import { Class as C } from 'pkg';
-```
-
----
-
-- Do not use `any` in production code; prefer `unknown` or concrete types and document exceptions inline.
-
-```ts
-// Bad
-let v: any;
-
-// Good
-let v: unknown; // then narrow
-```
-
----
-
-- Tests may use pragmatic casts for fixtures (e.g., `as unknown as Test`), but prefer proper types and short justification comments for casts. (Test override exists)
-
-```ts
-// Acceptable in tests
-const mock = {} as unknown as Core; // test fixture
-```
-
----
-
-- For tests: avoid `as any`. Prefer `unknown` or explicit fixture types and include a short justification comment for any pragmatic casts so reviewers and automated agents understand why the cast is needed. ESLint will enforce this by replacing `any` with `unknown` automatically and that might cause type errors if the cast is not justified properly. If you must use `as any`, include a comment explaining why (and disable ESLint for that line).
-
-```ts
-// Bad
-const mock = {} as any;
-
-// Good
-const mock = {} as unknown as Test; // justified: simple fixture for unit test
-```
-
----
-
-- Avoid redundant double-casts (`as unknown as T`); prefer single casts or type guards.
-
-```ts
-// Bad
-const v = x as unknown as T;
-
-// Good
-const v = x as T; // or use a type guard
-```
-
----
-
-- Avoid `as any`; if necessary, include an inline justification comment.
-
-```ts
-// Bad
-const x = y as any;
-
-// Good
-// justified:
-const x = y as unknown as Expected;
-```
-
----
-
-- Prefer `?.` and `??` over casts for null/undefined handling.
-
-```ts
-// Bad
-const a = (obj as any).x ?? 'd';
-
-// Good
-const a = obj?.x ?? 'd';
-```
-
----
-
-- Use utility types from @seedcord/types of type-fest (for example, `TypedPick`, `TypedOmit`, etc) rather than casts for structural transforms.
-
-```ts
-// Bad
-type P = any;
-
-// Good
-type P = TypedPick<T, 'a' | 'b'>;
-```
-
----
-
-- Minimize explicit casts; prefer narrowing, type predicates, or API refactors.
-
-```ts
-// Bad
-const s = value as unknown as string;
-
-// Good
-if (typeof value === 'string') {
-    const s = value;
-}
-```
-
----
-
-- Do not cast if the declared types are already correct; adjust types instead.
-
-```ts
-// Bad
-const s = x as string; // x already string
-
-// Good
-const s = x;
-```
-
----
-
-- Run lint/typecheck/tests ALWAYS after changes. `pnpm -C <pkg> tc && pnpm -C <pkg> lint:fix && pnpm -C <pkg> test (if tests are available). You must not run tests before first ensuring lint/typecheck pass without errors, even for the test files themselves.
-
-```sh
-pnpm -C packages/foo lint:fix
-pnpm -C packages/foo tc
-
-# And if tests exist
-pnpm -C packages/foo test
-```
-
----
-
-- Do NOT run `pnpm lint`. ALWAYS run `pnpm lint:fix` instead.
-
-```sh
-pnpm -C packages/foo lint:fix
-```
-
----
-
-- Prefer `pnpm -C <package> lint:fix` and `pnpm -C <package> tc` from repo root; `cd` into package is a fallback. (docs-generator package as an example)
-
-```sh
-pnpm -C packages/docs-generator lint:fix
-pnpm -C packages/docs-generator tc
-```
-
----
-
-- Run `pnpm tc` before running package code and re-run after tests/fixes. (Docs)
-
-```sh
-pnpm -C packages/foo tc
-pnpm -C packages/foo test
-pnpm -C packages/foo tc
-```
-
----
-
-- Prefer `pnpm -C <package> <script>` from repo root; use `cd` fallback if needed. (Docs)
-
-```sh
-pnpm -C packages/foo test
-# fallback
-cd packages/foo && pnpm test
-```
-
----
-
-- When seeing 'No such file or directory', confirm with `pwd` and `ls` and use `pnpm -C` to avoid directory mistakes. (Troubleshooting)
-
-```sh
-pwd
-ls -la
-```
-
----
-
-- Run `pnpm -C <package> lint:fix` regularly during edits.
-
-```sh
-pnpm -C packages/foo lint:fix
-```
-
----
-
-- Use package `scripts` for common tasks; add and document new scripts when needed.
-
-```json
-{ "scripts": { "dev": "tsx src/index.ts" } }
-```
-
----
-
-- If auto-fixes occur while you edit, re-run lint/tests locally to confirm the final state before PR.
-
----
-
-- Do not edit `AGENTS.md` or `TASKS.md` without explicit permission.
-
----
-
-- Prefer `pnpm exec tsx file.ts` (or `pnpm -C <pkg> exec tsx file.ts`) to run files directly. tsx is installed at the root of the repo, so is accessible via pnpm exec.
-
-```sh
-pnpm -C packages/foo exec tsx scripts/run.ts
-```
-
----
-
-- Follow DRY and SOLID principles; avoid code duplication and ensure single responsibility.
-
----
-
-- When moving/renaming files, prefer `git mv` for moving files to preserve history. `mv` is acceptable if `git mv` is not available.
-
-```sh
-git mv src/old.ts src/new.ts
-```
-
----
-
-- Prefer changing file extension to `.txt` to preserve files marked for deletion.
-
----
-
-- If files are large, consider splitting into smaller modules to improve readability and reduce lint noise.
-
----
-
-- Prefer TypeScript path aliases (tsconfig `paths`) for internal imports when available; avoid overly deep relative imports. Update `tsconfig.json` if needed.
-
-```ts
-import { X } from '@ui/components/Button';
-```
-
----
-
-- Use `pnpm -C <package> lint:fix` to fix import order/formatting; ensure CI checks remain green.
-
----
-
-- Add dependencies with `pnpm add` so `pnpm-lock.yaml` is updated and the latest version is pulled. If you are unfamiliar with the package's version, check its type declarations after adding it.
-
-```sh
-pnpm -C packages/foo add lodash
-```
-
----
-
-- Inspect type declarations for third-party packages before relying on them; prefer `import type` when appropriate.
-
----
-
-- Check the closest `package.json` for available scripts; do not assume scripts that don't exist.
-
----
-
-- When changing a package used by others, build it (`pnpm -C <pkg> build`) and run dependents' `tc` to verify integration before continuing.
-
-```sh
-pnpm -C packages/foo build
-pnpm -C packages/bar tc
-```
-
----
-
-- Run `pnpm -C <package> test` for changed packages and dependents when appropriate.
-
----
-
-- Use `rg` or `grep` to find usages across the repo quickly.
-
----
-
-- Prefer function declarations for complex exported functions; allow concise arrow expressions and inline callbacks; avoid block-bodied exported arrows.
+- **Function declarations for complex exported functions.** Arrow expressions for inline callbacks and short utilities only — no block-bodied exported arrows.
 
 ```ts
 // Bad
@@ -319,56 +68,185 @@ export function compute() {
 }
 ```
 
----
+- **DRY and SOLID.** No premature abstractions — three similar lines is better than a wrong abstraction. Wait for the third use before extracting.
 
-- Respect `Note for Agent:` comments in files: read and honor instructions before continuing; remove notes when done. The user may add these notes mid-prompt as type errors or lint errors so they appear when you run checks.
+- **YAGNI (You Aren't Gonna Need It).** Don't add features, config, abstractions, or infrastructure for hypothetical future requirements. Ship what the task requires; surface everything else as a question first.
 
-```ts
-type NoteForAgentAddedByTheUser = 'some note';
-const x: NoteForAgentAddedByTheUser = 42; // This will cause a type error
+- **No premature optimization.** Don't optimize for performance without a measured bottleneck. Readable, correct code first — profile, then optimize. Adding memoization, caching, or batching "just in case" creates complexity without verified benefit.
 
-// This will cause a lint error
-('Note for Agent: some note');
-```
+- **Split large files** (~200+ lines or multiple unrelated responsibilities) into focused modules.
 
 ---
 
-- Only type cast when necessary; prefer type guards, utility types, or refactor to avoid casts.
+## Type Standards
+
+- **No `any` in production code.** Use `unknown` then narrow with a type guard. If a third-party library forces a cast, prefer a single `as Expected` with `// justified: <reason>`.
+- **No `as unknown as T` double casts.** Fix the declaration, write a type guard, or refactor the API instead.
+- **Don't cast values that are already correctly typed** — adjust the type instead.
+- **Prefer `?.` and `??`** for genuinely optional branches — not to suppress errors or hide broken assumptions. See `.github/skills/code-quality/FAIL-FAST-RULES.md` for when NOT to reach for them.
+- **Prefer `import type { T } from 'pkg'`** for type-only imports. Avoid inline `import('pkg').T`.
+- **Use `type-fest` utility types** (available via the workspace catalog) for structural transforms rather than casts. The shared `@seedcord/types` package re-exports project-specific aliases — check there first.
+- **Tests may use pragmatic fixture casts** (`as unknown as Test`) — always include a short justification comment. Tests must not use `as any`; ESLint replaces `any` with `unknown` automatically and that will surface real type errors if the cast wasn't justified.
+- **To disable an ESLint rule inline:** `// eslint-disable-next-line <rule> -- <reason>`. Never file-wide or project-wide.
 
 ```ts
 // Bad
+let v: any;
+const a = (obj as any).x ?? 'd';
 const v = x as unknown as T;
 
 // Good
+let v: unknown; // then narrow with a type guard
+const a = obj?.x ?? 'd';
 if (isT(x)) {
     const v = x;
 }
+import type { Foo } from 'pkg'; // not import('pkg').Foo
 ```
 
 ---
 
-- At the end of your response, always include a summary of changes made in the files.
+## Imports & Dependencies
+
+- **Never wire cross-package source paths.** No `paths` or `include` reaching `../../packages/x/src`. Consume via package exports only — the `exports` map in each package's `package.json` is authoritative.
+- **Use path aliases** (e.g. `@lib/...`, `@components/...`, `@seedcord/...`) over deep relative imports; update `tsconfig.json` if needed. Apps under `apps/<name>` define their own alias map in their `tsconfig.json`.
+- **Add deps with `pnpm add`** so the lock file updates. Inspect type declarations before relying on them.
+- **Check upstream peer-dep ranges** before citing compatibility blockers — `curl -s https://registry.npmjs.org/<pkg>/latest`, look at the actual peer range, and check whether a newer version of the conflicting package widens it before pinning or skipping a bump.
+- **Workspace catalog rule:** If a dep appears in 2+ packages, add it to `pnpm-workspace.yaml` under the appropriate `catalogs:` key (`deps:` for runtime, `peer:` for peer deps) and reference it as `catalog:deps` / `catalog:peer` in every `package.json`. Never pin the same version string in multiple places.
+- **Inspect type declarations for third-party packages** before relying on them. Major version bumps routinely move, rename, or deprecate APIs. Fetch the README of the pinned version when in doubt — don't rely on training knowledge for fast-moving packages (React 19, Next.js 16, Discord.js 14.25, Tailwind 4, ESLint 9).
 
 ---
 
-- After linting/typechecking, the only acceptable result is 0 errors and 0 warnings. After running tests, 100% passing is the only acceptable result. This is not up for debate.
+## Workflow
+
+- **Run from repo root:** `pnpm -C <package> <script>`. Use `cd` only as a fallback.
+- **Execute scripts** with `pnpm exec tsx file.ts` (tsx is installed at the workspace root) or `pnpm -C <pkg> exec tsx file.ts`.
+- **Move/rename files** with `git mv` to preserve history.
+- **Find usages** with `rg` or `grep` before modifying or removing anything.
+- **Verify paths** with `pwd` and `ls` when hitting "No such file or directory."
+- **Use package `scripts`** for common tasks; add and document new scripts when needed. Check the closest `package.json` first — don't assume scripts exist.
+- **Prefer changing file extension to `.txt`** to preserve files marked for deletion (preserves git history).
+- **When a shared package changes, rebuild it** (`pnpm -C packages/<name> build`) and re-run `tc` on the dependents (e.g. `pnpm -C packages/seedcord tc`, `pnpm -C apps/docs tc`).
+- **Run `pnpm prePush`** before pushing — it runs `build && tc && lint && test` across the whole workspace and is what husky's pre-push hook gates on.
+- **For published packages**, add a `changeset` (`pnpm cs`) so the release pipeline can publish the new version and changelog entry. `pnpm cs:status` shows pending changesets.
 
 ---
 
-- You must not comment out tests or code to fix lint/typecheck errors. Always fix the underlying issue.
+## Repo Surface (where things live)
+
+- `packages/seedcord` — the core framework (`Seedcord` orchestrator, bot, effects, interfaces, hmr, miscellaneous).
+- `packages/services` — `CooldownManager`, `Errors`, `HealthCheck`, `Lifecycle`, `Logger`, `StrictEventEmitter`.
+- `packages/utils` — `misc`, `numbers`, `objects`, `strings`, `brand`.
+- `packages/types` — shared `Types` and `Interfaces`. Use `import type` from here before redefining locally.
+- `packages/cli` — the `seedcord` CLI built on Commander + Ink (React-based terminal UI).
+- `packages/plugins` — plugin contract and first-party plugins.
+- `packages/docs-engine`, `packages/docs-generator` — the docs extraction + rendering pipeline used by `apps/docs`.
+- `packages/eslint-config`, `packages/tsconfig`, `packages/tsup-config` — workspace-internal config packages (not published).
+- `apps/docs`, `apps/guide`, `apps/home` — Next.js 16 + React 19 documentation surfaces. `docs` is the most populated today; `guide` and `home` are placeholders.
+- `mock/` — a mock Discord bot consumed by tests and end-to-end exercises of the framework.
+- `debugging/` — scratch outputs from doc-extraction smoke runs (gitignored).
+- `generated/` — output of `pnpm docs:extract` (gitignored).
+- `.github/agents/`, `.github/prompts/`, `.github/skills/` — the agent prompts, slash prompts, and skill libraries used by Claude Code and the GitHub Copilot agents. `.claude/skills` symlinks to `.github/skills`, and `CLAUDE.md` symlinks to this file.
 
 ---
 
-- You must not skip writing tests just because they are complex. Write whatever mocks or helpers are needed to write the test in a way that it mimics real usage as closely as possible.
+## UI Primitives (apps)
+
+The Next.js apps each own their primitives under `apps/<name>/src/components/ui/`. For `apps/docs` today: `Button`, `CodeBlock`, `CodePanel`, `CopyAnchorButton`, `CopyButton`, `GithubIcon`, `Icon`, `ScrollToTopButton`, `Tooltip`. Raw `<button>` / `<input>` / `<select>` markup is banned when the primitive exists in the app — read the `components/ui/` index first, every time. Use `cn(...)` (from each app's `@lib/utils`) for class composition and the `tw\`…\`` template tag for multi-line class strings. Icon-only actions: `<Button variant="ghost" size="icon">`.
+
+A "one-off style" is a missing variant in the primitive's `VARIANTS` map, not an excuse to inline styles. If a primitive doesn't exist yet, that's a signal to either lift the pattern (when used in 2+ apps) or build the primitive in the app where it belongs.
+
+Same rule applies before writing a new hook, helper, or store in any app: check `apps/<name>/src/lib/`, `src/store/`, and `src/components/` first.
 
 ---
 
-- If absolutely needed, prefer to disable specific ESLint rules inline with comments rather than disabling them for the whole file or project. Always include a brief justification for the disable.
+## Design fidelity
 
-```ts
-// eslint justification: reason for disable
-// eslint-disable-next-line rule-name
-const x = y as any;
+When a mock or design reference is provided for an app, it is visual ground truth, not a loose reference. Every visible difference between the mock and the implementation is a bug unless explicitly listed in a written "Explicitly Descoped" section. If the project later adopts a UI quality bar doc (e.g. `.vscode/docs/UI_QUALITY_BAR.md`), read it before any UI work — it encodes tokens, animation rules, primitive conventions, and the iteration protocol. Deviations from mock require a written justification in the PR description. The `frontend-iteration` skill documents the interactive iteration loop.
+
+---
+
+## React / Next.js Patterns
+
+These apply to `apps/{docs,guide,home}` and to the Ink-based React surface in `packages/cli/src`. They are review-enforced today (no react-doctor installed yet):
+
+- **`.filter().map()`** → combine into a single `.reduce()` — never iterate twice.
+- **`array.includes()` in a loop** → `new Set()` for O(1) membership; build it once outside the loop.
+- **`font-bold` on `<h1>`–`<h6>`** → `font-semibold`. Bold weight crushes counter shapes at display sizes.
+- **No em dash (`—`) in JSX text** — use comma, colon, semicolon, or parentheses.
+- **`useState(propValue)` without sync** — if the prop can change externally, add `useEffect(() => { setState(prop); }, [prop])`, or remount the component via a `key` that changes with the prop.
+- **No array index as React key** — use a stable identity (id, slug, name). Static arrays with no id: use the content string.
+- **No mutable values in deps** (`location.pathname`, `ref.current`) — they don't trigger re-renders.
+- **No hydration mismatch sources** (`new Date()`, `Math.random()`, `window.*`) reachable from JSX during SSR — move into `useEffect` and back with state.
+- **React 19**: `use(Context)` not `useContext(Context)`; `ref` is a normal prop, no `forwardRef`.
+- **No barrel imports inside the same app** when the direct file is one folder away.
+- **Tailwind v4 syntax**: `bg-(--token)` not `bg-[var(--token)]`; `bg-color/50` not `bg-opacity-50`; `outline-hidden` not `outline-none`.
+
+See `.github/skills/code-quality/REACT19.md` and `.github/skills/code-quality/TAILWIND.md` for the long-form rationale.
+
+---
+
+## Dependencies and Exports
+
+- **YAGNI on deps.** Never `pnpm add` a package until the code using it is written in the same commit. Unused deps are dead code — remove them, don't leave them as "future prereqs."
+- **Dead exports.** Before adding `export` to a symbol, verify it is consumed outside the file. Unused exports are dead code — remove the `export` keyword.
+- **Run a dead-code sweep before committing** (see `.github/skills/code-quality/SKILL.md` for the manual `rg` checklist; a `knip` integration is a worthwhile follow-up but is not wired up yet).
+
+---
+
+## Tests
+
+- **Tests live in `<package>/tests/`** mirroring `src/` — not in `src/**/*.test.ts`. The lint/tc scripts in each package's `package.json` already cover `tests/**`.
+- **Vitest** is the runner; `pnpm -C <pkg> test` runs once, `pnpm -C <pkg> test:watch` watches, `pnpm -C <pkg> coverage` reports.
+- **Never run tests before lint:fix and tc pass cleanly** — that includes the test files themselves.
+- **Tests may use pragmatic fixture casts** (`as unknown as Test`) with a short justification comment. **No `as any`** even in tests.
+- **Don't comment out failing tests** to make a build pass. Fix the root cause.
+- **Don't skip writing tests because they're complex** — write whatever mocks or helpers you need to mimic real usage. The `mock/` package is the canonical example of a runnable Discord bot harness you can wire into framework-level tests.
+
+---
+
+## Quality Gates
+
+Run after every change, in order:
+
+```sh
+pnpm -C <pkg> lint:fix   # always lint:fix, never plain lint
+pnpm -C <pkg> tc
+pnpm -C <pkg> test       # only after lint + tc pass; only if the package has tests
 ```
 
+When changing a shared package, rebuild it and verify dependents:
+
+```sh
+pnpm -C packages/<name> build
+pnpm -C packages/<dependent> tc
+pnpm -C apps/<dependent-app> tc
+```
+
+Before pushing, run the full workspace gate:
+
+```sh
+pnpm prePush             # build && tc && lint && test, what husky's pre-push hook runs
+```
+
+**The only acceptable outcomes:**
+
+- `lint:fix` → 0 errors, 0 warnings
+- `tc` → 0 errors
+- `test` → 100% passing
+- `prePush` → exit 0
+
+**Do not:**
+
+- Comment out tests or code to fix failures — fix the root cause.
+- Skip tests because they're complex — write mocks and helpers to make them work.
+- Weaken assertions or add broad `eslint-disable` to bypass failures.
+- Skip hooks (`--no-verify`, `--no-gpg-sign`) unless the user explicitly asked.
+
+If auto-fixes occur while you edit, re-run lint/tc/tests locally to confirm the final state before opening a PR.
+
 ---
+
+## Response Format
+
+At the end of the final response, include a concise summary of which files changed, what was done in each, and why.
