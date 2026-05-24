@@ -33,9 +33,9 @@
     "editorconfig.generateAuto": false,
 
     // TypeScript Settings
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "typescript.suggest.autoImports": true,
-    "typescript.updateImportsOnFileMove.enabled": "prompt",
+    "js/ts.preferences.importModuleSpecifier": "relative",
+    "js/ts.suggest.autoImports": true,
+    "js/ts.updateImportsOnFileMove.enabled": "prompt",
 
     // File Explorer
     "files.exclude": {
