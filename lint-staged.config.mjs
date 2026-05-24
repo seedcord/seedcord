@@ -58,7 +58,9 @@ const findNearestEslintConfig = (filePath) => {
     // traverse up the directory tree to find the nearest eslint.config.mjs
     while (true) {
         const candidate = path.join(currentDir, 'eslint.config.mjs');
-        if (existsSync(candidate)) return candidate;
+        if (existsSync(candidate)) {
+            return { configPath: candidate, rootDir: currentDir };
+        }
 
         const parent = path.dirname(currentDir);
         if (parent === currentDir) break;
@@ -79,24 +81,37 @@ const runEslint = (files) => {
     const byConfig = new Map();
 
     for (const file of filteredFiles) {
-        const configPath = findNearestEslintConfig(file);
-        const key = configPath ?? 'DEFAULT';
+        const hit = findNearestEslintConfig(file);
+        const key = hit?.configPath ?? 'DEFAULT';
 
-        if (!byConfig.has(key)) byConfig.set(key, []);
-        byConfig.get(key).push(file);
+        if (!byConfig.has(key)) {
+            byConfig.set(key, { files: [], ...hit });
+        }
+
+        byConfig.get(key).files.push(file);
     }
 
     const commands = [];
 
-    for (const [configPath, groupedFiles] of byConfig.entries()) {
-        const fileList = quoteFiles(groupedFiles);
+    for (const [configPath, info] of byConfig.entries()) {
+        const scopedFiles = info?.rootDir ? info.files.map((file) => path.relative(info.rootDir, file)) : info.files;
+        const fileList = quoteFiles(scopedFiles);
         if (!fileList) continue;
 
-        const configFlag = configPath === 'DEFAULT' ? '' : `--config ${JSON.stringify(configPath)}`;
+        const scopedConfigPath =
+            info?.rootDir && configPath !== 'DEFAULT' ? path.relative(info.rootDir, configPath) : configPath;
+        const configFlag = scopedConfigPath === 'DEFAULT' ? '' : `--config ${JSON.stringify(scopedConfigPath)}`;
         const command = ['eslint --no-warn-ignored --max-warnings=0 --fix --cache', configFlag, fileList]
             .filter(Boolean)
             .join(' ');
-        commands.push(command);
+
+        if (info?.rootDir) {
+            const inner = `cd ${JSON.stringify(info.rootDir)} && pnpm exec ${command}`;
+            commands.push(`sh -c ${JSON.stringify(inner)}`);
+            continue;
+        }
+
+        commands.push(`pnpm exec ${command}`);
     }
 
     return commands;
