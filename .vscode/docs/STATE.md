@@ -6,7 +6,7 @@
 
 ## 0. URGENT — leaked secret in `TASKS.md`
 
-`TASKS.md` line ~5 contains a live GitHub PAT (`[REDACTED-LEAKED-PAT-ROTATED]`) that you shared for one-time artifacts-repo testing. Since `TASKS.md` is in `.gitignore` it never reached the remote — confirmed via `git log -- TASKS.md` returning nothing — but the file lives on disk. **Rotate the PAT now** (revoke at https://github.com/settings/tokens) and either delete `TASKS.md` once the relevant asks are tracked elsewhere, or strip the token. After rotation, regenerate `ARTIFACTS_PAT` in repo secrets if it shared the value.
+`TASKS.md` line ~5 contains a live GitHub PAT (`[REDACTED-LEAKED-PAT-ROTATED]`) that you shared for one-time artifacts-repo testing. Since `TASKS.md` is in `.gitignore` it never reached the remote — confirmed via `git log -- TASKS.md` returning nothing — but the file lives on disk. **Rotate the PAT now** (revoke at <https://github.com/settings/tokens>) and either delete `TASKS.md` once the relevant asks are tracked elsewhere, or strip the token. After rotation, regenerate `ARTIFACTS_PAT` in repo secrets if it shared the value.
 
 ---
 
@@ -26,7 +26,7 @@ The branch is two intertwined themes:
 
 ### Theme A — Public API surface reduction (across every package)
 
-Most commits with `refactor: ` or `refactor(WIP): ` titles. Goal: trim what each package re-exports to only what consumers should touch. Already merged into the branch:
+Most commits with `refactor:` or `refactor(WIP):` titles. Goal: trim what each package re-exports to only what consumers should touch. Already merged into the branch:
 
 - `refactor(WIP): reducing the public api surface for seedcord` (`758b50ec`)
 - `refactor: clean up Confirmable code (and improve it)` (`ee437d13`)
@@ -60,28 +60,28 @@ The 16 pending changesets in `.changeset/` show the full set of bumps queued for
 The top of `TASKS.md` has five active asks the previous-you flagged and almost certainly hasn't fully addressed yet:
 
 1. **Docs URLs are ugly.** Examples in `TASKS.md` line 5–6:
-   - `…/classes/autocomplete-handler#constructor-autocomplete-handler/constructor` — duplicate `/constructor` segment.
-   - `…/functions/check-permissions#check-permissions#checkPermissions-18o3wj0` — duplicate fragment + hash garbage suffix.
-   Goal: simpler URLs. Add tests that walk every entity kind (class / interface / enum / function / type alias / variable / member overloads) and assert URL shape. The new `packages/docs-engine/src/Slugger.ts` + `tests/slugger.test.ts` are the natural place; extend `tests/mock-package.test.ts` for end-to-end shape.
+    - `…/classes/autocomplete-handler#constructor-autocomplete-handler/constructor` — duplicate `/constructor` segment.
+    - `…/functions/check-permissions#check-permissions#checkPermissions-18o3wj0` — duplicate fragment + hash garbage suffix.
+      Goal: simpler URLs. Add tests that walk every entity kind (class / interface / enum / function / type alias / variable / member overloads) and assert URL shape. The new `packages/docs-engine/src/Slugger.ts` + `tests/slugger.test.ts` are the natural place; extend `tests/mock-package.test.ts` for end-to-end shape.
 2. **`scripts/` folder lint:fix / tc don't run from root.** The root `pnpm lint:fix` / `pnpm tc` go through turbo and only hit workspace packages; `scripts/` is loose tsx files (`extract-docs.ts`, `create-ts-files.sh`, `kill-seedcord.sh`). Add `lint:fix:scripts` and `tc:scripts` in root `package.json` that target `scripts/**/*.{ts,tsx}` with the root ESLint + TS config, and wire them into `prePush`.
 3. **Artifacts repo (`github.com/seedcord/artifacts`) needs to be populated** with the per-package per-version `api.json` plus an `index.json` (shape sketched at the bottom of `TASKS.md`). And the docs CI/CD must:
-   - Fetch the current index for the artifacts repo via jsDelivr CDN (no hardcoded package list, no hardcoded versions — read from the index).
-   - After a successful publish on `main`, diff git tags vs index to find new versions per package, check out each new tag, run the generator scoped to that package, push the resulting `api.json` to the artifacts repo, and update `index.json`.
-   - Token: `ARTIFACTS_PAT` is already in repo secrets (per `TASKS.md`).
+    - Fetch the current index for the artifacts repo via jsDelivr CDN (no hardcoded package list, no hardcoded versions — read from the index).
+    - After a successful publish on `main`, diff git tags vs index to find new versions per package, check out each new tag, run the generator scoped to that package, push the resulting `api.json` to the artifacts repo, and update `index.json`.
+    - Token: `ARTIFACTS_PAT` is already in repo secrets (per `TASKS.md`).
 4. **`DOCS_SYSTEM.md` has hallucinated `NEXT_*` env vars** that aren't actually used. Find them with `rg 'NEXT_'` in that file, confirm they're not referenced elsewhere, delete or replace with the real env contract.
 5. **The new docs CI is long and ugly.** Two specific complaints:
-   - Install `tsx` once at the top instead of `npx tsx` per step.
-   - Lift repeated logic into composite actions in `.github/actions/`. The pattern already exists — see `.github/actions/{docs-extract,setup,turbo-cache}/action.yml`. Audit `.github/workflows/publish.yml` and any new docs workflow for repetition that belongs in a new composite.
+    - Install `tsx` once at the top instead of `npx tsx` per step.
+    - Lift repeated logic into composite actions in `.github/actions/`. The pattern already exists — see `.github/actions/{docs-extract,setup,turbo-cache}/action.yml`. Audit `.github/workflows/publish.yml` and any new docs workflow for repetition that belongs in a new composite.
 
 Then **everything below `---` in `TASKS.md`** is from a previous prompt and is "many of them still not done." Key ones:
 
-6. **Version-aware docs.** Generator must accept "where to find the source for package X" so CI can `git checkout <tag>` and emit `api.json` for that exact tag. Local dev still defaults to "all packages from working tree." Look at `packages/docs-generator/src/{workspace.ts,paths.ts}` for the entry surface; today they assume `packages/`.
-7. **`docs-engine` runtime in `apps/docs`** should hold a singleton with a per-package version setter. On version change, pull the matching `api.json` from jsDelivr, rebuild the in-memory index for that package, swap it in. Search must span all currently-selected package versions, not just one package.
-8. **Engine should pull from `index.json`** to populate the version dropdown (the "• latest" affordance already exists in the UI).
-9. **Cross-package reference bug in `apps/docs`:** selecting an entity from another package while viewing seedcord should keep seedcord selected and link out — it currently switches the active package. Same fix needed on search results. Likely candidates to grep: `apps/docs/src/lib/docs/resolveReferenceHref.ts`, `apps/docs/src/components/docs/entity/`.
-10. **Inline vs block DocComment tags.** Right now `@link` may be misclassified as block. Audit every consumer of `DocComment`/`@link`/`@inline` in `packages/docs-generator/src/extractor.ts` and `packages/docs-engine/src/transformers/`. The user wants a non-fragile classification, not a band-aid.
-11. **`apps/docs/src/lib/docs/`** — move what belongs to the engine into `@seedcord/docs-engine` and delete unused code. Pre-merge cleanup.
-12. **Vercel deploy-readiness for `apps/docs`** pulling from the actual artifacts repo. No manual env wiring.
+1. **Version-aware docs.** Generator must accept "where to find the source for package X" so CI can `git checkout <tag>` and emit `api.json` for that exact tag. Local dev still defaults to "all packages from working tree." Look at `packages/docs-generator/src/{workspace.ts,paths.ts}` for the entry surface; today they assume `packages/`.
+2. **`docs-engine` runtime in `apps/docs`** should hold a singleton with a per-package version setter. On version change, pull the matching `api.json` from jsDelivr, rebuild the in-memory index for that package, swap it in. Search must span all currently-selected package versions, not just one package.
+3. **Engine should pull from `index.json`** to populate the version dropdown (the "• latest" affordance already exists in the UI).
+4. **Cross-package reference bug in `apps/docs`:** selecting an entity from another package while viewing seedcord should keep seedcord selected and link out — it currently switches the active package. Same fix needed on search results. Likely candidates to grep: `apps/docs/src/lib/docs/resolveReferenceHref.ts`, `apps/docs/src/components/docs/entity/`.
+5. **Inline vs block DocComment tags.** Right now `@link` may be misclassified as block. Audit every consumer of `DocComment`/`@link`/`@inline` in `packages/docs-generator/src/extractor.ts` and `packages/docs-engine/src/transformers/`. The user wants a non-fragile classification, not a band-aid.
+6. **`apps/docs/src/lib/docs/`** — move what belongs to the engine into `@seedcord/docs-engine` and delete unused code. Pre-merge cleanup.
+7. **Vercel deploy-readiness for `apps/docs`** pulling from the actual artifacts repo. No manual env wiring.
 
 There's also a "create a new `.md` file in this folder with every SINGLE thing I need to know for using the new system" line at the end — that should land as `.vscode/DOCS_SYSTEM.md` (or update the existing one) after the artifacts pipeline is real.
 
@@ -134,19 +134,19 @@ There are 30 open issues. They were derived from `debugging/ISSUE_PROPOSAL.md` (
 
 ### v1.0.0 blockers (close before tagging 1.0)
 
-| # | Title | Notes |
-|---|---|---|
-| #101 | ComponentsV2 error handling support (core) | Parent for #102 / #103 / #104 |
-| #102 | CustomError response should accept ComponentsV2 | API change, breaking |
-| #103 | Catchable decorator should deliver ComponentsV2 responses | |
-| #104 | EventCatchable decorator should deliver ComponentsV2 responses | |
-| #106 | Handler priorities and multi-handler routes | Parent for #107 / #108 |
-| #107 | Multi-handler support for interaction routes | |
-| #108 | Priority support on handlers | |
-| #111 | Typed custom id utilities | Generic `getArg` / `buildCustomId` |
-| #117 | Wire CI/CD publish (docs) | `feat/better-api-extraction` plus follow-up PR |
-| #120 | Fuzzy search in docs | Done in `12396f5e` — close on merge of #131 |
-| #53  | API Documentation | Umbrella for the whole docs system |
+| #    | Title                                                          | Notes                                          |
+| ---- | -------------------------------------------------------------- | ---------------------------------------------- |
+| #101 | ComponentsV2 error handling support (core)                     | Parent for #102 / #103 / #104                  |
+| #102 | CustomError response should accept ComponentsV2                | API change, breaking                           |
+| #103 | Catchable decorator should deliver ComponentsV2 responses      |                                                |
+| #104 | EventCatchable decorator should deliver ComponentsV2 responses |                                                |
+| #106 | Handler priorities and multi-handler routes                    | Parent for #107 / #108                         |
+| #107 | Multi-handler support for interaction routes                   |                                                |
+| #108 | Priority support on handlers                                   |                                                |
+| #111 | Typed custom id utilities                                      | Generic `getArg` / `buildCustomId`             |
+| #117 | Wire CI/CD publish (docs)                                      | `feat/better-api-extraction` plus follow-up PR |
+| #120 | Fuzzy search in docs                                           | Done in `12396f5e` — close on merge of #131    |
+| #53  | API Documentation                                              | Umbrella for the whole docs system             |
 
 HMR (#90 / `feat/hmr`) and the new CLI (#38, #98, #100) were the previous milestone push and landed in `next`.
 
