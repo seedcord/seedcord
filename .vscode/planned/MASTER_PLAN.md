@@ -26,9 +26,10 @@
 | 1     | 06   | Add missing devtools (react-compiler ESLint, react-refresh ESLint)             | ⏳ Not started | 03, 04     |
 | 2     | 07   | `scripts/` lint + tc + wire into prePush                                       | ⏳ Not started | 03         |
 | 2     | 08   | CI cleanup (composite actions, tsx install once, docs publish skeleton)        | ⏳ Not started | 03         |
-| 3     | 09   | apps/docs code-quality fixes (from audit punch list)                           | ⏳ Not started | 04         |
-| 3     | 10   | packages/cli code-quality fixes (from audit punch list)                        | ⏳ Not started | 03, 05     |
-| 3     | 11   | framework code-quality fixes (from audit punch list)                           | ⏳ Not started | 03, 05     |
+| 2     | 08.5 | knip + react-doctor (wire into prePush, reconcile audits)                      | ⏳ Not started | 08         |
+| 3     | 09   | apps/docs code-quality fixes (from audit punch list + tool reconciliation)     | ⏳ Not started | 04, 08.5   |
+| 3     | 10   | packages/cli code-quality fixes (audit + tool reconciliation)                  | ⏳ Not started | 03, 05, 08.5 |
+| 3     | 11   | framework code-quality fixes (audit + tool reconciliation)                     | ⏳ Not started | 03, 05, 08.5 |
 | 4     | 12   | URL spec implementation + acceptance tests                                     | ⏳ Not started | 11         |
 | 4     | 13   | `apps/docs/lib/docs` cleanup → move engine concerns to `@seedcord/docs-engine` | ⏳ Not started | 12         |
 | 4     | 14   | docs-generator: version-aware (`--package`, `--source-path`, `--tag-mode`)     | ⏳ Not started | 13         |
@@ -317,11 +318,16 @@ These decisions are non-negotiable for this PR. Re-grill before changing.
        │07 scripts/ tools│      │08 CI cleanup    │
        └────────┬────────┘      └────────┬────────┘
                 │                        │
-                └────────────┬───────────┘
+                │                        ▼
+                │            ┌────────────────────────┐
+                │            │08.5 knip + react-doctor│
+                │            └────────────┬───────────┘
+                │                         │
+                └────────────┬────────────┘
                              ▼
                 ┌────────────────────────┐
                 │ 09 apps/docs quality   │
-                │ 10 cli quality         │ (parallel)
+                │ 10 cli quality         │ (parallel; consume audits + tool reconciliation)
                 │ 11 framework quality   │
                 └────────────┬───────────┘
                              ▼
@@ -382,6 +388,7 @@ These decisions are non-negotiable for this PR. Re-grill before changing.
 | 1     | 06   | Add devtools (react-compiler, react-refresh) | ⏳ Not Started | —       | —         | —      |
 | 2     | 07   | scripts/ lint + tc                           | ⏳ Not Started | —       | —         | —      |
 | 2     | 08   | CI cleanup + composite actions               | ⏳ Not Started | —       | —         | —      |
+| 2     | 08.5 | knip + react-doctor                          | ⏳ Not Started | —       | —         | —      |
 | 3     | 09   | apps/docs quality fixes                      | ⏳ Not Started | —       | —         | —      |
 | 3     | 10   | packages/cli quality fixes                   | ⏳ Not Started | —       | —         | —      |
 | 3     | 11   | framework quality fixes                      | ⏳ Not Started | —       | —         | —      |
@@ -446,13 +453,15 @@ Document here so future-you doesn't accidentally pull these in. Track each in it
 - **#110 Custom error throwing hook** — framework feature; own PR
 - **#43 Pre-built components library** — framework feature; own PR
 - **#115 DatabaseError default effect** — framework feature; own PR
-- **#40 User guide / `apps/guide`** — separate workstream; needs design + content
+- **#40 User guide / `apps/guide`** — separate workstream. Stack decision locked: **fumadocs** (Next.js + MDX). Needs content design before implementation. Own PR.
+- **`apps/home`** — single landing page; great-looking design. Stack: Next.js for consistency with rest of monorepo. Needs design pass first. Own PR.
+- **`apps/docs` landing page redesign / removal** — flagged by user as needed but not in this PR. **Not in PR #130 either** (that branch is `feat/api-docs-updates`, an earlier draft whose commits are all contained in #131's history — `bcaa348b` is #130's tip and sits mid-history on `feat/better-api-extraction`). When #131 merges, close #130 without merging. The landing-page redesign should be its own future PR after #131 lands; track via a new GitHub issue.
 - **#132 Hide `@internal` members in docs** — docs enhancement; can land alongside #131 if trivial, otherwise defer
 - **Reorganize `packages/eslint-config` rule set** — out of dep bump scope; own PR
-- **Apps/home, apps/guide content** — placeholders; out of scope
 - **Docs.json schema versioning beyond `schemaVersion: 1`** — premature
 - **Multi-locale docs** — premature
 - **OpenGraph / SEO metadata on entity pages** — phase 7's DOCS_SYSTEM mentions but actual implementation deferred unless trivial
+- **Framework decision (Next vs Vite + React)** — settled: stay on Next.js. Reasoning: apps/docs uses ~12 Next features in real use (App Router, route handlers, SSR/ISR, `generateMetadata`, `next/{image,font,link,script,navigation,server}`); the docs use case wants SSR/ISR for SEO + first paint; TASK-20's `revalidate: 600` ISR strategy only works with a server framework; Vercel-optimal. Not re-litigating.
 
 ---
 
@@ -470,25 +479,7 @@ These docs are inputs to the task files. Read them before each phase:
 | `.vscode/audits/QUALITY-cli.md`         | 10             | packages/cli punch list — HIGH/MEDIUM/LOW + HMR review + public API audit                                  |
 | `.vscode/audits/QUALITY-framework.md`   | 11             | Framework packages punch list — HIGH/MEDIUM/LOW + cross-package consistency + API surface                  |
 | `.vscode/docs/URL_SPEC.md`              | 12             | URL grammar, fragment rules, acceptance tests, file inventory for impl                                     |
-
-- **OpenGraph / SEO metadata on entity pages** — phase 7's DOCS_SYSTEM mentions but actual implementation deferred unless trivial
-
----
-
-## Reference Materials Produced
-
-These docs are inputs to the task files. Read them before each phase:
-
-| File                                    | Phase consumed | What it gives you                                                                                          |
-| --------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `.vscode/docs/DEP_RESEARCH_TS_ECO.md`   | 03, 06         | Per-dep latest, breaking changes, migration recipes for TS / eslint / vite / tsup / tsx / vitest ecosystem |
-| `.vscode/docs/DEP_RESEARCH_FRONTEND.md` | 04             | Same for next / react / radix / tailwind / shiki / zustand / cmdk / lucide / etc.                          |
-| `.vscode/docs/DEP_RESEARCH_DOMAIN.md`   | 05             | Same for discord.js / mongoose / winston / ink / commander / typedoc / etc.                                |
-| `.vscode/docs/DEP_BUMP_RESEARCH.md`     | 02, 03, 04, 05 | Catalog reorg proposal + cross-cutting sequencing                                                          |
-| `.vscode/audits/QUALITY-apps-docs.md`   | 09             | apps/docs punch list — HIGH/MEDIUM/LOW + test gaps + lib/docs cleanup candidates                           |
-| `.vscode/audits/QUALITY-cli.md`         | 10             | packages/cli punch list — HIGH/MEDIUM/LOW + HMR review + public API audit                                  |
-| `.vscode/audits/QUALITY-framework.md`   | 11             | Framework packages punch list — HIGH/MEDIUM/LOW + cross-package consistency + API surface                  |
-| `.vscode/docs/URL_SPEC.md`              | 12             | URL grammar, fragment rules, acceptance tests, file inventory for impl                                     |
+| `.vscode/temp.md`                       | every session  | Kickoff doc for a fresh session: workflow, locked decisions, common pitfalls, first-message template       |
 
 ---
 
