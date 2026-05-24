@@ -37,6 +37,9 @@
         "MermaidChart.vscode-mermaid-chart",
 
         // Vitest
-        "vitest.explorer"
+        "vitest.explorer",
+
+        // Context7 MCP for agent context
+        "Upstash.context7-mcp"
     ]
 }
