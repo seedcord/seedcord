@@ -43,8 +43,9 @@
         "**/dist": true,
         "**/.turbo": true,
         "**/coverage": true,
-        "**/.eslintcache": true
-        // "**/logs": true
+        "**/.eslintcache": true,
+        "**/.pnpm-store": true,
+        "**/logs": true
     },
 
     // Terminal

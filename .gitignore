@@ -24,7 +24,15 @@ dist/
 # Ignore IDE specific files
 **/.idea
 **/.vs
-# We keep .vscode because it has recommended settings and extensions
+
+# .vscode/ is whitelisted: only the standard shared editor config files are tracked;
+# everything else (planning docs, audits, scratch, personal notes) stays local.
+# Add to the !.vscode/<file> list as new project-wide editor configs appear.
+/.vscode/*
+!/.vscode/extensions.json
+!/.vscode/launch.json
+!/.vscode/settings.json
+!/.vscode/tasks.json
 
 # Turborepo
 .turbo/
