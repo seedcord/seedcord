@@ -181,6 +181,12 @@ If the user picks a task whose blockers aren't done, **flag it before starting**
 
 - `actions/checkout` v5 → v6 (latest 6.0.2) and `pnpm/action-setup` v4 → v6 (latest 6.0.8, two majors behind) available. Skipped this batch; bump in a focused CI-hygiene PR.
 
+### Bash tool / sandbox (this repo)
+
+- **Never sandbox `pnpm` commands.** Set `dangerouslyDisableSandbox: true` on every Bash call invoking `pnpm` — install, build, test, lint, prePush, dlx, exec, anything. Reason: pnpm delegates to processes that hit resources the sandbox blocks (e.g. `@seedcord/docs:build` fetches Google Fonts at build time → cryptic "Failed to fetch Geist" errors that look like real bugs but are sandbox false-positives). Same for any tool pnpm orchestrates (next build, vitest, tsdown).
+- **Never sandbox git write operations.** `git commit`, `git checkout -b`, `git stash`, `git merge`, `git rebase`, `git tag`, `git pull` all write to `.git/HEAD` / `.git/refs` / `.git/objects` — sandbox `denyWithinAllow` blocks those paths. Read-only git (`status`, `diff`, `log`, `branch --show-current`, `rev-list`) is fine in sandbox.
+- **Default Bash `timeout` is 1 minute** (~60000ms). Only bump for known-long runs: `pnpm install`, `pnpm build`, full `pnpm prePush`, long E2E suites. Don't speculatively set 10-minute timeouts "to be safe" — short timeouts surface hangs faster.
+
 ### Old pitfalls (still apply)
 
 - `MASTER_PLAN` in a commit subject is rejected as Pascal-case. Lowercase or quote in body.

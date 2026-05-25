@@ -1,9 +1,6 @@
-echo "Pre-push hook triggered."
-
-pnpm prePush
+echo "Post-commit hook triggered."
 
 echo "📤 Running git lfs"
 
 command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path."; exit 2; }
-git lfs pre-push "$@"
-
+git lfs post-commit "$@"

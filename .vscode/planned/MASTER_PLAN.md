@@ -23,9 +23,9 @@
 | 1     | 03   | Dep bump: TS ecosystem                                                         | ✅ Completed   | 02           |
 | 1     | 04   | Dep bump: frontend ecosystem                                                   | ✅ Completed   | 02           |
 | 1     | 05   | Dep bump: domain (discord.js / mongoose / typedoc / ink / commander / winston) | ✅ Completed   | 02           |
-| 1     | 06   | Add missing devtools (react-compiler ESLint, react-refresh ESLint)             | 🟡 Partial      | 03, 04       |
-| 2     | 07   | `scripts/` lint + tc + wire into prePush                                       | ⏳ Not started | 03           |
-| 2     | 08   | CI cleanup (composite actions, tsx install once, docs publish skeleton)        | 🟡 Partial     | 03           |
+| 1     | 06   | Add missing devtools (react-compiler ESLint, react-refresh ESLint)             | ✅ Completed   | 03, 04       |
+| 2     | 07   | `scripts/` lint + tc + wire into prePush                                       | ✅ Completed   | 03           |
+| 2     | 08   | CI cleanup (composite actions, tsx install once, docs publish skeleton)        | ✅ Completed   | 03           |
 | 2     | 08.5 | knip + react-doctor (scripts only, no prePush wiring)                          | ✅ Completed   | 08           |
 | 3     | 09   | apps/docs code-quality fixes (from audit punch list + tool reconciliation)     | ⏳ Not started | 04, 08.5     |
 | 3     | 10   | packages/cli code-quality fixes (audit + tool reconciliation)                  | ⏳ Not started | 03, 05, 08.5 |
@@ -378,30 +378,30 @@ These decisions are non-negotiable for this PR. Re-grill before changing.
 
 (Mirror the top status table here as work progresses. Update STATUS column on each completion.)
 
-| Phase | TODO | Title                                        | Status         | Started    | Completed  | Commit                                                                                             |
-| ----- | ---- | -------------------------------------------- | -------------- | ---------- | ---------- | -------------------------------------------------------------------------------------------------- |
-| 0     | 01   | Baseline gates clean                         | ✅ Completed   | 2026-05-24 | 2026-05-24 | `0c9b859a`                                                                                         |
-| 1     | 02   | Catalog reorg                                | ✅ Completed   | 2026-05-24 | 2026-05-24 | `18c0e638`                                                                                         |
-| 1     | 03   | Dep bump: TS ecosystem                       | ✅ Completed   | 2026-05-24 | 2026-05-25 | `094909d8` `6f8f4d2d` `93b20e1d` `3456f608` `7f5f4e0a` `36cecef0` `8f853129`                       |
-| 1     | 04   | Dep bump: frontend                           | ✅ Completed   | 2026-05-24 | 2026-05-25 | `847f520c` `96f91f75` `3aea1f2f` `cb34a2e1` `d6402518` `21089c9e`                                  |
-| 1     | 05   | Dep bump: domain                             | ✅ Completed   | 2026-05-25 | 2026-05-25 | `1df74bc8` `5afda04b` `ffda6f71` `c5762703`                                                        |
-| 1     | 06   | Add devtools (react-compiler, react-refresh) | 🟡 Partial     | 2026-05-25 | 2026-05-25 | react-compiler ESLint plugin (RC 19.1.0-rc.2) wired in apps/docs; react-refresh stays N/A (Vite-only) |
-| 2     | 07   | scripts/ lint + tc                           | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 2     | 08   | CI cleanup + composite actions               | 🟡 Partial     | 2026-05-25 | 2026-05-25 | `56660520` — pin bumps only; composite actions for publish were already in place                   |
-| 2     | 08.5 | knip + react-doctor                          | ✅ Completed   | 2026-05-25 | 2026-05-25 | `f7f53f1f`                                                                                         |
-| 3     | 09   | apps/docs quality fixes                      | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 3     | 10   | packages/cli quality fixes                   | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 3     | 11   | framework quality fixes                      | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 4     | 12   | URL spec impl + tests                        | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 4     | 13   | apps/docs/lib/docs cleanup                   | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 4     | 14   | docs-generator version-aware                 | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 4     | 15   | docs-engine index.json + jsDelivr            | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 5     | 16   | apps/docs picker + version dropdown          | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 5     | 17   | apps/docs cross-pkg new tab + search scoping | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 6     | 18   | scripts/seed-artifacts.ts                    | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 6     | 19   | docs-publish workflow                        | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 6     | 20   | Vercel readiness                             | ⏳ Not Started | —          | —          | —                                                                                                  |
-| 7     | 21   | DOCS_SYSTEM.md                               | ⏳ Not Started | —          | —          | —                                                                                                  |
+| Phase | TODO | Title                                        | Status         | Started    | Completed  | Commit                                                                                                                |
+| ----- | ---- | -------------------------------------------- | -------------- | ---------- | ---------- | --------------------------------------------------------------------------------------------------------------------- |
+| 0     | 01   | Baseline gates clean                         | ✅ Completed   | 2026-05-24 | 2026-05-24 | `0c9b859a`                                                                                                            |
+| 1     | 02   | Catalog reorg                                | ✅ Completed   | 2026-05-24 | 2026-05-24 | `18c0e638`                                                                                                            |
+| 1     | 03   | Dep bump: TS ecosystem                       | ✅ Completed   | 2026-05-24 | 2026-05-25 | `094909d8` `6f8f4d2d` `93b20e1d` `3456f608` `7f5f4e0a` `36cecef0` `8f853129`                                          |
+| 1     | 04   | Dep bump: frontend                           | ✅ Completed   | 2026-05-24 | 2026-05-25 | `847f520c` `96f91f75` `3aea1f2f` `cb34a2e1` `d6402518` `21089c9e`                                                     |
+| 1     | 05   | Dep bump: domain                             | ✅ Completed   | 2026-05-25 | 2026-05-25 | `1df74bc8` `5afda04b` `ffda6f71` `c5762703`                                                                           |
+| 1     | 06   | Add devtools (react-compiler, react-refresh) | ✅ Completed   | 2026-05-25 | 2026-05-25 | react-compiler RC wired (apps/docs); react-refresh N/A (Vite-only); @eslint/eslintrc cleanup N/A until ESLint 10 bump |
+| 2     | 07   | scripts/ lint + tc                           | ✅ Completed   | 2026-05-25 | 2026-05-25 | `e50c977`                                                                                                             |
+| 2     | 08   | CI cleanup + composite actions               | ✅ Completed   | 2026-05-25 | 2026-05-25 | `56660520` (pin bumps), `d2a8e8b` (setup composite); artifact composites deferred to TASK-14 / TASK-19                |
+| 2     | 08.5 | knip + react-doctor                          | ✅ Completed   | 2026-05-25 | 2026-05-25 | `f7f53f1f`                                                                                                            |
+| 3     | 09   | apps/docs quality fixes                      | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 3     | 10   | packages/cli quality fixes                   | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 3     | 11   | framework quality fixes                      | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 4     | 12   | URL spec impl + tests                        | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 4     | 13   | apps/docs/lib/docs cleanup                   | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 4     | 14   | docs-generator version-aware                 | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 4     | 15   | docs-engine index.json + jsDelivr            | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 5     | 16   | apps/docs picker + version dropdown          | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 5     | 17   | apps/docs cross-pkg new tab + search scoping | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 6     | 18   | scripts/seed-artifacts.ts                    | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 6     | 19   | docs-publish workflow                        | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 6     | 20   | Vercel readiness                             | ⏳ Not Started | —          | —          | —                                                                                                                     |
+| 7     | 21   | DOCS_SYSTEM.md                               | ⏳ Not Started | —          | —          | —                                                                                                                     |
 
 **Status Legend:** 🔄 In Progress · ⏳ Not Started / Blocked · ✅ Completed · ❌ Failed / Needs Rework
 

@@ -1,0 +1,8 @@
+{
+    "$schema": "https://www.schemastore.org/tsconfig.json",
+    "extends": "@seedcord/tsconfig/node",
+    "compilerOptions": {
+        "rootDir": "."
+    },
+    "include": ["**/*.ts"]
+}

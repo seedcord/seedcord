@@ -1,0 +1,40 @@
+name: 'Setup workspace'
+description: 'Install pnpm, set up Node, optionally restore deps via pnpm install --frozen-lockfile.'
+
+inputs:
+    node-version:
+        description: 'Node.js version'
+        required: false
+        default: '24'
+    pnpm-version:
+        description: 'pnpm version'
+        required: false
+        default: '11.3.0'
+    registry-url:
+        description: 'Optional npm registry URL (set for publish jobs)'
+        required: false
+        default: ''
+    install:
+        description: 'Run `pnpm install --frozen-lockfile` as the final step'
+        required: false
+        default: 'true'
+
+runs:
+    using: composite
+    steps:
+        - name: Set up pnpm
+          uses: pnpm/action-setup@v4
+          with:
+              version: ${{ inputs.pnpm-version }}
+
+        - name: Set up Node.js
+          uses: actions/setup-node@v6
+          with:
+              node-version: ${{ inputs.node-version }}
+              cache: pnpm
+              registry-url: ${{ inputs.registry-url }}
+
+        - name: Install dependencies
+          if: ${{ inputs.install == 'true' }}
+          shell: bash
+          run: pnpm install --frozen-lockfile

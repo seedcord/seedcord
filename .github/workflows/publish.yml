@@ -24,14 +24,8 @@ jobs:
             - uses: actions/checkout@v5
               with:
                   fetch-depth: 0
-            - uses: pnpm/action-setup@v4
-              with:
-                  version: 11.3.0
-            - uses: actions/setup-node@v6
-              with:
-                  node-version: 24
-                  cache: pnpm
-            - run: pnpm install --frozen-lockfile
+            - name: Setup workspace
+              uses: ./.github/actions/setup
             - run: pnpm publish --dry-run --workspace-root --no-git-checks
 
     npm-publish:
@@ -53,18 +47,13 @@ jobs:
                   turbo_token: ${{ secrets.TURBO_TOKEN }}
                   turbo_team: ${{ vars.TURBO_TEAM }}
                   enable_fallback_cache: 'true'
-            - uses: pnpm/action-setup@v4
+            - name: Setup workspace
+              uses: ./.github/actions/setup
               with:
-                  version: 11.3.0
-            - uses: actions/setup-node@v6
-              with:
-                  node-version: 24
-                  cache: pnpm
                   registry-url: https://registry.npmjs.org
             - run: npm i -g npm@latest
             - run: node -v && npm -v
             - run: npm config get registry && npm ping
-            - run: pnpm install --frozen-lockfile
             - run: pnpm run prepublishOnly
 
             - id: changesets
