@@ -16,30 +16,30 @@
 
 **Overview of all tasks:**
 
-| Phase | TODO | Task                                                                           | Status         | Blocked by |
-| ----- | ---- | ------------------------------------------------------------------------------ | -------------- | ---------- |
-| 0     | 01   | Baseline gates clean + lockfile snapshot                                       | ⏳ Not started | —          |
-| 1     | 02   | Catalog reorg (cancrops-style buckets)                                         | ⏳ Not started | 01         |
-| 1     | 03   | Dep bump: TS ecosystem                                                         | ⏳ Not started | 02         |
-| 1     | 04   | Dep bump: frontend ecosystem                                                   | ⏳ Not started | 02         |
-| 1     | 05   | Dep bump: domain (discord.js / mongoose / typedoc / ink / commander / winston) | ⏳ Not started | 02         |
-| 1     | 06   | Add missing devtools (react-compiler ESLint, react-refresh ESLint)             | ⏳ Not started | 03, 04     |
-| 2     | 07   | `scripts/` lint + tc + wire into prePush                                       | ⏳ Not started | 03         |
-| 2     | 08   | CI cleanup (composite actions, tsx install once, docs publish skeleton)        | ⏳ Not started | 03         |
-| 2     | 08.5 | knip + react-doctor (wire into prePush, reconcile audits)                      | ⏳ Not started | 08         |
-| 3     | 09   | apps/docs code-quality fixes (from audit punch list + tool reconciliation)     | ⏳ Not started | 04, 08.5   |
+| Phase | TODO | Task                                                                           | Status         | Blocked by   |
+| ----- | ---- | ------------------------------------------------------------------------------ | -------------- | ------------ |
+| 0     | 01   | Baseline gates clean + lockfile snapshot                                       | ✅ Completed   | —            |
+| 1     | 02   | Catalog reorg (cancrops-style buckets)                                         | ✅ Completed   | 01           |
+| 1     | 03   | Dep bump: TS ecosystem                                                         | ✅ Completed   | 02           |
+| 1     | 04   | Dep bump: frontend ecosystem                                                   | ✅ Completed   | 02           |
+| 1     | 05   | Dep bump: domain (discord.js / mongoose / typedoc / ink / commander / winston) | ✅ Completed   | 02           |
+| 1     | 06   | Add missing devtools (react-compiler ESLint, react-refresh ESLint)             | 🟡 Partial      | 03, 04       |
+| 2     | 07   | `scripts/` lint + tc + wire into prePush                                       | ⏳ Not started | 03           |
+| 2     | 08   | CI cleanup (composite actions, tsx install once, docs publish skeleton)        | 🟡 Partial     | 03           |
+| 2     | 08.5 | knip + react-doctor (scripts only, no prePush wiring)                          | ✅ Completed   | 08           |
+| 3     | 09   | apps/docs code-quality fixes (from audit punch list + tool reconciliation)     | ⏳ Not started | 04, 08.5     |
 | 3     | 10   | packages/cli code-quality fixes (audit + tool reconciliation)                  | ⏳ Not started | 03, 05, 08.5 |
 | 3     | 11   | framework code-quality fixes (audit + tool reconciliation)                     | ⏳ Not started | 03, 05, 08.5 |
-| 4     | 12   | URL spec implementation + acceptance tests                                     | ⏳ Not started | 11         |
-| 4     | 13   | `apps/docs/lib/docs` cleanup → move engine concerns to `@seedcord/docs-engine` | ⏳ Not started | 12         |
-| 4     | 14   | docs-generator: version-aware (`--package`, `--source-path`, `--tag-mode`)     | ⏳ Not started | 13         |
-| 4     | 15   | docs-engine: consume `index.json` + jsDelivr fetcher                           | ⏳ Not started | 14         |
-| 5     | 16   | apps/docs UI: pkg picker + version dropdown driven by index.json               | ⏳ Not started | 15         |
-| 5     | 17   | apps/docs UI: cross-pkg link → new tab + search scoped to selected version     | ⏳ Not started | 16         |
-| 6     | 18   | `scripts/seed-artifacts.ts` — seed artifacts repo from existing tags           | ⏳ Not started | 14         |
-| 6     | 19   | docs publish workflow (composite action + workflow_run trigger)                | ⏳ Not started | 18         |
-| 6     | 20   | Vercel deploy readiness for apps/docs (env contract, build, ISR)               | ⏳ Not started | 19         |
-| 7     | 21   | `.vscode/docs/DOCS_SYSTEM.md` — final user-facing system doc                   | ⏳ Not started | 20         |
+| 4     | 12   | URL spec implementation + acceptance tests                                     | ⏳ Not started | 11           |
+| 4     | 13   | `apps/docs/lib/docs` cleanup → move engine concerns to `@seedcord/docs-engine` | ⏳ Not started | 12           |
+| 4     | 14   | docs-generator: version-aware (`--package`, `--source-path`, `--tag-mode`)     | ⏳ Not started | 13           |
+| 4     | 15   | docs-engine: consume `index.json` + jsDelivr fetcher                           | ⏳ Not started | 14           |
+| 5     | 16   | apps/docs UI: pkg picker + version dropdown driven by index.json               | ⏳ Not started | 15           |
+| 5     | 17   | apps/docs UI: cross-pkg link → new tab + search scoped to selected version     | ⏳ Not started | 16           |
+| 6     | 18   | `scripts/seed-artifacts.ts` — seed artifacts repo from existing tags           | ⏳ Not started | 14           |
+| 6     | 19   | docs publish workflow (composite action + workflow_run trigger)                | ⏳ Not started | 18           |
+| 6     | 20   | Vercel deploy readiness for apps/docs (env contract, build, ISR)               | ⏳ Not started | 19           |
+| 7     | 21   | `.vscode/docs/DOCS_SYSTEM.md` — final user-facing system doc                   | ⏳ Not started | 20           |
 
 **Current Verification (2026-05-24, planning-only session):**
 
@@ -378,30 +378,30 @@ These decisions are non-negotiable for this PR. Re-grill before changing.
 
 (Mirror the top status table here as work progresses. Update STATUS column on each completion.)
 
-| Phase | TODO | Title                                        | Status         | Started | Completed | Commit |
-| ----- | ---- | -------------------------------------------- | -------------- | ------- | --------- | ------ |
-| 0     | 01   | Baseline gates clean                         | ⏳ Not Started | —       | —         | —      |
-| 1     | 02   | Catalog reorg                                | ⏳ Not Started | —       | —         | —      |
-| 1     | 03   | Dep bump: TS ecosystem                       | ⏳ Not Started | —       | —         | —      |
-| 1     | 04   | Dep bump: frontend                           | ⏳ Not Started | —       | —         | —      |
-| 1     | 05   | Dep bump: domain                             | ⏳ Not Started | —       | —         | —      |
-| 1     | 06   | Add devtools (react-compiler, react-refresh) | ⏳ Not Started | —       | —         | —      |
-| 2     | 07   | scripts/ lint + tc                           | ⏳ Not Started | —       | —         | —      |
-| 2     | 08   | CI cleanup + composite actions               | ⏳ Not Started | —       | —         | —      |
-| 2     | 08.5 | knip + react-doctor                          | ⏳ Not Started | —       | —         | —      |
-| 3     | 09   | apps/docs quality fixes                      | ⏳ Not Started | —       | —         | —      |
-| 3     | 10   | packages/cli quality fixes                   | ⏳ Not Started | —       | —         | —      |
-| 3     | 11   | framework quality fixes                      | ⏳ Not Started | —       | —         | —      |
-| 4     | 12   | URL spec impl + tests                        | ⏳ Not Started | —       | —         | —      |
-| 4     | 13   | apps/docs/lib/docs cleanup                   | ⏳ Not Started | —       | —         | —      |
-| 4     | 14   | docs-generator version-aware                 | ⏳ Not Started | —       | —         | —      |
-| 4     | 15   | docs-engine index.json + jsDelivr            | ⏳ Not Started | —       | —         | —      |
-| 5     | 16   | apps/docs picker + version dropdown          | ⏳ Not Started | —       | —         | —      |
-| 5     | 17   | apps/docs cross-pkg new tab + search scoping | ⏳ Not Started | —       | —         | —      |
-| 6     | 18   | scripts/seed-artifacts.ts                    | ⏳ Not Started | —       | —         | —      |
-| 6     | 19   | docs-publish workflow                        | ⏳ Not Started | —       | —         | —      |
-| 6     | 20   | Vercel readiness                             | ⏳ Not Started | —       | —         | —      |
-| 7     | 21   | DOCS_SYSTEM.md                               | ⏳ Not Started | —       | —         | —      |
+| Phase | TODO | Title                                        | Status         | Started    | Completed  | Commit                                                                                             |
+| ----- | ---- | -------------------------------------------- | -------------- | ---------- | ---------- | -------------------------------------------------------------------------------------------------- |
+| 0     | 01   | Baseline gates clean                         | ✅ Completed   | 2026-05-24 | 2026-05-24 | `0c9b859a`                                                                                         |
+| 1     | 02   | Catalog reorg                                | ✅ Completed   | 2026-05-24 | 2026-05-24 | `18c0e638`                                                                                         |
+| 1     | 03   | Dep bump: TS ecosystem                       | ✅ Completed   | 2026-05-24 | 2026-05-25 | `094909d8` `6f8f4d2d` `93b20e1d` `3456f608` `7f5f4e0a` `36cecef0` `8f853129`                       |
+| 1     | 04   | Dep bump: frontend                           | ✅ Completed   | 2026-05-24 | 2026-05-25 | `847f520c` `96f91f75` `3aea1f2f` `cb34a2e1` `d6402518` `21089c9e`                                  |
+| 1     | 05   | Dep bump: domain                             | ✅ Completed   | 2026-05-25 | 2026-05-25 | `1df74bc8` `5afda04b` `ffda6f71` `c5762703`                                                        |
+| 1     | 06   | Add devtools (react-compiler, react-refresh) | 🟡 Partial     | 2026-05-25 | 2026-05-25 | react-compiler ESLint plugin (RC 19.1.0-rc.2) wired in apps/docs; react-refresh stays N/A (Vite-only) |
+| 2     | 07   | scripts/ lint + tc                           | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 2     | 08   | CI cleanup + composite actions               | 🟡 Partial     | 2026-05-25 | 2026-05-25 | `56660520` — pin bumps only; composite actions for publish were already in place                   |
+| 2     | 08.5 | knip + react-doctor                          | ✅ Completed   | 2026-05-25 | 2026-05-25 | `f7f53f1f`                                                                                         |
+| 3     | 09   | apps/docs quality fixes                      | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 3     | 10   | packages/cli quality fixes                   | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 3     | 11   | framework quality fixes                      | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 4     | 12   | URL spec impl + tests                        | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 4     | 13   | apps/docs/lib/docs cleanup                   | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 4     | 14   | docs-generator version-aware                 | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 4     | 15   | docs-engine index.json + jsDelivr            | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 5     | 16   | apps/docs picker + version dropdown          | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 5     | 17   | apps/docs cross-pkg new tab + search scoping | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 6     | 18   | scripts/seed-artifacts.ts                    | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 6     | 19   | docs-publish workflow                        | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 6     | 20   | Vercel readiness                             | ⏳ Not Started | —          | —          | —                                                                                                  |
+| 7     | 21   | DOCS_SYSTEM.md                               | ⏳ Not Started | —          | —          | —                                                                                                  |
 
 **Status Legend:** 🔄 In Progress · ⏳ Not Started / Blocked · ✅ Completed · ❌ Failed / Needs Rework
 
@@ -411,7 +411,16 @@ These decisions are non-negotiable for this PR. Re-grill before changing.
 
 **Instructions for the implementor:** After completing a TODO, copy the per-task handoff template from `.vscode/templates/TASK_PLAN_TEMPLATE.md` into the corresponding `TASK-NN-*.md` file and fill it in.
 
-(Empty — populated as tasks complete.)
+### Discovered during implementation (follow-ups within this PR)
+
+- **Intermittent Sidebar hydration mismatch** — `apps/docs/src/components/layout/sidebar/Sidebar.tsx:107`. React reports the `<nav>` className differs between SSR and client render (same classes, different order). Reproduced on the current `feat/better-api-extraction` branch BEFORE any of the `chore/dep-bump-batch-01-05` commits, so it's not a TASK-04 regression — pre-existing flaky behavior. Happens sometimes on initial page load. Likely root cause: non-deterministic order produced by `cn()` → `twMerge()` (tailwind-merge), or a Zustand-driven re-render race. **Owner: assign to TASK-09 (apps/docs quality fixes)** when that phase starts; investigation should include checking whether `tailwind-merge` outputs differ between Node and browser for the same input set, and whether `DocsUIProvider` / `useUIStore` hydration order matters for the Sidebar render path.
+- **cmd-k animation framerate** — pre-existing; cmd palette open/close animation is jerky (~20fps). Surfaced during TASK-04 visual checkpoint A. Owner: TASK-09 (apps/docs quality fixes); may want a follow-up dedicated "UI polish" task if the fix is non-trivial.
+
+- **Knip / react-doctor first-run findings** — captured in the "Tool reconciliation" sections of `.vscode/audits/QUALITY-apps-docs.md`, `QUALITY-cli.md`, `QUALITY-framework.md`. ~105 react-doctor findings in apps/docs (score 78/100), ~30 unused exports in apps/docs (knip), ~25 unused TYPE exports across framework packages (knip). Real fixes are TASK-09 / TASK-10 / TASK-11 work, per the original plan.
+
+- **GitHub Action major versions available but not bumped** in this batch — `actions/checkout` v5 → v6 (latest 6.0.2), `pnpm/action-setup` v4 → v6 (latest 6.0.8, two majors behind). Bumping is its own little PR (breaking-change risk, smoke per workflow). Track in TASK-08's continuation work or a dedicated CI hygiene PR.
+
+- **Root devDeps to drop** (knip-confirmed): `@swc/core` (was a tsup transformer; tsdown uses oxc), `@types/chai`, `chai` (no chai-style assertions in vitest tests), `nodemon` (no script references it). Fix in TASK-11 (framework quality) or as a one-line cleanup PR.
 
 ---
 
@@ -511,3 +520,7 @@ chore(deps): TASK-03 — bump TS to 6.0.3 + typescript-eslint to 9.x
 **Key Principle:** **Dep bump first, quality second, refactor third, features last.** Every change you make on a stale dep is a change you'll redo when the dep bumps. Every change you make on top of unfixed quality issues is a change that inherits them.
 
 Begin with **TASK-01: Baseline gates clean** when ready. See `TASK-01-baseline.md` for the discrete steps. After 01 lands clean, the dependency graph above defines the order.
+
+### TASK-06 partial — eslint-plugin-react-compiler RC adoption
+
+`eslint-plugin-react-compiler@19.1.0-rc.2` is wired into `apps/docs/eslint.config.mjs` via `reactCompiler.configs.recommended`. The plugin is officially marked Release Candidate but is published, maintained, and the React team's own diagnostic for React Compiler-readiness — user opted in despite the RC tag because the rules catch real correctness issues. First lint pass surfaced one false positive in `apps/docs/src/components/docs/entity/utils/useActiveSignatureList.tsx:42` (writing `window.location.hash` from inside a function that the compiler couldn't prove was an event-handler context) — suppressed inline with a justified `// eslint-disable-next-line react-compiler/react-compiler --` comment per the strict-validation policy. `eslint-plugin-react-refresh` stays N/A (Vite-only; apps/docs is Next with built-in Fast Refresh).

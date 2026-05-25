@@ -39,6 +39,7 @@ export function useActiveSignatureList(
         setActiveId(id);
         if (typeof window !== 'undefined') {
             try {
+                // eslint-disable-next-line react-compiler/react-compiler -- setActive is invoked from event handlers (signature click), not render. The compiler can't statically prove this so it false-positives on the external-mutation rule.
                 window.location.hash = id;
             } catch {
                 // ignore

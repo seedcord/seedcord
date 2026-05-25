@@ -32,11 +32,12 @@
         "sourceMap": true,
         "skipLibCheck": true,
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": false,
+        "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "isolatedModules": true,
         "experimentalDecorators": true,
         "lib": ["ESNext", "Decorators", "Decorators.Legacy"],
+        "types": ["node"],
         "target": "ESNext",
         "useDefineForClassFields": true,
         "emitDecoratorMetadata": true

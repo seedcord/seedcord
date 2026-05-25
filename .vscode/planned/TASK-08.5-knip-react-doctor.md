@@ -15,7 +15,7 @@ This task lands **between TASK-08 (CI cleanup) and TASK-09/10/11 (quality fixes)
 2. **react-doctor installed + configured** with `react-doctor.config.json` at workspace root targeting the React-bearing surfaces (`apps/docs`, `packages/cli` — Ink uses the React reconciler so same antipatterns apply).
 3. **Root scripts** `pnpm knip` and `pnpm react-doctor` exist.
 4. **`prePush` runs both** after `tc`/`lint`/`test` are clean.
-5. **Audit cross-check**: re-run the QUALITY-*.md audits against the tools' output; reconcile.
+5. **Audit cross-check**: re-run the QUALITY-\*.md audits against the tools' output; reconcile.
 6. **Add `lint` bucket entries** to the workspace catalog for `knip` and the react-doctor deps.
 
 ---
@@ -57,10 +57,7 @@ pnpm add -Dw knip
     ],
     "workspaces": {
         ".": {
-            "entry": [
-                "scripts/extract-docs.ts",
-                "scripts/**/*.ts"
-            ],
+            "entry": ["scripts/extract-docs.ts", "scripts/**/*.ts"],
             "project": ["scripts/**/*.ts"]
         },
         "packages/seedcord": {
@@ -130,10 +127,7 @@ pnpm add -Dw react-doctor    # or the actual pkg name
 ```json
 {
     "$schema": "https://unpkg.com/react-doctor@latest/schema.json",
-    "packages": [
-        "apps/docs",
-        "packages/cli"
-    ],
+    "packages": ["apps/docs", "packages/cli"],
     "rules": {
         "no-mutable-in-deps": "error",
         "no-array-index-as-key": "warn",
@@ -177,15 +171,19 @@ For each audit (`.vscode/audits/QUALITY-{apps-docs,cli,framework}.md`), append a
 ## Tool reconciliation (TASK-08.5 cross-check)
 
 ### react-doctor findings the manual audit missed
+
 - `file:line` — <rule> — <one-line>
 
 ### Manual audit findings react-doctor doesn't catch
+
 - (these stay manual; expected behavior)
 
 ### Conflicting interpretations
+
 - (rare; resolve case-by-case)
 
 ### Knip findings (dead code)
+
 - (per workspace)
 ```
 
@@ -225,13 +223,13 @@ Changesets: none (devDep additions only; no published surface drift).
 
 ## Risks and Mitigation
 
-| Risk | Mitigation |
-|---|---|
+| Risk                                                                          | Mitigation                                                                                                                    |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `react-doctor` isn't a published package; cancrops uses a fork or custom tool | Verify cancrops's `package.json` to identify the actual dep; if internal, port the rules manually as an ESLint plugin instead |
-| knip floods with false positives on first run | Triage iteratively; commit `knip.json` config tweaks as the false-positives are identified |
-| react-doctor severity tuning bikesheds | Match cancrops's defaults; treat as starting point |
-| Tools surface 50+ new findings, blowing scope | Roll the bulk into TASK-09/10/11; only fix here if it's a 5-min change and on the path |
-| Tools fail in CI because of Node engine drift | `engines.node` already bumps to `^22.13.0` in TASK-03; verify these tools work on that floor |
+| knip floods with false positives on first run                                 | Triage iteratively; commit `knip.json` config tweaks as the false-positives are identified                                    |
+| react-doctor severity tuning bikesheds                                        | Match cancrops's defaults; treat as starting point                                                                            |
+| Tools surface 50+ new findings, blowing scope                                 | Roll the bulk into TASK-09/10/11; only fix here if it's a 5-min change and on the path                                        |
+| Tools fail in CI because of Node engine drift                                 | `engines.node` already bumps to `^22.13.0` in TASK-03; verify these tools work on that floor                                  |
 
 ---
 
@@ -248,3 +246,9 @@ Changesets: none (devDep additions only; no published surface drift).
 - **Files affected:** 5-6
 - **Touches published packages:** No
 - **Estimated wall-clock:** 2-4 hours (most is false-positive triage)
+
+---
+
+## Handoff
+
+- 2026-05-25 — completed by Claude Opus on sub-branch `chore/dep-bump-batch-01-05`. Commit `f7f53f1f`. Installed `knip@^6.14.2` + `react-doctor@^0.2.5`. Per cancrops convention: scripts only (`pnpm knip`, `pnpm react-doctor --verbose`), NOT wired into prePush. react-doctor 0.2.5 was required (earlier versions failed to resolve workspace catalog refs; upstream PR #313 merged 2026-05-22). Required `minimumReleaseAgeExclude` for `react-doctor@0.2.5` + `oxlint-plugin-react-doctor@0.2.5` since they were both <24h old when installed. Audit reconciliation appended to all three `.vscode/audits/QUALITY-*.md` files; real fixes queued for TASK-09 / TASK-10 / TASK-11.

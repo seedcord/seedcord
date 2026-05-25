@@ -16,7 +16,7 @@ import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigratio
 import type { KpgOptions } from './types/KpgOptions';
 import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
 import type { HmrUpdateEvent } from '@seedcord/cli';
-import type { MigrationInfo } from 'kysely';
+import type { MigrationInfo } from 'kysely/migration';
 import type { Core } from 'seedcord';
 
 export interface KyselyArtifact {

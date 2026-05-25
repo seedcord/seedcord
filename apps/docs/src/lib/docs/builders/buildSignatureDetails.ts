@@ -9,14 +9,7 @@ import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { formatSignature, highlightCode } from '../formatting';
 
-import type {
-    CodeRepresentation,
-    CommentDisplayPart,
-    CommentExample,
-    CommentParagraph,
-    FormatContext,
-    FormattedComment
-} from '../types';
+import type { CodeRepresentation, CommentExample, CommentParagraph, FormatContext, FormattedComment } from '../types';
 import type { EntityMemberSummary } from '@components/docs/entity/types';
 import type { DocSignature, DocNode, DocCommentBlockTag, DocComment } from '@seedcord/docs-engine';
 
@@ -193,7 +186,7 @@ async function appendThrowsComments(
     for (const tag of uniqueTags.values()) {
         const fakeComment: DocComment = {
             summary: '',
-            summaryParts: [{ kind: 'text', text: '**Throws:** ' } as CommentDisplayPart, ...tag.content],
+            summaryParts: [{ kind: 'text', text: '**Throws:** ' }, ...tag.content],
             blockTags: [],
             modifierTags: [],
             examples: []

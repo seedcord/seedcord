@@ -9,17 +9,21 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "packages/docs-engine"
     },
-    "types": "./dist/index.d.ts",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs",
-            "default": "./dist/index.mjs"
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
         }
     },
     "scripts": {
-        "build": "tsup",
+        "build": "tsdown",
         "clean": "rm -rf dist",
         "smoke": "tsx src/smoke.ts",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
@@ -40,14 +44,14 @@
     ],
     "dependencies": {
         "@leeoniya/ufuzzy": "^1.0.19",
-        "typedoc": "catalog:deps",
-        "typedoc-plugin-dt-links": "^2.0.34",
-        "typedoc-plugin-mdn-links": "^5.0.10"
+        "typedoc": "catalog:docs",
+        "typedoc-plugin-dt-links": "catalog:docs",
+        "typedoc-plugin-mdn-links": "catalog:docs"
     },
     "devDependencies": {
         "@seedcord/docs-generator": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsup-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*"
     }
 }

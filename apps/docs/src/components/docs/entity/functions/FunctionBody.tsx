@@ -42,7 +42,7 @@ function buildTypeParamMember(tp: FunctionTypeParameterModel, index: number): En
                 examples: []
             }
         ]
-    } as unknown as EntityMemberSummary;
+    };
 }
 
 function buildParamMember(p: FunctionSignatureParameterModel, index: number): EntityMemberSummary {

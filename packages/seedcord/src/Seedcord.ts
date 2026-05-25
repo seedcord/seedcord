@@ -76,8 +76,8 @@ export class Seedcord extends Pluggable implements Core {
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
-        this.effects = new EffectsController(this as unknown as Core);
-        this.bot = new Bot(this as unknown as Core);
+        this.effects = new EffectsController(this);
+        this.bot = new Bot(this);
         this.healthCheck = new HealthCheck(this.shutdown);
 
         this.registerStartupTasks();

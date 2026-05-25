@@ -25,6 +25,12 @@ jobs:
               with:
                   fetch-depth: 0
             - uses: pnpm/action-setup@v4
+              with:
+                  version: 11.3.0
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: 24
+                  cache: pnpm
             - run: pnpm install --frozen-lockfile
             - run: pnpm publish --dry-run --workspace-root --no-git-checks
 
@@ -48,12 +54,8 @@ jobs:
                   turbo_team: ${{ vars.TURBO_TEAM }}
                   enable_fallback_cache: 'true'
             - uses: pnpm/action-setup@v4
-            - uses: actions/setup-node@v6
               with:
-                  node-version: 24
-                  cache: pnpm
-                  registry-url: https://registry.npmjs.org
-            - uses: pnpm/action-setup@v4
+                  version: 11.3.0
             - uses: actions/setup-node@v6
               with:
                   node-version: 24

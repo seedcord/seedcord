@@ -608,3 +608,34 @@ const toTokens = (value: unknown): string[] => {
 
 **File with most issues:** `apps/docs/src/components/docs/entity/EntityHeader.tsx` (H3, M3, M7 ×2, M28 nearby, L1, L9) — 6 findings touch this one file; plus it's a 227-line component that should split.
 **Most common antipattern:** `h-N w-N` equal-axis pairs (17 occurrences, M7) and `outline-none` (6 occurrences, M6). After tailwind-v4 sweep, the dominant remaining antipattern is the `as unknown as` double-cast cluster (8 occurrences across H2/H3/H4).
+
+---
+
+## Tool reconciliation (TASK-08.5 cross-check, 2026-05-25)
+
+### knip findings (run `pnpm knip` from repo root)
+
+- **Unused files (7 in apps/docs):**
+    - `src/components/docs/entity/functions/FunctionSignaturesSection.tsx`
+    - `src/components/docs/entity/signatures/SignatureCard.tsx`
+    - `src/components/docs/entity/utils/renderers/renderParameterBadge.tsx`
+    - `src/components/docs/entity/utils/renderers/renderVariable.tsx`
+    - `src/components/ui/CodeBlock.tsx`
+    - `src/components/ui/CodePanel.tsx`
+    - `src/components/ui/Tooltip.tsx`
+- **Unused dependencies in apps/docs/package.json:** `@radix-ui/react-tooltip`, `@seedcord/docs-generator` (build-time only; likely knip false positive), `tailwindcss` (CSS import, likely false positive), `type-fest`, `typedoc` (build-time only, likely false positive). Real removals only after verifying each isn't loaded at build time.
+- **Unused devDependencies:** `@seedcord/tsconfig` (tsconfig extends; false positive). Keep.
+- **Unused exports (selected):** `SIGNATURE_CONTAINER_CLASS`, `buildEntityTags`, `CATEGORY_CONFIG`, `escapeAttribute`, `normalizeInlineCode`, `sanitizeInternalHref`, `DOUBLE_NEWLINE`, `formatComment`, `DEFAULT_PACKAGE`, `EXTERNAL_DOCUMENTATION_LINKS`, `listDisplayPackages`, `DEFAULT_VERSION_SEGMENT`, `getEntityRouteSegment`, `ENTITIES`, `default` (`clearHistory.ts`), and others.
+- **Duplicate exports (named + default):** `Sidebar`, `CommandPalette`, `Button`, `clearDocsHistory`, `useUIStore`. Pick one form per file.
+
+### react-doctor findings (run `pnpm react-doctor --verbose`)
+
+Score: **78/100 (Great)** on apps/docs. **105 issues across 60/152 files**. Initial run surfaced `deslop/unused-dev-dependency` mirroring knip. Full per-run diagnostics path is printed at the end of each `react-doctor --verbose` invocation — capture it when reviewing.
+
+### Tool limitation noted
+
+- react-doctor < 0.2.5 didn't resolve workspace catalog refs (e.g., `react: catalog:react`). Failed with "No React dependency found". Fixed in 0.2.5 (upstream PR #313 merged 2026-05-22). TASK-08.5 pins to 0.2.5+.
+
+### Owner for fixes
+
+These findings are NOT addressed in TASK-08.5 (install + tool wiring only). Real fixes happen here, in TASK-09. Triage rule: a real finding must either be fixed in TASK-09 OR have a justified suppression added to the tool config with a comment explaining why.

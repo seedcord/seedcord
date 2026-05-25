@@ -8,13 +8,17 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "packages/plugins"
     },
-    "types": "./dist/index.d.ts",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs",
-            "default": "./dist/index.mjs"
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
         }
     },
     "files": [
@@ -24,7 +28,7 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsup",
+        "build": "tsdown",
         "clean": "rm -rf dist",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
@@ -39,15 +43,15 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/cli": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
-        "@seedcord/cli": "workspace:*",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps",
-        "kysely": "^0.28.9",
+        "kysely": "^0.29.2",
         "mongoose": "catalog:deps",
-        "pg": "^8.16.3",
+        "pg": "^8.21.0",
         "reflect-metadata": "catalog:deps",
         "seedcord": "workspace:*",
         "type-fest": "catalog:deps"
@@ -55,8 +59,8 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsup-config": "workspace:*",
-        "@types/pg": "^8.16.0"
+        "@seedcord/tsdown-config": "workspace:*",
+        "@types/pg": "^8.20.0"
     },
     "publishConfig": {
         "access": "public",

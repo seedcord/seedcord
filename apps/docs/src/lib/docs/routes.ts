@@ -21,14 +21,14 @@ export function buildEntityHref({ name, slug, version, tone }: BuildEntityHrefOp
 
     segments.push(encodeSegment(slug));
 
-    return segments.join('/') as Route;
+    return segments.join('/');
 }
 
 export function buildPackageBasePath(manifestPackage: string, version: string | null | undefined): Route {
     const packageSegment = encodeSegment(formatDisplayPackageName(manifestPackage));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
 
-    return `/docs/packages/${packageSegment}/${versionSegment}` as Route;
+    return `/docs/packages/${packageSegment}/${versionSegment}`;
 }
 
 export interface ParsedEntityPath {

@@ -308,3 +308,9 @@ git commit -m "chore(deps): reorganize pnpm-workspace catalogs into named bucket
 - **Files affected:** ~12 package.json files + workspace yaml + lockfile
 - **Touches published packages:** No (devDeps + dependencies syntax change only; resolved versions unchanged)
 - **Estimated wall-clock:** 1-2 hours
+
+---
+
+## Handoff
+
+- 2026-05-24 — completed by Claude Opus on sub-branch `chore/dep-bump-batch-01-05`. Commit `18c0e638`. Catalog trimmed to strict 2+ rule: 17 entries in 4 buckets (`deps`/`react`/`docs`/`peer`). 1-ref deps moved back to literal versions in their owning package.json. `onlyBuiltDependencies` migrated to the new pnpm 10.26 `allowBuilds` map. Resolved versions unchanged; `pnpm install --frozen-lockfile` + `pnpm prePush` both clean.

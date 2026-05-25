@@ -63,7 +63,7 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
         if (names.length === 0) continue;
 
         for (const nm of names) {
-            const see: SeeAlsoEntry = { name: nm } as SeeAlsoEntry;
+            const see: SeeAlsoEntry = { name: nm };
             if (typeof href === 'string' && href.length) see.href = href;
             if (typeof entry.target !== 'undefined') see.target = entry.target;
             results.push(see);

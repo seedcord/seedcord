@@ -6,7 +6,7 @@ import { inspect } from 'node:util';
 import { SeedcordError, SeedcordRangeError } from '@seedcord/services/internal';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
-import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely';
+import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
 import { SeedcordErrorCode } from 'seedcord';
 
 import type {
@@ -15,7 +15,13 @@ import type {
     MigrationOptions,
     StepMigrationOptions
 } from './types/KpgMigration';
-import type { Migration, MigrationInfo, MigrationProvider, MigrationResult, MigrationResultSet } from 'kysely';
+import type {
+    Migration,
+    MigrationInfo,
+    MigrationProvider,
+    MigrationResult,
+    MigrationResultSet
+} from 'kysely/migration';
 import type { Stats } from 'node:fs';
 
 /**
@@ -295,7 +301,7 @@ export class KpgMigrationManager<Database extends object> {
         if (!value || typeof value !== 'object') return false;
         if (!('up' in value) || !('down' in value)) return false;
 
-        const { up, down } = value as { up: unknown; down: unknown };
+        const { up, down } = value;
 
         return typeof up === 'function' && typeof down === 'function';
     }

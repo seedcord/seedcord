@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsdown';
 
-import type { Options } from 'tsup';
+import type { UserConfig } from 'tsdown';
 
-export type TsupOptions = Options;
+export type TsdownOptions = UserConfig;
 
 let cachedVersion: string | undefined;
 
@@ -29,40 +29,30 @@ function readPackageVersion(): string {
 }
 
 /**
- * Creates a standardized tsup configuration for seedcord packages
- * @param options - Tsup configuration options to override defaults
- * @returns A configured tsup configuration
+ * Creates a standardized tsdown configuration for seedcord packages.
+ * @param options - tsdown configuration options to override defaults
+ * @returns A configured tsdown configuration
  */
-// eslint-disable-next-line complexity
-export function createTsupConfig({
+// eslint-disable-next-line complexity -- Justified as this sets up default configs for tsdown
+export function createTsdownConfig({
     format = ['esm', 'cjs'],
     entry = ['src/index.ts'],
-    dts = true,
+    dts = { cjsReexport: true },
     shims = true,
-    skipNodeModulesBundle = true,
     clean = true,
     treeshake = true,
     platform = 'node',
     target = 'es2022',
-    splitting = false,
-    cjsInterop = format.includes('cjs'),
     minify = false,
-    keepNames = true,
     sourcemap = true,
     outDir = 'dist',
-    outExtension = (ctx) => {
-        if (ctx.format === 'cjs') {
-            return { js: '.cjs' };
-        }
-        if (ctx.format === 'esm') {
-            return { js: '.mjs' };
-        }
-        return { js: '.js' };
-    },
+    deps = { skipNodeModulesBundle: true },
+    fixedExtension = true,
+    checks = { legacyCjs: false },
     define = {},
     env = {},
     ...rest
-}: TsupOptions = {}): TsupOptions {
+}: TsdownOptions = {}): TsdownOptions {
     const packageVersion = readPackageVersion();
 
     return defineConfig({
@@ -70,18 +60,16 @@ export function createTsupConfig({
         entry,
         dts,
         shims,
-        skipNodeModulesBundle,
+        deps,
         clean,
         platform,
         target,
-        cjsInterop,
         minify,
-        splitting,
-        keepNames,
         sourcemap,
         treeshake,
         outDir,
-        outExtension,
+        fixedExtension,
+        checks,
         define: {
             __PACKAGE_VERSION__: JSON.stringify(packageVersion),
             ...define
@@ -91,7 +79,7 @@ export function createTsupConfig({
             ...env
         },
         ...rest
-    }) as Options;
+    });
 }
 
 /** Package version */

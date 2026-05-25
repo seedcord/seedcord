@@ -131,3 +131,9 @@ chore(deps): bump tsx, lint-staged, commitlint, changesets, prettier
 - **Files affected:** workspace yaml, root + tsconfig + every package tsconfig + likely 10-30 source-level cascade fixes
 - **Touches published packages:** Yes — peer dep range bump → changeset patch each
 - **Estimated wall-clock:** 4-6 hours
+
+---
+
+## Handoff
+
+- 2026-05-25 — completed by Claude Opus on sub-branch `chore/dep-bump-batch-01-05`. Block 1 PARTIAL first (`094909d8`: ts-eslint patches + drop @eslint/eslintrc) because ESLint 10 + TS 6 both blocked: ESLint 10 by `eslint-plugin-react@7.37.5` (no v8 compat release), TS 6 by `tsup@8.5.1`'s baseUrl injection (PR #1390 still open). After the tsdown migration (TASK-02.7, commit `0fd0585b`), TS 6 unblocked → commit `6f8f4d2d`. ESLint 10 stayed deferred. Remaining: `93b20e1d` (eslint-plugin-security 4), `3456f608` (vite 8 + vitest 4.1.7), `7f5f4e0a` (patch sweep), `36cecef0` (lint-staged 17), `8f853129` (commitlint 21). ESLint 10 deferred until `eslint-plugin-react` ships a compat release (track via `.vscode/notes/ECOSYSTEM_BLOCKERS_2026-05-24.md`).

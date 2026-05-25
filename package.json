@@ -4,7 +4,7 @@
     "description": "A Discord bot framework built on top of Discord.js",
     "private": true,
     "type": "module",
-    "packageManager": "pnpm@10.26.1",
+    "packageManager": "pnpm@11.3.0",
     "scripts": {
         "build": "turbo build",
         "dev": "turbo dev",
@@ -24,6 +24,8 @@
         "turbo:graph": "turbo build --graph",
         "turbo:trace": "turbo build --trace",
         "prepare": "husky",
+        "knip": "knip",
+        "react-doctor": "react-doctor --verbose",
         "cs": "changeset",
         "cs:publish": "changeset publish",
         "cs:status": "changeset status --output .changeset/status.json",
@@ -51,31 +53,29 @@
     "author": "Dhruv <materwelondhruv@gmail.com>",
     "license": "Apache-2.0",
     "devDependencies": {
-        "@changesets/cli": "^2.29.7",
-        "@commitlint/cli": "^20.1.0",
-        "@commitlint/config-conventional": "^20.0.0",
+        "@changesets/cli": "^2.31.0",
+        "@commitlint/cli": "^21.0.1",
+        "@commitlint/config-conventional": "^21.0.1",
         "@seedcord/docs-generator": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@swc/core": "^1.15.3",
-        "@types/chai": "^5.2.3",
-        "@types/node": "^24.10.1",
-        "@vitest/coverage-v8": "^4.0.13",
-        "chai": "^6.2.1",
+        "@types/node": "catalog:deps",
+        "@vitest/coverage-v8": "^4.1.7",
         "eslint": "catalog:peer",
         "husky": "^9.1.7",
-        "lint-staged": "^16.2.7",
-        "nodemon": "^3.1.11",
+        "knip": "^6.14.2",
+        "lint-staged": "^17.0.5",
         "prettier": "catalog:deps",
+        "react-doctor": "^0.2.5",
         "tsd": "^0.33.0",
-        "tsup": "catalog:peer",
+        "tsdown": "catalog:peer",
         "tsx": "catalog:peer",
-        "turbo": "^2.6.1",
+        "turbo": "^2.9.14",
         "typescript": "catalog:peer",
         "vite": "catalog:deps",
-        "vitest": "^4.0.13"
+        "vitest": "^4.1.7"
     },
     "engines": {
-        "node": ">=22.12.0"
+        "node": ">=22.13.0"
     }
 }

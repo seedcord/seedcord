@@ -89,6 +89,7 @@ describe('HmrPlugin', () => {
             // Initialize hooks
             const plugin = hmrPlugin.plugin;
             if (typeof plugin.configureServer === 'function') {
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Vite's Plugin.configureServer is a method with a `this` context type that resists direct invocation; the cast strips that without losing runtime semantics
                 (plugin.configureServer as (server: ViteDevServer) => void)(serverMock);
             }
         });

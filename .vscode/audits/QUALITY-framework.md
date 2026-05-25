@@ -549,3 +549,38 @@ This branch is mid-refactor reducing exported surface. The split is now `index.t
 
 **Package with most issues:** `packages/seedcord` (~24 findings across HIGH/MEDIUM/LOW), driven by the bot utilities (H1–H3), decorators (M5, M13, M14), HMR (M29), and effects (H10, M28).
 **Most common antipattern:** Silent error swallowing — appears in `fetchGuildMember`, `fetchRole`, `fetchText`, `attemptSendDM`, `Mongo.disconnect`, `KyselyPg.disconnect`, `Confirmable.onResolved`, `filterCirculars` (3 catches), and the `mongoose.deleteModel` cleanup path. AGENTS.md `FAIL-FAST-RULES` is the rule being broken most often.
+
+---
+
+## Tool reconciliation (TASK-08.5 cross-check, 2026-05-25)
+
+### knip findings (framework packages scope)
+
+Mostly unused TYPE exports flagged — likely a mix of true dead exports + public-API exports knip can't see are consumed externally. Real triage in TASK-11.
+
+- **Unused types/interfaces (selected):**
+    - `packages/plugins/src/kysely-pg/types/KpgMigration.ts:11`: `MigrationFn`
+    - `packages/plugins/src/kysely-pg/types/KpgServices.ts:32,39`: `DefaultKpgDatabase`, `DefaultKpgService`
+    - `packages/seedcord/src/bot/decorators/Command.ts:19,26,35,52`: `CommandCtor`, `GlobalMeta`, `GuildMeta`, `CommandScope`
+    - `packages/seedcord/src/bot/decorators/Confirmable/types.ts:41,48,57,83`: `ExtractComponent`, `ContainerLike`, `EmbedLike`, `ComponentsV2Payload`
+    - `packages/seedcord/src/bot/decorators/Interactions.ts:61,71,198`: `HandlerEventType`, `AssertHandles`, `SelectMenuInteractionFor`
+    - `packages/seedcord/src/bot/injectors/EmojiInjector.ts:20`: `EmojiConfigValue`
+    - `packages/seedcord/src/bot/utilities/Types.ts:5`: `MessageContent`
+    - `packages/seedcord/src/effects/types/Effects.ts:8,52`: `DefaultEffects`, `EffectParams`
+    - `packages/seedcord/src/interfaces/Handler.ts:71,280`: `HandlerWithChecks`, `AutocompleteHandlerConstructor`
+    - `packages/services/src/Errors/SeedcordError.ts:19,171,185,194`: `SeedcordErrorOptions`, `SeedcordErrorVariant`, `AnySeedcordErrorForCode`, `ErrorTypeFilter`
+    - `packages/services/src/Lifecycle/LifecycleTypes.ts:5`: `LifecycleAction`
+- **Unused dependencies (verify before removing):**
+    - `discord.js` in `packages/services` (services imports `discord.js` types — false positive worth verifying)
+    - `mongoose` in `mock/`
+    - `typedoc-plugin-dt-links` + `typedoc-plugin-mdn-links` in both `packages/docs-engine` and `packages/docs-generator` (loaded via typedoc config — false positive)
+    - `@typescript-eslint/eslint-plugin` + `@typescript-eslint/parser` in `packages/eslint-config` (re-exported by `typescript-eslint` — possible false positive but worth verifying)
+- **Root unused devDependencies (real candidates for removal):**
+    - `@swc/core` — was a tsup transformer; tsdown uses oxc. Likely removable.
+    - `@types/chai`, `chai` — vitest doesn't require chai-style assertions; check usage.
+    - `nodemon` — no script references it in package.json.
+- **Unlisted binary:** `continue` (knip thinks "continue" referenced in changeset content is a binary). False positive; can be ignored or added to `ignoreBinaries`.
+
+### Owner for fixes
+
+NOT addressed in TASK-08.5. Real fixes happen in TASK-11. Triage rule: each finding → fix OR justified suppression in `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns. Per the strict-validation policy (locked this session): suppressions must include a justification comment in this audit.

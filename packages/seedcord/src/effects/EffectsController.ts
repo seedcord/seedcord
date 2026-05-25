@@ -120,9 +120,9 @@ export class EffectsController extends Plugin<EffectsEvents> {
     }
 
     private unregisterEffect(handler: EffectConstructor, artifacts?: EffectArtifact): void {
-        const effects = artifacts ?? (Array.from(this.effectsMap.keys()) as EffectArtifact);
+        const effects = artifacts ?? Array.from(this.effectsMap.keys());
         for (const effect of effects) {
-            const handlers = this.effectsMap.get(effect as EffectKeys);
+            const handlers = this.effectsMap.get(effect);
             if (!handlers) continue;
             const index = handlers.findIndex((entry) => entry.ctor === handler);
             if (index !== -1) {

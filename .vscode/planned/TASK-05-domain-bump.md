@@ -142,3 +142,9 @@ git commit -m "chore(deps): straggler patch bumps"
 - **Files affected:** workspace yaml + ~10-20 source files (cli, plugins)
 - **Touches published packages:** Yes — changesets minor on `@seedcord/cli`, `@seedcord/plugins`
 - **Estimated wall-clock:** 3-5 hours
+
+---
+
+## Handoff
+
+- 2026-05-25 — completed by Claude Opus on sub-branch `chore/dep-bump-batch-01-05`. Four commits: `1df74bc8` (patch + minor sweep: discord.js 14.26.4, envapt 4.1.1, mongoose 9.6.2, type-fest 5.6.0, strip-ansi 7.2.0, commander 14.0.3, jiti 2.7.0, minimatch 10.2.5, pg 8.21.0, @types/pg 8.20.0), `5afda04b` (typedoc lockstep), `ffda6f71` (ink 7 — `ink-spinner@5.0.0` peer accepts ink 7 natively, no inline replacement needed), `c5762703` (kysely 0.29 — relocated migration helpers to `kysely/migration`). No `.getChanges()` or `.withTables()` call sites needed migration. Mock smoke + docs:smoke both unchanged from baseline.

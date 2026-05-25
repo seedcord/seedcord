@@ -22,7 +22,7 @@ export class KpgServiceRegistry<Database extends object> {
     ) {}
 
     public get map(): KpgServices {
-        return this.services as unknown as KpgServices;
+        return this.services;
     }
 
     public register(key: KpgServiceKeys, instance: AnyKpgService): void {

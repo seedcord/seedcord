@@ -360,3 +360,21 @@ None observed — the framework gets all the HMR types it needs.
 - Test gaps: 8
 
 **Most common antipattern:** unbounded resource lifecycle — repeated `process.on` registration, missing `dispose()` symmetry on listeners (Ink effects, HmrPlugin), and ad-hoc `setTimeout` flush waits instead of explicit "done" signals. The CLI's session-per-cycle architecture papers over leaks today but will break the first time a process or runtime is reused across iterations.
+
+---
+
+## Tool reconciliation (TASK-08.5 cross-check, 2026-05-25)
+
+### knip findings (packages/cli scope)
+
+- **Unused file:** `packages/cli/src/ui/index.ts` (barrel — confirm before deleting; may be the public entry point for `./vite-hmr` consumers).
+- **Unused dependencies:** `@commander-js/extra-typings` (used as a TYPE re-export from `commander`; likely false positive), `fix-esm-import-path` (used at build time by tsdown? verify). Investigate before removing.
+- **Unused devDependencies:** `@seedcord/tsconfig` (tsconfig extends; false positive).
+
+### react-doctor on packages/cli
+
+Run `pnpm react-doctor --verbose` and select `@seedcord/cli` in the prompt. Requires react-doctor 0.2.5+ for catalog reference resolution — earlier versions failed with "No React dependency found" because `react: catalog:react` in packages/cli/package.json wasn't resolved (upstream fix: millionco/react-doctor PR #313).
+
+### Owner for fixes
+
+NOT addressed in TASK-08.5. Real fixes happen in TASK-10. Triage rule: real finding → fix OR justified suppression in tool config with comment.

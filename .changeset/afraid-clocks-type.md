@@ -2,7 +2,6 @@
 '@seedcord/docs-generator': patch
 '@seedcord/eslint-config': patch
 '@seedcord/docs-engine': patch
-'@seedcord/tsup-config': patch
 'seedcord': patch
 '@seedcord/services': patch
 '@seedcord/plugins': patch

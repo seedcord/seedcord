@@ -8,19 +8,27 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "packages/seedcord"
     },
-    "types": "./dist/index.d.ts",
+    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs",
-            "default": "./dist/index.mjs"
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
         },
         "./internal": {
-            "types": "./dist/internal.index.d.ts",
-            "import": "./dist/internal.index.mjs",
-            "require": "./dist/internal.index.cjs",
-            "default": "./dist/internal.index.mjs"
+            "import": {
+                "types": "./dist/internal.index.d.mts",
+                "default": "./dist/internal.index.mjs"
+            },
+            "require": {
+                "types": "./dist/internal.index.d.cts",
+                "default": "./dist/internal.index.cjs"
+            }
         }
     },
     "files": [
@@ -30,7 +38,7 @@
         "LICENSE"
     ],
     "scripts": {
-        "build": "tsup",
+        "build": "tsdown",
         "clean": "rm -rf dist",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
@@ -58,7 +66,7 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsup-config": "workspace:*",
+        "@seedcord/tsdown-config": "workspace:*",
         "vite": "catalog:deps"
     },
     "publishConfig": {

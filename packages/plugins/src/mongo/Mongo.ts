@@ -45,7 +45,7 @@ export class Mongo extends Plugin {
      * Map of all loaded services.
      * Keys come from `@RegisterMongoService('key')`
      */
-    public readonly services: MongoServices = {} as MongoServices;
+    public readonly services: MongoServices = {};
 
     /** Exposed Mongoose instance once `init` completes. */
     declare public connection: Mongoose;

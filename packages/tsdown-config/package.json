@@ -1,20 +1,26 @@
 {
-    "name": "@seedcord/tsup-config",
+    "name": "@seedcord/tsdown-config",
     "type": "module",
-    "version": "1.1.2",
-    "description": "Tsup preset for seedcord packages and beyond",
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
+    "version": "2.0.0",
+    "private": true,
+    "description": "Internal tsdown preset for seedcord packages",
+    "main": "./dist/index.cjs",
+    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/tsup-config"
+        "directory": "packages/tsdown-config"
     },
     "exports": {
         ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.mjs",
-            "require": "./dist/index.cjs"
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
         }
     },
     "files": [
@@ -22,7 +28,7 @@
         "src"
     ],
     "scripts": {
-        "build": "tsup",
+        "build": "tsdown --config-loader tsx",
         "clean": "rm -rf dist",
         "lint": "eslint '*.{mjs,ts}' --cache",
         "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
@@ -33,13 +39,13 @@
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
     },
+    "dependencies": {
+        "tsdown": "catalog:peer"
+    },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
+        "@types/node": "catalog:deps",
         "typescript": "catalog:peer"
-    },
-    "publishConfig": {
-        "access": "public",
-        "provenance": true
     }
 }

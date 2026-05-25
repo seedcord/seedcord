@@ -125,7 +125,7 @@ function renderReferenceType(ctx: TransformContext, type: DocType, parts: SigPar
         parts.push(textPart(label));
     }
 
-    const typeArguments = (referenceType.typeArguments ?? []) as DocType[];
+    const typeArguments = referenceType.typeArguments ?? [];
     if (typeArguments.length === 0) {
         return;
     }
@@ -163,20 +163,20 @@ function renderTupleType(ctx: TransformContext, type: DocType, parts: SigPart[])
             parts.push(textPart(element.name));
             if (element.isOptional) parts.push(punctPart('?'));
             parts.push(punctPart(': '));
-            renderTypeNode(ctx, element.element as DocType, parts);
+            renderTypeNode(ctx, element.element, parts);
             return;
         }
         if (element.type === 'optional') {
-            renderTypeNode(ctx, element.elementType as DocType, parts);
+            renderTypeNode(ctx, element.elementType, parts);
             parts.push(punctPart('?'));
             return;
         }
         if (element.type === 'rest') {
             parts.push(punctPart('...'));
-            renderTypeNode(ctx, element.elementType as DocType, parts);
+            renderTypeNode(ctx, element.elementType, parts);
             return;
         }
-        renderTypeNode(ctx, element as DocType, parts);
+        renderTypeNode(ctx, element, parts);
     });
     parts.push(punctPart(']'));
 }
@@ -289,10 +289,10 @@ const TYPE_RENDERERS: Record<string, TypeRenderer> = {
         parts.push(punctPart('[]'));
     },
     union: (ctx, type, parts) => {
-        renderSeparatedTypes(ctx, (type as JSONOutput.UnionType).types as DocType[], ' | ', parts);
+        renderSeparatedTypes(ctx, (type as JSONOutput.UnionType).types, ' | ', parts);
     },
     intersection: (ctx, type, parts) => {
-        renderSeparatedTypes(ctx, (type as JSONOutput.IntersectionType).types as DocType[], ' & ', parts);
+        renderSeparatedTypes(ctx, (type as JSONOutput.IntersectionType).types, ' & ', parts);
     },
     tuple: renderTupleType,
     conditional: renderConditionalType,

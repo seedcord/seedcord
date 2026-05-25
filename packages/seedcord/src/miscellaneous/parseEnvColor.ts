@@ -9,7 +9,7 @@ export function parseEnvColor(raw: string | undefined | null, fallback: ColorRes
     if (!raw) return fallback;
 
     // eslint-disable-next-line no-magic-numbers
-    const toHex = (n: number): ColorResolvable => `#${n.toString(16).padStart(6, '0')}` as ColorResolvable;
+    const toHex = (n: number): ColorResolvable => `#${n.toString(16).padStart(6, '0')}`;
 
     // try numeric parse first
     const num = Number(raw);
@@ -19,7 +19,7 @@ export function parseEnvColor(raw: string | undefined | null, fallback: ColorRes
     if (raw.startsWith('#')) return raw as ColorResolvable;
 
     // hex without #
-    if (/^[0-9A-Fa-f]{6}$/.test(raw)) return `#${raw}` as ColorResolvable;
+    if (/^[0-9A-Fa-f]{6}$/.test(raw)) return `#${raw}`;
 
     // Discord named colors
     const colorKey = Object.keys(Colors).find((key) => key.toLowerCase() === raw.toLowerCase()) as

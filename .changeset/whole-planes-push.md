@@ -1,6 +1,5 @@
 ---
 '@seedcord/eslint-config': minor
-'@seedcord/tsup-config': minor
 'seedcord': minor
 '@seedcord/services': minor
 '@seedcord/plugins': minor

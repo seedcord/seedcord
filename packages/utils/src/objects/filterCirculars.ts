@@ -128,7 +128,7 @@ function json<ObjType, Marker extends string>(
     } catch (error) {
         logger?.error('filterCirculars stringify error', error);
         if (typeof value === 'object' && value !== null) {
-            logger?.error('top level keys', Object.keys(value as Record<string, unknown>));
+            logger?.error('top level keys', Object.keys(value));
         }
         return value as JsonifyWithCirculars<ObjType, Marker>;
     }

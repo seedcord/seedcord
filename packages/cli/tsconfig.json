@@ -4,7 +4,6 @@
     "compilerOptions": {
         "rootDir": "./",
         "outDir": "./dist",
-        "baseUrl": ".",
         "paths": {
             "commander": ["./node_modules/@commander-js/extra-typings"],
             "@ui/*": ["./src/ui/*"],

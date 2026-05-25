@@ -1,5 +1,6 @@
 import type { KpgMigrationsOptions } from './KpgOptions';
-import type { Kysely, Migration, NO_MIGRATIONS } from 'kysely';
+import type { Kysely } from 'kysely';
+import type { Migration, NoMigrations } from 'kysely/migration';
 import type { Logger } from 'seedcord';
 
 /**
@@ -22,7 +23,7 @@ export interface MigrationModule {
 /**
  * Target migration identifier used to indicate no migrations should be run. Uses Kysely's built-in `NO_MIGRATIONS` constant.
  */
-export type MigrationTarget = string | typeof NO_MIGRATIONS;
+export type MigrationTarget = string | NoMigrations;
 
 /**
  * Behavior configuration for migrations that should run automatically when a

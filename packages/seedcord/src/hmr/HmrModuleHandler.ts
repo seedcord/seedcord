@@ -222,7 +222,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
                 }
             }
         } catch (error) {
-            logger.error(`Failed to reload file: ${file}`, error as Error);
+            logger.error(`Failed to reload file: ${file}`, error);
         }
     }
 }

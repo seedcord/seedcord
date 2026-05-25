@@ -1,0 +1,35 @@
+{
+    "$schema": "https://unpkg.com/knip@latest/schema.json",
+    "workspaces": {
+        ".": {
+            "entry": ["scripts/extract-docs.ts", "scripts/**/*.ts"],
+            "project": ["scripts/**/*.ts"]
+        },
+        "packages/seedcord": {},
+        "packages/services": {},
+        "packages/utils": {},
+        "packages/types": {},
+        "packages/plugins": {},
+        "packages/cli": {
+            "entry": ["bin/seedcord.mjs"]
+        },
+        "packages/docs-engine": {
+            "entry": ["src/smoke.ts"]
+        },
+        "packages/docs-generator": {},
+        "packages/eslint-config": {},
+        "packages/tsdown-config": {},
+        "packages/tsconfig": {},
+        "apps/docs": {
+            "entry": [
+                "src/app/**/{page,layout,route,not-found}.{ts,tsx}",
+                "next.config.ts",
+                "postcss.config.mjs"
+            ],
+            "project": ["src/**/*.{ts,tsx}"]
+        },
+        "mock": {
+            "entry": ["src/index.ts"]
+        }
+    }
+}

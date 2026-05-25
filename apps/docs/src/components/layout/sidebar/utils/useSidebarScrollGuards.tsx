@@ -12,13 +12,16 @@ export function useSidebarScrollGuards(): {
     handleTouchEnd: () => void;
 } {
     const handleWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
-        event.stopPropagation();
-
         const viewport = event.currentTarget;
 
+        // If this viewport isn't actually scrollable yet, let the wheel bubble
+        // up to an ancestor that might be. Calling stopPropagation here would
+        // capture and silently drop the event — the "tight spring" bug.
         if (viewport.scrollHeight <= viewport.clientHeight) {
             return;
         }
+
+        event.stopPropagation();
 
         const normalizedDeltaY = normalizeWheelDelta(event, viewport);
 

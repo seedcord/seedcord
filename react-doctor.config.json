@@ -1,0 +1,18 @@
+{
+    "packages": ["apps/docs", "packages/cli"],
+    "rules": {
+        "no-mutable-in-deps": "error",
+        "no-array-index-as-key": "warn",
+        "no-react19-deprecated-apis": "warn",
+        "prefer-useReducer": "warn",
+        "js-combine-iterations": "warn",
+        "server-sequential-independent-await": "warn",
+        "async-defer-await": "warn",
+        "rendering-hydration-mismatch-time": "error",
+        "no-barrel-import": "warn",
+        "no-giant-component": "warn",
+        "design-no-bold-heading": "warn",
+        "design-no-redundant-size-axes": "warn"
+    },
+    "suppressions": []
+}

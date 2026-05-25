@@ -170,3 +170,9 @@ pnpm prePush
 - **Files affected:** workspace yaml + apps/docs source files where lucide / marked rendering changes
 - **Touches published packages:** No
 - **Estimated wall-clock:** 3-5 hours (mostly the manual smoke after each commit)
+
+---
+
+## Handoff
+
+- 2026-05-25 — completed by Claude Opus on sub-branch `chore/dep-bump-batch-01-05`. Six commits: `847f520c` (patch sweep), `96f91f75` (tailwindcss 4.3 + plugin 0.8), `3aea1f2f` (marked 18), `cb34a2e1` (shiki 4), `d6402518` (lucide 1.16). Plus `21089c9e` fix-up for a mobile sidebar scroll regression that Tailwind 4.3 surfaced (root cause was apps/docs's `h-full` inside a `max-h-only` parent — undefined CSS behavior; Tailwind 4.3 enforces spec). Found via dual-worktree bisect (`tailwindcss@4.1.18` vs 4.3.0). Two pre-existing bugs surfaced and noted in MASTER_PLAN handoff for TASK-09: intermittent Sidebar SSR/client class-order hydration mismatch + low-framerate cmd-k animation. Also fixed a related pre-existing bug in `useSidebarScrollGuards.handleWheel` (was calling `stopPropagation()` BEFORE the scrollable check, dropping wheel events on non-scrolling viewports).

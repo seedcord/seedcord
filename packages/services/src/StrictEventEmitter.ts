@@ -38,7 +38,7 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
         event: TEventKey,
         listener: (...args: TEvents[TEventKey]) => void
     ): this {
-        return super.on(event, listener as unknown as (...args: unknown[]) => void);
+        return super.on(event, listener);
     }
 
     /**
@@ -52,7 +52,7 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
         event: TEventKey,
         listener: (...args: TEvents[TEventKey]) => void
     ): this {
-        return super.once(event, listener as unknown as (...args: unknown[]) => void);
+        return super.once(event, listener);
     }
 
     /**
@@ -66,7 +66,7 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
         event: TEventKey,
         listener: (...args: TEvents[TEventKey]) => void
     ): this {
-        return super.off(event, listener as unknown as (...args: unknown[]) => void);
+        return super.off(event, listener);
     }
 
     /**
@@ -94,7 +94,7 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
         event: TEventKey,
         listener: (...args: TEvents[TEventKey]) => void
     ): this {
-        return super.removeListener(event, listener as unknown as (...args: unknown[]) => void);
+        return super.removeListener(event, listener);
     }
 
     /**

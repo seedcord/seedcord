@@ -160,3 +160,9 @@ git commit -m "chore: baseline gate results before dep bump pass"
 - **Files affected:** 1 new (.vscode/audits/BASELINE-2026-05-24.md)
 - **Touches published packages:** No
 - **Estimated wall-clock:** 15-30 min
+
+---
+
+## Handoff
+
+- 2026-05-24 — completed by Claude Opus on sub-branch `chore/dep-bump-batch-01-05`. Commit `0c9b859a`. All primary gates green; mock-dev surfaced 2 pre-existing issues recorded in BASELINE doc (React-key dup → TASK-10; Ink raw-mode → env-only/CI ownership).
