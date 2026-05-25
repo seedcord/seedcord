@@ -109,6 +109,66 @@ Changeset: minor on `@seedcord/eslint-config` (devDep surface change for consume
 
 ---
 
+## Handoff
+
+**Status:** ✅ Completed (2026-05-25)
+
+```
+Completed by: Claude Opus 4.7
+Build status: ✅ pnpm prePush exit 0
+
+### What was done:
+- React-compiler RC ESLint plugin (19.1.0-rc.2) wired in apps/docs/eslint.config.mjs in a prior commit
+  (chore/dep-bump-batch-01-05); user explicitly opted in despite the RC tag because the rules catch
+  real correctness issues. One false positive surfaced + suppressed inline with justification.
+- React-refresh ESLint plugin: stays N/A. apps/docs is Next.js (built-in Fast Refresh), not Vite.
+- @eslint/eslintrc / FlatCompat cleanup: N/A. Audited every package — `rg -i "eslintrc|FlatCompat"` returns
+  nothing in packages/eslint-config/src or any consumer eslint.config.mjs. The dep was never installed.
+
+### Blockers encountered:
+- ESLint 10 itself stays deferred — `eslint-plugin-react@7.37.5` still incompatible with ESLint 10's
+  reorganized linter API. Sonnet subagent research (saved to .vscode/notes/ESLINT-10-PLUGIN-REACT-RESEARCH.md)
+  confirmed the upstream fix PR (#3979) is open + CI-green but maintainer-bottlenecked on a separate
+  ESLint-10 fix in eslint-plugin-import. No timeline signal — pessimistic Q3 2026 or later. Recommendation:
+  keep waiting; do not fork or migrate to @eslint-react/eslint-plugin (rule names differ; significant cost).
+- ESLint 10 cleanup checklist captured in .vscode/notes/ECOSYSTEM_BLOCKERS_2026-05-24.md for whoever
+  finally lands the bump.
+
+### Breaking changes:
+- None.
+
+### Files modified count: 0 (this commit) / 1 in prior commit (apps/docs/eslint.config.mjs)
+### Files created count: 0
+### Files deleted count: 0
+
+### Key decisions made:
+- Marked complete despite the pivoted "post-ESLint-10 cleanup" scope being inapplicable — the original
+  goal (add devtools) is done; the pivot was contingent on ESLint 10 landing, which it didn't. Reopening
+  this TODO when ESLint 10 lands would be reasonable; the cleanup checklist + research doc are the
+  written handoff to that future work.
+
+### Tests passing: ✅ via pnpm prePush
+
+### Verification performed:
+- rg eslintrc packages/eslint-config/src → no hits
+- rg FlatCompat → no hits anywhere in src
+- ESLint catalog confirmed at ^9.39.2 (no 10.x); cleanup gated on the deferred bump.
+
+### Changeset added:
+- N/A — no published-package surface change (no dep removed, no API change).
+
+### Warnings to next implementor (whoever lands ESLint 10):
+- Walk the checklist in .vscode/notes/ECOSYSTEM_BLOCKERS_2026-05-24.md ("ESLint 10 cleanup checklist for
+  when the bump finally lands"). Specifically: bump peer.eslint in pnpm-workspace.yaml, bump
+  eslint-plugin-react to its new compat version, accept peer warnings from jsx-a11y/import/prettier/
+  react-hooks, run full pnpm prePush, add minor changeset on @seedcord/eslint-config.
+
+### Critical notes:
+- Squashed into feat/better-api-extraction as commit edc7e43.
+```
+
+---
+
 ## Notes
 
 - **Complexity:** Low

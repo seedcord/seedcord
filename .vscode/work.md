@@ -223,6 +223,20 @@ If the user picks a task whose blockers aren't done, **flag it before starting**
 - Commit(s): <sha list>
 ```
 
+### 2026-05-25 — TODOs 06 / 07 / 08 close-out (sub-branch `chore/task-06-07-08-cleanup`, squashed into `feat/better-api-extraction`)
+
+- **Implemented:** TODO 07 scripts/ lint + tc + prePush wiring (scripts/tsconfig.json extends @seedcord/tsconfig/node; `tc:scripts`, `lint:scripts`, `lint:fix:scripts` added; `.husky/pre-push` now delegates to `pnpm prePush` for single-source-of-truth); TODO 08 `setup` composite action consolidating pnpm + node + install across tests.yml + publish.yml (3 inline call sites → 1 composite); TODO 06 closed (react-compiler RC + eslintrc cleanup both already done / N/A; written checklist for the deferred ESLint 10 bump). Scope expanded mid-session to mirror cancrops's husky+LFS setup: new `.gitattributes` + post-checkout / post-commit / post-merge hooks + `git lfs pre-push` chain; existing 5 binary assets (banner.png, favicon.ico, 3 svgs, ~216K total) re-staged as LFS pointers via `git add --renormalize`. Also added root `.markdownlint.json` so CLI parity with the IDE markdownlint extension is enforced; deduplicated the inline `markdownlint.config` block in `.vscode/settings.json`. Also added "Bash tool / sandbox" pitfalls to this work.md so future agents stop sandboxing pnpm + git-write commands.
+- **Surprised by:**
+    - `pnpm exec eslint 'scripts/**/*.ts'` works against the root `eslint.config.mjs` because the root `tsconfig.json` doesn't exclude `scripts/` — parser type resolution Just Works without a per-scripts ESLint config. Only `tc` needs the dedicated scripts/tsconfig.json (since `pnpm tc` is `turbo tc` which scans workspace packages only).
+    - `.eslintignore` was still on disk despite the dep bump to ESLint 9. Surfaces as a runtime warning ("file no longer supported") on every `pnpm exec eslint` call. Migrated patterns into `generalIgnores` on the root config and deleted the file.
+    - `git lfs install --local` failed against husky's `.husky/_/pre-push` wrapper. Skipped — global LFS smudge/clean filters were already configured from a prior `git lfs install` (no `--local`), so the migrate Just Worked without re-installing.
+    - commitlint rejects `TASK-NN` in commit subjects as Pascal-case (same rule that already hit `MASTER_PLAN`). Move task IDs into the body (`Closes TODO 07.`).
+    - Pre-existing `MD051` link fragment in MASTER_PLAN (`[Out of Scope](#out-of-scope)` doesn't resolve) — flagged by `pnpm dlx markdownlint-cli2`. Not in this session's scope; future cleanup.
+- **Followed up with:** ESLint 10 cleanup checklist appended to `.vscode/notes/ECOSYSTEM_BLOCKERS_2026-05-24.md` (gitignored local note) + new `.vscode/notes/ESLINT-10-PLUGIN-REACT-RESEARCH.md` (sonnet subagent research — upstream fix PR #3979 maintainer-bottlenecked; pessimistic Q3 2026). No new MASTER_PLAN "Discovered" entries.
+- **Commit(s):** 5 commits on the sub-branch (tooling + TODO-07 + TODO-08 + TODO-06 doc + husky/LFS) → squashed into `edc7e43` on `feat/better-api-extraction`.
+
+---
+
 ### 2026-05-24/25 — Phase 0 + Phase 1 + TASK-02.7 + TASK-08.5 (sub-branch `chore/dep-bump-batch-01-05`, squashed into `feat/better-api-extraction`)
 
 - **Implemented:** TASK-01 baseline; TASK-02 catalog reorg to strict-2+ rule + `allowBuilds`; TASK-02.7 tsup → tsdown migration (renamed `@seedcord/tsup-config` to `@seedcord/tsdown-config` private; dual `.d.mts`/`.d.cts` exports); TASK-03 TS 6 + ts-eslint 8.59 + eslint-plugin-security 4 + vite 8 + vitest 4.1.7 + tooling tail (ESLint 10 deferred); TASK-04 frontend bumps (react, next, radix, postcss, zustand, tailwind 4.3, marked 18, shiki 4, lucide 1.16 + a11y); TASK-05 domain bumps (discord.js, mongoose, type-fest, typedoc 0.28.19, ink 7, kysely 0.29); partial TASK-06 (react-compiler RC wired in apps/docs); partial TASK-08 (CI pin bumps); TASK-08.5 (knip + react-doctor, scripts only). pnpm self-update to 11.3.0 + `minimumReleaseAge` policy active + `.npmrc` `confirm-modules-purge=false`. Catalog values converted to caret ranges so published peerDeps are sensible.

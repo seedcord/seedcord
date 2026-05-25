@@ -206,6 +206,64 @@ Changeset: none.
 
 ---
 
+## Handoff
+
+**Status:** ✅ Completed (2026-05-25)
+
+```
+Completed by: Claude Opus 4.7
+Build status: ✅ pnpm prePush exit 0; workflows YAML-valid via prettier
+
+### What was done:
+- .github/actions/setup/action.yml (new) wraps pnpm/action-setup + actions/setup-node + `pnpm install --frozen-lockfile`.
+  Inputs: node-version (24), pnpm-version (11.3.0), registry-url (optional, for publish jobs), install (default true).
+- tests.yml verify job and publish.yml dry-run-npm + npm-publish jobs all call ./.github/actions/setup instead of
+  duplicating those steps inline. 3 call sites collapsed.
+- publish.yml npm-publish keeps its registry-url passthrough (https://registry.npmjs.org) so the npm token exchange
+  for the changesets/action publish step still works.
+
+### Blockers encountered:
+- None.
+
+### Breaking changes:
+- None.
+
+### Deferred (out of scope):
+- extract-single-package-docs composite — depends on TASK-14 (docs-generator --package flag). Build alongside TASK-14.
+- commit-to-artifacts-repo composite — depends on TASK-19 (docs-publish workflow contract). Build alongside TASK-19.
+- setup-tsx composite — skipped entirely; `pnpm exec tsx` works as-is, no wrapper needed.
+- GitHub Action major version bumps (actions/checkout v5→v6, pnpm/action-setup v4→v6) — separate CI-hygiene PR per
+  the existing "Discovered during implementation" follow-up.
+
+### Files modified count: 2 (tests.yml, publish.yml)
+### Files created count: 1 (.github/actions/setup/action.yml)
+### Files deleted count: 0
+
+### Key decisions made:
+- Composite owns install (it's the workflow's universal first step). Inputs default to seedcord's current pins so
+  most call sites can use it with zero `with:` block.
+- registry-url is opt-in via input — only publish jobs need it, and it's harmless for other jobs (setup-node only
+  writes the .npmrc entry when it's passed).
+
+### Tests passing: ✅ via pnpm prePush
+
+### Verification performed:
+- prettier --check on the new yaml passed (lint-staged ran it on commit).
+- Actual CI run pending until the squash merge lands on origin.
+
+### Changeset added:
+- N/A — CI-only change.
+
+### Warnings to next implementor (TODO 14 / 19):
+- When TASK-14 adds the --package flag to docs-generator, build the extract-single-package-docs composite then.
+  Use this `setup` composite as a precedent for input shape + default style.
+
+### Critical notes:
+- Squashed into feat/better-api-extraction as commit edc7e43 alongside TODO 06 + 07.
+```
+
+---
+
 ## Notes
 
 - **Complexity:** Medium

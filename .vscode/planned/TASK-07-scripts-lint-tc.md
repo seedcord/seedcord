@@ -108,6 +108,54 @@ Changeset: none (no published surface change).
 
 ---
 
+## Handoff
+
+**Status:** ✅ Completed (2026-05-25)
+
+```
+Completed by: Claude Opus 4.7
+Build status: ✅ pnpm prePush exit 0 across full workspace
+
+### What was done:
+- scripts/tsconfig.json (new) extends @seedcord/tsconfig/node — covers scripts/extract-docs.ts under tsc --noEmit.
+- Root package.json: tc:scripts, lint:scripts, lint:fix:scripts added; prePush now chains them after the workspace counterparts (build && tc && tc:scripts && lint && lint:scripts && test).
+- .husky/pre-push delegates to `pnpm prePush` (single source of truth; previously inline + missing build).
+- eslint.config.mjs gained generalIgnores for .next/build/out/next-env.d.ts, absorbing what the deprecated .eslintignore used to cover.
+- .eslintignore deleted (deprecated in ESLint 9+ flat config).
+
+### Blockers encountered:
+- None.
+
+### Breaking changes:
+- None for published packages. .husky/pre-push is heavier now (includes build) — pushes take longer locally but match CI.
+
+### Files modified count: 4 (.husky/pre-push, package.json, eslint.config.mjs, .vscode/settings.json indirectly via parallel work)
+### Files created count: 1 (scripts/tsconfig.json)
+### Files deleted count: 1 (.eslintignore)
+
+### Key decisions made:
+- Single tsconfig per scripts/ folder rather than extending the root tsconfig.json — keeps scripts/ as a self-contained TS project. Root tsconfig is left untouched (still includes scripts/ for editor + lint type-aware rules).
+- Husky calls `pnpm prePush` rather than duplicating the script chain — avoids the divergence that previously had the hook missing `build`.
+
+### Tests passing: ✅ pnpm prePush exit 0
+
+### Verification performed:
+- pnpm tc:scripts → clean
+- pnpm lint:scripts → clean (after .eslintignore removal silenced the ESLint 9 deprecation warning)
+- pnpm prePush → exit 0 (with sandbox off — Next.js build fetches Google Fonts)
+
+### Changeset added:
+- N/A — no published-package surface change.
+
+### Warnings to next implementor:
+- Husky pre-push now runs `build`. If you're iterating fast and want to bypass build during local development, run `git push --no-verify` (only when you know CI will catch it).
+
+### Critical notes:
+- Squashed into feat/better-api-extraction as commit edc7e43.
+```
+
+---
+
 ## Notes
 
 - **Complexity:** Low
