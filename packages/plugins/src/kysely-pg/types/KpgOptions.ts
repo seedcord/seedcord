@@ -1,7 +1,7 @@
 import type { MigrationOptions } from './KpgMigration';
 import type { KyselyConfig } from 'kysely';
 import type { Pool, PoolConfig } from 'pg';
-import type { TypedOmit } from 'seedcord';
+import type { Except } from 'type-fest';
 
 /**
  * Options that describe where migrations live and how the migrator should
@@ -41,7 +41,7 @@ export interface KpgOptions {
     /** Force using insecure SSL*/
     readonly forceInsecureSSL?: boolean;
     /** Kysely config (excludes dialect because it's Postgres for this plugin) */
-    readonly kysely?: TypedOmit<KyselyConfig, 'dialect'>;
+    readonly kysely?: Except<KyselyConfig, 'dialect'>;
     /** Plugin timeout in milliseconds */
     timeout?: number;
 }

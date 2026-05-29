@@ -1,13 +1,11 @@
+import { Badge, Button, Card, Icon, type IconComponent, cn } from '@seedcord/ui';
 import { ArrowUpRight } from 'lucide-react';
 
 import { formatVersionLabel } from '@lib/docs/version';
 import { getToneConfig } from '@lib/entityMetadata';
-import Button from '@ui/Button';
-import Icon from '@ui/Icon';
 
-import Pill from '../ui/Pill';
-import SeeAlso from '../ui/SeeAlso';
-import TagPills from '../ui/TagPills';
+import SeeAlso from '../SeeAlso';
+import TagPills from '../TagPills';
 import CommentExamples from './comments/CommentExamples';
 import CommentParagraphs from './comments/CommentParagraphs';
 import DeprecatedEntity from './DeprecatedEntity';
@@ -16,7 +14,6 @@ import SignatureBlock from './signatures/SignatureBlock';
 import { buildSummaryNodes } from './utils/buildSummaryNodes';
 import { useActiveSignatureList } from './utils/useActiveSignatureList';
 
-import type { ActiveSignatureListProps } from './utils/useActiveSignatureList';
 import type {
     CodeRepresentation,
     CommentExample,
@@ -37,6 +34,9 @@ function getHeaderExamples(
     return summaryExamples ?? [];
 }
 
+const EMPTY_TAGS: readonly string[] = [];
+const EMPTY_EXAMPLES: readonly CommentExample[] = [];
+
 interface EntityHeaderProps extends WithThrows, WithSeeAlso, WithDeprecationStatus {
     badgeLabel: string;
     pkg: string;
@@ -56,7 +56,7 @@ const SourceButton = ({ href }: { href: string }): ReactElement => (
         asChild
         variant="ghost"
         size="icon"
-        className="border-border/80 text-subtle h-10 w-10 shrink-0 rounded-xl border transition hover:text-(--text)"
+        className={cn('border-border/80 text-subtle size-10 shrink-0 rounded-xl border transition hover:text-(--text)')}
         aria-label="Open source in a new tab"
     >
         <a href={href} target="_blank" rel="noreferrer noopener">
@@ -77,7 +77,7 @@ function HeaderTop({
     sourceUrl
 }: {
     toneStyles: EntityToneStyle;
-    toneIcon: React.ComponentType<Record<string, unknown>>;
+    toneIcon: IconComponent;
     badgeLabel: string;
     pkg: string;
     version?: string | null | undefined;
@@ -87,25 +87,21 @@ function HeaderTop({
     sourceUrl?: string | null | undefined;
 }): ReactElement {
     return (
-        <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2.5">
-                <Pill className={toneStyles.badge}>
-                    <Icon icon={toneIcon} size={16} />
+        <div className={cn('space-y-3')}>
+            <div className={cn('flex flex-wrap items-center gap-2.5')}>
+                <Badge className={cn(toneStyles.badge)}>
+                    <Icon icon={toneIcon} size={14} />
                     {badgeLabel}
-                </Pill>
-                <Pill className="border-border surface-pill text-subtle">{pkg}</Pill>
-                {version ? (
-                    <Pill className="border-border/80 bg-surface-strong text-subtle">
-                        {formatVersionLabel(version)}
-                    </Pill>
-                ) : null}
+                </Badge>
+                <Badge tone="accent">{pkg}</Badge>
+                {version ? <Badge tone="muted">{formatVersionLabel(version)}</Badge> : null}
                 <TagPills tags={tags} />
             </div>
 
-            <div className="flex items-start gap-3 sm:gap-4">
-                <div className="min-w-0 flex-1 space-y-2.5">
-                    <h1 className="text-2xl font-bold text-(--text) sm:text-3xl lg:text-4xl">{symbolName}</h1>
-                    <div className="text-subtle space-y-2 text-sm leading-relaxed">{summaryNodes}</div>
+            <div className={cn('flex items-start gap-3 sm:gap-4')}>
+                <div className={cn('min-w-0 flex-1 space-y-2.5')}>
+                    <h1 className={cn('text-2xl font-semibold text-(--text) sm:text-3xl lg:text-4xl')}>{symbolName}</h1>
+                    <div className={cn('text-subtle space-y-2 text-sm/relaxed')}>{summaryNodes}</div>
                 </div>
                 {sourceUrl ? <SourceButton href={sourceUrl} /> : null}
             </div>
@@ -129,13 +125,13 @@ function SignatureArea({
             <SignatureBlock signature={active ? active.code : signature} />
 
             {fn.length ? (
-                <div className="mt-3">
+                <div className={cn('mt-3')}>
                     <FunctionSignaturesInline signatures={fn} />
                 </div>
             ) : null}
 
             {headerExamples.length ? (
-                <div className="mt-3">
+                <div className={cn('mt-3')}>
                     <CommentExamples examples={headerExamples} />
                 </div>
             ) : null}
@@ -143,7 +139,48 @@ function SignatureArea({
     );
 }
 
-// eslint-disable-next-line complexity
+function ThrowsSection({
+    headerThrows
+}: {
+    headerThrows: readonly CommentParagraph[] | undefined;
+}): ReactElement | null {
+    if (!headerThrows?.length) return null;
+    return (
+        <div>
+            <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
+                <span className={cn('font-semibold text-(--text)')}>Throws:</span>
+            </p>
+            <CommentParagraphs paragraphs={headerThrows} />
+        </div>
+    );
+}
+
+interface HeaderBodyProps {
+    deprecationStatus: EntityHeaderProps['deprecationStatus'];
+    active: FunctionSignatureModel | undefined;
+    fn: readonly FunctionSignatureModel[];
+    signature: CodeRepresentation;
+    headerExamples: readonly CommentExample[];
+}
+
+function HeaderBody({ deprecationStatus, active, fn, signature, headerExamples }: HeaderBodyProps): ReactElement {
+    const parentIsDeprecated = Boolean(deprecationStatus?.isDeprecated);
+    const activeIsDeprecated = Boolean(active?.deprecationStatus?.isDeprecated);
+    const signatureArea = (
+        <SignatureArea active={active} fn={fn} signature={signature} headerExamples={headerExamples} />
+    );
+
+    if (parentIsDeprecated || !activeIsDeprecated) return signatureArea;
+
+    return (
+        <DeprecatedEntity
+            deprecationStatus={active?.deprecationStatus ?? { isDeprecated: true, deprecationMessage: undefined }}
+        >
+            {signatureArea}
+        </DeprecatedEntity>
+    );
+}
+
 function EntityHeader({
     badgeLabel,
     pkg,
@@ -154,8 +191,8 @@ function EntityHeader({
     sourceUrl,
     version,
     deprecationStatus = { isDeprecated: false },
-    tags = [],
-    summaryExamples = [],
+    tags = EMPTY_TAGS,
+    summaryExamples = EMPTY_EXAMPLES,
     functionSignatures,
     seeAlso,
     throws
@@ -164,61 +201,39 @@ function EntityHeader({
     const toneStyles = toneConfig.styles;
     const ToneIcon = toneConfig.icon;
     const fn = functionSignatures ?? [];
-    const ids = fn.map((s) => ({ id: s.id, anchor: (s as unknown as ActiveSignatureListProps).anchor }));
-    const [activeId] = useActiveSignatureList(ids as ActiveSignatureListProps[]);
+    const [activeId] = useActiveSignatureList(fn);
     const active = fn.find((s) => s.id === activeId) ?? fn[0];
 
     const headerSummary = active?.summary.length ? active.summary : summary;
     const headerExamples = getHeaderExamples(active, summaryExamples);
     const headerThrows = active?.throws?.length ? active.throws : throws;
     const summaryNodes = buildSummaryNodes(headerSummary, '');
-    const activeIsDeprecated = Boolean(active?.deprecationStatus?.isDeprecated);
-
-    const headerContent = (
-        <>
-            <HeaderTop
-                toneStyles={toneStyles}
-                toneIcon={ToneIcon}
-                badgeLabel={badgeLabel}
-                pkg={pkg}
-                version={version}
-                tags={tags}
-                symbolName={symbolName}
-                summaryNodes={summaryNodes}
-                sourceUrl={sourceUrl}
-            />
-
-            {headerThrows?.length ? (
-                <div>
-                    <p className="text-subtle flex flex-wrap items-baseline gap-2">
-                        <span className="font-semibold text-(--text)">Throws:</span>
-                    </p>
-                    <CommentParagraphs paragraphs={headerThrows} />
-                </div>
-            ) : null}
-
-            <SeeAlso entries={seeAlso} />
-
-            {deprecationStatus.isDeprecated ? (
-                <SignatureArea active={active} fn={fn} signature={signature} headerExamples={headerExamples} />
-            ) : activeIsDeprecated ? (
-                <DeprecatedEntity
-                    deprecationStatus={
-                        active?.deprecationStatus ?? { isDeprecated: true, deprecationMessage: undefined }
-                    }
-                >
-                    <SignatureArea active={active} fn={fn} signature={signature} headerExamples={headerExamples} />
-                </DeprecatedEntity>
-            ) : (
-                <SignatureArea active={active} fn={fn} signature={signature} headerExamples={headerExamples} />
-            )}
-        </>
-    );
 
     return (
-        <header className="min-w-0">
+        <header className={cn('min-w-0')}>
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <div className="card bg-surface-subtle shadow-soft space-y-4 p-4 sm:p-5">{headerContent}</div>
+                <Card size="md" className={cn('space-y-4 sm:p-5')}>
+                    <HeaderTop
+                        toneStyles={toneStyles}
+                        toneIcon={ToneIcon}
+                        badgeLabel={badgeLabel}
+                        pkg={pkg}
+                        version={version}
+                        tags={tags}
+                        symbolName={symbolName}
+                        summaryNodes={summaryNodes}
+                        sourceUrl={sourceUrl}
+                    />
+                    <ThrowsSection headerThrows={headerThrows} />
+                    <SeeAlso entries={seeAlso} />
+                    <HeaderBody
+                        deprecationStatus={deprecationStatus}
+                        active={active}
+                        fn={fn}
+                        signature={signature}
+                        headerExamples={headerExamples}
+                    />
+                </Card>
             </DeprecatedEntity>
         </header>
     );

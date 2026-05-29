@@ -54,7 +54,7 @@ describe('CommandRegistry Integration', () => {
                 events: { path: null },
                 clientOptions: { intents: [] }
             },
-            effects: { path: null }
+            subscribers: { path: null }
         };
 
         seedcord = new Seedcord(config);
@@ -91,7 +91,7 @@ describe('CommandRegistry Integration', () => {
                 events: { path: null },
                 clientOptions: { intents: [] }
             },
-            effects: { path: null }
+            subscribers: { path: null }
         };
 
         seedcord = new Seedcord(config);

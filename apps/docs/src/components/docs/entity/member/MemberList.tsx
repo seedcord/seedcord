@@ -1,8 +1,7 @@
 'use client';
 
+import { cn } from '@seedcord/ui';
 import Link from 'next/link';
-
-import { cn } from '@lib/utils';
 
 import { MEMBER_TITLES } from '../constants';
 
@@ -23,13 +22,16 @@ function MemberList({ items, prefix, onNavigate }: MemberListProps): ReactElemen
     const title = MEMBER_TITLES[prefix];
 
     return (
-        <section className="min-w-0 space-y-2.5" aria-labelledby={`${prefix}-list-heading`}>
-            <h2 id={`${prefix}-list-heading`} className="text-subtle text-xs font-semibold tracking-widest uppercase">
+        <section className={cn('min-w-0 space-y-2.5')} aria-labelledby={`${prefix}-list-heading`}>
+            <h2
+                id={`${prefix}-list-heading`}
+                className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}
+            >
                 {title}
             </h2>
-            <ul className="space-y-2">
+            <ul className={cn('space-y-2')}>
                 {items.map((item) => (
-                    <li key={item.id} className="min-w-0">
+                    <li key={item.id} className={cn('min-w-0')}>
                         <Link
                             href={`#${prefix}-${item.id}`}
                             onClick={() => {

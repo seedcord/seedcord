@@ -10,4 +10,4 @@
 'seedcord': patch
 ---
 
-Build pipeline migrated from `tsup` to `tsdown` (Rolldown + oxc). Distributed output shape changed accordingly: instead of a single `dist/index.d.ts` plus `.mjs` / `.cjs`, each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (the `.d.cts` is a one-line `export type * from './index.d.mts'` stub via `dts.cjsReexport: true`, avoiding the dual-module hazard). The `exports` map in each package.json was updated from a single `types` entry to per-condition (`import.types` → `.d.mts`, `require.types` → `.d.cts`); modern bundlers and TypeScript resolve both paths transparently. Source-level public API is unchanged. Internal `@seedcord/tsup-config` was renamed to `@seedcord/tsdown-config` and marked private — the previously-published `@seedcord/tsup-config@1.1.2` will be `npm deprecate`d post-release.
+build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.

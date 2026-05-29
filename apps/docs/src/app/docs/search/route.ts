@@ -111,8 +111,9 @@ function findEntityNode(engine: Awaited<ReturnType<typeof getDocsEngine>>, entry
             continue;
         }
 
-        const normalizedKind = kindName(candidate.kind).toLowerCase();
-        if (ENTITY_RESULT_KINDS.has(normalizedKind as SearchResultKind)) {
+        // `kindName` is camelCase; route through KIND_TO_RESULT to match SearchResultKind values.
+        const resultKind = getResultKind(candidate.kind);
+        if (ENTITY_RESULT_KINDS.has(resultKind)) {
             return candidate;
         }
     }

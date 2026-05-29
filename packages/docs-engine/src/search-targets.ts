@@ -69,12 +69,9 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
 
     // Variables
     { query: 'BuilderTypes' },
-    { query: 'EffectMetadataKey' },
+    { query: 'SubscribeMetadataKey' },
     { query: 'RowTypes' },
     { query: 'PermissionNames' },
     { query: 'PERM_GROUPS' },
     { query: 'PRETTIER_CONFIG' }
 ];
-
-// Single default search target for testing
-// export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [{ query: 'checkPermissions' }];

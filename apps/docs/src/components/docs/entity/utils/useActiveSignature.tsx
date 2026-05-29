@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-import type { SignatureSelection } from '../member/MemberCardBody';
+import type { SignatureSelection } from '../member/MemberRowBody';
 import type { EntityMemberSummary } from '../types';
 
 export function useActiveSignature(member: EntityMemberSummary): SignatureSelection {
@@ -14,6 +14,7 @@ export function useActiveSignature(member: EntityMemberSummary): SignatureSelect
         if (!activeSignatureId || !member.signatures.some((s) => s.id === activeSignatureId)) {
             let t: number | undefined;
             if (typeof window !== 'undefined') {
+                // justified: defers initial signature selection until after the signature list mounts so the <MemberRowHeader> ref is attached before scrolling.
                 t = window.setTimeout(() => setActiveSignatureId(first.id), 0);
             }
 
@@ -36,6 +37,7 @@ export function useActiveSignature(member: EntityMemberSummary): SignatureSelect
             }
         };
 
+        // justified: window.location.hash is unavailable during SSR, the timer schedules a post-hydration read so the URL drives the initial active signature.
         const initTimeout = window.setTimeout(init, 0);
         const onHash = (): void => {
             const hash = window.location.hash.slice(1);

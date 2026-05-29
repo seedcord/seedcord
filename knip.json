@@ -21,11 +21,7 @@
         "packages/tsdown-config": {},
         "packages/tsconfig": {},
         "apps/docs": {
-            "entry": [
-                "src/app/**/{page,layout,route,not-found}.{ts,tsx}",
-                "next.config.ts",
-                "postcss.config.mjs"
-            ],
+            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx}"]
         },
         "mock": {

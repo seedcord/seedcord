@@ -69,6 +69,7 @@ export function formatCurrency(n: number): string { ... }
 ## Rule 3 — SOLID in practice
 
 ### Single Responsibility
+
 Each class has one reason to change. If a class knows how to fetch data AND format it AND validate it, split it.
 
 ```ts
@@ -86,12 +87,15 @@ export function validateOrder(order: Order): boolean { ... }
 ```
 
 ### Open/Closed — extend via composition, not modification
+
 Add behavior by composing, not by modifying the class. New use cases should add new code, not rewrite existing classes.
 
 ### Liskov Substitution
+
 Subclasses must be usable wherever the base class is expected — without callers knowing which subclass they have. If a subclass throws on a method the base class exposes, that's a violation.
 
 ### Interface Segregation
+
 Prefer narrow interfaces over one fat interface.
 
 ```ts
@@ -111,6 +115,7 @@ interface Writable<T> { save(entity: T): Promise<void>; }
 ```
 
 ### Dependency Inversion
+
 Depend on interfaces/abstractions, not concrete implementations. Pass dependencies in (constructor injection) rather than constructing them inside.
 
 ```ts
@@ -169,6 +174,7 @@ export class ProductService {
 ```
 
 **`#name` (ECMAScript private)** vs **`private` (TypeScript keyword):**
+
 - `private` is erased at runtime — still accessible via `(obj as any).name`
 - `#name` is a true runtime private field — use it for genuinely sensitive state
 
@@ -244,6 +250,7 @@ export class AddressService {
 ```
 
 Conventions:
+
 - One service per domain entity or bounded context
 - Services are instantiated once (singletons in DI or module-level instances)
 - No presentation logic inside services — they return domain types, not display strings

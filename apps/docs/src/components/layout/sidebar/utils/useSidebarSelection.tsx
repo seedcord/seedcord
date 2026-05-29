@@ -33,10 +33,15 @@ export function useSidebarSelection(
         );
     }, [activePackage, activeVersionId]);
 
+    const versionOptions = useMemo<readonly PackageVersionCatalog[]>(
+        () => activePackage?.versions ?? [],
+        [activePackage]
+    );
+
     return {
         activePackage,
         activeVersion,
         packageOptions: catalog,
-        versionOptions: activePackage?.versions ?? []
+        versionOptions
     };
 }

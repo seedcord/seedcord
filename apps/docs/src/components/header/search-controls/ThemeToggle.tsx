@@ -1,10 +1,9 @@
+import { Button, Icon, cn } from '@seedcord/ui';
 import { MonitorSmartphone, Sun, MoonStar } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 import { log } from '@lib/logger';
-import Button from '@ui/Button';
-import Icon from '@ui/Icon';
 
 import type { ReactElement } from 'react';
 
@@ -14,6 +13,7 @@ function ThemeToggle(): ReactElement {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        // justified: next-themes resolves the active theme one tick after mount, the timer skips one frame to read the resolved value, not the SSR default.
         const t = setTimeout(() => setMounted(true), 0);
         return () => clearTimeout(t);
     }, []);
@@ -31,7 +31,7 @@ function ThemeToggle(): ReactElement {
                 size="icon"
                 aria-label="Toggle theme"
                 title="Toggle theme"
-                className="text-(--text)"
+                className={cn('text-(--text)')}
                 disabled
             >
                 <Icon icon={MonitorSmartphone} size={18} />
@@ -49,7 +49,7 @@ function ThemeToggle(): ReactElement {
             onClick={handleToggle}
             aria-label={label}
             title={label}
-            className="text-(--text)"
+            className={cn('text-(--text)')}
         >
             {icon}
         </Button>

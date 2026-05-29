@@ -96,7 +96,7 @@ export function mapType(context: TransformContext, type: SomeType | ReflectionTy
     return out;
 }
 
-export const mapComment = (context: TransformContext, comment?: Comment | null): DocComment | null =>
+const mapComment = (context: TransformContext, comment?: Comment | null): DocComment | null =>
     context.commentTransformer.toDocComment(comment ?? undefined);
 
 export function mapSources(sources: SourceReference[] | undefined): DocSource[] {
@@ -122,7 +122,7 @@ export const primaryUrlFromSources = (sources?: SourceReference[]): string | und
         ? sources.find((source) => typeof source.url === 'string' && source.url.length > 0)?.url
         : undefined;
 
-export function mapSignatureParameters(
+function mapSignatureParameters(
     context: TransformContext,
     parameters: readonly ParameterReflection[] | undefined
 ): DocSignatureParameter[] {

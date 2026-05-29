@@ -1,4 +1,4 @@
-import { cn } from '@lib/utils';
+import { cn, CodeBlock } from '@seedcord/ui';
 
 import CommentExamples from '../comments/CommentExamples';
 import CommentParagraphs from '../comments/CommentParagraphs';
@@ -7,8 +7,6 @@ import DeprecatedEntity from '../DeprecatedEntity';
 import type { MemberSignatureDetail, WithParentDeprecationStatus } from '../types';
 import type { DeprecationStatus } from '@lib/docs/types';
 import type { ReactElement } from 'react';
-
-export const SIGNATURE_CONTAINER_CLASS = 'code-scroll-area panel px-2.5 py-2 text-(--text) md:px-3 md:py-2.5';
 
 interface SignaturePanelProps extends WithParentDeprecationStatus {
     signature: MemberSignatureDetail;
@@ -22,15 +20,7 @@ function SignaturePanel({ signature, isActive, parentDeprecationStatus }: Signat
             className={cn('space-y-3', isActive ? 'block' : 'hidden')}
             aria-hidden={!isActive}
         >
-            <div className={SIGNATURE_CONTAINER_CLASS}>
-                {signature.code.html ? (
-                    <div className="code-scroll-content" dangerouslySetInnerHTML={{ __html: signature.code.html }} />
-                ) : (
-                    <pre className="code-scroll-content text-sm whitespace-pre text-(--text)">
-                        <code>{signature.code.text}</code>
-                    </pre>
-                )}
-            </div>
+            <CodeBlock representation={signature.code} copyValue={null} />
             {signature.documentation.length ? <CommentParagraphs paragraphs={signature.documentation} /> : null}
             {signature.examples.length ? <CommentExamples examples={signature.examples} /> : null}
         </section>
@@ -51,9 +41,9 @@ function SignaturePanel({ signature, isActive, parentDeprecationStatus }: Signat
     // - the parent is NOT deprecated,
     // - and the parent's deprecation message is not equal to the signature's.
     const shouldDecorate =
-        Boolean(isActive) &&
-        Boolean(signature.deprecationStatus?.isDeprecated) &&
-        !Boolean(parentDeprecationStatus?.isDeprecated) &&
+        isActive &&
+        signature.deprecationStatus?.isDeprecated &&
+        !parentDeprecationStatus?.isDeprecated &&
         parentKey !== sigKey;
 
     if (shouldDecorate) {

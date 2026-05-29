@@ -1,171 +1,133 @@
-import { format } from 'prettier';
+import {
+    formatInlineTypePretty,
+    formatRenderedDeclarationHeaderPretty,
+    formatRenderedSignaturePretty,
+    formatTypeParameterPretty,
+    type InlineType,
+    type RefRange,
+    type RenderedDeclarationHeader,
+    type RenderedSignature,
+    type ResolveHref,
+    type TypeParameter
+} from '@seedcord/docs-engine';
 
-import { highlightToHtml } from '@lib/shiki';
+import { sanitizeHtml } from '@lib/sanitizeHtml';
+import {
+    highlightMemberToHtml,
+    highlightSignatureToHtml,
+    highlightToHtml,
+    highlightTypeParamToHtml,
+    type CodeLink
+} from '@lib/shiki';
 
-import { renderInlineType } from './comments/renderers/renderInlineType';
-import { renderSigParts } from './comments/renderers/renderSigParts';
+import { resolveOptions } from './comments/resolvers';
+import { resolveExternalPackageUrl } from './packages';
+import { resolveReferenceHref } from './resolveReferenceHref';
 
 import type { CodeRepresentation, FormatContext } from './types';
-import type { DocComment, RenderedDeclarationHeader, RenderedSignature } from '@seedcord/docs-engine';
-import type { Options } from 'prettier';
 
-async function tryFormat(text: string): Promise<string> {
-    const options = {
-        parser: 'typescript',
-        printWidth: 80,
-        tabWidth: 4,
-        semi: true,
-        trailingComma: 'none' as const
-    } satisfies Options;
+function buildResolveHref(context: FormatContext): ResolveHref {
+    const options = resolveOptions(context);
+    return (reference) => resolveReferenceHref(reference, options) ?? resolveExternalPackageUrl(reference.name) ?? null;
+}
 
-    try {
-        return (await format(text, options)).trim();
-    } catch {
-        try {
-            const wrapped = `class _ {\n${text}\n}`;
-            const formatted = await format(wrapped, options);
-            const match = formatted.match(/class _ \{([\s\S]*)\}/);
-            if (match) {
-                const body = match[1];
-                if (typeof body === 'string') {
-                    const lines = body.split('\n');
-                    if (lines.length > 0 && lines[0]?.trim() === '') lines.shift();
-                    if (lines.length > 0 && lines[lines.length - 1]?.trim() === '') lines.pop();
-                    return lines
-                        .map((line) => line.replace(/^\s{4}/, ''))
-                        .join('\n')
-                        .trim();
-                }
-            }
-        } catch {
-            // Ignore
-        }
+function refsToLinks(refs: readonly RefRange[]): CodeLink[] {
+    const links: CodeLink[] = [];
+    for (const r of refs) {
+        if (r.href) links.push({ name: r.name, href: r.href, start: r.start, end: r.end });
     }
+    return links;
+}
 
-    return text;
+async function safeHighlight(
+    highlight: (code: string) => Promise<string | null>,
+    code: string
+): Promise<string | null> {
+    const html = await highlight(code);
+    return html === null ? null : sanitizeHtml(html);
 }
 
 export async function formatDeclarationHeader(
     header: RenderedDeclarationHeader,
     context: FormatContext
 ): Promise<CodeRepresentation> {
-    const segments: string[] = [];
-
-    if (header.modifiers.length) {
-        segments.push(header.modifiers.join(' '));
-    }
-
-    if (header.keyword) {
-        segments.push(header.keyword);
-    }
-
-    let nameSegment = header.name;
-
-    if (header.typeParams?.length) {
-        const renderedParams = header.typeParams
-            .map((param) => {
-                const pieces: string[] = [param.name];
-                if (param.constraint) {
-                    pieces.push(`extends ${renderInlineType(param.constraint, context)}`);
-                }
-                if (param.default) {
-                    pieces.push(`= ${renderInlineType(param.default, context)}`);
-                }
-                return pieces.join(' ');
-            })
-            .join(', ');
-        nameSegment += `<${renderedParams}>`;
-    }
-
-    if (header.type) {
-        nameSegment += `: ${renderInlineType(header.type, context)}`;
-    }
-
-    if (header.value) {
-        nameSegment += ` = ${renderInlineType(header.value, context)}`;
-    }
-
-    segments.push(nameSegment);
-
-    if (header.heritage?.extends?.length) {
-        const clause = header.heritage.extends.map((entry) => renderInlineType(entry, context)).join(', ');
-        segments.push(`extends ${clause}`);
-    }
-
-    if (header.heritage?.implements?.length) {
-        const clause = header.heritage.implements.map((entry) => renderInlineType(entry, context)).join(', ');
-        segments.push(`implements ${clause}`);
-    }
-
-    const text = await tryFormat(segments.join(' ').trim());
-
-    return {
-        text,
-        html: await highlightToHtml(text)
-    };
+    const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context));
+    const links = refsToLinks(refs);
+    // Top-level declarations (`class Foo`, `interface X`, `type Y = ...`) are valid TS at the
+    // file level. Property/type-parameter declarations (no keyword) need a class-body wrap so
+    // shiki recognizes `protected`/`readonly`/type-param `extends` as keywords.
+    const highlighter = header.keyword
+        ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', links)
+        : (c: string): Promise<string | null> => highlightMemberToHtml(c, links);
+    return { text, html: await safeHighlight(highlighter, text) };
 }
 
 export async function formatSignature(
     signature: RenderedSignature,
     context: FormatContext
 ): Promise<CodeRepresentation> {
-    const name = renderSigParts(signature.name, context);
-
-    let typeParams = '';
-    if (signature.typeParams?.length) {
-        const renderedParams = signature.typeParams
-            .map((param) => {
-                const pieces: string[] = [param.name];
-                if (param.constraint) {
-                    pieces.push(`extends ${renderInlineType(param.constraint, context)}`);
-                }
-                if (param.default) {
-                    pieces.push(`= ${renderInlineType(param.default, context)}`);
-                }
-                return pieces.join(' ');
-            })
-            .join(', ');
-        typeParams = `<${renderedParams}>`;
-    }
-
-    const parameters = signature.parameters
-        .map((param) => {
-            const pieces: string[] = [param.name + (param.optional ? '?' : '')];
-            if (param.type) {
-                pieces.push(`: ${renderInlineType(param.type, context)}`);
-            }
-            if (param.defaultValue) {
-                pieces.push(`= ${param.defaultValue}`);
-            }
-            return pieces.join(' ');
-        })
-        .join(', ');
-
-    const returnType = signature.returnType ? `: ${renderInlineType(signature.returnType, context)}` : '';
-    const text = await tryFormat(`${name}${typeParams}(${parameters})${returnType}`.trim());
-
-    return {
-        text,
-        html: await highlightToHtml(text)
-    };
-}
-
-export function formatComment(comment: DocComment | null | undefined): string[] {
-    if (!comment?.summary) {
-        return [];
-    }
-
-    return comment.summary
-        .split(/\n{2,}/)
-        .map((segment) => segment.replace(/\n/g, ' ').trim())
-        .filter(Boolean);
+    const { text, refs } = await formatRenderedSignaturePretty(signature, buildResolveHref(context));
+    const links = refsToLinks(refs);
+    return { text, html: await safeHighlight((c) => highlightSignatureToHtml(c, links), text) };
 }
 
 export async function highlightCode(code: string, lang = 'ts'): Promise<CodeRepresentation> {
-    const language = (lang || 'ts') as Parameters<typeof highlightToHtml>[1];
-
+    const language = (lang || 'ts') as 'ts';
     return {
         text: code,
-        html: await highlightToHtml(code, language)
+        html: await safeHighlight((c) => highlightToHtml(c, language), code)
     };
+}
+
+// Re-highlight an already-formatted signature text (used when a builder prepends a modifier
+// keyword like `public` or `async`). Uses the same function-wrap as `formatSignature` so the
+// TS grammar enters the right scope. No links because the prefix-augmented text has lost the
+// engine's offset map.
+export async function highlightSignatureCode(code: string): Promise<CodeRepresentation> {
+    return {
+        text: code,
+        html: await safeHighlight((c) => highlightSignatureToHtml(c), code)
+    };
+}
+
+export async function formatTypeParameter(param: TypeParameter, context: FormatContext): Promise<CodeRepresentation> {
+    const { text, refs } = await formatTypeParameterPretty(param, buildResolveHref(context));
+    const links = refsToLinks(refs);
+    return { text, html: await safeHighlight((c) => highlightTypeParamToHtml(c, links), text) };
+}
+
+// Plain text of an inline type with refs resolved. Use for metadata fields (`model.returnType`,
+// `model.type`) that get displayed outside a code block, where markdown link syntax would render
+// as raw text.
+export async function inlineTypeText(inline: InlineType, context: FormatContext): Promise<string> {
+    const { text } = await formatInlineTypePretty(inline, buildResolveHref(context));
+    return text;
+}
+
+export interface ParameterFormatInput {
+    name: string;
+    optional: boolean;
+    type?: InlineType;
+    defaultValue?: string;
+}
+
+// Highlights a parameter row (`name(?): Type [= default]`) with links woven from the type
+// portion. Uses the member-wrap (`class _ { … }`) so shiki's TS grammar tokenizes the `name:
+// type` shape as a class-field declaration, not as a labeled statement.
+export async function formatParameter(
+    input: ParameterFormatInput,
+    context: FormatContext
+): Promise<CodeRepresentation> {
+    const refs: RefRange[] = [];
+    let text = input.name + (input.optional ? '?' : '');
+    if (input.type) {
+        const inline = await formatInlineTypePretty(input.type, buildResolveHref(context));
+        const offset = text.length + ': '.length;
+        text += `: ${inline.text}`;
+        for (const r of inline.refs)
+            refs.push({ name: r.name, href: r.href, start: r.start + offset, end: r.end + offset });
+    }
+    if (input.defaultValue !== undefined) text += ` = ${input.defaultValue}`;
+    const links = refsToLinks(refs);
+    return { text, html: await safeHighlight((c) => highlightMemberToHtml(c, links), text) };
 }

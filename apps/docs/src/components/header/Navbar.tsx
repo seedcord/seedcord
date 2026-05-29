@@ -1,10 +1,7 @@
 'use client';
 
+import { Button, GithubIcon, Icon, cn } from '@seedcord/ui';
 import Link from 'next/link';
-
-import Button from '@ui/Button';
-import GithubIcon from '@ui/GithubIcon';
-import Icon from '@ui/Icon';
 
 import HeaderSettingsPopover from './HeaderSettingsPopover';
 import HeaderSearchControls from './search-controls/HeaderSearchControls';
@@ -14,28 +11,23 @@ import type { ReactElement } from 'react';
 
 function Navbar(): ReactElement {
     return (
-        <header className="border-border sticky top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur">
-            <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 md:px-6">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <Link
-                            href="/"
-                            className="group flex cursor-pointer items-center rounded-2xl border border-transparent px-3 py-1.5 text-(--text) transition hover:border-(--border-70-transparent) hover:bg-(--bg-light-moderate) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-a-subtle)"
-                            aria-label="Seedcord home"
-                        >
-                            <SeedcordMark />
-                        </Link>
-                        <nav className="hidden items-center gap-2 lg:flex" aria-label="Primary navigation">
-                            <Link
-                                href="/docs"
-                                className="text-subtle inline-flex items-center gap-2 rounded-xl border border-transparent px-3 py-1.5 text-sm font-semibold transition hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle) hover:text-(--text) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-a-subtle)"
-                            >
-                                Docs home
+        <header className={cn('border-border sticky top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}>
+            <div className={cn('mx-auto flex max-w-7xl flex-col gap-3 p-4 md:px-6')}>
+                <div className={cn('flex items-center justify-between gap-3')}>
+                    <div className={cn('flex items-center gap-3')}>
+                        <Button asChild variant="ghost" size="md" aria-label="Seedcord home">
+                            <Link href="/">
+                                <SeedcordMark />
                             </Link>
+                        </Button>
+                        <nav className={cn('hidden items-center gap-2 lg:flex')} aria-label="Primary navigation">
+                            <Button asChild variant="ghost" size="sm" className={cn('text-subtle')}>
+                                <Link href="/docs">Docs home</Link>
+                            </Button>
                         </nav>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
+                    <div className={cn('flex items-center gap-3')}>
+                        <div className={cn('flex items-center gap-2')}>
                             <HeaderSearchControls />
                             <HeaderSettingsPopover />
                             <Button
@@ -43,7 +35,7 @@ function Navbar(): ReactElement {
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Open GitHub repository"
-                                className="text-(--text)"
+                                className={cn('text-(--text)')}
                             >
                                 <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
                                     <Icon icon={GithubIcon} size={20} />

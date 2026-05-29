@@ -1,11 +1,17 @@
+// every docs-owned localStorage key must start with this so clearDocsHistory finds it
+export const DOCS_STORAGE_PREFIX = 'docs.';
+
 export function clearDocsHistory(): void {
     try {
         if (typeof window === 'undefined') return;
 
-        // Remove docs.* keys from localStorage
-        Object.keys(window.localStorage)
-            .filter((k) => k.startsWith('docs.'))
-            .forEach((k) => window.localStorage.removeItem(k));
+        const { localStorage } = window;
+        const stale: string[] = [];
+        for (let i = 0; i < localStorage.length; i += 1) {
+            const key = localStorage.key(i);
+            if (key?.startsWith(DOCS_STORAGE_PREFIX)) stale.push(key);
+        }
+        for (const key of stale) localStorage.removeItem(key);
 
         // expire cookies visible to this path
         try {
@@ -26,5 +32,3 @@ export function clearDocsHistory(): void {
         // ignore overall failures
     }
 }
-
-export default clearDocsHistory;

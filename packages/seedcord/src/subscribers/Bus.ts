@@ -1,0 +1,172 @@
+import { Logger } from '@seedcord/services';
+import { traverseDirectory } from '@seedcord/utils';
+import chalk from 'chalk';
+import { Collection } from 'discord.js';
+import { Envapter } from 'envapt';
+
+import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
+import { Plugin } from '@interfaces/Plugin';
+
+import { SubscribeMetadataKey } from './decorators/Subscribe';
+import { UnknownException } from './default/UnknownException';
+import { Subscriber } from './Subscriber';
+
+import type { SubscribeMetadataEntry } from './decorators/Subscribe';
+import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
+import type { Core } from '@interfaces/Core';
+import type { EventFrequency } from '@miscellaneous/types';
+import type { HmrUpdateEvent } from '@seedcord/cli';
+import type { TypedConstructor } from '@seedcord/types';
+
+type SubscriberConstructor = TypedConstructor<typeof Subscriber>;
+interface RegisteredSubscriberHandlerEntry {
+    ctor: SubscriberConstructor;
+    frequency: EventFrequency;
+}
+
+type SubscriberArtifact = SubscriptionKey[];
+
+/**
+ * Manages application subscribers and event handling
+ *
+ * Provides a centralized system for registering and executing custom subscribers
+ * throughout the application lifecycle. Bus subscribers are loaded from configured directories
+ * and can be triggered programmatically or by framework events.
+ *
+ * @internal Accessed via core.bus, not directly instantiated
+ */
+export class Bus extends Plugin<SubscriptionTuples> {
+    public readonly logger = new Logger('Subscribers');
+    public override readonly name = 'Subscribers';
+    private isInitialized = false;
+    private readonly subscribersMap = new Collection<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();
+    private readonly executedOnceHandlers = new Set<SubscriberConstructor>();
+    private readonly hmrHandler?: HmrModuleHandler<SubscriberConstructor, void, SubscriberArtifact>;
+
+    constructor(protected core: Core) {
+        super(core);
+
+        if (this.core.config.subscribers.path) {
+            if (!Envapter.isDevelopment) return; // HMR only in development
+            this.hmrHandler = new HmrModuleHandler({
+                handlersDir: this.core.config.subscribers.path,
+                isHandler: this.isSubscriber.bind(this),
+                registerHandler: this.registerSubscriber.bind(this),
+                unregisterHandler: this.unregisterSubscriber.bind(this),
+                getArtifacts: this.getArtifacts.bind(this),
+                logger: this.logger,
+                name: 'Subscribers'
+            });
+        }
+    }
+
+    private getArtifacts(ctor: SubscriberConstructor): SubscriberArtifact {
+        const meta = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry;
+        return [meta.subscriber];
+    }
+
+    public async init(): Promise<void> {
+        if (this.isInitialized) return;
+
+        this.isInitialized = true;
+
+        this.registerSubscriber(UnknownException);
+
+        const subscribersDir = this.core.config.subscribers.path;
+        if (subscribersDir) {
+            this.logger.info(chalk.bold(subscribersDir));
+            await this.loadSubscribers(subscribersDir);
+            const totalSubscribers = Array.from(this.subscribersMap.values()).reduce(
+                (acc, handlers) => acc + handlers.length,
+                0
+            );
+            this.logger.utils.list([`${chalk.bold.magenta(totalSubscribers)} subscribers`], chalk.bold.green('Loaded'));
+        }
+    }
+
+    /** @internal For use in dev mode */
+    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+        if (this.hmrHandler) {
+            await this.hmrHandler.handle(event);
+        }
+    }
+
+    private async loadSubscribers(dir: string): Promise<void> {
+        await traverseDirectory(
+            dir,
+            (fullPath, relativePath, imported) => {
+                for (const exportName of Object.keys(imported)) {
+                    const val = imported[exportName];
+                    if (this.isSubscriber(val)) {
+                        this.registerSubscriber(val);
+                        this.hmrHandler?.trackHandler(fullPath, val);
+                        this.logger.utils.registration(val.name, relativePath);
+                    }
+                }
+            },
+            this.logger
+        );
+    }
+
+    private registerSubscriber(handler: SubscriberConstructor): void {
+        const options = Reflect.getMetadata(SubscribeMetadataKey, handler) as SubscribeMetadataEntry;
+
+        let handlers = this.subscribersMap.get(options.subscriber);
+        if (!handlers) {
+            handlers = [];
+            this.subscribersMap.set(options.subscriber, handlers);
+        }
+        handlers.push({ ctor: handler, frequency: options.frequency ?? 'on' });
+    }
+
+    private unregisterSubscriber(handler: SubscriberConstructor, artifacts?: SubscriberArtifact): void {
+        const subscribers = artifacts ?? Array.from(this.subscribersMap.keys());
+        for (const subscriber of subscribers) {
+            const handlers = this.subscribersMap.get(subscriber);
+            if (!handlers) continue;
+            const index = handlers.findIndex((entry) => entry.ctor === handler);
+            if (index !== -1) {
+                handlers.splice(index, 1);
+            }
+        }
+        this.executedOnceHandlers.delete(handler);
+    }
+
+    private isSubscriber(obj: unknown): obj is SubscriberConstructor {
+        if (typeof obj !== 'function') return false;
+        return obj.prototype instanceof Subscriber && Reflect.hasMetadata(SubscribeMetadataKey, obj);
+    }
+
+    public publish<KeyOfSubscribers extends SubscriptionKey>(
+        event: KeyOfSubscribers,
+        data: AllSubscriptions[KeyOfSubscribers]
+    ): boolean {
+        void this.processSubscriber(event, data);
+        return super.emit(event, data);
+    }
+
+    private async processSubscriber<KeyOfSubscribers extends SubscriptionKey>(
+        subscriberName: KeyOfSubscribers,
+        data: AllSubscriptions[KeyOfSubscribers]
+    ): Promise<void> {
+        const handlers = this.subscribersMap.get(subscriberName);
+        if (!handlers) return;
+
+        for (const entry of handlers) {
+            if (entry.frequency === 'once' && this.executedOnceHandlers.has(entry.ctor)) {
+                continue;
+            }
+
+            try {
+                const instance = new entry.ctor(data, this.core);
+                await instance.execute();
+
+                if (entry.frequency === 'once') {
+                    this.executedOnceHandlers.add(entry.ctor);
+                }
+            } catch (err) {
+                this.logger.error(`Error in subscriber ${String(subscriberName)} handler ${entry.ctor.name}:`, err);
+            }
+        }
+    }
+}

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, type Dispatch, type SetStateAction } from 'react';
+import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { resolveRestSegments } from './resolveRestSegments';
 
@@ -52,8 +52,20 @@ export function useSidebarSelectionState(
     const fallbackPackageId = resolvedFromPath?.packageId ?? activePackageId;
     const fallbackVersionId = resolvedFromPath?.versionId ?? activeVersionId;
 
-    const pendingPackageId = pendingSelection?.packageId ?? null;
-    const pendingVersionId = pendingSelection?.versionId ?? null;
+    // Clear the pending selection synchronously once the navigation it represents
+    // has committed (fallback now matches). React supports setState during render
+    // to derive new state, avoiding a deferred-effect roundtrip.
+    if (pendingSelection) {
+        const matchesPackage = pendingSelection.packageId === fallbackPackageId;
+        const matchesVersion = pendingSelection.versionId ? pendingSelection.versionId === fallbackVersionId : true;
+        if (matchesPackage && matchesVersion) {
+            setPendingSelection(null);
+        }
+    }
+
+    const effectivePending = pendingSelection;
+    const pendingPackageId = effectivePending?.packageId ?? null;
+    const pendingVersionId = effectivePending?.versionId ?? null;
 
     const effectivePackageId = pendingPackageId ?? fallbackPackageId;
     const effectiveVersionId = useMemo(() => {
@@ -63,27 +75,6 @@ export function useSidebarSelectionState(
 
         return fallbackVersionId;
     }, [pendingPackageId, effectivePackageId, pendingVersionId, fallbackVersionId]);
-
-    useEffect(() => {
-        if (!pendingSelection) {
-            return undefined;
-        }
-
-        const matchesPackage = pendingSelection.packageId === fallbackPackageId;
-        const matchesVersion = pendingSelection.versionId ? pendingSelection.versionId === fallbackVersionId : true;
-
-        if (!matchesPackage || !matchesVersion) {
-            return undefined;
-        }
-
-        const timeoutId = window.setTimeout(() => {
-            setPendingSelection(null);
-        }, 0);
-
-        return () => {
-            window.clearTimeout(timeoutId);
-        };
-    }, [pendingSelection, fallbackPackageId, fallbackVersionId]);
 
     return {
         restSegments,

@@ -61,14 +61,15 @@ describe('EventController Integration', () => {
                 commands: { path: null },
                 clientOptions: { intents: [] }
             },
-            effects: { path: null }
+            subscribers: { path: null }
         };
 
         seedcord = new Seedcord(config);
-        await (seedcord.bot as unknown as TestBot).events.init();
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
 
-        // Access private eventMap to verify registration
-        const controller = (seedcord.bot as unknown as TestBot).events;
+        const controller = testBot.events;
         expect(controller.eventMap.has('ready')).toBe(true);
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
@@ -97,13 +98,15 @@ describe('EventController Integration', () => {
                 commands: { path: null },
                 clientOptions: { intents: [] }
             },
-            effects: { path: null }
+            subscribers: { path: null }
         };
 
         seedcord = new Seedcord(config);
-        await (seedcord.bot as unknown as TestBot).events.init();
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
 
-        let controller = (seedcord.bot as unknown as TestBot).events;
+        let controller = testBot.events;
         expect(controller.eventMap.get('messageCreate')).toHaveLength(1);
 
         // Simulate HMR update
@@ -123,12 +126,12 @@ describe('EventController Integration', () => {
         );
 
         // Manually trigger onHmr since we don't have a real watcher
-        await (seedcord.bot as unknown as TestBot).events.onHmr({
+        await testBot.events.onHmr({
             file: filePath,
             type: 'update'
         });
 
-        controller = (seedcord.bot as unknown as TestBot).events;
+        controller = testBot.events;
 
         expect(controller.eventMap.has('messageCreate')).toBe(false);
         expect(controller.eventMap.has('messageUpdate')).toBe(true);

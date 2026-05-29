@@ -1,49 +1,31 @@
 'use client';
 
-import { cloneElement, isValidElement, useLayoutEffect, useMemo, useRef, useState } from 'react';
-
-import { cn } from '@lib/utils';
-import ScrollToTopButton from '@ui/ScrollToTopButton';
+import { cn, ScrollToTopButton } from '@seedcord/ui';
+import { useLayoutEffect, useRef, useState } from 'react';
 
 import DesktopSidebarFrame from './DesktopSidebarFrame';
 import MobileNavigationToggle from './MobileNavigationToggle';
 import MobilePanelDialog from './MobilePanelDialog';
+import Sidebar from '../../Sidebar';
 import { SIDEBAR_WIDTH } from '../constants';
 
-import type { SidebarProps as SidebarComponentProps } from '../../types';
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import type { DocsCatalog } from '@lib/docs/types';
+import type { CSSProperties, ReactNode } from 'react';
 
-export interface ContainerProps {
-    sidebar: ReactNode;
+interface ContainerProps {
+    catalog: DocsCatalog;
+    activePackageId: string;
+    activeVersionId: string;
     children: ReactNode;
     className?: string;
 }
 
-function Container({ sidebar, children, className }: ContainerProps): ReactNode {
+const SIDEBAR_BASE_CLASS = 'flex size-full flex-col';
+const MOBILE_SIDEBAR_OVERRIDES = 'h-auto overflow-visible border-transparent bg-transparent shadow-none';
+
+function Container({ catalog, activePackageId, activeVersionId, children, className }: ContainerProps): ReactNode {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [navigationOpen, setNavigationOpen] = useState(false);
-    const sidebarVariants = useMemo<{ desktop: ReactNode; mobile: ReactNode }>(() => {
-        if (!isValidElement(sidebar)) {
-            return { desktop: sidebar, mobile: sidebar };
-        }
-
-        const sidebarElement = sidebar as ReactElement<SidebarComponentProps>;
-        const mergedClassName = cn('flex h-full w-full flex-col', sidebarElement.props.className);
-
-        const desktop = cloneElement<SidebarComponentProps>(sidebarElement, {
-            className: mergedClassName,
-            variant: sidebarElement.props.variant ?? 'desktop'
-        });
-
-        const mobile = cloneElement<SidebarComponentProps>(sidebarElement, {
-            className: cn(mergedClassName, 'h-auto overflow-visible border-transparent bg-transparent shadow-none'),
-            variant: 'mobile',
-            onSelect: () => setNavigationOpen(false)
-        });
-
-        return { desktop, mobile };
-    }, [sidebar]);
-    const { desktop: desktopSidebar, mobile: mobileSidebar } = sidebarVariants;
 
     useLayoutEffect(() => {
         const updateNavigationHeight = (): void => {
@@ -76,19 +58,40 @@ function Container({ sidebar, children, className }: ContainerProps): ReactNode 
             <MobileNavigationToggle onOpen={() => setNavigationOpen(true)} />
 
             <MobilePanelDialog open={navigationOpen} onOpenChange={setNavigationOpen} title="Navigation">
-                {mobileSidebar}
+                <Sidebar
+                    catalog={catalog}
+                    activePackageId={activePackageId}
+                    activeVersionId={activeVersionId}
+                    variant="mobile"
+                    className={cn(SIDEBAR_BASE_CLASS, MOBILE_SIDEBAR_OVERRIDES)}
+                    onSelect={() => setNavigationOpen(false)}
+                />
             </MobilePanelDialog>
 
-            <div className="flex w-full min-w-0 flex-1">
-                <DesktopSidebarFrame sidebar={desktopSidebar} />
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-                    <div className="mx-auto w-full max-w-none min-w-0 px-3 pt-6 pb-12 md:px-7 md:pt-8 lg:px-10 lg:pt-10">
+            <div className={cn('flex w-full min-w-0 flex-1')}>
+                <DesktopSidebarFrame
+                    sidebar={
+                        <Sidebar
+                            catalog={catalog}
+                            activePackageId={activePackageId}
+                            activeVersionId={activeVersionId}
+                            variant="desktop"
+                            className={SIDEBAR_BASE_CLASS}
+                        />
+                    }
+                />
+                <div className={cn('flex min-h-0 min-w-0 flex-1 flex-col')}>
+                    <div
+                        className={cn(
+                            'mx-auto w-full max-w-none min-w-0 px-3 pt-6 pb-12 md:px-7 md:pt-8 lg:px-10 lg:pt-10'
+                        )}
+                    >
                         {children}
                     </div>
                 </div>
             </div>
 
-            <ScrollToTopButton className="fixed right-6 bottom-10" />
+            <ScrollToTopButton className={cn('fixed right-6 bottom-10')} />
         </div>
     );
 }

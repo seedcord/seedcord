@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import createConfig from '@seedcord/eslint-config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
@@ -7,6 +9,7 @@ export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     registerImportPlugin: false,
     registerTypescriptConfigs: false,
+    tailwindEntryPoint: path.resolve(import.meta.dirname, 'src/app/globals.css'),
     userConfigs: [
         // Next core with Web Vitals. Includes react, hooks, import, jsx-a11y, and @next already.
         ...nextVitals,

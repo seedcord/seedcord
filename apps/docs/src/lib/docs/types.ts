@@ -8,16 +8,14 @@ import type {
     DocSignatureParameter,
     RenderedSignature
 } from '@seedcord/docs-engine';
-import type { ReadonlyRecord, TypedOmit } from '@seedcord/types';
+import type { CodeRepresentation } from '@seedcord/ui';
+import type { Except } from 'type-fest';
+
+export type { CodeRepresentation };
 
 export interface FormatContext {
     engine: DocsEngine;
     manifestPackage: string;
-}
-
-export interface CodeRepresentation {
-    text: string;
-    html: string | null;
 }
 
 export type CommentDisplayPart = NonNullable<DocComment['summaryParts']>[number];
@@ -46,7 +44,7 @@ export interface SeeAlsoEntry {
     target?: unknown;
 }
 
-export type SeeAlsoEntryWithoutTarget = TypedOmit<SeeAlsoEntry, 'target'>;
+export type SeeAlsoEntryWithoutTarget = Except<SeeAlsoEntry, 'target'>;
 
 export type DeprecationStatus =
     | { isDeprecated: false }
@@ -54,11 +52,11 @@ export type DeprecationStatus =
 
 export type WithSourceUrl = Pick<DocNode, 'sourceUrl'>;
 
-export type WithCode<Key extends string = 'code'> = ReadonlyRecord<Key, CodeRepresentation>;
+export type WithCode<Key extends string = 'code'> = Readonly<Record<Key, CodeRepresentation>>;
 
-export type WithSummary<Key extends string = 'summary'> = ReadonlyRecord<Key, readonly CommentParagraph[]>;
+type WithSummary<Key extends string = 'summary'> = Readonly<Record<Key, readonly CommentParagraph[]>>;
 
-export type WithExamples<Key extends string = 'examples'> = ReadonlyRecord<Key, readonly CommentExample[]>;
+type WithExamples<Key extends string = 'examples'> = Readonly<Record<Key, readonly CommentExample[]>>;
 
 export type WithDocs<
     SummaryKey extends string = 'summary',
@@ -192,6 +190,7 @@ export interface FunctionTypeParameterModel {
 
 export interface FunctionSignatureModel extends WithCode, WithDocs, WithSourceUrl, WithDeprecationStatus, WithThrows {
     id: string;
+    anchor: string;
     overloadIndex: number;
     parameters: FunctionSignatureParameterModel[];
     typeParameters?: FunctionTypeParameterModel[];

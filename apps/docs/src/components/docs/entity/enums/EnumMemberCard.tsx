@@ -1,7 +1,5 @@
+import { Card, Icon, CopyAnchorButton, cn } from '@seedcord/ui';
 import { Code } from 'lucide-react';
-
-import CopyAnchorButton from '@ui/CopyAnchorButton';
-import Icon from '@ui/Icon';
 
 import CommentParagraphs from '../comments/CommentParagraphs';
 import DeprecatedEntity from '../DeprecatedEntity';
@@ -23,23 +21,26 @@ function SignatureCell({
     showValueAfterSignature: boolean;
 }): ReactElement {
     const withHtml = (
-        <div className="text-subtle flex items-center gap-2 text-sm">
-            <div className="shiki-inline-wrapper truncate" dangerouslySetInnerHTML={{ __html: signatureHtml ?? '' }} />
-            {showValueAfterSignature ? <code className="truncate font-mono">= {value}</code> : null}
+        <div className={cn('text-subtle flex items-center gap-2 text-sm')}>
+            <div
+                className={cn('shiki-inline-wrapper truncate')}
+                dangerouslySetInnerHTML={{ __html: signatureHtml ?? '' }}
+            />
+            {showValueAfterSignature ? <code className={cn('truncate font-mono')}>= {value}</code> : null}
         </div>
     );
 
     const withValue = (
-        <div className="text-subtle truncate text-sm">
-            <code className="truncate font-mono">
+        <div className={cn('text-subtle truncate text-sm')}>
+            <code className={cn('truncate font-mono')}>
                 {label} = {value}
             </code>
         </div>
     );
 
     const plain = (
-        <div className="text-subtle truncate text-sm">
-            <code className="truncate font-mono">{label}</code>
+        <div className={cn('text-subtle truncate text-sm')}>
+            <code className={cn('truncate font-mono')}>{label}</code>
         </div>
     );
 
@@ -58,18 +59,22 @@ function ActionsCell({
     sourceUrl: string | undefined;
 }): ReactElement {
     return (
-        <div className="ml-auto flex h-8 w-18 shrink-0 items-center justify-end gap-2 pl-2">
+        <div className={cn('ml-auto flex h-8 w-18 shrink-0 items-center justify-end gap-2 pl-2')}>
             <CopyAnchorButton
                 anchorId={anchorId}
                 label={label}
-                className="h-8 w-8 opacity-0 transition-opacity duration-150 group-hover/name:opacity-100"
+                className={cn(
+                    'size-8 opacity-0 transition-opacity duration-150 group-hover/name:opacity-100 data-[copied=true]:opacity-100'
+                )}
             />
             {sourceUrl ? (
                 <a
                     href={sourceUrl}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-subtle inline-flex h-8 w-8 items-center justify-center transition hover:text-(--text)"
+                    className={cn(
+                        'text-subtle inline-flex size-8 items-center justify-center transition hover:text-(--text)'
+                    )}
                     aria-label={`Open source for ${label} in a new tab`}
                 >
                     <Icon icon={Code} size={16} />
@@ -86,13 +91,13 @@ function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
     const deprecationStatus: DeprecationStatus | undefined = member.deprecationStatus;
 
     return (
-        <article id={anchorId} className="group/name relative min-w-0">
+        <article id={anchorId} className={cn('group/name relative min-w-0')}>
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <div className="group/name card bg-surface-subtle shadow-soft relative min-w-0 p-4 sm:p-5">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="min-w-0 flex-1 space-y-3">
-                            <div className="group/name relative flex min-w-0 items-center">
-                                <div className="min-w-0">
+                <Card size="md" className={cn('group/name relative min-w-0 sm:p-5')}>
+                    <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between')}>
+                        <div className={cn('min-w-0 flex-1 space-y-3')}>
+                            <div className={cn('group/name relative flex min-w-0 items-center')}>
+                                <div className={cn('min-w-0')}>
                                     <SignatureCell
                                         label={member.label}
                                         signatureHtml={member.signature.html}
@@ -108,8 +113,10 @@ function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
                             </div>
                         </div>
                     </div>
-                    {hasSummary ? <CommentParagraphs paragraphs={member.summary} className="mt-2 space-y-0" /> : null}
-                </div>
+                    {hasSummary ? (
+                        <CommentParagraphs paragraphs={member.summary} className={cn('mt-2 space-y-0')} />
+                    ) : null}
+                </Card>
             </DeprecatedEntity>
         </article>
     );

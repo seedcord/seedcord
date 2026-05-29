@@ -1,3 +1,5 @@
+import { Card, cn } from '@seedcord/ui';
+
 import InstallCommandTabs from '@components/docs/InstallCommandTabs';
 import { highlightToHtml } from '@lib/shiki';
 
@@ -32,15 +34,15 @@ async function DocsIndexPage(): Promise<ReactElement> {
     );
 
     return (
-        <section className="space-y-12">
-            <header className="space-y-4">
-                <p className="text-subtle text-xs font-semibold tracking-[0.4em] uppercase">Getting started</p>
-                <h1 className="text-3xl font-semibold text-(--text) sm:text-4xl">Install the package</h1>
+        <section className={cn('space-y-12')}>
+            <header className={cn('space-y-4')}>
+                <p className={cn('text-subtle text-xs font-semibold tracking-[0.4em] uppercase')}>Getting started</p>
+                <h1 className={cn('text-3xl font-semibold text-(--text) sm:text-4xl')}>Install the package</h1>
             </header>
 
-            <article className="card bg-surface shadow-soft space-y-4 p-6">
+            <Card as="article" size="lg" className={cn('bg-surface space-y-4')}>
                 <InstallCommandTabs commands={highlightedCommands} />
-            </article>
+            </Card>
         </section>
     );
 }

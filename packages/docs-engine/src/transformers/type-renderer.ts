@@ -280,7 +280,14 @@ function renderReflectionType(ctx: TransformContext, type: DocType, parts: SigPa
 }
 
 const TYPE_RENDERERS: Record<string, TypeRenderer> = {
-    intrinsic: (_ctx, type, parts) => parts.push(textPart((type as JSONOutput.IntrinsicType).name)),
+    intrinsic: (_ctx, type, parts) => {
+        // Emit intrinsics (`unknown`, `string`, `number`, `undefined`, ...) as ref parts so the
+        // consumer's resolveHref callback can look them up against MDN / TS-lang external maps.
+        // Emitting them as plain text would force consumers to scan post-render text and re-wrap
+        // matches, which is how external links to intrinsics were leaking raw markdown.
+        const name = (type as JSONOutput.IntrinsicType).name;
+        parts.push({ kind: 'ref', text: name, ref: { name } });
+    },
     literal: (_ctx, type, parts) => parts.push(textPart(literalToText((type as JSONOutput.LiteralType).value))),
     reference: renderReferenceType,
     array: (ctx, type, parts) => {

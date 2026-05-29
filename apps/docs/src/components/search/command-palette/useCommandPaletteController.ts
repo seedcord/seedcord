@@ -83,13 +83,12 @@ export function useCommandPaletteController(): CommandPaletteController {
         if (!mounted) return undefined;
 
         if (open) {
-            const resetTimeout = window.setTimeout(() => setSearchValue(''), 0);
+            // justified: animation-coupled, input lives behind a Radix <Dialog> mount and only receives focus after the surface paints in.
             const focusTimeout = window.setTimeout(() => {
                 inputRef.current?.focus();
             }, FOCUS_DELAY_MS);
             log('Command palette opened', { fromPath: pathname });
             return () => {
-                window.clearTimeout(resetTimeout);
                 window.clearTimeout(focusTimeout);
             };
         }
@@ -97,6 +96,14 @@ export function useCommandPaletteController(): CommandPaletteController {
         log('Command palette closed');
         return undefined;
     }, [mounted, open, pathname]);
+
+    const handleOpenChange = useCallback(
+        (next: boolean): void => {
+            if (next) setSearchValue('');
+            setCommandPaletteOpen(next);
+        },
+        [setCommandPaletteOpen]
+    );
 
     const handleClose = useCallback(() => setCommandPaletteOpen(false), [setCommandPaletteOpen]);
 
@@ -135,7 +142,7 @@ export function useCommandPaletteController(): CommandPaletteController {
         mounted,
         searchValue,
         inputRef,
-        handleOpenChange: setCommandPaletteOpen,
+        handleOpenChange,
         handleValueChange: setSearchValue,
         handleClose,
         handleSelect,

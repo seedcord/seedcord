@@ -1,10 +1,10 @@
 'use client';
 
+import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 
 import { getToneConfig } from '@lib/entityMetadata';
 import { log } from '@lib/logger';
-import { cn } from '@lib/utils';
 
 import type { SidebarItemProps } from './types';
 import type { ReactElement } from 'react';
@@ -29,12 +29,12 @@ function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps): Reac
             }}
         >
             <span
-                className={cn('inline-flex h-6 w-6 items-center justify-center rounded-full border', toneStyles.badge)}
+                className={cn('inline-flex size-6 items-center justify-center rounded-full border', toneStyles.badge)}
             >
                 <ItemIcon size={14} strokeWidth={2} aria-hidden />
             </span>
 
-            <span className="min-w-0 truncate">{label}</span>
+            <span className={cn('min-w-0 truncate')}>{label}</span>
         </Link>
     );
 }

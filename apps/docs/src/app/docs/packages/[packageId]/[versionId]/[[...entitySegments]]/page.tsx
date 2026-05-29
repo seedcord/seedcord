@@ -1,3 +1,4 @@
+import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -10,7 +11,7 @@ import { getToneConfig } from '@lib/entityMetadata';
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 type PageParams = Record<string, string | string[] | undefined>;
 
@@ -48,25 +49,31 @@ function renderCategory(category: NavigationCategory): ReactElement {
     const toneStyles = getToneConfig(category.tone).styles;
 
     return (
-        <div key={category.id} className="space-y-3">
-            <header className="flex items-center justify-between">
-                <div className="flex flex-col">
-                    <span className="text-subtle text-xs font-semibold tracking-wide uppercase">{category.title}</span>
-                    <span className="text-xs text-(--text-accent-b-strong)">
+        <div key={category.id} className={cn('space-y-3')}>
+            <header className={cn('flex items-center justify-between')}>
+                <div className={cn('flex flex-col')}>
+                    <span className={cn('text-subtle text-xs font-semibold tracking-wide uppercase')}>
+                        {category.title}
+                    </span>
+                    <span className={cn('text-xs text-(--text-accent-b-strong)')}>
                         {category.items.length} item{category.items.length === 1 ? '' : 's'}
                     </span>
                 </div>
             </header>
-            <ul className="space-y-2">
+            <ul className={cn('space-y-2')}>
                 {category.items.map((item) => (
                     <li key={item.id}>
                         <Link
                             href={item.href}
-                            className="bg-surface-moderate shadow-soft border-border flex items-center justify-between rounded-xl border px-3 py-2 text-sm font-medium text-(--text) transition hover:border-(--outline-accent-b-moderate) hover:bg-(--surface-accent-b-moderate)"
+                            className={cn(
+                                'bg-surface-moderate shadow-soft border-border flex items-center justify-between rounded-xl border px-3 py-2 text-sm font-medium text-(--text) transition hover:border-(--outline-accent-b-moderate) hover:bg-(--surface-accent-b-moderate)'
+                            )}
                         >
                             <span>{item.label}</span>
                             <span
-                                className={`inline-flex h-6 min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs font-semibold ${toneStyles.badge}`}
+                                className={cn(
+                                    `inline-flex h-6 min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs font-semibold ${toneStyles.badge}`
+                                )}
                             >
                                 {category.tone}
                             </span>
@@ -86,18 +93,22 @@ function PackageVersionOverview({
     version: PackageVersionCatalog;
 }): ReactElement {
     return (
-        <section className="space-y-8">
-            <header className="space-y-3">
-                <p className="text-subtle text-xs font-semibold tracking-[0.35em] uppercase">Reference overview</p>
-                <h1 className="text-3xl font-semibold text-(--text) sm:text-4xl">
+        <section className={cn('space-y-8')}>
+            <header className={cn('space-y-3')}>
+                <p className={cn('text-subtle text-xs font-semibold tracking-[0.35em] uppercase')}>
+                    Reference overview
+                </p>
+                <h1 className={cn('text-3xl font-semibold text-(--text) sm:text-4xl')}>
                     {entry.label} · {version.label}
                 </h1>
             </header>
-            <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+            <div className={cn('grid gap-6 lg:grid-cols-2 xl:grid-cols-3')}>
                 {version.categories.length ? (
                     version.categories.map(renderCategory)
                 ) : (
-                    <p className="text-subtle text-sm">No reference entries are available for this version yet.</p>
+                    <p className={cn('text-subtle text-sm')}>
+                        No reference entries are available for this version yet.
+                    </p>
                 )}
             </div>
         </section>

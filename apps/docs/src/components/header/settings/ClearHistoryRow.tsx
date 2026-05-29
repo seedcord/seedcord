@@ -1,38 +1,41 @@
 'use client';
 
+import { tw, Button, IconSwap, cn, useTimedToggle } from '@seedcord/ui';
 import { Check, Trash2 } from 'lucide-react';
-import { useState } from 'react';
 
 import { clearDocsHistory } from '@lib/settings/clearHistory';
-import { tw } from '@lib/utils';
-import Button from '@ui/Button';
-import Icon from '@ui/Icon';
 
 import SettingsRow from './SettingsRow';
 
-import type { ReactElement } from 'react';
+import type { MouseEvent, ReactElement } from 'react';
 
-const FEEDBACK_DURATION = 2000;
+const FEEDBACK_DURATION_MS = 2000;
 
 function ClearHistoryRow(): ReactElement {
-    const [cleared, setCleared] = useState(false);
+    const [cleared, markCleared] = useTimedToggle(FEEDBACK_DURATION_MS);
 
-    const handleClear = (): void => {
+    // Blur the button after the action so the focus ring (`--accent-a`, which is brand-red)
+    // doesn't linger across the timed-feedback window. The action is already complete; nothing
+    // left to focus on this control.
+    const handleClear = (event: MouseEvent<HTMLButtonElement>): void => {
         clearDocsHistory();
-        setCleared(true);
-        setTimeout(() => {
-            setCleared(false);
-        }, FEEDBACK_DURATION);
+        markCleared();
+        event.currentTarget.blur();
     };
 
     return (
         <SettingsRow title="Clear history" subtitle="Delete cached site navigation settings">
             <Button variant="ghost" size="icon" onClick={handleClear} aria-label="Clear history">
-                <Icon
-                    icon={cleared ? Check : Trash2}
+                <IconSwap
+                    active={cleared}
+                    idleIcon={Trash2}
+                    activeIcon={Check}
                     size={16}
-                    {...(cleared ? { className: tw`text-(--accent-b)` } : {})}
+                    activeClassName={tw`text-(--accent-b)`}
                 />
+                <span className={cn('sr-only')} aria-live="polite">
+                    {cleared ? 'History cleared' : ''}
+                </span>
             </Button>
         </SettingsRow>
     );

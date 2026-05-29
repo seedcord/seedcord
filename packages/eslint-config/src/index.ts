@@ -8,6 +8,8 @@ import eslintTsdoc from 'eslint-plugin-tsdoc';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
+import { tailwindBlock } from './tailwind';
+
 import {
     ALL_FILES,
     COMMON_LINTER_OPTIONS,
@@ -30,7 +32,7 @@ import {
     createImportSettings
 } from './rules';
 
-import type { ESLint, Linter } from 'eslint';
+import type { Linter } from 'eslint';
 
 /**
  * Flattened type for the entire ESLint configuration array.
@@ -74,6 +76,40 @@ interface CreateConfigOptions {
 
     /** Toggle registration of TypeScript ESLint configs {@default true} */
     registerTypescriptConfigs?: boolean;
+
+    /**
+     * Absolute path to the consumer's Tailwind entry CSS file (the one with `@import 'tailwindcss'`).
+     * When provided, the canonical-class lint rules are registered as `warn`:
+     * - `better-tailwindcss/enforce-canonical-classes` (shorthand combining, e.g. `h-N w-N → size-N`)
+     * - `tailwind-canonical-classes/tailwind-canonical-classes` (arbitrary-value scale normalization)
+     *
+     * When omitted, both rules are off — useful for packages with no Tailwind surface (CLI, framework, types).
+     * Shared packages without their own `globals.css` should pass a sibling app's entry via {@link resolveSharedTailwindEntry}.
+     *
+     * Requires `tailwindcss` to be installed in the consuming package (an optional peerDependency).
+     */
+    tailwindEntryPoint?: string;
+
+    /**
+     * Utility function names whose string arguments should be scanned for non-canonical Tailwind classes.
+     *
+     * Applied to both plugins (better-tailwindcss `callees` + tailwind-canonical-classes `calleeFunctions`).
+     * Defaults cover seedcord's `cn`/`clsx`/`twMerge` helpers. Add `'cva'` if a package consumes CVA.
+     *
+     * @default ['cn', 'clsx', 'twMerge']
+     */
+    tailwindCalleeFunctions?: string[];
+
+    /**
+     * Tagged template literal names whose template content should be scanned for non-canonical Tailwind classes.
+     *
+     * Only the `better-tailwindcss` plugin supports tagged templates today; `tailwind-canonical-classes`
+     * canonicalizes JSX className attrs + string-literal callees only. Seedcord uses a custom `tw` template
+     * tag in `apps/docs/src/lib/utils.ts`, so the default scans that.
+     *
+     * @default ['tw']
+     */
+    tailwindTaggedTemplates?: string[];
 }
 
 // Helper to build a config item with optional plugin registration
@@ -89,7 +125,7 @@ function pluginBlock(params: {
     if (params.settings) item.settings = params.settings;
     if (params.rules) item.rules = params.rules;
     if (params.enabled && params.plugin && params.pluginName) {
-        item.plugins = { [params.pluginName]: params.plugin } as Record<string, ESLint.Plugin>;
+        item.plugins = { [params.pluginName]: params.plugin };
     }
     return item;
 }
@@ -108,7 +144,10 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         registerPrettierPlugin = true,
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
-        registerTypescriptConfigs = true
+        registerTypescriptConfigs = true,
+        tailwindEntryPoint,
+        tailwindCalleeFunctions = ['cn', 'clsx', 'twMerge'],
+        tailwindTaggedTemplates = ['tw']
     } = options;
 
     const createTsParserOptions = (rootDir: string) => ({
@@ -193,6 +232,14 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
         }),
 
+        // Tailwind canonical-class lint (autofix; opt-in via tailwindEntryPoint)
+        tailwindBlock({
+            files: [...TS_FILES],
+            entryPoint: tailwindEntryPoint,
+            calleeFunctions: tailwindCalleeFunctions,
+            taggedTemplates: tailwindTaggedTemplates
+        }),
+
         // Additional rules for all files
         {
             files: [...ALL_FILES],
@@ -223,6 +270,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
 export * from './constants';
 export * from './rules';
+export * from './tailwind';
 export type { CreateConfigOptions, FlatConfig, FlatConfigItem };
 export default createConfig;
 

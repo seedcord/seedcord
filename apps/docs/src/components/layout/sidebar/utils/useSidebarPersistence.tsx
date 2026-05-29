@@ -1,43 +1,51 @@
 'use client';
-import { useRef, useEffect } from 'react';
+import { useCallback } from 'react';
 
 export interface PendingSidebarSelection {
     packageId: string;
     versionId: string | null;
 }
+
 export function useSidebarPersistence(
     localPackageId: string,
-    localVersionId: string,
-    handleScroll: (e: React.UIEvent<HTMLDivElement>) => void
+    localVersionId: string
 ): {
-    scrollRef: React.RefObject<HTMLDivElement | null>;
+    scrollRef: (el: HTMLDivElement | null) => () => void;
     collapsedStorageKey: string;
-    composedHandleScroll: (e: React.UIEvent<HTMLDivElement>) => void;
 } {
-    const scrollRef = useRef<HTMLDivElement | null>(null);
     const collapsedStorageKey = `docs.sidebar.collapsed:${localPackageId}:${localVersionId}`;
     const scrollStorageKey = `docs.sidebar.scroll:${localPackageId}:${localVersionId}`;
 
-    useEffect(() => {
-        const ls = typeof window !== 'undefined' ? window.localStorage : null;
-        const el = scrollRef.current;
-        if (el && ls) {
-            const saved = ls.getItem(scrollStorageKey);
-            if (saved) {
-                const n = Number(saved);
-                if (!Number.isNaN(n)) el.scrollTop = n;
+    // Ref callback identity changes when scrollStorageKey changes, so React
+    // runs cleanup (detach old listener) then re-attaches against the same
+    // DOM node with the new key, restoring the new key's saved scrollTop.
+    const scrollRef = useCallback(
+        (el: HTMLDivElement | null): (() => void) => {
+            if (!el) return () => undefined;
+
+            const ls = typeof window !== 'undefined' ? window.localStorage : null;
+
+            if (ls) {
+                const saved = ls.getItem(scrollStorageKey);
+                if (saved !== null) {
+                    const n = Number(saved);
+                    if (!Number.isNaN(n)) el.scrollTop = n;
+                }
             }
-        }
-    }, [localPackageId, localVersionId, scrollStorageKey]);
 
-    const composedHandleScroll = (e: React.UIEvent<HTMLDivElement>): void => {
-        handleScroll(e);
-        const ls = typeof window !== 'undefined' ? window.localStorage : null;
-        const el = scrollRef.current;
-        if (el && ls) {
-            ls.setItem(scrollStorageKey, String(el.scrollTop));
-        }
-    };
+            const persist = (): void => {
+                if (!ls) return;
+                ls.setItem(scrollStorageKey, String(el.scrollTop));
+            };
 
-    return { scrollRef, collapsedStorageKey, composedHandleScroll };
+            el.addEventListener('scroll', persist, { passive: true });
+
+            return () => {
+                el.removeEventListener('scroll', persist);
+            };
+        },
+        [scrollStorageKey]
+    );
+
+    return { scrollRef, collapsedStorageKey };
 }

@@ -13,7 +13,7 @@ export default mergeConfig(
             alias: {
                 '@src': path.resolve(__dirname, './src'),
                 '@bot': path.resolve(__dirname, './src/bot'),
-                '@effects': path.resolve(__dirname, './src/effects'),
+                '@subscribers': path.resolve(__dirname, './src/subscribers'),
                 '@hmr': path.resolve(__dirname, './src/hmr'),
                 '@interfaces': path.resolve(__dirname, './src/interfaces'),
                 '@miscellaneous': path.resolve(__dirname, './src/miscellaneous'),

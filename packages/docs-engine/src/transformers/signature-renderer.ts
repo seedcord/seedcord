@@ -250,9 +250,7 @@ export function formatRenderedDeclarationHeader(header: RenderedDeclarationHeade
         .trim();
 }
 
-export { renderInlineType };
-
-export function sigPartsToText(parts: SigPart[]): string {
+function sigPartsToText(parts: SigPart[]): string {
     let result = '';
     for (const part of parts) {
         if (part.kind === 'space') {
@@ -268,7 +266,7 @@ export function sigPartsToText(parts: SigPart[]): string {
     return result.trim();
 }
 
-export function inlineTypeToText(inline?: InlineType): string {
+function inlineTypeToText(inline?: InlineType): string {
     return inline ? sigPartsToText(inline.parts) : '';
 }
 

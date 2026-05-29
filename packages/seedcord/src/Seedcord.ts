@@ -10,9 +10,9 @@ import { SeedcordBrand } from '@seedcord/utils/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { EffectsController } from './effects/EffectsController';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
+import { Bus } from './subscribers/Bus';
 
 import type { Core } from './interfaces/Core';
 import type { Config } from '@seedcord/types';
@@ -38,8 +38,8 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link CoordinatedStartup} */
     public override readonly startup: CoordinatedStartup;
 
-    /** @see {@link EffectsController} */
-    public readonly effects: EffectsController;
+    /** @see {@link Bus} */
+    public readonly bus: Bus;
 
     /** @see {@link Bot} */
     public readonly bot: Bot;
@@ -76,7 +76,7 @@ export class Seedcord extends Pluggable implements Core {
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
-        this.effects = new EffectsController(this);
+        this.bus = new Bus(this);
         this.bot = new Bot(this);
         this.healthCheck = new HealthCheck(this.shutdown);
 
@@ -99,10 +99,10 @@ export class Seedcord extends Pluggable implements Core {
     private registerStartupTasks(): void {
         if (Envapter.isDevelopment) this.registerHmrAwareModules();
 
-        this.startup.addTask(StartupPhase.Configuration, 'Effect Initialization', async () => {
-            this.effects.logger.utils.initialization('Effects', 'start');
-            await this.effects.init();
-            this.effects.logger.utils.initialization('Effects', 'end');
+        this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
+            this.bus.logger.utils.initialization('Subscribers', 'start');
+            await this.bus.init();
+            this.bus.logger.utils.initialization('Subscribers', 'end');
         });
 
         this.startup.addTask(StartupPhase.Instantiation, 'Bot Initialization', async () => {

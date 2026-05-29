@@ -7,15 +7,15 @@ description: Use this when asked to write code, or audit, sweep, or fix code qua
 
 The seedcord monorepo enforces quality through layered checks — mostly tool-enforced now, with a single review-enforced check that's hard to automate (cross-package source paths).
 
-| Layer                                  | What it catches                                                                                                       | How to run today                                                                                                                          |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **ESLint + TypeScript** (tool)         | Type errors, lint violations, import order, formatting, rule violations                                               | `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc` (or `pnpm lint:fix && pnpm tc` from repo root via turbo)                                     |
-| **Vitest** (tool)                      | Behavior regressions                                                                                                  | `pnpm -C <pkg> test` (only after lint + tc pass)                                                                                          |
-| **Prettier** (tool)                    | Formatting                                                                                                            | `pnpm -C <pkg> fmt` / `fmt:check`                                                                                                         |
-| **changesets** (tool)                  | Missing version bump on published packages                                                                            | `pnpm cs` when touching a published package; `pnpm cs:status` to check                                                                    |
-| **React 19 antipatterns** (tool)       | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components           | `pnpm react-doctor --verbose` from repo root. Configured via `react-doctor.config.json`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
-| **Dead code / unused deps** (tool)     | Unused files, exports, types, deps, devDeps, binaries                                                                 | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
-| **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src`                                                            | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`.                                                                |
+| Layer                                   | What it catches                                                                                             | How to run today                                                                                                                                                                                                                          |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ESLint + TypeScript** (tool)          | Type errors, lint violations, import order, formatting, rule violations                                     | `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc` (or `pnpm lint:fix && pnpm tc` from repo root via turbo)                                                                                                                                     |
+| **Vitest** (tool)                       | Behavior regressions                                                                                        | `pnpm -C <pkg> test` (only after lint + tc pass)                                                                                                                                                                                          |
+| **Prettier** (tool)                     | Formatting                                                                                                  | `pnpm -C <pkg> fmt` / `fmt:check`                                                                                                                                                                                                         |
+| **changesets** (tool)                   | Missing version bump on published packages                                                                  | `pnpm cs` when touching a published package; `pnpm cs:status` to check                                                                                                                                                                    |
+| **React 19 antipatterns** (tool)        | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `pnpm react-doctor --verbose` from repo root. Configured via `react-doctor.config.json`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics.                               |
+| **Dead code / unused deps** (tool)      | Unused files, exports, types, deps, devDeps, binaries                                                       | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
+| **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src`                                                  | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`.                                                                                                                                                                |
 
 The only acceptable end state for a PR is: **lint:fix and tc exit clean for every touched package, every test passes, no React 19 antipattern is shipped in `apps/*`, and any published-package change has a `changeset`.**
 
@@ -135,7 +135,9 @@ const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 // Good
 type UIState = { isOpen: boolean; isDropdownOpen: boolean };
 type UIAction = { type: 'open' } | { type: 'closeAll' };
-function uiReducer(state: UIState, action: UIAction): UIState { /* ... */ }
+function uiReducer(state: UIState, action: UIAction): UIState {
+    /* ... */
+}
 const [ui, dispatch] = useReducer(uiReducer, { isOpen: false, isDropdownOpen: false });
 ```
 
@@ -245,24 +247,32 @@ Extract focused sub-components. The parent reads as an orchestrator — state, e
 Until a dead-code scanner is wired into the repo, run this checklist on the package you've been editing before opening a PR:
 
 1. **Unused dependency check.** For each entry in `dependencies` and `devDependencies` of the package you've touched:
-   ```sh
-   # CLI / runtime deps
-   rg "from ['\"]<pkg>" packages/<pkg>/src packages/<pkg>/tests --type ts --type tsx
-   rg "require\(['\"]<pkg>" packages/<pkg>/src
-   # CLI deps invoked via pnpm exec
-   rg "<pkg>" packages/<pkg>/package.json
-   ```
-   - Returns nothing in src/tests, returns nothing in scripts → **remove from package.json**, then `pnpm install`.
-   - Returns nothing in src/tests but appears as a `pnpm exec <pkg>` in scripts → it's a CLI dep, leave it.
+
+    ```sh
+    # CLI / runtime deps
+    rg "from ['\"]<pkg>" packages/<pkg>/src packages/<pkg>/tests --type ts --type tsx
+    rg "require\(['\"]<pkg>" packages/<pkg>/src
+    # CLI deps invoked via pnpm exec
+    rg "<pkg>" packages/<pkg>/package.json
+    ```
+
+    - Returns nothing in src/tests, returns nothing in scripts → **remove from package.json**, then `pnpm install`.
+    - Returns nothing in src/tests but appears as a `pnpm exec <pkg>` in scripts → it's a CLI dep, leave it.
+
 2. **Unused exports.** Before adding `export` to a symbol, verify it's consumed outside the file. After moving code, re-grep:
-   ```sh
-   rg "import.*<symbol>.*from.*<pkg-or-path>"
-   ```
-   If only the defining file uses it, drop the `export`. If nothing uses it, delete the symbol.
+
+    ```sh
+    rg "import.*<symbol>.*from.*<pkg-or-path>"
+    ```
+
+    If only the defining file uses it, drop the `export`. If nothing uses it, delete the symbol.
+
 3. **Unused files.** If you replaced a module, check it's still referenced before leaving the file in tree:
-   ```sh
-   rg "from ['\"].*<old-file-name>"
-   ```
+
+    ```sh
+    rg "from ['\"].*<old-file-name>"
+    ```
+
 4. **Workspace catalog duplication.** If the dep appears in 2+ packages, lift it to `pnpm-workspace.yaml`'s `catalogs:` and reference it as `catalog:<name>` everywhere.
 
 Track candidates in a scratch note while you sweep so you fix them in one focused commit, not scattered across feature work.
@@ -329,4 +339,3 @@ For any change touching a package under `packages/` (other than `tsconfig`, `tsu
 - **[`TYPESCRIPT.md`](./TYPESCRIPT.md)** — type narrowing, discriminated unions, generics, `satisfies`, const assertions, branded types, utility types from `type-fest`
 - **[`OOP.md`](./OOP.md)** — class vs function decision, SOLID in TypeScript, service pattern, composition vs inheritance, access modifiers
 - **[`FAIL-FAST-RULES.md`](./FAIL-FAST-RULES.md)** — null/undefined handling, invariant checks, when NOT to use `?.` / `??`
-- **[`CODE-COMMENTING-GUIDELINES.md`](./CODE-COMMENTING-GUIDELINES.md)** — when comments help vs. when they're noise

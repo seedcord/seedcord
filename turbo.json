@@ -34,11 +34,11 @@
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"],
             "outputs": ["coverage/**"]
         },
-        "format": {
+        "fmt": {
             "inputs": ["$TURBO_DEFAULT$", ".prettierrc*", "prettier.config.*"],
             "cache": false
         },
-        "format:check": {
+        "fmt:check": {
             "inputs": ["$TURBO_DEFAULT$", ".prettierrc*", "prettier.config.*"]
         },
         "clean": {
@@ -46,5 +46,6 @@
         }
     },
     "globalDependencies": ["package.json", "pnpm-workspace.yaml", "turbo.json", ".env*"],
-    "globalEnv": ["NODE_ENV", "ENVIRONMENT", "ENV"]
+    "globalEnv": ["NODE_ENV", "ENVIRONMENT", "ENV"],
+    "cacheMaxAge": "12h"
 }

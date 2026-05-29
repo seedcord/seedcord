@@ -1,5 +1,7 @@
 'use client';
 
+import { cn } from '@seedcord/ui';
+
 import SidebarSelect from './SidebarSelect';
 
 import type { SidebarHeaderPackageOption, SidebarHeaderVersionOption } from './types';
@@ -23,7 +25,7 @@ function SidebarHeader({
     onVersionChange
 }: SidebarHeaderProps): ReactElement {
     return (
-        <div className="space-y-3">
+        <div className={cn('space-y-3')}>
             <SidebarSelect
                 id="docs-package-picker"
                 label="Package"

@@ -2,9 +2,6 @@
     "$schema": "https://www.schemastore.org/tsconfig.json",
     "extends": "./base.json",
     "compilerOptions": {
-        "lib": ["ESNext", "Decorators", "Decorators.Legacy"],
-        "target": "ES2024",
-        "module": "esnext",
-        "moduleResolution": "bundler"
+        "target": "ES2024"
     }
 }

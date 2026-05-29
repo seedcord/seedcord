@@ -1,6 +1,6 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig",
-    "extends": "../../packages/tsconfig/base.json",
+    "extends": "@seedcord/tsconfig/base",
     "compilerOptions": {
         "lib": ["ESNext", "DOM", "DOM.Iterable"],
         "allowJs": true,
@@ -26,9 +26,12 @@
         "next-env.d.ts",
         "src/**/*.ts",
         "src/**/*.tsx",
+        "tests/**/*.ts",
+        "tests/**/*.tsx",
         "pages/**/*.tsx",
         "tailwind.config.ts",
         "next.config.ts",
+        "vitest.config.ts",
         ".next/types/**/*.ts"
     ],
     "exclude": ["node_modules", "dist"]

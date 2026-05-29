@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 
+import { sanitizeHtml } from '@lib/sanitizeHtml';
 import { highlightToHtml, highlightInlineToHtml } from '@lib/shiki';
 
 import { resolveInlineHref } from '../resolvers';
@@ -60,7 +61,7 @@ export async function renderParagraphs(comment: DocComment, context: FormatConte
         }
     }
 
-    const html = await marked.parse(markdown, { async: true });
+    const html = sanitizeHtml(await marked.parse(markdown, { async: true }));
 
     return [
         {

@@ -1,4 +1,4 @@
-import { cn } from '@lib/utils';
+import { cn } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
@@ -20,9 +20,9 @@ function SignatureSelector({
     }
 
     return (
-        <fieldset className="space-y-2">
-            <legend className="text-subtle text-xs font-semibold tracking-widest uppercase">{legend}</legend>
-            <div className="flex flex-wrap gap-2">
+        <fieldset className={cn('space-y-2')}>
+            <legend className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>{legend}</legend>
+            <div className={cn('flex flex-wrap gap-2')}>
                 {signatures.map((signature, index) => {
                     const checked = signature.id === activeSignatureId;
                     const label = `${OVERLOAD_LABEL_PREFIX} ${index + 1}`;
@@ -43,7 +43,8 @@ function SignatureSelector({
                                 value={signature.id}
                                 checked={checked}
                                 onChange={() => onChange(signature.id)}
-                                className="sr-only"
+                                aria-label={label}
+                                className={cn('sr-only')}
                             />
                             <span>{label}</span>
                         </label>

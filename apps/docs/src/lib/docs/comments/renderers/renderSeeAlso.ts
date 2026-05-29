@@ -1,7 +1,9 @@
 import { resolveInlineHref } from '../resolvers';
 
 import type { FormatContext, InlineTagPart, SeeAlsoEntry, SeeAlsoEntryWithoutTarget } from '../../types';
-import type { DocComment } from '@seedcord/docs-engine';
+import type { DocComment, DocCommentBlockTag } from '@seedcord/docs-engine';
+
+type DocCommentPart = DocCommentBlockTag['content'][number];
 
 export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeAlsoEntry[] | undefined {
     const collected = collectSeeAlsoFromBlockTags(comment);
@@ -73,44 +75,53 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
     return results.length ? results : undefined;
 }
 
-// eslint-disable-next-line complexity
+interface PartAccumulator {
+    name: string | undefined;
+    href: string | undefined;
+    target: unknown;
+}
+
+function applyInlineTagPart(part: InlineTagPart, acc: PartAccumulator): void {
+    if (!acc.name && part.text.trim().length) acc.name = part.text.trim();
+    if (part.url?.trim().length) acc.href = part.url.trim();
+    if (part.target) acc.target = part.target;
+}
+
+function applyTextPart(part: DocCommentPart, acc: PartAccumulator): void {
+    if (!acc.name && part.text.trim().length) acc.name = part.text.trim();
+}
+
+function extractSeeEntry(tag: DocCommentBlockTag): SeeAlsoEntryWithoutTarget | null {
+    const initialName = tag.text.trim();
+    const acc: PartAccumulator = {
+        name: initialName.length ? initialName : undefined,
+        href: undefined,
+        target: undefined
+    };
+
+    for (const part of tag.content) {
+        if (part.kind === 'inline-tag') {
+            applyInlineTagPart(part, acc);
+        } else {
+            applyTextPart(part, acc);
+        }
+    }
+
+    if (!acc.name && !acc.href) return null;
+    const entry: SeeAlsoEntry = { name: acc.name ?? '' };
+    if (acc.href) entry.href = acc.href;
+    if (acc.target) entry.target = acc.target;
+    return entry;
+}
+
 function collectSeeAlsoFromBlockTags(comment: DocComment): SeeAlsoEntry[] | undefined {
     if (comment.blockTags.length === 0) return undefined;
 
     const collected: SeeAlsoEntryWithoutTarget[] = [];
     for (const tag of comment.blockTags) {
         if (tag.tag !== '@see') continue;
-
-        let name: string | undefined = tag.text.trim().length ? tag.text.trim() : undefined;
-        let href: string | undefined;
-        let target: unknown;
-
-        if (tag.content.length) {
-            for (const part of tag.content) {
-                if (!name && part.kind !== 'inline-tag' && part.text.trim().length) {
-                    name = part.text.trim();
-                }
-
-                if (part.kind === 'inline-tag') {
-                    const inline = part as InlineTagPart;
-                    if (!name && inline.text.trim().length) {
-                        name = inline.text.trim();
-                    }
-                    if (inline.url?.trim().length) {
-                        href = inline.url.trim();
-                    }
-                    if (inline.target) {
-                        target = inline.target;
-                    }
-                }
-            }
-        }
-
-        if (!name && !href) continue;
-        const entry: SeeAlsoEntry = { name: name ?? '' };
-        if (href) entry.href = href;
-        if (target) entry.target = target;
-        collected.push(entry);
+        const entry = extractSeeEntry(tag);
+        if (entry) collected.push(entry);
     }
 
     return collected.length ? collected : undefined;

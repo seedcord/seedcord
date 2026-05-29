@@ -47,7 +47,7 @@ export const seedcord = new Seedcord({
             Cancel: 'confirmation_cross'
         }
     },
-    effects: {
+    subscribers: {
         path: null
     }
 }).attach('db', Mongo, StartupPhase.Configuration, {

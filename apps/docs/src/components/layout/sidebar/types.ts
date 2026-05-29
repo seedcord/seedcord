@@ -1,5 +1,4 @@
 import type {
-    DocsCatalog,
     PackageCatalogEntry,
     NavigationCategory,
     NavigationEntityItem,
@@ -8,8 +7,6 @@ import type {
 import type { EntityTone } from '@lib/entityMetadata';
 
 export type SidebarVariant = 'desktop' | 'mobile';
-
-export type SidebarCatalog = DocsCatalog;
 
 export interface SidebarProps {
     catalog: readonly PackageCatalogEntry[];

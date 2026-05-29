@@ -1,5 +1,5 @@
-import DocsUIProvider from '@components/docs/DocsUIContext';
-import Sidebar from '@components/layout/sidebar/Sidebar';
+import { cn } from '@seedcord/ui';
+
 import Container from '@components/layout/sidebar/utils/container/Container';
 import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
 
@@ -60,33 +60,21 @@ function resolveActiveSelection(
 }
 
 async function DocsLayout({ children, params }: DocsLayoutProps): Promise<ReactNode> {
-    const catalog = await loadDocsCatalog();
-    const resolvedParams = await params;
-    const snapshot = {};
+    const [catalog, resolvedParams] = await Promise.all([loadDocsCatalog(), params]);
     const effectiveParams: DocsLayoutParams = { ...resolvedParams };
 
     const { activePackage, activeVersion } = resolveActiveSelection(catalog, effectiveParams);
 
     return (
-        <>
-            <script dangerouslySetInnerHTML={{ __html: `window.__DOCS_UI__ = ${JSON.stringify(snapshot)};` }} />
-
-            <DocsUIProvider value={snapshot}>
-                <Container
-                    sidebar={
-                        <Sidebar
-                            catalog={catalog}
-                            activePackageId={activePackage?.id ?? ''}
-                            activeVersionId={activeVersion?.id ?? ''}
-                        />
-                    }
-                >
-                    <main id="main-content" className="min-w-0">
-                        {children}
-                    </main>
-                </Container>
-            </DocsUIProvider>
-        </>
+        <Container
+            catalog={catalog}
+            activePackageId={activePackage?.id ?? ''}
+            activeVersionId={activeVersion?.id ?? ''}
+        >
+            <main id="main-content" className={cn('min-w-0')}>
+                {children}
+            </main>
+        </Container>
     );
 }
 

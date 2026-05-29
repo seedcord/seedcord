@@ -406,7 +406,7 @@ APPROVE FIX #1
 APPROVE FIX #2
 SKIP FIX #3
 
-3. For complex fixes, respond:
+1. For complex fixes, respond:
 
 COMPLEX FIX #X: [Plan refactor task] / [Manual] / [Skip]
 

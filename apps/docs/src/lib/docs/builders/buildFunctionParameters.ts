@@ -1,16 +1,11 @@
-// buildFunctionParameters.ts
 import { formatCommentRich } from '../comments/formatter';
-import { renderInlineType } from '../comments/renderers/renderInlineType';
-import { highlightCode } from '../formatting';
+import { formatParameter, inlineTypeText, type ParameterFormatInput } from '../formatting';
 
 import type { FunctionSignatureParameterModel, FormatContext } from '../types';
 import type { DocSignature, InlineType, RenderedSignature } from '@seedcord/docs-engine';
 
 export const isInlineType = (v: unknown): v is InlineType =>
     !!v && typeof v === 'object' && Array.isArray((v as { parts?: unknown }).parts);
-
-const paramTypeString = (renderedType: unknown, context: FormatContext): string | undefined =>
-    isInlineType(renderedType) ? renderInlineType(renderedType, context) : undefined;
 
 export async function buildFunctionParameters(
     signature: DocSignature,
@@ -19,20 +14,25 @@ export async function buildFunctionParameters(
 ): Promise<FunctionSignatureParameterModel[]> {
     const tasks = signature.parameters.map(async (param, index) => {
         const r = rendered?.parameters[index];
-        const typeStr = paramTypeString(r?.type, context);
+        const type = isInlineType(r?.type) ? r.type : undefined;
         const defaultValue = r?.defaultValue ?? param.defaultValue;
+        const optional = param.flags.isOptional;
 
-        const formatted = await formatCommentRich(param.comment, context);
-        const label = param.name + (param.flags.isOptional ? '?' : '');
-        let displayText = label;
-        if (typeStr) displayText += `: ${typeStr}`;
-        if (defaultValue !== undefined) displayText += ` = ${defaultValue}`;
+        const paramInput: ParameterFormatInput = { name: param.name, optional };
+        if (type) paramInput.type = type;
+        if (defaultValue !== undefined) paramInput.defaultValue = String(defaultValue);
+
+        const [formatted, display, typeStr] = await Promise.all([
+            formatCommentRich(param.comment, context),
+            formatParameter(paramInput, context),
+            type ? inlineTypeText(type, context) : Promise.resolve(undefined)
+        ]);
 
         const model: FunctionSignatureParameterModel = {
             name: param.name,
-            optional: param.flags.isOptional,
+            optional,
             documentation: formatted.paragraphs,
-            display: await highlightCode(displayText)
+            display
         };
 
         if (typeStr) model.type = typeStr;

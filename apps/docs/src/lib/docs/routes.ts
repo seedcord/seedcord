@@ -5,7 +5,7 @@ import { formatDisplayPackageName } from './packages';
 import type { BuildEntityHrefOptions } from './types';
 import type { Route } from 'next';
 
-export const DEFAULT_VERSION_SEGMENT = 'latest';
+const DEFAULT_VERSION_SEGMENT = 'latest';
 
 const encodeSegment = (segment: string): string => encodeURIComponent(segment);
 
@@ -65,5 +65,3 @@ export function parseEntityPathSegments(segments?: string[] | null): ParsedEntit
         rawSegments: segments
     } satisfies ParsedEntityPath;
 }
-
-export const getEntityRouteSegment = (tone: EntityTone): string => toneToDirectory(tone);

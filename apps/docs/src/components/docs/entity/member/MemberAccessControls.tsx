@@ -1,11 +1,10 @@
 'use client';
 
-import { useContext } from 'react';
+import { SegmentedControl, cn, tw, type SegmentedControlOption } from '@seedcord/ui';
+import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { DocsUIContext } from '@components/docs/DocsUIContext';
-import { MEMBER_ACCESS_LEVELS, formatMemberAccessLabel } from '@lib/memberAccess';
-import { cn } from '@lib/utils';
+import { MEMBER_ACCESS_LEVELS, formatMemberAccessLabel, type MemberAccessLevel } from '@lib/memberAccess';
 import { useUIStore, type UIStore } from '@store/ui';
 
 import type { ReactElement } from 'react';
@@ -19,8 +18,6 @@ function MemberAccessControls({
     orientation?: 'vertical' | 'horizontal';
     showLegend?: boolean;
 } = {}): ReactElement {
-    const ctx = useContext(DocsUIContext);
-
     const { memberAccessLevel, setMemberAccessLevel } = useUIStore(
         useShallow((state: UIStore) => ({
             memberAccessLevel: state.memberAccessLevel,
@@ -28,43 +25,26 @@ function MemberAccessControls({
         }))
     );
 
-    const initialLevel = ctx?.memberAccessLevel;
+    const options = useMemo<SegmentedControlOption<MemberAccessLevel>[]>(
+        () => MEMBER_ACCESS_LEVELS.map((level) => ({ value: level, label: formatMemberAccessLabel(level) })),
+        []
+    );
 
     const containerClasses =
-        orientation === 'horizontal' ? 'flex items-center gap-3' : 'flex flex-col items-stretch gap-2';
+        orientation === 'horizontal' ? tw`flex items-center gap-3` : tw`flex flex-col items-stretch gap-2`;
 
     return (
         <div className={cn(containerClasses, className)}>
             {showLegend ? (
-                <span className="text-subtle text-xs font-semibold tracking-widest uppercase">Access</span>
+                <span className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>Access</span>
             ) : null}
-            <div
-                role="radiogroup"
-                aria-label={showLegend ? undefined : 'Member access level'}
-                className="border-border/60 bg-surface-subtle inline-flex overflow-hidden rounded-full border"
-            >
-                {MEMBER_ACCESS_LEVELS.map((level, index) => {
-                    const isActive = (initialLevel ?? memberAccessLevel) === level;
-                    return (
-                        <button
-                            key={level}
-                            type="button"
-                            role="radio"
-                            aria-checked={isActive}
-                            onClick={() => setMemberAccessLevel(level)}
-                            className={cn(
-                                'relative px-3 py-1.5 text-xs font-medium transition-colors focus-visible:z-1 focus-visible:ring-1 focus-visible:ring-(--outline-accent-b-subtle) focus-visible:ring-offset-1 focus-visible:ring-offset-(--bg-surface-subtle-transparent) focus-visible:outline-none',
-                                index > 0 && 'border-border/50 border-l',
-                                isActive
-                                    ? 'bg-(--surface-accent-b-moderate) text-(--text-accent-b-faint)'
-                                    : 'text-subtle hover:text-(--text)'
-                            )}
-                        >
-                            {formatMemberAccessLabel(level)}
-                        </button>
-                    );
-                })}
-            </div>
+            <SegmentedControl
+                options={options}
+                value={memberAccessLevel}
+                onChange={setMemberAccessLevel}
+                size="sm"
+                {...(showLegend ? {} : { 'aria-label': 'Member access level' })}
+            />
         </div>
     );
 }

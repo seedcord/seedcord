@@ -1,15 +1,14 @@
 'use client';
 
+import { cn } from '@seedcord/ui';
 import { useMemo } from 'react';
 
 import MemberDetailGroup from '../member/MemberDetailGroup';
 import { useActiveSignatureList } from '../utils/useActiveSignatureList';
 
 import type { EntityMemberSummary } from '../types';
-import type { ActiveSignatureListProps } from '../utils/useActiveSignatureList';
 import type {
     FunctionEntityModel,
-    FunctionSignatureModel,
     FunctionTypeParameterModel,
     FunctionSignatureParameterModel,
     CodeRepresentation
@@ -45,6 +44,7 @@ function buildTypeParamMember(tp: FunctionTypeParameterModel, index: number): En
     };
 }
 
+// Parameters render via the member-row renderer; the dedicated FunctionParamMember type lift is deferred because it cascades into MemberRow's prop signature.
 function buildParamMember(p: FunctionSignatureParameterModel, index: number): EntityMemberSummary {
     const id = `param-${p.name}-${index}`;
     const label = p.name + (p.optional ? '?' : '');
@@ -70,22 +70,20 @@ function buildParamMember(p: FunctionSignatureParameterModel, index: number): En
                 documentation: p.documentation,
                 examples: []
             }
-        ],
-        sourceUrl: undefined
-    } as unknown as EntityMemberSummary;
+        ]
+    };
 }
 
 function FunctionBody({ model }: { model: FunctionEntityModel }): ReactElement | null {
     const signatures = model.signatures;
-    const mapped = signatures.map((s) => ({ id: s.id, anchor: (s as unknown as ActiveSignatureListProps).anchor }));
-    const [activeSignatureId] = useActiveSignatureList(mapped as ActiveSignatureListProps[]);
+    const [activeSignatureId] = useActiveSignatureList(signatures);
 
     const activeSignature = useMemo(
         () => signatures.find((s) => s.id === activeSignatureId) ?? signatures[0],
         [signatures, activeSignatureId]
-    ) as FunctionSignatureModel;
+    );
 
-    if (!signatures.length) return null;
+    if (!signatures.length || !activeSignature) return null;
 
     const rawTypeParams = activeSignature.typeParameters ?? [];
     const typeParameterItems: EntityMemberSummary[] = rawTypeParams.map((tp, idx) => buildTypeParamMember(tp, idx));
@@ -93,7 +91,7 @@ function FunctionBody({ model }: { model: FunctionEntityModel }): ReactElement |
     const parameterItems: EntityMemberSummary[] = activeSignature.parameters.map((p, idx) => buildParamMember(p, idx));
 
     return (
-        <section className="space-y-6">
+        <section className={cn('space-y-6')}>
             <div>
                 <MemberDetailGroup items={typeParameterItems} prefix="typeParameter" />
             </div>

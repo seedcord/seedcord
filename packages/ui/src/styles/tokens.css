@@ -1,0 +1,101 @@
+:root {
+    --color-bg: #f8f6e8;
+    --color-text: #070917;
+    --color-base-dark: #070917;
+    --color-base-slate: #0f172a;
+    --color-surface: rgba(0, 0, 0, 0.02);
+
+    /* mater red */
+    --accent-a: #f04e36;
+    /* welon green */
+    --accent-b: #6fab49;
+    /* resource accent */
+    --accent-r: #8b90a7;
+
+    --overlay: rgba(0, 0, 0, 0.6);
+    --deprecated-dark: #cf3234;
+
+    /* Tailwind v4 alias layer (consumed via bg-(--bg), text-(--text), etc.) */
+    --bg: var(--color-bg);
+    --text: var(--color-text);
+    --surface: var(--color-surface);
+    --border: rgba(0, 0, 0, 0.12);
+
+    /* mirrored in @seedcord/ui/lib/motion.ts */
+    --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+    color-scheme: light;
+}
+
+[data-theme='dark'] {
+    --color-bg: #070917;
+    --color-text: #f8f6e8;
+    --color-surface: rgba(255, 255, 255, 0.04);
+    --border: rgba(255, 255, 255, 0.16);
+
+    color-scheme: dark;
+}
+
+/* Computed variants — auto-follow theme via inherited bases */
+:root {
+    /* Surface Mixes */
+    --bg-dim: color-mix(in oklab, var(--color-bg) 94%, black 6%);
+    --surface-faint: color-mix(in oklab, var(--color-surface) 98%, transparent);
+    --surface-subtle: color-mix(in oklab, var(--color-surface) 95%, transparent);
+    --surface-moderate: color-mix(in oklab, var(--color-surface) 92%, transparent);
+
+    /* Accent Hovers */
+    --accent-a-hover: color-mix(in oklab, var(--accent-a) 88%, black);
+    --accent-b-hover: color-mix(in oklab, var(--accent-b) 92%, black 8%);
+
+    /* Accent transparency tiers (for hover/active subtle tints) */
+    --accent-a-transparent-subtle: color-mix(in oklab, var(--accent-a) 8%, transparent);
+
+    /* Text Mixes */
+    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
+    --text-muted-light: color-mix(in oklab, var(--color-text) 85%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
+
+    /* Focus ring (primitive focus-visible default) */
+    --focus-outline-b: color-mix(in oklab, var(--accent-b) 78%, transparent);
+
+    /* Popover/Tooltip surface — slightly tinted toward dark for contrast at any theme */
+    --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
+
+    /* Shadows */
+    --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--color-text) 28%, transparent);
+    --shadow-card:
+        0 1px 2px color-mix(in oklab, var(--color-text) 4%, transparent),
+        0 1px 1px color-mix(in oklab, var(--color-text) 4%, transparent);
+    --shadow-card-md:
+        0 4px 12px color-mix(in oklab, var(--color-text) 6%, transparent),
+        0 1px 2px color-mix(in oklab, var(--color-text) 4%, transparent);
+    --shadow-card-lg:
+        0 12px 32px color-mix(in oklab, var(--color-text) 10%, transparent),
+        0 2px 6px color-mix(in oklab, var(--color-text) 4%, transparent);
+}
+
+@layer base {
+    *,
+    *::before,
+    *::after {
+        border-color: var(--border);
+    }
+
+    body {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

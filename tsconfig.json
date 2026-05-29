@@ -4,5 +4,5 @@
     "compilerOptions": {
         "rootDir": "./"
     },
-    "exclude": ["node_modules", "packages", "apps", "mock"]
+    "exclude": ["node_modules", "packages", "apps", "mock", ".vscode"]
 }

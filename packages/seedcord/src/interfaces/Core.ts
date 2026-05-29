@@ -1,7 +1,7 @@
 import type { Bot } from '@bot/Bot';
-import type { EffectsController } from '@effects/EffectsController';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 import type { Config } from '@seedcord/types';
+import type { Bus } from '@subscribers/Bus';
 
 /**
  * Main interface for Seedcord core functionality
@@ -25,7 +25,7 @@ export interface Core {
     readonly startup: CoordinatedStartup;
 
     readonly bot: Bot;
-    readonly effects: EffectsController;
+    readonly bus: Bus;
     readonly config: Config;
 
     start(): Promise<this>;

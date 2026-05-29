@@ -44,6 +44,7 @@
     ],
     "dependencies": {
         "@leeoniya/ufuzzy": "^1.0.19",
+        "prettier": "catalog:deps",
         "typedoc": "catalog:docs",
         "typedoc-plugin-dt-links": "catalog:docs",
         "typedoc-plugin-mdn-links": "catalog:docs"

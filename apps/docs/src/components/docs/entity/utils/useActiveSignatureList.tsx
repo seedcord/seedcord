@@ -8,7 +8,7 @@ export interface ActiveSignatureListProps {
 }
 
 export function useActiveSignatureList(
-    signatures: ActiveSignatureListProps[]
+    signatures: readonly ActiveSignatureListProps[]
 ): readonly [string, (id: string) => void] {
     const [activeId, setActiveId] = useState<string>(() => signatures[0]?.id ?? '');
 
@@ -26,6 +26,7 @@ export function useActiveSignatureList(
             }
         };
 
+        // justified: window.location.hash is unavailable during SSR, the timer schedules a post-hydration read so the URL drives the initial active signature.
         const initTimeout = window.setTimeout(handleHash, 0);
         window.addEventListener('hashchange', handleHash);
         return () => {

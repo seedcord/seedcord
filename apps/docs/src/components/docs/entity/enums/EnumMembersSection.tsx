@@ -1,4 +1,4 @@
-import { cn } from '@lib/utils';
+import { cn } from '@seedcord/ui';
 
 import EnumMemberCard from './EnumMemberCard';
 
@@ -15,9 +15,9 @@ function EnumMembersSection({ members }: EnumMembersSectionProps): ReactElement 
     }
 
     return (
-        <section className="space-y-4">
-            <header className="space-y-1">
-                <h2 className="text-xl font-semibold text-(--text-enum-mix-72)">Members</h2>
+        <section className={cn('space-y-4')}>
+            <header className={cn('space-y-1')}>
+                <h2 className={cn('text-xl font-semibold text-(--text-enum-mix-72)')}>Members</h2>
             </header>
             <div className={cn('grid gap-4', members.length > 1 ? 'lg:grid-cols-2' : undefined)}>
                 {members.map((member) => (

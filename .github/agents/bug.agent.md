@@ -328,14 +328,18 @@ Create `.vscode/bugs/[name]/BUG-[NUMBER]-[SHORT-TITLE].md`:
 
 1. **Write the fix**
 2. **Run lint and typecheck:**
+
     ```bash
     pnpm -C <package> lint:fix
     pnpm -C <package> tc
     ```
+
 3. **Run tests:**
+
     ```bash
     pnpm -C <package> test
     ```
+
 4. **Check results:** If lint/typecheck/tests fail, analyze errors
 5. **If tests fail:** Fix issues and GOTO step 1
 6. **If all pass:** Move to Phase 5

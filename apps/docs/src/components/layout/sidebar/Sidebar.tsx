@@ -1,9 +1,9 @@
 'use client';
 
+import { Card, cn } from '@seedcord/ui';
 import { usePathname } from 'next/navigation';
 
-import { cn } from '@lib/utils';
-import useUIStore from '@store/ui';
+import { useUIStore } from '@store/ui';
 
 import SidebarCategoryList from './SidebarCategoryList';
 import SidebarEmptyState from './SidebarEmptyState';
@@ -20,7 +20,7 @@ import type { SidebarProps } from './types';
 import type { ReactElement } from 'react';
 
 // eslint-disable-next-line max-lines-per-function
-export function Sidebar({
+function Sidebar({
     catalog,
     activePackageId,
     activeVersionId,
@@ -31,7 +31,7 @@ export function Sidebar({
     const pathname = usePathname();
     const containerStyles = getContainerStyles(variant);
     const listStyles = getListStyles(variant);
-    const { handleWheel, handleScroll, handleTouchStart, handleTouchMove, handleTouchEnd } = useSidebarScrollGuards();
+    const { handleWheel } = useSidebarScrollGuards();
 
     const {
         restSegments,
@@ -42,11 +42,7 @@ export function Sidebar({
         setPendingSelection
     } = useSidebarSelectionState(catalog, pathname, activePackageId, activeVersionId);
 
-    const { scrollRef, collapsedStorageKey, composedHandleScroll } = useSidebarPersistence(
-        fallbackPackageId,
-        fallbackVersionId,
-        handleScroll
-    );
+    const { scrollRef, collapsedStorageKey } = useSidebarPersistence(fallbackPackageId, fallbackVersionId);
 
     const { activePackage, activeVersion, packageOptions, versionOptions } = useSidebarSelection(
         catalog,
@@ -69,13 +65,9 @@ export function Sidebar({
 
         setPendingSelection({ packageId: value, versionId: nextVersionId });
 
-        try {
-            setSelectedPackage(value);
-            if (nextVersionId) {
-                setSelectedVersion(nextVersionId);
-            }
-        } catch {
-            // ignore
+        setSelectedPackage(value);
+        if (nextVersionId) {
+            setSelectedVersion(nextVersionId);
         }
 
         handlePackageChange(value);
@@ -88,34 +80,30 @@ export function Sidebar({
             setPendingSelection({ packageId: targetPackageId, versionId: value });
         }
 
-        try {
-            setSelectedVersion(value);
-        } catch {
-            // ignore
-        }
+        setSelectedVersion(value);
 
         handleVersionChange(value);
     };
 
     if (!activePackage || !activeVersion) {
-        return className ? <SidebarEmptyState className={className} /> : <SidebarEmptyState />;
+        return className ? <SidebarEmptyState className={cn(className)} /> : <SidebarEmptyState />;
     }
 
     const isDesktop = variant === 'desktop';
 
     return (
-        <nav
+        <Card
+            as="nav"
+            size="none"
             aria-label="Library navigation"
             className={cn(
                 'flex h-full flex-col p-4',
-                isDesktop
-                    ? 'rounded-none border-0 bg-(--bg-surface-moderate-transparent) shadow-none'
-                    : 'card bg-surface shadow-soft',
+                isDesktop ? 'rounded-none border-0 bg-(--bg-surface-moderate-transparent) shadow-none' : 'bg-surface',
                 className
             )}
             style={containerStyles}
         >
-            <div className="shrink-0 space-y-3">
+            <div className={cn('shrink-0 space-y-3')}>
                 <SidebarHeader
                     packageOptions={packageOptions}
                     versionOptions={versionOptions}
@@ -127,14 +115,9 @@ export function Sidebar({
             </div>
             <div
                 ref={scrollRef}
-                className="relative mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1"
+                className={cn('nice-scroll relative mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1')}
                 style={listStyles}
                 onWheel={handleWheel}
-                onScroll={composedHandleScroll}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onTouchCancel={handleTouchEnd}
             >
                 <SidebarCategoryList
                     categories={activeVersion.categories}
@@ -143,7 +126,7 @@ export function Sidebar({
                     {...(onSelect ? { onSelect } : {})}
                 />
             </div>
-        </nav>
+        </Card>
     );
 }
 

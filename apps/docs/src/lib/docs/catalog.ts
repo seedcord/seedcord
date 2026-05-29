@@ -18,7 +18,7 @@ import type { EntityTone } from '@lib/entityMetadata';
 
 type GetPackageDirectoryReturn = ReturnType<DocsEngine['getPackageDirectory']>;
 
-export const CATEGORY_CONFIG: readonly CategoryConfig[] = [
+const CATEGORY_CONFIG: readonly CategoryConfig[] = [
     { entity: 'classes', title: 'Classes', tone: 'class' },
     { entity: 'interfaces', title: 'Interfaces', tone: 'interface' },
     { entity: 'functions', title: 'Functions', tone: 'function' },

@@ -4,11 +4,9 @@ import { resolveEntityTone } from '@lib/entityMetadata';
 
 import { buildEntityModel } from './builders/buildEntityModel';
 import { getDocsEngine } from './engine';
-import { resolveManifestPackageName } from './packages';
+import { DEFAULT_MANIFEST_PACKAGE, resolveManifestPackageName } from './packages';
 
 import type { InternalEntityLookupParams, EntityQueryParams, EntityKind, EntityModel } from './types';
-
-export const DEFAULT_PACKAGE = 'seedcord';
 
 function normalizeKind(kind: string | undefined): EntityKind | null {
     if (!kind) {
@@ -124,7 +122,7 @@ function findEntityNode(engine: DocsEngine, params: InternalEntityLookupParams):
 }
 
 export async function loadEntityModel(params: EntityQueryParams): Promise<EntityModel | null> {
-    const requestedPackage = params.manifestPackage ?? params.pkg ?? DEFAULT_PACKAGE;
+    const requestedPackage = params.manifestPackage ?? params.pkg ?? DEFAULT_MANIFEST_PACKAGE;
     const engine = await getDocsEngine();
     const manifestPackage = resolveManifestPackageName(engine, requestedPackage);
     const node = findEntityNode(engine, {

@@ -152,7 +152,7 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 
 ## UI Primitives (apps)
 
-The Next.js apps each own their primitives under `apps/<name>/src/components/ui/`. For `apps/docs` today: `Button`, `CodeBlock`, `CodePanel`, `CopyAnchorButton`, `CopyButton`, `GithubIcon`, `Icon`, `ScrollToTopButton`, `Tooltip`. Raw `<button>` / `<input>` / `<select>` markup is banned when the primitive exists in the app — read the `components/ui/` index first, every time. Use `cn(...)` (from each app's `@lib/utils`) for class composition and the `tw\`…\`` template tag for multi-line class strings. Icon-only actions: `<Button variant="ghost" size="icon">`.
+The Next.js apps each own their primitives under `apps/<name>/src/components/ui/`. For `apps/docs` today: `Button`, `CodeBlock`, `CodePanel`, `CopyAnchorButton`, `CopyButton`, `GithubIcon`, `Icon`, `ScrollToTopButton`, `Tooltip`. Raw `<button>` / `<input>` / `<select>` markup is banned when the primitive exists in the app — read the `components/ui/` index first, every time. Use `cn(...)` (from each app's `@lib/utils`) for class composition and the `tw\`…\``template tag for multi-line class strings. Icon-only actions:`<Button variant="ghost" size="icon">`.
 
 A "one-off style" is a missing variant in the primitive's `VARIANTS` map, not an excuse to inline styles. If a primitive doesn't exist yet, that's a signal to either lift the pattern (when used in 2+ apps) or build the primitive in the app where it belongs.
 

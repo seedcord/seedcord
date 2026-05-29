@@ -25,73 +25,45 @@ export type UIStore = UIState & UIActions;
 
 const DEFAULT_ACCESS_LEVEL: MemberAccessLevel = 'protected';
 
-interface Snapshot {
-    selectedPackage?: string | undefined;
-    selectedVersion?: string | undefined;
-    memberAccessLevel?: MemberAccessLevel | undefined;
-}
+export const useUIStore = create<UIStore>((set) => ({
+    isCommandPaletteOpen: false,
+    selectedPackage: DEFAULT_MANIFEST_PACKAGE,
+    selectedVersion: DEFAULT_VERSION,
+    memberAccessLevel: DEFAULT_ACCESS_LEVEL,
 
-function readSnapshotFromWindow(): Snapshot {
-    if (typeof window === 'undefined') return {};
+    setCommandPaletteOpen: (open) => {
+        log('Command palette visibility updated', { open });
+        set({ isCommandPaletteOpen: open });
+    },
 
-    try {
-        const snapshotRaw = (window as unknown as { __DOCS_UI__?: Snapshot }).__DOCS_UI__;
-        if (!snapshotRaw) return {};
-        return {
-            selectedPackage: snapshotRaw.selectedPackage,
-            selectedVersion: snapshotRaw.selectedVersion,
-            memberAccessLevel: snapshotRaw.memberAccessLevel
-        };
-    } catch {
-        return {};
-    }
-}
+    toggleCommandPalette: () =>
+        set((state) => {
+            const open = !state.isCommandPaletteOpen;
+            log('Command palette toggled', { open });
+            return { isCommandPaletteOpen: open };
+        }),
 
-export const useUIStore = create<UIStore>((set) => {
-    const snapshot = readSnapshotFromWindow();
-
-    return {
-        isCommandPaletteOpen: false,
-        selectedPackage: snapshot.selectedPackage ?? DEFAULT_MANIFEST_PACKAGE,
-        selectedVersion: snapshot.selectedVersion ?? DEFAULT_VERSION,
-        memberAccessLevel: snapshot.memberAccessLevel ?? DEFAULT_ACCESS_LEVEL,
-
-        setCommandPaletteOpen: (open) => {
-            log('Command palette visibility updated', { open });
-            set({ isCommandPaletteOpen: open });
-        },
-
-        toggleCommandPalette: () =>
-            set((state) => {
-                const open = !state.isCommandPaletteOpen;
-                log('Command palette toggled', { open });
-                return { isCommandPaletteOpen: open };
-            }),
-
-        setSelectedPackage: (pkg) => {
-            log('Package filter changed', { pkg });
-            if (typeof window !== 'undefined') {
-                window.localStorage.setItem('docs.selectedPackage', pkg);
-            }
-            set({ selectedPackage: pkg });
-        },
-
-        setSelectedVersion: (version) => {
-            log('Version filter changed', { version });
-            if (typeof window !== 'undefined') {
-                window.localStorage.setItem('docs.selectedVersion', version);
-            }
-            set({ selectedVersion: version });
-        },
-
-        setMemberAccessLevel: (level) => {
-            log('Member access filter changed', { level: formatMemberAccessLabel(level) });
-            if (typeof window !== 'undefined') {
-                window.localStorage.setItem('docs.memberAccessLevel', level);
-            }
-            set({ memberAccessLevel: level });
+    setSelectedPackage: (pkg) => {
+        log('Package filter changed', { pkg });
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('docs.selectedPackage', pkg);
         }
-    };
-});
+        set({ selectedPackage: pkg });
+    },
 
-export default useUIStore;
+    setSelectedVersion: (version) => {
+        log('Version filter changed', { version });
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('docs.selectedVersion', version);
+        }
+        set({ selectedVersion: version });
+    },
+
+    setMemberAccessLevel: (level) => {
+        log('Member access filter changed', { level: formatMemberAccessLabel(level) });
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('docs.memberAccessLevel', level);
+        }
+        set({ memberAccessLevel: level });
+    }
+}));

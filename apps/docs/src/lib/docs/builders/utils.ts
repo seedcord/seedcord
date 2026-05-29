@@ -12,6 +12,8 @@ import type {
 import type { EntityMemberSummary } from '@components/docs/entity/types';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
+type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;
+
 export const cloneExamples = (examples: readonly CommentExample[] | null | undefined): CommentExample[] =>
     examples?.length ? [...examples] : [];
 
@@ -186,7 +188,7 @@ export function deriveSharedDocumentation(
     return stripDuplicateDescription(nodeComment.paragraphs, description);
 }
 
-export function buildDeprecationStatusFromNodeLike(node: DocNode): DeprecationStatus {
+export function buildDeprecationStatusFromNodeLike(node: DocNodeLike): DeprecationStatus {
     if (!node.flags.isDeprecated) return { isDeprecated: false };
 
     const deprecationBlock = node.comment?.blockTags.find((val) => val.tag === '@deprecated');

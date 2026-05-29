@@ -1,6 +1,5 @@
+import { Icon, cn } from '@seedcord/ui';
 import { AlertTriangle } from 'lucide-react';
-
-import Icon from '@ui/Icon';
 
 import CommentParagraphs from './comments/CommentParagraphs';
 
@@ -18,14 +17,14 @@ function DeprecatedEntity({
     if (!deprecationStatus.isDeprecated) return <>{children}</>;
 
     return (
-        <div className="relative">
-            <div className="deprecated-card shadow-soft p-4 sm:p-5">
+        <div className={cn('relative')}>
+            <div className={cn('deprecated-card shadow-soft p-4 sm:p-5')}>
                 {deprecationStatus.deprecationMessage ? (
-                    <div className="text-subtle mb-3 flex items-start gap-3 text-sm">
-                        <div className="mt-0.5 shrink-0 text-(--deprecated-dark)">
+                    <div className={cn('text-subtle mb-3 flex items-start gap-3 text-sm')}>
+                        <div className={cn('mt-0.5 shrink-0 text-(--deprecated-dark)')}>
                             <Icon icon={AlertTriangle} size={16} />
                         </div>
-                        <div className="text-subtle min-w-0 text-sm leading-relaxed">
+                        <div className={cn('text-subtle min-w-0 text-sm/relaxed')}>
                             <CommentParagraphs paragraphs={deprecationStatus.deprecationMessage} />
                         </div>
                     </div>
@@ -33,7 +32,7 @@ function DeprecatedEntity({
 
                 {children}
             </div>
-            <span className="deprecated-label">Deprecated</span>
+            <span className={cn('deprecated-label')}>Deprecated</span>
         </div>
     );
 }

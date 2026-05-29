@@ -1,4 +1,4 @@
-import { cn } from '@lib/utils';
+import { cn } from '@seedcord/ui';
 
 import type { CommentParagraph } from '@lib/docs/types';
 import type { ReactElement } from 'react';
@@ -16,7 +16,7 @@ function CommentParagraphs({ paragraphs, className, paragraphClassName }: Commen
     }
 
     return (
-        <div className={cn('text-subtle space-y-2 text-sm leading-relaxed', className)}>
+        <div className={cn('text-subtle space-y-2 text-sm/relaxed', className)}>
             {entries.map((paragraph, index) => {
                 const key = `${index}-${paragraph.html || paragraph.plain || 'empty'}`;
                 if (paragraph.html) {

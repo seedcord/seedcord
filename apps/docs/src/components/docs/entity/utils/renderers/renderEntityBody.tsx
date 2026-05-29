@@ -5,7 +5,6 @@ import { renderType } from './renderType';
 
 import type { EntityModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';
-// import { renderVariable } from './renderVariable';
 
 export function renderEntityBody(model: EntityModel): ReactElement | null {
     switch (model.kind) {
@@ -19,7 +18,6 @@ export function renderEntityBody(model: EntityModel): ReactElement | null {
         case 'function':
             return renderFunction(model);
         case 'variable':
-        // return renderVariable(model);
         default:
             return null;
     }

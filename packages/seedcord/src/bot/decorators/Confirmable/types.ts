@@ -1,6 +1,5 @@
 import type { BuilderComponent, RowComponent } from '@interfaces/Components';
 import type { RepliableInteractionHandler, Repliables } from '@interfaces/Handler';
-import type { TypedOmit } from '@seedcord/types';
 import type {
     ButtonInteraction,
     ChannelSelectMenuInteraction,
@@ -12,7 +11,7 @@ import type {
     StringSelectMenuInteraction,
     UserSelectMenuInteraction
 } from 'discord.js';
-import type { IntClosedRange, NonEmptyTuple, Promisable, TupleOf } from 'type-fest';
+import type { Except, IntClosedRange, NonEmptyTuple, Promisable, TupleOf } from 'type-fest';
 
 /**
  * Context object supplied to Confirmable factory callbacks.
@@ -188,7 +187,7 @@ export interface ConfirmableSharedOptions<TComponentType extends MessageComponen
 /**
  * Classic mode payload that allows omitting components when clearing the UI.
  */
-export type MaybeClearedClassic = TypedOmit<ClassicPayload, 'components'> & {
+export type MaybeClearedClassic = Except<ClassicPayload, 'components'> & {
     components?: readonly RowLike[];
 };
 

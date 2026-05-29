@@ -15,8 +15,8 @@ export * from '@bUtilities/index';
 // Interfaces exports
 export * from '@interfaces/index';
 
-// Effects exports
-export * from '@effects/index';
+// Pub/Sub exports
+export * from '@subscribers/index';
 
 // HMR exports
 export * from '@hmr/index';

@@ -1,35 +1,14 @@
-/* This is for the light theme */
+/* Entity kind accents */
 :root {
-    --color-bg: #f8f6e8;
-    --color-text: #070917;
-    --color-base-dark: #070917;
-    --color-base-slate: #0f172a;
-    --color-surface: rgba(0, 0, 0, 0.02);
-    --overlay: rgba(0, 0, 0, 0.6);
-
-    /* mater red */
-    --accent-a: #f04e36;
-    /* welon green */
-    --accent-b: #6fab49;
-    /* resource accent */
-    --accent-r: #8b90a7;
-
     --entity-class: #3956ff;
     --entity-interface: #b12bcf;
     --entity-type: #d97a20;
     --entity-function: #0a9961;
     --entity-enum: #d93c62;
     --entity-variable: #1770ac;
-
-    --shadow-soft: 0 28px 60px -36px color-mix(in oklab, var(--color-text) 28%, transparent);
 }
 
 [data-theme='dark'] {
-    --color-bg: #070917;
-    --color-text: #f8f6e8;
-    --color-surface: rgba(255, 255, 255, 0.04);
-    --overlay: rgba(0, 0, 0, 0.6);
-
     --entity-class: #94b6ff;
     --entity-interface: #e2b1ff;
     --entity-type: #f6bb7d;
@@ -39,18 +18,7 @@
 }
 
 :root {
-    --bg-dim: color-mix(in oklab, var(--color-bg) 94%, black 6%);
-
-    --surface-faint: color-mix(in oklab, var(--color-surface) 98%, transparent);
-    --surface-subtle: color-mix(in oklab, var(--color-surface) 95%, transparent);
-    --surface-moderate: color-mix(in oklab, var(--color-surface) 92%, transparent);
-
-    --accent-a-hover: color-mix(in oklab, var(--accent-a) 88%, black);
-    --accent-b-hover: color-mix(in oklab, var(--accent-b) 92%, black 8%);
-
-    --shadow-soft-token: 0 28px 60px -36px color-mix(in oklab, var(--color-text) 28%, transparent);
-    --focus-outline-b: color-mix(in oklab, var(--accent-b) 78%, transparent);
-
+    /* Badges */
     --badge-package-border: color-mix(in oklab, var(--accent-b) 38%, var(--border));
     --badge-package-bg: color-mix(in oklab, var(--accent-b) 16%, var(--surface));
     --badge-package-text: color-mix(in oklab, var(--text) 88%, var(--accent-b) 12%);
@@ -68,6 +36,7 @@
 
     --command-overlay: color-mix(in oklab, var(--bg) 55%, #070917 45%);
 
+    /* Per-tone Presentation Tokens */
     --tone-class-heading: color-mix(in oklab, var(--entity-class) 80%, var(--color-text));
     --tone-class-item-bg: color-mix(in oklab, var(--entity-class) 12%, transparent);
     --tone-class-badge-bg: color-mix(in oklab, var(--entity-class) 18%, transparent);
@@ -111,9 +80,6 @@
     --tone-var-tag-text: color-mix(in oklab, var(--entity-variable) 70%, var(--color-text));
 
     /* Text Mixes */
-    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
-    --text-muted-light: color-mix(in oklab, var(--color-text) 85%, transparent);
-    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
     --text-accent-b-subtle: color-mix(in oklab, var(--color-text) 85%, var(--accent-b) 15%);
     --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
     --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--accent-b) 35%);
@@ -142,14 +108,13 @@
     --border-accent-a-subtle: color-mix(in oklab, var(--accent-a) 38%, var(--border));
     --border-accent-a-moderate: color-mix(in oklab, var(--accent-a) 55%, var(--border));
 
-    /* Outline/Ring Mixes */
+    /* Outline / Ring Mixes */
     --outline-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, transparent);
     --outline-accent-b-moderate: color-mix(in oklab, var(--accent-b) 48%, transparent);
     --outline-accent-a-subtle: color-mix(in oklab, var(--accent-a) 42%, transparent);
     --outline-accent-a-moderate: color-mix(in oklab, var(--accent-a) 52%, transparent);
 
     /* Specific Component Mixes */
-    --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
     --bg-navbar: color-mix(in oklab, var(--bg) 97%, white 3%);
     --bg-surface-light: color-mix(in oklab, var(--surface) 90%, white 10%);
     --bg-light-moderate: color-mix(in oklab, var(--bg) 92%, white 8%);

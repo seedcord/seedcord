@@ -1,5 +1,6 @@
 'use client';
 
+import { cn } from '@seedcord/ui';
 import { useEffect, type ReactElement } from 'react';
 
 import { log } from '@lib/logger';
@@ -10,12 +11,12 @@ import { useEntityTone } from './utils/useEntityTone';
 
 import type { EntityModel, FunctionEntityModel } from '@lib/docs/types';
 
-export interface EntityContentProps {
+interface EntityContentProps {
     model: EntityModel;
 }
 
 function EntityContent({ model }: EntityContentProps): ReactElement {
-    const { tone, badgeLabel } = useEntityTone(model.kind, model.name);
+    const { tone, badgeLabel } = useEntityTone(model.kind);
 
     useEffect(() => {
         log('Entity page mounted', {
@@ -33,7 +34,7 @@ function EntityContent({ model }: EntityContentProps): ReactElement {
     }
 
     return (
-        <article className="w-full min-w-0 space-y-6 lg:space-y-8">
+        <article className={cn('w-full min-w-0 space-y-6 lg:space-y-8')}>
             <EntityHeader
                 badgeLabel={badgeLabel}
                 pkg={model.displayPackage}

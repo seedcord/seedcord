@@ -1,9 +1,9 @@
 'use client';
 
-import { useContext, useMemo, type ReactElement } from 'react';
+import { cn } from '@seedcord/ui';
+import { useMemo, type ReactElement } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { DocsUIContext } from '@components/docs/DocsUIContext';
 import MemberAccessControls from '@components/docs/entity/member/MemberAccessControls';
 import { useUIStore, type UIStore } from '@store/ui';
 
@@ -15,7 +15,9 @@ import { useMemberNavigation } from './utils/useMemberNavigation';
 
 import type { EntityMemberSummary, WithParentDeprecationStatus } from './types';
 
-export interface EntityMembersSectionProps extends WithParentDeprecationStatus {
+const EMPTY_MEMBERS: readonly EntityMemberSummary[] = [];
+
+interface EntityMembersSectionProps extends WithParentDeprecationStatus {
     properties: readonly EntityMemberSummary[];
     methods: readonly EntityMemberSummary[];
     typeParameters?: readonly EntityMemberSummary[];
@@ -26,28 +28,25 @@ export interface EntityMembersSectionProps extends WithParentDeprecationStatus {
 function EntityMembersSection({
     properties,
     methods,
-    constructors = [],
-    typeParameters = [],
+    constructors = EMPTY_MEMBERS,
+    typeParameters = EMPTY_MEMBERS,
     showAccessControls = false,
     parentDeprecationStatus
 }: EntityMembersSectionProps): ReactElement {
-    const ctx = useContext(DocsUIContext);
     const memberAccessLevel = useUIStore(useShallow((state: UIStore) => state.memberAccessLevel));
-
-    const effectiveMemberAccessLevel = ctx?.memberAccessLevel ?? memberAccessLevel;
     const openMemberSection = useMemberNavigation();
 
     const filteredProperties = useMemo(
-        () => properties.filter((member) => shouldIncludeMember(member, effectiveMemberAccessLevel)),
-        [properties, effectiveMemberAccessLevel]
+        () => properties.filter((member) => shouldIncludeMember(member, memberAccessLevel)),
+        [properties, memberAccessLevel]
     );
     const filteredMethods = useMemo(
-        () => methods.filter((member) => shouldIncludeMember(member, effectiveMemberAccessLevel)),
-        [methods, effectiveMemberAccessLevel]
+        () => methods.filter((member) => shouldIncludeMember(member, memberAccessLevel)),
+        [methods, memberAccessLevel]
     );
     const filteredConstructors = useMemo(
-        () => constructors.filter((member) => shouldIncludeMember(member, effectiveMemberAccessLevel)),
-        [constructors, effectiveMemberAccessLevel]
+        () => constructors.filter((member) => shouldIncludeMember(member, memberAccessLevel)),
+        [constructors, memberAccessLevel]
     );
     const quickPanelColumns: ReactElement[] = [
         <MemberList key="properties" items={filteredProperties} prefix="property" onNavigate={openMemberSection} />,
@@ -55,14 +54,16 @@ function EntityMembersSection({
     ];
 
     return (
-        <section className="min-w-0 space-y-8">
+        <section className={cn('min-w-0 space-y-8')}>
             {showAccessControls ? (
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                        <p className="text-subtle text-xs font-semibold tracking-widest uppercase">Member visibility</p>
-                        <p className="text-subtle/80 text-xs">Filter class members by access level.</p>
+                <div className={cn('flex flex-wrap items-center justify-between gap-3')}>
+                    <div className={cn('space-y-0.5')}>
+                        <p className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>
+                            Member visibility
+                        </p>
+                        <p className={cn('text-subtle/80 text-xs')}>Filter class members by access level.</p>
                     </div>
-                    <MemberAccessControls orientation="horizontal" showLegend={false} className="shrink-0" />
+                    <MemberAccessControls orientation="horizontal" showLegend={false} className={cn('shrink-0')} />
                 </div>
             ) : null}
             <MemberDetailGroup
@@ -72,11 +73,11 @@ function EntityMembersSection({
             />
             <MemberOverview
                 columns={quickPanelColumns}
-                memberAccessLevel={effectiveMemberAccessLevel}
+                memberAccessLevel={memberAccessLevel}
                 showAccessControls={showAccessControls}
             />
 
-            <div className="min-w-0 space-y-8">
+            <div className={cn('min-w-0 space-y-8')}>
                 <MemberDetailGroup
                     items={typeParameters}
                     prefix="typeParameter"

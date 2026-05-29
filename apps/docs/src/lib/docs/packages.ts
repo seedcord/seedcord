@@ -5,7 +5,7 @@ import { rawExternalLinks } from './rawExternalLinks';
 import type { ExternalDocumentationMap } from './types';
 import type { DocsEngine } from '@seedcord/docs-engine';
 
-export const EXTERNAL_DOCUMENTATION_LINKS: ExternalDocumentationMap = new Map(
+const EXTERNAL_DOCUMENTATION_LINKS: ExternalDocumentationMap = new Map(
     Object.entries(rawExternalLinks).map(([key, value]) => [sanitizeExternalKey(key), value])
 );
 
@@ -51,13 +51,6 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
 
 export const DEFAULT_MANIFEST_PACKAGE = 'seedcord';
 export const DEFAULT_VERSION = 'latest';
-
-const sortPackages = (packages: readonly string[]): string[] =>
-    packages.slice().sort((a, b) => {
-        if (a === DEFAULT_MANIFEST_PACKAGE) return -1;
-        if (b === DEFAULT_MANIFEST_PACKAGE) return 1;
-        return a.localeCompare(b, undefined, { sensitivity: 'base' });
-    });
 
 const normalizeKey = (value: string): string => value.trim().toLowerCase();
 
@@ -168,9 +161,4 @@ export function resolveManifestPackageName(engine: DocsEngine, requested?: strin
 
     const fallback = packages[0] ?? DEFAULT_MANIFEST_PACKAGE;
     return packages.includes(DEFAULT_MANIFEST_PACKAGE) ? DEFAULT_MANIFEST_PACKAGE : fallback;
-}
-
-export function listDisplayPackages(engine: DocsEngine): string[] {
-    const ordered = sortPackages(engine.listPackages());
-    return ordered.map((pkg) => formatDisplayPackageName(pkg));
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { MIN_SEARCH_QUERY_LENGTH } from './constants';
 
@@ -20,28 +20,35 @@ interface UseCommandPaletteSearchOptions {
 }
 
 const SEARCH_ENDPOINT = '/docs/search';
-const SEARCH_DEBOUNCE_MS = 160;
+const SEARCH_DEBOUNCE_MS = 350;
 
 interface SearchResponse {
     results?: CommandAction[];
 }
 
-const createDefaultState = (): SearchState => ({ results: [], status: 'idle' });
+const DEFAULT_STATE: SearchState = { results: [], status: 'idle' };
 
 export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearchOptions): SearchState {
-    const [state, setState] = useState<SearchState>(createDefaultState);
+    const [state, setState] = useState<SearchState>(DEFAULT_STATE);
+    // Re-opening with a previously-resolved query must skip the fetch, otherwise the UI flickers cached -> loading -> cached.
+    const cacheRef = useRef<Map<string, CommandAction[]>>(new Map());
+    const trimmed = query.trim();
+    const active = open && trimmed.length >= MIN_SEARCH_QUERY_LENGTH;
 
     useEffect(() => {
-        const trimmed = query.trim();
-
-        if (!open || trimmed.length < MIN_SEARCH_QUERY_LENGTH) {
-            const resetTimeout = window.setTimeout(() => setState(createDefaultState()), 0);
-            return () => window.clearTimeout(resetTimeout);
-        }
+        if (!active) return undefined;
 
         let cancelled = false;
         const controller = new AbortController();
+        // justified: every input path (cache hit and fresh fetch) waits the same debounce window so
+        // fast typing does not flash intermediate cached results between keystrokes.
         const timeout = window.setTimeout(() => {
+            const cached = cacheRef.current.get(trimmed);
+            if (cached) {
+                setState({ results: cached, status: 'success' });
+                return;
+            }
+
             setState({ results: [], status: 'loading' });
 
             const params = new URLSearchParams({ q: trimmed });
@@ -57,10 +64,9 @@ export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearch
                     if (cancelled) {
                         return;
                     }
-                    setState({
-                        results: Array.isArray(payload.results) ? payload.results : [],
-                        status: 'success'
-                    });
+                    const results = Array.isArray(payload.results) ? payload.results : [];
+                    cacheRef.current.set(trimmed, results);
+                    setState({ results, status: 'success' });
                 })
                 .catch((error: unknown) => {
                     if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) {
@@ -80,7 +86,8 @@ export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearch
             controller.abort();
             window.clearTimeout(timeout);
         };
-    }, [open, query]);
+    }, [active, trimmed]);
 
+    // Returning `state` while `!active` preserves results during the close animation so Esc doesn't flash the empty caption mid-collapse.
     return state;
 }

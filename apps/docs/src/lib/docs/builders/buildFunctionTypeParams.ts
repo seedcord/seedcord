@@ -1,10 +1,9 @@
 import { isInlineType } from './buildFunctionParameters';
 import { formatCommentRich } from '../comments/formatter';
-import { renderInlineType } from '../comments/renderers/renderInlineType';
-import { highlightCode } from '../formatting';
+import { formatTypeParameter, inlineTypeText } from '../formatting';
 
 import type { FunctionTypeParameterModel, FormatContext } from '../types';
-import type { RenderedSignature, DocSignature } from '@seedcord/docs-engine';
+import type { RenderedSignature, DocSignature, TypeParameter } from '@seedcord/docs-engine';
 
 export async function buildFunctionTypeParams(
     signature: DocSignature | undefined,
@@ -16,32 +15,31 @@ export async function buildFunctionTypeParams(
 
     return Promise.all(
         renderedParams.map(async (tp, idx) => {
-            const constraint = isInlineType(tp.constraint) ? renderInlineType(tp.constraint, context) : undefined;
-            const defaultVal = isInlineType(tp.default) ? renderInlineType(tp.default, context) : undefined;
+            const constraint = isInlineType(tp.constraint) ? tp.constraint : undefined;
+            const defaultVal = isInlineType(tp.default) ? tp.default : undefined;
 
-            const codeText = [
-                tp.name,
-                constraint ? `extends ${constraint}` : undefined,
-                defaultVal ? `= ${defaultVal}` : undefined
-            ]
-                .filter(Boolean)
-                .join(' ');
+            const tpInput: TypeParameter = { name: tp.name };
+            if (constraint) tpInput.constraint = constraint;
+            if (defaultVal) tpInput.default = defaultVal;
 
-            let description: string | undefined = undefined;
-            const docParam = signature ? signature.typeParameters[idx] : undefined;
-            if (docParam?.comment) {
-                const formatted = await formatCommentRich(docParam.comment, context);
-                if (formatted.paragraphs.length) {
-                    description = formatted.paragraphs.map((p) => p.html).join('\n\n');
-                }
-            }
+            const docParam = signature?.typeParameters[idx];
+            const [code, constraintStr, defaultStr, formatted] = await Promise.all([
+                formatTypeParameter(tpInput, context),
+                constraint ? inlineTypeText(constraint, context) : Promise.resolve(undefined),
+                defaultVal ? inlineTypeText(defaultVal, context) : Promise.resolve(undefined),
+                docParam?.comment ? formatCommentRich(docParam.comment, context) : Promise.resolve(undefined)
+            ]);
+
+            const description = formatted?.paragraphs.length
+                ? formatted.paragraphs.map((p) => p.html).join('\n\n')
+                : undefined;
 
             return {
                 name: tp.name,
-                constraint,
-                default: defaultVal,
+                constraint: constraintStr,
+                default: defaultStr,
                 description,
-                code: await highlightCode(codeText)
+                code
             };
         })
     );

@@ -1,127 +1,78 @@
+import { tw } from '@seedcord/ui';
 import { Braces, FunctionSquare, ListTree, Puzzle, SquareStack, Variable } from 'lucide-react';
 
-const ENTITIES_INTERNAL = {
+const ENTITIES = {
     class: {
         label: 'Class',
         icon: SquareStack,
         styles: {
-            heading: 'text-(--tone-class-heading)',
-            item: [
-                'hover:border-(--tone-class-badge-border)',
-                'hover:bg-(--tone-class-item-bg)',
-                'focus-visible:outline-(--entity-class)'
-            ].join(' '),
-            badge: ['border-(--tone-class-badge-border)', 'bg-(--tone-class-badge-bg)', 'text-(--entity-class)'].join(
-                ' '
-            ),
-            tag: [
-                'border-(--tone-class-badge-border)',
-                'bg-(--tone-class-tag-bg)',
-                'text-(--tone-class-tag-text)'
-            ].join(' '),
-            accent: 'text-(--tone-class-heading)'
+            heading: tw`text-(--tone-class-heading)`,
+            item: tw`hover:border-(--tone-class-badge-border) hover:bg-(--tone-class-item-bg) focus-visible:outline-(--entity-class)`,
+            badge: tw`border-(--tone-class-badge-border) bg-(--tone-class-badge-bg) text-(--entity-class)`,
+            tag: tw`border-(--tone-class-badge-border) bg-(--tone-class-tag-bg) text-(--tone-class-tag-text)`,
+            accent: tw`text-(--tone-class-heading)`
         }
     },
     interface: {
         label: 'Interface',
         icon: Puzzle,
         styles: {
-            heading: 'text-(--tone-interface-heading)',
-            item: [
-                'hover:border-(--tone-interface-badge-border)',
-                'hover:bg-(--tone-interface-item-bg)',
-                'focus-visible:outline-(--entity-interface)'
-            ].join(' '),
-            badge: [
-                'border-(--tone-interface-badge-border)',
-                'bg-(--tone-interface-badge-bg)',
-                'text-(--entity-interface)'
-            ].join(' '),
-            tag: [
-                'border-(--tone-interface-badge-border)',
-                'bg-(--tone-interface-tag-bg)',
-                'text-(--tone-interface-tag-text)'
-            ].join(' '),
-            accent: 'text-(--tone-interface-heading)'
+            heading: tw`text-(--tone-interface-heading)`,
+            item: tw`hover:border-(--tone-interface-badge-border) hover:bg-(--tone-interface-item-bg) focus-visible:outline-(--entity-interface)`,
+            badge: tw`border-(--tone-interface-badge-border) bg-(--tone-interface-badge-bg) text-(--entity-interface)`,
+            tag: tw`border-(--tone-interface-badge-border) bg-(--tone-interface-tag-bg) text-(--tone-interface-tag-text)`,
+            accent: tw`text-(--tone-interface-heading)`
         }
     },
     type: {
         label: 'Type',
         icon: Braces,
         styles: {
-            heading: 'text-(--tone-type-heading)',
-            item: [
-                'hover:border-(--tone-type-badge-border)',
-                'hover:bg-(--tone-type-item-bg)',
-                'focus-visible:outline-(--entity-type)'
-            ].join(' '),
-            badge: ['border-(--tone-type-badge-border)', 'bg-(--tone-type-badge-bg)', 'text-(--entity-type)'].join(' '),
-            tag: ['border-(--tone-type-badge-border)', 'bg-(--tone-type-tag-bg)', 'text-(--tone-type-tag-text)'].join(
-                ' '
-            ),
-            accent: 'text-(--tone-type-heading)'
+            heading: tw`text-(--tone-type-heading)`,
+            item: tw`hover:border-(--tone-type-badge-border) hover:bg-(--tone-type-item-bg) focus-visible:outline-(--entity-type)`,
+            badge: tw`border-(--tone-type-badge-border) bg-(--tone-type-badge-bg) text-(--entity-type)`,
+            tag: tw`border-(--tone-type-badge-border) bg-(--tone-type-tag-bg) text-(--tone-type-tag-text)`,
+            accent: tw`text-(--tone-type-heading)`
         }
     },
     function: {
         label: 'Function',
         icon: FunctionSquare,
         styles: {
-            heading: 'text-(--tone-func-heading)',
-            item: [
-                'hover:border-(--tone-func-badge-border)',
-                'hover:bg-(--tone-func-item-bg)',
-                'focus-visible:outline-(--entity-function)'
-            ].join(' '),
-            badge: ['border-(--tone-func-badge-border)', 'bg-(--tone-func-badge-bg)', 'text-(--entity-function)'].join(
-                ' '
-            ),
-            tag: ['border-(--tone-func-badge-border)', 'bg-(--tone-func-tag-bg)', 'text-(--tone-func-tag-text)'].join(
-                ' '
-            ),
-            accent: 'text-(--tone-func-heading)'
+            heading: tw`text-(--tone-func-heading)`,
+            item: tw`hover:border-(--tone-func-badge-border) hover:bg-(--tone-func-item-bg) focus-visible:outline-(--entity-function)`,
+            badge: tw`border-(--tone-func-badge-border) bg-(--tone-func-badge-bg) text-(--entity-function)`,
+            tag: tw`border-(--tone-func-badge-border) bg-(--tone-func-tag-bg) text-(--tone-func-tag-text)`,
+            accent: tw`text-(--tone-func-heading)`
         }
     },
     enum: {
         label: 'Enum',
         icon: ListTree,
         styles: {
-            heading: 'text-(--tone-enum-heading)',
-            item: [
-                'hover:border-(--tone-enum-badge-border)',
-                'hover:bg-(--tone-enum-item-bg)',
-                'focus-visible:outline-(--entity-enum)'
-            ].join(' '),
-            badge: ['border-(--tone-enum-badge-border)', 'bg-(--tone-enum-badge-bg)', 'text-(--entity-enum)'].join(' '),
-            tag: ['border-(--tone-enum-badge-border)', 'bg-(--tone-enum-tag-bg)', 'text-(--tone-enum-tag-text)'].join(
-                ' '
-            ),
-            accent: 'text-(--tone-enum-heading)'
+            heading: tw`text-(--tone-enum-heading)`,
+            item: tw`hover:border-(--tone-enum-badge-border) hover:bg-(--tone-enum-item-bg) focus-visible:outline-(--entity-enum)`,
+            badge: tw`border-(--tone-enum-badge-border) bg-(--tone-enum-badge-bg) text-(--entity-enum)`,
+            tag: tw`border-(--tone-enum-badge-border) bg-(--tone-enum-tag-bg) text-(--tone-enum-tag-text)`,
+            accent: tw`text-(--tone-enum-heading)`
         }
     },
     variable: {
         label: 'Variable',
         icon: Variable,
         styles: {
-            heading: 'text-(--tone-var-heading)',
-            item: [
-                'hover:border-(--tone-var-badge-border)',
-                'hover:bg-(--tone-var-item-bg)',
-                'focus-visible:outline-(--entity-variable)'
-            ].join(' '),
-            badge: ['border-(--tone-var-badge-border)', 'bg-(--tone-var-badge-bg)', 'text-(--entity-variable)'].join(
-                ' '
-            ),
-            tag: ['border-(--tone-var-badge-border)', 'bg-(--tone-var-tag-bg)', 'text-(--tone-var-tag-text)'].join(' '),
-            accent: 'text-(--tone-var-heading)'
+            heading: tw`text-(--tone-var-heading)`,
+            item: tw`hover:border-(--tone-var-badge-border) hover:bg-(--tone-var-item-bg) focus-visible:outline-(--entity-variable)`,
+            badge: tw`border-(--tone-var-badge-border) bg-(--tone-var-badge-bg) text-(--entity-variable)`,
+            tag: tw`border-(--tone-var-badge-border) bg-(--tone-var-tag-bg) text-(--tone-var-tag-text)`,
+            accent: tw`text-(--tone-var-heading)`
         }
     }
 } as const;
 
-export type EntityTone = keyof typeof ENTITIES_INTERNAL;
-export type EntityToneConfig = (typeof ENTITIES_INTERNAL)[EntityTone];
+export type EntityTone = keyof typeof ENTITIES;
+export type EntityToneConfig = (typeof ENTITIES)[EntityTone];
 export type EntityToneStyle = EntityToneConfig['styles'];
-
-export const ENTITIES: typeof ENTITIES_INTERNAL = ENTITIES_INTERNAL;
 
 const TONE_DIRECTORY_MAP = {
     class: 'classes',
@@ -149,29 +100,27 @@ const TONE_SYNONYMS: Partial<Record<string, EntityTone>> = {
 
 const isEntityTone = (value: string): value is EntityTone => value in ENTITIES;
 
-const SINGLE_CHARACTER = 1;
-const DOUBLE_CHARACTER = 2;
-const TRIPLE_CHARACTER = 3;
-
 function buildToneCandidates(value: string): string[] {
     const candidates = new Set<string>([value]);
 
     if (value.endsWith('s')) {
-        const withoutS = value.slice(0, value.length - SINGLE_CHARACTER);
+        const withoutS = value.slice(0, -1);
         if (withoutS) {
             candidates.add(withoutS);
         }
     }
 
     if (value.endsWith('es')) {
-        const withoutEs = value.slice(0, value.length - DOUBLE_CHARACTER);
+        // eslint-disable-next-line no-magic-numbers -- 'es' suffix length
+        const withoutEs = value.slice(0, -2);
         if (withoutEs) {
             candidates.add(withoutEs);
         }
     }
 
     if (value.endsWith('ies')) {
-        const withoutIes = `${value.slice(0, value.length - TRIPLE_CHARACTER)}y`;
+        // eslint-disable-next-line no-magic-numbers -- 'ies' suffix length
+        const withoutIes = `${value.slice(0, -3)}y`;
         if (withoutIes) {
             candidates.add(withoutIes);
         }

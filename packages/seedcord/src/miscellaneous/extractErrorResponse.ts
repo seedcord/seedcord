@@ -29,7 +29,7 @@ export interface ExtractedErrorResponse {
  * Processes an error and extracts the standardized response, if available (else returns a {@link GenericError}).
  *
  * Handles different error types (CustomError, DatabaseError) with appropriate
- * logging, side effects, and user-facing error messages.
+ * logging, subscribers, and user-facing error messages.
  *
  * @param error - The error to process
  * @param core - The core framework instance
@@ -50,7 +50,7 @@ export function extractErrorResponse(
 
     if (error instanceof CustomError) {
         if (error instanceof DatabaseError) {
-            core.effects.emit('unknownException', { uuid, error, guild, user, metadata });
+            core.bus.publish('unknownException', { uuid, error, guild, user, metadata });
 
             logger.error(`DatabaseError: ${error.uuid}`);
         } else if (error.emit) {
@@ -67,7 +67,7 @@ export function extractErrorResponse(
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}`);
 
-    core.effects.emit('unknownException', { uuid, error, guild, user, metadata });
+    core.bus.publish('unknownException', { uuid, error, guild, user, metadata });
 
     return {
         uuid,

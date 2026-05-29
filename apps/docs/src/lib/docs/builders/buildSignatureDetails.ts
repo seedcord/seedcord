@@ -7,7 +7,7 @@ import {
 } from './utils';
 import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
-import { formatSignature, highlightCode } from '../formatting';
+import { formatSignature, highlightCode, highlightSignatureCode } from '../formatting';
 
 import type { CodeRepresentation, CommentExample, CommentParagraph, FormatContext, FormattedComment } from '../types';
 import type { EntityMemberSummary } from '@components/docs/entity/types';
@@ -86,7 +86,7 @@ export async function buildSignatureDetails({
                 : await highlightCode(signature.name);
 
             const modifierPrefix = buildModifierPrefix(node, { kindLabel: signature.kindLabel });
-            const code = modifierPrefix ? await highlightCode(`${modifierPrefix} ${baseCode.text}`) : baseCode;
+            const code = modifierPrefix ? await highlightSignatureCode(`${modifierPrefix} ${baseCode.text}`) : baseCode;
 
             const comment = signatureComments[index];
             let documentation = cloneCommentParagraphs(comment?.paragraphs);
@@ -109,7 +109,7 @@ export async function buildSignatureDetails({
                 examples
             };
 
-            const sigDep = buildDeprecationStatusFromNodeLike(signature as unknown as DocNode);
+            const sigDep = buildDeprecationStatusFromNodeLike(signature);
             if (sigDep.isDeprecated) detail.deprecationStatus = sigDep;
 
             const signatureSourceUrl = signature.sourceUrl ?? node.sourceUrl;

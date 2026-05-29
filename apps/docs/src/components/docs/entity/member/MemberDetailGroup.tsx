@@ -1,13 +1,9 @@
 'use client';
 
-import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
-
-import { cn } from '@lib/utils';
-import Icon from '@ui/Icon';
+import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, Icon } from '@seedcord/ui';
 
 import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '../constants';
-import MemberCard from './MemberCard';
+import MemberRow from './MemberRow';
 
 import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '../types';
 import type { ReactElement } from 'react';
@@ -25,58 +21,40 @@ function MemberDetailGroup({
     parentDeprecationStatus
 }: MemberDetailGroupProps): ReactElement | null {
     const title = titleProp ?? MEMBER_TITLES[prefix];
-    const panelId = `${prefix}-member-panel`;
-    const [expanded, setExpanded] = useState(true);
 
     if (!items.length) {
         return null;
     }
 
     return (
-        <section className="min-w-0 space-y-4" data-member-group={prefix}>
+        <Disclosure defaultOpen className={cn('min-w-0 space-y-4')} data-member-group={prefix}>
             <header>
-                <button
-                    type="button"
-                    onClick={() => {
-                        setExpanded((previous) => !previous);
-                    }}
-                    className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-2 text-left transition hover:bg-(--surface-moderate) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--outline-accent-b-moderate)"
-                    aria-expanded={expanded}
-                    aria-controls={panelId}
+                <DisclosureTrigger
+                    className={cn(
+                        'justify-between rounded-xl border border-transparent px-3 py-2 transition hover:bg-(--surface-moderate)'
+                    )}
                 >
-                    <span className="flex items-center gap-2 text-lg font-semibold text-(--text)">
+                    <span className={cn('flex items-center gap-2 text-lg font-semibold text-(--text)')}>
                         <Icon icon={MEMBER_HEADER_ICONS[prefix]} size={18} aria-hidden />
                         {title}
                     </span>
-                    <Icon
-                        icon={ChevronDown}
-                        size={18}
-                        className={cn(
-                            'text-subtle transition-transform duration-200',
-                            expanded ? 'rotate-0' : '-rotate-90'
-                        )}
-                        aria-hidden
-                    />
-                </button>
+                    <DisclosureChevron size={18} />
+                </DisclosureTrigger>
             </header>
-            <div
-                id={panelId}
-                className={cn(
-                    'divide-border/70 border-border/70 divide-y border-t',
-                    expanded ? 'flex min-w-0 flex-col' : 'hidden'
-                )}
-            >
-                {items.map((item, index) => (
-                    <MemberCard
-                        key={item.id}
-                        member={item}
-                        prefix={prefix}
-                        isLast={index === items.length - 1}
-                        parentDeprecationStatus={parentDeprecationStatus}
-                    />
-                ))}
-            </div>
-        </section>
+            <DisclosurePanel>
+                <div className={cn('divide-border/70 border-border/70 flex min-w-0 flex-col divide-y border-t')}>
+                    {items.map((item, index) => (
+                        <MemberRow
+                            key={item.id}
+                            member={item}
+                            prefix={prefix}
+                            isLast={index === items.length - 1}
+                            parentDeprecationStatus={parentDeprecationStatus}
+                        />
+                    ))}
+                </div>
+            </DisclosurePanel>
+        </Disclosure>
     );
 }
 

@@ -1,7 +1,7 @@
 import type { EmojiMap } from './EmojiMap';
 import type { ClientOptions } from 'discord.js';
 
-// interactions, events, commands, services, effects
+// interactions, events, commands, services, bus subscribers
 
 /**
  * Djs Interactions handlers
@@ -62,17 +62,17 @@ export type CommandsConfig =
       };
 
 /**
- * Application side effects configuration
+ * Application subscribers configuration
  */
-export type EffectsConfig =
+export type SubscribersConfig =
     | {
           /**
-           * Path to dir of user defined side effects.
+           * Path to dir of user defined subscribers (loaded onto core.bus).
            */
           path: string;
       }
     | {
-          /** No effects configured (except the default effects) */
+          /** No bus subscribers configured (except the default ones) */
           path: null;
       };
 
@@ -127,7 +127,7 @@ export interface BotConfig {
 /** Main configuration object for Seedcord bot */
 export interface Config {
     bot: BotConfig;
-    effects: EffectsConfig;
+    subscribers: SubscribersConfig;
 
     /**
      * Whether to show the error stack trace in the terminal in errors caught by the `@Catchable` decorator

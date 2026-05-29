@@ -1,7 +1,6 @@
 import { createPlainParagraph } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
-import { renderInlineType } from '../comments/renderers/renderInlineType';
-import { highlightCode } from '../formatting';
+import { formatTypeParameter } from '../formatting';
 
 import type { FormatContext, CommentParagraph, CommentExample } from '../types';
 import type { EntityMemberSummary } from '@components/docs/entity/types';
@@ -19,17 +18,7 @@ export async function buildTypeParameterSummaries(
 
     return Promise.all(
         params.map(async (param) => {
-            const segments: string[] = [param.name];
-
-            if (param.constraint) {
-                segments.push(`extends ${renderInlineType(param.constraint, context)}`);
-            }
-
-            if (param.default) {
-                segments.push(`= ${renderInlineType(param.default, context)}`);
-            }
-
-            const code = await highlightCode(segments.join(' '));
+            const code = await formatTypeParameter(param, context);
             const documentation: CommentParagraph[] = [];
             const examples: CommentExample[] = [];
 

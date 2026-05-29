@@ -227,7 +227,7 @@ Arbitrary values are acceptable only when the design genuinely requires a one-of
 
 ## Rule 8 — Co-locate component variants with the component
 
-For each app's UI primitives (`apps/<name>/src/components/ui/<Primitive>.tsx`), put `BASE_STYLES`, `VARIANTS`, and `SIZES` as `tw\`…\`` constants at the top of the component file. Don't invent a `cva`-style abstraction; the existing `Button.tsx` pattern is the convention. If a primitive is needed in more than one app, extract it to a shared package — don't copy it.
+For each app's UI primitives (`apps/<name>/src/components/ui/<Primitive>.tsx`), put `BASE_STYLES`, `VARIANTS`, and `SIZES` as `tw\`…\`` constants at the top of the component file. Don't invent a `cva`-style abstraction; the existing`Button.tsx` pattern is the convention. If a primitive is needed in more than one app, extract it to a shared package — don't copy it.
 
 ```tsx
 // Good — matches apps/docs/src/components/ui/Button.tsx structure

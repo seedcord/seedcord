@@ -1,15 +1,17 @@
-import { cn } from '@lib/utils';
+import { Card, cn } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
 function SidebarEmptyState({ className }: { className?: string }): ReactElement {
     return (
-        <nav
+        <Card
+            as="nav"
+            size="none"
             aria-label="Library navigation"
-            className={cn('card bg-surface shadow-soft flex h-full flex-col p-4', className)}
+            className={cn('bg-surface flex h-full flex-col p-4', className)}
         >
-            <p className="text-subtle text-sm">No packages available.</p>
-        </nav>
+            <p className={cn('text-subtle text-sm')}>No packages available.</p>
+        </Card>
     );
 }
 

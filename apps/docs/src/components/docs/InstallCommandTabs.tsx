@@ -1,9 +1,7 @@
 'use client';
 
+import { CodeBlock, SegmentedControl, cn, type SegmentedControlOption } from '@seedcord/ui';
 import { useMemo, useState } from 'react';
-
-import { cn, tw } from '@lib/utils';
-import CopyButton from '@ui/CopyButton';
 
 import type { ReactElement } from 'react';
 
@@ -19,57 +17,34 @@ interface InstallCommandTabsProps {
 }
 
 function InstallCommandTabs({ commands }: InstallCommandTabsProps): ReactElement | null {
-    const initialId = commands[0]?.id;
-    const [activeId, setActiveId] = useState(initialId);
+    const [selectedId, setSelectedId] = useState(commands[0]?.id);
 
-    const activeCommand = useMemo(
-        () => commands.find((command) => command.id === activeId) ?? commands[0],
-        [activeId, commands]
+    // derive in render so a stale selectedId (no longer in commands) falls back to commands[0]
+    const activeCommand = commands.find((command) => command.id === selectedId) ?? commands[0];
+    const activeId = activeCommand?.id;
+
+    const options = useMemo<SegmentedControlOption<string>[]>(
+        () => commands.map((command) => ({ value: command.id, label: command.label })),
+        [commands]
     );
 
-    if (!activeCommand) {
+    if (!activeCommand || activeId === undefined) {
         return null;
     }
 
-    const codeContainerClass = tw`code-scroll-area px-4 py-4 text-sm leading-relaxed text-(--text)`;
-
     return (
-        <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-                {commands.map((command) => (
-                    <button
-                        key={command.id}
-                        type="button"
-                        onClick={() => setActiveId(command.id)}
-                        className={cn(
-                            'rounded-full border px-3 py-1.5 text-xs font-semibold tracking-wide uppercase transition',
-                            command.id === activeCommand.id
-                                ? 'border-(--border-accent-a-moderate) bg-(--bg-accent-a-transparent-moderate) text-(--text)'
-                                : 'bg-surface-subtle text-subtle border-(--border) hover:border-(--accent-a)/30 hover:text-(--text)'
-                        )}
-                    >
-                        {command.label}
-                    </button>
-                ))}
-            </div>
-            <div className="card bg-surface-moderate shadow-soft relative overflow-hidden">
-                <CopyButton
-                    value={activeCommand.code}
-                    ariaLabel={`Copy ${activeCommand.label} install command`}
-                    className="absolute top-3 right-3 z-10"
-                />
-                {activeCommand.html ? (
-                    <div className={codeContainerClass}>
-                        <div className="code-scroll-content" dangerouslySetInnerHTML={{ __html: activeCommand.html }} />
-                    </div>
-                ) : (
-                    <div className={codeContainerClass}>
-                        <pre className="code-scroll-content whitespace-pre">
-                            <code>{activeCommand.code}</code>
-                        </pre>
-                    </div>
-                )}
-            </div>
+        <div className={cn('space-y-3')}>
+            <SegmentedControl
+                options={options}
+                value={activeId}
+                onChange={setSelectedId}
+                size="sm"
+                aria-label="Install command"
+            />
+            <CodeBlock
+                representation={{ html: activeCommand.html, text: activeCommand.code }}
+                label={activeCommand.label}
+            />
         </div>
     );
 }

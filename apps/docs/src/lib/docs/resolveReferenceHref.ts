@@ -21,13 +21,13 @@ const MEMBER_ANCHOR_PREFIX: Record<string, string> = {
 };
 
 function getParentSlug(slug: string): string | null {
-    const segments = String(slug).split('/');
+    const segments = slug.split('/');
     if (segments.length <= 1) return null;
     return segments.slice(0, -1).join('/');
 }
 
 function findEntityNode(engine: DocsEngine, packageName: string, slug: string): DocNode | null {
-    const segments = String(slug).split('/');
+    const segments = slug.split('/');
 
     for (let index = segments.length; index > 0; index -= 1) {
         const candidateSlug = segments.slice(0, index).join('/');
@@ -56,7 +56,7 @@ function buildInternalHref(engine: DocsEngine, packageName: string, slug: string
         });
     }
 
-    if (String(node.slug).includes('/')) {
+    if (node.slug.includes('/')) {
         return buildMemberHrefFromNode(engine, packageName, node);
     }
 
@@ -122,7 +122,7 @@ function buildParameterAnchor(engine: DocsEngine, packageName: string, entityHre
 
 function findOwnerNode(engine: DocsEngine, packageName: string, node: DocNode | null): DocNode | null {
     if (!node) return null;
-    if (!String(node.slug).includes('/')) return null;
+    if (!node.slug.includes('/')) return null;
     if (typeof node.qualifiedName !== 'string' || !node.qualifiedName.includes('.')) return null;
 
     const ownerQName = node.qualifiedName.split('.').slice(0, -1).join('.');

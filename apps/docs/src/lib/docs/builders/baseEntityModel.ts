@@ -11,7 +11,7 @@ import type {
 } from '../types';
 import type { DocNode } from '@seedcord/docs-engine';
 
-export function buildEntityTags(node: DocNode): string[] {
+function buildEntityTags(node: DocNode): string[] {
     const tags = new Set<string>();
     const flags = node.flags;
 

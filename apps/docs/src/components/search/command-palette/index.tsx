@@ -5,7 +5,7 @@ import { useCommandPaletteController } from './useCommandPaletteController';
 
 import type { ReactElement } from 'react';
 
-export function CommandPalette(): ReactElement | null {
+function CommandPalette(): ReactElement | null {
     const controller = useCommandPaletteController();
 
     if (!controller.mounted) {

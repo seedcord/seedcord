@@ -8,7 +8,7 @@ Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of 
 1. **Reuse** of an existing primitive, helper, type, convention, or pattern.
 2. **A justified, named extension** to that existing surface — added in the right package, exported through the right boundary, then reused.
 
-There is **no third option.** If neither reuse nor a clean shared extension fits, stop and ask the user instead of inventing a local workaround. Inline duplication is not a "small thing." Reinventing a Logger, a CooldownManager, a string utility, or an effect helper is not a "quick win." Each duplicate creates tech debt that compounds across packages and across PRs until the conventions stop mattering and someone has to do a multi-package cleanup. The same logic applies to types, error classes, validation, and code structure: a small antipattern shipped today becomes a multi-file migration in three months.
+There is **no third option.** If neither reuse nor a clean shared extension fits, stop and ask the user instead of inventing a local workaround. Inline duplication is not a "small thing." Reinventing a Logger, a CooldownManager, a string utility, or a bus subscriber helper is not a "quick win." Each duplicate creates tech debt that compounds across packages and across PRs until the conventions stop mattering and someone has to do a multi-package cleanup. The same logic applies to types, error classes, validation, and code structure: a small antipattern shipped today becomes a multi-file migration in three months.
 
 Before writing any new code, run the checks below. If the answer to any is "I haven't checked," go check. Only depart from these checks when the user explicitly asks for a different approach or a repo-level instruction overrides them.
 
@@ -23,7 +23,7 @@ If you're about to write a string utility, number helper, object helper, type-fe
 - `packages/utils/src/index.ts` — re-exports `misc`, `numbers`, `objects`, `strings`, `brand`. Look here for `cn`-style guards, formatting helpers, set/object operations, and string transforms before writing your own.
 - `packages/types/src/index.ts` — shared TypeScript `Types` and `Interfaces`. Use `import type { … } from '@seedcord/types'` rather than defining the same alias locally.
 - `packages/services/src/index.ts` — `CooldownManager`, the `Errors` family, `HealthCheck`, the `Lifecycle` primitives, the `Logger`, and `StrictEventEmitter`. Compose these — do not parallel-implement them inside a bot or plugin.
-- `packages/seedcord/src/{bot,effects,hmr,interfaces,miscellaneous,Seedcord.ts}` — the framework surface. Effects, interfaces, and the `Seedcord` orchestrator are first-class APIs, not internal-only.
+- `packages/seedcord/src/{bot,bus,hmr,interfaces,miscellaneous,Seedcord.ts}` — the framework surface. The bus (`core.bus`, `Subscriber<K>`, `@Subscribe(...)`, `BusEvents` augmentation), interfaces, and the `Seedcord` orchestrator are first-class APIs, not internal-only.
 - `packages/plugins/src` — plugin contract and existing first-party plugins. If your "feature" is really a plugin, that's where it goes.
 - `packages/cli/src` — the seedcord CLI built on Commander + Ink. CLI-shaped features extend this, not a new ad-hoc CLI.
 
@@ -89,6 +89,7 @@ Before writing any code that uses a package not already in the workspace, fetch 
 **Why:** Using stale knowledge about modern packages produces code built on deprecated subpaths and silently broken imports that the user has to fix mid-PR.
 
 **How:**
+
 1. Check the pinned version: `grep -E '<pkg>|catalog' pnpm-workspace.yaml package.json`
 2. `WebFetch` the README for that version
 3. Only then write code based on what the README actually documents
@@ -166,7 +167,7 @@ If no existing surface fits and there is no clean shared extension path, stop an
     - Pure type / interface: `@seedcord/types`
     - Pure helper (string/number/object/brand/misc): `@seedcord/utils`
     - Runtime service (logger, cooldown, lifecycle, error class, health check, event emitter): `@seedcord/services`
-    - Framework-level effect, interface, or orchestrator hook: `@seedcord/seedcord`
+    - Framework-level bus event, interface, or orchestrator hook: `@seedcord/seedcord`
     - Plugin-shaped behavior: `@seedcord/plugins`
     - CLI command / Ink component for the CLI: `@seedcord/cli`
     - Doc-extraction or doc-rendering logic: `@seedcord/docs-generator` / `@seedcord/docs-engine`

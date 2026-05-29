@@ -35,8 +35,10 @@ export function Banner({ config }: BannerProps): ReactElement {
                             : chalk.gray('Disabled')}
                     </Text>
                     <Text>
-                        <Text color="blue">➜</Text> Effects:{' '}
-                        {config.effects.path ? chalk.dim(formatFilePath(config.effects.path)) : chalk.gray('Disabled')}
+                        <Text color="blue">➜</Text> Pub/Sub:{' '}
+                        {config.subscribers.path
+                            ? chalk.dim(formatFilePath(config.subscribers.path))
+                            : chalk.gray('Disabled')}
                     </Text>
                 </Box>
             )}
