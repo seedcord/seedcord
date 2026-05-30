@@ -28,6 +28,8 @@ const messages = {
     [SeedcordErrorCode.CorePluginKeyExists]: (key: string) => `Plugin with key "${key}" already exists.`,
     [SeedcordErrorCode.CoreBotRoleMissing]: (guildId?: string) =>
         guildId ? `Bot role not found in guild ${guildId}.` : 'Bot role not found in guild.',
+    [SeedcordErrorCode.CoreControllerPathMissing]: (controllerName: string, pathKind: string) =>
+        `${controllerName} was instantiated without a ${pathKind} path.`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorMethodNotFound]: () =>
@@ -44,9 +46,10 @@ const messages = {
         'RegisterCommand("guild") requires a non-empty guilds array.',
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: () => 'Middleware priority must be a finite number.',
 
-    [SeedcordErrorCode.UtilHexInputType]: () => 'hexToNumber expects a string input.',
-    [SeedcordErrorCode.UtilHexInvalid]: () => 'Invalid hex string.',
     [SeedcordErrorCode.UtilInvalidSlashRouteArgument]: () => 'Invalid argument passed to buildSlashRoute.',
+
+    [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
+    [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
@@ -54,6 +57,9 @@ const messages = {
         `Missing @RegisterMongoModel on ${className}.`,
     [SeedcordErrorCode.PluginMongoConnectionFailed]: (databaseName?: string) =>
         databaseName ? `Could not connect to MongoDB (${databaseName}).` : 'Could not connect to MongoDB.',
+    [SeedcordErrorCode.PluginMongoDisconnectFailed]: () => 'Failed to disconnect from MongoDB cleanly during shutdown.',
+    [SeedcordErrorCode.PluginMongoServicesNotReady]: () =>
+        'Mongo services accessed before the plugin finished initializing.',
 
     [SeedcordErrorCode.PluginKpgServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterKpgService on ${className}.`,
@@ -68,6 +74,9 @@ const messages = {
     [SeedcordErrorCode.PluginKpgInvalidMigrationModule]: (filePath: string) =>
         `Migration file ${filePath} must export async functions up and down.`,
     [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,
+    [SeedcordErrorCode.PluginKpgDisconnectFailed]: () => 'Failed to close the Postgres pool cleanly during shutdown.',
+    [SeedcordErrorCode.PluginKpgServicesNotReady]: () =>
+        'KPG services accessed before the plugin finished initializing.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>
@@ -124,5 +133,3 @@ export function formatSeedcordErrorMessage<Code extends SeedcordErrorCode>(
     const resolvedArgs = (args ?? []) as unknown[];
     return (formatter as (...params: unknown[]) => string)(...resolvedArgs);
 }
-
-export { messages as seedcordErrorMessages };

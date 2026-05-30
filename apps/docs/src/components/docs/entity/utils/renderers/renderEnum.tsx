@@ -1,4 +1,4 @@
-import EnumMembersSection from '../../enums/EnumMembersSection';
+import { EnumMembersSection } from '../../enums/EnumMembersSection';
 
 import type { EnumModel } from '../../types';
 import type { ReactElement } from 'react';

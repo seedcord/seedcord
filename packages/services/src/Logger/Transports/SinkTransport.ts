@@ -74,23 +74,21 @@ export class SinkTransport extends TransportStream {
     }
 
     private resolveChannel(info: Logform.TransformableInfo): string {
-        const record = info as unknown as Record<string, unknown>;
-        const channel = record.channel;
+        const channel = info.channel;
         return typeof channel === 'string' ? channel : this.channelName;
     }
 
     private resolveRendered(info: Logform.TransformableInfo): string {
-        const record = info as unknown as Record<string | symbol, unknown>;
-        const msg = record[Symbol.for('message')];
+        const msg = info[Symbol.for('message')];
 
         if (typeof msg === 'string') return msg;
 
-        const fallback = (info as unknown as Record<string, unknown>).message;
+        const fallback = info.message;
         if (typeof fallback === 'string') return fallback;
 
         if (fallback instanceof Error) return fallback.stack ?? fallback.message;
 
-        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string -- last-resort stringify for a non-string, non-Error message value
         return String(fallback ?? '');
     }
 }

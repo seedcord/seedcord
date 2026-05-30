@@ -58,7 +58,7 @@ export const InteractionMetadataKey = Symbol('interaction:metadata');
  *
  * @internal
  */
-export type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
     InstanceType<TCtor> extends InteractionHandler<infer TEvent> ? TEvent : never;
 
 /**
@@ -68,7 +68,7 @@ export type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHa
  *
  * @internal
  */
-export type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
     Extract<HandlerEventType<TCtor>, TRequired> extends never
         ? Constructor<['Handler event generic must include', TRequired]>
         : TCtor;

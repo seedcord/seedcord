@@ -5,30 +5,27 @@ import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError
 import { Envapt } from 'envapt';
 
 import { BuilderComponent } from '@interfaces/Components';
-import { hexToNumber } from '@miscellaneous/hexToNumber';
 
 import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
 
 import type { AllSubscriptions } from '../types/Subscriptions';
 
+const DISCORD_WEBHOOK_REGEX = new RegExp(
+    String.raw`^https?:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w$-]+$`
+);
+
 function webhookUrlValidator(raw: unknown, _fallback: unknown): string {
-    if (raw === null) {
-        throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing);
-    }
-    if (typeof raw !== 'string') {
+    if (raw !== null && typeof raw !== 'string') {
         throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid);
     }
 
-    const value = raw.trim();
+    const value = raw?.trim() ?? '';
     if (value === '') {
         throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing);
     }
 
-    const pattern = String.raw`^https?:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w$-]+$`;
-    const discordWebhookRegex = new RegExp(pattern);
-
-    if (!URL.canParse(value) || !discordWebhookRegex.test(value)) {
+    if (!URL.canParse(value) || !DISCORD_WEBHOOK_REGEX.test(value)) {
         throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid);
     }
 
@@ -67,8 +64,6 @@ export class UnknownException extends WebhookLog<'unknownException'> {
                 flags: 'IsComponentsV2',
                 withComponents: true,
                 username: 'Unknown Exception',
-                avatarURL:
-                    'https://cdn.discordapp.com/attachments/1351446034827579466/1351446912947191830/warning-2.png',
                 components: [new UnhandledErrorContainer(this.data).component],
                 files: metadataFile ? [metadataFile] : []
             });
@@ -103,7 +98,6 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
         const { uuid, error, guild, user, metadata } = data;
 
         this.instance
-            .setAccentColor(hexToNumber('#ef4860'))
             .addTextDisplayComponents((text) =>
                 text.setContent(
                     `### An unknown exception was thrown\n` +
@@ -129,10 +123,8 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
         const snowflake = error.url.match(/\/interactions\/(\d+)\//)?.[1];
         if (!snowflake) return undefined;
 
-        // Discord epoch offset (ms) and timestamp extraction
         const interactionTs = Number(SnowflakeUtil.deconstruct(snowflake).timestamp);
 
-        // Time difference
         const diff = now - interactionTs;
         const seconds = Math.floor(diff / 1000);
         const millis = diff % 1000;

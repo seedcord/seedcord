@@ -1,6 +1,7 @@
-import { SeedcordError } from '@seedcord/services/internal';
-import { CustomError, SeedcordErrorCode, throwCustomError } from 'seedcord';
-import { DatabaseError } from 'seedcord/internal';
+import { CustomError, SeedcordErrorCode } from 'seedcord';
+import { SeedcordError } from 'seedcord/internal';
+
+import { throwDatabaseError } from './throwDatabaseError';
 
 /**
  * Catches and wraps database operation errors.
@@ -42,7 +43,7 @@ export function WrapDatabaseError<TypeReturn>(errorMessage: string) {
                 return await originalMethod.apply(this, args);
             } catch (error) {
                 if (!(error instanceof CustomError)) {
-                    throwCustomError(error, errorMessage, DatabaseError);
+                    throwDatabaseError(error, errorMessage);
                 } else {
                     throw error;
                 }

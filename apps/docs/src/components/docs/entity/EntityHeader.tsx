@@ -4,13 +4,13 @@ import { ArrowUpRight } from 'lucide-react';
 import { formatVersionLabel } from '@lib/docs/version';
 import { getToneConfig } from '@lib/entityMetadata';
 
-import SeeAlso from '../SeeAlso';
-import TagPills from '../TagPills';
-import CommentExamples from './comments/CommentExamples';
-import CommentParagraphs from './comments/CommentParagraphs';
-import DeprecatedEntity from './DeprecatedEntity';
-import FunctionSignaturesInline from './functions/FunctionSignaturesInline';
-import SignatureBlock from './signatures/SignatureBlock';
+import { SeeAlso } from '../SeeAlso';
+import { TagPills } from '../TagPills';
+import { CommentExamples } from './comments/CommentExamples';
+import { CommentParagraphs } from './comments/CommentParagraphs';
+import { DeprecatedEntity } from './DeprecatedEntity';
+import { FunctionSignaturesInline } from './functions/FunctionSignaturesInline';
+import { SignatureBlock } from './signatures/SignatureBlock';
 import { buildSummaryNodes } from './utils/buildSummaryNodes';
 import { useActiveSignatureList } from './utils/useActiveSignatureList';
 
@@ -181,7 +181,7 @@ function HeaderBody({ deprecationStatus, active, fn, signature, headerExamples }
     );
 }
 
-function EntityHeader({
+export function EntityHeader({
     badgeLabel,
     pkg,
     signature,
@@ -238,5 +238,3 @@ function EntityHeader({
         </header>
     );
 }
-
-export default EntityHeader;

@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
-function NotFound(): ReactElement {
+export function NotFound(): ReactElement {
     return (
         <div className={cn('flex min-h-[60vh] items-center justify-center')}>
             <div className={cn('text-center')}>
@@ -12,5 +12,3 @@ function NotFound(): ReactElement {
         </div>
     );
 }
-
-export default NotFound;

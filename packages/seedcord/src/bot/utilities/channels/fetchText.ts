@@ -1,4 +1,4 @@
-import { TextChannel } from 'discord.js';
+import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
 
 import { CouldNotFindChannel } from '@bot/defaults/errors/Channels';
 
@@ -23,8 +23,12 @@ export async function fetchText(client: Client, channelId: TextChannelResolvable
     if (!channel) {
         try {
             channel = await client.channels.fetch(channelId);
-        } catch {
-            throw new CouldNotFindChannel('Channel not found or not a text channel', channelId);
+        } catch (err) {
+            if (err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownChannel) {
+                throw new CouldNotFindChannel('Channel not found or not a text channel', channelId);
+            }
+
+            throw err;
         }
     }
 

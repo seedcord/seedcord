@@ -1,5 +1,5 @@
 import type { EmojiMap } from './EmojiMap';
-import type { ClientOptions } from 'discord.js';
+import type { ClientOptions, ColorResolvable } from 'discord.js';
 
 // interactions, events, commands, services, bus subscribers
 
@@ -124,6 +124,40 @@ export interface BotConfig {
     emojis?: EmojiMap;
 }
 
+/**
+ * Health-check HTTP server settings.
+ */
+export interface HealthCheckConfig {
+    /**
+     * Port the health-check server listens on.
+     *
+     * `6967` by default
+     */
+    port?: number;
+    /**
+     * Path the health-check server responds on.
+     *
+     * `/healthcheck` by default
+     */
+    path?: string;
+    /**
+     * Host/interface to bind. Omit to bind all interfaces.
+     */
+    host?: string;
+}
+
+/**
+ * Settings for the messages the framework sends on unhandled errors.
+ */
+export interface NotificationsConfig {
+    /**
+     * Contact name shown in the generic unknown-error message.
+     *
+     * `the developer` by default
+     */
+    developerUsername?: string;
+}
+
 /** Main configuration object for Seedcord bot */
 export interface Config {
     bot: BotConfig;
@@ -135,4 +169,28 @@ export interface Config {
      * `false` by default
      */
     errorStack?: boolean;
+
+    /**
+     * Accent and embed color applied to every `BuilderComponent` (embeds, containers).
+     *
+     * Omit for Discord's default color.
+     */
+    botColor?: ColorResolvable;
+
+    /**
+     * Whether coordinated shutdown registers OS signal handlers and runs teardown tasks.
+     *
+     * `true` by default
+     */
+    shutdownEnabled?: boolean;
+
+    /**
+     * Health-check HTTP server settings.
+     */
+    healthCheck?: HealthCheckConfig;
+
+    /**
+     * Settings for framework-sent error notifications.
+     */
+    notifications?: NotificationsConfig;
 }

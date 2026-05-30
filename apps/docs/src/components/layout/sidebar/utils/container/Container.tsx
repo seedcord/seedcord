@@ -3,10 +3,10 @@
 import { cn, ScrollToTopButton } from '@seedcord/ui';
 import { useLayoutEffect, useRef, useState } from 'react';
 
-import DesktopSidebarFrame from './DesktopSidebarFrame';
-import MobileNavigationToggle from './MobileNavigationToggle';
-import MobilePanelDialog from './MobilePanelDialog';
-import Sidebar from '../../Sidebar';
+import { DesktopSidebarFrame } from './DesktopSidebarFrame';
+import { MobileNavigationToggle } from './MobileNavigationToggle';
+import { MobilePanelDialog } from './MobilePanelDialog';
+import { Sidebar } from '../../Sidebar';
 import { SIDEBAR_WIDTH } from '../constants';
 
 import type { DocsCatalog } from '@lib/docs/types';
@@ -23,7 +23,13 @@ interface ContainerProps {
 const SIDEBAR_BASE_CLASS = 'flex size-full flex-col';
 const MOBILE_SIDEBAR_OVERRIDES = 'h-auto overflow-visible border-transparent bg-transparent shadow-none';
 
-function Container({ catalog, activePackageId, activeVersionId, children, className }: ContainerProps): ReactNode {
+export function Container({
+    catalog,
+    activePackageId,
+    activeVersionId,
+    children,
+    className
+}: ContainerProps): ReactNode {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [navigationOpen, setNavigationOpen] = useState(false);
 
@@ -95,5 +101,3 @@ function Container({ catalog, activePackageId, activeVersionId, children, classN
         </div>
     );
 }
-
-export default Container;

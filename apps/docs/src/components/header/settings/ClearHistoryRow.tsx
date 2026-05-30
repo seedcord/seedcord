@@ -5,18 +5,16 @@ import { Check, Trash2 } from 'lucide-react';
 
 import { clearDocsHistory } from '@lib/settings/clearHistory';
 
-import SettingsRow from './SettingsRow';
+import { SettingsRow } from './SettingsRow';
 
 import type { MouseEvent, ReactElement } from 'react';
 
 const FEEDBACK_DURATION_MS = 2000;
 
-function ClearHistoryRow(): ReactElement {
+export function ClearHistoryRow(): ReactElement {
     const [cleared, markCleared] = useTimedToggle(FEEDBACK_DURATION_MS);
 
-    // Blur the button after the action so the focus ring (`--accent-a`, which is brand-red)
-    // doesn't linger across the timed-feedback window. The action is already complete; nothing
-    // left to focus on this control.
+    // Blur after the action so the brand-red focus ring (`--accent-a`) does not linger across the timed-feedback window.
     const handleClear = (event: MouseEvent<HTMLButtonElement>): void => {
         clearDocsHistory();
         markCleared();
@@ -40,5 +38,3 @@ function ClearHistoryRow(): ReactElement {
         </SettingsRow>
     );
 }
-
-export default ClearHistoryRow;

@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 import { MessageFlags } from 'discord.js';
 
@@ -6,11 +6,13 @@ import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
 import type { RepliableInteractionHandler } from '@interfaces/Handler';
 
+const logger = new Logger('Catchable');
+
 /**
  * Configuration options for the Catchable decorator.
  */
 export interface CatchableOptions {
-    /** Whether to log errors to console using console.error {@default false} */
+    /** Whether to log caught errors via the framework Logger {@default false} */
     log?: boolean;
     /** Always use followUp instead of reply/editReply {@default false} */
     forceFollowup?: boolean;
@@ -57,8 +59,7 @@ export function Catchable(options?: CatchableOptions) {
 
                 this.setErrored();
 
-                // eslint-disable-next-line no-console
-                if (log) console.error(error);
+                if (log) logger.error('Caught handler error', error);
 
                 const { response } = extractErrorResponse(
                     error,

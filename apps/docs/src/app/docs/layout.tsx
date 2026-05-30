@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import Container from '@components/layout/sidebar/utils/container/Container';
+import { Container } from '@components/layout/sidebar/utils/container/Container';
 import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
 
 import type { DocsCatalog, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';

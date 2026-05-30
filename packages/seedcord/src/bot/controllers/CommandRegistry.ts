@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 
-import { Logger } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
@@ -47,7 +48,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public constructor(private readonly core: Core) {
         const commandsDir = this.core.config.bot.commands.path;
         if (!commandsDir) {
-            throw new Error('CommandRegistry instantiated without commands path');
+            throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['CommandRegistry', 'commands']);
         }
 
         if (!Envapter.isDevelopment) return; // HMR only in development
@@ -136,7 +137,6 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private isCommandClass(obj: unknown): obj is CommandCtor {
         if (typeof obj !== 'function') return false;
-        // Need a more robust check here to make sure it's specifically a command/context menu class of BuilderComponent
         return obj.prototype instanceof BuilderComponent && Reflect.hasMetadata(CommandMetadataKey, obj);
     }
 

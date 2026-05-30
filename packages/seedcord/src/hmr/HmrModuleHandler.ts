@@ -23,7 +23,7 @@ interface HmrData {
  *
  * This is only useful during development.
  */
-export interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unknown> {
+interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unknown> {
     /** Directory containing handler modules. */
     handlersDir: string;
     /** Directory containing middleware modules. Optional because not all setups use middleware. */
@@ -57,9 +57,11 @@ export interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifact
  */
 export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown> {
     private readonly store: HmrStore<THandler, TMiddleware, TArtifacts>;
+    private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>;
 
-    constructor(private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
-        options.logger = options.logger.inChannel('hmr');
+    constructor(options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
+        // Copy rather than mutate the caller's options object when scoping the logger to the hmr channel.
+        this.options = { ...options, logger: options.logger.inChannel('hmr') };
 
         if (import.meta.hot) {
             const data = import.meta.hot.data as HmrData;
@@ -115,7 +117,6 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
                 continue;
             }
 
-            // Unload previous exports from this file
             this.unload(fileToReload);
 
             await this.reloadFile(fileToReload);

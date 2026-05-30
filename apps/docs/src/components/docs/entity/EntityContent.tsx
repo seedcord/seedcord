@@ -5,7 +5,7 @@ import { useEffect, type ReactElement } from 'react';
 
 import { log } from '@lib/logger';
 
-import EntityHeader from './EntityHeader';
+import { EntityHeader } from './EntityHeader';
 import { renderEntityBody } from './utils/renderers/renderEntityBody';
 import { useEntityTone } from './utils/useEntityTone';
 
@@ -15,7 +15,7 @@ interface EntityContentProps {
     model: EntityModel;
 }
 
-function EntityContent({ model }: EntityContentProps): ReactElement {
+export function EntityContent({ model }: EntityContentProps): ReactElement {
     const { tone, badgeLabel } = useEntityTone(model.kind);
 
     useEffect(() => {
@@ -55,5 +55,3 @@ function EntityContent({ model }: EntityContentProps): ReactElement {
         </article>
     );
 }
-
-export default EntityContent;

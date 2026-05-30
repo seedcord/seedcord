@@ -1,6 +1,6 @@
 import { Card, cn } from '@seedcord/ui';
 
-import InstallCommandTabs from '@components/docs/InstallCommandTabs';
+import { InstallCommandTabs } from '@components/docs/InstallCommandTabs';
 import { highlightToHtml } from '@lib/shiki';
 
 import type { ReactElement } from 'react';

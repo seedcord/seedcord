@@ -3,13 +3,13 @@
 import { Button, GithubIcon, Icon, cn } from '@seedcord/ui';
 import Link from 'next/link';
 
-import HeaderSettingsPopover from './HeaderSettingsPopover';
-import HeaderSearchControls from './search-controls/HeaderSearchControls';
-import SeedcordMark from './SeedcordMark';
+import { HeaderSettingsPopover } from './HeaderSettingsPopover';
+import { HeaderSearchControls } from './search-controls/HeaderSearchControls';
+import { SeedcordMark } from './SeedcordMark';
 
 import type { ReactElement } from 'react';
 
-function Navbar(): ReactElement {
+export function Navbar(): ReactElement {
     return (
         <header className={cn('border-border sticky top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}>
             <div className={cn('mx-auto flex max-w-7xl flex-col gap-3 p-4 md:px-6')}>
@@ -48,5 +48,3 @@ function Navbar(): ReactElement {
         </header>
     );
 }
-
-export default Navbar;

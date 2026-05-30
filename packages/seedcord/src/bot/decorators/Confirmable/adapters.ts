@@ -23,8 +23,10 @@ export class ClassicAdapter<TComponentType extends MessageComponentType> impleme
     constructor(private readonly opts: ConfirmableClassicOptions<TComponentType>) {}
 
     public async buildPrompt(ctx: ConfirmableContext): Promise<ConfirmablePayload> {
-        const prompt = await resolveFactory(this.opts.prompt, ctx);
-        const rows = await resolveFactory(this.opts.rows, ctx);
+        const [prompt, rows] = await Promise.all([
+            resolveFactory(this.opts.prompt, ctx),
+            resolveFactory(this.opts.rows, ctx)
+        ]);
         const components = [...rows] as NonEmptyTuple<RowLike>;
 
         const payload: ClassicPayload = { components };

@@ -54,12 +54,29 @@ export class TypeScriptProjectBuilder {
     private async runTsc(projectDir: string, tsconfigPath: string): Promise<void> {
         const tscPath = this.resolveProjectTsc(projectDir);
 
-        const result = await this.runNodeScript(projectDir, tscPath, ['-p', tsconfigPath, '--pretty', 'false']);
+        const args = ['-p', tsconfigPath, '--pretty', 'false', '--inlineSources'];
+        // tsc rejects --sourceMap alongside a project's inlineSourceMap; only force it otherwise.
+        if (!(await this.usesInlineSourceMap(projectDir, tsconfigPath))) args.push('--sourceMap');
+
+        const result = await this.runNodeScript(projectDir, tscPath, args);
         if (result.exitCode === 0) return;
 
         throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [
             `TypeScript compilation failed:\n${this.truncateOutput(result.output)}`
         ]);
+    }
+
+    private async usesInlineSourceMap(projectDir: string, tsconfigPath: string): Promise<boolean> {
+        const tscPath = this.resolveProjectTsc(projectDir);
+        const result = await this.runNodeScript(projectDir, tscPath, ['--showConfig', '-p', tsconfigPath]);
+        if (result.exitCode !== 0) return false;
+
+        try {
+            const config = JSON.parse(result.output) as { compilerOptions?: { inlineSourceMap?: boolean } };
+            return config.compilerOptions?.inlineSourceMap === true;
+        } catch {
+            return false;
+        }
     }
 
     private async fixRelativeSpecifiers(outDir: string): Promise<void> {

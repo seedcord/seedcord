@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import type { ReactNode } from 'react';
 
-function SettingsRow({
+export function SettingsRow({
     title,
     subtitle,
     children
@@ -22,5 +22,3 @@ function SettingsRow({
         </div>
     );
 }
-
-export default SettingsRow;

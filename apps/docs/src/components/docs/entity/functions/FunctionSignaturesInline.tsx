@@ -1,12 +1,12 @@
 'use client';
 
-import SignatureSelector from '../signatures/SignatureSelector';
+import { SignatureSelector } from '../signatures/SignatureSelector';
 import { useActiveSignatureList } from '../utils/useActiveSignatureList';
 
 import type { FunctionSignatureModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
-function FunctionSignaturesInline({
+export function FunctionSignaturesInline({
     signatures
 }: {
     signatures: readonly FunctionSignatureModel[];
@@ -24,5 +24,3 @@ function FunctionSignaturesInline({
         </div>
     );
 }
-
-export default FunctionSignaturesInline;

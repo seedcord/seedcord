@@ -39,13 +39,25 @@ interface MongoArtifact {
 export class Mongo extends Plugin {
     public readonly logger = new Logger('Mongo');
     private isInitialised = false;
+    private servicesReady = false;
     private readonly uri: string;
 
+    private readonly _services: Record<string, unknown> = {};
+
     /**
-     * Map of all loaded services.
-     * Keys come from `@RegisterMongoService('key')`
+     * Map of all loaded services. Keys come from `@RegisterMongoService('key')`.
+     *
+     * @throws A {@link SeedcordError} if accessed before the plugin finishes initializing (e.g. from
+     * a plugin that starts in an earlier phase).
      */
-    public readonly services: MongoServices = {};
+    public get services(): MongoServices {
+        if (!this.servicesReady) {
+            throw new SeedcordError(SeedcordErrorCode.PluginMongoServicesNotReady);
+        }
+        // MongoServices is augmented per-consumer via declaration merging; the registry holds the
+        // instances opaquely and exposes the generated map shape at this public boundary.
+        return this._services;
+    }
 
     /** Exposed Mongoose instance once `init` completes. */
     declare public connection: Mongoose;
@@ -97,6 +109,7 @@ export class Mongo extends Plugin {
 
         await this.connect();
         await this.loadServices();
+        this.servicesReady = true;
     }
 
     public async stop(): Promise<void> {
@@ -133,14 +146,16 @@ export class Mongo extends Plugin {
     private async disconnect(): Promise<void> {
         this.clearModels();
 
-        // connect() may have failed/timed out before assigning, in which case there is nothing to disconnect.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- connect() may have failed before assigning, so there is nothing to disconnect
         if (!this.connection) return;
 
         await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
-            .catch((err) => this.logger.error(`Could not disconnect from MongoDB: ${(err as Error).message}`));
+            .catch((err) => {
+                this.logger.error(`Could not disconnect from MongoDB: ${(err as Error).message}`);
+                throw new SeedcordError(SeedcordErrorCode.PluginMongoDisconnectFailed, { cause: err });
+            });
     }
 
     private async loadServices(): Promise<void> {
@@ -161,7 +176,7 @@ export class Mongo extends Plugin {
         );
 
         this.logger.utils.list(
-            [`${chalk.magenta(Object.keys(this.services).length)} services`],
+            [`${chalk.magenta(Object.keys(this._services).length)} services`],
             chalk.bold.green('Loaded')
         );
     }
@@ -184,8 +199,8 @@ export class Mongo extends Plugin {
      *
      * @internal
      */
-    _register<SKey extends keyof MongoServices>(key: SKey, instance: MongoServices[SKey]): void {
-        this.services[key] = instance;
+    _register(key: string, instance: unknown): void {
+        this._services[key] = instance;
     }
 
     private unregister(Service: MongoServiceConstructor, artifacts?: { key?: string; modelName?: string }): void {
@@ -194,9 +209,9 @@ export class Mongo extends Plugin {
             artifacts?.modelName ??
             (Reflect.getMetadata(ModelMetadataKey, Service) as mongoose.Model<unknown> | undefined)?.modelName;
 
-        if (key && (this.services as Record<string, unknown>)[key]) {
+        if (key && this._services[key]) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name, not a static property
-            delete (this.services as Record<string, unknown>)[key];
+            delete this._services[key];
         }
 
         if (modelName) {

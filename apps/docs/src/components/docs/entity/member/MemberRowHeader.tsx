@@ -1,9 +1,7 @@
 import { cn, Icon, CopyAnchorButton } from '@seedcord/ui';
 import { Code } from 'lucide-react';
 
-// access label formatting is now shown in signatures; import removed
-
-import CommentParagraphs from '../comments/CommentParagraphs';
+import { CommentParagraphs } from '../comments/CommentParagraphs';
 
 import type { EntityMemberSummary } from '../types';
 import type { ReactElement } from 'react';
@@ -15,7 +13,7 @@ interface MemberRowHeaderProps {
     prefix?: 'property' | 'method' | 'constructor' | 'typeParameter';
 }
 
-function MemberRowHeader({ member, anchorId, tags, prefix }: MemberRowHeaderProps): ReactElement {
+export function MemberRowHeader({ member, anchorId, tags, prefix }: MemberRowHeaderProps): ReactElement {
     return (
         <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between')}>
             <div className={cn('min-w-0 flex-1 space-y-3')}>
@@ -75,5 +73,3 @@ function MemberRowHeader({ member, anchorId, tags, prefix }: MemberRowHeaderProp
         </div>
     );
 }
-
-export default MemberRowHeader;

@@ -2,7 +2,7 @@ import { Badge } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
-function TagPills({ tags }: { tags: readonly string[] }): ReactElement | null {
+export function TagPills({ tags }: { tags: readonly string[] }): ReactElement | null {
     if (!tags.length) return null;
 
     return (
@@ -12,5 +12,3 @@ function TagPills({ tags }: { tags: readonly string[] }): ReactElement | null {
         </>
     );
 }
-
-export default TagPills;

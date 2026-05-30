@@ -5,8 +5,8 @@ import { Card, cn, easeOutStrong } from '@seedcord/ui';
 import { m } from 'motion/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import CommandHeader from './CommandHeader';
-import CommandListItem from './CommandListItem';
+import { CommandHeader } from './CommandHeader';
+import { CommandListItem } from './CommandListItem';
 import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from './constants';
 import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
@@ -106,7 +106,7 @@ function deriveListProps(
 }
 
 // eslint-disable-next-line max-lines-per-function -- dialog wires search state, roving keyboard nav, and the animated list
-function CommandPaletteDialog({ controller }: { controller: CommandPaletteController }): ReactElement {
+export function CommandPaletteDialog({ controller }: { controller: CommandPaletteController }): ReactElement {
     const { open, handleOpenChange, searchValue, handleValueChange, handleClose, handleSelect, inputRef } = controller;
 
     const commandRef = useRef<HTMLDivElement | null>(null);
@@ -247,5 +247,3 @@ function CommandPaletteDialog({ controller }: { controller: CommandPaletteContro
         </Dialog.Root>
     );
 }
-
-export default CommandPaletteDialog;

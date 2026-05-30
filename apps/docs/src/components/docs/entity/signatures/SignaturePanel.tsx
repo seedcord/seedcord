@@ -1,8 +1,8 @@
 import { cn, CodeBlock } from '@seedcord/ui';
 
-import CommentExamples from '../comments/CommentExamples';
-import CommentParagraphs from '../comments/CommentParagraphs';
-import DeprecatedEntity from '../DeprecatedEntity';
+import { CommentExamples } from '../comments/CommentExamples';
+import { CommentParagraphs } from '../comments/CommentParagraphs';
+import { DeprecatedEntity } from '../DeprecatedEntity';
 
 import type { MemberSignatureDetail, WithParentDeprecationStatus } from '../types';
 import type { DeprecationStatus } from '@lib/docs/types';
@@ -13,7 +13,7 @@ interface SignaturePanelProps extends WithParentDeprecationStatus {
     isActive: boolean;
 }
 
-function SignaturePanel({ signature, isActive, parentDeprecationStatus }: SignaturePanelProps): ReactElement {
+export function SignaturePanel({ signature, isActive, parentDeprecationStatus }: SignaturePanelProps): ReactElement {
     const section = (
         <section
             id={signature.anchor}
@@ -35,11 +35,7 @@ function SignaturePanel({ signature, isActive, parentDeprecationStatus }: Signat
     const parentKey = deprecationMessageKey(parentDeprecationStatus);
     const sigKey = deprecationMessageKey(signature.deprecationStatus);
 
-    // Only decorate when:
-    // - the signature is active (visible),
-    // - the signature is deprecated,
-    // - the parent is NOT deprecated,
-    // - and the parent's deprecation message is not equal to the signature's.
+    // Skip the per-signature deprecation banner when the parent already shows the same message, to avoid a duplicate.
     const shouldDecorate =
         isActive &&
         signature.deprecationStatus?.isDeprecated &&
@@ -58,5 +54,3 @@ function SignaturePanel({ signature, isActive, parentDeprecationStatus }: Signat
 
     return section;
 }
-
-export default SignaturePanel;

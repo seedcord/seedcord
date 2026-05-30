@@ -11,7 +11,7 @@ interface CommentExamplesProps {
     open?: boolean;
 }
 
-function CommentExamples({ examples, className, open = false }: CommentExamplesProps): ReactElement | null {
+export function CommentExamples({ examples, className, open = false }: CommentExamplesProps): ReactElement | null {
     if (!examples.length) return null;
 
     return (
@@ -39,5 +39,3 @@ function CommentExamples({ examples, className, open = false }: CommentExamplesP
         </Disclosure>
     );
 }
-
-export default CommentExamples;

@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import type { ReactNode, ReactElement } from 'react';
 
-function DesktopSidebarFrame({ sidebar }: { sidebar: ReactNode }): ReactElement {
+export function DesktopSidebarFrame({ sidebar }: { sidebar: ReactNode }): ReactElement {
     return (
         <aside
             className={cn('hidden lg:block lg:shrink-0')}
@@ -30,5 +30,3 @@ function DesktopSidebarFrame({ sidebar }: { sidebar: ReactNode }): ReactElement 
         </aside>
     );
 }
-
-export default DesktopSidebarFrame;

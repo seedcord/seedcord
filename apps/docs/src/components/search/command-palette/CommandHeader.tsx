@@ -18,7 +18,7 @@ interface CommandHeaderProps {
     listExpanded: boolean;
 }
 
-function CommandHeader({
+export function CommandHeader({
     inputRef,
     onClose,
     onValueChange,
@@ -89,5 +89,3 @@ function CommandHeader({
         </div>
     );
 }
-
-export default CommandHeader;

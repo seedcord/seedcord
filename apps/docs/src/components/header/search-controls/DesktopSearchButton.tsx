@@ -8,7 +8,7 @@ import { useUIStore } from '@store/ui';
 
 import type { ReactElement } from 'react';
 
-function DesktopSearchButton(): ReactElement {
+export function DesktopSearchButton(): ReactElement {
     const open = useUIStore((state) => state.isCommandPaletteOpen);
     const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
 
@@ -40,7 +40,7 @@ function DesktopSearchButton(): ReactElement {
                         'border-border bg-surface-moderate inline-flex items-center gap-px rounded-md border px-2 py-1 font-sans text-xs leading-none font-semibold tracking-wide uppercase'
                     )}
                 >
-                    {/* U+2318 — system-font glyph aligns baseline + cap-height with adjacent letter; SVG icons don't */}
+                    {/* U+2318 system-font glyph aligns baseline and cap-height with the adjacent letter; an SVG icon does not */}
                     <span aria-hidden="true">⌘</span>
                     <span>K</span>
                 </kbd>
@@ -48,5 +48,3 @@ function DesktopSearchButton(): ReactElement {
         </Button>
     );
 }
-
-export default DesktopSearchButton;

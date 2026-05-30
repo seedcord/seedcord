@@ -44,6 +44,14 @@ export type JsonifyObject<BaseType, Marker extends string> = {
 };
 
 /**
+ * Returned by {@link filterCirculars} when a value cannot be made JSON-safe. The original value is
+ * never returned on failure, because it would re-throw in the caller's own `JSON.stringify`.
+ */
+export interface UnserializableValue {
+    '[unserializable]': string;
+}
+
+/**
  * Configuration for {@link filterCirculars}.
  */
 export interface FilterCircularsOptions<Marker extends string = '[Circular]'> {
@@ -87,7 +95,7 @@ export interface FilterCircularsOptions<Marker extends string = '[Circular]'> {
 export function filterCirculars<ObjType, Marker extends string = '[Circular]'>(
     value: ObjType,
     options?: FilterCircularsOptions<Marker>
-): JsonifyWithCirculars<ObjType, Marker> {
+): JsonifyWithCirculars<ObjType, Marker> | UnserializableValue {
     const logger = options?.logger;
     const marker = (options?.marker ?? '[Circular]') as Marker;
     const mode = options?.mode ?? 'decycle';
@@ -98,7 +106,7 @@ export function filterCirculars<ObjType, Marker extends string = '[Circular]'>(
         return decycle(value, marker);
     } catch (error) {
         logger?.error('filterCirculars decycle error', error);
-        return value as JsonifyWithCirculars<ObjType, Marker>;
+        return { '[unserializable]': 'decycle failed' };
     }
 }
 
@@ -111,7 +119,7 @@ function json<ObjType, Marker extends string>(
     value: ObjType,
     marker: Marker,
     logger?: ILogger
-): JsonifyWithCirculars<ObjType, Marker> {
+): JsonifyWithCirculars<ObjType, Marker> | UnserializableValue {
     const seen = new WeakSet<object>();
     let json: string | undefined;
 
@@ -130,11 +138,11 @@ function json<ObjType, Marker extends string>(
         if (typeof value === 'object' && value !== null) {
             logger?.error('top level keys', Object.keys(value));
         }
-        return value as JsonifyWithCirculars<ObjType, Marker>;
+        return { '[unserializable]': 'stringify failed' };
     }
 
     if (typeof json !== 'string') {
-        return value as JsonifyWithCirculars<ObjType, Marker>;
+        return { '[unserializable]': 'stringify returned undefined' };
     }
 
     try {
@@ -142,7 +150,7 @@ function json<ObjType, Marker extends string>(
     } catch (error) {
         logger?.error('filterCirculars parse error', error);
         logger?.error('bad JSON', json);
-        return value as JsonifyWithCirculars<ObjType, Marker>;
+        return { '[unserializable]': 'parse failed' };
     }
 }
 
@@ -160,10 +168,7 @@ function decycle<ObjType, Marker extends string = '[Circular]'>(
         if (val === null) return null;
         const t = typeof val;
 
-        // if bigint, return string representation
         if (t === 'bigint') return (val as bigint).toString();
-
-        // if primitive, return as is
         if (t !== 'object') return val;
 
         const obj = val as Record<string | number | symbol, unknown>;
@@ -171,23 +176,17 @@ function decycle<ObjType, Marker extends string = '[Circular]'>(
         if (seen.has(obj)) return marker;
         seen.add(obj);
 
-        // if Date, return ISO string
         if (obj instanceof Date) return obj.toISOString();
-
-        // if RegExp, return string representation
         if (obj instanceof RegExp) return obj.toString();
 
-        // if array, recur on each item
         if (Array.isArray(obj)) {
             return obj.map((item) => recur(item));
         }
 
-        // if Map, recur on entries/values
         if (obj instanceof Map) {
             return Array.from(obj, ([k, v]) => [recur(k), recur(v)]);
         }
 
-        // if Set, recur on values
         if (obj instanceof Set) {
             return Array.from(obj, (v) => recur(v));
         }

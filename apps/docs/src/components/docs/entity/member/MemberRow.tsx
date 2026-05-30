@@ -1,8 +1,8 @@
 import { cn } from '@seedcord/ui';
 
-import MemberRowBody from './MemberRowBody';
-import MemberRowHeader from './MemberRowHeader';
-import DeprecatedEntity from '../DeprecatedEntity';
+import { MemberRowBody } from './MemberRowBody';
+import { MemberRowHeader } from './MemberRowHeader';
+import { DeprecatedEntity } from '../DeprecatedEntity';
 import { buildTagList } from '../utils/buildTagList';
 
 import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '../types';
@@ -14,7 +14,7 @@ interface MemberRowProps extends WithParentDeprecationStatus {
     prefix: MemberPrefix;
     isLast: boolean;
 }
-function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: MemberRowProps): ReactElement {
+export function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: MemberRowProps): ReactElement {
     const tags = buildTagList(member);
     const anchorId = `${prefix}-${member.id}`;
     const hasTags = tags.length > 0;
@@ -23,8 +23,7 @@ function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: MemberRo
         Boolean(member.tags?.includes('deprecated')) ||
         Boolean(member.deprecationStatus?.isDeprecated);
 
-    // Prefer model-provided deprecationStatus, otherwise build one. If the member has no deprecation message
-    // but the parent entity has one, prefer that message for clarity.
+    // A deprecated member with no message of its own inherits the parent entity's deprecation message.
     let deprecationStatus: DeprecationStatus =
         member.deprecationStatus ??
         (isDeprecated
@@ -55,5 +54,3 @@ function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: MemberRo
         </article>
     );
 }
-
-export default MemberRow;

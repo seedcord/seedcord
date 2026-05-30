@@ -1,8 +1,8 @@
 import { Card, Icon, CopyAnchorButton, cn } from '@seedcord/ui';
 import { Code } from 'lucide-react';
 
-import CommentParagraphs from '../comments/CommentParagraphs';
-import DeprecatedEntity from '../DeprecatedEntity';
+import { CommentParagraphs } from '../comments/CommentParagraphs';
+import { DeprecatedEntity } from '../DeprecatedEntity';
 
 import type { DeprecationStatus, EnumMemberModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';
@@ -84,7 +84,7 @@ function ActionsCell({
     );
 }
 
-function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
+export function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
     const anchorId = `enum-member-${member.id}`;
     const hasSummary = member.summary.length > 0;
 
@@ -121,5 +121,3 @@ function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
         </article>
     );
 }
-
-export default EnumMemberCard;

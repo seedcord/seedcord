@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
-function SeeAlso({
+export function SeeAlso({
     entries
 }: {
     entries?: readonly { name: string; href?: string }[] | undefined;
@@ -29,5 +29,3 @@ function SeeAlso({
         </p>
     );
 }
-
-export default SeeAlso;

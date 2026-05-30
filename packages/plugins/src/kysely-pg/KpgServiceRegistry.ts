@@ -6,14 +6,14 @@ import { KpgService } from './KpgService';
 
 import type { KyselyServiceConstructor } from './KpgService';
 import type { KyselyArtifact, KyselyPg } from './KyselyPg';
-import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
+import type { KpgServices } from './types/KpgServices';
 import type { Core, Logger } from 'seedcord';
 
 /**
  * Discovers and registers Postgres services for the plugin.
  */
 export class KpgServiceRegistry<Database extends object> {
-    private readonly services: Record<string, AnyKpgService> = Object.create(null) as Record<string, AnyKpgService>;
+    private readonly services: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
 
     constructor(
         private readonly plugin: KyselyPg<Database>,
@@ -22,10 +22,12 @@ export class KpgServiceRegistry<Database extends object> {
     ) {}
 
     public get map(): KpgServices {
+        // KpgServices is augmented per-consumer via declaration merging; the registry holds the
+        // instances opaquely and exposes the generated map shape at this boundary.
         return this.services;
     }
 
-    public register(key: KpgServiceKeys, instance: AnyKpgService): void {
+    public register(key: string, instance: unknown): void {
         this.services[key] = instance;
     }
 
@@ -38,9 +40,7 @@ export class KpgServiceRegistry<Database extends object> {
                 for (const Service of Object.values(mod)) {
                     if (this.isServiceClass(Service)) {
                         this.initializeService(Service, rel);
-
-                        // @ts-expect-error - private access on hmrHandler. hmrHandler is private as it's a development only api used by hmr
-                        this.plugin.hmrHandler?.trackHandler(fullPath, Service);
+                        this.plugin.trackServiceFile(fullPath, Service);
                     }
                 }
             },
@@ -55,9 +55,9 @@ export class KpgServiceRegistry<Database extends object> {
 
     public unregister(Service: KyselyServiceConstructor<Database>, artifacts?: KyselyArtifact): void {
         const key = artifacts?.key ?? (Reflect.getMetadata(PgServiceMetadataKey, Service) as string | undefined);
-        if (key && (this.services as Record<string, unknown>)[key]) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-            delete (this.services as Record<string, unknown>)[key];
+        if (key && this.services[key]) {
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name, not a static property
+            delete this.services[key];
         }
     }
 

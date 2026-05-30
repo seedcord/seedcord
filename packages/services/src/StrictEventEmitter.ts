@@ -1,5 +1,8 @@
 import { EventEmitter } from 'node:events';
 
+import { SeedcordErrorCode } from './Errors';
+import { SeedcordError } from './Errors/SeedcordError';
+
 /** Tuple type used for all event payloads. */
 export type SEArgsTuple = readonly unknown[];
 
@@ -19,7 +22,7 @@ export type SEEventMapLike<TEvents extends object> = { [K in keyof TEvents]: SEA
  * @typeParam TEvents - Map of event names to readonly tuple payloads
  * @internal
  */
-export type SEEventKey<TEvents extends object> = Extract<keyof TEvents, string | symbol>;
+type SEEventKey<TEvents extends object> = Extract<keyof TEvents, string | symbol>;
 
 /**
  * Typed wrapper around Node.js {@link EventEmitter} enforcing tuple payloads per event name.
@@ -105,7 +108,9 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
      * @returns True when the event had listeners, false otherwise
      */
     override emit<TEventKey extends SEEventKey<TEvents>>(event: TEventKey, ...args: TEvents[TEventKey]): boolean {
-        return super.emit(event, ...(args as unknown as unknown[]));
+        // justified: widen the per-event tuple to its base array type so it spreads into Node's
+        // `emit(event, ...args: any[])`. There's no declaration fix for Node's base signature.
+        return super.emit(event, ...(args as readonly unknown[]));
     }
 
     /**
@@ -159,7 +164,7 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
 
             const onAbort = (): void => {
                 cleanup();
-                reject(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
+                reject(new SeedcordError(SeedcordErrorCode.EventEmitterWaitForAborted));
             };
 
             let timeoutId: NodeJS.Timeout | null = null;
@@ -178,10 +183,11 @@ export class StrictEventEmitter<TEvents extends SEEventMapLike<TEvents>> extends
             }
 
             if (opts?.timeoutMs !== undefined) {
+                const timeoutMs = opts.timeoutMs;
                 timeoutId = setTimeout(() => {
                     cleanup();
-                    reject(new Error('Timed out'));
-                }, opts.timeoutMs);
+                    reject(new SeedcordError(SeedcordErrorCode.EventEmitterWaitForTimeout, [timeoutMs]));
+                }, timeoutMs);
             }
         });
     }

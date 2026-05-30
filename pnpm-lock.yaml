@@ -49,12 +49,6 @@ catalogs:
     typedoc:
       specifier: ^0.28.19
       version: 0.28.19
-    typedoc-plugin-dt-links:
-      specifier: ^2.0.56
-      version: 2.0.56
-    typedoc-plugin-mdn-links:
-      specifier: ^5.1.1
-      version: 5.1.1
   peer:
     eslint:
       specifier: ^9.39.2
@@ -390,12 +384,6 @@ importers:
       typedoc:
         specifier: catalog:docs
         version: 0.28.19(typescript@6.0.3)
-      typedoc-plugin-dt-links:
-        specifier: catalog:docs
-        version: 2.0.56(typedoc@0.28.19(typescript@6.0.3))
-      typedoc-plugin-mdn-links:
-        specifier: catalog:docs
-        version: 5.1.1(typedoc@0.28.19(typescript@6.0.3))
     devDependencies:
       '@seedcord/docs-generator':
         specifier: workspace:*
@@ -416,10 +404,10 @@ importers:
         specifier: catalog:docs
         version: 0.28.19(typescript@6.0.3)
       typedoc-plugin-dt-links:
-        specifier: catalog:docs
+        specifier: ^2.0.56
         version: 2.0.56(typedoc@0.28.19(typescript@6.0.3))
       typedoc-plugin-mdn-links:
-        specifier: catalog:docs
+        specifier: ^5.1.1
         version: 5.1.1(typedoc@0.28.19(typescript@6.0.3))
     devDependencies:
       '@seedcord/eslint-config':
@@ -608,9 +596,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 5.6.2
-      discord.js:
-        specifier: catalog:deps
-        version: 14.26.4
       envapt:
         specifier: catalog:deps
         version: 4.1.1

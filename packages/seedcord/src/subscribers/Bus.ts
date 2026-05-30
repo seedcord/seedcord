@@ -137,6 +137,18 @@ export class Bus extends Plugin<SubscriptionTuples> {
         return obj.prototype instanceof Subscriber && Reflect.hasMetadata(SubscribeMetadataKey, obj);
     }
 
+    /**
+     * Publishes an event to its subscribers and native listeners.
+     *
+     * Fire-and-forget: subscriber handlers run asynchronously and this returns before they
+     * complete, so callers must not assume side effects have landed. Errors thrown by a subscriber
+     * are caught and logged, never surfaced here. A `'once'` subscriber is marked as executed when
+     * it starts (even if it throws), so it never runs twice.
+     *
+     * @param event - The subscription key to publish
+     * @param data - Payload passed to each subscriber
+     * @returns Whether the underlying emitter had native listeners for the event
+     */
     public publish<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
@@ -158,12 +170,14 @@ export class Bus extends Plugin<SubscriptionTuples> {
             }
 
             try {
-                const instance = new entry.ctor(data, this.core);
-                await instance.execute();
-
+                // Mark before awaiting so a re-entrant publish of the same event can't run a
+                // 'once' subscriber twice while the first invocation is still pending.
                 if (entry.frequency === 'once') {
                     this.executedOnceHandlers.add(entry.ctor);
                 }
+
+                const instance = new entry.ctor(data, this.core);
+                await instance.execute();
             } catch (err) {
                 this.logger.error(`Error in subscriber ${String(subscriberName)} handler ${entry.ctor.name}:`, err);
             }

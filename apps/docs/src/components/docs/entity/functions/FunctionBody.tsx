@@ -3,7 +3,7 @@
 import { cn } from '@seedcord/ui';
 import { useMemo } from 'react';
 
-import MemberDetailGroup from '../member/MemberDetailGroup';
+import { MemberDetailGroup } from '../member/MemberDetailGroup';
 import { useActiveSignatureList } from '../utils/useActiveSignatureList';
 
 import type { EntityMemberSummary } from '../types';
@@ -44,7 +44,7 @@ function buildTypeParamMember(tp: FunctionTypeParameterModel, index: number): En
     };
 }
 
-// Parameters render via the member-row renderer; the dedicated FunctionParamMember type lift is deferred because it cascades into MemberRow's prop signature.
+// Reuses EntityMemberSummary rather than a dedicated FunctionParamMember type, which would cascade into MemberRow's prop signature.
 function buildParamMember(p: FunctionSignatureParameterModel, index: number): EntityMemberSummary {
     const id = `param-${p.name}-${index}`;
     const label = p.name + (p.optional ? '?' : '');
@@ -74,7 +74,7 @@ function buildParamMember(p: FunctionSignatureParameterModel, index: number): En
     };
 }
 
-function FunctionBody({ model }: { model: FunctionEntityModel }): ReactElement | null {
+export function FunctionBody({ model }: { model: FunctionEntityModel }): ReactElement | null {
     const signatures = model.signatures;
     const [activeSignatureId] = useActiveSignatureList(signatures);
 
@@ -101,5 +101,3 @@ function FunctionBody({ model }: { model: FunctionEntityModel }): ReactElement |
         </section>
     );
 }
-
-export default FunctionBody;

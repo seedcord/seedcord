@@ -2,14 +2,16 @@ import { Envapter } from 'envapt';
 
 import { Logger } from './Logger';
 
+const logger = new Logger('CooldownManager');
+
 /**
  * Configuration options for CooldownManager.
  */
 export interface CooldownOptions {
     /** Cooldown window in milliseconds (default 1000) */
     cooldown?: number;
-    /** Custom error class to throw when a key is still cooling down */
-    err?: new (msg: string, ...args: any[]) => Error;
+    /** Custom error class to throw when a key is still cooling down; receives the remaining ms. */
+    err?: new (msg: string, remaining: number) => Error;
     /** Message passed to the error constructor (default "Cooldown active") */
     message?: string;
 }
@@ -22,7 +24,7 @@ export interface CooldownOptions {
  */
 export class CooldownManager {
     private readonly window: number;
-    private readonly Err: new (msg: string, ...args: any[]) => Error;
+    private readonly Err: new (msg: string, remaining: number) => Error;
     private readonly msg: string;
     private readonly map = new Map<string, number>();
 
@@ -61,7 +63,7 @@ export class CooldownManager {
         const remaining = this.window - (now - (last ?? 0));
 
         if (Envapter.isDevelopment && remaining > 0) {
-            Logger.Debug('CooldownManager', `${key} - ${remaining}ms remaining`);
+            logger.debug(`${key} - ${remaining}ms remaining`);
         }
 
         if (last !== undefined && remaining > 0) {

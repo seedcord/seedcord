@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 
 import { createAdapter } from './adapters';
@@ -14,6 +14,8 @@ import type {
 } from './types';
 import type { RepliableInteractionHandler } from '@interfaces/Handler';
 import type { MessageComponentType, ComponentType } from 'discord.js';
+
+const logger = new Logger('Confirmable');
 
 /**
  * Wraps a repliable handler method with an interactive confirmation flow.
@@ -139,8 +141,8 @@ export function Confirmable<TComponent extends MessageComponentType = ComponentT
                         ...(button ? { button: button as ComponentInteractionFor<TComponent> } : {})
                     };
                     await options.onResolved(resolution);
-                } catch {
-                    // Suppress error in callback
+                } catch (err) {
+                    logger.error('Confirmable onResolved callback threw', err);
                 }
             }
 

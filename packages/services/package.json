@@ -58,7 +58,6 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "discord.js": "catalog:deps",
         "envapt": "catalog:deps",
         "strip-ansi": "^7.2.0",
         "type-fest": "catalog:deps",

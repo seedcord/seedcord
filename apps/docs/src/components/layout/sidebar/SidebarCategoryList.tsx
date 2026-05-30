@@ -4,7 +4,7 @@ import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, 
 
 import { getToneConfig } from '@lib/entityMetadata';
 
-import SidebarItem from './SidebarItem';
+import { SidebarItem } from './SidebarItem';
 
 import type { SidebarCategoryListProps } from './types';
 import type { ReactElement } from 'react';
@@ -59,7 +59,12 @@ function SidebarCategory({
     );
 }
 
-function SidebarCategoryList({ categories, activeHref, storageKey, onSelect }: SidebarCategoryListProps): ReactElement {
+export function SidebarCategoryList({
+    categories,
+    activeHref,
+    storageKey,
+    onSelect
+}: SidebarCategoryListProps): ReactElement {
     return (
         <div className={cn('flex flex-col gap-6 pr-1 pb-2')}>
             {categories.map((category) => (
@@ -75,5 +80,3 @@ function SidebarCategoryList({ categories, activeHref, storageKey, onSelect }: S
         </div>
     );
 }
-
-export default SidebarCategoryList;

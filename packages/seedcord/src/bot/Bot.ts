@@ -136,7 +136,8 @@ export class Bot extends Plugin<BotEvents> {
     }
 
     /**
-     * Emits with correlation between a Discord event key and its exact arg tuple.
+     * Emits a Discord event with its argument tuple. The overloads enforce the key/args correlation
+     * at compile time only; at runtime this forwards straight to the underlying EventEmitter.
      *
      * @internal
      */
@@ -146,11 +147,7 @@ export class Bot extends Plugin<BotEvents> {
         ...args: ClientEvents[TKey]
     ): boolean;
 
-    /**
-     * Fallback for other BotEvents keys.
-     *
-     * @internal
-     */
+    /** @internal */
     override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
 
     override emit(event: string, ...args: unknown[]): boolean {

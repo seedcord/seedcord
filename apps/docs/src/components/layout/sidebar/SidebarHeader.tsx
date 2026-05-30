@@ -2,7 +2,7 @@
 
 import { cn } from '@seedcord/ui';
 
-import SidebarSelect from './SidebarSelect';
+import { SidebarSelect } from './SidebarSelect';
 
 import type { SidebarHeaderPackageOption, SidebarHeaderVersionOption } from './types';
 import type { ReactElement } from 'react';
@@ -16,7 +16,7 @@ interface SidebarHeaderProps {
     onVersionChange: (value: string) => void;
 }
 
-function SidebarHeader({
+export function SidebarHeader({
     packageOptions,
     versionOptions,
     activePackage,
@@ -43,5 +43,3 @@ function SidebarHeader({
         </div>
     );
 }
-
-export default SidebarHeader;

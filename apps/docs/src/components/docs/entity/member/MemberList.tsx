@@ -14,7 +14,7 @@ interface MemberListProps {
     onNavigate: (anchorId: string) => void;
 }
 
-function MemberList({ items, prefix, onNavigate }: MemberListProps): ReactElement | null {
+export function MemberList({ items, prefix, onNavigate }: MemberListProps): ReactElement | null {
     if (!items.length) {
         return null;
     }
@@ -53,5 +53,3 @@ function MemberList({ items, prefix, onNavigate }: MemberListProps): ReactElemen
         </section>
     );
 }
-
-export default MemberList;

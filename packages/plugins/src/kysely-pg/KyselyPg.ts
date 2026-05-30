@@ -1,10 +1,11 @@
 import 'reflect-metadata';
 
+import { SeedcordError } from '@seedcord/services/internal';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
-import { Pool, type PoolConfig } from 'pg';
-import { HmrModuleHandler, keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
+import { Pool, type PoolConfig, type PoolClient } from 'pg';
+import { HmrModuleHandler, keepDefined, Logger, Plugin, SeedcordErrorCode, ShutdownPhase } from 'seedcord';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
@@ -14,7 +15,7 @@ import { KpgServiceRegistry } from './KpgServiceRegistry';
 import type { KyselyServiceConstructor } from './KpgService';
 import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigration';
 import type { KpgOptions } from './types/KpgOptions';
-import type { AnyKpgService, KpgServiceKeys, KpgServices } from './types/KpgServices';
+import type { KpgServices } from './types/KpgServices';
 import type { HmrUpdateEvent } from '@seedcord/cli';
 import type { MigrationInfo } from 'kysely/migration';
 import type { Core } from 'seedcord';
@@ -32,10 +33,12 @@ export interface KyselyArtifact {
 export class KyselyPg<Database extends object> extends Plugin {
     public readonly logger = new Logger('KyselyPg');
     private isInitialised = false;
+    private servicesReady = false;
 
     /** Exposed Kysely instance once `init` completes. */
     declare public connection: Kysely<Database>;
     private pool: Pool | null = null;
+    private onConnectHandler: ((client: PoolClient) => void) | null = null;
     private migrationManager: KpgMigrationManager<Database> | null = null;
     private readonly serviceRegistry: KpgServiceRegistry<Database>;
     private readonly databaseBootstrapper: KpgDatabaseBootstrapper;
@@ -46,6 +49,9 @@ export class KyselyPg<Database extends object> extends Plugin {
      * Map of all services registered with the plugin, keyed by their decorator name.
      */
     public get services(): KpgServices {
+        if (!this.servicesReady) {
+            throw new SeedcordError(SeedcordErrorCode.PluginKpgServicesNotReady);
+        }
         return this.serviceRegistry.map;
     }
 
@@ -65,7 +71,6 @@ export class KyselyPg<Database extends object> extends Plugin {
 
         if (!Envapter.isDevelopment) return; // HMR only in development
 
-        // Register migrations directory as critical
         const relPaths = this.options.migrations.path;
         super.registerCriticalFiles(Array.isArray(relPaths) ? relPaths : [relPaths]);
 
@@ -110,6 +115,7 @@ export class KyselyPg<Database extends object> extends Plugin {
             }
         }
         await this.serviceRegistry.loadFromDirectory(this.options.dir);
+        this.servicesReady = true;
     }
 
     /**
@@ -153,12 +159,18 @@ export class KyselyPg<Database extends object> extends Plugin {
         const pool = this.pool;
         if (!pool) return;
 
+        if (this.onConnectHandler) {
+            pool.removeListener('connect', this.onConnectHandler);
+            this.onConnectHandler = null;
+        }
+
         this.pool = null;
         this.migrationManager = null;
 
         this.logger.info(chalk.gray('Closing Postgres pool.'));
         await pool.end().catch((err) => {
             this.logger.error(`Could not close pg pool: ${(err as Error).message}`);
+            throw new SeedcordError(SeedcordErrorCode.PluginKpgDisconnectFailed, { cause: err });
         });
         this.logger.info(chalk.red.bold('Disconnected from Postgres'));
     }
@@ -224,8 +236,18 @@ export class KyselyPg<Database extends object> extends Plugin {
      *
      * @internal
      */
-    _register(key: KpgServiceKeys, instance: AnyKpgService): void {
+    _register(key: string, instance: unknown): void {
         this.serviceRegistry.register(key, instance);
+    }
+
+    /**
+     * Tracks a service file with the HMR handler so dev reloads can swap it. No-op outside dev.
+     *
+     * @internal Lets {@link KpgServiceRegistry} reach the dev-only HMR handler without poking a
+     * private field.
+     */
+    public trackServiceFile(filePath: string, ctor: KyselyServiceConstructor<Database>): void {
+        this.hmrHandler?.trackHandler(filePath, ctor);
     }
 
     private async resolvePool(): Promise<Pool> {
@@ -263,13 +285,16 @@ export class KyselyPg<Database extends object> extends Plugin {
         if (!statements?.length) return;
 
         const queuedStatements = [...statements];
-        pool.on('connect', (client) => {
+        const handler = (client: PoolClient): void => {
             void (async () => {
                 for (const sql of queuedStatements) {
                     await client.query(sql);
                 }
-            })();
-        });
+            })().catch((err) => this.logger.error('Failed to run onConnect SQL', err));
+        };
+
+        this.onConnectHandler = handler;
+        pool.on('connect', handler);
     }
 
     private async testPoolConnection(pool: Pool): Promise<void> {

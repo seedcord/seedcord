@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
-import { Logger } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
@@ -96,7 +97,6 @@ export class InteractionController implements Initializeable, HmrAware {
     ];
 
     constructor(protected core: Core) {
-        // Add ignored keys from config
         const ignoredKeysFromConfig = hasKeys(this.core.config.bot.interactions, ['ignoreCustomIds'])
             ? this.core.config.bot.interactions.ignoreCustomIds
             : undefined;
@@ -106,8 +106,11 @@ export class InteractionController implements Initializeable, HmrAware {
 
         const interactionsDir = this.core.config.bot.interactions.path;
         if (!interactionsDir) {
-            // This should never happen as InteractionController is only instantiated if path is set. But if it does, it should stop the whole process.
-            throw new Error('InteractionController instantiated without interactions path');
+            // Unreachable: InteractionController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping handler loading.
+            throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
+                'InteractionController',
+                'interactions'
+            ]);
         }
 
         if (!Envapter.isDevelopment) return; // HMR only in development
@@ -326,7 +329,6 @@ export class InteractionController implements Initializeable, HmrAware {
         args?: string[]
     ): Promise<void> {
         const key = extractKey(interaction);
-        // Check if the key is in the ignore list
         if (
             [...this.keysToIgnore].some((pattern) =>
                 typeof pattern === 'string' ? pattern === key : pattern.test(key)
@@ -335,7 +337,7 @@ export class InteractionController implements Initializeable, HmrAware {
             return;
         }
 
-        // Run middlewares first
+        // Autocomplete interactions skip middlewares.
         if (!interaction.isAutocomplete()) {
             for (const { ctor } of this.middlewares) {
                 const middleware = new ctor(interaction as Repliables, this.core, args);
@@ -349,7 +351,6 @@ export class InteractionController implements Initializeable, HmrAware {
 
         let HandlerCtor = getHandler(key);
         if (!HandlerCtor) {
-            // Automatically fallback to UnhandledEvent
             this.logger.warn(`No handler found for key ${chalk.bold.cyan(key)}. Falling back to UnhandledEvent.`);
             HandlerCtor = UnhandledEvent;
         }

@@ -6,7 +6,6 @@ import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 
 import type { Mongo } from './Mongo';
 import type { MongoDocument } from './types/MongoDocument';
-import type { MongoServices } from './types/MongoServices';
 import type { TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
 import type { Core } from 'seedcord';
@@ -55,7 +54,7 @@ export abstract class MongoService<Doc extends MongoDocument = MongoDocument> {
 
         this.model = model;
 
-        db._register(key as keyof MongoServices, this as unknown as MongoServices[keyof MongoServices]);
+        db._register(key, this);
     }
 }
 

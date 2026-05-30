@@ -3,6 +3,9 @@ import { format } from 'winston';
 
 import type { Logform } from 'winston';
 
+/** An Error temporarily annotated with its ANSI-formatted name while pretty-printing stacks. */
+type FormattedError = Error & { __formattedName?: string; __plainName?: string };
+
 /**
  * Options for pretty log formatting.
  */
@@ -64,7 +67,7 @@ export class LogFormatter {
     }
 
     private getExtras(info: Logform.TransformableInfo): unknown[] {
-        const raw = (info as unknown as Record<string | symbol, unknown>)[this.SPLAT];
+        const raw = info[this.SPLAT];
         return Array.isArray(raw) ? raw : [];
     }
 
@@ -78,8 +81,8 @@ export class LogFormatter {
             const extras = this.getExtras(info);
             const matches = msg.match(this.FORMAT_SPECIFIERS);
             const formatCount = matches ? matches.length : 0;
-            (info as Record<string | symbol, unknown>)[this.HAD_FORMAT_KEY] = formatCount;
-            (info as Record<string | symbol, unknown>)[this.SAVED_SPLAT_KEY] = [...extras];
+            info[this.HAD_FORMAT_KEY] = formatCount;
+            info[this.SAVED_SPLAT_KEY] = [...extras];
             return info;
         })();
     }
@@ -97,8 +100,9 @@ export class LogFormatter {
                     const originalName = item.name;
                     const plainName = stripAnsi(item.name);
 
-                    (item as unknown as Record<string, unknown>).__formattedName = originalName;
-                    (item as unknown as Record<string, unknown>).__plainName = plainName;
+                    const formatted = item as FormattedError;
+                    formatted.__formattedName = originalName;
+                    formatted.__plainName = plainName;
                 }
             }
 
@@ -113,8 +117,7 @@ export class LogFormatter {
 
                 for (const item of extras) {
                     if (item instanceof Error) {
-                        const formattedName = (item as unknown as Record<string, unknown>).__formattedName;
-                        const plainName = (item as unknown as Record<string, unknown>).__plainName;
+                        const { __formattedName: formattedName, __plainName: plainName } = item as FormattedError;
 
                         if (typeof formattedName === 'string' && typeof plainName === 'string') {
                             info.stack = (info.stack as string).replace(
@@ -166,8 +169,9 @@ export class LogFormatter {
                 }
 
                 const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
-                const savedExtras = (info as Record<string | symbol, unknown>)[this.SAVED_SPLAT_KEY] as unknown[];
-                const extras = Array.isArray(savedExtras) ? savedExtras : this.getExtras(info);
+                const savedExtras = info[this.SAVED_SPLAT_KEY];
+                // Array.isArray narrows to any[]; keep the elements as unknown so the filter below stays safe.
+                const extras: unknown[] = Array.isArray(savedExtras) ? savedExtras : this.getExtras(info);
 
                 let rendered = base;
 
@@ -178,7 +182,8 @@ export class LogFormatter {
                 }
 
                 const cleaned = options.stripExtras ? extras.map((entry) => this.sanitizeAnsi(entry)) : extras;
-                const formatSpecifierCount = (info as Record<string | symbol, unknown>)[this.HAD_FORMAT_KEY] as number;
+                const rawFormatCount = info[this.HAD_FORMAT_KEY];
+                const formatSpecifierCount = typeof rawFormatCount === 'number' ? rawFormatCount : 0;
                 const filtered = cleaned.filter((x, index) => {
                     if (x === null || x === undefined) return false;
                     if (x instanceof Error && typeof info.stack === 'string') return false;
@@ -234,8 +239,7 @@ export class LogFormatter {
                     info.message = typeof info.message === 'string' ? stripAnsi(info.message) : info.message;
                     if (typeof info.stack === 'string') info.stack = stripAnsi(info.stack);
                     const extras = this.getExtras(info);
-                    if (extras.length)
-                        (info as Record<string, unknown>).extras = extras.map((entry) => this.sanitizeAnsi(entry));
+                    if (extras.length) info.extras = extras.map((entry) => this.sanitizeAnsi(entry));
                     return info;
                 })()
             );

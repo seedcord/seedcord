@@ -79,8 +79,7 @@ export function hasKeys<Obj extends object, Keys extends string>(
             if (!(part in current)) {
                 return false;
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-            current = (current as any)[part];
+            current = (current as Record<string, unknown>)[part];
         }
 
         return current !== null && current !== undefined;

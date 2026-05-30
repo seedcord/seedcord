@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 
 import type { ReactNode } from 'react';
 
-function MobilePanelDialog({
+export function MobilePanelDialog({
     open,
     onOpenChange,
     title,
@@ -57,5 +57,3 @@ function MobilePanelDialog({
         </Dialog.Root>
     );
 }
-
-export default MobilePanelDialog;

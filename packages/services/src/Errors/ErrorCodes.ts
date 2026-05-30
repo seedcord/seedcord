@@ -34,6 +34,8 @@ export enum SeedcordErrorCode {
     CorePluginKeyExists = 1203,
     /** Bot role lookup failed within the provided guild. */
     CoreBotRoleMissing = 1204,
+    /** A bot controller was constructed without its required handlers directory. */
+    CoreControllerPathMissing = 1205,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,
@@ -48,12 +50,13 @@ export enum SeedcordErrorCode {
     /** Middleware priority provided by the decorator was not a finite number. */
     DecoratorInvalidMiddlewarePriority = 1306,
 
-    /** hexToNumber received a non-string input. */
-    UtilHexInputType = 1401,
-    /** hexToNumber received an invalid hex string. */
-    UtilHexInvalid = 1402,
     /** buildSlashRoute received an invalid argument. */
     UtilInvalidSlashRouteArgument = 1403,
+
+    /** StrictEventEmitter.waitFor was aborted via its AbortSignal. */
+    EventEmitterWaitForAborted = 1501,
+    /** StrictEventEmitter.waitFor exceeded its configured timeout. */
+    EventEmitterWaitForTimeout = 1502,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
@@ -61,6 +64,10 @@ export enum SeedcordErrorCode {
     PluginMongoModelDecoratorMissing = 2102,
     /** Mongo client failed to establish a connection. */
     PluginMongoConnectionFailed = 2103,
+    /** Mongo client failed to disconnect cleanly during shutdown. */
+    PluginMongoDisconnectFailed = 2104,
+    /** Mongo `services` was accessed before the plugin finished initializing. */
+    PluginMongoServicesNotReady = 2105,
 
     /** KPG service class is missing the `@RegisterKpgService` decorator. */
     PluginKpgServiceDecoratorMissing = 2201,
@@ -78,6 +85,10 @@ export enum SeedcordErrorCode {
     PluginKpgInvalidMigrationModule = 2207,
     /** An arbitrary (non-Error) failure was reported by a migration. */
     PluginKpgNonErrorFailure = 2208,
+    /** Postgres pool failed to close cleanly during shutdown. */
+    PluginKpgDisconnectFailed = 2209,
+    /** KPG `services` was accessed before the plugin finished initializing. */
+    PluginKpgServicesNotReady = 2210,
 
     /** Config file default export was not an object. */
     CliConfigInvalidExport = 3101,

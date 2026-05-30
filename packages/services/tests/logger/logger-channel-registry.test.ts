@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { Logger } from '../../src/Logger/Logger';
 import { LoggerChannelRegistry } from '../../src/Logger/LoggerChannelRegistry';
+import { SinkTransport } from '../../src/Logger/Transports/SinkTransport';
 
 import type { ILoggerSink, ILoggerSinkHandle, LoggerSinkLogEntry } from '../../src/Logger/Transports/SinkTransport';
 
@@ -52,6 +53,37 @@ describe('LoggerChannelRegistry', () => {
             expect(() => {
                 registry.get('custom');
             }).not.toThrow();
+        });
+
+        it('detaches the previous loggers transports on reconfigure (H9)', () => {
+            const logger = registry.get('h9-leak');
+            expect(logger.transports.length).toBeGreaterThan(0);
+
+            registry.configure({});
+
+            // The discarded logger must have its transports removed (and closed), or they
+            // leak across every reconfigure / dev HMR cycle.
+            expect(logger.transports.length).toBe(0);
+
+            const rebuilt = registry.get('h9-leak');
+            expect(rebuilt).not.toBe(logger);
+            expect(rebuilt.transports.length).toBeGreaterThan(0);
+        });
+
+        it('re-applies installed sinks to rebuilt loggers without accumulating (H9)', () => {
+            const sink = new TestSink();
+            const handle = registry.installSink(sink, { muteConsole: false });
+
+            const first = registry.get('h9-sink');
+            expect(first.transports.filter((t) => t instanceof SinkTransport)).toHaveLength(1);
+
+            registry.configure({});
+            expect(first.transports).toHaveLength(0);
+
+            const second = registry.get('h9-sink');
+            expect(second.transports.filter((t) => t instanceof SinkTransport)).toHaveLength(1);
+
+            handle.dispose();
         });
     });
 

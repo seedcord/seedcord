@@ -8,7 +8,7 @@ import type { Logger } from 'seedcord';
  *
  * @internal
  */
-export type MigrationFn<TKey extends keyof Migration> = NonNullable<Migration[TKey]>;
+type MigrationFn<TKey extends keyof Migration> = NonNullable<Migration[TKey]>;
 
 /**
  * Module exporting both `up` and `down` migration functions.

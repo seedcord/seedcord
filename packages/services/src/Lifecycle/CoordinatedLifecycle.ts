@@ -10,15 +10,19 @@ import chalk from 'chalk';
 import { SeedcordErrorCode } from '../Errors';
 import { SeedcordError } from '../Errors/SeedcordError';
 import { Logger } from '../Logger';
+import { StrictEventEmitter } from '../StrictEventEmitter';
 
 import type { LifecycleTask } from './LifecycleTypes';
+import type { SEEventMapLike } from '../StrictEventEmitter';
 
 /**
  * Abstract base class for coordinated lifecycle management (startup/shutdown)
  */
-export abstract class CoordinatedLifecycle<TPhase extends number> {
+export abstract class CoordinatedLifecycle<
+    TPhase extends number,
+    TEvents extends SEEventMapLike<TEvents>
+> extends StrictEventEmitter<TEvents> {
     protected readonly logger: Logger;
-    protected readonly events = new EventEmitter();
     protected readonly tasksMap = new Map<TPhase, LifecycleTask[]>();
 
     protected constructor(
@@ -26,8 +30,8 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         protected readonly phaseOrder: TPhase[],
         protected readonly phaseEnum: Record<number, string>
     ) {
+        super();
         this.logger = new Logger(loggerName);
-        // Initialize phases
         this.phaseOrder.forEach((phase) => this.tasksMap.set(phase, []));
     }
 
@@ -102,25 +106,22 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         this.logger.info(
             `${chalk.bold.yellow('Running')} ${this.getTaskType()} phase ${chalk.bold.magenta(this.phaseEnum[phase])} with ${chalk.bold.cyan(tasks.length)} tasks`
         );
-        this.emit(`phase:${phase}:start`);
+        this.emitPhase(phase, 'start');
 
-        // Execute all tasks with the execution strategy
         const results: PromiseSettledResult<void>[] = await this.executeTasksInPhase(phase, tasks);
 
-        // Check results
         const failures = results.filter((r) => r.status === 'rejected').length;
         if (failures > 0) {
-            throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [
-                chalk.bold.magenta(this.phaseEnum[phase]),
-                failures
-            ]);
+            // Pass the raw phase name; chalk's ANSI codes would otherwise leak into the serialized
+            // error message (e.g. the unknown-exception webhook payload).
+            throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
         } else {
             this.logger.info(
                 `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
             );
         }
 
-        this.emit(`phase:${phase}:complete`);
+        this.emitPhase(phase, 'complete');
     }
 
     /**
@@ -134,7 +135,6 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         let timeoutId: NodeJS.Timeout | undefined;
 
         try {
-            // Create a race between the task and a timeout
             await Promise.race([
                 task.task(),
                 new Promise<void>((_, reject) => {
@@ -160,22 +160,11 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         }
     }
 
-    /**
-     * Subscribe to lifecycle events
-     */
-    public on(event: string, listener: (...args: unknown[]) => void): void {
-        this.events.on(event, listener);
-    }
-
-    /**
-     * Unsubscribe from lifecycle events
-     */
-    public off(event: string, listener: (...args: unknown[]) => void): void {
-        this.events.off(event, listener);
-    }
-
-    protected emit(event: string, ...args: unknown[]): boolean {
-        return this.events.emit(event, ...args);
+    // The phase event key is interpolated from phaseOrder at runtime; the subclass event map derives
+    // its phase keys from the same range, so the key is always valid, but TS can't correlate a
+    // template-literal key with the generic TEvents. Emit the no-payload event via the base emitter.
+    private emitPhase(phase: TPhase, action: 'start' | 'complete'): void {
+        EventEmitter.prototype.emit.call(this, `phase:${phase}:${action}`);
     }
 
     // Abstract methods to be implemented by subclasses

@@ -20,8 +20,10 @@ function readPackageVersion(): string {
             cachedVersion = pkg.version;
             return cachedVersion;
         }
-    } catch {
-        // ignore file system errors and fall back to the default version
+    } catch (error) {
+        // Surface the cause (missing or malformed package.json) before falling back to the default.
+        // eslint-disable-next-line no-console -- build-config helper has no Logger
+        console.warn(`[tsdown-config] could not read package.json version, using default: ${String(error)}`);
     }
 
     cachedVersion = '0.0.0';

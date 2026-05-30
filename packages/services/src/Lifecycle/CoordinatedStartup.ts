@@ -4,7 +4,7 @@ import { SeedcordErrorCode } from '../Errors';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 import { SeedcordError } from '../Errors/SeedcordError';
 
-import type { LifecycleTask, PhaseEvents } from './LifecycleTypes';
+import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';
 
 /**
@@ -23,7 +23,7 @@ export enum StartupPhase {
     Configuration,
     /** Instantiate plugin classes with Core and arguments */
     Instantiation,
-    /** Activate plugins by calling their init/setup effects */
+    /** Activate plugins by calling their init/setup methods */
     Activation,
     /** Mark seedcord as ready and start handling interactions */
     Ready
@@ -41,9 +41,9 @@ const PHASE_ORDER: StartupPhase[] = [
 ];
 
 /**
- * Event keys for coordinated startup phases
+ * Strict-event-emitter payload map for coordinated startup phases.
  */
-export type CoordinatedStartupEventKey = PhaseEvents<'startup', UnionToTuple<StartupPhase>>;
+export type CoordinatedStartupEvents = PhaseEventMap<'startup', UnionToTuple<StartupPhase>>;
 
 /**
  * Manages bot startup lifecycle with ordered phases
@@ -51,7 +51,7 @@ export type CoordinatedStartupEventKey = PhaseEvents<'startup', UnionToTuple<Sta
  * Coordinates initialization of all bot components in a predictable sequence.
  * Tasks are executed within their designated phases to ensure proper dependency order.
  */
-export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
+export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, CoordinatedStartupEvents> {
     private isStartingUp = false;
     private hasStarted = false;
 
@@ -99,7 +99,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         phase: StartupPhase,
         tasks: LifecycleTask[]
     ): Promise<PromiseSettledResult<void>[]> {
-        // Execute all tasks in parallel
         const promises = tasks.map((task) => this.runTaskWithTimeout(phase, task));
         return Promise.allSettled(promises);
     }
@@ -136,10 +135,8 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         this.emit('startup:start');
 
         try {
-            // Execute each phase in order
             for (const phase of PHASE_ORDER) {
-                // This can be set to false in case of an abort initiated by the cli
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false mid-loop from the cli
                 if (!this.isStartingUp) {
                     this.logger.warn('Startup sequence aborted');
                     return;
@@ -151,8 +148,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
             this.logger.info(`${chalk.bold.green('Coordinated startup completed')} successfully`);
             this.emit('startup:complete');
         } catch (error) {
-            // This can be set to false in case of an abort initiated by the cli
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false before this catch runs
             if (!this.isStartingUp) {
                 this.logger.warn('Startup sequence aborted during error handling');
                 return;
@@ -173,7 +169,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         let timeoutId: NodeJS.Timeout | undefined;
 
         try {
-            // Create a race between the task and a timeout
             await Promise.race([
                 task.task(),
                 new Promise<void>((_, reject) => {
@@ -211,20 +206,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
             this.isStartingUp = false;
             this.logger.warn('Aborting coordinated startup sequence');
         }
-    }
-
-    /**
-     * Subscribe to startup events
-     */
-    public override on(event: CoordinatedStartupEventKey, listener: (...args: unknown[]) => void): void {
-        super.on(event, listener);
-    }
-
-    /**
-     * Unsubscribe from startup events
-     */
-    public override off(event: CoordinatedStartupEventKey, listener: (...args: unknown[]) => void): void {
-        super.off(event, listener);
     }
 
     /**

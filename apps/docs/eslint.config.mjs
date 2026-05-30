@@ -25,8 +25,20 @@ export default createConfig({
                 // Hardening
                 'react/jsx-no-target-blank': 'error',
                 'react-hooks/exhaustive-deps': 'error',
-                'import/no-anonymous-default-export': 'error'
+                'import/no-anonymous-default-export': 'error',
+                'import/no-default-export': 'error'
             }
+        },
+
+        // Next.js owns these filenames and resolves each by its default export, so the
+        // no-default-export ban above would break routing/metadata if left on here.
+        {
+            files: [
+                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx}',
+                'src/app/**/{icon,apple-icon,opengraph-image,twitter-image}.{ts,tsx}',
+                'src/{middleware,instrumentation}.{ts,tsx}'
+            ],
+            rules: { 'import/no-default-export': 'off' }
         },
 
         // Ignores per Next docs

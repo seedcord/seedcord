@@ -18,7 +18,6 @@ export class Logger implements ILogger {
     private channel: string;
     private readonly registry = LoggerChannelRegistry.instance;
 
-    /* Common logging utilities for structured and formatted output */
     public readonly utils: LoggerUtilities;
 
     private static readonly instances = new Map<string, Logger>();
@@ -146,75 +145,5 @@ export class Logger implements ILogger {
      */
     public silly(msg: string, ...args: unknown[]): void {
         this.logger.silly(msg, ...args);
-    }
-
-    /**
-     * Static method to log an error message with a specific prefix.
-     * Creates or retrieves a logger instance for the given prefix.
-     *
-     * @param prefix - The logger prefix/label to use
-     * @param msg - The error message to log
-     * @param args - Additional data to include in the log entry
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static Error(prefix: string, msg: string, ...args: unknown[]): void {
-        const logger = this.instance(prefix);
-        logger.error(msg, ...args);
-    }
-
-    /**
-     * Static method to log an informational message with a specific prefix.
-     * Creates or retrieves a logger instance for the given prefix.
-     *
-     * @param prefix - The logger prefix/label to use
-     * @param msg - The informational message to log
-     * @param args - Additional data to include in the log entry
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static Info(prefix: string, msg: string, ...args: unknown[]): void {
-        const logger = this.instance(prefix);
-        logger.info(msg, ...args);
-    }
-
-    /**
-     * Static method to log a warning message with a specific prefix.
-     * Creates or retrieves a logger instance for the given prefix.
-     *
-     * @param prefix - The logger prefix/label to use
-     * @param msg - The warning message to log
-     * @param args - Additional data to include in the log entry
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static Warn(prefix: string, msg: string, ...args: unknown[]): void {
-        const logger = this.instance(prefix);
-        logger.warn(msg, ...args);
-    }
-
-    /**
-     * Static method to log a debug message with a specific prefix.
-     * Creates or retrieves a logger instance for the given prefix.
-     *
-     * @param prefix - The logger prefix/label to use
-     * @param msg - The debug message to log
-     * @param args - Additional data to include in the log entry
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static Debug(prefix: string, msg: string, ...args: unknown[]): void {
-        const logger = this.instance(prefix);
-        logger.debug(msg, ...args);
-    }
-
-    /**
-     * Static method to log a silly/trace level message with a specific prefix.
-     * Creates or retrieves a logger instance for the given prefix.
-     *
-     * @param prefix - The logger prefix/label to use
-     * @param msg - The silly message to log
-     * @param args - Additional data to include in the log entry
-     */
-    // eslint-disable-next-line @typescript-eslint/naming-convention
-    public static Silly(prefix: string, msg: string, ...args: unknown[]): void {
-        const logger = this.instance(prefix);
-        logger.silly(msg, ...args);
     }
 }

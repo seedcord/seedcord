@@ -9,14 +9,14 @@ import { formatSeedcordErrorMessage, type SeedcordErrorArguments } from './Error
  *
  * @internal
  */
-export type SeedcordErrorIdentifier = keyof typeof SeedcordErrorCode;
+type SeedcordErrorIdentifier = keyof typeof SeedcordErrorCode;
 
 /**
  * Options for Seedcord errors.
  *
  * @internal
  */
-export interface SeedcordErrorOptions extends ErrorOptions {}
+interface SeedcordErrorOptions extends ErrorOptions {}
 
 function resolveIdentifier(code: SeedcordErrorCode): SeedcordErrorIdentifier {
     return SeedcordErrorCode[code] as SeedcordErrorIdentifier;
@@ -168,7 +168,7 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
  *
  * @internal
  */
-export type SeedcordErrorVariant<
+type SeedcordErrorVariant<
     Type extends SeedcordErrorTypeString,
     Code extends SeedcordErrorCode
 > = Type extends 'SeedcordError'
@@ -182,7 +182,7 @@ export type SeedcordErrorVariant<
  *
  * @internal
  */
-export type AnySeedcordErrorForCode<Code extends SeedcordErrorCode> = {
+type AnySeedcordErrorForCode<Code extends SeedcordErrorCode> = {
     [Variant in SeedcordErrorTypeString]: SeedcordErrorVariant<Variant, Code>;
 }[SeedcordErrorTypeString];
 
@@ -191,7 +191,7 @@ export type AnySeedcordErrorForCode<Code extends SeedcordErrorCode> = {
  *
  * @internal
  */
-export type ErrorTypeFilter<Type extends SeedcordErrorTypeString | undefined> = Type extends SeedcordErrorTypeString
+type ErrorTypeFilter<Type extends SeedcordErrorTypeString | undefined> = Type extends SeedcordErrorTypeString
     ? {
           [Code in SeedcordErrorCode]: SeedcordErrorVariant<Type, Code>;
       }[SeedcordErrorCode]
@@ -229,16 +229,16 @@ export function isSeedcordError<
     const isSeedcordRangeErrorInstance = error instanceof SeedcordRangeError && error.type === 'SeedcordRangeError';
 
     if (!isSeedcordErrorInstance && !isSeedcordTypeErrorInstance && !isSeedcordRangeErrorInstance) {
-        return false; // Not a Seedcord error of any type
+        return false;
     }
 
     const matchesType = type
         ? (type === 'SeedcordError' && isSeedcordErrorInstance) ||
           (type === 'SeedcordTypeError' && isSeedcordTypeErrorInstance) ||
           (type === 'SeedcordRangeError' && isSeedcordRangeErrorInstance)
-        : true; // No type to match, so it's a Seedcord error of some type
+        : true;
 
-    if (!matchesType) return false; // Early return if type does not match
-    if (code === undefined) return true; // No code to match, so it's a Seedcord error of the correct type
-    return error.code === code; // Check if the code matches
+    if (!matchesType) return false;
+    if (code === undefined) return true;
+    return error.code === code;
 }

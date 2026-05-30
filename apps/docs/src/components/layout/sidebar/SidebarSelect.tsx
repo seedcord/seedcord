@@ -19,7 +19,7 @@ interface SidebarSelectProps {
     onChange: (value: string) => void;
 }
 
-function SidebarSelect({ id, label, value, options, onChange }: SidebarSelectProps): ReactElement {
+export function SidebarSelect({ id, label, value, options, onChange }: SidebarSelectProps): ReactElement {
     const labelId = `${id}-label`;
     const dropdownOptions = useMemo<DropdownOption[]>(
         () => options.map((option) => ({ value: option.id, label: option.label })),
@@ -46,5 +46,3 @@ function SidebarSelect({ id, label, value, options, onChange }: SidebarSelectPro
         </div>
     );
 }
-
-export default SidebarSelect;

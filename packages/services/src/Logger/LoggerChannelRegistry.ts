@@ -118,8 +118,25 @@ export class LoggerChannelRegistry {
      * @param config - Partial configuration to merge with existing settings
      */
     public configure(config: Partial<LoggerConfiguration>): void {
+        this.disposeCachedLoggers();
         this.config = { ...this.config, ...config, channels: { ...this.config.channels, ...(config.channels ?? {}) } };
         this.cache.clear();
+    }
+
+    // configure() rebuilds every logger; detach + close the old transports and reset sink
+    // bookkeeping first, or the discarded loggers leak transports (and their file handles /
+    // sink wrappers) across reconfigures, e.g. on every dev HMR cycle.
+    private disposeCachedLoggers(): void {
+        for (const logger of this.cache.values()) {
+            for (const transport of [...logger.transports]) {
+                logger.remove(transport);
+                transport.close?.();
+            }
+        }
+        for (const record of this.sinks.values()) {
+            record.transportsByChannel.clear();
+            record.removedConsoleByChannel.clear();
+        }
     }
 
     /**

@@ -28,8 +28,6 @@ catalogs:
     vite: ^8.0.14
   docs:
     typedoc: ^0.28.19
-    typedoc-plugin-dt-links: ^2.0.56
-    typedoc-plugin-mdn-links: ^5.1.1
   peer:
     eslint: ^9.39.2
     tsdown: ^0.22.0

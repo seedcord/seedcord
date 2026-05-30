@@ -13,7 +13,7 @@ interface MemberOverviewProps {
     showAccessControls?: boolean;
 }
 
-function MemberOverview({
+export function MemberOverview({
     columns,
     memberAccessLevel,
     showAccessControls = false
@@ -49,5 +49,3 @@ function MemberOverview({
         </Card>
     );
 }
-
-export default MemberOverview;

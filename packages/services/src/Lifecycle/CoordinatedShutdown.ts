@@ -1,9 +1,8 @@
 import chalk from 'chalk';
-import { Envapt } from 'envapt';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
-import type { LifecycleTask, PhaseEvents } from './LifecycleTypes';
+import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';
 
 /**
@@ -32,10 +31,11 @@ const PHASE_ORDER: ShutdownPhase[] = [
 ];
 
 /**
- * Event keys for coordinated shutdown phases
+ * Strict-event-emitter payload map for coordinated shutdown phases.
  */
-export type CoordinatedShutdownEventKey = PhaseEvents<'shutdown', UnionToTuple<ShutdownPhase>>;
+export type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<ShutdownPhase>>;
 
+// Delay process.exit so winston has a window to flush buffered log lines before the event loop dies.
 const LOG_FLUSH_DELAY_MS = 500;
 
 /**
@@ -43,22 +43,19 @@ const LOG_FLUSH_DELAY_MS = 500;
  *
  * It listens for termination signals (SIGINT, SIGTERM) and runs tasks in parallel within each phase.
  * Tasks can be added or removed dynamically, and each task has an associated timeout.
- *
- * Enable or disable the shutdown mechanism via the SHUTDOWN_IS_ENABLED environment variable. It's enabled by default. I recommend enabling it in production environments.
  */
-export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
-    @Envapt('SHUTDOWN_IS_ENABLED', { fallback: true })
-    declare private readonly isShutdownEnabled: boolean;
+export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, CoordinatedShutdownEvents> {
+    private readonly isShutdownEnabled: boolean;
 
     private isShuttingDown = false;
     private exitCode = 0;
     private onSigTerm: (() => void) | null = null;
     private onSigInt: (() => void) | null = null;
 
-    public constructor() {
+    public constructor(enabled = true) {
         super('CoordinatedShutdown', PHASE_ORDER, ShutdownPhase);
 
-        // Register signal effects
+        this.isShutdownEnabled = enabled;
         this.registerSignalHandlers();
     }
 
@@ -78,7 +75,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         phase: ShutdownPhase,
         tasks: LifecycleTask[]
     ): Promise<PromiseSettledResult<void>[]> {
-        // Execute all tasks in parallel
         const promises = tasks.map((task) => this.runTaskWithTimeout(phase, task));
         return Promise.allSettled(promises);
     }
@@ -166,7 +162,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         this.emit('shutdown:start');
 
         try {
-            // Execute each phase in order
             for (const phase of PHASE_ORDER) {
                 await this.runPhase(phase);
             }
@@ -184,22 +179,8 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
                 }, LOG_FLUSH_DELAY_MS);
             } else {
                 this.logger.info(`${chalk.bold.yellow('Skipping')} process exit (dev mode)`);
-                this.isShuttingDown = false; // Reset for next run if needed
+                this.isShuttingDown = false;
             }
         }
-    }
-
-    /**
-     * Subscribe to shutdown events
-     */
-    public override on(event: CoordinatedShutdownEventKey, listener: (...args: unknown[]) => void): void {
-        super.on(event, listener);
-    }
-
-    /**
-     * Unsubscribe from shutdown events
-     */
-    public override off(event: CoordinatedShutdownEventKey, listener: (...args: unknown[]) => void): void {
-        super.off(event, listener);
     }
 }

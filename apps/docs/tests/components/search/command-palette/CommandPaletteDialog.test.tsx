@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import MotionProvider from '@components/providers/MotionProvider';
-import CommandPaletteDialog from '@components/search/command-palette/CommandPaletteDialog';
+import { MotionProvider } from '@components/providers/MotionProvider';
+import { CommandPaletteDialog } from '@components/search/command-palette/CommandPaletteDialog';
 import { COMMAND_LISTBOX_ID } from '@components/search/command-palette/constants';
 
 import type { CommandAction } from '@components/search/command-palette/types';

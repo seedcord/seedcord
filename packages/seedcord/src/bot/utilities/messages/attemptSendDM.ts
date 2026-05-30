@@ -1,6 +1,10 @@
+import { Logger } from '@seedcord/services';
+
 import type { AtleastOneMessageComponent } from '@bUtilities/Types';
 import type { Nullable } from '@seedcord/types';
 import type { Message, User } from 'discord.js';
+
+const logger = new Logger('DirectMessage');
 
 /**
  * Sends a direct message to a user.
@@ -20,7 +24,10 @@ export async function attemptSendDM(user: User, content: AtleastOneMessageCompon
 
     try {
         return await user.send(payload);
-    } catch {
+    } catch (err) {
+        // DMs commonly fail when the user has them disabled or has blocked the bot; surface the
+        // cause for diagnostics but keep the best-effort null contract.
+        logger.warn(`Failed to DM user ${user.id}`, err);
         return null;
     }
 }

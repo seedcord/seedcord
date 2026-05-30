@@ -4,7 +4,6 @@ import { SeedcordErrorCode } from 'seedcord';
 import { PgServiceMetadataKey, PgTableMetadataKey } from './decorators/RegisterKpgService';
 
 import type { KyselyPg } from './KyselyPg';
-import type { AnyKpgService, KpgServices } from './types/KpgServices';
 import type { Kysely } from 'kysely';
 import type { Core, TypedConstructor } from 'seedcord';
 import type { LiteralUnion } from 'type-fest';
@@ -56,7 +55,7 @@ export abstract class KpgService<Database extends object, TTable extends Literal
         }
 
         this.table = table;
-        this.kysely._register(key as keyof KpgServices, this as unknown as AnyKpgService);
+        this.kysely._register(key, this);
     }
 
     /**

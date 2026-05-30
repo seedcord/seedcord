@@ -2,11 +2,11 @@
 
 import { cn } from '@seedcord/ui';
 
-import SeeAlso from '../../SeeAlso';
-import CommentExamples from '../comments/CommentExamples';
-import CommentParagraphs from '../comments/CommentParagraphs';
-import SignaturePanel from '../signatures/SignaturePanel';
-import SignatureSelector from '../signatures/SignatureSelector';
+import { SeeAlso } from '../../SeeAlso';
+import { CommentExamples } from '../comments/CommentExamples';
+import { CommentParagraphs } from '../comments/CommentParagraphs';
+import { SignaturePanel } from '../signatures/SignaturePanel';
+import { SignatureSelector } from '../signatures/SignatureSelector';
 import { useActiveSignature } from '../utils/useActiveSignature';
 
 import type { EntityMemberSummary, WithParentDeprecationStatus } from '../types';
@@ -18,7 +18,7 @@ interface MemberRowBodyProps extends WithParentDeprecationStatus {
     member: EntityMemberSummary;
 }
 
-function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBodyProps): ReactElement {
+export function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBodyProps): ReactElement {
     const [activeSignatureId, setActiveSignatureId] = useActiveSignature(member);
     const hasSharedDocumentation = member.sharedDocumentation.length > 0;
     const hasSharedExamples = member.sharedExamples.length > 0;
@@ -66,5 +66,3 @@ function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBodyProps):
         </div>
     );
 }
-
-export default MemberRowBody;

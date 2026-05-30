@@ -7,6 +7,8 @@ description: Use this when writing, refactoring, or reviewing TypeScript code. D
 
 Use comments to explain intent, constraints, and hidden rules. Do not use comments to narrate obvious syntax.
 
+> **Related:** this skill decides _whether_ and _where_ a comment belongs. For _how_ a comment should read once you write it (voice, word choice, no hype or anthropomorphism), see the `writing-voice` skill.
+
 ## When Comments Are Required
 
 Add a short comment when one of these is true:
@@ -153,9 +155,7 @@ If a comment explains a TYPE definition that's two lines above, the comment is r
 // `EnvaptOptions` is a discriminated union over `required` so the compile-time check
 // rejects `required: true` paired with `fallback`. The runtime Validator catches the
 // dynamic case that bypasses the types.
-type EnvaptOptions =
-    | { required: false; fallback?: T }
-    | { required: true; fallback?: Err<'...'> };
+type EnvaptOptions = { required: false; fallback?: T } | { required: true; fallback?: Err<'...'> };
 
 // Good: the brand-name and Err<> explanation belong on the brand type itself, once.
 // Consumers don't need a paragraph re-explaining the union.
@@ -163,7 +163,7 @@ type EnvaptOptions =
 
 ### Overload narration
 
-Multiple overload signatures next to short `//` comments labeling each one ("Time-specific overload", "Required form, time-specific", "Required form, built-in/array") are noise — the signature already conveys this. If users need a map of overloads, write ONE TSDoc block on the implementation signature describing the family, not a per-overload caption.
+Multiple overload signatures next to short `//` comments labeling each one ("Time-specific overload", "Required form, time-specific", "Required form, built-in/array") are noise: the signature already conveys this. If users need a map of overloads, write ONE TSDoc block on the implementation signature describing the family, not a per-overload caption.
 
 ### Stale-after-refactor
 

@@ -23,9 +23,9 @@ COPY ../.. .
 USER seedcord
 
 EXPOSE 3000
-EXPOSE 6956
+EXPOSE 6967
 
-CMD ["pnpm", "start:watch"]
+CMD ["pnpm", "dev"]
 
 # Build stage
 FROM base AS build
@@ -42,9 +42,9 @@ COPY --from=build /usr/source/app/package.json ./
 USER seedcord
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:6956/healthcheck || exit 1
+  CMD curl -f http://localhost:6967/healthcheck || exit 1
 
 EXPOSE 3000
-EXPOSE 6956
+EXPOSE 6967
 
-CMD ["pnpm", "start:bot"]
+CMD ["node", "--enable-source-maps", "dist/index.mjs"]

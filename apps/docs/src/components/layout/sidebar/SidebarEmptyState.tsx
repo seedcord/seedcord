@@ -2,7 +2,7 @@ import { Card, cn } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
-function SidebarEmptyState({ className }: { className?: string }): ReactElement {
+export function SidebarEmptyState({ className }: { className?: string }): ReactElement {
     return (
         <Card
             as="nav"
@@ -14,5 +14,3 @@ function SidebarEmptyState({ className }: { className?: string }): ReactElement 
         </Card>
     );
 }
-
-export default SidebarEmptyState;

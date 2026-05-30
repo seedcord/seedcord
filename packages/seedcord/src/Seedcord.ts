@@ -12,6 +12,7 @@ import { Envapter } from 'envapt';
 import { Bot } from './bot/Bot';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
+import { setBotColor } from './miscellaneous/botColorHolder';
 import { Bus } from './subscribers/Bus';
 
 import type { Core } from './interfaces/Core';
@@ -64,11 +65,13 @@ export class Seedcord extends Pluggable implements Core {
         Seedcord.isInstantiated = true;
 
         // Create lifecycle instances
-        const shutdown = new CoordinatedShutdown();
+        const shutdown = new CoordinatedShutdown(config.shutdownEnabled);
         const startup = new CoordinatedStartup();
 
         // Pass them to parent constructor
         super(shutdown, startup);
+
+        setBotColor(config.botColor);
 
         // Store references for public access
         this.shutdown = shutdown;
@@ -78,7 +81,7 @@ export class Seedcord extends Pluggable implements Core {
         this.hmrManager.init();
         this.bus = new Bus(this);
         this.bot = new Bot(this);
-        this.healthCheck = new HealthCheck(this.shutdown);
+        this.healthCheck = new HealthCheck(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();
     }

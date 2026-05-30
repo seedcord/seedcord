@@ -4,12 +4,12 @@ import { cn } from '@seedcord/ui';
 import { useMemo, type ReactElement } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import MemberAccessControls from '@components/docs/entity/member/MemberAccessControls';
+import { MemberAccessControls } from '@components/docs/entity/member/MemberAccessControls';
 import { useUIStore, type UIStore } from '@store/ui';
 
-import MemberDetailGroup from './member/MemberDetailGroup';
-import MemberList from './member/MemberList';
-import MemberOverview from './member/MemberOverview';
+import { MemberDetailGroup } from './member/MemberDetailGroup';
+import { MemberList } from './member/MemberList';
+import { MemberOverview } from './member/MemberOverview';
 import { shouldIncludeMember } from './utils/shouldIncludeMember';
 import { useMemberNavigation } from './utils/useMemberNavigation';
 
@@ -25,7 +25,7 @@ interface EntityMembersSectionProps extends WithParentDeprecationStatus {
     showAccessControls?: boolean;
 }
 
-function EntityMembersSection({
+export function EntityMembersSection({
     properties,
     methods,
     constructors = EMPTY_MEMBERS,
@@ -97,5 +97,3 @@ function EntityMembersSection({
         </section>
     );
 }
-
-export default EntityMembersSection;

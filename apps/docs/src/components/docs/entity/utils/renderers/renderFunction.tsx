@@ -1,4 +1,4 @@
-import FunctionBody from '../../functions/FunctionBody';
+import { FunctionBody } from '../../functions/FunctionBody';
 
 import type { FunctionModel } from '../../types';
 import type { ReactElement } from 'react';

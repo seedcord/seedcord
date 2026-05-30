@@ -49,7 +49,6 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
      * @virtual Override this method to handle HMR updates
      */
     public onHmr(_event: HmrUpdateEvent): Promise<void> {
-        // Default implementation does nothing
         return Promise.resolve();
     }
 
@@ -155,7 +154,6 @@ export class Pluggable<
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
         key: Key,
-
         Plugin: Ctor,
         startupPhase: StartupPhase,
         ...args: PluginArgs<Ctor>
@@ -163,10 +161,13 @@ export class Pluggable<
         if (this.isInitialized) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
         }
-        if ((this as Record<string, unknown>)[key]) {
+        if (key in this) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
         }
 
+        // justified: `Core` is augmented by consumers via declaration merging (each attached plugin
+        // adds a key), so `this` cannot satisfy the augmented `Core` until every plugin is attached,
+        // which is exactly what attach() is doing. The host is always a Seedcord (a Core) at runtime.
         const instance = new Plugin(this as unknown as Core, ...args);
         this.plugins.push(instance);
 

@@ -1,3 +1,5 @@
+import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
+
 import { UserNotInGuild } from '@bot/defaults/errors/User';
 
 import type { Guild, GuildMember } from 'discord.js';
@@ -12,8 +14,12 @@ import type { Guild, GuildMember } from 'discord.js';
  */
 export async function fetchGuildMember(guild: Guild, userId: string): Promise<GuildMember> {
     let user = guild.members.cache.get(userId);
-    user ??= await guild.members.fetch(userId).catch(() => {
-        throw new UserNotInGuild(`User with ID ${userId} not found in guild`);
+    user ??= await guild.members.fetch(userId).catch((err) => {
+        if (err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownMember) {
+            throw new UserNotInGuild(`User with ID ${userId} not found in guild`);
+        }
+
+        throw err;
     });
 
     return user;

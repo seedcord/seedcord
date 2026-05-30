@@ -11,7 +11,7 @@ interface HotkeyProviderProps {
     children: ReactNode;
 }
 
-function HotkeyProvider({ children }: HotkeyProviderProps): ReactNode {
+export function HotkeyProvider({ children }: HotkeyProviderProps): ReactNode {
     const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
 
     useEffect(() => {
@@ -22,5 +22,3 @@ function HotkeyProvider({ children }: HotkeyProviderProps): ReactNode {
 
     return children;
 }
-
-export default HotkeyProvider;

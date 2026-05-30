@@ -49,7 +49,8 @@ export const seedcord = new Seedcord({
     },
     subscribers: {
         path: null
-    }
+    },
+    botColor: '#fe565a'
 }).attach('db', Mongo, StartupPhase.Configuration, {
     dir: resolve(import.meta.dirname, './services'),
     uri: Vars.mongoUri,

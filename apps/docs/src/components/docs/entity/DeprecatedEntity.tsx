@@ -1,7 +1,7 @@
 import { Icon, cn } from '@seedcord/ui';
 import { AlertTriangle } from 'lucide-react';
 
-import CommentParagraphs from './comments/CommentParagraphs';
+import { CommentParagraphs } from './comments/CommentParagraphs';
 
 import type { WithDeprecationStatus } from '@lib/docs/types';
 import type { ReactElement, ReactNode } from 'react';
@@ -10,7 +10,7 @@ interface DeprecatedEntityProps extends WithDeprecationStatus {
     children: ReactNode;
 }
 
-function DeprecatedEntity({
+export function DeprecatedEntity({
     deprecationStatus = { isDeprecated: false },
     children
 }: DeprecatedEntityProps): ReactElement {
@@ -36,5 +36,3 @@ function DeprecatedEntity({
         </div>
     );
 }
-
-export default DeprecatedEntity;

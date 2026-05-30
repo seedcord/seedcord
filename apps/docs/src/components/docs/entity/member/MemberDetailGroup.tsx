@@ -3,7 +3,7 @@
 import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, Icon } from '@seedcord/ui';
 
 import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '../constants';
-import MemberRow from './MemberRow';
+import { MemberRow } from './MemberRow';
 
 import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '../types';
 import type { ReactElement } from 'react';
@@ -14,7 +14,7 @@ interface MemberDetailGroupProps extends WithParentDeprecationStatus {
     title?: string | undefined;
 }
 
-function MemberDetailGroup({
+export function MemberDetailGroup({
     items,
     prefix,
     title: titleProp,
@@ -57,5 +57,3 @@ function MemberDetailGroup({
         </Disclosure>
     );
 }
-
-export default MemberDetailGroup;

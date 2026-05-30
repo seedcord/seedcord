@@ -3,11 +3,11 @@
 import { Button, Icon, Popover, PopoverContent, PopoverTrigger, cn } from '@seedcord/ui';
 import { Settings } from 'lucide-react';
 
-import ClearHistoryRow from './settings/ClearHistoryRow';
+import { ClearHistoryRow } from './settings/ClearHistoryRow';
 
 import type { ReactElement } from 'react';
 
-function HeaderSettingsPopover(): ReactElement {
+export function HeaderSettingsPopover(): ReactElement {
     return (
         <Popover>
             <PopoverTrigger asChild>
@@ -28,5 +28,3 @@ function HeaderSettingsPopover(): ReactElement {
         </Popover>
     );
 }
-
-export default HeaderSettingsPopover;

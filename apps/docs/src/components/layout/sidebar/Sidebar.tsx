@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 
 import { useUIStore } from '@store/ui';
 
-import SidebarCategoryList from './SidebarCategoryList';
-import SidebarEmptyState from './SidebarEmptyState';
-import SidebarHeader from './SidebarHeader';
+import { SidebarCategoryList } from './SidebarCategoryList';
+import { SidebarEmptyState } from './SidebarEmptyState';
+import { SidebarHeader } from './SidebarHeader';
 import { getContainerStyles } from './utils/getContainerStyles';
 import { getListStyles } from './utils/getListStyles';
 import { useSidebarNavigationHandlers } from './utils/useSidebarNavigationHandlers';
@@ -19,8 +19,8 @@ import { useSidebarSelectionState } from './utils/useSidebarSelectionState';
 import type { SidebarProps } from './types';
 import type { ReactElement } from 'react';
 
-// eslint-disable-next-line max-lines-per-function
-function Sidebar({
+// eslint-disable-next-line max-lines-per-function -- composes selection state, persistence, navigation handlers, store wiring, and the full sidebar tree
+export function Sidebar({
     catalog,
     activePackageId,
     activeVersionId,
@@ -129,5 +129,3 @@ function Sidebar({
         </Card>
     );
 }
-
-export default Sidebar;

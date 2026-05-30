@@ -22,15 +22,13 @@ import {
     StringSelectMenuOptionBuilder,
     TextDisplayBuilder,
     TextInputBuilder,
-    UserSelectMenuBuilder
+    UserSelectMenuBuilder,
+    resolveColor
 } from 'discord.js';
-import { Envapt } from 'envapt';
-import { Join, NonEmptyTuple } from 'type-fest';
 
-import { hexToNumber } from '@miscellaneous/hexToNumber';
-import { parseEnvColor } from '@miscellaneous/parseEnvColor';
+import { getBotColor } from '@miscellaneous/botColorHolder';
 
-import type { ColorResolvable } from 'discord.js';
+import type { Join, NonEmptyTuple } from 'type-fest';
 
 /**
  * Available Discord.js builder classes for use with BuilderComponent
@@ -191,40 +189,37 @@ export abstract class BaseComponent<TComponent> {
 export abstract class BuilderComponent<BuilderKey extends BuilderType> extends BaseComponent<
     InstantiatedBuilder<BuilderKey>
 > {
-    /**
-     * Bot color for the component
-     * Uses the DEFAULT_BOT_COLOR environment variable or falls back to 'Default' set by Discord.js.
-     *
-     * Set DEFAULT_BOT_COLOR to a hex code in your `.env` file to customize.
-     */
-    @Envapt<ColorResolvable>('DEFAULT_BOT_COLOR', {
-        fallback: 'Default',
-        converter: (raw, fallback) => parseEnvColor(raw, fallback)
-    })
-    declare public readonly botColor: ColorResolvable;
+    private colorApplied = false;
 
     protected constructor(public readonly type: BuilderKey) {
         const ComponentClass = BuilderTypes[type] as unknown;
         super(ComponentClass as new () => InstantiatedBuilder<BuilderKey>);
 
-        // Override in builders
-        if (this.instance instanceof EmbedBuilder) this.instance.setColor(this.botColor);
-
-        // Override in builders
-        if (this.instance instanceof ContainerBuilder) {
-            this.instance.setAccentColor(
-                this.botColor === 'Default' ? undefined : hexToNumber(this.botColor.toString())
-            );
-        }
-
-        // Override in builders
         if (this.instance instanceof SlashCommandBuilder || this.instance instanceof ContextMenuCommandBuilder) {
             this.instance.setContexts(InteractionContextType.Guild);
         }
     }
 
     get component(): InstantiatedBuilder<BuilderKey> {
+        this.applyBotColor();
         return this.instance;
+    }
+
+    // Resolving in the constructor would capture the default for a component built before setBotColor()
+    // ran. The unset check keeps a color the subclass set for itself.
+    private applyBotColor(): void {
+        if (this.colorApplied) return;
+        this.colorApplied = true;
+
+        const color = getBotColor();
+        if (this.instance instanceof EmbedBuilder) {
+            if (this.instance.data.color === undefined) this.instance.setColor(color);
+        } else if (this.instance instanceof ContainerBuilder) {
+            const accent = this.instance.data.accent_color;
+            if (accent === null || accent === undefined) {
+                this.instance.setAccentColor(color === 'Default' ? undefined : resolveColor(color));
+            }
+        }
     }
 }
 

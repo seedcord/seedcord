@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 import { Message } from 'discord.js';
 
@@ -9,11 +9,13 @@ import type { EventHandler, RepliableEventHandler } from '@interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 import type { NonEmptyTuple } from 'type-fest';
 
+const logger = new Logger('EventCatchable');
+
 /**
  * Configuration options for the EventCatchable decorator.
  */
 export interface EventCatchableOptions {
-    /** Whether to log errors to console using console.error {@default false} */
+    /** Whether to log caught errors via the framework Logger {@default false} */
     log?: boolean;
     /**
      * Whether to fail silently without trying to send a message {@default false}.
@@ -61,8 +63,7 @@ export function EventCatchable(options?: EventCatchableOptions) {
                 if (!(err instanceof Error)) throw err;
 
                 this.setErrored();
-                // eslint-disable-next-line no-console
-                if (log) console.error(err);
+                if (log) logger.error('Caught event handler error', err);
 
                 const eventArgs = Array.isArray(this.getEvent()) ? (this.getEvent() as unknown[]) : [this.getEvent()];
                 const msg = eventArgs.find((x): x is Message => x instanceof Message);

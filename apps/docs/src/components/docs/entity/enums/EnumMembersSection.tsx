@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import EnumMemberCard from './EnumMemberCard';
+import { EnumMemberCard } from './EnumMemberCard';
 
 import type { EnumMemberModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';
@@ -9,7 +9,7 @@ interface EnumMembersSectionProps {
     members: readonly EnumMemberModel[];
 }
 
-function EnumMembersSection({ members }: EnumMembersSectionProps): ReactElement | null {
+export function EnumMembersSection({ members }: EnumMembersSectionProps): ReactElement | null {
     if (!members.length) {
         return null;
     }
@@ -27,5 +27,3 @@ function EnumMembersSection({ members }: EnumMembersSectionProps): ReactElement 
         </section>
     );
 }
-
-export default EnumMembersSection;

@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import EntityContent from '@components/docs/entity/EntityContent';
+import { EntityContent } from '@components/docs/entity/EntityContent';
 import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
 import { loadEntityModel } from '@lib/docs/loadEntityModel';
 import { parseEntityPathSegments } from '@lib/docs/routes';

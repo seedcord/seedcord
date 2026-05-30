@@ -2,9 +2,6 @@
 export * from './channels/fetchText';
 export * from './channels/sendInText';
 
-// Bot Utilities Errors exports
-export * from './errors/throwCustomError';
-
 // Bot Utilities Messages exports
 export * from './messages/attemptSendDM';
 

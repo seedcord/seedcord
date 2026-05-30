@@ -8,7 +8,7 @@ interface ThemeProviderProps {
     children: ReactNode;
 }
 
-function ThemeProvider({ children }: ThemeProviderProps): ReactElement {
+export function ThemeProvider({ children }: ThemeProviderProps): ReactElement {
     return (
         <NextThemesProvider
             attribute="data-theme"
@@ -21,5 +21,3 @@ function ThemeProvider({ children }: ThemeProviderProps): ReactElement {
         </NextThemesProvider>
     );
 }
-
-export default ThemeProvider;

@@ -1,4 +1,5 @@
-import { Logger } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 import { hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
@@ -61,8 +62,8 @@ export class EventController implements Initializeable, HmrAware {
     public constructor(protected core: Core) {
         const eventsDir = this.core.config.bot.events.path;
         if (!eventsDir) {
-            // This should never happen as EventController is only instantiated if path is set. But if it does, it should stop the whole process.
-            throw new Error('EventController instantiated without events path');
+            // Unreachable: EventController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping event loading.
+            throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['EventController', 'events']);
         }
 
         if (!Envapter.isDevelopment) return; // HMR only in development
@@ -251,7 +252,7 @@ export class EventController implements Initializeable, HmrAware {
                 frequency
             });
 
-            // If HMR adds a new event type, ensure listener is attached
+            // A handler registered post-init (HMR) introduces an event type with no client listener yet.
             if (this.isInitialized && !this.attachedEvents.has(key)) {
                 this.attachListener(key);
             }
@@ -287,7 +288,6 @@ export class EventController implements Initializeable, HmrAware {
             `Attaching ${chalk.bold.green(eventName)} to the client with ${chalk.gray(handlerEntries?.length ?? 0)} handler(s)`
         );
 
-        // Attach a single listener per event type that looks up handlers from the map
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
             this.core.bot.emit('any:event', eventName, ...args);
             void (async () => {
@@ -306,12 +306,11 @@ export class EventController implements Initializeable, HmrAware {
         const handlerEntries = this.eventMap.get(eventName);
         if (!handlerEntries || handlerEntries.length === 0) return;
 
-        // Check if there are any handlers that need to execute
         const handlersToExecute = handlerEntries.filter(
             (entry) => entry.frequency !== 'once' || !this.executedOnceHandlers.has(entry.ctor)
         );
 
-        // If no handlers need to execute, skip middlewares and return early
+        // Return before running middlewares when every handler is a spent 'once'.
         if (handlersToExecute.length === 0) return;
 
         const shouldContinue = await this.runMiddlewares(eventName, args);
@@ -320,7 +319,6 @@ export class EventController implements Initializeable, HmrAware {
         for (const entry of handlersToExecute) {
             await this.processHandler(eventName, entry.ctor, args);
 
-            // Mark 'once' handlers as executed
             if (entry.frequency === 'once') this.executedOnceHandlers.add(entry.ctor);
         }
     }

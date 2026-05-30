@@ -1,12 +1,11 @@
 import * as crypto from 'node:crypto';
 
 import { Logger } from '@seedcord/services';
-import { Envapt } from 'envapt';
 
 import { DatabaseError } from '@bot/defaults/errors/Database';
 import { CustomError } from '@interfaces/Components';
-import { Core } from '@interfaces/Core';
 
+import type { Core } from '@interfaces/Core';
 import type { Nullable } from '@seedcord/types';
 import type { EmbedBuilder, Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';
@@ -71,26 +70,26 @@ export function extractErrorResponse(
 
     return {
         uuid,
-        response: new GenericError(uuid).response
+        response: new GenericError(uuid, core.config.notifications?.developerUsername).response
     };
 }
 
 /**
  * Generic error shown to users when an unknown error occurs
  *
- * Set an environment variable called `DEVELOPER_DISCORD_USERNAME` in your `.env` file to customize the contact name.
+ * Set `notifications.developerUsername` in your Seedcord config to customize the contact name.
  */
 export class GenericError extends CustomError {
-    @Envapt('DEVELOPER_DISCORD_USERNAME')
-    private readonly developerUsername: string = 'the developer';
-
-    constructor(private readonly uuid: UUID) {
+    constructor(
+        private readonly uuid: UUID,
+        developerUsername = 'the developer'
+    ) {
         super('An unknown error occurred');
 
         this.response
             .setTitle('Error')
             .setDescription(
-                `An unknown error occurred. Please reach out to ${this.developerUsername} with a way to reproduce the error and the following:\n` +
+                `An unknown error occurred. Please reach out to ${developerUsername} with a way to reproduce the error and the following:\n` +
                     `### UUID: \`${this.uuid}\``
             );
     }

@@ -9,7 +9,7 @@ import { log } from '@lib/logger';
 import type { SidebarItemProps } from './types';
 import type { ReactElement } from 'react';
 
-function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps): ReactElement {
+export function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps): ReactElement {
     const toneConfig = getToneConfig(tone);
     const ItemIcon = toneConfig.icon;
     const toneStyles = toneConfig.styles;
@@ -38,5 +38,3 @@ function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps): Reac
         </Link>
     );
 }
-
-export default SidebarItem;

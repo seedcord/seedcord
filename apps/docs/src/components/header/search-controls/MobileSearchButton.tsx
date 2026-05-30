@@ -8,7 +8,7 @@ import { useUIStore } from '@store/ui';
 
 import type { ReactElement } from 'react';
 
-function MobileSearchButton(): ReactElement {
+export function MobileSearchButton(): ReactElement {
     const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
 
     return (
@@ -26,5 +26,3 @@ function MobileSearchButton(): ReactElement {
         </Button>
     );
 }
-
-export default MobileSearchButton;

@@ -47,7 +47,7 @@ interface CommandListItemProps {
     onActivate: (index: number) => void;
 }
 
-function CommandListItem({
+export function CommandListItem({
     action,
     onSelect,
     isActive,
@@ -104,5 +104,3 @@ function CommandListItem({
         </div>
     );
 }
-
-export default CommandListItem;

@@ -1,9 +1,48 @@
-import { Guild } from 'discord.js';
+import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
 import { RoleDoesNotExist } from '@bot/defaults/errors/Roles';
 
 import type { Nullable } from '@seedcord/types';
 import type { Client, Role } from 'discord.js';
+
+function isUnknownRole(err: unknown): boolean {
+    return err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownRole;
+}
+
+async function fetchRoleInGuild(guild: Guild, roleId: string): Promise<Nullable<Role>> {
+    const cached = guild.roles.cache.get(roleId);
+    if (cached) return cached;
+
+    try {
+        return await guild.roles.fetch(roleId);
+    } catch (err) {
+        if (isUnknownRole(err)) {
+            throw new RoleDoesNotExist('Role not found in specified guild', roleId);
+        }
+
+        throw err;
+    }
+}
+
+async function scanGuildsForRole(client: Client, roleId: string): Promise<Nullable<Role>> {
+    const cached = client.guilds.cache.map((guild) => guild.roles.cache.get(roleId)).find((role) => role);
+    if (cached) return cached;
+
+    for (const guild of client.guilds.cache.values()) {
+        try {
+            const role = await guild.roles.fetch(roleId);
+            if (role) return role;
+        } catch (err) {
+            // A role id is unique to one guild, so "unknown role" just means "not this one"; keep
+            // scanning. Surface anything else (rate limits, permissions, outages).
+            if (isUnknownRole(err)) continue;
+
+            throw err;
+        }
+    }
+
+    return null;
+}
 
 /**
  * Fetches a role by ID from a client or guild.
@@ -14,41 +53,14 @@ import type { Client, Role } from 'discord.js';
  * @throws A {@link RoleDoesNotExist} When the role doesn't exist
  */
 export async function fetchRole(clientOrGuild: Client | Guild, roleId: string): Promise<Role> {
-    let role: Nullable<Role>;
-
     if (!roleId) {
         throw new RoleDoesNotExist('Role ID is null or undefined', roleId);
     }
 
-    if (clientOrGuild instanceof Guild) {
-        const guild = clientOrGuild;
-
-        role = guild.roles.cache.get(roleId);
-
-        if (!role) {
-            try {
-                role = await guild.roles.fetch(roleId);
-            } catch {
-                throw new RoleDoesNotExist('Role not found in specified guild', roleId);
-            }
-        }
-    } else {
-        const client = clientOrGuild;
-
-        role = client.guilds.cache.map((guild) => guild.roles.cache.get(roleId)).find((role) => role);
-
-        if (!role) {
-            const guilds = client.guilds.cache;
-            for (const guild of guilds.values()) {
-                try {
-                    role = await guild.roles.fetch(roleId);
-                    if (role) break;
-                } catch {
-                    continue;
-                }
-            }
-        }
-    }
+    const role =
+        clientOrGuild instanceof Guild
+            ? await fetchRoleInGuild(clientOrGuild, roleId)
+            : await scanGuildsForRole(clientOrGuild, roleId);
 
     if (!role) {
         throw new RoleDoesNotExist('Role not found', roleId);

@@ -117,35 +117,6 @@ describe('Logger', () => {
         });
     });
 
-    describe('static methods', () => {
-        it('should log via static Error method', () => {
-            expect(() => Logger.Error('static-logger', 'Static error message')).not.toThrow();
-        });
-
-        it('should log via static Info method', () => {
-            expect(() => Logger.Info('static-logger', 'Static info message')).not.toThrow();
-        });
-
-        it('should log via static Warn method', () => {
-            expect(() => Logger.Warn('static-logger', 'Static warn message')).not.toThrow();
-        });
-
-        it('should log via static Debug method', () => {
-            expect(() => Logger.Debug('static-logger', 'Static debug message')).not.toThrow();
-        });
-
-        it('should log via static Silly method', () => {
-            expect(() => Logger.Silly('static-logger', 'Static silly message')).not.toThrow();
-        });
-
-        it('should reuse logger instances for same prefix', () => {
-            Logger.Info('reuse-test', 'Message 1');
-            Logger.Info('reuse-test', 'Message 2');
-            // If instances are reused, this should work without issues
-            expect(true).toBe(true);
-        });
-    });
-
     describe('configure', () => {
         it('should accept custom configuration', () => {
             Logger.configure({
@@ -173,7 +144,7 @@ describe('Logger', () => {
         });
 
         it('should clear instance cache after configure', () => {
-            Logger.Info('cache-test', 'Before configure');
+            new Logger('cache-test').info('Before configure');
 
             Logger.configure({
                 defaultChannel: 'new-default',
@@ -189,7 +160,7 @@ describe('Logger', () => {
                 }
             });
 
-            Logger.Info('cache-test', 'After configure');
+            new Logger('cache-test').info('After configure');
             expect(true).toBe(true);
         });
     });

@@ -51,8 +51,8 @@
     ],
     "dependencies": {
         "typedoc": "catalog:docs",
-        "typedoc-plugin-dt-links": "catalog:docs",
-        "typedoc-plugin-mdn-links": "catalog:docs"
+        "typedoc-plugin-dt-links": "^2.0.56",
+        "typedoc-plugin-mdn-links": "^5.1.1"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
