@@ -2,6 +2,6 @@ export * from './Banner';
 export * from './ChannelSelector';
 export * from './CommandRefreshPrompt';
 export * from './ErrorDisplay';
-export * from './Help';
+export * from './Footer';
 export * from './LogPanel';
-export * from './StatusLine';
+export * from './StatusBadge';

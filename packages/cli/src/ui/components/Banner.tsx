@@ -1,55 +1,42 @@
 import { formatFilePath } from '@seedcord/utils';
-import chalk from 'chalk';
 import { Box, Text } from 'ink';
 import React from 'react';
-
-import { accentA, accentB } from './shared';
 
 import type { Config } from '@seedcord/types';
 import type { ReactElement } from 'react';
 
+const SEED_COLOR = '#f04e36';
+const CORD_COLOR = '#6fab49';
+
 interface BannerProps {
-    config: Config | null;
+    readonly config: Config | null;
+}
+
+function ConfigPath({ path }: { path: string | null | undefined }): ReactElement {
+    if (!path) return <Text color="gray">Disabled</Text>;
+    return <Text dimColor>{formatFilePath(path)}</Text>;
 }
 
 export function Banner({ config }: BannerProps): ReactElement {
     return (
-        <Box flexDirection="column" paddingBottom={1}>
-            <Text>
-                {accentA('seed')}
-                {accentB('cord')}
+        <Box flexDirection="column">
+            <Text bold>
+                <Text color={SEED_COLOR}>seed</Text>
+                <Text color={CORD_COLOR}>cord</Text>
             </Text>
-            <Text></Text>
             {config && (
-                <Box flexDirection="column" paddingBottom={1}>
+                <Box flexDirection="column" paddingTop={1}>
                     <Text>
-                        <Text color="blue">➜</Text> Interactions:{' '}
-                        {config.bot.interactions.path
-                            ? chalk.dim(formatFilePath(config.bot.interactions.path))
-                            : chalk.gray('Disabled')}
+                        <Text color="blue">➜</Text> Interactions: <ConfigPath path={config.bot.interactions.path} />
                     </Text>
                     <Text>
-                        <Text color="blue">➜</Text> Events:{' '}
-                        {config.bot.events.path
-                            ? chalk.dim(formatFilePath(config.bot.events.path))
-                            : chalk.gray('Disabled')}
+                        <Text color="blue">➜</Text> Events: <ConfigPath path={config.bot.events.path} />
                     </Text>
                     <Text>
-                        <Text color="blue">➜</Text> Pub/Sub:{' '}
-                        {config.subscribers.path
-                            ? chalk.dim(formatFilePath(config.subscribers.path))
-                            : chalk.gray('Disabled')}
+                        <Text color="blue">➜</Text> Pub/Sub: <ConfigPath path={config.subscribers.path} />
                     </Text>
                 </Box>
             )}
-            <Text>
-                <Text color="green">➜</Text>
-                <Text color="gray"> Press </Text>
-                <Text bold color="white">
-                    h
-                </Text>
-                <Text color="gray"> to show help</Text>
-            </Text>
         </Box>
     );
 }

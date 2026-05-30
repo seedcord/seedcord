@@ -4,7 +4,7 @@ import { BaseCommand } from '@core/BaseCommand';
 
 import { BuildRunner } from './BuildRunner';
 
-import type { Command } from 'commander';
+import type { Command } from '@commander-js/extra-typings';
 
 export class BuildCommand extends BaseCommand {
     private readonly runner: BuildRunner;

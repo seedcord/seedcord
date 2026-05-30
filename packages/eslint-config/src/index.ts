@@ -8,6 +8,7 @@ import eslintTsdoc from 'eslint-plugin-tsdoc';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
+import { mdxBlock } from './mdx';
 import { tailwindBlock } from './tailwind';
 
 import {
@@ -34,24 +35,12 @@ import {
 
 import type { Linter } from 'eslint';
 
-/**
- * Flattened type for the entire ESLint configuration array.
- *
- * @internal
- */
+/** @internal */
 type FlatConfig = Linter.Config[];
 
-/**
- * Flattened type for ESLint configuration items.
- *
- * @internal
- */
+/** @internal */
 type FlatConfigItem = Linter.Config;
 
-/**
- * Options for creating the ESLint configuration.
- *
- */
 interface CreateConfigOptions {
     /** Root directory for TypeScript configuration {@default `process.cwd()`} */
     tsconfigRootDir?: string;
@@ -94,9 +83,10 @@ interface CreateConfigOptions {
      * Utility function names whose string arguments should be scanned for non-canonical Tailwind classes.
      *
      * Applied to both plugins (better-tailwindcss `callees` + tailwind-canonical-classes `calleeFunctions`).
-     * Defaults cover seedcord's `cn`/`clsx`/`twMerge` helpers. Add `'cva'` if a package consumes CVA.
+     * Defaults to seedcord's `cn` helper, the only call site that holds literal class strings; the `tw`
+     * tagged template is handled by {@link CreateConfigOptions.tailwindTaggedTemplates}.
      *
-     * @default ['cn', 'clsx', 'twMerge']
+     * @default ['cn']
      */
     tailwindCalleeFunctions?: string[];
 
@@ -105,14 +95,23 @@ interface CreateConfigOptions {
      *
      * Only the `better-tailwindcss` plugin supports tagged templates today; `tailwind-canonical-classes`
      * canonicalizes JSX className attrs + string-literal callees only. Seedcord uses a custom `tw` template
-     * tag in `apps/docs/src/lib/utils.ts`, so the default scans that.
+     * tag in `packages/ui/src/lib/tw.ts`, so the default scans that.
      *
      * @default ['tw']
      */
     tailwindTaggedTemplates?: string[];
+
+    /**
+     * File globs to enable MDX linting on (typically `['**\/*.mdx']`).
+     *
+     * When provided, registers the `eslint-mdx` parser + `mdx` plugin and applies the core
+     * `no-unused-expressions` rule to embedded JS/JSX. Omit to disable entirely (no parser,
+     * no rules), mirroring how {@link CreateConfigOptions.tailwindEntryPoint} gates Tailwind.
+     * Does not lint markdown prose. Requires `eslint-plugin-mdx` (bundled as a dependency).
+     */
+    mdxFiles?: string[];
 }
 
-// Helper to build a config item with optional plugin registration
 function pluginBlock(params: {
     enabled: boolean;
     files: string[];
@@ -146,8 +145,9 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
         tailwindEntryPoint,
-        tailwindCalleeFunctions = ['cn', 'clsx', 'twMerge'],
-        tailwindTaggedTemplates = ['tw']
+        tailwindCalleeFunctions = ['cn'],
+        tailwindTaggedTemplates = ['tw'],
+        mdxFiles
     } = options;
 
     const createTsParserOptions = (rootDir: string) => ({
@@ -172,17 +172,14 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const resolvedGeneralIgnores = generalIgnores.map((g) => (ignoreBase ? `${ignoreBase}/${g}` : g));
 
     return defineConfig(
-        // Global ignores
         { ignores: [...GLOBAL_IGNORES, ...resolvedGeneralIgnores] },
 
-        // Base ESLint configuration for JavaScript files
         {
             files: [...JS_FILES],
             languageOptions: merge({}, JAVASCRIPT_LANGUAGE_OPTIONS),
             linterOptions: COMMON_LINTER_OPTIONS
         },
 
-        // TypeScript specific configuration
         {
             files: [...TS_FILES],
             languageOptions: merge({}, TYPESCRIPT_LANGUAGE_OPTIONS, {
@@ -192,10 +189,8 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             linterOptions: COMMON_LINTER_OPTIONS
         },
 
-        // typescript eslint shared configs applied to TS files only
         ...tsConfigs,
 
-        // Security
         pluginBlock({
             enabled: registerSecurityPlugin,
             files: [...ALL_FILES],
@@ -204,7 +199,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             rules: merge({}, eslintSecurity.configs.recommended.rules) as Linter.RulesRecord
         }),
 
-        // Import
         pluginBlock({
             enabled: registerImportPlugin,
             files: [...ALL_FILES],
@@ -214,7 +208,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             rules: IMPORT_RULES
         }),
 
-        // Prettier
         pluginBlock({
             enabled: registerPrettierPlugin,
             files: [...ALL_FILES],
@@ -223,7 +216,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             rules: PRETTIER_RULES
         }),
 
-        // TSDoc
         pluginBlock({
             enabled: registerTsdocPlugin,
             files: [...TS_FILES],
@@ -232,7 +224,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
         }),
 
-        // Tailwind canonical-class lint (autofix; opt-in via tailwindEntryPoint)
+        // Opt-in via tailwindEntryPoint; off when omitted (see CreateConfigOptions.tailwindEntryPoint).
         tailwindBlock({
             files: [...TS_FILES],
             entryPoint: tailwindEntryPoint,
@@ -240,13 +232,14 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             taggedTemplates: tailwindTaggedTemplates
         }),
 
-        // Additional rules for all files
+        // Opt-in via mdxFiles; the spread drops the block entirely when omitted.
+        ...(mdxFiles ? [mdxBlock(mdxFiles)] : []),
+
         {
             files: [...ALL_FILES],
             rules: merge({}, GENERAL_RULES, SECURITY_RULES, OVERRIDE_RULES)
         },
 
-        // Test files
         {
             files: [...TEST_FILES],
             rules: {
@@ -260,19 +253,19 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             }
         },
 
-        // Prettier config to disable conflicting rules
+        // Must stay after the rule blocks above so it can disable any formatting rules they enable.
         prettierConfig,
 
-        // User provided configs last
+        // Last so consumer overrides win over everything above.
         ...userConfigs
     );
 }
 
 export * from './constants';
+export * from './mdx';
 export * from './rules';
 export * from './tailwind';
 export type { CreateConfigOptions, FlatConfig, FlatConfigItem };
 export default createConfig;
 
-/** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

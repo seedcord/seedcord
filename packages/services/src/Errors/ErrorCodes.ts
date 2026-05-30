@@ -116,5 +116,9 @@ export enum SeedcordErrorCode {
     /** Unable to write the generated bootstrap file. */
     CliBootstrapWriteFailed = 3118,
     /** Config tsconfig must be a string when provided. */
-    CliConfigInvalidTsconfig = 3119
+    CliConfigInvalidTsconfig = 3119,
+    /** Config hmr options must be an object when provided. */
+    CliConfigInvalidHmr = 3120,
+    /** Config hmr restart patterns must be an array of strings when provided. */
+    CliConfigInvalidHmrRestart = 3121
 }

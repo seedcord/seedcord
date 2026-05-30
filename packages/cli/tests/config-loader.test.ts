@@ -1,10 +1,14 @@
 import { join, dirname, resolve } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordBrand } from '@seedcord/types/internal';
 import { describe, it, expect, vi } from 'vitest';
 
-import { DevRunner } from '@commands/dev/DevRunner';
+import { DevRunner, isSeedcordInstance } from '@commands/dev/DevRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
+import { DevStore } from '@ui/stores/DevStore';
 
+import type { ConfigLocator } from '@core/config/ConfigLocator';
 import type { SeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
@@ -69,6 +73,61 @@ describe('ConfigLoader', () => {
             'Config must include an `entry` string'
         );
     });
+
+    it('carries hmr config through to the resolved config and resolves hmr.tsconfig', async () => {
+        const hmr = { restart: ['**/*.json'], tsconfig: './tsconfig.dev.json' };
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(): TModule {
+                return {
+                    default: { instance: './bot.ts', entry: './index.ts', hmr } satisfies SeedcordDevConfig
+                } as TModule;
+            }
+        };
+
+        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
+            join(process.cwd(), 'seedcord.config.ts')
+        );
+
+        expect(resolved.hmr).toEqual(hmr);
+        expect(resolved.tsconfig).toBe(resolve(process.cwd(), 'tsconfig.dev.json'));
+    });
+
+    it('rejects a non-object default export', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(): TModule {
+                return { default: [] } as TModule;
+            }
+        };
+
+        await expect(
+            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidExport });
+    });
+
+    it('rejects a non-array hmr.restart', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(): TModule {
+                return { default: { instance: './bot.ts', entry: './index.ts', hmr: { restart: 'nope' } } } as TModule;
+            }
+        };
+
+        await expect(
+            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRestart });
+    });
+});
+
+describe('isSeedcordInstance', () => {
+    it('accepts a branded object', () => {
+        expect(isSeedcordInstance({ [SeedcordBrand]: true })).toBe(true);
+    });
+
+    it('rejects a look-alike without the brand', () => {
+        expect(isSeedcordInstance({ config: {}, start: () => undefined })).toBe(false);
+        expect(isSeedcordInstance({ [SeedcordBrand]: false })).toBe(false);
+        expect(isSeedcordInstance(null)).toBe(false);
+        expect(isSeedcordInstance('nope')).toBe(false);
+    });
 });
 
 describe('DevRunner', () => {
@@ -90,24 +149,20 @@ describe('DevRunner', () => {
             }))
         };
 
-        const runner = new DevRunner(locator as never, configLoader as never);
+        // fixture doubles: only locate()/load() are exercised on this path
+        const runner = new DevRunner(
+            locator as unknown as ConfigLocator,
+            configLoader as unknown as ConfigLoader,
+            new DevStore()
+        );
 
-        // Spy on private method handleError to rethrow error so we can assert it
+        // run() swallows session errors through handleError; rethrow so the assertion below can see it.
         // @ts-expect-error accessing private method
-        vi.spyOn(runner, 'handleError').mockImplementation((_actions: unknown, error: unknown) => {
+        vi.spyOn(runner, 'handleError').mockImplementation((error: unknown) => {
             throw error;
         });
 
-        const actions = {
-            setStatus: vi.fn(),
-            setError: vi.fn(),
-            setBusy: vi.fn(),
-            setConfig: vi.fn(),
-            setRestartRequired: vi.fn(),
-            setCommandUpdatePrompt: vi.fn()
-        };
-
-        await expect(runner.run(actions)).rejects.toThrow(/Cannot find entry file|Failed to load url/);
+        await expect(runner.run()).rejects.toThrow(/Cannot find entry file|Failed to load url/);
 
         expect(locator.locate).toHaveBeenCalledTimes(1);
         expect(configLoader.load).toHaveBeenCalledWith(configPath);

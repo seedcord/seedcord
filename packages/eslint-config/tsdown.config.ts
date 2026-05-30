@@ -5,7 +5,7 @@ import { defineConfig } from 'tsdown';
 // with packages/tsdown-config/src/index.ts defaults.
 export default defineConfig({
     format: ['esm', 'cjs'],
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/prettier.ts'],
     dts: { cjsReexport: true },
     shims: true,
     clean: true,

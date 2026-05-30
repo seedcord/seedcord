@@ -4,6 +4,7 @@ import { Logger, StrictEventEmitter } from '@seedcord/services';
 import chalk from 'chalk';
 import { minimatch } from 'minimatch';
 
+import type { DevEvent } from './events';
 import type { HmrEventType, HmrUpdateEvent } from '@api/Hmr';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type {
@@ -17,15 +18,9 @@ import type {
 
 const DEBOUNCE_MS = 250;
 
-export interface HmrPluginEvents {
-    invalidate: [file: string];
-    'restart-needed': [file: string];
-    'command-update-prompt': [files: string[]];
-}
-
-export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
+export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
-    private lastUpdate: { file: string; time: number } | null = null;
+    private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
 
@@ -63,7 +58,7 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
 
         if (this.hot) {
             this.hot.on('seedcord:commands-update-prompt', (data) => {
-                this.emit('command-update-prompt', data.files);
+                this.emit('event', { type: 'command-update-prompt', files: data.files });
             });
 
             this.hot.on('seedcord:register-critical-files', (data) => {
@@ -76,13 +71,19 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         }
     }
 
-    private handleFileEvent(file: string, type: HmrEventType): void {
-        // Debounce rapid updates to the same file
+    // Debounce per (file, type): a rapid create-then-update of the same file is two distinct events, so a
+    // single shared timestamp would drop the second. Returns true when the event should be suppressed.
+    private isDebounced(file: string, type: HmrEventType): boolean {
+        const key = `${file}::${type}`;
         const now = Date.now();
-        if (this.lastUpdate?.file === file && now - this.lastUpdate.time < DEBOUNCE_MS) {
-            return;
-        }
-        this.lastUpdate = { file, time: now };
+        const last = this.lastUpdate.get(key);
+        if (last !== undefined && now - last < DEBOUNCE_MS) return true;
+        this.lastUpdate.set(key, now);
+        return false;
+    }
+
+    private handleFileEvent(file: string, type: HmrEventType): void {
+        if (this.isDebounced(file, type)) return;
 
         const relPath = relative(process.cwd(), file);
         const typeColor =
@@ -101,39 +102,29 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         }
     }
 
-    // eslint-disable-next-line max-statements
     private hotUpdate(ctx: HotUpdateOptions): EnvironmentModuleNode[] {
         const { file, modules, server } = ctx;
-        const now = Date.now();
+        const type = 'update';
 
-        // Debounce rapid updates to the same file
-        if (this.lastUpdate?.file === file && now - this.lastUpdate.time < DEBOUNCE_MS) {
-            return [];
-        }
-        this.lastUpdate = { file, time: now };
+        if (this.isDebounced(file, type)) return [];
 
         const relPath = relative(process.cwd(), file);
-        const type = 'update';
 
         this.logger.info(`${chalk.blue(type.toUpperCase())} ${chalk.gray(relPath)}`);
 
-        // Check for critical files
         if (this.isCriticalFile(file)) {
             this.logger.warn(`${chalk.red('Critical file changed:')} ${chalk.bold(relPath)}. Restart required.`);
-            this.emit('restart-needed', file);
+            this.emit('event', { type: 'restart-required' });
             return [];
         }
 
-        // Get all modules associated with this file from the graph
         const moduleGraph = server.moduleGraph;
         const fileModules = moduleGraph.getModulesByFile(file);
         const allModules = fileModules ? Array.from(fileModules) : [];
 
-        // Combine with modules provided by hotUpdate context
         const combinedModules = new Set([...modules, ...allModules]);
         const affectedModules = this.getAffectedModules(Array.from(combinedModules));
 
-        // Invalidate the changed file and all affected modules
         const filesToInvalidate = new Set([file, ...affectedModules]);
 
         for (const fileToInvalidate of filesToInvalidate) {
@@ -145,8 +136,8 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
             }
         }
 
-        // Emit invalidate event to runtime
-        this.emit('invalidate', file);
+        // file-change tells the runtime to invalidate this module in its evaluated-modules graph.
+        this.emit('event', { type: 'file-change', path: file });
 
         const payload: HmrUpdateEvent = { file, type, affectedModules };
 
@@ -154,7 +145,7 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
             this.hot.send('seedcord:hmr', payload);
         }
 
-        // Return empty array to prevent default HMR update
+        // Returning [] suppresses Vite's default client HMR; we drive invalidation through the runtime instead.
         return [];
     }
 
@@ -162,7 +153,6 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
         const root = this.config.root;
         const relPath = relative(root, file);
 
-        // Check user configured restart patterns
         if (this.config.hmr?.restart) {
             for (const pattern of this.config.hmr.restart) {
                 if (minimatch(relPath, pattern)) {
@@ -171,14 +161,12 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
             }
         }
 
-        // Check dynamic restart patterns
         for (const pattern of this.dynamicRestartPatterns) {
             if (minimatch(relPath, pattern)) {
                 return true;
             }
         }
 
-        // Config files
         if (
             file === this.config.configFile ||
             file.endsWith('package.json') ||
@@ -188,7 +176,6 @@ export class HmrPlugin extends StrictEventEmitter<HmrPluginEvents> {
             return true;
         }
 
-        // Entry points
         const entryPath = resolve(root, this.config.entry);
         const instancePath = resolve(root, this.config.instance);
 

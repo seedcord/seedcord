@@ -1,6 +1,6 @@
 import type { Bot } from '@bot/Bot';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
-import type { Config } from '@seedcord/types';
+import type { Config, SeedcordInstance } from '@seedcord/types';
 import type { Bus } from '@subscribers/Bus';
 
 /**
@@ -20,7 +20,7 @@ import type { Bus } from '@subscribers/Bus';
  * }
  * ```
  * */
-export interface Core {
+export interface Core extends SeedcordInstance {
     readonly shutdown: CoordinatedShutdown;
     readonly startup: CoordinatedStartup;
 

@@ -1,25 +1,33 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
-import { Card, cn } from '@seedcord/ui';
-import { Command } from 'cmdk';
-import { useMemo, useRef } from 'react';
+import { Card, cn, easeOutStrong } from '@seedcord/ui';
+import { m } from 'motion/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import CommandHeader from './CommandHeader';
 import CommandListItem from './CommandListItem';
-import { MIN_SEARCH_QUERY_LENGTH } from './constants';
+import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from './constants';
 import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
 import type { CommandAction } from './types';
 import type { CommandPaletteController } from './useCommandPaletteController';
-import type { ReactElement } from 'react';
+import type { KeyboardEvent, ReactElement } from 'react';
+
+const HEIGHT_ANIMATION_S = 1;
+
+function optionId(id: string): string {
+    return `command-option-${id}`;
+}
 
 interface CommandListContentProps {
     showInitialHint: boolean;
     isSearching: boolean;
     errorMessage?: string;
     results: CommandAction[];
+    activeIndex: number;
     onSelect: (action: CommandAction) => void;
+    onActivate: (index: number) => void;
 }
 
 function CommandListContent({
@@ -27,21 +35,18 @@ function CommandListContent({
     isSearching,
     errorMessage,
     results,
-    onSelect
-}: CommandListContentProps): ReactElement {
+    activeIndex,
+    onSelect,
+    onActivate
+}: CommandListContentProps): ReactElement | null {
     const hasResults = results.length > 0;
-    const shouldShowItems = !showInitialHint && !isSearching && !errorMessage && hasResults;
+    // Items stay visible during a refresh (stale results) so the list doesn't flicker; the header spinner
+    // signals loading. The "no results" fallback waits for loading to finish to avoid a false flash.
+    const shouldShowItems = !showInitialHint && !errorMessage && hasResults;
     const shouldShowFallback = !showInitialHint && !isSearching && !errorMessage && !hasResults;
 
     let emptyContent: ReactElement | null = null;
-
-    if (showInitialHint) {
-        emptyContent = (
-            <div className={cn('text-subtle px-4 py-12 text-center text-sm')}>
-                Type at least {MIN_SEARCH_QUERY_LENGTH} characters to explore the documentation index.
-            </div>
-        );
-    } else if (errorMessage) {
+    if (errorMessage) {
         emptyContent = (
             <div
                 className={cn(
@@ -59,26 +64,35 @@ function CommandListContent({
         );
     }
 
+    // Rendering null (e.g. under the min query length) collapses the animated panel back to the bare bar.
+    if (!emptyContent && !shouldShowItems) return null;
+
     return (
-        <>
-            {emptyContent ? <Command.Empty>{emptyContent}</Command.Empty> : null}
-            {isSearching ? (
-                <Command.Loading>
-                    <div className={cn('text-subtle px-2 py-6 text-center text-sm')}>Searching documentation…</div>
-                </Command.Loading>
+        <div className={cn('py-3')}>
+            {emptyContent}
+            {shouldShowItems ? (
+                <div id={COMMAND_LISTBOX_ID} role="listbox" aria-label="Search results">
+                    {results.map((action, index) => (
+                        <CommandListItem
+                            key={action.id}
+                            action={action}
+                            onSelect={onSelect}
+                            isActive={index === activeIndex}
+                            optionId={optionId(action.id)}
+                            index={index}
+                            onActivate={onActivate}
+                        />
+                    ))}
+                </div>
             ) : null}
-            {shouldShowItems
-                ? results.map((action) => <CommandListItem key={action.id} action={action} onSelect={onSelect} />)
-                : null}
-        </>
+        </div>
     );
 }
 
 function deriveListProps(
     searchState: ReturnType<typeof useCommandPaletteSearch>,
-    normalizedSearch: string,
-    onSelect: (action: CommandAction) => void
-): CommandListContentProps {
+    normalizedSearch: string
+): Omit<CommandListContentProps, 'activeIndex' | 'onSelect' | 'onActivate'> {
     const showInitialHint = normalizedSearch.length < MIN_SEARCH_QUERY_LENGTH;
     const isSearching = searchState.status === 'loading';
     const resolvedError =
@@ -87,28 +101,88 @@ function deriveListProps(
         showInitialHint,
         isSearching,
         results: searchState.results,
-        onSelect,
         ...(resolvedError ? { errorMessage: resolvedError } : {})
     };
 }
 
+// eslint-disable-next-line max-lines-per-function -- dialog wires search state, roving keyboard nav, and the animated list
 function CommandPaletteDialog({ controller }: { controller: CommandPaletteController }): ReactElement {
-    const {
-        open,
-        handleOpenChange,
-        searchValue,
-        handleValueChange,
-        handleClose,
-        handleSelect,
-        handleKeyDown,
-        inputRef
-    } = controller;
+    const { open, handleOpenChange, searchValue, handleValueChange, handleClose, handleSelect, inputRef } = controller;
 
     const commandRef = useRef<HTMLDivElement | null>(null);
+    const observerRef = useRef<ResizeObserver | null>(null);
+    const [activeIndex, setActiveIndex] = useState(0);
+    const [contentHeight, setContentHeight] = useState(0);
 
     const normalizedSearch = useMemo(() => searchValue.trim(), [searchValue]);
     const searchState = useCommandPaletteSearch({ query: normalizedSearch, open });
-    const listProps = deriveListProps(searchState, normalizedSearch, handleSelect);
+    const listProps = deriveListProps(searchState, normalizedSearch);
+    const { results } = listProps;
+
+    // A new result set re-anchors the active row to the top. Adjusting during render (not in an effect)
+    // avoids a wasted render pass and the set-state-in-effect smell.
+    const [trackedResults, setTrackedResults] = useState(results);
+    if (trackedResults !== results) {
+        setTrackedResults(results);
+        setActiveIndex(0);
+    }
+
+    // The animated container follows the measured body height. A callback ref re-attaches the observer every
+    // time the dialog opens (the measured node only exists in the DOM while the Radix portal is mounted); the
+    // observer fires on observe() and on every later content change, so it owns the measurement.
+    const measureRef = useCallback((el: HTMLDivElement | null) => {
+        observerRef.current?.disconnect();
+        if (!el) {
+            observerRef.current = null;
+            return;
+        }
+        const observer = new ResizeObserver(() => {
+            setContentHeight(el.scrollHeight);
+        });
+        observer.observe(el);
+        observerRef.current = observer;
+    }, []);
+
+    const activeAction = results[activeIndex];
+    const activeId = activeAction ? optionId(activeAction.id) : undefined;
+    const listExpanded = !listProps.showInitialHint && !listProps.errorMessage && results.length > 0;
+
+    useEffect(() => {
+        if (!activeId) return;
+        document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
+    }, [activeId]);
+
+    const handleListKeyDown = useCallback(
+        (event: KeyboardEvent<HTMLInputElement>) => {
+            if (results.length === 0) return;
+            switch (event.key) {
+                case 'ArrowDown':
+                    event.preventDefault();
+                    setActiveIndex((index) => (index + 1) % results.length);
+                    break;
+                case 'ArrowUp':
+                    event.preventDefault();
+                    setActiveIndex((index) => (index - 1 + results.length) % results.length);
+                    break;
+                case 'Home':
+                    event.preventDefault();
+                    setActiveIndex(0);
+                    break;
+                case 'End':
+                    event.preventDefault();
+                    setActiveIndex(results.length - 1);
+                    break;
+                case 'Enter': {
+                    event.preventDefault();
+                    if (activeAction) handleSelect(activeAction);
+                    break;
+                }
+                default:
+                    break;
+            }
+        },
+        [results, activeAction, handleSelect]
+    );
 
     return (
         <Dialog.Root open={open} onOpenChange={handleOpenChange}>
@@ -137,12 +211,7 @@ function CommandPaletteDialog({ controller }: { controller: CommandPaletteContro
                             'mx-auto max-h-[78vh] w-full max-w-xl overflow-hidden bg-(--bg-dim) text-(--text) transition sm:max-w-2xl md:max-w-3xl'
                         )}
                     >
-                        <Command
-                            ref={commandRef}
-                            className={cn('flex h-full flex-col')}
-                            label="Documentation search"
-                            onKeyDown={handleKeyDown}
-                        >
+                        <div ref={commandRef} className={cn('flex h-full flex-col')}>
                             <Dialog.Title className={cn('sr-only')}>Command palette</Dialog.Title>
                             <Dialog.Description className={cn('sr-only')}>
                                 Search documentation content and navigation items.
@@ -151,16 +220,27 @@ function CommandPaletteDialog({ controller }: { controller: CommandPaletteContro
                                 inputRef={inputRef}
                                 onClose={handleClose}
                                 onValueChange={handleValueChange}
+                                onKeyDown={handleListKeyDown}
                                 searchValue={searchValue}
+                                isSearching={listProps.isSearching}
+                                activeId={activeId}
+                                listExpanded={listExpanded}
                             />
-                            <Command.List
-                                className={cn(
-                                    'max-h-[calc(78vh-5.25rem)] overflow-y-auto overscroll-contain px-2 py-3'
-                                )}
+                            <m.div
+                                animate={{ height: contentHeight }}
+                                transition={{ duration: HEIGHT_ANIMATION_S, ease: [...easeOutStrong] }}
+                                className={cn('max-h-[calc(78vh-5.25rem)] overflow-y-auto overscroll-contain px-2')}
                             >
-                                <CommandListContent {...listProps} />
-                            </Command.List>
-                        </Command>
+                                <div ref={measureRef}>
+                                    <CommandListContent
+                                        {...listProps}
+                                        activeIndex={activeIndex}
+                                        onSelect={handleSelect}
+                                        onActivate={setActiveIndex}
+                                    />
+                                </div>
+                            </m.div>
+                        </div>
                     </Card>
                 </Dialog.Content>
             </Dialog.Portal>

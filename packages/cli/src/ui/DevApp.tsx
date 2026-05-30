@@ -1,66 +1,85 @@
-import { Box, Text, useInput, useStdout } from 'ink';
-import React, { useEffect, useRef, useState } from 'react';
+import { Box, measureElement, Text, useInput, useStdout } from 'ink';
+import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import {
     Banner,
     ChannelSelector,
     CommandRefreshPrompt,
     ErrorDisplay,
-    Help,
-    HELP_HEIGHT,
+    Footer,
     LogPanel,
-    StatusLine
+    StatusBadge
 } from '@ui/components';
+import { isSessionLive } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
-import type { Config } from '@seedcord/types';
+import type { FooterMode } from '@ui/components';
+import type { DevState, DevStore } from '@ui/stores/DevStore';
+import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 
-interface DevAppActions {
-    setStatus: (status: string) => void;
-    setError: (error: Error) => void;
-    setBusy: (isBusy: boolean) => void;
-    setConfig: (config: Config) => void;
-    setRestartRequired: (required: boolean) => void;
-    setCommandUpdatePrompt: (files: string[] | null) => void;
+function useDevState(store: DevStore): DevState {
+    const subscribe = useCallback(
+        (onChange: () => void) => {
+            store.on('change', onChange);
+            return () => {
+                store.off('change', onChange);
+            };
+        },
+        [store]
+    );
+    const getSnapshot = useCallback(() => store.getState(), [store]);
+    return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 interface DevAppProps {
-    readonly onReady: (actions: DevAppActions) => void;
+    readonly store: DevStore;
+    readonly onReady: () => void;
     readonly onQuit?: () => Promise<void> | void;
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
     readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
 }
 
-// eslint-disable-next-line max-lines-per-function, max-statements
-export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshCommands }: DevAppProps): ReactElement {
-    const [status, setStatus] = useState('Initializing...');
-    const [error, setError] = useState<Error | null>(null);
-    const [isBusy, setBusy] = useState(true);
-    const [config, setConfig] = useState<Config | null>(null);
-    const [showHelp, setShowHelp] = useState(false);
+const MIN_LOG_LINES = 3;
+const BORDER_ROWS = 2;
+
+// eslint-disable-next-line max-lines-per-function -- single root component; splitting the layout tree adds indirection without reducing complexity
+export function DevApp({
+    store,
+    onReady,
+    onQuit,
+    onDisconnect,
+    onRestart,
+    onRefreshCommands
+}: DevAppProps): ReactElement {
+    const { phase, status, error, isBusy, config, restartRequired, commandUpdatePrompt } = useDevState(store);
+
     const [showChannels, setShowChannels] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<string | undefined>('default');
-    const [restartRequired, setRestartRequired] = useState(false);
-    const [commandUpdatePrompt, setCommandUpdatePrompt] = useState<string[] | null>(null);
+    const [selectedChannel, setSelectedChannel] = useState<string | undefined>(undefined);
 
     const { stdout } = useStdout();
     const DEFAULT_ROWS = 24;
     const DEFAULT_COLUMNS = 80;
     const [terminalHeight, setTerminalHeight] = useState(stdout.rows || DEFAULT_ROWS);
     const [terminalWidth, setTerminalWidth] = useState(stdout.columns || DEFAULT_COLUMNS);
-    const [resizeKey, setResizeKey] = useState(0);
     const isInitialized = useRef(false);
 
+    // The log slot flexes to fill whatever the header (banner + badge), an error/prompt above it, and the
+    // footer leave behind; measureElement reads that laid-out height so the log tail slices to exactly fit.
+    // Everything renders inside the bounded column so it can never grow past terminalHeight (Ink corrupts
+    // frames when it does), and the error sits above the logs rather than replacing them.
+    const logSlotRef = useRef<DOMElement | null>(null);
+    const [logSlotHeight, setLogSlotHeight] = useState(0);
+
     useEffect(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        // useStdout() types stdout as always present, but it is undefined when stdout is not a TTY.
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see above
         if (!stdout) return;
 
         const onResize = (): void => {
             setTerminalHeight(stdout.rows);
             setTerminalWidth(stdout.columns);
-            setResizeKey((prev) => prev + 1);
         };
 
         stdout.on('resize', onResize);
@@ -69,25 +88,36 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
         };
     }, [stdout]);
 
-    const staticOverhead = 13;
+    useEffect(() => {
+        if (logSlotRef.current) {
+            setLogSlotHeight(measureElement(logSlotRef.current).height);
+        }
+        // Anything that shrinks the log slot (terminal size, banner growth on config load, an error or
+        // prompt above it) must trigger a re-measure so the tail re-slices to the new height.
+    }, [terminalHeight, terminalWidth, config, error, commandUpdatePrompt, showChannels]);
 
-    const helpOverhead = showHelp ? HELP_HEIGHT : 0;
-    const errorOverhead = error ? (error.stack?.split('\n').length ?? 0) + 5 : 0;
-    // eslint-disable-next-line no-magic-numbers
-    const promptOverhead = commandUpdatePrompt ? commandUpdatePrompt.length + 4 : 0;
-    const availableHeight = terminalHeight - staticOverhead - helpOverhead - errorOverhead - promptOverhead;
-    const effectiveLogHeight = Math.max(0, availableHeight);
+    const logLines = Math.max(0, logSlotHeight - BORDER_ROWS);
+    const interactive = !isBusy || restartRequired;
+    const footerMode: FooterMode = commandUpdatePrompt ? 'prompt' : showChannels ? 'channels' : 'default';
 
     useInput(
-        // eslint-disable-next-line max-statements, complexity
+        // eslint-disable-next-line max-statements, complexity -- flat keypress dispatch; each branch is one hotkey, splitting it would only hide the dispatch table
         (input, key) => {
+            // Ink puts stdin in raw mode, so Ctrl-C arrives as a keypress, not a SIGINT the process handler
+            // could catch. Treat it as quit here so it always works regardless of the current state.
+            if (key.ctrl && input === 'c') {
+                store.beginQuit();
+                void onQuit?.();
+                return;
+            }
+
             if (commandUpdatePrompt) {
                 if (input === 'y') {
                     void onRefreshCommands?.(true);
-                    setCommandUpdatePrompt(null);
+                    store.clearPrompt();
                 } else if (input === 'n') {
                     void onRefreshCommands?.(false);
-                    setCommandUpdatePrompt(null);
+                    store.clearPrompt();
                 }
                 return;
             }
@@ -95,39 +125,28 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
             if (showChannels) return; // ChannelSelector will handle input
 
             if (input === 'q') {
-                setStatus('Quitting...');
+                store.beginQuit();
                 void onQuit?.();
                 return;
             }
 
-            if (isBusy && !restartRequired) return;
+            if (!interactive) return;
 
             if (input === 'd') {
-                setBusy(true);
-                setRestartRequired(false);
-
-                if (error) setError(null);
-                setStatus('Disconnecting...');
+                if (!isSessionLive(phase)) return; // nothing to disconnect when already stopped
+                store.beginDisconnect();
                 void onDisconnect?.();
                 return;
             }
 
             if (input === 'r') {
-                setBusy(true);
-                setRestartRequired(false);
-                setStatus('Restarting...');
-                if (error) setError(null);
+                store.beginRestart();
                 void onRestart?.();
                 return;
             }
 
             if (input === 'c' && !key.ctrl) {
                 setShowChannels(true);
-                return;
-            }
-
-            if (input === 'h') {
-                setShowHelp((prev) => !prev);
                 return;
             }
 
@@ -143,7 +162,7 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
 
         LogStore.instance.clear();
         LogStore.instance.mount();
-        onReady({ setStatus, setError, setBusy, setConfig, setRestartRequired, setCommandUpdatePrompt });
+        onReady();
 
         return () => {
             LogStore.instance.unmount();
@@ -151,26 +170,31 @@ export function DevApp({ onReady, onQuit, onDisconnect, onRestart, onRefreshComm
     }, [onReady]);
 
     return (
-        <Box flexDirection="column" key={resizeKey} width={terminalWidth} height={terminalHeight}>
+        <Box flexDirection="column" width={terminalWidth} height={terminalHeight} overflow="hidden">
             <Banner config={config} />
-            {error && <ErrorDisplay error={error} />}
-            {commandUpdatePrompt && <CommandRefreshPrompt files={commandUpdatePrompt} />}
-            {showHelp && <Help />}
-            <StatusLine text={status} spinner={isBusy} restartRequired={restartRequired} />
-            {showChannels ? (
-                <ChannelSelector
-                    currentChannel={selectedChannel}
-                    onSelect={setSelectedChannel}
-                    onClose={() => setShowChannels(false)}
-                />
-            ) : effectiveLogHeight >= 5 ? (
-                <LogPanel height={effectiveLogHeight} channel={selectedChannel} />
-            ) : (
-                <Box borderStyle="round" borderColor="yellow" flexDirection="column" padding={1}>
-                    <Text color="yellow">Terminal too small to show logs.</Text>
-                    <Text dimColor>Please increase terminal height.</Text>
-                </Box>
-            )}
+            <StatusBadge phase={phase} detail={status} />
+            <Box flexGrow={1} flexDirection="column" overflow="hidden">
+                {commandUpdatePrompt && <CommandRefreshPrompt files={commandUpdatePrompt} />}
+                {error && <ErrorDisplay error={error} />}
+                {showChannels ? (
+                    <ChannelSelector
+                        currentChannel={selectedChannel}
+                        onSelect={setSelectedChannel}
+                        onClose={() => setShowChannels(false)}
+                    />
+                ) : (
+                    <Box ref={logSlotRef} flexGrow={1} flexDirection="column" overflow="hidden">
+                        {logSlotHeight === 0 ? null : logLines >= MIN_LOG_LINES ? (
+                            <LogPanel height={logLines} channel={selectedChannel} />
+                        ) : (
+                            <Text color="yellow" wrap="truncate">
+                                Terminal too small to show logs.
+                            </Text>
+                        )}
+                    </Box>
+                )}
+            </Box>
+            <Footer phase={phase} interactive={interactive} mode={footerMode} />
         </Box>
     );
 }

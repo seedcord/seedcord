@@ -98,7 +98,10 @@ const messages = {
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
         `Failed to write bootstrap file at ${targetPath}: ${reason}.`,
-    [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.'
+    [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
+    [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
+        'Config `hmr.restart` must be an array of strings when provided.'
 } satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**

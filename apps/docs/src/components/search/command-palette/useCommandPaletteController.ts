@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type RefObject } from 'react';
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { log } from '@lib/logger';
@@ -63,7 +63,6 @@ export interface CommandPaletteController {
     handleValueChange: (value: string) => void;
     handleClose: () => void;
     handleSelect: (action: CommandAction) => void;
-    handleKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export function useCommandPaletteController(): CommandPaletteController {
@@ -128,15 +127,6 @@ export function useCommandPaletteController(): CommandPaletteController {
         [handleClose, router]
     );
 
-    const handleKeyDown = useCallback(
-        (event: KeyboardEvent<HTMLDivElement>) => {
-            if (event.key === 'Escape') {
-                handleClose();
-            }
-        },
-        [handleClose]
-    );
-
     return {
         open,
         mounted,
@@ -145,7 +135,6 @@ export function useCommandPaletteController(): CommandPaletteController {
         handleOpenChange,
         handleValueChange: setSearchValue,
         handleClose,
-        handleSelect,
-        handleKeyDown
+        handleSelect
     };
 }

@@ -1,5 +1,5 @@
+import { Command } from '@commander-js/extra-typings';
 import { Logger } from '@seedcord/services';
-import { Command } from 'commander';
 
 import { BuildCommand } from '@commands/build/BuildCommand';
 import { DevCommand } from '@commands/dev/DevCommand';

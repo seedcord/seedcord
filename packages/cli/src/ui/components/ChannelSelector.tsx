@@ -21,8 +21,10 @@ export function ChannelSelector({ onSelect, onClose, currentChannel }: ChannelSe
         return currentIndex >= 0 ? currentIndex : 0;
     });
 
-    useInput((input, key) => {
-        if (key.escape || input === 'c') {
+    useInput((_input, key) => {
+        // Close on escape only. `c` is the parent's open key; handling it here too would double-fire the moment
+        // the parent stopped guarding against it. The footer advertises esc as the close key.
+        if (key.escape) {
             onClose();
             return;
         }

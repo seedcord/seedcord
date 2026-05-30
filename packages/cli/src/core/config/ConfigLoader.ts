@@ -14,6 +14,48 @@ import type {
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isOptionalString(value: unknown): boolean {
+    return typeof value === 'undefined' || typeof value === 'string';
+}
+
+function isStringArray(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function validateBuild(value: unknown): void {
+    if (typeof value === 'undefined') return;
+    if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuild);
+    if (!isOptionalString(value.outDir)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildOutDir);
+    if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildTsconfig);
+    if (!isOptionalString(value.bootstrap)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildBootstrap);
+}
+
+function validateHmr(value: unknown): void {
+    if (typeof value === 'undefined') return;
+    if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmr);
+    if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
+    if (typeof value.restart !== 'undefined' && !isStringArray(value.restart)) {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRestart);
+    }
+}
+
+function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
+    if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
+    if (typeof raw.instance !== 'string' || raw.instance.length === 0) {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigMissingInstance);
+    }
+    if (typeof raw.entry !== 'string' || raw.entry.length === 0) {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
+    }
+    if (!isOptionalString(raw.root)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
+    validateBuild(raw.build);
+    validateHmr(raw.hmr);
+}
+
 export class ConfigLoader {
     constructor(
         private readonly modules: ModuleLoader,
@@ -22,10 +64,10 @@ export class ConfigLoader {
 
     public async load(configPath: string): Promise<ResolvedSeedcordDevConfig> {
         const loadedModule = await this.modules.importModule(configPath);
-        const rawExport = resolveDefaultExport(loadedModule);
-        const config = await this.unwrapConfig(rawExport);
-        const configDir = dirname(configPath);
+        const config: unknown = await Promise.resolve(resolveDefaultExport(loadedModule));
+        validateConfig(config);
 
+        const configDir = dirname(configPath);
         const root = resolve(configDir, config.root ?? '.');
         const instance = this.resolveWithinRoot(root, config.instance);
         const entry = this.resolveWithinRoot(root, config.entry);
@@ -48,58 +90,9 @@ export class ConfigLoader {
             configFile: configPath,
             entry,
             build,
-            tsconfig
+            tsconfig,
+            hmr: config.hmr
         } satisfies ResolvedSeedcordDevConfig;
-    }
-
-    // eslint-disable-next-line complexity, max-statements
-    private async unwrapConfig(raw: unknown): Promise<SeedcordDevConfig> {
-        const resolved = await Promise.resolve(raw);
-        if (!resolved || typeof resolved !== 'object') {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
-        }
-        const cfg = resolved as Partial<SeedcordDevConfig>;
-        if (!cfg.instance || typeof cfg.instance !== 'string') {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigMissingInstance);
-        }
-
-        if (!cfg.entry || typeof cfg.entry !== 'string') {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
-        }
-
-        if (typeof cfg.root !== 'undefined' && typeof cfg.root !== 'string') {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
-        }
-
-        if (typeof cfg.hmr?.tsconfig !== 'undefined' && typeof cfg.hmr.tsconfig !== 'string') {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
-        }
-
-        if (typeof cfg.build !== 'undefined' && typeof cfg.build !== 'object') {
-            throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuild);
-        }
-
-        if (cfg.build) {
-            const { outDir, tsconfig, bootstrap } = cfg.build;
-            if (typeof outDir !== 'undefined' && typeof outDir !== 'string') {
-                throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildOutDir);
-            }
-
-            if (typeof tsconfig !== 'undefined' && typeof tsconfig !== 'string') {
-                throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildTsconfig);
-            }
-
-            if (typeof bootstrap !== 'undefined' && typeof bootstrap !== 'string') {
-                throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildBootstrap);
-            }
-        }
-
-        const normalized: SeedcordDevConfig = { instance: cfg.instance, entry: cfg.entry };
-        if (typeof cfg.root === 'string') normalized.root = cfg.root;
-        if (typeof cfg.hmr?.tsconfig === 'string') normalized.hmr = { tsconfig: cfg.hmr.tsconfig };
-        if (cfg.build) normalized.build = cfg.build;
-
-        return normalized;
     }
 
     private resolveWithinRoot(root: string, target: string): string {

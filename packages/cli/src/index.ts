@@ -8,5 +8,5 @@ export {
 
 export type * from '@api/Hmr';
 
-/** Package version */
+/** Package version. Falls back to '0.0.0' when run unbuilt (dev); the real value is injected at build time. */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

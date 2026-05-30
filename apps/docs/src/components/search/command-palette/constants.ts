@@ -19,6 +19,8 @@ import type { LucideIcon } from 'lucide-react';
 
 export const FOCUS_DELAY_MS = 10;
 export const MIN_SEARCH_QUERY_LENGTH = 3;
+export const SEARCH_DEBOUNCE_MS = 380;
+export const COMMAND_LISTBOX_ID = 'command-listbox';
 
 export const SEARCH_KIND_ICONS: Record<SearchResultKind, LucideIcon> = {
     package: PackageSearch,

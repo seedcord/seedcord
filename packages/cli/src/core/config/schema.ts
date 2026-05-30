@@ -66,7 +66,7 @@ export interface ResolvedSeedcordBuildConfig {
 /**
  * Fully resolved configuration with absolute file system paths.
  */
-export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'tsconfig' | 'hmr'>> {
+export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'hmr'>> {
     /**
      * Absolute path to the config file that produced this resolution.
      */
@@ -76,13 +76,13 @@ export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConf
      */
     build: ResolvedSeedcordBuildConfig;
     /**
-     * Optional tsconfig path to use for type checking in dev mode.
+     * Resolved tsconfig path to use for type checking in dev mode.
      */
     tsconfig?: string | undefined;
     /**
-     * Optional HMR configuration.
+     * HMR configuration carried through from the user config (restart globs are matched as-is).
      */
-    hmr?: SeedcordHmrConfig;
+    hmr?: SeedcordHmrConfig | undefined;
 }
 
 /**

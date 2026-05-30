@@ -6,7 +6,7 @@ import {
     StartupPhase
 } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
-import { SeedcordBrand } from '@seedcord/utils/internal';
+import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';

@@ -27,8 +27,7 @@ export class BootstrapWriter {
     }
 
     private formatImportPath(fragment: string): string {
-        let normalized = fragment.replace(/\\/g, '/');
-        if (!normalized.startsWith('.')) normalized = `./${normalized}`;
-        return normalized;
+        const normalized = fragment.replaceAll('\\', '/');
+        return normalized.startsWith('.') ? normalized : `./${normalized}`;
     }
 }

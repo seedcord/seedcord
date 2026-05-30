@@ -13,6 +13,12 @@ interface LogStoreEvents {
     change: [];
 }
 
+// Buffered log batches flush on this debounce so a noisy bot doesn't re-render the panel per line.
+const UPDATE_DEBOUNCE_MS = 30;
+
+// eslint-disable-next-line no-magic-numbers -- 27 is the ESC control code
+const ESC = String.fromCharCode(27);
+
 export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILoggerSink {
     private static _instance: LogStore | null = null;
 
@@ -21,6 +27,7 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
     private nextId = 1;
     private sinkHandle: ILoggerSinkHandle | null = null;
     private pendingUpdate = false;
+    private flushTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_LOGS = 1000;
 
     private constructor() {
@@ -46,14 +53,17 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
     }
 
     public onLog(entry: LoggerSinkLogEntry): void {
-        const lines = entry.rendered.split(/\r?\n/);
+        // Split on a lone \r too: a bare carriage return left in a row resets the terminal cursor to column 0
+        // on print and overwrites the start of the line. Then drop any other control char (keeping ESC so SGR
+        // color sequences still render) for the same corruption reason.
+        const lines = entry.rendered.split(/\r\n|\r|\n/);
         const now = Date.now();
 
         for (const line of lines) {
             this.buffer.push({
                 id: this.nextId++,
                 channel: entry.channel,
-                text: line,
+                text: line.replace(/\p{Cc}/gu, (char) => (char === ESC ? char : '')),
                 timestamp: now
             });
         }
@@ -77,26 +87,31 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
         this.emit('change');
     }
 
+    // Drain buffered logs immediately and yield once so Ink paints the final lines before a quit unmounts the UI.
+    public async flush(): Promise<void> {
+        if (this.flushTimer) {
+            clearTimeout(this.flushTimer);
+            this.flushTimer = null;
+        }
+        this.applyBuffer();
+        await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+
     private scheduleUpdate(): void {
         if (this.pendingUpdate) return;
         this.pendingUpdate = true;
-        const TARGET_FPS = 30;
+        this.flushTimer = setTimeout(() => this.applyBuffer(), UPDATE_DEBOUNCE_MS);
+    }
 
-        setTimeout(() => {
-            this.pendingUpdate = false;
+    private applyBuffer(): void {
+        this.flushTimer = null;
+        this.pendingUpdate = false;
+        if (this.buffer.length === 0) return;
 
-            if (this.buffer.length > 0) {
-                const newEntries = [...this.entries, ...this.buffer];
-                this.buffer = [];
+        const newEntries = [...this.entries, ...this.buffer];
+        this.buffer = [];
+        this.entries = newEntries.length > this.MAX_LOGS ? newEntries.slice(-this.MAX_LOGS) : newEntries;
 
-                if (newEntries.length > this.MAX_LOGS) {
-                    this.entries = newEntries.slice(-this.MAX_LOGS);
-                } else {
-                    this.entries = newEntries;
-                }
-
-                this.emit('change');
-            }
-        }, TARGET_FPS);
+        this.emit('change');
     }
 }

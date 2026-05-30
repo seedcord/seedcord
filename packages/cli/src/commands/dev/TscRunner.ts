@@ -1,6 +1,11 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
 
 import { Logger } from '@seedcord/services';
+
+const TSC_GRACEFUL_EXIT_MS = 2000;
 
 export class TscRunner {
     private process: ChildProcess | null = null;
@@ -16,16 +21,21 @@ export class TscRunner {
     public start(): void {
         if (this.process) return;
 
-        const args = ['--noEmit', '--watch', '--preserveWatchOutput', '--pretty'];
+        const tscPath = this.resolveProjectTsc();
+        if (!tscPath) {
+            this.logger.error('Unable to resolve "typescript". Install it in the project to enable tsc --watch.');
+            return;
+        }
+
+        const args = [tscPath, '--noEmit', '--watch', '--preserveWatchOutput', '--pretty'];
         if (this.tsconfigPath) {
             args.push('--project', this.tsconfigPath);
         }
 
         this.logger.info('Starting tsc --watch...');
 
-        this.process = spawn('tsc', args, {
+        this.process = spawn(process.execPath, args, {
             cwd: this.cwd ?? process.cwd(),
-            shell: true,
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
@@ -62,10 +72,30 @@ export class TscRunner {
     }
 
     public stop(): void {
-        if (this.process) {
-            this.logger.info('Stopping tsc...');
-            this.process.kill();
-            this.process = null;
+        const child = this.process;
+        if (!child) return;
+
+        this.logger.info('Stopping tsc...');
+        child.kill('SIGTERM');
+
+        // justified: tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds); escalate to SIGKILL after a grace window. unref so the timer never holds the event loop open.
+        const killTimer = setTimeout(() => child.kill('SIGKILL'), TSC_GRACEFUL_EXIT_MS);
+        killTimer.unref();
+        child.once('exit', () => {
+            clearTimeout(killTimer);
+        });
+        // The handle is nulled by the 'exit' listener in start(); leaving it set until exit prevents start() from spawning a second tsc over a still-dying one.
+    }
+
+    private resolveProjectTsc(): string | null {
+        const projectDir = this.cwd ?? process.cwd();
+        const manifest = resolve(projectDir, 'package.json');
+        const projectRequire = existsSync(manifest) ? createRequire(manifest) : createRequire(import.meta.url);
+
+        try {
+            return projectRequire.resolve('typescript/bin/tsc');
+        } catch {
+            return null;
         }
     }
 }

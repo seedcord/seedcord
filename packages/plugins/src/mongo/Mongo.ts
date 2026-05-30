@@ -65,7 +65,7 @@ export class Mongo extends Plugin {
             this.options.timeout
         );
 
-        if (!Envapter.isDevelopment) return; // HMR only in development
+        if (!Envapter.isDevelopment) return;
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
             isHandler: this.isServiceClass.bind(this),
@@ -133,6 +133,10 @@ export class Mongo extends Plugin {
     private async disconnect(): Promise<void> {
         this.clearModels();
 
+        // connect() may have failed/timed out before assigning, in which case there is nothing to disconnect.
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        if (!this.connection) return;
+
         await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
@@ -191,7 +195,7 @@ export class Mongo extends Plugin {
             (Reflect.getMetadata(ModelMetadataKey, Service) as mongoose.Model<unknown> | undefined)?.modelName;
 
         if (key && (this.services as Record<string, unknown>)[key]) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name, not a static property
             delete (this.services as Record<string, unknown>)[key];
         }
 

@@ -1,7 +1,7 @@
 import { Logger } from '@seedcord/services';
 
+import type { Command } from '@commander-js/extra-typings';
 import type { ILogger } from '@seedcord/types';
-import type { Command } from 'commander';
 
 export abstract class BaseCommand {
     protected readonly logger: ILogger;

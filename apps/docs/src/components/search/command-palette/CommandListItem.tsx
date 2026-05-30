@@ -1,7 +1,6 @@
 'use client';
 
 import { cn, tw, Icon } from '@seedcord/ui';
-import { Command } from 'cmdk';
 
 import { getToneConfig, resolveEntityTone } from '@lib/entityMetadata';
 
@@ -42,33 +41,46 @@ const BASE_ICON_CLASSES = tw`flex size-8 shrink-0 items-center justify-center ro
 interface CommandListItemProps {
     action: CommandAction;
     onSelect: (action: CommandAction) => void;
+    isActive: boolean;
+    optionId: string;
+    index: number;
+    onActivate: (index: number) => void;
 }
 
-function CommandListItem({ action, onSelect }: CommandListItemProps): ReactElement {
+function CommandListItem({
+    action,
+    onSelect,
+    isActive,
+    optionId,
+    index,
+    onActivate
+}: CommandListItemProps): ReactElement {
     const ItemIcon = SEARCH_KIND_ICONS[action.kind];
     const isEntityResult = ENTITY_RESULT_KINDS.has(action.kind);
     const tone = isEntityResult ? resolveEntityTone(action.kind) : undefined;
     const toneStyles = tone ? getToneConfig(tone).styles : undefined;
-    const keywords = [action.path, action.id];
-    if (action.description) {
-        keywords.push(action.description);
-    }
     const iconClasses = cn(
         BASE_ICON_CLASSES,
         toneStyles ? toneStyles.badge : NON_ENTITY_BADGES[action.kind as NonEntityResultKind]
     );
 
     return (
-        <Command.Item
-            value={`${action.label} ${action.id}`}
-            onSelect={() => onSelect(action)}
+        // In the WAI-ARIA combobox/listbox pattern, options are not individually focusable and take no key
+        // handlers: focus stays on the input and keyboard selection runs there via aria-activedescendant + Enter.
+        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
+        <div
+            id={optionId}
+            role="option"
+            aria-selected={isActive}
+            data-active={isActive || undefined}
             data-command-id={action.id}
-            className={cn(
-                'group/item mt-1 flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-transparent p-3 text-sm text-(--text) transition outline-none first:mt-0',
-                'data-[selected=true]:border-(--accent-b)/38 data-[selected=true]:bg-(--accent-b)/16'
-            )}
             aria-label={action.label}
-            keywords={keywords}
+            onClick={() => onSelect(action)}
+            onMouseMove={() => onActivate(index)}
+            className={cn(
+                'group/item mt-1 flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-transparent p-3 text-sm text-(--text) transition outline-hidden first:mt-0',
+                'data-[active=true]:border-(--accent-b)/38 data-[active=true]:bg-(--accent-b)/16'
+            )}
         >
             <span className={cn(iconClasses)}>
                 <Icon icon={ItemIcon} size={18} aria-hidden />
@@ -77,7 +89,7 @@ function CommandListItem({ action, onSelect }: CommandListItemProps): ReactEleme
                 <div className={cn('flex flex-wrap items-center gap-2')}>
                     <span
                         className={cn(
-                            'truncate font-medium transition-colors group-data-[selected=true]/item:text-(--text-accent-b-subtle)'
+                            'truncate font-medium transition-colors group-data-[active=true]/item:text-(--text-accent-b-subtle)'
                         )}
                     >
                         {action.label}
@@ -89,7 +101,7 @@ function CommandListItem({ action, onSelect }: CommandListItemProps): ReactEleme
             {action.isExternal ? (
                 <Icon icon={SEARCH_KIND_ICONS.resource} size={16} className={cn('text-subtle mt-1')} aria-hidden />
             ) : null}
-        </Command.Item>
+        </div>
     );
 }
 

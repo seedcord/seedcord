@@ -5,7 +5,6 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "commander": ["./node_modules/@commander-js/extra-typings"],
             "@ui/*": ["./src/ui/*"],
             "@core/*": ["./src/core/*"],
             "@commands/*": ["./src/commands/*"],

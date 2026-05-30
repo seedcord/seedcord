@@ -10,6 +10,9 @@ const resolveAppPath = (segment: string): string => fileURLToPath(new URL(segmen
 export default mergeConfig(
     rootConfig,
     defineConfig({
+        // The app's tsconfig sets jsx: "preserve" for Next, which the default oxc transform honors and leaves
+        // JSX untransformed under vitest. Force the React automatic runtime for the test transform.
+        oxc: { jsx: { runtime: 'automatic' } },
         resolve: {
             alias: {
                 '@components': resolveAppPath('./src/components'),

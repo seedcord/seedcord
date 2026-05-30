@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { MIN_SEARCH_QUERY_LENGTH } from './constants';
+import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from './constants';
 
 import type { CommandAction } from './types';
 
@@ -20,7 +20,6 @@ interface UseCommandPaletteSearchOptions {
 }
 
 const SEARCH_ENDPOINT = '/docs/search';
-const SEARCH_DEBOUNCE_MS = 350;
 
 interface SearchResponse {
     results?: CommandAction[];
@@ -49,7 +48,9 @@ export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearch
                 return;
             }
 
-            setState({ results: [], status: 'loading' });
+            // Keep the previous results visible while the next query resolves; the header spinner signals the
+            // refresh. Clearing to [] here is what made the list flicker to the caption between keystrokes.
+            setState((prev) => ({ results: prev.results, status: 'loading' }));
 
             const params = new URLSearchParams({ q: trimmed });
 
