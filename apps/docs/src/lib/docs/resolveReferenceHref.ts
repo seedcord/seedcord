@@ -2,6 +2,7 @@ import { kindName, type DocReference, type DocsEngine, type DocNode } from '@see
 
 import { resolveEntityTone } from '@lib/entityMetadata';
 
+import { memberFragment } from './anchors';
 import { resolveExternalPackageUrl } from './packages';
 import { buildEntityHref } from './routes';
 
@@ -11,14 +12,6 @@ interface ResolveReferenceOptions {
 }
 
 const ENTITY_RESULT_KINDS = new Set(['class', 'interface', 'enum', 'type', 'function', 'variable']);
-
-const MEMBER_ANCHOR_PREFIX: Record<string, string> = {
-    method: 'method',
-    property: 'property',
-    constructor: 'constructor',
-    typeParameter: 'typeParameter',
-    enumMember: 'enum-member'
-};
 
 function getParentSlug(slug: string): string | null {
     const segments = slug.split('/');
@@ -92,8 +85,7 @@ function buildMemberHrefFromNode(engine: DocsEngine, packageName: string, node: 
             return buildParameterAnchor(engine, packageName, entityHref, parentSlug);
         }
 
-        const anchorPrefix = MEMBER_ANCHOR_PREFIX[nodeKind];
-        return anchorPrefix ? `${entityHref}#${anchorPrefix}-${node.slug}` : entityHref;
+        return `${entityHref}#${memberFragment(node)}`;
     }
 
     const owner = findOwnerNode(engine, packageName, node);
@@ -111,13 +103,14 @@ function buildMemberHrefFromNode(engine: DocsEngine, packageName: string, node: 
     return '/docs/404';
 }
 
+// A `@link` to a parameter resolves to the owning method/constructor anchor; parameters
+// render inline on the parent's signature, not as their own scroll target.
 function buildParameterAnchor(engine: DocsEngine, packageName: string, entityHref: string, parentSlug: string): string {
     const parentNode =
         engine.getNodeByGlobalSlug(packageName, parentSlug) ?? engine.getNodeBySlug(packageName, parentSlug);
-    const parentKind = parentNode ? kindName(parentNode.kind).toLowerCase() : '';
-    const prefix = parentKind === 'constructor' ? 'constructor' : 'method';
+    if (!parentNode) return entityHref;
 
-    return `${entityHref}#${prefix}-${parentSlug}`;
+    return `${entityHref}#${memberFragment(parentNode)}`;
 }
 
 function findOwnerNode(engine: DocsEngine, packageName: string, node: DocNode | null): DocNode | null {

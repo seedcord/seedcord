@@ -1,10 +1,5 @@
-import {
-    ensureSlug,
-    stripDuplicateDescription,
-    cloneExamples,
-    ensureSignatureAnchor,
-    buildDeprecationStatusFromNodeLike
-} from './utils';
+import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
+import { memberFragment, withOverload } from '../anchors';
 import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { formatSignature, highlightCode, highlightSignatureCode } from '../formatting';
@@ -60,13 +55,14 @@ export async function buildSignatureDetails({
     descriptionSignatureIndex,
     headerSignature
 }: SignatureDetailsOptions): Promise<EntityMemberSummary['signatures']> {
+    const base = memberFragment(node);
+
     if (node.signatures.length === 0) {
         const documentation: CommentParagraph[] = [];
         const examples: CommentExample[] = [];
-        const anchor = ensureSlug(node);
         const fallbackDetail: EntityMemberSummary['signatures'][number] = {
-            id: `${anchor}-signature`,
-            anchor,
+            id: base,
+            anchor: '',
             code: headerSignature,
             documentation,
             examples
@@ -78,6 +74,8 @@ export async function buildSignatureDetails({
 
         return [fallbackDetail];
     }
+
+    const total = node.signatures.length;
 
     return Promise.all(
         node.signatures.map(async (signature, index) => {
@@ -101,9 +99,10 @@ export async function buildSignatureDetails({
 
             const examples = cloneExamples(comment?.examples ?? []);
 
+            const fragment = withOverload(base, index, total);
             const detail: EntityMemberSummary['signatures'][number] = {
-                id: ensureSignatureAnchor(signature),
-                anchor: ensureSignatureAnchor(signature),
+                id: fragment,
+                anchor: total > 1 ? fragment : '',
                 code,
                 documentation,
                 examples

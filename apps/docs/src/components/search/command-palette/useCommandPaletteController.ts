@@ -11,43 +11,11 @@ import { FOCUS_DELAY_MS } from './constants';
 
 import type { CommandAction } from './types';
 
-type ActionKind = CommandAction['kind'];
-
-const MEMBER_ANCHOR_PREFIX: Partial<Record<ActionKind, string>> = {
-    method: 'method',
-    property: 'property',
-    variable: 'property',
-    typeParameter: 'typeParameter',
-    constructor: 'constructor',
-    enumMember: 'enum-member'
-};
-
-function resolveMemberAnchor(kind: ActionKind, params: URLSearchParams): string | null {
-    const prefix = MEMBER_ANCHOR_PREFIX[kind];
-
-    if (prefix) {
-        const paramKey = prefix === 'typeParameter' ? 'typeparam' : 'member';
-        const id = params.get(paramKey);
-        return id ? `${prefix}-${id}` : null;
-    }
-
-    if (kind === 'parameter') {
-        const owningMember = params.get('member');
-        return owningMember ? `method-${owningMember}` : null;
-    }
-
-    return null;
-}
-
+// `action.href` already carries the correct member fragment from the search route; this only
+// strips the origin for router.push / window.open.
 function buildNavigationHref(action: CommandAction, origin: string): string {
     try {
         const targetUrl = new URL(action.href, origin);
-        const anchor = resolveMemberAnchor(action.kind, targetUrl.searchParams);
-
-        if (anchor) {
-            targetUrl.hash = anchor;
-        }
-
         return `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`;
     } catch {
         return action.href;

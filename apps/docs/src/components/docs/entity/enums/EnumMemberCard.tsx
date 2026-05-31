@@ -85,7 +85,7 @@ function ActionsCell({
 }
 
 export function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactElement {
-    const anchorId = `enum-member-${member.id}`;
+    const anchorId = member.id;
     const hasSummary = member.summary.length > 0;
 
     const deprecationStatus: DeprecationStatus | undefined = member.deprecationStatus;

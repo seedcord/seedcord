@@ -16,7 +16,7 @@ interface SignaturePanelProps extends WithParentDeprecationStatus {
 export function SignaturePanel({ signature, isActive, parentDeprecationStatus }: SignaturePanelProps): ReactElement {
     const section = (
         <section
-            id={signature.anchor}
+            id={signature.anchor || undefined}
             className={cn('space-y-3', isActive ? 'block' : 'hidden')}
             aria-hidden={!isActive}
         >

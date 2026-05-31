@@ -16,7 +16,7 @@ interface MemberRowProps extends WithParentDeprecationStatus {
 }
 export function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: MemberRowProps): ReactElement {
     const tags = buildTagList(member);
-    const anchorId = `${prefix}-${member.id}`;
+    const anchorId = member.id;
     const hasTags = tags.length > 0;
     const isDeprecated =
         tags.includes('deprecated') ||

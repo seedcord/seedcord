@@ -3,6 +3,8 @@
 import { cn } from '@seedcord/ui';
 import { useMemo } from 'react';
 
+import { paramFragment, typeParamFragment, withOverload } from '@lib/docs/anchors';
+
 import { MemberDetailGroup } from '../member/MemberDetailGroup';
 import { useActiveSignatureList } from '../utils/useActiveSignatureList';
 
@@ -15,8 +17,8 @@ import type {
 } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
-function buildTypeParamMember(tp: FunctionTypeParameterModel, index: number): EntityMemberSummary {
-    const id = `typeparam-${tp.name}-${index}`;
+function buildTypeParamMember(tp: FunctionTypeParameterModel): EntityMemberSummary {
+    const id = typeParamFragment(tp.name);
     const codeText = [
         tp.name,
         tp.constraint ? `extends ${tp.constraint}` : undefined,
@@ -34,8 +36,8 @@ function buildTypeParamMember(tp: FunctionTypeParameterModel, index: number): En
         sharedExamples: [],
         signatures: [
             {
-                id: `${id}-sig`,
-                anchor: `${id}-sig`,
+                id,
+                anchor: '',
                 code: { text: codeRepresentation.text, html: codeRepresentation.html ?? null },
                 documentation: tp.description ? [{ plain: tp.description, html: tp.description }] : [],
                 examples: []
@@ -45,8 +47,12 @@ function buildTypeParamMember(tp: FunctionTypeParameterModel, index: number): En
 }
 
 // Reuses EntityMemberSummary rather than a dedicated FunctionParamMember type, which would cascade into MemberRow's prop signature.
-function buildParamMember(p: FunctionSignatureParameterModel, index: number): EntityMemberSummary {
-    const id = `param-${p.name}-${index}`;
+function buildParamMember(
+    p: FunctionSignatureParameterModel,
+    overloadIndex: number,
+    totalSignatures: number
+): EntityMemberSummary {
+    const id = withOverload(paramFragment(p.name), overloadIndex, totalSignatures);
     const label = p.name + (p.optional ? '?' : '');
 
     const defaultTextParts: string[] = [];
@@ -64,8 +70,8 @@ function buildParamMember(p: FunctionSignatureParameterModel, index: number): En
         sharedExamples: [],
         signatures: [
             {
-                id: `${id}-sig`,
-                anchor: `${id}-sig`,
+                id,
+                anchor: '',
                 code: codeRep,
                 documentation: p.documentation,
                 examples: []
@@ -86,9 +92,11 @@ export function FunctionBody({ model }: { model: FunctionEntityModel }): ReactEl
     if (!signatures.length || !activeSignature) return null;
 
     const rawTypeParams = activeSignature.typeParameters ?? [];
-    const typeParameterItems: EntityMemberSummary[] = rawTypeParams.map((tp, idx) => buildTypeParamMember(tp, idx));
+    const typeParameterItems: EntityMemberSummary[] = rawTypeParams.map((tp) => buildTypeParamMember(tp));
 
-    const parameterItems: EntityMemberSummary[] = activeSignature.parameters.map((p, idx) => buildParamMember(p, idx));
+    const parameterItems: EntityMemberSummary[] = activeSignature.parameters.map((p) =>
+        buildParamMember(p, activeSignature.overloadIndex, signatures.length)
+    );
 
     return (
         <section className={cn('space-y-6')}>

@@ -1,6 +1,7 @@
 import { kindName, type DocSearchEntry, type DocNode } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { memberFragment } from '@lib/docs/anchors';
 import { getDocsEngine } from '@lib/docs/engine';
 import { DEFAULT_MANIFEST_PACKAGE, resolveManifestPackageName } from '@lib/docs/packages';
 import { buildEntityHref, buildPackageBasePath } from '@lib/docs/routes';
@@ -85,14 +86,6 @@ function buildBreadcrumb(entry: DocSearchEntry): string {
 
 const ENTITY_RESULT_KINDS = new Set<SearchResultKind>(['class', 'interface', 'enum', 'type', 'function', 'variable']);
 
-const MEMBER_ANCHOR_PREFIX: Partial<Record<SearchResultKind, string>> = {
-    method: 'method',
-    property: 'property',
-    constructor: 'constructor',
-    typeParameter: 'typeParameter',
-    enumMember: 'enum-member'
-};
-
 function getParentSlug(slug: string): string | null {
     const segments = slug.split('/');
     if (segments.length <= 1) {
@@ -161,10 +154,11 @@ const buildParameterHref = (
     }
 
     const parentNode = engine.getNodeByGlobalSlug(entry.packageName, parentSlug);
-    const parentKind = parentNode ? kindName(parentNode.kind).toLowerCase() : '';
-    const prefix = parentKind === 'constructor' ? 'constructor' : 'method';
+    if (!parentNode) {
+        return entityHref;
+    }
 
-    return `${entityHref}#${prefix}-${parentSlug}`;
+    return `${entityHref}#${memberFragment(parentNode)}`;
 };
 
 const buildMemberHref = (
@@ -180,8 +174,8 @@ const buildMemberHref = (
         return buildParameterHref(engine, entry, entityHref);
     }
 
-    const anchorPrefix = MEMBER_ANCHOR_PREFIX[resultKind];
-    return anchorPrefix ? `${entityHref}#${anchorPrefix}-${entry.slug}` : entityHref;
+    const memberNode = engine.getNodeByGlobalSlug(entry.packageName, entry.slug);
+    return memberNode ? `${entityHref}#${memberFragment(memberNode)}` : entityHref;
 };
 
 const mapSearchEntry = (

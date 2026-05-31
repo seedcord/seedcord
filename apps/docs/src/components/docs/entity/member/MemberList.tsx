@@ -33,9 +33,9 @@ export function MemberList({ items, prefix, onNavigate }: MemberListProps): Reac
                 {items.map((item) => (
                     <li key={item.id} className={cn('min-w-0')}>
                         <Link
-                            href={`#${prefix}-${item.id}`}
+                            href={`#${item.id}`}
                             onClick={() => {
-                                onNavigate(`${prefix}-${item.id}`);
+                                onNavigate(item.id);
                             }}
                             className={cn(
                                 'group bg-surface-subtle flex w-full min-w-0 items-center justify-between rounded-lg border border-(--border)/70 px-3.5 py-2 text-sm text-(--text)',

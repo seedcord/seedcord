@@ -1,3 +1,4 @@
+import { typeParamFragment } from '../anchors';
 import { createPlainParagraph } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { formatTypeParameter } from '../formatting';
@@ -37,16 +38,18 @@ export async function buildTypeParameterSummaries(
                 }
             }
 
+            const fragment = typeParamFragment(param.name);
+
             return {
-                id: `type-${param.name}`,
+                id: fragment,
                 label: param.name,
                 description,
                 sharedDocumentation: [],
                 sharedExamples: examples,
                 signatures: [
                     {
-                        id: `type-${param.name}-signature`,
-                        anchor: `type-${param.name}`,
+                        id: fragment,
+                        anchor: '',
                         code,
                         documentation,
                         examples

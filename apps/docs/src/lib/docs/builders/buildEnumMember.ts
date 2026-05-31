@@ -1,4 +1,5 @@
-import { ensureSlug, collectMemberTags, buildDeprecationStatusFromNodeLike } from './utils';
+import { collectMemberTags, buildDeprecationStatusFromNodeLike } from './utils';
+import { memberFragment } from '../anchors';
 import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { highlightCode } from '../formatting';
@@ -10,7 +11,7 @@ export async function buildEnumMember(node: DocNode, context: FormatContext): Pr
     const code = await highlightCode(node.headerText ?? node.name);
     const comment = await formatCommentRich(node.comment, context);
     const member: EnumMemberModel = {
-        id: ensureSlug(node),
+        id: memberFragment(node),
         label: node.name,
         summary: cloneCommentParagraphs(comment.paragraphs),
         signature: code,

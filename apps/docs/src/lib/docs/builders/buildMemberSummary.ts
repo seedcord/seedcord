@@ -1,23 +1,23 @@
-import { formatCommentRich } from '../comments/formatter';
-import { resolveReferenceHref } from '../resolveReferenceHref';
+import { memberFragment } from '../anchors';
 import { buildSignatureDetails } from './buildSignatureDetails';
 import {
     buildDeprecationStatusFromNodeLike,
     cloneExamples,
     collectMemberTags,
     deriveSharedDocumentation,
-    ensureSlug,
     normalizeAccessor,
     resolveHeaderSignature,
     selectDescription
 } from './utils';
+import { formatCommentRich } from '../comments/formatter';
+import { resolveReferenceHref } from '../resolveReferenceHref';
 
 import type { FormatContext, SeeAlsoEntryWithoutTarget } from '../types';
 import type { EntityMemberSummary } from '@components/docs/entity/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildMemberSummary(node: DocNode, context: FormatContext): Promise<EntityMemberSummary> {
-    const memberId = ensureSlug(node);
+    const memberId = memberFragment(node);
     const headerSignature = await resolveHeaderSignature(node, context);
     const nodeComment = await formatCommentRich(node.comment, context);
     const signatureComments = await Promise.all(node.signatures.map((sig) => formatCommentRich(sig.comment, context)));

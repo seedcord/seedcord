@@ -171,11 +171,11 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'doThing' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/classes/MockClass#method-MockClass/doThing'
+            '/docs/packages/seedcord/1.0.0/classes/MockClass#doThing'
         );
     });
 
-    it('builds a parameter anchor (#method-<parentSlug>) when the resolved node is a parameter on a method', () => {
+    it('points a parameter on a method at the owning method anchor', () => {
         const owner = makeNode({
             slug: 'MockClass',
             qualifiedName: 'MockClass',
@@ -201,11 +201,11 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'arg' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/classes/MockClass#method-MockClass/doThing'
+            '/docs/packages/seedcord/1.0.0/classes/MockClass#doThing'
         );
     });
 
-    it('uses the constructor anchor prefix when the parent of a parameter is a constructor', () => {
+    it('points a parameter on a constructor at the #constructor anchor', () => {
         const owner = makeNode({
             slug: 'MockClass',
             qualifiedName: 'MockClass',
@@ -231,7 +231,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'options' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/classes/MockClass#constructor-MockClass/constructor'
+            '/docs/packages/seedcord/1.0.0/classes/MockClass#constructor'
         );
     });
 

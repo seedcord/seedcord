@@ -2,7 +2,7 @@ import { toGlobalId, type GlobalId } from '../ids';
 import { kindLabel } from '../kinds';
 import { mapFlags } from './flag-mapper';
 import { formatRenderedSignature, renderSignatureView } from './signature-renderer';
-import { typeToken, toDocType } from './type-helpers';
+import { toDocType } from './type-helpers';
 
 import type {
     DocComment,
@@ -252,16 +252,9 @@ export function mapGroups(group: ReflectionGroup, packageName: string): DocGroup
     };
 }
 
-function sigFragment(signature: SignatureReflection): string {
-    const HASH_BASE = 36;
-    const name = signature.name;
-    const params = (signature.parameters ?? []).map((parameter) => typeToken(parameter.type)).join(',');
-    const ret = typeToken(signature.type);
-    let hash = 5381;
-    for (const ch of `${name}(${params}):${ret}`) {
-        hash = (hash << 5) + hash + ch.charCodeAt(0);
-    }
-    return `${name}-${(hash >>> 0).toString(HASH_BASE)}`;
+// Bare overload disambiguator; apps/docs composes the full member anchor from this.
+function sigFragment(overloadIndex: number, totalSignatures: number): string {
+    return totalSignatures > 1 ? `overload-${overloadIndex + 1}` : '';
 }
 
 function mapSignatureComments(
@@ -283,32 +276,16 @@ function mapSignatureComments(
     };
 }
 
-function registerSignatureFragment(signature: SignatureReflection, registry?: Set<string>): string {
-    const fragment = sigFragment(signature);
-    if (!registry) {
-        return fragment;
-    }
-
-    let attempt = 0;
-    let candidate = fragment;
-    while (registry.has(candidate)) {
-        attempt += 1;
-        candidate = `${fragment}-o${attempt}`;
-    }
-    registry.add(candidate);
-    return candidate;
-}
-
 export function mapSignature(
     context: TransformContext,
     signature: SignatureReflection,
     parent: { id: number; name: string; slug: string },
     index: number,
-    fragmentRegistry?: Set<string>
+    totalSignatures: number
 ): DocSignature {
     const { comment, returnsComment, throws } = mapSignatureComments(context, signature);
-    const fragment = registerSignatureFragment(signature, fragmentRegistry);
-    const anchor = `${parent.slug}#${fragment}`;
+    const fragment = sigFragment(index, totalSignatures);
+    const anchor = fragment;
 
     const docSignature: DocSignature = {
         name: signature.name && signature.name.length > 0 ? signature.name : parent.name,

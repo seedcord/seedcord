@@ -151,6 +151,8 @@ export interface DocSignature {
     id?: number;
     name: string;
     kind: ReflectionKind;
+    // `overload-N` (1-based) for multi-signature members, empty otherwise. `anchor` mirrors it
+    // (bare, no parent slug); apps/docs composes the full member anchor.
     fragment: string;
     anchor: string;
     overloadIndex: number;

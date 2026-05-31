@@ -309,10 +309,8 @@ export class NodeTransformer {
         if (acc.getSignature) out.push(acc.getSignature);
         if (acc.setSignature) out.push(acc.setSignature);
 
-        const fragments = new Set<string>();
-
         node.signatures = out.map((sig, i) =>
-            mapSignature(this.context, sig, { id: node.id, name: node.name, slug: node.slug }, i, fragments)
+            mapSignature(this.context, sig, { id: node.id, name: node.name, slug: node.slug }, i, out.length)
         );
     }
 
