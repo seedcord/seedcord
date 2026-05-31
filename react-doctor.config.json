@@ -1,4 +1,5 @@
 {
+    "$schema": "https://www.react.doctor/schema/config.json",
     "ignore": {
         "files": ["apps/docs/src/app/dev/**"],
         "overrides": [
