@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import { MemberDetailGroup } from '../../member/MemberDetailGroup';
 
-import type { TypeModel } from '../../types';
+import type { TypeModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 export function renderType(model: TypeModel): ReactElement {

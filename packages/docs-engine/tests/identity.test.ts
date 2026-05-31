@@ -6,9 +6,9 @@ import {
     formatDisplayPackageName,
     resolveExternalPackageUrl,
     resolveManifestPackageName
-} from '../../../src/lib/docs/packages';
+} from '../src/packages/identity';
 
-import type { DocsEngine } from '@seedcord/docs-engine';
+import type { DocsEngine } from '../src/DocsEngine';
 
 function makeEngine(packages: string[]): DocsEngine {
     return { listPackages: () => packages } as unknown as DocsEngine;

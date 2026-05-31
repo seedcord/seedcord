@@ -1,10 +1,11 @@
-import { kindName, type DocReference, type DocsEngine, type DocNode } from '@seedcord/docs-engine';
+import { memberFragment } from '../anchors';
+import { kindName } from '../kinds';
+import { buildEntityHref } from './url-builder';
+import { resolveExternalPackageUrl } from '../packages/identity';
+import { resolveEntityTone } from '../tones';
 
-import { resolveEntityTone } from '@lib/entityMetadata';
-
-import { memberFragment } from './anchors';
-import { resolveExternalPackageUrl } from './packages';
-import { buildEntityHref } from './routes';
+import type { DocsEngine } from '../DocsEngine';
+import type { DocNode, DocReference } from '../types';
 
 interface ResolveReferenceOptions {
     engine: DocsEngine;
@@ -19,7 +20,7 @@ function getParentSlug(slug: string): string | null {
     return segments.slice(0, -1).join('/');
 }
 
-function findEntityNode(engine: DocsEngine, packageName: string, slug: string): DocNode | null {
+function walkToEntityNode(engine: DocsEngine, packageName: string, slug: string): DocNode | null {
     const segments = slug.split('/');
 
     for (let index = segments.length; index > 0; index -= 1) {
@@ -64,7 +65,7 @@ function buildInternalHref(engine: DocsEngine, packageName: string, slug: string
 }
 
 function buildMemberHrefFromNode(engine: DocsEngine, packageName: string, node: DocNode): string {
-    const entityNode = findEntityNode(engine, packageName, node.slug);
+    const entityNode = walkToEntityNode(engine, packageName, node.slug);
 
     if (entityNode) {
         const entityTone = resolveEntityTone(kindName(entityNode.kind));

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 
 import type { SignatureSelection } from '../member/MemberRowBody';
-import type { EntityMemberSummary } from '../types';
+import type { EntityMemberSummary } from '@lib/docs/types';
 
 export function useActiveSignature(member: EntityMemberSummary): SignatureSelection {
     const [activeSignatureId, setActiveSignatureId] = useState(() => member.signatures[0]?.id ?? '');

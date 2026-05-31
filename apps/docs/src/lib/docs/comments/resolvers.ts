@@ -1,4 +1,4 @@
-import { resolveReferenceHref } from '../resolveReferenceHref';
+import { resolveReferenceHref } from '@seedcord/docs-engine';
 
 import type { InlineTagPart, FormatContext } from '../types';
 import type { DocsEngine, DocNode, DocReference } from '@seedcord/docs-engine';

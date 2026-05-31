@@ -1,4 +1,4 @@
-import type { EntityMemberSummary } from '../types';
+import type { EntityMemberSummary } from '@lib/docs/types';
 
 export function buildTagList(member: EntityMemberSummary): string[] {
     const collected = new Set(member.tags ?? []);

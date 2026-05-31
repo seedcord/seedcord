@@ -1,5 +1,5 @@
-import { resolveHeaderSignature } from './utils';
-import { formatDisplayPackageName } from '../packages';
+import { formatDisplayPackageName } from '@seedcord/docs-engine';
+
 import { buildBaseEntityModel } from './baseEntityModel';
 import { buildClassLikeEntity } from './buildClassLikeEntity';
 import { buildEnumEntity } from './buildEnumEntity';
@@ -7,6 +7,7 @@ import { buildFunctionEntity } from './buildFunctionEntity';
 import { buildTypeEntity } from './buildTypeEntity';
 import { buildVariableEntity } from './buildVariableEntity';
 import { resolveEntityKind } from './resolveEntityKind';
+import { resolveHeaderSignature } from './utils';
 import { createFormatContext } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 

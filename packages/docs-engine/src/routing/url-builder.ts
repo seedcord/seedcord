@@ -1,15 +1,18 @@
-import { resolveEntityTone, toneToDirectory, type EntityTone } from '@lib/entityMetadata';
+import { formatDisplayPackageName } from '../packages/identity';
+import { resolveEntityTone, toneToDirectory, type EntityTone } from '../tones';
 
-import { formatDisplayPackageName } from './packages';
-
-import type { BuildEntityHrefOptions } from './types';
-import type { Route } from 'next';
+export interface BuildEntityHrefOptions {
+    name: string;
+    slug: string;
+    version?: string | null;
+    tone?: string | null;
+}
 
 const DEFAULT_VERSION_SEGMENT = 'latest';
 
 const encodeSegment = (segment: string): string => encodeURIComponent(segment);
 
-export function buildEntityHref({ name, slug, version, tone }: BuildEntityHrefOptions): Route {
+export function buildEntityHref({ name, slug, version, tone }: BuildEntityHrefOptions): string {
     const resolvedTone = tone ? resolveEntityTone(tone) : null;
     const packageSegment = encodeSegment(formatDisplayPackageName(name));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
@@ -24,7 +27,7 @@ export function buildEntityHref({ name, slug, version, tone }: BuildEntityHrefOp
     return segments.join('/');
 }
 
-export function buildPackageBasePath(manifestPackage: string, version: string | null | undefined): Route {
+export function buildPackageBasePath(manifestPackage: string, version: string | null | undefined): string {
     const packageSegment = encodeSegment(formatDisplayPackageName(manifestPackage));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
 

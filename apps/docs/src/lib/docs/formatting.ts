@@ -10,6 +10,7 @@ import {
     type ResolveHref,
     type TypeParameter
 } from '@seedcord/docs-engine';
+import { resolveExternalPackageUrl, resolveReferenceHref } from '@seedcord/docs-engine';
 
 import { sanitizeHtml } from '@lib/sanitizeHtml';
 import {
@@ -21,8 +22,6 @@ import {
 } from '@lib/shiki';
 
 import { resolveOptions } from './comments/resolvers';
-import { resolveExternalPackageUrl } from './packages';
-import { resolveReferenceHref } from './resolveReferenceHref';
 
 import type { CodeRepresentation, FormatContext } from './types';
 
@@ -53,9 +52,9 @@ export async function formatDeclarationHeader(
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context));
     const links = refsToLinks(refs);
-    // Top-level declarations (`class Foo`, `interface X`, `type Y = ...`) are valid TS at the
-    // file level. Property/type-parameter declarations (no keyword) need a class-body wrap so
-    // shiki recognizes `protected`/`readonly`/type-param `extends` as keywords.
+    // Property/type-parameter declarations (no leading keyword) need a class-body wrap so shiki
+    // tokenizes `protected`/`readonly`/type-param `extends` as keywords; keyword-led top-level
+    // declarations (`class Foo`, `type Y = ...`) are valid TS at the file level without it.
     const highlighter = header.keyword
         ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', links)
         : (c: string): Promise<string | null> => highlightMemberToHtml(c, links);

@@ -1,10 +1,14 @@
 import { kindName, type DocSearchEntry, type DocNode } from '@seedcord/docs-engine';
+import {
+    memberFragment,
+    DEFAULT_MANIFEST_PACKAGE,
+    resolveManifestPackageName,
+    buildEntityHref,
+    buildPackageBasePath
+} from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { memberFragment } from '@lib/docs/anchors';
 import { getDocsEngine } from '@lib/docs/engine';
-import { DEFAULT_MANIFEST_PACKAGE, resolveManifestPackageName } from '@lib/docs/packages';
-import { buildEntityHref, buildPackageBasePath } from '@lib/docs/routes';
 
 const MAX_RESULTS = 24;
 const MIN_QUERY_LENGTH = 3;
@@ -104,7 +108,6 @@ function findEntityNode(engine: Awaited<ReturnType<typeof getDocsEngine>>, entry
             continue;
         }
 
-        // `kindName` is camelCase; route through KIND_TO_RESULT to match SearchResultKind values.
         const resultKind = getResultKind(candidate.kind);
         if (ENTITY_RESULT_KINDS.has(resultKind)) {
             return candidate;

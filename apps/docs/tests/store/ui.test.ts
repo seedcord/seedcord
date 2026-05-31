@@ -25,7 +25,7 @@ function installStorageShim(): void {
 
 installStorageShim();
 
-const { DEFAULT_MANIFEST_PACKAGE, DEFAULT_VERSION } = await import('../../src/lib/docs/packages');
+const { DEFAULT_MANIFEST_PACKAGE, DEFAULT_VERSION } = await import('@seedcord/docs-engine/client');
 const { useUIStore } = await import('../../src/store/ui');
 
 const initialState = useUIStore.getState();

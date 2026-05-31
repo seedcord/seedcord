@@ -86,7 +86,7 @@ export const rawExternalLinks = {
     Capitalize: 'https://www.typescriptlang.org/docs/handbook/utility-types.html#capitalizestringtype',
     Uncapitalize: 'https://www.typescriptlang.org/docs/handbook/utility-types.html#uncapitalizestringtype',
 
-    // Undocumented Typescript Types to close-enough links
+    // Undocumented TypeScript types: nearest relevant page, not an exact match
     TypedPropertyDescriptor: 'https://www.typescriptlang.org/docs/handbook/decorators.html#parameter-decorators',
 
     // Node.js APIs (@types/node)
@@ -115,6 +115,5 @@ export const rawExternalLinks = {
     winston: 'https://github.com/winstonjs/winston',
     kysely: 'https://kysely.dev/docs/intro',
     pg: 'https://node-postgres.com',
-    tsup: 'https://tsup.egoist.dev',
     eslint: 'https://eslint.org/docs/latest/'
 } as const;

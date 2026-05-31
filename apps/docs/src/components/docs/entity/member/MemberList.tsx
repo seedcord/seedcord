@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import { MEMBER_TITLES } from '../constants';
 
-import type { EntityMemberSummary, MemberPrefix } from '../types';
+import type { EntityMemberSummary, MemberPrefix } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface MemberListProps {

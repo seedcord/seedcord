@@ -2,7 +2,7 @@ import { type ReactElement, Fragment } from 'react';
 
 import { EntityMembersSection } from '../../EntityMembersSection';
 
-import type { ClassLikeModel } from '../../types';
+import type { ClassLikeModel } from '@lib/docs/types';
 
 export function renderClassLike(model: ClassLikeModel): ReactElement {
     const showAccessControls = model.kind === 'class';

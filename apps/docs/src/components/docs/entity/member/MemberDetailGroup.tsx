@@ -5,7 +5,7 @@ import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, 
 import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '../constants';
 import { MemberRow } from './MemberRow';
 
-import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '../types';
+import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface MemberDetailGroupProps extends WithParentDeprecationStatus {

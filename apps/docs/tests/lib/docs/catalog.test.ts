@@ -3,24 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { PackageCatalogEntry, PackageVersionCatalog } from '../../../src/lib/docs/types';
 
 // justified: stub transitive imports so the test stays hermetic and dodges the '@lib/*' alias vitest can't resolve without vite-tsconfig-paths.
-vi.mock('@lib/entityMetadata', () => ({
-    resolveEntityTone: () => 'class',
-    toneToDirectory: () => 'classes'
-}));
 vi.mock('../../../src/lib/docs/engine', () => ({
     getDocsEngine: () =>
         Promise.resolve({ listPackages: () => [], getPackage: () => null, getPackageDirectory: () => null })
 }));
-vi.mock('../../../src/lib/docs/packages', () => ({
-    DEFAULT_MANIFEST_PACKAGE: 'seedcord',
-    DEFAULT_VERSION: 'latest',
-    formatDisplayPackageName: (n: string) => n
-}));
-vi.mock('../../../src/lib/docs/routes', () => ({
-    buildEntityHref: () => '/',
-    buildPackageBasePath: () => '/'
-}));
-vi.mock('../../../src/lib/docs/version', () => ({
+vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@seedcord/docs-engine')>()),
     formatVersionLabel: (v: string) => v
 }));
 

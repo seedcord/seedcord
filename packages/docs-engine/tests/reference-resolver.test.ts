@@ -1,47 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DocNode, DocReference, DocsEngine } from '@seedcord/docs-engine';
-
-// justified: @lib/entityMetadata alias isn't resolved by vitest without vite-tsconfig-paths.
-vi.mock('@lib/entityMetadata', () => ({
-    resolveEntityTone: (input?: string | null) => {
-        const normalized = typeof input === 'string' ? input.toLowerCase() : '';
-        const map: Record<string, string> = {
-            class: 'class',
-            interface: 'interface',
-            enum: 'enum',
-            type: 'type',
-            typealias: 'type',
-            function: 'function',
-            method: 'function',
-            variable: 'variable',
-            property: 'variable'
-        };
-        return map[normalized] ?? 'class';
-    },
-    toneToDirectory: (tone: string) => {
-        const map: Record<string, string> = {
-            class: 'classes',
-            interface: 'interfaces',
-            enum: 'enums',
-            type: 'types',
-            function: 'functions',
-            variable: 'variables'
-        };
-        return map[tone] ?? 'classes';
-    }
-}));
+import type { DocsEngine } from '../src/DocsEngine';
+import type { DocNode, DocReference } from '../src/types';
 
 // justified: stub kindName to echo the fixture's `kind` string so fixtures stay readable without real typedoc ReflectionKind values.
-vi.mock('@seedcord/docs-engine', async () => {
-    const actual = await vi.importActual<typeof import('@seedcord/docs-engine')>('@seedcord/docs-engine');
+vi.mock('../src/kinds', async () => {
+    const actual = await vi.importActual<typeof import('../src/kinds')>('../src/kinds');
     return {
         ...actual,
         kindName: (kind: unknown): string => (typeof kind === 'string' ? kind : String(kind))
     };
 });
 
-const { resolveReferenceHref } = await import('../../../src/lib/docs/resolveReferenceHref');
+const { resolveReferenceHref } = await import('../src/routing/reference-resolver');
 
 type EngineResolution = ReturnType<DocsEngine['resolveReference']>;
 

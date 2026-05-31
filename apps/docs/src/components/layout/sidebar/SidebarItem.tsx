@@ -3,8 +3,8 @@
 import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { getToneConfig } from '@lib/entityMetadata';
 import { log } from '@lib/logger';
+import { getToneConfig } from '@lib/tonePresentation';
 
 import type { SidebarItemProps } from './types';
 import type { ReactElement } from 'react';

@@ -7,9 +7,9 @@ import type {
     CodeRepresentation,
     CommentParagraph,
     FormattedComment,
-    DeprecationStatus
+    DeprecationStatus,
+    EntityMemberSummary
 } from '../types';
-import type { EntityMemberSummary } from '@components/docs/entity/types';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
 type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;

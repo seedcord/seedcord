@@ -1,11 +1,18 @@
+import { memberFragment, withOverload } from '@seedcord/docs-engine';
+
 import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
-import { memberFragment, withOverload } from '../anchors';
 import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { formatSignature, highlightCode, highlightSignatureCode } from '../formatting';
 
-import type { CodeRepresentation, CommentExample, CommentParagraph, FormatContext, FormattedComment } from '../types';
-import type { EntityMemberSummary } from '@components/docs/entity/types';
+import type {
+    CodeRepresentation,
+    CommentExample,
+    CommentParagraph,
+    FormatContext,
+    FormattedComment,
+    EntityMemberSummary
+} from '../types';
 import type { DocSignature, DocNode, DocCommentBlockTag, DocComment } from '@seedcord/docs-engine';
 
 interface SignatureDetailsOptions {

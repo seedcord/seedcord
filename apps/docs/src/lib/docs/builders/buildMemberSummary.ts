@@ -1,4 +1,5 @@
-import { memberFragment } from '../anchors';
+import { memberFragment, resolveReferenceHref } from '@seedcord/docs-engine';
+
 import { buildSignatureDetails } from './buildSignatureDetails';
 import {
     buildDeprecationStatusFromNodeLike,
@@ -10,10 +11,8 @@ import {
     selectDescription
 } from './utils';
 import { formatCommentRich } from '../comments/formatter';
-import { resolveReferenceHref } from '../resolveReferenceHref';
 
-import type { FormatContext, SeeAlsoEntryWithoutTarget } from '../types';
-import type { EntityMemberSummary } from '@components/docs/entity/types';
+import type { FormatContext, SeeAlsoEntryWithoutTarget, EntityMemberSummary } from '../types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildMemberSummary(node: DocNode, context: FormatContext): Promise<EntityMemberSummary> {

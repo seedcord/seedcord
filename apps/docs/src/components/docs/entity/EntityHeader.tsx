@@ -1,8 +1,8 @@
+import { formatVersionLabel } from '@seedcord/docs-engine/client';
 import { Badge, Button, Card, Icon, type IconComponent, cn } from '@seedcord/ui';
 import { ArrowUpRight } from 'lucide-react';
 
-import { formatVersionLabel } from '@lib/docs/version';
-import { getToneConfig } from '@lib/entityMetadata';
+import { getToneConfig } from '@lib/tonePresentation';
 
 import { SeeAlso } from '../SeeAlso';
 import { TagPills } from '../TagPills';
@@ -23,7 +23,8 @@ import type {
     WithSeeAlso,
     WithThrows
 } from '@lib/docs/types';
-import type { EntityTone, EntityToneStyle } from '@lib/entityMetadata';
+import type { EntityToneStyle } from '@lib/tonePresentation';
+import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
 
 function getHeaderExamples(

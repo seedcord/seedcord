@@ -1,5 +1,6 @@
+import { memberFragment } from '@seedcord/docs-engine';
+
 import { collectMemberTags, buildDeprecationStatusFromNodeLike } from './utils';
-import { memberFragment } from '../anchors';
 import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 import { highlightCode } from '../formatting';

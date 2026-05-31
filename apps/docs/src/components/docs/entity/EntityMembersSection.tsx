@@ -13,7 +13,7 @@ import { MemberOverview } from './member/MemberOverview';
 import { shouldIncludeMember } from './utils/shouldIncludeMember';
 import { useMemberNavigation } from './utils/useMemberNavigation';
 
-import type { EntityMemberSummary, WithParentDeprecationStatus } from './types';
+import type { EntityMemberSummary, WithParentDeprecationStatus } from '@lib/docs/types';
 
 const EMPTY_MEMBERS: readonly EntityMemberSummary[] = [];
 

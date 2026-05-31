@@ -4,8 +4,7 @@ import { CommentExamples } from '../comments/CommentExamples';
 import { CommentParagraphs } from '../comments/CommentParagraphs';
 import { DeprecatedEntity } from '../DeprecatedEntity';
 
-import type { MemberSignatureDetail, WithParentDeprecationStatus } from '../types';
-import type { DeprecationStatus } from '@lib/docs/types';
+import type { MemberSignatureDetail, WithParentDeprecationStatus, DeprecationStatus } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface SignaturePanelProps extends WithParentDeprecationStatus {
@@ -35,7 +34,7 @@ export function SignaturePanel({ signature, isActive, parentDeprecationStatus }:
     const parentKey = deprecationMessageKey(parentDeprecationStatus);
     const sigKey = deprecationMessageKey(signature.deprecationStatus);
 
-    // Skip the per-signature deprecation banner when the parent already shows the same message, to avoid a duplicate.
+    // When the parent already shows the same deprecation message, the per-signature banner would duplicate it.
     const shouldDecorate =
         isActive &&
         signature.deprecationStatus?.isDeprecated &&

@@ -2,7 +2,7 @@
 
 import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, Icon } from '@seedcord/ui';
 
-import { getToneConfig } from '@lib/entityMetadata';
+import { getToneConfig } from '@lib/tonePresentation';
 
 import { SidebarItem } from './SidebarItem';
 

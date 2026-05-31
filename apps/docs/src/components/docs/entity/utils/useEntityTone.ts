@@ -1,13 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { formatEntityKindLabel, resolveEntityTone } from '@seedcord/docs-engine/client';
 
-import { formatEntityKindLabel, resolveEntityTone } from '@lib/entityMetadata';
-
-import type { EntityTone } from '@lib/entityMetadata';
+import type { EntityTone } from '@seedcord/docs-engine/client';
 
 export function useEntityTone(kind: string): { tone: EntityTone; badgeLabel: string } {
-    const tone = useMemo<EntityTone>(() => resolveEntityTone(kind), [kind]);
-    const badgeLabel = useMemo(() => formatEntityKindLabel(tone), [tone]);
+    const tone = resolveEntityTone(kind);
+    const badgeLabel = formatEntityKindLabel(tone);
     return { tone, badgeLabel };
 }

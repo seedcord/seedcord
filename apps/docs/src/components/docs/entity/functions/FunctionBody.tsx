@@ -1,15 +1,14 @@
 'use client';
 
+import { paramFragment, typeParamFragment, withOverload } from '@seedcord/docs-engine/client';
 import { cn } from '@seedcord/ui';
 import { useMemo } from 'react';
-
-import { paramFragment, typeParamFragment, withOverload } from '@lib/docs/anchors';
 
 import { MemberDetailGroup } from '../member/MemberDetailGroup';
 import { useActiveSignatureList } from '../utils/useActiveSignatureList';
 
-import type { EntityMemberSummary } from '../types';
 import type {
+    EntityMemberSummary,
     FunctionEntityModel,
     FunctionTypeParameterModel,
     FunctionSignatureParameterModel,

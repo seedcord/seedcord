@@ -1,11 +1,8 @@
-import { cache } from 'react';
+import { rawExternalLinks } from './external-links';
 
-import { rawExternalLinks } from './rawExternalLinks';
+import type { DocsEngine } from '../DocsEngine';
 
-import type { ExternalDocumentationMap } from './types';
-import type { DocsEngine } from '@seedcord/docs-engine';
-
-const EXTERNAL_DOCUMENTATION_LINKS: ExternalDocumentationMap = new Map(
+const EXTERNAL_DOCUMENTATION_LINKS: ReadonlyMap<string, string> = new Map(
     Object.entries(rawExternalLinks).map(([key, value]) => [sanitizeExternalKey(key), value])
 );
 
@@ -38,10 +35,6 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/eslint-config': {
         displayName: 'eslint-config',
         aliases: ['eslint', '@seedcord/eslint-config']
-    },
-    '@seedcord/tsup-config': {
-        displayName: 'tsup-config',
-        aliases: ['tsup', '@seedcord/tsup-config']
     },
     '@seedcord/cli': {
         displayName: 'cli',
@@ -96,7 +89,7 @@ export function formatDisplayPackageName(manifestName: string): string {
     return override ?? manifestName;
 }
 
-const computePackageAliases = cache((available: readonly string[]): Map<string, string> => {
+function computePackageAliases(available: readonly string[]): Map<string, string> {
     const map = new Map<string, string>();
 
     for (const manifestName of available) {
@@ -133,7 +126,7 @@ const computePackageAliases = cache((available: readonly string[]): Map<string, 
     }
 
     return map;
-});
+}
 
 export function resolveManifestPackageName(engine: DocsEngine, requested?: string | null): string {
     const packages = engine.listPackages();

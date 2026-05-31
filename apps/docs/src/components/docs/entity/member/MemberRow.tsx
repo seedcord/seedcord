@@ -5,8 +5,12 @@ import { MemberRowHeader } from './MemberRowHeader';
 import { DeprecatedEntity } from '../DeprecatedEntity';
 import { buildTagList } from '../utils/buildTagList';
 
-import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '../types';
-import type { DeprecationStatus } from '@lib/docs/types';
+import type {
+    EntityMemberSummary,
+    MemberPrefix,
+    WithParentDeprecationStatus,
+    DeprecationStatus
+} from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface MemberRowProps extends WithParentDeprecationStatus {

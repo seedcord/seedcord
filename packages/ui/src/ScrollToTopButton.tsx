@@ -57,7 +57,7 @@ export function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactE
         };
     }, []);
 
-    const handleClick = (): void => {
+    const scrollToTop = (): void => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -65,7 +65,7 @@ export function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactE
         <Button
             variant="ghost"
             size="icon"
-            onClick={handleClick}
+            onClick={scrollToTop}
             aria-label="Jump to top"
             className={cn(
                 'border-border/80 shadow-soft size-12 rounded-full border bg-(--surface-moderate) text-(--text) transition-all duration-300 hover:-translate-y-1 hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-moderate)',

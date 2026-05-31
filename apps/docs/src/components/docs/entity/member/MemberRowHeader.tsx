@@ -3,7 +3,7 @@ import { Code } from 'lucide-react';
 
 import { CommentParagraphs } from '../comments/CommentParagraphs';
 
-import type { EntityMemberSummary } from '../types';
+import type { EntityMemberSummary } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface MemberRowHeaderProps {

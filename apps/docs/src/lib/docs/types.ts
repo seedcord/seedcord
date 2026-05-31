@@ -1,6 +1,5 @@
-import type { EntityTone } from '../entityMetadata';
 import type { DocsEngine } from './engine';
-import type { EntityMemberSummary } from '@components/docs/entity/types';
+import type { MemberAccessLevel } from '@lib/memberAccess';
 import type {
     DirectoryEntity,
     DocComment,
@@ -8,6 +7,8 @@ import type {
     DocSignatureParameter,
     RenderedSignature
 } from '@seedcord/docs-engine';
+import type { EntityTone } from '@seedcord/docs-engine/client';
+import type { RenameKey } from '@seedcord/types';
 import type { CodeRepresentation } from '@seedcord/ui';
 import type { Except } from 'type-fest';
 
@@ -50,15 +51,15 @@ export type DeprecationStatus =
     | { isDeprecated: false }
     | { isDeprecated: true; deprecationMessage: CommentParagraph[] | undefined };
 
-export type WithSourceUrl = Pick<DocNode, 'sourceUrl'>;
+type WithSourceUrl = Pick<DocNode, 'sourceUrl'>;
 
-export type WithCode<Key extends string = 'code'> = Readonly<Record<Key, CodeRepresentation>>;
+type WithCode<Key extends string = 'code'> = Readonly<Record<Key, CodeRepresentation>>;
 
 type WithSummary<Key extends string = 'summary'> = Readonly<Record<Key, readonly CommentParagraph[]>>;
 
 type WithExamples<Key extends string = 'examples'> = Readonly<Record<Key, readonly CommentExample[]>>;
 
-export type WithDocs<
+type WithDocs<
     SummaryKey extends string = 'summary',
     ExamplesKey extends string = 'examples'
 > = WithSummary<SummaryKey> & WithExamples<ExamplesKey>;
@@ -215,7 +216,6 @@ export type EntityModel =
     | FunctionEntityModel
     | VariableEntityModel;
 
-export type ExternalDocumentationMap = ReadonlyMap<string, string>;
 export interface EntityQueryParams {
     pkg?: string;
     manifestPackage?: string;
@@ -224,16 +224,36 @@ export interface EntityQueryParams {
     qualifiedName?: string;
     kind?: string;
 }
-export interface InternalEntityLookupParams {
-    manifestPackage: string;
-    slug?: string;
-    symbol?: string;
-    qualifiedName?: string;
-    kind: EntityKind | null;
+
+type MemberAccessorType = 'getter' | 'setter' | 'accessor';
+
+export interface MemberSignatureDetail
+    extends WithCode, WithDocs<'documentation', 'examples'>, WithSourceUrl, WithThrows, WithDeprecationStatus {
+    id: string;
+    anchor: string;
 }
-export interface BuildEntityHrefOptions {
-    name: string;
-    slug: string;
-    version?: string | null;
-    tone?: string | null;
+
+export interface EntityMemberSummary extends WithSourceUrl, WithThrows, WithSeeAlso, WithDeprecationStatus {
+    id: string;
+    label: string;
+    description?: CommentParagraph | null;
+    sharedDocumentation: CommentParagraph[];
+    sharedExamples: CommentExample[];
+    signatures: MemberSignatureDetail[];
+    inheritedFrom?: string | { name: string; href?: string };
+    tags?: readonly string[];
+    access?: MemberAccessLevel;
+    accessorType?: MemberAccessorType;
 }
+
+export type MemberPrefix = 'property' | 'method' | 'constructor' | 'typeParameter';
+export type ClassLikeModel = Extract<EntityModel, { kind: 'class' | 'interface' }>;
+export type EnumModel = Extract<EntityModel, { kind: 'enum' }>;
+export type TypeModel = Extract<EntityModel, { kind: 'type' }>;
+export type FunctionModel = Extract<EntityModel, { kind: 'function' }>;
+
+export type WithParentDeprecationStatus = RenameKey<
+    WithDeprecationStatus,
+    'deprecationStatus',
+    'parentDeprecationStatus'
+>;

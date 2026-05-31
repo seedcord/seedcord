@@ -1,9 +1,14 @@
+import {
+    DEFAULT_MANIFEST_PACKAGE,
+    DEFAULT_VERSION,
+    formatDisplayPackageName,
+    buildEntityHref,
+    buildPackageBasePath,
+    formatVersionLabel
+} from '@seedcord/docs-engine';
 import { cache } from 'react';
 
 import { getDocsEngine } from './engine';
-import { DEFAULT_MANIFEST_PACKAGE, DEFAULT_VERSION, formatDisplayPackageName } from './packages';
-import { buildEntityHref, buildPackageBasePath } from './routes';
-import { formatVersionLabel } from './version';
 
 import type { DocsEngine } from './engine';
 import type {
@@ -14,7 +19,7 @@ import type {
     PackageCatalogEntry,
     PackageVersionCatalog
 } from './types';
-import type { EntityTone } from '@lib/entityMetadata';
+import type { EntityTone } from '@seedcord/docs-engine/client';
 
 type GetPackageDirectoryReturn = ReturnType<DocsEngine['getPackageDirectory']>;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildEntityHref, buildPackageBasePath, parseEntityPathSegments } from '@lib/docs/routes';
+import { buildEntityHref, buildPackageBasePath, parseEntityPathSegments } from '../src/routing/url-builder';
 
 describe('buildEntityHref', () => {
     it('builds a full href with package, version, tone directory and slug', () => {

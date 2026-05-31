@@ -4,7 +4,7 @@ import type {
     NavigationEntityItem,
     PackageVersionCatalog
 } from '@lib/docs/types';
-import type { EntityTone } from '@lib/entityMetadata';
+import type { EntityTone } from '@seedcord/docs-engine/client';
 
 export type SidebarVariant = 'desktop' | 'mobile';
 

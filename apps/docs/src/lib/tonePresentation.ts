@@ -1,9 +1,11 @@
 import { tw } from '@seedcord/ui';
 import { Braces, FunctionSquare, ListTree, Puzzle, SquareStack, Variable } from 'lucide-react';
 
-const ENTITIES = {
+import type { EntityTone } from '@seedcord/docs-engine/client';
+
+// The tone taxonomy and resolution logic live in @seedcord/docs-engine; this only maps each tone to its visuals.
+const TONE_PRESENTATION = {
     class: {
-        label: 'Class',
         icon: SquareStack,
         styles: {
             heading: tw`text-(--tone-class-heading)`,
@@ -14,7 +16,6 @@ const ENTITIES = {
         }
     },
     interface: {
-        label: 'Interface',
         icon: Puzzle,
         styles: {
             heading: tw`text-(--tone-interface-heading)`,
@@ -25,7 +26,6 @@ const ENTITIES = {
         }
     },
     type: {
-        label: 'Type',
         icon: Braces,
         styles: {
             heading: tw`text-(--tone-type-heading)`,
@@ -36,7 +36,6 @@ const ENTITIES = {
         }
     },
     function: {
-        label: 'Function',
         icon: FunctionSquare,
         styles: {
             heading: tw`text-(--tone-func-heading)`,
@@ -47,7 +46,6 @@ const ENTITIES = {
         }
     },
     enum: {
-        label: 'Enum',
         icon: ListTree,
         styles: {
             heading: tw`text-(--tone-enum-heading)`,
@@ -58,7 +56,6 @@ const ENTITIES = {
         }
     },
     variable: {
-        label: 'Variable',
         icon: Variable,
         styles: {
             heading: tw`text-(--tone-var-heading)`,
@@ -68,96 +65,11 @@ const ENTITIES = {
             accent: tw`text-(--tone-var-heading)`
         }
     }
-} as const;
+} as const satisfies Record<EntityTone, { icon: typeof SquareStack; styles: Record<string, string> }>;
 
-export type EntityTone = keyof typeof ENTITIES;
-export type EntityToneConfig = (typeof ENTITIES)[EntityTone];
+type EntityToneConfig = (typeof TONE_PRESENTATION)[EntityTone];
 export type EntityToneStyle = EntityToneConfig['styles'];
 
-const TONE_DIRECTORY_MAP = {
-    class: 'classes',
-    interface: 'interfaces',
-    type: 'types',
-    function: 'functions',
-    enum: 'enums',
-    variable: 'variables'
-} as const;
-
-export type DirectoryEntityFrontend = (typeof TONE_DIRECTORY_MAP)[EntityTone];
-
-export const toneToDirectory = (tone: EntityTone): DirectoryEntityFrontend => TONE_DIRECTORY_MAP[tone];
-
-const TONE_SYNONYMS: Partial<Record<string, EntityTone>> = {
-    typealias: 'type',
-    alias: 'type',
-    method: 'function',
-    parameter: 'type',
-    const: 'variable',
-    constant: 'variable',
-    property: 'variable',
-    enumeration: 'enum'
-};
-
-const isEntityTone = (value: string): value is EntityTone => value in ENTITIES;
-
-function buildToneCandidates(value: string): string[] {
-    const candidates = new Set<string>([value]);
-
-    if (value.endsWith('s')) {
-        const withoutS = value.slice(0, -1);
-        if (withoutS) {
-            candidates.add(withoutS);
-        }
-    }
-
-    if (value.endsWith('es')) {
-        // eslint-disable-next-line no-magic-numbers -- 'es' suffix length
-        const withoutEs = value.slice(0, -2);
-        if (withoutEs) {
-            candidates.add(withoutEs);
-        }
-    }
-
-    if (value.endsWith('ies')) {
-        // eslint-disable-next-line no-magic-numbers -- 'ies' suffix length
-        const withoutIes = `${value.slice(0, -3)}y`;
-        if (withoutIes) {
-            candidates.add(withoutIes);
-        }
-    }
-
-    return [...candidates];
-}
-
 export function getToneConfig(tone: EntityTone): EntityToneConfig {
-    return ENTITIES[tone];
-}
-
-export function resolveEntityTone(input?: string | null): EntityTone {
-    if (!input) {
-        return 'class';
-    }
-
-    const normalized = input.trim().toLowerCase();
-    if (!normalized) {
-        return 'class';
-    }
-
-    for (const candidate of buildToneCandidates(normalized)) {
-        const synonymTone = TONE_SYNONYMS[candidate];
-        if (synonymTone) {
-            return synonymTone;
-        }
-
-        if (isEntityTone(candidate)) {
-            return candidate;
-        }
-    }
-
-    return 'class';
-}
-
-export function formatEntityKindLabel(input?: string | null): string {
-    const tone = resolveEntityTone(input);
-    return getToneConfig(tone).label;
+    return TONE_PRESENTATION[tone];
 }

@@ -1,6 +1,6 @@
 import { EnumMembersSection } from '../../enums/EnumMembersSection';
 
-import type { EnumModel } from '../../types';
+import type { EnumModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
 export function renderEnum(model: EnumModel): ReactElement {
