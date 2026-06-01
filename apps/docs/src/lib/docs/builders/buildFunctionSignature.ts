@@ -1,5 +1,5 @@
 import { cloneCommentParagraphs } from '../comments/creators';
-import { formatSignature, highlightCode, highlightSignatureCode, inlineTypeText } from '../formatting';
+import { formatSignature, highlightCode, inlineTypeText } from '../formatting';
 import { buildFunctionParameters } from './buildFunctionParameters';
 import { buildFunctionTypeParams } from './buildFunctionTypeParams';
 import { ensureSignatureAnchor, buildDeprecationStatusFromNodeLike } from './utils';
@@ -14,11 +14,9 @@ export async function buildFunctionSignature(
     isAsync = false
 ): Promise<FunctionSignatureModel> {
     const rendered = signature.render;
-    const baseCode: CodeRepresentation = rendered
-        ? await formatSignature(rendered, context)
+    const code: CodeRepresentation = rendered
+        ? await formatSignature(rendered, context, isAsync ? 'async' : undefined)
         : await highlightCode(signature.name);
-
-    const code: CodeRepresentation = isAsync ? await highlightSignatureCode(`async ${baseCode.text}`) : baseCode;
 
     const parameters = await buildFunctionParameters(signature, rendered, context);
     const comment = await formatCommentRich(signature.comment, context);
@@ -37,6 +35,10 @@ export async function buildFunctionSignature(
         deprecationStatus: buildDeprecationStatusFromNodeLike(signature),
         throws: comment.throws?.slice() ?? []
     };
+
+    if (comment.seeAlso?.length) {
+        model.seeAlso = comment.seeAlso;
+    }
 
     if (rendered?.returnType) {
         model.returnType = await inlineTypeText(rendered.returnType, context);

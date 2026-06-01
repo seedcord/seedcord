@@ -14,8 +14,8 @@ describe('ManifestReader', () => {
 
         const payload = {
             generatedAt: '2024-01-01T00:00:00.000Z',
-            tool: 'typedoc',
-            typedocVersion: '0.25.0',
+            tool: 'api-extractor',
+            apiExtractorVersion: '7.58.7',
             outputDir: './relative-output',
             repository: {
                 url: 'https://example.com/repo.git',
@@ -47,8 +47,8 @@ describe('ManifestReader', () => {
         const manifest = await reader.read();
 
         expect(manifest.generatedAt).toBe(payload.generatedAt);
-        expect(manifest.tool).toBe('typedoc');
-        expect(manifest.typedocVersion).toBe(payload.typedocVersion);
+        expect(manifest.tool).toBe('api-extractor');
+        expect(manifest.apiExtractorVersion).toBe(payload.apiExtractorVersion);
         expect(manifest.outputDir).toBe(payload.outputDir);
         expect(manifest.repository).toEqual(payload.repository);
 
@@ -73,7 +73,7 @@ describe('ManifestReader', () => {
         const payload = {
             generatedAt: '',
             tool: '',
-            typedocVersion: '',
+            apiExtractorVersion: '',
             outputDir: '',
             repository: {
                 url: ''

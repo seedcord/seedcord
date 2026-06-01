@@ -189,7 +189,8 @@ export interface FunctionTypeParameterModel {
     code?: CodeRepresentation | undefined;
 }
 
-export interface FunctionSignatureModel extends WithCode, WithDocs, WithSourceUrl, WithDeprecationStatus, WithThrows {
+export interface FunctionSignatureModel
+    extends WithCode, WithDocs, WithSourceUrl, WithDeprecationStatus, WithThrows, WithSeeAlso {
     id: string;
     anchor: string;
     overloadIndex: number;

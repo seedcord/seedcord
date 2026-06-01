@@ -49,7 +49,9 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
 
     for (const entry of collected) {
         let href = entry.href;
-        if (!href && typeof entry.target !== 'undefined') {
+        // Resolve even when the `{@link}` target is absent: API Extractor leaves many in-repo
+        // `@see {@link X}` destinations unresolved, so fall back to resolving X by name (search).
+        if (!href) {
             try {
                 const resolved = resolveInlineHref(
                     { kind: 'inline-tag', tag: '@link', text: entry.name, target: entry.target } as InlineTagPart,

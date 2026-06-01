@@ -127,6 +127,20 @@ export class MockClass<TypeT, TypeU extends number> extends BaseClass {
     }
 
     /**
+     * A read-write accessor exposing both a getter and a setter.
+     *
+     * @returns The current label.
+     * @throws An {@link Error} if the label was never initialized.
+     */
+    get label(): string {
+        return this._optionalProp ?? '';
+    }
+
+    set label(value: string) {
+        this._optionalProp = value;
+    }
+
+    /**
      * An async method.
      *
      * @param delay - The delay in milliseconds.

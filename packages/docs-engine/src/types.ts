@@ -1,6 +1,5 @@
 import type { GlobalId } from './ids';
 import type { PackageDirectory } from './PackageDirectory';
-import type { JSONOutput, ProjectReflection, ReflectionKind, VarianceModifier } from 'typedoc';
 
 export type SigPart =
     | { kind: 'text'; text: string }
@@ -60,7 +59,7 @@ export interface DocManifestPackage {
 export interface DocManifest {
     generatedAt: string;
     tool: string;
-    typedocVersion: string;
+    apiExtractorVersion: string;
     outputDir: string;
     repository?: {
         url: string;
@@ -78,11 +77,28 @@ export interface DocReference {
     externalUrl?: string;
 }
 
+// Engine-owned, structurally identical to the parts the comment renderers in apps/docs consume.
+// The adapter emits a pre-resolved `DocReference` here; the app narrows by reading
+// `qualifiedName`/`packageName`/`targetKey` off it.
+export interface InlineTagTarget {
+    name?: string;
+    qualifiedName?: string;
+    packageName?: string;
+    packagePath?: string;
+    targetKey?: GlobalId;
+    externalUrl?: string;
+}
+
+export type CommentDisplayPart =
+    | { kind: 'text'; text: string }
+    | { kind: 'code'; text: string }
+    | { kind: 'inline-tag'; tag: `@${string}`; text: string; target?: number | string | InlineTagTarget };
+
 export interface DocCommentBlockTag {
     tag: string;
     text: string;
     name?: string;
-    content: JSONOutput.CommentDisplayPart[];
+    content: CommentDisplayPart[];
 }
 
 export interface DocCommentExample {
@@ -93,7 +109,7 @@ export interface DocCommentExample {
 
 export interface DocComment {
     summary: string;
-    summaryParts: JSONOutput.CommentDisplayPart[];
+    summaryParts: CommentDisplayPart[];
     blockTags: DocCommentBlockTag[];
     modifierTags: string[];
     examples: DocCommentExample[];
@@ -123,14 +139,15 @@ export interface DocSource {
     url?: string;
 }
 
-export type DocType = JSONOutput.SomeType;
+// A declaration's type, rendered as inline parts (refs resolved). The adapter emits these from AE
+// excerpts; the app narrows with `isInlineType` before formatting.
+export type DocType = InlineType;
 
 export interface DocTypeParameter {
     id: number;
     name: string;
     constraint?: DocType | null;
     default?: DocType | null;
-    variance?: VarianceModifier;
     comment?: DocComment | null;
     flags: {
         isOptional: boolean;
@@ -140,7 +157,7 @@ export interface DocTypeParameter {
 export interface DocSignatureParameter {
     id: number;
     name: string;
-    kind: ReflectionKind;
+    kind: number;
     type?: DocType | null;
     defaultValue?: string;
     comment?: DocComment | null;
@@ -150,7 +167,7 @@ export interface DocSignatureParameter {
 export interface DocSignature {
     id?: number;
     name: string;
-    kind: ReflectionKind;
+    kind: number;
     // `overload-N` (1-based) for multi-signature members, empty otherwise. `anchor` mirrors it
     // (bare, no parent slug); apps/docs composes the full member anchor.
     fragment: string;
@@ -175,7 +192,7 @@ export interface DocSignature {
 
 export interface DocGroup {
     title: string;
-    kind: ReflectionKind | null;
+    kind: number | null;
     childKeys: GlobalId[];
 }
 
@@ -201,8 +218,11 @@ export interface DocNode {
     path: string[];
     qualifiedName: string;
     slug: string;
-    kind: ReflectionKind;
+    kind: number;
     kindLabel: string;
+    // Reachable from the package entry point. Forgotten/referenced-only declarations are `false`:
+    // they get a page + resolve as link targets but are hidden from the sidebar + search (two-tier).
+    isExported: boolean;
     flags: DocFlags;
     comment?: DocComment | null;
     type?: DocType | null;
@@ -227,7 +247,7 @@ export interface DocSearchEntry {
     qualifiedName: string;
     packageName: string;
     packageVersion?: string;
-    kind: ReflectionKind;
+    kind: number;
     summary: string | null;
     aliases?: string[];
     file?: string;
@@ -238,13 +258,12 @@ export interface DocIndexes {
     byId: Map<number, DocNode>;
     bySlug: Map<string, DocNode>;
     byQName: Map<string, DocNode>;
-    byKind: Map<ReflectionKind, DocNode[]>;
+    byKind: Map<number, DocNode[]>;
     search: DocSearchEntry[];
 }
 
 export interface DocPackageModel {
     manifest: DocManifestPackage;
-    project: ProjectReflection;
     root: DocNode;
     packageDocumentation: DocComment | null;
     nodes: Map<number, DocNode>;

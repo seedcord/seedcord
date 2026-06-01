@@ -1,5 +1,6 @@
 import uFuzzy from '@leeoniya/ufuzzy';
-import { ReflectionKind } from 'typedoc';
+
+import { DocKind } from '../model/kinds';
 
 import type { DocCollection, DocSearchEntry } from '../types';
 
@@ -14,27 +15,27 @@ const SCORE_PACKAGE_MATCH = 3;
 const SCORE_SLUG_EXACT = 7;
 const SCORE_SLUG_PREFIX = 3;
 const KIND_SCORE_DEFAULT = 4;
-const KIND_SCORE_TABLE: Partial<Record<ReflectionKind, number>> = {
-    [ReflectionKind.Class]: 18,
-    [ReflectionKind.Interface]: 16,
-    [ReflectionKind.TypeAlias]: 15,
-    [ReflectionKind.Enum]: 14,
-    [ReflectionKind.Function]: 13,
-    [ReflectionKind.Constructor]: 12,
-    [ReflectionKind.Method]: 11,
-    [ReflectionKind.Accessor]: 10,
-    [ReflectionKind.Property]: 9,
-    [ReflectionKind.EnumMember]: 7,
-    [ReflectionKind.Variable]: 7,
-    [ReflectionKind.TypeParameter]: 6,
-    [ReflectionKind.Project]: 1,
-    [ReflectionKind.Module]: 6,
-    [ReflectionKind.Namespace]: 6,
-    [ReflectionKind.CallSignature]: 10,
-    [ReflectionKind.ConstructorSignature]: 10,
-    [ReflectionKind.IndexSignature]: 8,
-    [ReflectionKind.GetSignature]: 10,
-    [ReflectionKind.SetSignature]: 10
+const KIND_SCORE_TABLE: Partial<Record<number, number>> = {
+    [DocKind.Class]: 18,
+    [DocKind.Interface]: 16,
+    [DocKind.TypeAlias]: 15,
+    [DocKind.Enum]: 14,
+    [DocKind.Function]: 13,
+    [DocKind.Constructor]: 12,
+    [DocKind.Method]: 11,
+    [DocKind.Accessor]: 10,
+    [DocKind.Property]: 9,
+    [DocKind.EnumMember]: 7,
+    [DocKind.Variable]: 7,
+    [DocKind.TypeParameter]: 6,
+    [DocKind.Project]: 1,
+    [DocKind.Module]: 6,
+    [DocKind.Namespace]: 6,
+    [DocKind.CallSignature]: 10,
+    [DocKind.ConstructorSignature]: 10,
+    [DocKind.IndexSignature]: 8,
+    [DocKind.GetSignature]: 10,
+    [DocKind.SetSignature]: 10
 };
 
 export class DocSearch {
@@ -48,7 +49,7 @@ export class DocSearch {
     private readonly safeEquals = (value: string | undefined, token: string): boolean =>
         typeof value === 'string' && value.length > 0 && this.collator.compare(value.toLowerCase(), token) === 0;
 
-    private readonly getKindWeight = (kind: ReflectionKind): number => KIND_SCORE_TABLE[kind] ?? KIND_SCORE_DEFAULT;
+    private readonly getKindWeight = (kind: number): number => KIND_SCORE_TABLE[kind] ?? KIND_SCORE_DEFAULT;
 
     private readonly aggregateSearchIndex = (collection: DocCollection): DocSearchEntry[] =>
         collection.packages.flatMap((pkg) => pkg.indexes.search);

@@ -208,6 +208,9 @@ export function EntityHeader({
     const headerSummary = active?.summary.length ? active.summary : summary;
     const headerExamples = getHeaderExamples(active, summaryExamples);
     const headerThrows = active?.throws?.length ? active.throws : throws;
+    // Functions carry @see on the signature (entity-level seeAlso is empty), so track the active
+    // overload like summary/throws do.
+    const headerSeeAlso = active?.seeAlso?.length ? active.seeAlso : seeAlso;
     const summaryNodes = buildSummaryNodes(headerSummary, '');
 
     return (
@@ -226,7 +229,7 @@ export function EntityHeader({
                         sourceUrl={sourceUrl}
                     />
                     <ThrowsSection headerThrows={headerThrows} />
-                    <SeeAlso entries={seeAlso} />
+                    <SeeAlso entries={headerSeeAlso} />
                     <HeaderBody
                         deprecationStatus={deprecationStatus}
                         active={active}

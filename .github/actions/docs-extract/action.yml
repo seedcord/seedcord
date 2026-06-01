@@ -15,6 +15,5 @@ runs:
       - name: Run docs extraction
         shell: bash
         run: |
-            pnpm --version || true
             echo "Running docs extraction: output=${{ inputs.output-dir }}, packages=${{ inputs.packages-dir }}"
-            pnpm --filter @seedcord/docs-generator run smoke -o "${{ inputs.output-dir }}" -p "${{ inputs.packages-dir }}"
+            pnpm tsx scripts/extract-docs.ts -o "${{ inputs.output-dir }}" -p "${{ inputs.packages-dir }}"

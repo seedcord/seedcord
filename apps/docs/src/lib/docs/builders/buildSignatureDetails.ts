@@ -3,7 +3,7 @@ import { memberFragment, withOverload } from '@seedcord/docs-engine';
 import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
 import { cloneCommentParagraphs } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
-import { formatSignature, highlightCode, highlightSignatureCode } from '../formatting';
+import { formatSignature, highlightCode } from '../formatting';
 
 import type {
     CodeRepresentation,
@@ -86,12 +86,10 @@ export async function buildSignatureDetails({
 
     return Promise.all(
         node.signatures.map(async (signature, index) => {
-            const baseCode = signature.render
-                ? await formatSignature(signature.render, context)
-                : await highlightCode(signature.name);
-
             const modifierPrefix = buildModifierPrefix(node, { kindLabel: signature.kindLabel });
-            const code = modifierPrefix ? await highlightSignatureCode(`${modifierPrefix} ${baseCode.text}`) : baseCode;
+            const code = signature.render
+                ? await formatSignature(signature.render, context, modifierPrefix || undefined)
+                : await highlightCode(signature.name);
 
             const comment = signatureComments[index];
             let documentation = cloneCommentParagraphs(comment?.paragraphs);

@@ -1,3 +1,2 @@
-export type GlobalId = `${string}:${number}`;
-
-export const toGlobalId = (pkg: string, id: number): GlobalId => `${pkg}:${id}` as const;
+// Node identity: the API Extractor `canonicalReference` string (e.g. `seedcord!Logger#debug:member(1)`).
+export type GlobalId = string;

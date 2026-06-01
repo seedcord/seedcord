@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 
-import { Application } from 'typedoc';
+import { Extractor } from '@microsoft/api-extractor';
 
 import { defaultPaths } from './paths';
 
@@ -10,8 +10,8 @@ import type { PackageDocResult } from './types';
 export async function writeManifest(results: PackageDocResult[], paths: ApiDocsPaths = defaultPaths): Promise<void> {
     const payload = {
         generatedAt: new Date().toISOString(),
-        tool: 'typedoc',
-        typedocVersion: Application.VERSION,
+        tool: 'api-extractor',
+        apiExtractorVersion: Extractor.version,
         outputDir: paths.toRepoRelative(paths.outputDir),
         packages: results.map((result) => ({
             name: result.name,

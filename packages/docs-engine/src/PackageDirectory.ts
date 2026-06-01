@@ -1,4 +1,4 @@
-import { ReflectionKind } from 'typedoc';
+import { DocKind } from './model/kinds';
 
 import type { DocIndexes, DocNode } from './types';
 
@@ -6,13 +6,13 @@ export type DirectoryEntity = 'classes' | 'interfaces' | 'enums' | 'types' | 'fu
 
 export type DirectorySnapshot = Record<DirectoryEntity, string[]>;
 
-const ENTITY_KIND_MAP: Record<DirectoryEntity, ReflectionKind[]> = {
-    classes: [ReflectionKind.Class],
-    interfaces: [ReflectionKind.Interface],
-    enums: [ReflectionKind.Enum],
-    types: [ReflectionKind.TypeAlias],
-    functions: [ReflectionKind.Function],
-    variables: [ReflectionKind.Variable]
+const ENTITY_KIND_MAP: Record<DirectoryEntity, number[]> = {
+    classes: [DocKind.Class],
+    interfaces: [DocKind.Interface],
+    enums: [DocKind.Enum],
+    types: [DocKind.TypeAlias],
+    functions: [DocKind.Function],
+    variables: [DocKind.Variable]
 };
 
 export class PackageDirectory {
@@ -34,9 +34,6 @@ export class PackageDirectory {
         return new PackageDirectory(maps);
     }
 
-    /**
-     * Retrieve the doc node for a given entity by its slug key.
-     */
     get(entity: DirectoryEntity, slug: string): DocNode | undefined {
         return this.maps[entity].get(slug);
     }
@@ -45,16 +42,10 @@ export class PackageDirectory {
         return new Map(this.maps[entity]);
     }
 
-    /**
-     * List all doc nodes captured under the given entity kind.
-     */
     list(entity: DirectoryEntity): DocNode[] {
         return Array.from(this.maps[entity].values());
     }
 
-    /**
-     * List the slug keys for every doc node captured under the given entity kind.
-     */
     listNames(entity: DirectoryEntity): string[] {
         return Array.from(this.maps[entity].keys()).sort((a, b) => a.localeCompare(b));
     }
@@ -85,7 +76,7 @@ export class PackageDirectory {
         };
     }
 
-    private static collect(indexes: DocIndexes, kinds: ReflectionKind[]): Map<string, DocNode> {
+    private static collect(indexes: DocIndexes, kinds: number[]): Map<string, DocNode> {
         const map = new Map<string, DocNode>();
 
         for (const kind of kinds) {

@@ -80,10 +80,6 @@ export class ApiDocsPaths {
     toPackageRelative(filePath: string): string {
         return path.relative(this.packageRoot, filePath).split(path.sep).join('/');
     }
-
-    getOutputPathForPackage(unscopedName: string): string {
-        return path.join(this.outputDir, `${unscopedName}.json`);
-    }
 }
 
 export const defaultPaths = new ApiDocsPaths();

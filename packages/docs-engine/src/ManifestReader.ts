@@ -30,7 +30,7 @@ export class ManifestReader {
         const manifest: DocManifest = {
             generatedAt: parsed.generatedAt ?? '',
             tool: parsed.tool ?? '',
-            typedocVersion: parsed.typedocVersion ?? '',
+            apiExtractorVersion: parsed.apiExtractorVersion ?? '',
             outputDir: parsed.outputDir ?? '',
             packages
         };

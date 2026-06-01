@@ -1,8 +1,8 @@
-import { ReflectionKind } from 'typedoc';
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getManifest, getMockPackage, getNodeBySlug } from './utils/test-helpers';
+import { DocKind } from '../src/model/kinds';
 
 import type { DocsEngine } from '../src/DocsEngine';
 import type { DocNode, DocPackageModel } from '../src/types';
@@ -32,7 +32,7 @@ describe('DocsEngine mock package integration', () => {
         expect(manifest.packages).toHaveLength(1);
         const [manifestPackage] = manifest.packages;
         expect(manifestPackage!.name).toBe(MOCK_PACKAGE_FULL_NAME);
-        expect(manifestPackage!.entryPoints).toEqual(['index.ts']);
+        expect(manifestPackage!.entryPoints).toEqual(['dist/index.d.ts']);
         expect(manifestPackage!.version).toBe('0.0.0');
         expect(engine.getPackageDirectory(MOCK_PACKAGE_FULL_NAME)).toBe(pkg.directory);
     });
@@ -58,16 +58,13 @@ describe('DocsEngine mock package integration', () => {
         });
 
         it('captures metadata and grouping', () => {
-            expect(mockClass.kind).toBe(ReflectionKind.Class);
+            expect(mockClass.kind).toBe(DocKind.Class);
             expect(mockClass.flags.isDeprecated).toBe(true);
             expect(mockClass.packageVersion).toBe('0.0.0');
             expect(mockClass.comment?.summary).toContain('Represents a complex mock class');
-            expect(mockClass.groups.map((group) => group.title)).toEqual([
-                'Constructors',
-                'Properties',
-                'Accessors',
-                'Methods'
-            ]);
+            expect(new Set(mockClass.groups.map((group) => group.kind))).toEqual(
+                new Set([DocKind.Constructor, DocKind.Property, DocKind.Accessor, DocKind.Method])
+            );
         });
 
         it('has optionalProp with isOptional flag set to true', () => {
@@ -79,23 +76,43 @@ describe('DocsEngine mock package integration', () => {
         it('has optionalProp setter', () => {
             const optionalProp = mockClass.children.find((child) => child.name === 'optionalProp');
             expect(optionalProp).toBeDefined();
+            expect(optionalProp?.flags.accessor).toBe('setter');
             const setter = optionalProp?.signatures.find((sig) => sig.name === 'optionalProp');
             expect(setter).toBeDefined();
-            expect(setter?.kind).toBe(ReflectionKind.SetSignature);
+            expect(setter?.kind).toBe(DocKind.SetSignature);
         });
 
-        it('captures type parameters and inheritance', () => {
-            expect(mockClass.typeParameters.map((param) => param.name)).toEqual(['TypeT', 'TypeU']);
-            const typeU = mockClass.typeParameters.find((param) => param.name === 'TypeU');
-            expect(typeU?.constraint && (typeU.constraint as { type?: string }).type).toBe('intrinsic');
+        it('renders a get+set accessor as both signatures, with the doc + @throws carried once', () => {
+            const label = mockClass.children.find((child) => child.name === 'label');
+            expect(label?.kind).toBe(DocKind.Accessor);
+            expect(label?.flags.accessor).toBe('getter-setter');
+            // The comment moves onto the signatures, so the member summary won't render it twice.
+            expect(label?.comment).toBeNull();
+            expect(label?.signatures.map((sig) => sig.kind)).toEqual([DocKind.GetSignature, DocKind.SetSignature]);
+            const [getter, setter] = label?.signatures ?? [];
+            expect(getter?.comment?.summary).toContain('read-write accessor');
+            expect(getter?.throws?.[0]?.text).toContain('Error');
+            // The setter must not re-carry the shared summary.
+            expect(setter?.comment).toBeNull();
+        });
 
-            expect(mockClass.inheritance.extends).toHaveLength(1);
-            const baseRef = mockClass.inheritance.extends?.[0];
-            if (!baseRef || typeof baseRef !== 'object') {
-                throw new Error('Inheritance data missing for MockClass');
-            }
-            expect((baseRef as { type?: string }).type).toBe('reference');
-            expect((baseRef as { name?: string }).name).toBe('BaseClass');
+        it('renders a get-only accessor as a single getter signature', () => {
+            const computed = mockClass.children.find((child) => child.name === 'computedProp');
+            expect(computed?.flags.accessor).toBe('getter');
+            expect(computed?.signatures.map((sig) => sig.kind)).toEqual([DocKind.GetSignature]);
+            expect(computed?.comment).toBeNull();
+            expect(computed?.signatures[0]?.comment?.summary).toContain('computed property');
+        });
+
+        it('captures type parameters and inheritance in the rendered header', () => {
+            expect(mockClass.typeParameters.map((param) => param.name)).toEqual(['TypeT', 'TypeU']);
+            // Constraint + heritage render through the declaration header (what apps/docs displays).
+            expect(mockClass.headerText).toContain('TypeU extends number');
+            expect(mockClass.headerText).toContain('extends BaseClass');
+
+            const extendsClause = mockClass.header?.heritage?.extends?.[0];
+            const baseRef = extendsClause?.parts.find((part) => part.kind === 'ref');
+            expect(baseRef && 'ref' in baseRef ? baseRef.ref.name : undefined).toBe('BaseClass');
         });
 
         it('lists expected child nodes', () => {
@@ -113,7 +130,7 @@ describe('DocsEngine mock package integration', () => {
 
         it('maps constructor overload with parameters and throws tag', () => {
             const constructorNode = findChildNode(mockClass, 'constructor');
-            expect(constructorNode.kind).toBe(ReflectionKind.Constructor);
+            expect(constructorNode.kind).toBe(DocKind.Constructor);
             const [constructorSignature] = constructorNode.signatures;
             if (!constructorSignature) {
                 throw new Error('Expected constructor signature');
@@ -133,7 +150,8 @@ describe('DocsEngine mock package integration', () => {
                 throw new Error('Expected async method signature');
             }
             expect(asyncSignature.flags.isAsync).toBe(true);
-            expect(asyncSignature.type?.type).toBe('reference');
+            expect(asyncSignature.render?.returnType).toBeDefined();
+            expect(asyncSignature.renderText).toContain('Promise<void>');
         });
 
         it('identifies rest parameters in restMethod', () => {
@@ -151,7 +169,7 @@ describe('DocsEngine mock package integration', () => {
 
     it('maps package-level functions with decorator and async flags', async () => {
         const logDecorator = await getNodeBySlug('log-decorator');
-        expect(logDecorator.kind).toBe(ReflectionKind.Function);
+        expect(logDecorator.kind).toBe(DocKind.Function);
         const decoratorSignature = logDecorator.signatures[0];
         if (!decoratorSignature) {
             throw new Error('Expected LogDecorator signature');
@@ -172,14 +190,41 @@ describe('DocsEngine mock package integration', () => {
         expect(asyncSignature.returnsComment?.text).toContain('promise resolving');
     });
 
+    it('gives each overload its own type parameters', async () => {
+        // mockFunction has a generic overload `<TypeT>(param: TypeT)` and concrete `string`/`number`
+        // overloads that declare no type parameters; each signature must carry only its own.
+        const fn = await getNodeBySlug('mock-function');
+        expect(fn.signatures.length).toBeGreaterThanOrEqual(2);
+        const generic = fn.signatures.find((sig) => sig.typeParameters.length > 0);
+        const concrete = fn.signatures.find((sig) => sig.typeParameters.length === 0);
+        expect(generic?.typeParameters.map((tp) => tp.name)).toEqual(['TypeT']);
+        expect(concrete).toBeDefined();
+        // render.typeParams mirrors the per-signature list, so a concrete overload renders no `<…>`.
+        expect(concrete?.render?.typeParams ?? []).toEqual([]);
+    });
+
+    it('extracts @see blocks as @see block tags (entity comment and function signature)', async () => {
+        // @see is a standard TSDoc tag (parsed into seeBlocks, not customBlocks); the engine must
+        // still surface it so the app's see-also renderer can resolve the targets.
+        const mockClass = await getNodeBySlug('mock-class');
+        const classSee = mockClass.comment?.blockTags.filter((tag) => tag.tag === '@see') ?? [];
+        expect(classSee.length).toBeGreaterThan(0);
+
+        const fn = await getNodeBySlug('mock-function');
+        const signatureSee = fn.signatures.flatMap(
+            (sig) => sig.comment?.blockTags.filter((tag) => tag.tag === '@see') ?? []
+        );
+        expect(signatureSee.length).toBeGreaterThan(0);
+    });
+
     it('maps type aliases and enum members correctly', async () => {
         const unionType = await getNodeBySlug('mock-union');
-        expect(unionType.kind).toBe(ReflectionKind.TypeAlias);
+        expect(unionType.kind).toBe(DocKind.TypeAlias);
         expect(unionType.headerText).toContain('type MockUnion');
         expect(unionType.headerText).toContain('= string | number | boolean');
 
         const enumNode = await getNodeBySlug('mock-enum');
-        expect(enumNode.kind).toBe(ReflectionKind.Enum);
+        expect(enumNode.kind).toBe(DocKind.Enum);
         const secondMember = enumNode.children.find((child) => child.name === 'Second');
         const thirdMember = enumNode.children.find((child) => child.name === 'Third');
         expect(secondMember?.defaultValue).toBe('10');

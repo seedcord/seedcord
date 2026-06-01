@@ -1,9 +1,9 @@
 import { mkdir } from 'node:fs/promises';
 
-import { extractPackageDocs } from './extractor';
+import { extractPackageApiModel } from './ae-extractor';
 import { writeManifest } from './manifest';
 import { ApiDocsPaths } from './paths';
-import { discoverWorkspacePackages } from './workspace';
+import { discoverWorkspacePackages, readPackageManifest, unscopedName } from './workspace';
 
 import type { ApiDocsPathConfig } from './paths';
 import type { PackageDocResult } from './types';
@@ -12,6 +12,10 @@ type ConsoleLike = Pick<Console, 'log'> & Partial<Pick<Console, 'error'>>;
 
 export interface ApiDocsGeneratorOptions extends ApiDocsPathConfig {
     logger?: ConsoleLike;
+    /** Scope extraction to a single package, by full (`@seedcord/utils`) or unscoped (`utils`) name. */
+    packageName?: string;
+    /** GitHub base URL for the source tree being extracted; sets view-source links (e.g. at a tag). */
+    projectFolderUrl?: string;
 }
 
 export interface ApiDocsGeneratorResult {
@@ -26,6 +30,8 @@ export interface ApiDocsGeneratorResult {
 export class ApiDocsGenerator {
     private readonly paths: ApiDocsPaths;
     private readonly logger: ConsoleLike;
+    private readonly packageName?: string;
+    private readonly projectFolderUrl?: string;
     private lastResults: PackageDocResult[] = [];
     private lastPackages: string[] = [];
 
@@ -39,6 +45,8 @@ export class ApiDocsGenerator {
 
         this.paths = new ApiDocsPaths(pathConfig);
         this.logger = options.logger ?? console;
+        if (options.packageName) this.packageName = options.packageName;
+        if (options.projectFolderUrl) this.projectFolderUrl = options.projectFolderUrl;
     }
 
     getPaths(): ApiDocsPaths {
@@ -83,9 +91,23 @@ export class ApiDocsGenerator {
     }
 
     async discoverPackages(): Promise<string[]> {
-        const packages = await discoverWorkspacePackages(this.paths);
+        const discovered = await discoverWorkspacePackages(this.paths);
+        const packages = this.packageName ? await this.scopeToPackage(discovered, this.packageName) : discovered;
         this.lastPackages = packages;
         return packages;
+    }
+
+    private async scopeToPackage(packageDirs: string[], target: string): Promise<string[]> {
+        const named = await Promise.all(
+            packageDirs.map(async (dir) => ({ dir, name: (await readPackageManifest(dir)).name }))
+        );
+        const matches = named
+            .filter(({ name }) => name === target || unscopedName(name) === target)
+            .map(({ dir }) => dir);
+        if (matches.length === 0) {
+            throw new Error(`--package "${target}" matched no package under ${this.paths.packagesDir}`);
+        }
+        return matches;
     }
 
     async run(): Promise<ApiDocsGeneratorResult> {
@@ -94,14 +116,14 @@ export class ApiDocsGenerator {
         const results: PackageDocResult[] = [];
 
         for (const packageDir of packageDirs) {
-            const result = await extractPackageDocs(packageDir, this.paths);
+            const result = await extractPackageApiModel(packageDir, this.paths, this.projectFolderUrl);
             if (!result) continue;
 
             results.push(result);
             this.logPackageResult(result);
 
             if (!result.succeeded) {
-                throw new Error(`TypeDoc extraction failed for ${result.name}. see logs above.`);
+                throw new Error(`API Extractor extraction failed for ${result.name}. see logs above.`);
             }
         }
 
@@ -124,7 +146,7 @@ export class ApiDocsGenerator {
 
     private logPackageResult(result: PackageDocResult): void {
         const statusIcon = result.succeeded ? '✅' : '❌';
-        const outputSummary = result.outputPath ? `→ ${this.paths.toRepoRelative(result.outputPath)}` : '→ —';
+        const outputSummary = result.outputPath ? `-> ${this.paths.toRepoRelative(result.outputPath)}` : '-> (none)';
         const warningSummary = result.warnings.length > 0 ? ` ⚠️ ${result.warnings.length}` : '';
         this.logger.log(`${statusIcon} ${result.name}@${result.version} ${outputSummary}${warningSummary}`);
     }

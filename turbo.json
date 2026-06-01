@@ -24,6 +24,7 @@
             "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"]
         },
         "test": {
+            "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
         },
         "test:watch": {

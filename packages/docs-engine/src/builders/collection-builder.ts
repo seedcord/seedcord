@@ -1,54 +1,12 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import { buildPackage, type PackageLookups } from './package-builder';
-// import { propagateSourceInformation } from './source-fixer';
+import { buildPackageFromApi } from './package-builder';
+import { createApiModel, loadApiPackage } from '../model/load-model';
 
 import type { GlobalId } from '../ids';
 import type { DocCollection, DocManifest, DocManifestPackage, DocPackageModel } from '../types';
-
-const normalizeAlias = (value: string): string => value.trim().toLowerCase();
-
-function computeAliases(name: string): string[] {
-    const aliases = new Set<string>();
-
-    const add = (candidate: string | null | undefined): void => {
-        if (!candidate) return;
-        aliases.add(candidate);
-        aliases.add(normalizeAlias(candidate));
-    };
-
-    add(name);
-
-    const withoutScope = name.startsWith('@') ? name.slice(1) : name;
-    add(withoutScope);
-
-    const segments = withoutScope.split('/');
-    const last = segments.at(-1);
-    if (last && last.length > 0) {
-        add(last);
-    }
-
-    return Array.from(aliases);
-}
-
-function createPackageLookups(packages: DocManifestPackage[]): PackageLookups {
-    const byName = new Map<string, DocManifestPackage>();
-    const byAlias = new Map<string, DocManifestPackage>();
-
-    for (const pkg of packages) {
-        byName.set(pkg.name, pkg);
-        const aliases = computeAliases(pkg.name);
-        for (const alias of aliases) {
-            const key = normalizeAlias(alias);
-            if (!byAlias.has(key)) {
-                byAlias.set(key, pkg);
-            }
-        }
-    }
-
-    return { byName, byAlias } satisfies PackageLookups;
-}
+import type { ApiPackage } from '@microsoft/api-extractor-model';
 
 export interface ResolveOptions {
     workspaceRoot?: string;
@@ -174,20 +132,21 @@ function relativizeFromManifestOutput(output: string, manifestOutputDir: string)
     return relative;
 }
 
-export async function buildCollection(manifest: DocManifest, options: ResolveOptions): Promise<DocCollection> {
+export function buildCollection(manifest: DocManifest, options: ResolveOptions): DocCollection {
     const baseCandidates = collectBaseCandidates(options);
-    const packageLookups = createPackageLookups(manifest.packages);
-    const packages: DocPackageModel[] = [];
+    const resolveProject = (pkg: DocManifestPackage): string | null =>
+        resolvePackageJsonPath(pkg, baseCandidates, options);
 
+    const model = createApiModel();
+    // Load every package into the shared model before adapting any, so cross-package @link
+    // references resolve against the full set.
+    const loaded: { pkg: DocManifestPackage; apiPackage: ApiPackage }[] = [];
     for (const pkg of manifest.packages) {
-        const projectPath = resolvePackageJsonPath(pkg, baseCandidates, options);
-        if (!projectPath) {
-            continue;
-        }
-
-        const model = await buildPackage(pkg, projectPath, packageLookups);
-        packages.push(model);
+        const apiJsonPath = resolveProject(pkg);
+        if (!apiJsonPath) continue;
+        loaded.push({ pkg, apiPackage: loadApiPackage(model, apiJsonPath) });
     }
+    const packages = loaded.map(({ pkg, apiPackage }) => buildPackageFromApi(pkg, apiPackage, model));
 
     const { byKey, byGlobalSlug } = buildGlobalMaps(packages);
     return { manifest, packages, byKey, byGlobalSlug };

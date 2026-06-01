@@ -45,9 +45,8 @@ export class DocsEngine {
         });
     }
 
-    static async fromManifest(manifest: DocManifest, resolve: ResolveOptions): Promise<DocsEngine> {
-        const coll = await buildCollection(manifest, resolve);
-        return new DocsEngine(coll);
+    static fromManifest(manifest: DocManifest, resolve: ResolveOptions): DocsEngine {
+        return new DocsEngine(buildCollection(manifest, resolve));
     }
 
     getManifest(): DocManifest {

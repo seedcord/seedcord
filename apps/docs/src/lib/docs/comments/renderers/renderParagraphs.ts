@@ -56,7 +56,6 @@ export async function renderParagraphs(comment: DocComment, context: FormatConte
                 break;
             }
             default:
-                markdown += part.text || '';
                 break;
         }
     }

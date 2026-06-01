@@ -90,6 +90,11 @@ describe('resolveExternalPackageUrl', () => {
         expect(resolveExternalPackageUrl('totally-not-a-thing')).toBeNull();
     });
 
+    it('maps a DefinitelyTyped package to its runtime entry (@types/pg -> pg)', () => {
+        // AE reports Pool/PoolConfig as belonging to @types/pg; the table keys the runtime name.
+        expect(resolveExternalPackageUrl('@types/pg')).toBe('https://node-postgres.com');
+    });
+
     it('does not lowercase-match Map (mixed case lookup keys are preserved)', () => {
         expect(resolveExternalPackageUrl('MAP')).toBeNull();
     });

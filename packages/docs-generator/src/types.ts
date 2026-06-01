@@ -1,24 +1,21 @@
 /**
- * Allow packages to add a lil bit of config inside their package.json under seedcordDocs
+ * Per-package doc config under `seedcordDocs` in package.json.
  */
 export interface SeedcordDocsConfig {
     entryPoints?: string[];
-    tsconfig?: string;
 }
 
-/**
- * The exact bits of package.json important when generating docs
- */
 export interface PackageManifest {
     name: string;
     version: string;
     private?: boolean;
     types?: string;
+    dependencies?: Record<string, string>;
     seedcordDocs?: SeedcordDocsConfig;
 }
 
 /**
- * Typedoc run summary
+ * API Extractor run summary for one package.
  */
 export interface PackageDocResult {
     name: string;

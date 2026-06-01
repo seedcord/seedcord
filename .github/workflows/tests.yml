@@ -55,7 +55,7 @@ jobs:
               run: pnpm lint
 
             - name: Check formatting
-              run: pnpm format:check
+              run: pnpm fmt:check
 
             - name: Type check
               run: pnpm tc
@@ -63,14 +63,15 @@ jobs:
             - name: Test
               run: pnpm test
 
+            - name: Build
+              run: pnpm build
+
+            # API Extractor consumes the built `dist/*.d.mts`, so this must run after Build.
             - name: Generate docs manifest
               uses: ./.github/actions/docs-extract
               with:
                   output-dir: ./generated
                   packages-dir: ./packages
-
-            - name: Build
-              run: pnpm build
 
             - name: Audit for high severity vulnerabilities
               if: github.event_name == 'push'

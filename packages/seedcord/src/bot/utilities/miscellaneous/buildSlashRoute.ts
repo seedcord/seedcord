@@ -20,6 +20,7 @@ export type CommandRouteString<
  * @param command - Main command name
  * @param subcommand - Optional subcommand name
  * @param group - Optional group name (will be ignored if subcommand is not provided with it)
+ * @see {@link CommandRouteString}
  */
 export function buildSlashRoute<
     Cmmd extends string,

@@ -50,10 +50,11 @@ const normalizeKey = (value: string): string => value.trim().toLowerCase();
 function sanitizeExternalKey(value: string): string {
     if (!value) return '';
     return value
-        .replace(/<.*>/g, '') // remove generics
-        .replace(/\[\]/g, '') // remove array brackets
-        .replace(/\|.*/g, '') // remove union tails
-        .trim(); // trim whitespace
+        .replace(/^@types\//, '') // DefinitelyTyped (@types/pg) documents the runtime package (pg)
+        .replace(/<.*>/g, '')
+        .replace(/\[\]/g, '')
+        .replace(/\|.*/g, '')
+        .trim();
 }
 
 export function resolveExternalPackageUrl(packageName?: string | null): string | null {
@@ -71,9 +72,9 @@ export function resolveExternalPackageUrl(packageName?: string | null): string |
         candidates.add(cap);
     }
     const stripped = packageName
-        .trim() // trim whitespace
-        .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '') // remove surrounding non-alphanumerics
-        .trim(); // trim again
+        .trim()
+        .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
+        .trim();
     if (stripped) candidates.add(sanitizeExternalKey(stripped));
 
     for (const key of candidates) {

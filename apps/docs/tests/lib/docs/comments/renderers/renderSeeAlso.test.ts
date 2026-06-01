@@ -122,6 +122,17 @@ describe('renderSeeAlso', () => {
         expect(resolveInlineHrefMock).toHaveBeenCalled();
     });
 
+    it('resolves a @see by name (search fallback) when it has neither href nor target', () => {
+        // API Extractor leaves many in-repo `@see {@link X}` destinations unresolved, so the renderer
+        // must still attempt resolution by the entry name rather than only when a target is present.
+        resolveInlineHrefMock.mockReturnValueOnce('/packages/seedcord/0.10.6/types/command-route-string');
+        const comment = makeComment([makeSeeTag('CommandRouteString')]);
+        expect(renderSeeAlso(comment, makeContext())).toEqual([
+            { name: 'CommandRouteString', href: '/packages/seedcord/0.10.6/types/command-route-string' }
+        ]);
+        expect(resolveInlineHrefMock).toHaveBeenCalled();
+    });
+
     it('reads a name from a plain text part when block text is empty', () => {
         const text: DisplayPart = { kind: 'text', text: 'PlainName' };
         const comment = makeComment([makeSeeTag('', [text])]);

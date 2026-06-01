@@ -50,9 +50,7 @@
         "LICENSE"
     ],
     "dependencies": {
-        "typedoc": "catalog:docs",
-        "typedoc-plugin-dt-links": "^2.0.56",
-        "typedoc-plugin-mdn-links": "^5.1.1"
+        "@microsoft/api-extractor": "7.58.7"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

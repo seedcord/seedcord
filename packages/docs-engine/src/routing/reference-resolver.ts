@@ -139,8 +139,9 @@ export function resolveReferenceHref(
 
     if (resolved.packageName && resolved.slug) return buildInternalHref(engine, resolved.packageName, resolved.slug);
 
-    const packageName = reference.packageName ?? reference.name;
-    const fallbackUrl = resolveExternalPackageUrl(packageName);
+    // Try the owning package first (e.g. `mongoose` for `mongoose.Schema`), then the symbol name
+    // (e.g. `Writable`, keyed directly in the external-link table). A single `??` can't serve both.
+    const fallbackUrl = resolveExternalPackageUrl(reference.packageName) ?? resolveExternalPackageUrl(reference.name);
     if (fallbackUrl) return fallbackUrl;
 
     if (reference.qualifiedName) {

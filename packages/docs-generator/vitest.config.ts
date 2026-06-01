@@ -11,7 +11,6 @@ export default mergeConfig(
             globals: true,
             environment: 'node',
             testTimeout: 10000,
-            setupFiles: ['./tests/utils/setup.ts'],
             globalSetup: './tests/utils/globalSetup.ts',
             fileParallelism: false
         }

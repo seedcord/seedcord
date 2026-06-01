@@ -8,16 +8,21 @@ import type { ApiDocsGeneratorOptions, ApiDocsGeneratorResult } from '@seedcord/
 const HELP_TEXT = `Usage: tsx extract-docs.ts [options]
 
 Options:
-    --output <dir>    Directory where generated JSON files will be written.
-    --packages <dir>  Directory that contains the packages to extract documentation from.
-    --repo <dir>      Repository root used to compute relative paths.
-    --manifest <path> Custom manifest.json path to write inside the output directory.
-    --help            Show this message and exit.
+    --output <dir>              Directory where generated JSON files will be written.
+    --packages <dir>            Directory that contains the packages to extract from.
+    --source-path <dir>         Alias for --packages; point at a checked-out tag's packages root.
+    --package <name>            Extract only this package (e.g. @seedcord/utils or utils).
+    --project-folder-url <url>  Base GitHub URL for view-source links (e.g. the tag's tree URL).
+    --repo <dir>                Repository root used to compute relative paths.
+    --manifest <path>           Custom manifest.json path to write inside the output directory.
+    --help                      Show this message and exit.
 `;
 
 interface SmokeOptions {
     outputDir?: string;
     packagesDir?: string;
+    packageName?: string;
+    projectFolderUrl?: string;
     repoRoot?: string;
     manifestPath?: string;
 }
@@ -48,6 +53,24 @@ const FLAG_HANDLERS = new Map<string, FlagHandler>([
         '--packages',
         (value, options) => {
             options.packagesDir = resolvePath(value);
+        }
+    ],
+    [
+        '--source-path',
+        (value, options) => {
+            options.packagesDir = resolvePath(value);
+        }
+    ],
+    [
+        '--package',
+        (value, options) => {
+            options.packageName = value;
+        }
+    ],
+    [
+        '--project-folder-url',
+        (value, options) => {
+            options.projectFolderUrl = value;
         }
     ],
     [
@@ -137,6 +160,8 @@ const createGeneratorOptions = (options: SmokeOptions): ApiDocsGeneratorOptions 
     const generatorOptions: ApiDocsGeneratorOptions = {};
     if (options.outputDir) generatorOptions.outputDir = options.outputDir;
     if (options.packagesDir) generatorOptions.packagesDir = options.packagesDir;
+    if (options.packageName) generatorOptions.packageName = options.packageName;
+    if (options.projectFolderUrl) generatorOptions.projectFolderUrl = options.projectFolderUrl;
     if (options.repoRoot) generatorOptions.repoRoot = options.repoRoot;
     if (options.manifestPath) generatorOptions.manifestPath = options.manifestPath;
     return generatorOptions;

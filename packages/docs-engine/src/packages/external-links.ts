@@ -102,6 +102,7 @@ export const rawExternalLinks = {
     IncomingMessage: 'https://nodejs.org/api/http.html#class-httpincomingmessage',
     MessagePort: 'https://nodejs.org/api/worker_threads.html#class-messageport',
     Readable: 'https://nodejs.org/api/stream.html#class-streamreadable',
+    Writable: 'https://nodejs.org/api/stream.html#class-streamwritable',
     Stream: 'https://nodejs.org/api/stream.html#stream',
 
     // External Libraries
@@ -113,6 +114,7 @@ export const rawExternalLinks = {
     'prettier.io': 'https://prettier.io/docs/api',
     'type-fest': 'https://github.com/sindresorhus/type-fest',
     winston: 'https://github.com/winstonjs/winston',
+    logform: 'https://github.com/winstonjs/logform',
     kysely: 'https://kysely.dev/docs/intro',
     pg: 'https://node-postgres.com',
     eslint: 'https://eslint.org/docs/latest/'

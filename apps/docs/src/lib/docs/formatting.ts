@@ -38,12 +38,24 @@ function refsToLinks(refs: readonly RefRange[]): CodeLink[] {
     return links;
 }
 
+// A type link whose range crosses a shiki span boundary is split by DOMPurify's HTML5 reparse into
+// the real anchor plus an empty seam anchor (the parser copies the href onto the reopened tag).
+// Drop the empty seams; the fixpoint loop handles back-to-back boundaries.
+const EMPTY_ANCHOR = /<a\b[^>]*>\s*<\/a>/g;
+
 async function safeHighlight(
     highlight: (code: string) => Promise<string | null>,
     code: string
 ): Promise<string | null> {
     const html = await highlight(code);
-    return html === null ? null : sanitizeHtml(html);
+    if (html === null) return null;
+    let sanitized = sanitizeHtml(html);
+    let previous: string;
+    do {
+        previous = sanitized;
+        sanitized = sanitized.replace(EMPTY_ANCHOR, '');
+    } while (sanitized !== previous);
+    return sanitized;
 }
 
 export async function formatDeclarationHeader(
@@ -63,11 +75,23 @@ export async function formatDeclarationHeader(
 
 export async function formatSignature(
     signature: RenderedSignature,
-    context: FormatContext
+    context: FormatContext,
+    prefix?: string
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedSignaturePretty(signature, buildResolveHref(context));
-    const links = refsToLinks(refs);
-    return { text, html: await safeHighlight((c) => highlightSignatureToHtml(c, links), text) };
+    if (!prefix) {
+        const links = refsToLinks(refs);
+        return { text, html: await safeHighlight((c) => highlightSignatureToHtml(c, links), text) };
+    }
+    // A modifier prefix (`async`, `public get`, ...) sits outside the engine's offset map, so shift
+    // every ref past it and highlight the prefixed text with the shifted links.
+    const offset = prefix.length + 1;
+    const prefixedText = `${prefix} ${text}`;
+    const links = refsToLinks(refs).map((link) => ({ ...link, start: link.start + offset, end: link.end + offset }));
+    return {
+        text: prefixedText,
+        html: await safeHighlight((c) => highlightSignatureToHtml(c, links), prefixedText)
+    };
 }
 
 export async function highlightCode(code: string, lang = 'ts'): Promise<CodeRepresentation> {
@@ -75,17 +99,6 @@ export async function highlightCode(code: string, lang = 'ts'): Promise<CodeRepr
     return {
         text: code,
         html: await safeHighlight((c) => highlightToHtml(c, language), code)
-    };
-}
-
-// Re-highlight an already-formatted signature text (used when a builder prepends a modifier
-// keyword like `public` or `async`). Uses the same function-wrap as `formatSignature` so the
-// TS grammar enters the right scope. No links because the prefix-augmented text has lost the
-// engine's offset map.
-export async function highlightSignatureCode(code: string): Promise<CodeRepresentation> {
-    return {
-        text: code,
-        html: await safeHighlight((c) => highlightSignatureToHtml(c), code)
     };
 }
 
