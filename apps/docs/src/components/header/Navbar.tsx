@@ -20,11 +20,6 @@ export function Navbar(): ReactElement {
                                 <SeedcordMark />
                             </Link>
                         </Button>
-                        <nav className={cn('hidden items-center gap-2 lg:flex')} aria-label="Primary navigation">
-                            <Button asChild variant="ghost" size="sm" className={cn('text-subtle')}>
-                                <Link href="/docs">Docs home</Link>
-                            </Button>
-                        </nav>
                     </div>
                     <div className={cn('flex items-center gap-3')}>
                         <div className={cn('flex items-center gap-2')}>

@@ -104,7 +104,7 @@ describe('useCommandPaletteSearch', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe('/docs/search?q=foo');
+        expect(url).toBe('/search?q=foo');
         expect(result.current.status).toBe('loading');
 
         await act(async () => {

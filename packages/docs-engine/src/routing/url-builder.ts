@@ -16,7 +16,7 @@ export function buildEntityHref({ name, slug, version, tone }: BuildEntityHrefOp
     const resolvedTone = tone ? resolveEntityTone(tone) : null;
     const packageSegment = encodeSegment(formatDisplayPackageName(name));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
-    const segments: string[] = ['', 'docs', 'packages', packageSegment, versionSegment];
+    const segments: string[] = ['', 'packages', packageSegment, versionSegment];
 
     if (resolvedTone) {
         segments.push(toneToDirectory(resolvedTone));
@@ -31,7 +31,7 @@ export function buildPackageBasePath(manifestPackage: string, version: string | 
     const packageSegment = encodeSegment(formatDisplayPackageName(manifestPackage));
     const versionSegment = encodeSegment(version ?? DEFAULT_VERSION_SEGMENT);
 
-    return `/docs/packages/${packageSegment}/${versionSegment}`;
+    return `/packages/${packageSegment}/${versionSegment}`;
 }
 
 export interface ParsedEntityPath {

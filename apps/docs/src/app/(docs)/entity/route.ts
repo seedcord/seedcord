@@ -22,7 +22,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     if (!entity) {
-        const fallbackUrl = new URL('/docs', request.url);
+        const fallbackUrl = new URL('/', request.url);
         return NextResponse.redirect(fallbackUrl, HTTP_TEMPORARY_REDIRECT);
     }
 

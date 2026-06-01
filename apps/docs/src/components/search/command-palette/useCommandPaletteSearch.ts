@@ -19,7 +19,7 @@ interface UseCommandPaletteSearchOptions {
     query: string;
 }
 
-const SEARCH_ENDPOINT = '/docs/search';
+const SEARCH_ENDPOINT = '/search';
 
 interface SearchResponse {
     results?: CommandAction[];

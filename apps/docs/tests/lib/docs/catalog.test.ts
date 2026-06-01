@@ -20,7 +20,7 @@ function makeVersion(id: string, manifestVersion = id): PackageVersionCatalog {
         label: id,
         summary: `summary ${id}`,
         manifestVersion,
-        basePath: `/docs/pkg/${id}`,
+        basePath: `/pkg/${id}`,
         categories: []
     };
 }

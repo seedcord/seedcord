@@ -110,7 +110,7 @@ describe('renderSeeAlso', () => {
     });
 
     it('falls back to resolveInlineHref when the inline tag has a target but no url', () => {
-        resolveInlineHrefMock.mockReturnValueOnce('/docs/resolved');
+        resolveInlineHrefMock.mockReturnValueOnce('/resolved');
         const inline: DisplayPart = {
             kind: 'inline-tag',
             tag: '@link',
@@ -118,7 +118,7 @@ describe('renderSeeAlso', () => {
             target: 7
         };
         const comment = makeComment([makeSeeTag('', [inline])]);
-        expect(renderSeeAlso(comment, makeContext())).toEqual([{ name: 'Linked', href: '/docs/resolved', target: 7 }]);
+        expect(renderSeeAlso(comment, makeContext())).toEqual([{ name: 'Linked', href: '/resolved', target: 7 }]);
         expect(resolveInlineHrefMock).toHaveBeenCalled();
     });
 

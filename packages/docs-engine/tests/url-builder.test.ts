@@ -11,7 +11,7 @@ describe('buildEntityHref', () => {
                 version: '1.2.3',
                 tone: 'class'
             })
-        ).toBe('/docs/packages/seedcord/1.2.3/classes/mock-class');
+        ).toBe('/packages/seedcord/1.2.3/classes/mock-class');
     });
 
     it('maps scoped manifest names to their display segment', () => {
@@ -22,7 +22,7 @@ describe('buildEntityHref', () => {
                 version: '0.1.0',
                 tone: 'interface'
             })
-        ).toBe('/docs/packages/services/0.1.0/interfaces/logger');
+        ).toBe('/packages/services/0.1.0/interfaces/logger');
     });
 
     it('falls back to the latest version segment when version is omitted', () => {
@@ -32,7 +32,7 @@ describe('buildEntityHref', () => {
                 slug: 'foo',
                 tone: 'function'
             })
-        ).toBe('/docs/packages/seedcord/latest/functions/foo');
+        ).toBe('/packages/seedcord/latest/functions/foo');
     });
 
     it('falls back to the latest version segment when version is null', () => {
@@ -43,7 +43,7 @@ describe('buildEntityHref', () => {
                 version: null,
                 tone: 'enum'
             })
-        ).toBe('/docs/packages/seedcord/latest/enums/foo');
+        ).toBe('/packages/seedcord/latest/enums/foo');
     });
 
     it('omits the tone directory when tone is null or undefined (root entity)', () => {
@@ -53,7 +53,7 @@ describe('buildEntityHref', () => {
                 slug: 'index',
                 version: '1.0.0'
             })
-        ).toBe('/docs/packages/seedcord/1.0.0/index');
+        ).toBe('/packages/seedcord/1.0.0/index');
 
         expect(
             buildEntityHref({
@@ -62,7 +62,7 @@ describe('buildEntityHref', () => {
                 version: '1.0.0',
                 tone: null
             })
-        ).toBe('/docs/packages/seedcord/1.0.0/index');
+        ).toBe('/packages/seedcord/1.0.0/index');
     });
 
     it('resolves unknown tone strings to the class fallback directory', () => {
@@ -73,7 +73,7 @@ describe('buildEntityHref', () => {
                 version: '1.0.0',
                 tone: 'totally-bogus-kind'
             })
-        ).toBe('/docs/packages/seedcord/1.0.0/classes/thing');
+        ).toBe('/packages/seedcord/1.0.0/classes/thing');
     });
 
     it('resolves tone synonyms (method -> function, alias -> type)', () => {
@@ -84,7 +84,7 @@ describe('buildEntityHref', () => {
                 version: '1.0.0',
                 tone: 'method'
             })
-        ).toBe('/docs/packages/seedcord/1.0.0/functions/doThing');
+        ).toBe('/packages/seedcord/1.0.0/functions/doThing');
 
         expect(
             buildEntityHref({
@@ -93,7 +93,7 @@ describe('buildEntityHref', () => {
                 version: '1.0.0',
                 tone: 'alias'
             })
-        ).toBe('/docs/packages/seedcord/1.0.0/types/MyAlias');
+        ).toBe('/packages/seedcord/1.0.0/types/MyAlias');
     });
 
     it('URI-encodes slug segments containing special characters', () => {
@@ -104,7 +104,7 @@ describe('buildEntityHref', () => {
                 version: '1.0.0',
                 tone: 'class'
             })
-        ).toBe(`/docs/packages/seedcord/1.0.0/classes/${encodeURIComponent('foo bar/baz')}`);
+        ).toBe(`/packages/seedcord/1.0.0/classes/${encodeURIComponent('foo bar/baz')}`);
     });
 
     it('URI-encodes version segments containing special characters', () => {
@@ -115,30 +115,30 @@ describe('buildEntityHref', () => {
                 version: '1.0.0-beta+build.1',
                 tone: 'class'
             })
-        ).toBe(`/docs/packages/seedcord/${encodeURIComponent('1.0.0-beta+build.1')}/classes/foo`);
+        ).toBe(`/packages/seedcord/${encodeURIComponent('1.0.0-beta+build.1')}/classes/foo`);
     });
 });
 
 describe('buildPackageBasePath', () => {
     it('builds the canonical package base path with a version', () => {
-        expect(buildPackageBasePath('seedcord', '1.0.0')).toBe('/docs/packages/seedcord/1.0.0');
+        expect(buildPackageBasePath('seedcord', '1.0.0')).toBe('/packages/seedcord/1.0.0');
     });
 
     it('maps scoped manifest names to their display segment', () => {
-        expect(buildPackageBasePath('@seedcord/services', '0.1.0')).toBe('/docs/packages/services/0.1.0');
+        expect(buildPackageBasePath('@seedcord/services', '0.1.0')).toBe('/packages/services/0.1.0');
     });
 
     it('falls back to "latest" when version is null', () => {
-        expect(buildPackageBasePath('seedcord', null)).toBe('/docs/packages/seedcord/latest');
+        expect(buildPackageBasePath('seedcord', null)).toBe('/packages/seedcord/latest');
     });
 
     it('falls back to "latest" when version is undefined', () => {
-        expect(buildPackageBasePath('seedcord', undefined)).toBe('/docs/packages/seedcord/latest');
+        expect(buildPackageBasePath('seedcord', undefined)).toBe('/packages/seedcord/latest');
     });
 
     it('URI-encodes version segments containing special characters', () => {
         expect(buildPackageBasePath('seedcord', '1.0.0 rc1')).toBe(
-            `/docs/packages/seedcord/${encodeURIComponent('1.0.0 rc1')}`
+            `/packages/seedcord/${encodeURIComponent('1.0.0 rc1')}`
         );
     });
 });

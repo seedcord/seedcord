@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GET } from '../../../../src/app/docs/search/route';
+import { GET } from '../../../../src/app/(docs)/search/route';
 
 import type { DocNode, DocSearchEntry } from '@seedcord/docs-engine';
 import type { NextRequest } from 'next/server';
@@ -70,68 +70,68 @@ beforeEach(() => {
     engineStub.search.mockReturnValue([]);
 });
 
-describe('GET /docs/search: query validation', () => {
+describe('GET /search: query validation', () => {
     it('returns an empty result set when q is missing', async () => {
-        const res = await GET(makeRequest('https://example.com/docs/search'));
+        const res = await GET(makeRequest('https://example.com/search'));
         await expect(res.json()).resolves.toEqual({ results: [] });
         expect(engineStub.search).not.toHaveBeenCalled();
     });
 
     it('returns an empty result set when q is blank', async () => {
-        const res = await GET(makeRequest('https://example.com/docs/search?q='));
+        const res = await GET(makeRequest('https://example.com/search?q='));
         await expect(res.json()).resolves.toEqual({ results: [] });
         expect(engineStub.search).not.toHaveBeenCalled();
     });
 
     it('returns an empty result set for a query shorter than 3 chars after trim', async () => {
-        const res = await GET(makeRequest('https://example.com/docs/search?q=ab'));
+        const res = await GET(makeRequest('https://example.com/search?q=ab'));
         await expect(res.json()).resolves.toEqual({ results: [] });
         expect(engineStub.search).not.toHaveBeenCalled();
     });
 
     it('treats a whitespace-only query as empty', async () => {
-        const res = await GET(makeRequest('https://example.com/docs/search?q=%20%20'));
+        const res = await GET(makeRequest('https://example.com/search?q=%20%20'));
         await expect(res.json()).resolves.toEqual({ results: [] });
         expect(engineStub.search).not.toHaveBeenCalled();
     });
 
     it('trims surrounding whitespace before forwarding to engine.search', async () => {
-        await GET(makeRequest('https://example.com/docs/search?q=%20%20Logger%20%20'));
+        await GET(makeRequest('https://example.com/search?q=%20%20Logger%20%20'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', undefined);
     });
 
     it('forwards the query verbatim (case is preserved; engine does its own matching)', async () => {
-        await GET(makeRequest('https://example.com/docs/search?q=LoGgEr'));
+        await GET(makeRequest('https://example.com/search?q=LoGgEr'));
         expect(engineStub.search).toHaveBeenCalledWith('LoGgEr', undefined);
     });
 });
 
-describe('GET /docs/search: pkg parameter', () => {
+describe('GET /search: pkg parameter', () => {
     it('omits the package filter when pkg is absent', async () => {
-        await GET(makeRequest('https://example.com/docs/search?q=Logger'));
+        await GET(makeRequest('https://example.com/search?q=Logger'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', undefined);
     });
 
     it('resolves a pkg alias through resolveManifestPackageName', async () => {
         engineStub.listPackages.mockReturnValue(['seedcord', '@seedcord/services']);
-        await GET(makeRequest('https://example.com/docs/search?q=Logger&pkg=services'));
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=services'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
     });
 
     it('is case-insensitive on the pkg alias', async () => {
         engineStub.listPackages.mockReturnValue(['seedcord', '@seedcord/services']);
-        await GET(makeRequest('https://example.com/docs/search?q=Logger&pkg=SERVICES'));
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=SERVICES'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
     });
 
     it('falls back to the default manifest package for an unknown pkg', async () => {
         engineStub.listPackages.mockReturnValue(['seedcord', '@seedcord/services']);
-        await GET(makeRequest('https://example.com/docs/search?q=Logger&pkg=nope'));
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=nope'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', 'seedcord');
     });
 });
 
-describe('GET /docs/search: KIND_TO_RESULT canonical mapping (H8 regression)', () => {
+describe('GET /search: KIND_TO_RESULT canonical mapping (H8 regression)', () => {
     const cases: Array<[number, string, string]> = [
         [Kind.Class, 'Class', 'class'],
         [Kind.Interface, 'Interface', 'interface'],
@@ -155,7 +155,7 @@ describe('GET /docs/search: KIND_TO_RESULT canonical mapping (H8 regression)', (
     it.each(cases)('maps Kind.%s to "%s"', async (kind, _label, expected) => {
         engineStub.search.mockReturnValue([makeEntry({ slug: `item-${expected}`, kind })]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=item'));
+        const res = await GET(makeRequest('https://example.com/search?q=item'));
         const body = (await res.json()) as { results: Array<{ kind: string }> };
         expect(body.results).toHaveLength(1);
         expect(body.results[0]?.kind).toBe(expected);
@@ -165,15 +165,15 @@ describe('GET /docs/search: KIND_TO_RESULT canonical mapping (H8 regression)', (
         // justified: Kind.Namespace and Module are intentionally absent from KIND_TO_RESULT, so they collapse to "page".
         engineStub.search.mockReturnValue([makeEntry({ slug: 'space', kind: Kind.Namespace })]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=space'));
+        const res = await GET(makeRequest('https://example.com/search?q=space'));
         const body = (await res.json()) as { results: Array<{ kind: string; href: string }> };
         expect(body.results).toHaveLength(1);
         expect(body.results[0]?.kind).toBe('page');
-        expect(body.results[0]?.href).toBe('/docs/packages/seedcord/1.0.0/space');
+        expect(body.results[0]?.href).toBe('/packages/seedcord/1.0.0/space');
     });
 });
 
-describe('GET /docs/search: response shape', () => {
+describe('GET /search: response shape', () => {
     it('includes id, label, path, href, kind and an optional description', async () => {
         engineStub.search.mockReturnValue([
             makeEntry({
@@ -185,7 +185,7 @@ describe('GET /docs/search: response shape', () => {
             })
         ]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=Logger'));
+        const res = await GET(makeRequest('https://example.com/search?q=Logger'));
         const body = (await res.json()) as { results: Array<Record<string, unknown>> };
         expect(body.results).toHaveLength(1);
         expect(body.results[0]).toMatchObject({
@@ -193,7 +193,7 @@ describe('GET /docs/search: response shape', () => {
             label: 'Logger',
             kind: 'class',
             description: 'A logger.',
-            href: '/docs/packages/seedcord/1.0.0/classes/logger'
+            href: '/packages/seedcord/1.0.0/classes/logger'
         });
         expect(body.results[0]?.path).toContain('seedcord');
     });
@@ -201,7 +201,7 @@ describe('GET /docs/search: response shape', () => {
     it('omits description when the entry has no summary', async () => {
         engineStub.search.mockReturnValue([makeEntry({ slug: 'logger', kind: Kind.Class, summary: null })]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=Logger'));
+        const res = await GET(makeRequest('https://example.com/search?q=Logger'));
         const body = (await res.json()) as { results: Array<Record<string, unknown>> };
         expect(body.results[0]).not.toHaveProperty('description');
     });
@@ -216,7 +216,7 @@ describe('GET /docs/search: response shape', () => {
             })
         ]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=info'));
+        const res = await GET(makeRequest('https://example.com/search?q=info'));
         const body = (await res.json()) as { results: Array<{ path: string }> };
         expect(body.results[0]?.path).toBe('seedcord@1.0.0 · Logger.info');
     });
@@ -227,21 +227,21 @@ describe('GET /docs/search: response shape', () => {
             makeEntry({ slug: 'keeper', kind: Kind.Class })
         ]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=item'));
+        const res = await GET(makeRequest('https://example.com/search?q=item'));
         const body = (await res.json()) as { results: Array<{ id: string }> };
         expect(body.results).toHaveLength(1);
         expect(body.results[0]?.id).toBe('seedcord:keeper:128');
     });
 });
 
-describe('GET /docs/search: grouping and limits', () => {
+describe('GET /search: grouping and limits', () => {
     it('collapses duplicate (slug, resultKind) groups, preferring the default manifest package', async () => {
         engineStub.search.mockReturnValue([
             makeEntry({ slug: 'logger', packageName: '@seedcord/services', kind: Kind.Class }),
             makeEntry({ slug: 'logger', packageName: 'seedcord', kind: Kind.Class })
         ]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=Logger'));
+        const res = await GET(makeRequest('https://example.com/search?q=Logger'));
         const body = (await res.json()) as { results: Array<{ id: string }> };
         expect(body.results).toHaveLength(1);
         expect(body.results[0]?.id).toBe('seedcord:logger:128');
@@ -253,7 +253,7 @@ describe('GET /docs/search: grouping and limits', () => {
             makeEntry({ slug: 'logger', kind: Kind.Interface })
         ]);
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=Logger'));
+        const res = await GET(makeRequest('https://example.com/search?q=Logger'));
         const body = (await res.json()) as { results: Array<{ kind: string }> };
         expect(body.results.map((r) => r.kind).sort()).toEqual(['class', 'interface']);
     });
@@ -264,7 +264,7 @@ describe('GET /docs/search: grouping and limits', () => {
             Array.from({ length: MANY }, (_, idx) => makeEntry({ slug: `entry-${idx}`, kind: Kind.Class }))
         );
 
-        const res = await GET(makeRequest('https://example.com/docs/search?q=entry'));
+        const res = await GET(makeRequest('https://example.com/search?q=entry'));
         const body = (await res.json()) as { results: unknown[] };
         expect(body.results).toHaveLength(24);
     });

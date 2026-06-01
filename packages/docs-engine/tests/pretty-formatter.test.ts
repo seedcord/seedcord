@@ -24,7 +24,7 @@ function inlineMix(parts: SigPart[]): InlineType {
 }
 
 const noResolver = (): null => null;
-const idResolver = (r: DocReference): string => `/docs/${r.name.toLowerCase()}`;
+const idResolver = (r: DocReference): string => `/${r.name.toLowerCase()}`;
 
 describe('formatRenderedSignaturePretty', () => {
     it('formats a single-line signature that fits in 80 columns', async () => {
@@ -71,7 +71,7 @@ describe('formatRenderedSignaturePretty', () => {
         expect(result.refs.map((r) => r.name)).toContain('Pluggable');
 
         const seRef = result.refs.find((r) => r.name === 'SEEventMapLike');
-        expect(seRef?.href).toBe('/docs/seeventmaplike');
+        expect(seRef?.href).toBe('/seeventmaplike');
     });
 
     it('emits refs with null href when resolver returns null', async () => {
@@ -170,8 +170,8 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
 
         const base = result.refs.find((r) => r.name === 'BaseConfig');
         const logg = result.refs.find((r) => r.name === 'Loggable');
-        expect(base?.href).toBe('/docs/baseconfig');
-        expect(logg?.href).toBe('/docs/loggable');
+        expect(base?.href).toBe('/baseconfig');
+        expect(logg?.href).toBe('/loggable');
         expect(result.text.slice(base!.start, base!.end)).toBe('BaseConfig');
         expect(result.text.slice(logg!.start, logg!.end)).toBe('Loggable');
     });
@@ -210,8 +210,8 @@ describe('formatRenderedDeclarationHeaderPretty', () => {
         expect(result.text).toContain('Plugin<SENoEvents>[]');
         const plugin = result.refs.find((r) => r.name === 'Plugin');
         const ev = result.refs.find((r) => r.name === 'SENoEvents');
-        expect(plugin?.href).toBe('/docs/plugin');
-        expect(ev?.href).toBe('/docs/senoevents');
+        expect(plugin?.href).toBe('/plugin');
+        expect(ev?.href).toBe('/senoevents');
         expect(result.text.slice(plugin!.start, plugin!.end)).toBe('Plugin');
         expect(result.text.slice(ev!.start, ev!.end)).toBe('SENoEvents');
     });

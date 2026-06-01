@@ -101,7 +101,7 @@ function buildMemberHrefFromNode(engine: DocsEngine, packageName: string, node: 
         });
     }
 
-    return '/docs/404';
+    return '/404';
 }
 
 // A `@link` to a parameter resolves to the owning method/constructor anchor; parameters

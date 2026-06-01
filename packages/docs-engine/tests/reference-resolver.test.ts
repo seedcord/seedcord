@@ -105,7 +105,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'MockClass', qualifiedName: 'MockClass' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/2.0.0/classes/mock-class'
+            '/packages/seedcord/2.0.0/classes/mock-class'
         );
     });
 
@@ -116,7 +116,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'Ghost' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/9.9.9/ghost'
+            '/packages/seedcord/9.9.9/ghost'
         );
     });
 
@@ -142,7 +142,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'doThing' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/classes/MockClass#doThing'
+            '/packages/seedcord/1.0.0/classes/MockClass#doThing'
         );
     });
 
@@ -172,7 +172,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'arg' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/classes/MockClass#doThing'
+            '/packages/seedcord/1.0.0/classes/MockClass#doThing'
         );
     });
 
@@ -202,7 +202,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'options' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/classes/MockClass#constructor'
+            '/packages/seedcord/1.0.0/classes/MockClass#constructor'
         );
     });
 
@@ -225,11 +225,11 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'orphanMember' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/3.1.4/classes/MockClass'
+            '/packages/seedcord/3.1.4/classes/MockClass'
         );
     });
 
-    it('returns /docs/404 when the resolved member has no entity ancestor and no qualifiedName owner', () => {
+    it('returns /404 when the resolved member has no entity ancestor and no qualifiedName owner', () => {
         const member = makeNode({
             slug: 'a/b/c',
             qualifiedName: 'unrelated',
@@ -240,7 +240,7 @@ describe('resolveReferenceHref', () => {
             nodesByGlobalSlug: new Map([['a/b/c', member]])
         });
         const ref: DocReference = { name: 'c' };
-        expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe('/docs/404');
+        expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe('/404');
     });
 
     it('falls back to resolveExternalPackageUrl when the engine cannot resolve and the reference name is a known external', () => {
@@ -266,7 +266,7 @@ describe('resolveReferenceHref', () => {
         });
         const ref: DocReference = { name: 'TotallyUnknownLocalName', qualifiedName: 'LateBound' };
         expect(resolveReferenceHref(ref, { engine, currentPackage: 'seedcord' })).toBe(
-            '/docs/packages/seedcord/1.0.0/interfaces/LateBound'
+            '/packages/seedcord/1.0.0/interfaces/LateBound'
         );
     });
 
