@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, ChevronDown } from 'lucide-react';
-import { useId, useState } from 'react';
+import { Fragment, useId, useState } from 'react';
 
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
@@ -36,44 +36,69 @@ const dropdownItemBaseClassName = [
     tw`px-3 py-2 text-sm text-(--text)`,
     tw`transition-colors duration-100 ease-out`,
     tw`hover:bg-(--bg-accent-b-moderate)`,
-    tw`focus-visible:outline-2 focus-visible:outline-offset-(-2) focus-visible:outline-(--focus-outline-b)`,
+    tw`focus-visible:bg-(--bg-accent-b-moderate) focus-visible:outline-hidden`,
     tw`aria-selected:bg-(--bg-accent-b-strong) aria-selected:font-semibold`
+].join(' ');
+
+// Rendered with role="presentation" so the separator label isn't announced as a listbox option.
+const dropdownGroupSeparatorClassName = [
+    tw`mt-1 mb-0.5 border-t border-(--border) px-3 pt-2 pb-0.5`,
+    tw`text-[10px] font-semibold tracking-wide text-(--text-faint) uppercase`
 ].join(' ');
 
 export interface DropdownOption {
     value: string;
     label: string;
+    trailing?: ReactNode;
+}
+
+export interface DropdownGroup {
+    id: string;
+    label?: string;
+    options: readonly DropdownOption[];
 }
 
 interface DropdownListboxProps {
     listboxId: string;
-    options: readonly DropdownOption[];
+    groups: readonly DropdownGroup[];
     value: string;
     onSelect: (value: string) => void;
 }
 
-function DropdownListbox({ listboxId, options, value, onSelect }: DropdownListboxProps): ReactElement {
+function DropdownListbox({ listboxId, groups, value, onSelect }: DropdownListboxProps): ReactElement {
     return (
         <ul id={listboxId} role="listbox" className={cn('max-h-72 space-y-0.5 overflow-y-auto overscroll-y-contain')}>
-            {options.map((opt) => {
-                const isSelected = opt.value === value;
-                return (
-                    <li key={opt.value}>
-                        <button
-                            type="button"
-                            role="option"
-                            aria-selected={isSelected}
-                            onClick={() => onSelect(opt.value)}
-                            className={cn(dropdownItemBaseClassName)}
-                        >
-                            <span className={cn('truncate')}>{opt.label}</span>
-                            {isSelected ? (
-                                <Check size={16} aria-hidden className={cn('shrink-0 text-(--accent-b)')} />
-                            ) : null}
-                        </button>
-                    </li>
-                );
-            })}
+            {groups.map((group, index) => (
+                <Fragment key={group.id}>
+                    {index > 0 ? (
+                        <li role="presentation" className={cn(dropdownGroupSeparatorClassName)}>
+                            {group.label}
+                        </li>
+                    ) : null}
+                    {group.options.map((opt) => {
+                        const isSelected = opt.value === value;
+                        return (
+                            <li key={opt.value}>
+                                <button
+                                    type="button"
+                                    role="option"
+                                    aria-selected={isSelected}
+                                    onClick={() => onSelect(opt.value)}
+                                    className={cn(dropdownItemBaseClassName)}
+                                >
+                                    <span className={cn('truncate')}>{opt.label}</span>
+                                    <span className={cn('flex shrink-0 items-center gap-1.5')}>
+                                        {opt.trailing}
+                                        {isSelected ? (
+                                            <Check size={16} aria-hidden className={cn('text-(--accent-b)')} />
+                                        ) : null}
+                                    </span>
+                                </button>
+                            </li>
+                        );
+                    })}
+                </Fragment>
+            ))}
         </ul>
     );
 }
@@ -81,7 +106,8 @@ function DropdownListbox({ listboxId, options, value, onSelect }: DropdownListbo
 export interface DropdownProps {
     placeholderLabel: string;
     value: string;
-    options: readonly DropdownOption[];
+    options?: readonly DropdownOption[];
+    groups?: readonly DropdownGroup[];
     onChange: (value: string) => void;
     leadingIcon?: ReactNode;
     minWidth?: string;
@@ -98,7 +124,8 @@ export function Dropdown({
     leadingIcon,
     placeholderLabel,
     value,
-    options,
+    options = [],
+    groups,
     onChange,
     minWidth,
     fieldSize = 'md',
@@ -111,7 +138,8 @@ export function Dropdown({
 }: DropdownProps): ReactElement {
     const [open, setOpen] = useState(false);
     const listboxId = useId();
-    const selected = options.find((o) => o.value === value);
+    const resolvedGroups: readonly DropdownGroup[] = groups ?? [{ id: 'default', options }];
+    const selected = resolvedGroups.flatMap((group) => group.options).find((option) => option.value === value);
     const displayLabel = selected?.label ?? placeholderLabel;
 
     return (
@@ -148,7 +176,7 @@ export function Dropdown({
             <PopoverContent align="start" sideOffset={6} className={dropdownContentClassName}>
                 <DropdownListbox
                     listboxId={listboxId}
-                    options={options}
+                    groups={resolvedGroups}
                     value={value}
                     onSelect={(next) => {
                         onChange(next);

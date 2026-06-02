@@ -3,13 +3,36 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Dropdown, type DropdownOption } from '../src/Dropdown';
+import { Dropdown, type DropdownGroup, type DropdownOption } from '../src/Dropdown';
 
 const options: readonly DropdownOption[] = [
     { value: 'one', label: 'One' },
     { value: 'two', label: 'Two' },
     { value: 'three', label: 'Three' }
 ];
+
+const versionGroups: readonly DropdownGroup[] = [
+    {
+        id: 'stable',
+        options: [
+            { value: '0.10.6', label: 'v0.10.6', trailing: <span data-testid="latest-badge">latest</span> },
+            { value: '0.9.4', label: 'v0.9.4' }
+        ]
+    },
+    { id: 'prerelease', label: 'pre-release', options: [{ value: '0.11.0-next.1', label: 'v0.11.0-next.1' }] }
+];
+
+function renderGroups(onChange = vi.fn()): ReturnType<typeof render> {
+    return render(
+        <Dropdown
+            placeholderLabel="Version"
+            value="0.10.6"
+            groups={versionGroups}
+            onChange={onChange}
+            aria-label="version"
+        />
+    );
+}
 
 function renderDropdown(
     overrides: {
@@ -141,6 +164,40 @@ describe('Dropdown ARIA wiring', () => {
         expect(pickOption(opts, 0)).toHaveAttribute('aria-selected', 'false');
         expect(pickOption(opts, 1)).toHaveAttribute('aria-selected', 'true');
         expect(pickOption(opts, 2)).toHaveAttribute('aria-selected', 'false');
+    });
+});
+
+describe('Dropdown groups', () => {
+    it('renders every option across groups in order', async () => {
+        const user = userEvent.setup();
+        renderGroups();
+        await user.click(screen.getByRole('button', { name: 'version' }));
+        const opts = await screen.findAllByRole('option');
+        expect(opts.map((opt) => opt.textContent)).toEqual(['v0.10.6latest', 'v0.9.4', 'v0.11.0-next.1']);
+    });
+
+    it('renders a labelled separator for non-first groups', async () => {
+        const user = userEvent.setup();
+        renderGroups();
+        await user.click(screen.getByRole('button', { name: 'version' }));
+        expect(await screen.findByRole('listbox')).toHaveTextContent('pre-release');
+    });
+
+    it('renders per-option trailing decoration', async () => {
+        const user = userEvent.setup();
+        renderGroups();
+        await user.click(screen.getByRole('button', { name: 'version' }));
+        expect(await screen.findByTestId('latest-badge')).toBeInTheDocument();
+    });
+
+    it('fires onChange for an option in a later group', async () => {
+        const user = userEvent.setup();
+        const onChange = vi.fn();
+        renderGroups(onChange);
+        await user.click(screen.getByRole('button', { name: 'version' }));
+        const opts = await screen.findAllByRole('option');
+        await user.click(pickOption(opts, 2));
+        expect(onChange).toHaveBeenCalledWith('0.11.0-next.1');
     });
 });
 

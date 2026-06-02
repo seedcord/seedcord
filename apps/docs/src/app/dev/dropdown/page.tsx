@@ -1,6 +1,6 @@
 'use client';
 
-import { tw, Dropdown, Icon, type DropdownOption } from '@seedcord/ui';
+import { tw, Badge, Dropdown, Icon, type DropdownGroup, type DropdownOption } from '@seedcord/ui';
 import { Globe } from 'lucide-react';
 import { useState } from 'react';
 
@@ -24,10 +24,34 @@ const PACKAGE_OPTIONS: DropdownOption[] = [
 ];
 
 const VERSION_OPTIONS: DropdownOption[] = [
-    { value: '0.10.6', label: 'latest · v0.10.6' },
+    { value: '0.10.6', label: 'v0.10.6' },
     { value: '0.10.5', label: 'v0.10.5' },
     { value: '0.10.4', label: 'v0.10.4' },
     { value: '0.10.3', label: 'v0.10.3' }
+];
+
+const VERSION_GROUPS: DropdownGroup[] = [
+    {
+        id: 'stable',
+        options: [
+            {
+                value: '0.10.6',
+                label: 'v0.10.6',
+                trailing: (
+                    <Badge tone="accent" variant="chip">
+                        latest
+                    </Badge>
+                )
+            },
+            { value: '0.9.4', label: 'v0.9.4' },
+            { value: '0.8.7', label: 'v0.8.7' }
+        ]
+    },
+    {
+        id: 'prerelease',
+        label: 'pre-release',
+        options: [{ value: '0.11.0-next.1', label: 'v0.11.0-next.1' }]
+    }
 ];
 
 const LOCALE_OPTIONS: DropdownOption[] = [
@@ -50,6 +74,16 @@ function SidebarSelectMock(): ReactElement {
                 <p className={tw`text-subtle text-xs font-semibold tracking-wide uppercase`}>Version</p>
                 <Dropdown placeholderLabel="Version" value={version} options={VERSION_OPTIONS} onChange={setVersion} />
             </div>
+        </div>
+    );
+}
+
+function VersionGroupsMock(): ReactElement {
+    const [version, setVersion] = useState('0.10.6');
+    return (
+        <div className={tw`max-w-xs space-y-1`}>
+            <p className={tw`text-subtle text-xs font-semibold tracking-wide uppercase`}>Version</p>
+            <Dropdown placeholderLabel="Version" value={version} groups={VERSION_GROUPS} onChange={setVersion} />
         </div>
     );
 }
@@ -156,6 +190,9 @@ function DropdownPage(): ReactElement {
             </header>
             <DevSection title="SidebarSelect mock (real-world consumer cluster)">
                 <SidebarSelectMock />
+            </DevSection>
+            <DevSection title="Grouped version picker (stable desc, pre-release separator, latest badge)">
+                <VersionGroupsMock />
             </DevSection>
             <DevSection title="Sizes (sm + md)">
                 <SizesRow />
