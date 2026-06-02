@@ -91,10 +91,12 @@ export class Bot extends Plugin<BotEvents> {
         }
         this.isInitialized = true;
 
+        const token = this.botToken;
+
         if (this.interactions) await this.interactions.init();
         if (this.events) await this.events.init();
 
-        await this.login();
+        await this.login(token);
 
         if (this.commands) {
             await this.commands.init();
@@ -117,8 +119,8 @@ export class Bot extends Plugin<BotEvents> {
     /**
      * Logs the bot into Discord using the configured token
      */
-    private async login(): Promise<Bot> {
-        await this._client.login(this.botToken);
+    private async login(token: string): Promise<Bot> {
+        await this._client.login(token);
         this.logger.info(`Logged in as ${chalk.bold.magenta(this._client.user?.username)}!`);
         return this;
     }
