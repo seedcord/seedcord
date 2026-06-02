@@ -1,4 +1,4 @@
-import type { DocsEngine } from './engine';
+import type { VersionedDocsEngine } from './engine';
 import type { MemberAccessLevel } from '@lib/memberAccess';
 import type {
     DirectoryEntity,
@@ -15,7 +15,7 @@ import type { Except } from 'type-fest';
 export type { CodeRepresentation };
 
 export interface FormatContext {
-    engine: DocsEngine;
+    engine: VersionedDocsEngine;
     manifestPackage: string;
 }
 
@@ -102,9 +102,9 @@ export interface NavigationCategory {
 export interface PackageVersionCatalog {
     id: string;
     label: string;
-    summary: string;
-    manifestVersion: string;
     basePath: string;
+    isLatest: boolean;
+    channel: 'stable' | 'prerelease';
     categories: readonly NavigationCategory[];
 }
 
@@ -216,15 +216,6 @@ export type EntityModel =
     | TypeEntityModel
     | FunctionEntityModel
     | VariableEntityModel;
-
-export interface EntityQueryParams {
-    pkg?: string;
-    manifestPackage?: string;
-    slug?: string;
-    symbol?: string;
-    qualifiedName?: string;
-    kind?: string;
-}
 
 type MemberAccessorType = 'getter' | 'setter' | 'accessor';
 

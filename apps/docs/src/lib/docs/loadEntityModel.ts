@@ -1,25 +1,29 @@
-import {
-    DEFAULT_MANIFEST_PACKAGE,
-    findEntityNode,
-    resolveEntityTone,
-    resolveManifestPackageName
-} from '@seedcord/docs-engine';
+import { findEntityNode, resolveEntityTone } from '@seedcord/docs-engine';
 
 import { buildEntityModel } from './builders/buildEntityModel';
-import { getDocsEngine } from './engine';
 
-import type { EntityModel, EntityQueryParams } from './types';
+import type { VersionedDocsEngine } from './engine';
+import type { EntityModel } from './types';
 
-export async function loadEntityModel(params: EntityQueryParams): Promise<EntityModel | null> {
-    const requestedPackage = params.manifestPackage ?? params.pkg ?? DEFAULT_MANIFEST_PACKAGE;
-    const engine = await getDocsEngine();
-    const manifestPackage = resolveManifestPackageName(engine, requestedPackage);
+interface EntityLookup {
+    slug?: string;
+    symbol?: string;
+    qualifiedName?: string;
+    kind?: string;
+}
+
+// Requires the caller to have run setVersion for the package first; resolves against loaded models only.
+export async function loadEntityModel(
+    engine: VersionedDocsEngine,
+    manifestPackage: string,
+    lookup: EntityLookup
+): Promise<EntityModel | null> {
     const node = findEntityNode(engine, {
         manifestPackage,
-        ...(params.slug ? { slug: params.slug } : {}),
-        ...(params.symbol ? { symbol: params.symbol } : {}),
-        ...(params.qualifiedName ? { qualifiedName: params.qualifiedName } : {}),
-        kind: params.kind ? resolveEntityTone(params.kind) : null
+        ...(lookup.slug ? { slug: lookup.slug } : {}),
+        ...(lookup.symbol ? { symbol: lookup.symbol } : {}),
+        ...(lookup.qualifiedName ? { qualifiedName: lookup.qualifiedName } : {}),
+        kind: lookup.kind ? resolveEntityTone(lookup.kind) : null
     });
 
     if (!node) {

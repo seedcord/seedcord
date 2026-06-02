@@ -1,29 +1,53 @@
-import { buildEntityHref } from '@seedcord/docs-engine';
+import { buildEntityHref, resolvePackageIdentity } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { getDocsEngine } from '@lib/docs/engine';
 import { loadEntityModel } from '@lib/docs/loadEntityModel';
 
 const HTTP_TEMPORARY_REDIRECT = 307;
 
+interface EntityQuery {
+    pkg: string | null;
+    lookup: { slug?: string; symbol?: string; qualifiedName?: string; kind?: string };
+}
+
+function readEntityQuery(params: URLSearchParams): EntityQuery {
+    const get = (key: string): string | undefined => params.get(key) ?? undefined;
+    const slug = get('slug');
+    const symbol = get('symbol');
+    const qualifiedName = get('q') ?? get('qualifiedName');
+    const kind = get('kind');
+
+    return {
+        pkg: params.get('pkg') ?? params.get('package'),
+        lookup: {
+            ...(slug ? { slug } : {}),
+            ...(symbol ? { symbol } : {}),
+            ...(qualifiedName ? { qualifiedName } : {}),
+            ...(kind ? { kind } : {})
+        }
+    };
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
-    const url = request.nextUrl;
-    const pkg = url.searchParams.get('pkg') ?? url.searchParams.get('package') ?? undefined;
-    const slug = url.searchParams.get('slug') ?? undefined;
-    const symbol = url.searchParams.get('symbol') ?? undefined;
-    const qualifiedName = url.searchParams.get('q') ?? url.searchParams.get('qualifiedName') ?? undefined;
-    const kind = url.searchParams.get('kind') ?? undefined;
+    const { pkg, lookup } = readEntityQuery(request.nextUrl.searchParams);
+    const fallback = (): NextResponse => NextResponse.redirect(new URL('/', request.url), HTTP_TEMPORARY_REDIRECT);
 
-    const entity = await loadEntityModel({
-        ...(pkg ? { pkg } : {}),
-        ...(slug ? { slug } : {}),
-        ...(symbol ? { symbol } : {}),
-        ...(qualifiedName ? { qualifiedName } : {}),
-        ...(kind ? { kind } : {})
-    });
+    const engine = await getDocsEngine();
+    const identity = resolvePackageIdentity(await engine.listPackages(), pkg);
+    if (!identity) {
+        return fallback();
+    }
 
+    try {
+        await engine.setVersion(identity.folder, 'latest');
+    } catch {
+        return fallback();
+    }
+
+    const entity = await loadEntityModel(engine, identity.fullName, lookup);
     if (!entity) {
-        const fallbackUrl = new URL('/', request.url);
-        return NextResponse.redirect(fallbackUrl, HTTP_TEMPORARY_REDIRECT);
+        return fallback();
     }
 
     const href = buildEntityHref({
@@ -33,6 +57,5 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         tone: entity.kind
     });
 
-    const destination = new URL(href, request.url);
-    return NextResponse.redirect(destination, HTTP_TEMPORARY_REDIRECT);
+    return NextResponse.redirect(new URL(href, request.url), HTTP_TEMPORARY_REDIRECT);
 }

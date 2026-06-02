@@ -9,6 +9,8 @@ const TONE_PRESENTATION = {
         icon: SquareStack,
         styles: {
             heading: tw`text-(--tone-class-heading)`,
+            dot: tw`bg-(--entity-class)`,
+            iconColor: tw`text-(--entity-class)`,
             item: tw`hover:border-(--tone-class-badge-border) hover:bg-(--tone-class-item-bg) focus-visible:outline-(--entity-class)`,
             badge: tw`border-(--tone-class-badge-border) bg-(--tone-class-badge-bg) text-(--entity-class)`,
             tag: tw`border-(--tone-class-badge-border) bg-(--tone-class-tag-bg) text-(--tone-class-tag-text)`,
@@ -19,6 +21,8 @@ const TONE_PRESENTATION = {
         icon: Puzzle,
         styles: {
             heading: tw`text-(--tone-interface-heading)`,
+            dot: tw`bg-(--entity-interface)`,
+            iconColor: tw`text-(--entity-interface)`,
             item: tw`hover:border-(--tone-interface-badge-border) hover:bg-(--tone-interface-item-bg) focus-visible:outline-(--entity-interface)`,
             badge: tw`border-(--tone-interface-badge-border) bg-(--tone-interface-badge-bg) text-(--entity-interface)`,
             tag: tw`border-(--tone-interface-badge-border) bg-(--tone-interface-tag-bg) text-(--tone-interface-tag-text)`,
@@ -29,6 +33,8 @@ const TONE_PRESENTATION = {
         icon: Braces,
         styles: {
             heading: tw`text-(--tone-type-heading)`,
+            dot: tw`bg-(--entity-type)`,
+            iconColor: tw`text-(--entity-type)`,
             item: tw`hover:border-(--tone-type-badge-border) hover:bg-(--tone-type-item-bg) focus-visible:outline-(--entity-type)`,
             badge: tw`border-(--tone-type-badge-border) bg-(--tone-type-badge-bg) text-(--entity-type)`,
             tag: tw`border-(--tone-type-badge-border) bg-(--tone-type-tag-bg) text-(--tone-type-tag-text)`,
@@ -39,6 +45,8 @@ const TONE_PRESENTATION = {
         icon: FunctionSquare,
         styles: {
             heading: tw`text-(--tone-func-heading)`,
+            dot: tw`bg-(--entity-function)`,
+            iconColor: tw`text-(--entity-function)`,
             item: tw`hover:border-(--tone-func-badge-border) hover:bg-(--tone-func-item-bg) focus-visible:outline-(--entity-function)`,
             badge: tw`border-(--tone-func-badge-border) bg-(--tone-func-badge-bg) text-(--entity-function)`,
             tag: tw`border-(--tone-func-badge-border) bg-(--tone-func-tag-bg) text-(--tone-func-tag-text)`,
@@ -49,6 +57,8 @@ const TONE_PRESENTATION = {
         icon: ListTree,
         styles: {
             heading: tw`text-(--tone-enum-heading)`,
+            dot: tw`bg-(--entity-enum)`,
+            iconColor: tw`text-(--entity-enum)`,
             item: tw`hover:border-(--tone-enum-badge-border) hover:bg-(--tone-enum-item-bg) focus-visible:outline-(--entity-enum)`,
             badge: tw`border-(--tone-enum-badge-border) bg-(--tone-enum-badge-bg) text-(--entity-enum)`,
             tag: tw`border-(--tone-enum-badge-border) bg-(--tone-enum-tag-bg) text-(--tone-enum-tag-text)`,
@@ -59,6 +69,8 @@ const TONE_PRESENTATION = {
         icon: Variable,
         styles: {
             heading: tw`text-(--tone-var-heading)`,
+            dot: tw`bg-(--entity-variable)`,
+            iconColor: tw`text-(--entity-variable)`,
             item: tw`hover:border-(--tone-var-badge-border) hover:bg-(--tone-var-item-bg) focus-visible:outline-(--entity-variable)`,
             badge: tw`border-(--tone-var-badge-border) bg-(--tone-var-badge-bg) text-(--entity-variable)`,
             tag: tw`border-(--tone-var-badge-border) bg-(--tone-var-tag-bg) text-(--tone-var-tag-text)`,

@@ -3,8 +3,6 @@
 import { Card, cn } from '@seedcord/ui';
 import { usePathname } from 'next/navigation';
 
-import { useUIStore } from '@store/ui';
-
 import { SidebarCategoryList } from './SidebarCategoryList';
 import { SidebarEmptyState } from './SidebarEmptyState';
 import { SidebarHeader } from './SidebarHeader';
@@ -56,20 +54,11 @@ export function Sidebar({
         restSegments
     );
 
-    const setSelectedPackage = useUIStore((s) => s.setSelectedPackage);
-    const setSelectedVersion = useUIStore((s) => s.setSelectedVersion);
-
     const onPackageChange = (value: string): void => {
         const nextPackage = catalog.find((entry) => entry.id === value) ?? null;
         const nextVersionId = nextPackage?.versions[0]?.id ?? null;
 
         setPendingSelection({ packageId: value, versionId: nextVersionId });
-
-        setSelectedPackage(value);
-        if (nextVersionId) {
-            setSelectedVersion(nextVersionId);
-        }
-
         handlePackageChange(value);
     };
 
@@ -79,8 +68,6 @@ export function Sidebar({
         if (targetPackageId) {
             setPendingSelection({ packageId: targetPackageId, versionId: value });
         }
-
-        setSelectedVersion(value);
 
         handleVersionChange(value);
     };

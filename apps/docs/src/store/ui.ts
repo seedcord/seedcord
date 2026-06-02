@@ -1,6 +1,5 @@
 'use client';
 
-import { DEFAULT_MANIFEST_PACKAGE, DEFAULT_VERSION } from '@seedcord/docs-engine/client';
 import { create } from 'zustand';
 
 import { log } from '@lib/logger';
@@ -8,16 +7,12 @@ import { formatMemberAccessLabel, type MemberAccessLevel } from '@lib/memberAcce
 
 interface UIState {
     isCommandPaletteOpen: boolean;
-    selectedPackage: string;
-    selectedVersion: string;
     memberAccessLevel: MemberAccessLevel;
 }
 
 interface UIActions {
     setCommandPaletteOpen: (open: boolean) => void;
     toggleCommandPalette: () => void;
-    setSelectedPackage: (pkg: string) => void;
-    setSelectedVersion: (version: string) => void;
     setMemberAccessLevel: (level: MemberAccessLevel) => void;
 }
 
@@ -27,8 +22,6 @@ const DEFAULT_ACCESS_LEVEL: MemberAccessLevel = 'protected';
 
 export const useUIStore = create<UIStore>((set) => ({
     isCommandPaletteOpen: false,
-    selectedPackage: DEFAULT_MANIFEST_PACKAGE,
-    selectedVersion: DEFAULT_VERSION,
     memberAccessLevel: DEFAULT_ACCESS_LEVEL,
 
     setCommandPaletteOpen: (open) => {
@@ -42,22 +35,6 @@ export const useUIStore = create<UIStore>((set) => ({
             log('Command palette toggled', { open });
             return { isCommandPaletteOpen: open };
         }),
-
-    setSelectedPackage: (pkg) => {
-        log('Package filter changed', { pkg });
-        if (typeof window !== 'undefined') {
-            window.localStorage.setItem('docs.selectedPackage', pkg);
-        }
-        set({ selectedPackage: pkg });
-    },
-
-    setSelectedVersion: (version) => {
-        log('Version filter changed', { version });
-        if (typeof window !== 'undefined') {
-            window.localStorage.setItem('docs.selectedVersion', version);
-        }
-        set({ selectedVersion: version });
-    },
 
     setMemberAccessLevel: (level) => {
         log('Member access filter changed', { level: formatMemberAccessLabel(level) });

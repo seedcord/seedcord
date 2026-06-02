@@ -3,7 +3,7 @@
 import { Dropdown, cn } from '@seedcord/ui';
 import { useMemo } from 'react';
 
-import type { DropdownOption } from '@seedcord/ui';
+import type { DropdownGroup, DropdownOption } from '@seedcord/ui';
 import type { ReactElement } from 'react';
 
 interface SidebarSelectOption {
@@ -15,14 +15,15 @@ interface SidebarSelectProps {
     id: string;
     label: string;
     value: string;
-    options: readonly SidebarSelectOption[];
+    options?: readonly SidebarSelectOption[];
+    groups?: readonly DropdownGroup[];
     onChange: (value: string) => void;
 }
 
-export function SidebarSelect({ id, label, value, options, onChange }: SidebarSelectProps): ReactElement {
+export function SidebarSelect({ id, label, value, options, groups, onChange }: SidebarSelectProps): ReactElement {
     const labelId = `${id}-label`;
     const dropdownOptions = useMemo<DropdownOption[]>(
-        () => options.map((option) => ({ value: option.id, label: option.label })),
+        () => (options ?? []).map((option) => ({ value: option.id, label: option.label })),
         [options]
     );
 
@@ -40,8 +41,8 @@ export function SidebarSelect({ id, label, value, options, onChange }: SidebarSe
                 aria-labelledby={labelId}
                 placeholderLabel={label}
                 value={value}
-                options={dropdownOptions}
                 onChange={onChange}
+                {...(groups ? { groups } : { options: dropdownOptions })}
             />
         </div>
     );

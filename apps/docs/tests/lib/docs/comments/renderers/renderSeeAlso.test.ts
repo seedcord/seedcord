@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { FormatContext } from '../../../../../src/lib/docs/types';
-import type { DocComment, DocCommentBlockTag, DocsEngine } from '@seedcord/docs-engine';
+import type { DocComment, DocCommentBlockTag, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 const resolveInlineHrefMock = vi.fn<(...args: unknown[]) => string | null>(() => null);
 vi.mock('../../../../../src/lib/docs/comments/resolvers', () => ({
@@ -31,7 +31,7 @@ function makeComment(blockTags: DocCommentBlockTag[]): DocComment {
 }
 
 function makeContext(): FormatContext {
-    const engine = {} as unknown as DocsEngine;
+    const engine = {} as unknown as VersionedDocsEngine;
     return { engine, manifestPackage: 'seedcord' };
 }
 

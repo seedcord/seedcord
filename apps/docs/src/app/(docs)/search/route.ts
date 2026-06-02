@@ -2,7 +2,7 @@ import { kindName, type DocSearchEntry, type DocNode } from '@seedcord/docs-engi
 import {
     memberFragment,
     DEFAULT_MANIFEST_PACKAGE,
-    resolveManifestPackageName,
+    resolvePackageIdentity,
     buildEntityHref,
     buildPackageBasePath
 } from '@seedcord/docs-engine';
@@ -236,8 +236,12 @@ export async function GET(request: NextRequest): Promise<NextResponse<SearchResp
     }
 
     const engine = await getDocsEngine();
+    const packages = await engine.listPackages();
+    // Load every package's latest so search spans the whole library, not just the active package.
+    await Promise.all(packages.map((pkg) => engine.setVersion(pkg.folder, 'latest').catch(() => undefined)));
+
     const pkgParam = url.searchParams.get('pkg');
-    const manifestPackage = pkgParam ? resolveManifestPackageName(engine, pkgParam) : undefined;
+    const manifestPackage = pkgParam ? (resolvePackageIdentity(packages, pkgParam)?.fullName ?? undefined) : undefined;
     const rawResults = engine.search(query, manifestPackage);
 
     const grouped = new Map<string, DocSearchEntry[]>();

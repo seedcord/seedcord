@@ -3,6 +3,7 @@
 import { cn } from '@seedcord/ui';
 
 import { SidebarSelect } from './SidebarSelect';
+import { buildVersionGroups } from './utils/buildVersionGroups';
 
 import type { SidebarHeaderPackageOption, SidebarHeaderVersionOption } from './types';
 import type { ReactElement } from 'react';
@@ -37,7 +38,7 @@ export function SidebarHeader({
                 id="docs-version-picker"
                 label="Version"
                 value={activeVersion.id}
-                options={versionOptions.map((option) => ({ id: option.id, label: option.label }))}
+                groups={buildVersionGroups(versionOptions)}
                 onChange={onVersionChange}
             />
         </div>

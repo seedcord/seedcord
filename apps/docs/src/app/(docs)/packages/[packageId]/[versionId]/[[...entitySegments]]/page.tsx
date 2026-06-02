@@ -1,16 +1,18 @@
 import { parseEntityPathSegments } from '@seedcord/docs-engine';
-import { cn } from '@seedcord/ui';
+import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '@components/docs/entity/EntityContent';
-import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
+import { findCatalogEntry, findCatalogVersion, loadActiveVersion, loadDocsCatalog } from '@lib/docs/catalog';
+import { getDocsEngine } from '@lib/docs/engine';
 import { loadEntityModel } from '@lib/docs/loadEntityModel';
 import { getToneConfig } from '@lib/tonePresentation';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
+// Prerendered + cached on first request: these entity pages are shiki-heavy, too slow to render per request.
 export const dynamic = 'force-static';
 
 type PageParams = Record<string, string | string[] | undefined>;
@@ -37,60 +39,49 @@ async function getCatalogContext(
     const entry = findCatalogEntry(catalog, decodedPackageId);
     if (!entry) notFound();
 
-    const decodedVersionId = decodeParam(params.versionId);
-    const versionCandidate = decodedVersionId ? findCatalogVersion(entry, decodedVersionId) : null;
-    const version = versionCandidate ?? entry.versions[0] ?? null;
+    // An unknown explicit version is a 404, not a fall-through to latest.
+    const version = findCatalogVersion(entry, decodeParam(params.versionId));
     if (!version) notFound();
 
     return { entry, version };
 }
 
+const chipBaseClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;
+
 function renderCategory(category: NavigationCategory): ReactElement {
-    const toneStyles = getToneConfig(category.tone).styles;
+    const { icon: ToneIcon, styles: toneStyles } = getToneConfig(category.tone);
 
     return (
-        <div key={category.id} className={cn('space-y-3')}>
-            <header className={cn('flex items-center justify-between')}>
-                <div className={cn('flex flex-col')}>
-                    <span className={cn('text-subtle text-xs font-semibold tracking-wide uppercase')}>
-                        {category.title}
-                    </span>
-                    <span className={cn('text-xs text-(--text-accent-b-strong)')}>
-                        {category.items.length} item{category.items.length === 1 ? '' : 's'}
-                    </span>
-                </div>
+        <section key={category.id} className={cn('space-y-3')}>
+            <header className={cn('flex items-center gap-2')}>
+                <ToneIcon size={16} strokeWidth={2} aria-hidden className={cn('shrink-0', toneStyles.iconColor)} />
+                <span className={cn('text-subtle text-sm font-semibold tracking-wide uppercase')}>
+                    {category.title}
+                </span>
+                <span className={cn('text-xs text-(--text-faint)')}>
+                    {category.items.length} item{category.items.length === 1 ? '' : 's'}
+                </span>
             </header>
-            <ul className={cn('space-y-2')}>
+            <div className={cn('flex flex-wrap gap-2')}>
                 {category.items.map((item) => (
-                    <li key={item.id}>
-                        <Link
-                            href={item.href}
-                            className={cn(
-                                'bg-surface-moderate shadow-soft border-border flex items-center justify-between rounded-xl border px-3 py-2 text-sm font-medium text-(--text) transition hover:border-(--outline-accent-b-moderate) hover:bg-(--surface-accent-b-moderate)'
-                            )}
-                        >
-                            <span>{item.label}</span>
-                            <span
-                                className={cn(
-                                    `inline-flex h-6 min-w-9 items-center justify-center rounded-full border px-2 py-1 text-xs font-semibold ${toneStyles.badge}`
-                                )}
-                            >
-                                {category.tone}
-                            </span>
-                        </Link>
-                    </li>
+                    <Link key={item.id} href={item.href} className={cn(chipBaseClassName, toneStyles.item)}>
+                        <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', toneStyles.dot)} />
+                        {item.label}
+                    </Link>
                 ))}
-            </ul>
-        </div>
+            </div>
+        </section>
     );
 }
 
 function PackageVersionOverview({
     entry,
-    version
+    version,
+    categories
 }: {
     entry: PackageCatalogEntry;
     version: PackageVersionCatalog;
+    categories: readonly NavigationCategory[];
 }): ReactElement {
     return (
         <section className={cn('space-y-8')}>
@@ -102,9 +93,9 @@ function PackageVersionOverview({
                     {entry.label} · {version.label}
                 </h1>
             </header>
-            <div className={cn('grid gap-6 lg:grid-cols-2 xl:grid-cols-3')}>
-                {version.categories.length ? (
-                    version.categories.map(renderCategory)
+            <div className={cn('space-y-8')}>
+                {categories.length ? (
+                    categories.map(renderCategory)
                 ) : (
                     <p className={cn('text-subtle text-sm')}>
                         No reference entries are available for this version yet.
@@ -119,6 +110,8 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
     const resolvedParams = await params;
     const { entry, version } = await getCatalogContext(resolvedParams);
 
+    const categories = await loadActiveVersion(entry.id, version.id);
+
     const rawSegments = resolvedParams.entitySegments;
     function normalizeSegments(raw: typeof rawSegments): string[] | undefined {
         if (Array.isArray(raw)) return raw;
@@ -128,7 +121,7 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
     const normalizedSegments: string[] | undefined = normalizeSegments(rawSegments);
 
     if (!normalizedSegments || normalizedSegments.length === 0) {
-        return <PackageVersionOverview entry={entry} version={version} />;
+        return <PackageVersionOverview entry={entry} version={version} categories={categories} />;
     }
 
     const parsedSegments = parseEntityPathSegments(normalizedSegments);
@@ -137,8 +130,8 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
         notFound();
     }
 
-    const entity = await loadEntityModel({
-        manifestPackage: entry.manifestName,
+    const engine = await getDocsEngine();
+    const entity = await loadEntityModel(engine, entry.manifestName, {
         slug: parsedSegments.slug,
         ...(parsedSegments.tone ? { kind: parsedSegments.tone } : {})
     });

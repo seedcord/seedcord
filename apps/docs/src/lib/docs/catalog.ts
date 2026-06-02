@@ -1,16 +1,17 @@
 import {
     DEFAULT_MANIFEST_PACKAGE,
     DEFAULT_VERSION,
-    formatDisplayPackageName,
     buildEntityHref,
     buildPackageBasePath,
-    formatVersionLabel
+    formatDisplayPackageName,
+    formatVersionLabel,
+    stableLineHeads
 } from '@seedcord/docs-engine';
 import { cache } from 'react';
 
 import { getDocsEngine } from './engine';
 
-import type { DocsEngine } from './engine';
+import type { VersionedDocsEngine } from './engine';
 import type {
     CategoryConfig,
     DocsCatalog,
@@ -19,9 +20,10 @@ import type {
     PackageCatalogEntry,
     PackageVersionCatalog
 } from './types';
+import type { PackageIndexEntry } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
-type GetPackageDirectoryReturn = ReturnType<DocsEngine['getPackageDirectory']>;
+type GetPackageDirectoryReturn = ReturnType<VersionedDocsEngine['getPackageDirectory']>;
 
 const CATEGORY_CONFIG: readonly CategoryConfig[] = [
     { entity: 'classes', title: 'Classes', tone: 'class' },
@@ -76,31 +78,50 @@ function buildCategories(directory: GetPackageDirectoryReturn): NavigationCatego
     });
 }
 
-function buildPackageEntry(
-    manifestPackage: string,
+function buildVersion(
+    fullName: string,
     version: string,
-    directory: GetPackageDirectoryReturn
-): PackageCatalogEntry {
-    const displayName = formatDisplayPackageName(manifestPackage);
-    const description = `Reference documentation for ${displayName}.`;
-    const versionLabel = formatVersionLabel(version);
-    const categories = buildCategories(directory);
-
-    const versionCatalog: PackageVersionCatalog = {
+    channel: 'stable' | 'prerelease',
+    isLatest: boolean
+): PackageVersionCatalog {
+    return {
         id: version,
-        label: versionLabel,
-        summary: `${displayName} API (${versionLabel})`,
-        manifestVersion: version,
-        basePath: buildPackageBasePath(manifestPackage, version),
-        categories
-    };
+        label: formatVersionLabel(version),
+        basePath: buildPackageBasePath(fullName, version),
+        isLatest,
+        channel,
+        categories: []
+    } satisfies PackageVersionCatalog;
+}
+
+// Newest-first (stable line heads, then latest prerelease) so callers can take versions[0] as the
+// default. Categories stay empty here; loadActiveVersion fills them for one version on demand.
+function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersionCatalog[] {
+    const versions: PackageVersionCatalog[] = [];
+
+    if (entry.stable) {
+        const { latest } = entry.stable;
+        for (const version of stableLineHeads(entry.stable)) {
+            versions.push(buildVersion(fullName, version, 'stable', version === latest));
+        }
+    }
+
+    if (entry.prerelease) {
+        versions.push(buildVersion(fullName, entry.prerelease.latest, 'prerelease', false));
+    }
+
+    return versions;
+}
+
+function buildPackageEntry(fullName: string, entry: PackageIndexEntry): PackageCatalogEntry {
+    const displayName = formatDisplayPackageName(fullName);
 
     return {
         id: displayName,
-        manifestName: manifestPackage,
+        manifestName: fullName,
         label: displayName,
-        description,
-        versions: [versionCatalog]
+        description: `Reference documentation for ${displayName}.`,
+        versions: buildVersions(fullName, entry)
     } satisfies PackageCatalogEntry;
 }
 
@@ -111,50 +132,66 @@ const sortCatalogEntries = (entries: PackageCatalogEntry[]): PackageCatalogEntry
         return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
     });
 
+// The package + version axes come straight from index.json; no project.json is fetched.
 export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     const engine = await getDocsEngine();
-    const packages = engine.listPackages();
+    await engine.ready();
+    const packages = await engine.listPackages();
 
-    const entries = packages
-        .map((manifestPackage) => {
-            const pkg = engine.getPackage(manifestPackage);
-            if (!pkg) {
-                return null;
-            }
-
-            const version = pkg.manifest.version;
-            const directory = engine.getPackageDirectory(manifestPackage);
-
-            return buildPackageEntry(manifestPackage, version, directory);
+    const entries = await Promise.all(
+        packages.map(async ({ folder, fullName }): Promise<PackageCatalogEntry | null> => {
+            const entry = await engine.getEntry(folder);
+            return entry ? buildPackageEntry(fullName, entry) : null;
         })
-        .filter((entry): entry is PackageCatalogEntry => entry !== null);
+    );
 
-    return sortCatalogEntries(entries);
+    return sortCatalogEntries(entries.filter((entry): entry is PackageCatalogEntry => entry !== null));
+});
+
+// Cached so the layout and page share one fetch + setVersion per (folder, version).
+export const loadActiveVersion = cache(async (folder: string, versionId: string): Promise<NavigationCategory[]> => {
+    const engine = await getDocsEngine();
+    const entry = await engine.getEntry(folder);
+    if (!entry) {
+        return [];
+    }
+
+    try {
+        await engine.setVersion(folder, versionId);
+    } catch {
+        return [];
+    }
+
+    return buildCategories(engine.getPackageDirectory(entry.fullName));
 });
 
 export const findCatalogEntry = (catalog: DocsCatalog, packageId: string): PackageCatalogEntry | undefined =>
     catalog.find((entry) => entry.id === packageId);
 
-function parseSemver(v: string): [number, number, number] {
-    const s = v.replace(/^v/, '');
-    const parts = s.split('.').map((p) => Number(p.replace(/[^0-9]/g, '')) || 0);
-    return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
-}
-
-function compareSemver(a: string, b: string): number {
-    const [am, an, ap] = parseSemver(a);
-    const [bm, bn, bp] = parseSemver(b);
-    if (am !== bm) return am - bm;
-    if (an !== bn) return an - bn;
-    return ap - bp;
-}
-
 export function findCatalogVersion(entry: PackageCatalogEntry, versionId: string): PackageVersionCatalog | undefined {
-    if (!entry.versions.length) return undefined;
-
     if (versionId === DEFAULT_VERSION) {
-        return entry.versions.slice().sort((a, b) => compareSemver(b.manifestVersion, a.manifestVersion))[0];
+        return entry.versions.find((version) => version.isLatest) ?? entry.versions[0];
     }
 
     return entry.versions.find((version) => version.id === versionId);
+}
+
+// Fills categories on the resolved (packageId, versionId) only; the sidebar renders the active
+// version alone, so every other version stays empty.
+export function withActiveCategories(
+    catalog: DocsCatalog,
+    packageId: string,
+    versionId: string,
+    categories: readonly NavigationCategory[]
+): DocsCatalog {
+    return catalog.map((entry) =>
+        entry.id === packageId
+            ? {
+                  ...entry,
+                  versions: entry.versions.map((version) =>
+                      version.id === versionId ? { ...version, categories } : version
+                  )
+              }
+            : entry
+    );
 }

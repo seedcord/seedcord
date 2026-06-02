@@ -1,7 +1,7 @@
 import { escapeHtml } from './cleaners';
 
 import type { CommentParagraph, FormatContext } from '../types';
-import type { DocsEngine } from '@seedcord/docs-engine';
+import type { VersionedDocsEngine } from '@seedcord/docs-engine';
 
 export function createPlainParagraph(text: string): CommentParagraph {
     const normalized = text.trim();
@@ -12,7 +12,7 @@ export const cloneCommentParagraphs = (
     paragraphs: readonly CommentParagraph[] | null | undefined
 ): CommentParagraph[] => (paragraphs?.length ? [...paragraphs] : []);
 
-export const createFormatContext = (engine: DocsEngine, manifestPackage: string): FormatContext => ({
+export const createFormatContext = (engine: VersionedDocsEngine, manifestPackage: string): FormatContext => ({
     engine,
     manifestPackage
 });

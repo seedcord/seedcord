@@ -12,9 +12,9 @@ import { createFormatContext } from '../comments/creators';
 import { formatCommentRich } from '../comments/formatter';
 
 import type { EntityModel } from '../types';
-import type { DocNode, DocsEngine } from '@seedcord/docs-engine';
+import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';
 
-export async function buildEntityModel(engine: DocsEngine, node: DocNode): Promise<EntityModel> {
+export async function buildEntityModel(engine: VersionedDocsEngine, node: DocNode): Promise<EntityModel> {
     const manifestPackage = node.packageName;
     const context = createFormatContext(engine, manifestPackage);
     const formattedSummary = await formatCommentRich(node.comment, context);

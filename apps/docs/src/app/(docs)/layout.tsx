@@ -1,81 +1,9 @@
-import { cn } from '@seedcord/ui';
-
-import { Container } from '@components/layout/sidebar/utils/container/Container';
-import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
-
-import type { DocsCatalog, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
 import type { ReactNode } from 'react';
 
-interface DocsLayoutParams {
-    packageId?: string;
-    versionId?: string;
-    entitySegments?: string[];
-    [key: string]: string | string[] | undefined;
-}
-
-interface DocsLayoutProps {
-    children: ReactNode;
-    params: Promise<DocsLayoutParams>;
-}
-
-function decodeParam(value?: string): string | undefined {
-    if (!value) {
-        return undefined;
-    }
-
-    try {
-        return decodeURIComponent(value);
-    } catch {
-        return value;
-    }
-}
-
-function resolveActiveSelection(
-    catalog: DocsCatalog,
-    params: DocsLayoutParams
-): {
-    activePackage: PackageCatalogEntry | null;
-    activeVersion: PackageVersionCatalog | null;
-} {
-    if (!catalog.length) {
-        return { activePackage: null, activeVersion: null };
-    }
-
-    const decodedPackageId = decodeParam(params.packageId);
-    const candidatePackage = decodedPackageId ? findCatalogEntry(catalog, decodedPackageId) : null;
-    const activePackage = candidatePackage ?? catalog[0] ?? null;
-
-    if (!activePackage) {
-        return { activePackage: null, activeVersion: null };
-    }
-
-    const decodedVersionId = decodeParam(params.versionId);
-    const candidateVersion = decodedVersionId ? findCatalogVersion(activePackage, decodedVersionId) : null;
-    const activeVersion = candidateVersion ?? activePackage.versions[0] ?? null;
-
-    return {
-        activePackage,
-        activeVersion
-    };
-}
-
-async function DocsLayout({ children, params }: DocsLayoutProps): Promise<ReactNode> {
-    const [catalog, resolvedParams] = await Promise.all([loadDocsCatalog(), params]);
-    const effectiveParams: DocsLayoutParams = { ...resolvedParams };
-
-    const { activePackage, activeVersion } = resolveActiveSelection(catalog, effectiveParams);
-
-    return (
-        <Container
-            catalog={catalog}
-            activePackageId={activePackage?.id ?? ''}
-            activeVersionId={activeVersion?.id ?? ''}
-        >
-            <main id="main-content" className={cn('min-w-0')}>
-                {children}
-            </main>
-        </Container>
-    );
+// Pass-through: the sidebar needs [packageId]/[versionId] params that a route-group layout never
+// receives, so it is built in packages/[packageId]/[versionId]/layout.tsx instead.
+function DocsLayout({ children }: { children: ReactNode }): ReactNode {
+    return children;
 }
 
 export default DocsLayout;

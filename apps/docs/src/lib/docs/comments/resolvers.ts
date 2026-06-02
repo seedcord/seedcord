@@ -1,23 +1,23 @@
 import { resolveReferenceHref } from '@seedcord/docs-engine';
 
 import type { InlineTagPart, FormatContext } from '../types';
-import type { DocsEngine, DocNode, DocReference } from '@seedcord/docs-engine';
+import type { VersionedDocsEngine, DocNode, DocReference } from '@seedcord/docs-engine';
 
-function listPackageCandidates(engine: DocsEngine, currentPackage: string): string[] {
+function listPackageCandidates(engine: VersionedDocsEngine, currentPackage: string): string[] {
     const ordered = new Set<string>();
 
     if (currentPackage) {
         ordered.add(currentPackage);
     }
 
-    for (const pkgName of engine.listPackages()) {
+    for (const pkgName of engine.loadedPackages()) {
         ordered.add(pkgName);
     }
 
     return Array.from(ordered);
 }
 
-function resolveNodeById(engine: DocsEngine, id: number, currentPackage: string): DocNode | null {
+function resolveNodeById(engine: VersionedDocsEngine, id: number, currentPackage: string): DocNode | null {
     for (const pkgName of listPackageCandidates(engine, currentPackage)) {
         const pkg = engine.getPackage(pkgName);
         const node = pkg?.nodes.get(id);
@@ -108,6 +108,6 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
     );
 }
 
-export function resolveOptions(context: FormatContext): { engine: DocsEngine; currentPackage: string } {
+export function resolveOptions(context: FormatContext): { engine: VersionedDocsEngine; currentPackage: string } {
     return { engine: context.engine, currentPackage: context.manifestPackage };
 }

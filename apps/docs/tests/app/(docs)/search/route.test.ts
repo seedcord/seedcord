@@ -30,7 +30,8 @@ const Kind = {
 
 const engineStub = {
     search: vi.fn<(query: string, pkgName?: string) => DocSearchEntry[]>(),
-    listPackages: vi.fn<() => string[]>(),
+    listPackages: vi.fn<() => Promise<{ folder: string; fullName: string }[]>>(),
+    setVersion: vi.fn<(folder: string, selector: string) => Promise<void>>(),
     getNodeByGlobalSlug: vi.fn<(packageName: string, slug: string) => DocNode | null>(),
     getNodeBySlug: vi.fn<(packageName: string, slug: string) => DocNode | null>()
 };
@@ -40,7 +41,7 @@ vi.mock('@lib/docs/engine', () => ({
 }));
 
 function makeRequest(url: string): NextRequest {
-    // justified: route only reads nextUrl.searchParams; the real NextRequest constructor pulls in heavy Next internals.
+    // justified: route only reads nextUrl.searchParams; the real NextRequest constructor pulls in Next internals.
     return { nextUrl: new URL(url) } as unknown as NextRequest;
 }
 
@@ -61,10 +62,12 @@ function makeEntry(overrides: Partial<DocSearchEntry> = {}): DocSearchEntry {
 beforeEach(() => {
     engineStub.search.mockReset();
     engineStub.listPackages.mockReset();
+    engineStub.setVersion.mockReset();
     engineStub.getNodeByGlobalSlug.mockReset();
     engineStub.getNodeBySlug.mockReset();
 
-    engineStub.listPackages.mockReturnValue(['seedcord']);
+    engineStub.listPackages.mockResolvedValue([{ folder: 'seedcord', fullName: 'seedcord' }]);
+    engineStub.setVersion.mockResolvedValue(undefined);
     engineStub.getNodeByGlobalSlug.mockReturnValue(null);
     engineStub.getNodeBySlug.mockReturnValue(null);
     engineStub.search.mockReturnValue([]);
@@ -112,20 +115,29 @@ describe('GET /search: pkg parameter', () => {
         expect(engineStub.search).toHaveBeenCalledWith('Logger', undefined);
     });
 
-    it('resolves a pkg alias through resolveManifestPackageName', async () => {
-        engineStub.listPackages.mockReturnValue(['seedcord', '@seedcord/services']);
+    it('resolves a pkg alias through resolvePackageIdentity', async () => {
+        engineStub.listPackages.mockResolvedValue([
+            { folder: 'seedcord', fullName: 'seedcord' },
+            { folder: 'services', fullName: '@seedcord/services' }
+        ]);
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=services'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
     });
 
     it('is case-insensitive on the pkg alias', async () => {
-        engineStub.listPackages.mockReturnValue(['seedcord', '@seedcord/services']);
+        engineStub.listPackages.mockResolvedValue([
+            { folder: 'seedcord', fullName: 'seedcord' },
+            { folder: 'services', fullName: '@seedcord/services' }
+        ]);
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=SERVICES'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
     });
 
     it('falls back to the default manifest package for an unknown pkg', async () => {
-        engineStub.listPackages.mockReturnValue(['seedcord', '@seedcord/services']);
+        engineStub.listPackages.mockResolvedValue([
+            { folder: 'seedcord', fullName: 'seedcord' },
+            { folder: 'services', fullName: '@seedcord/services' }
+        ]);
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=nope'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger', 'seedcord');
     });
@@ -162,7 +174,7 @@ describe('GET /search: KIND_TO_RESULT canonical mapping (H8 regression)', () => 
     });
 
     it('falls back to "page" for a ReflectionKind absent from the lookup table', async () => {
-        // justified: Kind.Namespace and Module are intentionally absent from KIND_TO_RESULT, so they collapse to "page".
+        // Kind.Namespace and Module are intentionally absent from KIND_TO_RESULT, so they collapse to "page".
         engineStub.search.mockReturnValue([makeEntry({ slug: 'space', kind: Kind.Namespace })]);
 
         const res = await GET(makeRequest('https://example.com/search?q=space'));
