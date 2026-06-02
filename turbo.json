@@ -27,6 +27,10 @@
             "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
         },
+        "@seedcord/docs-engine#test": {
+            "dependsOn": ["^build", "@seedcord/docs-generator#test"],
+            "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
+        },
         "test:watch": {
             "cache": false,
             "persistent": true
