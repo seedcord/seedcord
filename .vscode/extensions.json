@@ -25,9 +25,6 @@
         "prisma.prisma",
         "mikestead.dotenv",
 
-        // Development productivity
-        "gruntfuggly.todo-tree",
-
         // Syntax highlighting
         "kennylong.kubernetes-yaml-formatter",
         "mikestead.dotenv",
