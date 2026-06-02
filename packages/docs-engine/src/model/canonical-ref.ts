@@ -1,8 +1,8 @@
-import type { DocReference } from '../types';
+import type { DocReference } from '@src/types';
 
 /**
  * API Extractor's `canonicalReference` (a TSDoc `DeclarationReference`) is an experimental/beta API.
- * All parsing of it lives in this one file so an AE upgrade only breaks this file. We rely only
+ * Confining all parsing to this file means an AE upgrade only breaks this file. We rely only
  * on its stable string form, e.g.:
  *   `seedcord!Logger:class`            top-level export
  *   `seedcord!Logger#debug:member(1)`  instance member
@@ -23,7 +23,7 @@ export function canonicalKey(ref: CanonicalReferenceLike): CanonicalKey {
     return ref.toString();
 }
 
-/** Package that owns the referenced symbol, or undefined for TS-lib / global (`!Foo`). */
+/** Package the referenced symbol belongs to, or undefined for TS-lib / global (`!Foo`). */
 export function packageNameOf(ref: CanonicalReferenceLike): string | undefined {
     const key = ref.toString();
     const bang = key.indexOf('!');

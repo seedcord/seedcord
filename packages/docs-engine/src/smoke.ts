@@ -4,11 +4,11 @@ import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 
-import { resolveGeneratedDir } from './constants';
-import { DocsEngine, type DocsEngineOptions } from './DocsEngine';
-import { DEFAULT_SEARCH_TARGETS } from './search-targets';
+import { resolveGeneratedDir } from '@src/constants';
+import { DocsEngine, type DocsEngineOptions } from '@src/DocsEngine';
+import { DEFAULT_SEARCH_TARGETS } from '@src/search-targets';
 
-import type { DocNode } from './types';
+import type { DocNode } from '@src/types';
 
 const HELP_TEXT = `Usage: tsx smoke.ts [options] [generated-root]
 

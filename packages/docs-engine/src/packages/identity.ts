@@ -1,6 +1,6 @@
-import { rawExternalLinks } from './external-links';
+import { rawExternalLinks } from '@packages/external-links';
 
-import type { DocsEngine } from '../DocsEngine';
+import type { DocsEngine } from '@src/DocsEngine';
 
 const EXTERNAL_DOCUMENTATION_LINKS: ReadonlyMap<string, string> = new Map(
     Object.entries(rawExternalLinks).map(([key, value]) => [sanitizeExternalKey(key), value])

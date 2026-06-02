@@ -1,5 +1,5 @@
-import type { GlobalId } from './ids';
-import type { PackageDirectory } from './PackageDirectory';
+import type { GlobalId } from '@src/ids';
+import type { PackageDirectory } from '@src/PackageDirectory';
 
 export type SigPart =
     | { kind: 'text'; text: string }
@@ -77,7 +77,7 @@ export interface DocReference {
     externalUrl?: string;
 }
 
-// Engine-owned, structurally identical to the parts the comment renderers in apps/docs consume.
+// Defined in the engine, structurally identical to the parts the comment renderers in apps/docs consume.
 // The adapter emits a pre-resolved `DocReference` here; the app narrows by reading
 // `qualifiedName`/`packageName`/`targetKey` off it.
 export interface InlineTagTarget {

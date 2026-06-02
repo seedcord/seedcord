@@ -1,8 +1,8 @@
-import { kindName } from '../kinds';
-import { resolveEntityTone, type EntityTone } from '../tones';
+import { kindName } from '@src/kinds';
+import { resolveEntityTone, type EntityTone } from '@src/tones';
 
-import type { DocsEngine } from '../DocsEngine';
-import type { DocNode, DocPackageModel } from '../types';
+import type { DocsEngine } from '@src/DocsEngine';
+import type { DocNode, DocPackageModel } from '@src/types';
 
 export interface EntityLookupParams {
     manifestPackage: string;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { memberFragment, paramFragment, typeParamFragment, withOverload } from '../src/anchors';
+import { memberFragment, paramFragment, typeParamFragment, withOverload } from '@src/anchors';
 
 describe('docs anchors', () => {
     it('collapses a constructor to the bare word (its slug already ends in /constructor)', () => {

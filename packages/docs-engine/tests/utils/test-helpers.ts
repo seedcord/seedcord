@@ -2,11 +2,12 @@ import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { MOCK_PACKAGE_FULL_NAME, MOCK_PACKAGE_NAME, TEMP_DIR } from './constants';
-import { DocsEngine, type DocsEngineOptions } from '../../src/DocsEngine';
-import { ManifestReader } from '../../src/ManifestReader';
+import { DocsEngine, type DocsEngineOptions } from '@src/DocsEngine';
+import { ManifestReader } from '@src/ManifestReader';
 
-import type { DocManifest, DocNode, DocPackageModel } from '../../src/types';
+import { MOCK_PACKAGE_FULL_NAME, MOCK_PACKAGE_NAME, TEMP_DIR } from './constants';
+
+import type { DocManifest, DocNode, DocPackageModel } from '@src/types';
 
 let cachedEngine: Promise<DocsEngine> | null = null;
 let cachedManifest: Promise<DocManifest> | null = null;

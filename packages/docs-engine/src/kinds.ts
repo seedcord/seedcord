@@ -1,4 +1,4 @@
-import { frozenKindLabel } from './model/kinds';
+import { frozenKindLabel } from '@model/kinds';
 
 const KIND_LABEL_PREFIX = 'kind_';
 

@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { DocsEngine } from '../src/DocsEngine';
-import type { DocNode, DocReference } from '../src/types';
+import type { DocsEngine } from '@src/DocsEngine';
+import type { DocNode, DocReference } from '@src/types';
 
-// justified: stub kindName to echo the fixture's `kind` string so fixtures stay readable without real typedoc ReflectionKind values.
+// justified: stub kindName to echo the fixture's `kind` string so fixtures can use kind names directly instead of DocKind numbers.
 vi.mock('../src/kinds', async () => {
     const actual = await vi.importActual<typeof import('../src/kinds')>('../src/kinds');
     return {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveEntityTone } from '../src/tones';
+import { resolveEntityTone } from '@src/tones';
 
 describe('resolveEntityTone', () => {
     describe('canonical kinds', () => {

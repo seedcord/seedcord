@@ -1,6 +1,6 @@
-import { DocKind } from './model/kinds';
+import { DocKind } from '@model/kinds';
 
-import type { DocIndexes, DocNode } from './types';
+import type { DocIndexes, DocNode } from '@src/types';
 
 export type DirectoryEntity = 'classes' | 'interfaces' | 'enums' | 'types' | 'functions' | 'variables';
 

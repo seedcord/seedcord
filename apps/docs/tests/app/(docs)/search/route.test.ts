@@ -5,7 +5,7 @@ import { GET } from '../../../../src/app/(docs)/search/route';
 import type { DocNode, DocSearchEntry } from '@seedcord/docs-engine';
 import type { NextRequest } from 'next/server';
 
-// justified: typedoc lives in docs-engine, not this app, so the ReflectionKind enum can't be imported from the test bundle. Mirror the 0.28.x bitflag contract by value.
+// Mirror DocKind: the kind enum isn't exported from @seedcord/docs-engine, so the test pins its bitflag values.
 const Kind = {
     Module: 2,
     Namespace: 4,

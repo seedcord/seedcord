@@ -6,9 +6,9 @@ import {
     formatDisplayPackageName,
     resolveExternalPackageUrl,
     resolveManifestPackageName
-} from '../src/packages/identity';
+} from '@packages/identity';
 
-import type { DocsEngine } from '../src/DocsEngine';
+import type { DocsEngine } from '@src/DocsEngine';
 
 function makeEngine(packages: string[]): DocsEngine {
     return { listPackages: () => packages } as unknown as DocsEngine;

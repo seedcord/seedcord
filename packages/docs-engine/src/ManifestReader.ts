@@ -1,8 +1,8 @@
 import fs from 'node:fs/promises';
 
-import { resolveManifestPath } from './constants';
+import { resolveManifestPath } from '@src/constants';
 
-import type { DocManifest, DocManifestPackage } from './types';
+import type { DocManifest, DocManifestPackage } from '@src/types';
 
 export interface ManifestReaderOptions {
     rootDir?: string;

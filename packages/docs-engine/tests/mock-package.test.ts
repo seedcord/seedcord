@@ -1,11 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { DocKind } from '@model/kinds';
+
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getManifest, getMockPackage, getNodeBySlug } from './utils/test-helpers';
-import { DocKind } from '../src/model/kinds';
 
-import type { DocsEngine } from '../src/DocsEngine';
-import type { DocNode, DocPackageModel } from '../src/types';
+import type { DocsEngine } from '@src/DocsEngine';
+import type { DocNode, DocPackageModel } from '@src/types';
 
 let engine: DocsEngine;
 let pkg: DocPackageModel;

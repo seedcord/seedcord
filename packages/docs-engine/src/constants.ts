@@ -38,3 +38,32 @@ export function resolveManifestPath(rootDir?: string, manifestPath?: string): st
 
     return path.join(resolveGeneratedDir(rootDir), MANIFEST_FILENAME);
 }
+
+// The artifacts repo the published docs are read from over jsDelivr. The fetch path (index.json +
+// project.json) is intentionally node:fs-free so it runs in build, ISR, and request contexts alike;
+// only the local create() path above touches the filesystem (SEEDCORD_DOCS_DIR).
+const ARTIFACTS_REPO = 'seedcord/artifacts';
+const DEFAULT_ARTIFACTS_BRANCH = 'main';
+
+function jsdelivrBase(): string {
+    const branch = process.env.SEEDCORD_DOCS_INDEX_BRANCH?.trim();
+    const ref = branch && branch.length > 0 ? branch : DEFAULT_ARTIFACTS_BRANCH;
+    return `https://cdn.jsdelivr.net/gh/${ARTIFACTS_REPO}@${ref}`;
+}
+
+/**
+ * The `index.json` URL, in precedence order: an explicit `SEEDCORD_DOCS_INDEX_URL`, else the jsDelivr
+ * URL for `SEEDCORD_DOCS_INDEX_BRANCH` (default `main`).
+ */
+export function resolveIndexUrl(): string {
+    const override = process.env.SEEDCORD_DOCS_INDEX_URL?.trim();
+    if (override && override.length > 0) {
+        return override;
+    }
+    return `${jsdelivrBase()}/index.json`;
+}
+
+/** The base for sibling `project.json` fetches: the index URL with a trailing `/index.json` removed. */
+export function projectBaseFromIndexUrl(indexUrl: string): string {
+    return indexUrl.replace(/\/index\.json$/, '');
+}

@@ -2,7 +2,8 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { DEFAULT_GENERATED_DIR, MANIFEST_FILENAME, resolveGeneratedDir, resolveManifestPath } from '../src/constants';
+import { DEFAULT_GENERATED_DIR, MANIFEST_FILENAME, resolveGeneratedDir, resolveManifestPath } from '@src/constants';
+
 import { TEMP_DIR } from './utils/constants';
 
 const originalSeedcordDocsDir = process.env.SEEDCORD_DOCS_DIR;

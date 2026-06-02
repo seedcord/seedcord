@@ -1,9 +1,9 @@
 import { ExcerptTokenKind } from '@microsoft/api-extractor-model';
 
-import { referenceFromCanonical } from './canonical-ref';
+import { referenceFromCanonical } from '@model/canonical-ref';
 
-import type { InlineType, SigPart } from '../types';
 import type { Excerpt, ExcerptToken } from '@microsoft/api-extractor-model';
+import type { InlineType, SigPart } from '@src/types';
 
 // Intrinsic / global type keywords. The TypeDoc renderer emitted these as `ref` parts so the
 // consumer's resolveHref can link them to MDN / the TS handbook; API Extractor flattens them into

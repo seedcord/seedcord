@@ -1,14 +1,15 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import { buildCollection, type ResolveOptions } from './builders/collection-builder';
-import { resolveManifestPath } from './constants';
-import { ManifestReader } from './ManifestReader';
-import { DocSearch } from './services/Search';
+import { buildCollection, type ResolveOptions } from '@builders/collection-builder';
+import { findByQualifiedName, orderedPackageCandidates, resolveWithinPackage } from '@routing/resolve-helpers';
+import { DocSearch } from '@services/Search';
+import { resolveManifestPath } from '@src/constants';
+import { ManifestReader } from '@src/ManifestReader';
 
-import type { GlobalId } from './ids';
-import type { DirectorySnapshot, PackageDirectory } from './PackageDirectory';
-import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocReference, DocSearchEntry } from './types';
+import type { GlobalId } from '@src/ids';
+import type { DirectorySnapshot, PackageDirectory } from '@src/PackageDirectory';
+import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocReference, DocSearchEntry } from '@src/types';
 
 export interface DocsEngineOptions {
     generatedRoot: string;
@@ -145,28 +146,6 @@ export class DocsEngine {
     }
 }
 
-function orderedPackageCandidates(
-    currentPackage: string,
-    hintedPackage: string | undefined,
-    available: string[]
-): string[] {
-    const ordered = new Set<string>();
-
-    if (hintedPackage) {
-        ordered.add(hintedPackage);
-    }
-
-    if (currentPackage) {
-        ordered.add(currentPackage);
-    }
-
-    for (const name of available) {
-        ordered.add(name);
-    }
-
-    return Array.from(ordered);
-}
-
 function resolveWorkspaceRoot(explicit: string | undefined, anchor: string): string {
     if (explicit) {
         return path.resolve(explicit);
@@ -198,30 +177,4 @@ function findWorkspaceRoot(startDir: string): string {
 
         cursor = parent;
     }
-}
-
-function resolveWithinPackage(reference: DocReference, pkg: DocPackageModel): DocNode | null {
-    if (reference.qualifiedName) {
-        const byQName = pkg.indexes.byQName.get(reference.qualifiedName);
-        if (byQName) {
-            return byQName;
-        }
-    }
-
-    for (const node of pkg.indexes.byQName.values()) {
-        if (node.qualifiedName === reference.name) return node;
-    }
-
-    return null;
-}
-
-function findByQualifiedName(packages: DocPackageModel[], qualifiedName: string): DocNode | null {
-    for (const pkg of packages) {
-        const node = pkg.indexes.byQName.get(qualifiedName);
-        if (node) {
-            return node;
-        }
-    }
-
-    return null;
 }

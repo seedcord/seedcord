@@ -1,11 +1,11 @@
-import { memberFragment } from '../anchors';
-import { kindName } from '../kinds';
-import { buildEntityHref } from './url-builder';
-import { resolveExternalPackageUrl } from '../packages/identity';
-import { resolveEntityTone } from '../tones';
+import { resolveExternalPackageUrl } from '@packages/identity';
+import { buildEntityHref } from '@routing/url-builder';
+import { memberFragment } from '@src/anchors';
+import { kindName } from '@src/kinds';
+import { resolveEntityTone } from '@src/tones';
 
-import type { DocsEngine } from '../DocsEngine';
-import type { DocNode, DocReference } from '../types';
+import type { DocsEngine } from '@src/DocsEngine';
+import type { DocNode, DocReference } from '@src/types';
 
 interface ResolveReferenceOptions {
     engine: DocsEngine;

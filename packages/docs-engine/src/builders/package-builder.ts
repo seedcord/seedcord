@@ -1,9 +1,10 @@
 import path from 'node:path';
 
-import { ApiAdapter } from '../model/adapter';
-import { PackageDirectory } from '../PackageDirectory';
-import { inlineTypeToText, sigPartsToText } from '../transformers/signature-renderer';
+import { ApiAdapter } from '@model/adapter';
+import { PackageDirectory } from '@src/PackageDirectory';
+import { inlineTypeToText, sigPartsToText } from '@transformers/signature-renderer';
 
+import type { ApiModel, ApiPackage } from '@microsoft/api-extractor-model';
 import type {
     DocComment,
     DocIndexes,
@@ -15,8 +16,7 @@ import type {
     InlineType,
     RenderedSignature,
     SigPart
-} from '../types';
-import type { ApiModel, ApiPackage } from '@microsoft/api-extractor-model';
+} from '@src/types';
 
 function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     const byId = new Map<number, DocNode>();
@@ -241,9 +241,13 @@ function collectTokens(node: DocNode, summary: string, file: string | undefined,
     return Array.from(tokens);
 }
 
-/** Adapt one already-loaded `ApiPackage` (in the shared model) into the engine's model. */
+// Requires apiPackage already loaded into the shared model so cross-package @link refs resolve.
 export function buildPackageFromApi(pkg: DocManifestPackage, apiPackage: ApiPackage, model: ApiModel): DocPackageModel {
-    const root = new ApiAdapter(pkg, model).transform(apiPackage);
+    return buildPackageFromModel(pkg, new ApiAdapter(pkg, model).transform(apiPackage));
+}
+
+// The node-free half of buildPackageFromApi: the remote project.json loader reuses it without the AE adapter.
+export function buildPackageFromModel(pkg: DocManifestPackage, root: DocNode): DocPackageModel {
     const indexes = buildIndexes(root, pkg);
     const directory = PackageDirectory.fromIndexes(indexes);
     return {

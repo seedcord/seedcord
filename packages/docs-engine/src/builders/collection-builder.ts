@@ -1,12 +1,12 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import { buildPackageFromApi } from './package-builder';
-import { createApiModel, loadApiPackage } from '../model/load-model';
+import { buildPackageFromApi } from '@builders/package-builder';
+import { createApiModel, loadApiPackage } from '@model/load-model';
 
-import type { GlobalId } from '../ids';
-import type { DocCollection, DocManifest, DocManifestPackage, DocPackageModel } from '../types';
 import type { ApiPackage } from '@microsoft/api-extractor-model';
+import type { GlobalId } from '@src/ids';
+import type { DocCollection, DocManifest, DocManifestPackage, DocPackageModel } from '@src/types';
 
 export interface ResolveOptions {
     workspaceRoot?: string;

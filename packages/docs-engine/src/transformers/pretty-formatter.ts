@@ -1,6 +1,6 @@
 import { format } from 'prettier';
 
-import type { DocReference, InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '../types';
+import type { DocReference, InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '@src/types';
 import type { Options } from 'prettier';
 
 export type ResolveHref = (reference: DocReference) => string | null | undefined;
@@ -93,10 +93,9 @@ function substituteRefs(formatted: string, refs: readonly InternalRef[]): Format
 }
 
 // Method-shape inputs (`name<T>(p): R`) aren't valid top-level TS. Wrap as a function
-// declaration so prettier (and downstream shiki) sees a complete statement; extract the
+// declaration so prettier (and downstream shiki) parses a complete statement; extract the
 // body afterward. Function-wrap also tokenizes multi-line type-param constraints correctly,
-// which `class _ {…}` does NOT (smoke-verified: TextMate grammar fails across newlines
-// inside a class body).
+// which `class _ {…}` does not: TextMate grammar fails across newlines inside a class body.
 async function tryPrettierAsMethod(stripped: string): Promise<string | null> {
     try {
         const formatted = await format(`function ${stripped} {}`, PRETTIER_OPTIONS);
@@ -208,10 +207,8 @@ export async function formatRenderedSignaturePretty(
 }
 
 /**
- * Same shape as `formatRenderedSignaturePretty` for declaration headers (class/interface/enum
- * /type/function/const/var/property). Class/interface/enum get a `{}` body probe before
- * prettier since they're syntactically incomplete without one; the probe is stripped from
- * the output.
+ * Like {@link formatRenderedSignaturePretty}, for declaration headers. Class/interface/enum get a `{}`
+ * body probe before prettier (syntactically incomplete without one); the probe is stripped from the output.
  */
 export async function formatRenderedDeclarationHeaderPretty(
     header: RenderedDeclarationHeader,
@@ -230,11 +227,9 @@ export interface TypeParameter {
 }
 
 /**
- * Format a single type-parameter row as `name [extends X] [= Y]`. Used by the type-parameter
- * summary list on entity pages. Always class-body-shaped (no leading keyword) so the consumer
- * should highlight with the member-wrap variant. Synchronous in practice (no prettier pass:
- * the row is always short and well-formed) but returned as Promise so the call shape mirrors
- * the other two formatters and stays composable in async builder chains.
+ * Class-body-shaped (no leading keyword), so the consumer highlights with the member-wrap variant.
+ * Synchronous (the row is always short, no prettier pass) but returns a Promise so its call shape
+ * mirrors the other formatters and composes in async builder chains.
  */
 export function formatTypeParameterPretty(param: TypeParameter, resolveHref: ResolveHref): Promise<FormattedOutput> {
     const refs: InternalRef[] = [];
@@ -245,10 +240,8 @@ export function formatTypeParameterPretty(param: TypeParameter, resolveHref: Res
 }
 
 /**
- * Format a bare inline type as plain text plus offset map. Used for callers that need to embed
- * a type expression inside a larger structure they're hand-composing (e.g. a parameter row's
- * `name: <type>` shape, a function's `returnType` field). No prettier pass because the input is
- * already short and well-formed; output goes straight to the consumer's highlighter.
+ * For embedding a type expression inside a caller-composed structure (a parameter row's `name: <type>`,
+ * a `returnType` field). No prettier pass: the input is already short and well-formed.
  */
 export function formatInlineTypePretty(inline: InlineType, resolveHref: ResolveHref): Promise<FormattedOutput> {
     const refs: InternalRef[] = [];

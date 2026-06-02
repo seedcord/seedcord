@@ -1,8 +1,8 @@
 import uFuzzy from '@leeoniya/ufuzzy';
 
-import { DocKind } from '../model/kinds';
+import { DocKind } from '@model/kinds';
 
-import type { DocCollection, DocSearchEntry } from '../types';
+import type { DocCollection, DocSearchEntry } from '@src/types';
 
 const SCORE_FUZZY_MATCH = 5;
 const SCORE_NAME_EXACT = 8;

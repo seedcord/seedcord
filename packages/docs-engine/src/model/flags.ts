@@ -9,7 +9,7 @@ import {
     type ApiItem
 } from '@microsoft/api-extractor-model';
 
-import type { DocFlags } from '../types';
+import type { DocFlags } from '@src/types';
 
 /**
  * Bits the adapter derives (API Extractor doesn't model them directly) and folds into the flags.

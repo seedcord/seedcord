@@ -1,11 +1,4 @@
 import type {
-    CommentDisplayPart,
-    DocReference,
-    DocComment as EngineComment,
-    DocCommentBlockTag,
-    DocCommentExample
-} from '../types';
-import type {
     DocBlock,
     DocCodeSpan,
     DocComment,
@@ -16,6 +9,13 @@ import type {
     DocParamBlock,
     DocPlainText
 } from '@microsoft/tsdoc';
+import type {
+    CommentDisplayPart,
+    DocReference,
+    DocComment as EngineComment,
+    DocCommentBlockTag,
+    DocCommentExample
+} from '@src/types';
 
 /**
  * Resolve a TSDoc `@link` code destination to an engine reference, or undefined when it cannot be

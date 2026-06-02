@@ -8,11 +8,11 @@ import {
     type HeritageType
 } from '@microsoft/api-extractor-model';
 
-import { referenceFromCanonical } from './canonical-ref';
-import { excerptToInlineType } from './excerpt-renderer';
-import { DocKind, frozenKindLabel } from './kinds';
-import { buildComment, type LinkResolver } from './tsdoc-comment';
-import { formatRenderedSignature } from '../transformers/signature-renderer';
+import { referenceFromCanonical } from '@model/canonical-ref';
+import { excerptToInlineType } from '@model/excerpt-renderer';
+import { DocKind, frozenKindLabel } from '@model/kinds';
+import { buildComment, type LinkResolver } from '@model/tsdoc-comment';
+import { formatRenderedSignature } from '@transformers/signature-renderer';
 
 import type {
     DocFlags,
@@ -25,9 +25,9 @@ import type {
     InlineType,
     RenderedDeclarationHeader,
     RenderedSignature
-} from '../types';
+} from '@src/types';
 
-/** Group a node's children by kind, in first-seen order, for the entity-page section layout. */
+// First-seen kind order, not sorted: the entity-page section layout depends on it.
 export function synthGroups(children: DocNode[]): DocGroup[] {
     const byKind = new Map<number, DocNode[]>();
     for (const child of children) {
@@ -43,7 +43,7 @@ export function synthGroups(children: DocNode[]): DocGroup[] {
 }
 
 // Fields API Extractor exposes on concrete item subtypes but not on the `ApiItem` base. All optional,
-// so `item as AeShapes` is a safe widening (no `as unknown as` needed); this is here so it can only break in one place.
+// so `item as AeShapes` is a safe widening (no `as unknown as` needed).
 export interface AeShapes {
     extendsType?: HeritageType;
     extendsTypes?: readonly HeritageType[];
@@ -231,7 +231,7 @@ export interface SignatureBuildDeps {
     resolveLink: LinkResolver;
 }
 
-/** Build one get/set signature for an accessor. The first signature (index 0) carries the comment. */
+/** The first signature (index 0) carries the accessor's doc comment; later ones get none. */
 export function buildAccessorSignature(
     item: ApiItem,
     owner: DocNode,

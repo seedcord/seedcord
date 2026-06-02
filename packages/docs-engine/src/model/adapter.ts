@@ -13,7 +13,6 @@ import {
     type ApiPackage
 } from '@microsoft/api-extractor-model';
 
-import { Slugger, slugForNode } from '../Slugger';
 import {
     accessorHasSetter,
     accessorRole,
@@ -26,19 +25,20 @@ import {
     paramFlags,
     synthGroups,
     type AeShapes
-} from './adapter-helpers';
-import { canonicalKey, referenceFromCanonical } from './canonical-ref';
-import { excerptToInlineType } from './excerpt-renderer';
-import { buildFlags, type DerivedFlagBits } from './flags';
-import { apiKindToDocKind, DocKind, frozenKindLabel } from './kinds';
+} from '@model/adapter-helpers';
+import { canonicalKey, referenceFromCanonical } from '@model/canonical-ref';
+import { excerptToInlineType } from '@model/excerpt-renderer';
+import { buildFlags, type DerivedFlagBits } from '@model/flags';
+import { apiKindToDocKind, DocKind, frozenKindLabel } from '@model/kinds';
 import {
     buildComment,
     buildParamComment,
     buildReturnsComment,
     buildTypeParamComment,
     type LinkResolver
-} from './tsdoc-comment';
-import { formatRenderedDeclarationHeader, formatRenderedSignature } from '../transformers/signature-renderer';
+} from '@model/tsdoc-comment';
+import { Slugger, slugForNode } from '@src/Slugger';
+import { formatRenderedDeclarationHeader, formatRenderedSignature } from '@transformers/signature-renderer';
 
 import type {
     DocCommentBlockTag,
@@ -53,7 +53,7 @@ import type {
     RenderedSignature,
     SigPart,
     SourcePackage
-} from '../types';
+} from '@src/types';
 
 const CALLABLE = new Set<number>([DocKind.Function, DocKind.Method, DocKind.Constructor]);
 
@@ -220,7 +220,7 @@ export class ApiAdapter {
             const primary = group[0];
             if (!primary) continue;
             // API Extractor names a constructor `(constructor)`; the engine + URL grammar expect the
-            // bare `constructor` (drives the `#constructor` anchor and the `Owner.constructor` slug).
+            // bare `constructor` (sets the `#constructor` anchor and the `Owner.constructor` slug).
             const memberName = apiKindToDocKind(primary) === DocKind.Constructor ? 'constructor' : primary.displayName;
             const inheritedFrom = inheritedFromRef(primary, owningContainer);
             // Own (non-inherited) class members render the implicit `public`; constructors do not
