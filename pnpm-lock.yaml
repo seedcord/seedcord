@@ -12,18 +12,15 @@ catalogs:
     chalk:
       specifier: ^5.6.2
       version: 5.6.2
-    discord.js:
-      specifier: ^14.26.4
-      version: 14.26.4
     envapt:
       specifier: ^4.1.1
       version: 4.1.1
+    eslint:
+      specifier: ^9.39.2
+      version: 9.39.2
     lucide-react:
       specifier: ^1.16.0
       version: 1.16.0
-    mongoose:
-      specifier: ^9.6.2
-      version: 9.6.2
     motion:
       specifier: ^12.40.0
       version: 12.40.0
@@ -33,12 +30,15 @@ catalogs:
     prettier-plugin-tailwindcss:
       specifier: ^0.8.0
       version: 0.8.0
-    reflect-metadata:
-      specifier: ^0.2.2
-      version: 0.2.2
     tailwindcss:
       specifier: ^4.3.0
       version: 4.3.0
+    tsdown:
+      specifier: ^0.22.0
+      version: 0.22.0
+    tsx:
+      specifier: ^4.22.3
+      version: 4.22.3
     type-fest:
       specifier: ^5.6.0
       version: 5.6.0
@@ -46,15 +46,15 @@ catalogs:
       specifier: ^8.0.14
       version: 8.0.14
   peer:
-    eslint:
-      specifier: ^9.39.2
-      version: 9.39.2
-    tsdown:
-      specifier: ^0.22.0
-      version: 0.22.0
-    tsx:
-      specifier: ^4.22.3
-      version: 4.22.3
+    discord.js:
+      specifier: ^14.26.4
+      version: 14.26.4
+    mongoose:
+      specifier: ^9.6.2
+      version: 9.6.2
+    reflect-metadata:
+      specifier: ^0.2.2
+      version: 0.2.2
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
@@ -120,7 +120,7 @@ importers:
         specifier: catalog:test
         version: 4.1.7(vitest@4.1.7)
       eslint:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 9.39.2(jiti@2.7.0)
       husky:
         specifier: ^9.1.7
@@ -144,10 +144,10 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0
       tsdown:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 0.22.0(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(tsx@4.22.3)(typescript@6.0.3)
       tsx:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 4.22.3
       turbo:
         specifier: ^2.9.14
@@ -274,16 +274,16 @@ importers:
         specifier: workspace:*
         version: link:../packages/plugins
       discord.js:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 14.26.4
       envapt:
         specifier: catalog:deps
         version: 4.1.1
       mongoose:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 9.6.2
       reflect-metadata:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 0.2.2
       seedcord:
         specifier: workspace:*
@@ -341,7 +341,7 @@ importers:
         specifier: catalog:react
         version: 19.2.6
       tsx:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 4.22.3
       vite:
         specifier: catalog:deps
@@ -425,7 +425,7 @@ importers:
         specifier: ^8.59.4
         version: 8.59.4(eslint@9.39.2(jiti@2.7.0))(typescript@6.0.3)
       eslint:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 9.39.2(jiti@2.7.0)
       eslint-config-prettier:
         specifier: ^10.1.8
@@ -497,24 +497,6 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 4.1.1
-      kysely:
-        specifier: ^0.29.2
-        version: 0.29.2
-      mongoose:
-        specifier: catalog:deps
-        version: 9.6.2
-      pg:
-        specifier: ^8.21.0
-        version: 8.21.0
-      reflect-metadata:
-        specifier: catalog:deps
-        version: 0.2.2
-      seedcord:
-        specifier: workspace:*
-        version: link:../seedcord
-      type-fest:
-        specifier: catalog:deps
-        version: 5.6.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -531,6 +513,24 @@ importers:
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
+      kysely:
+        specifier: ^0.29.2
+        version: 0.29.2
+      mongoose:
+        specifier: catalog:peer
+        version: 9.6.2
+      pg:
+        specifier: ^8.21.0
+        version: 8.21.0
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      seedcord:
+        specifier: workspace:*
+        version: link:../seedcord
+      type-fest:
+        specifier: catalog:deps
+        version: 5.6.0
 
   packages/seedcord:
     dependencies:
@@ -549,18 +549,9 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 5.6.2
-      discord.js:
-        specifier: catalog:deps
-        version: 14.26.4
       envapt:
         specifier: catalog:deps
         version: 4.1.1
-      reflect-metadata:
-        specifier: catalog:deps
-        version: 0.2.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.6.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -574,6 +565,15 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.6.0
       vite:
         specifier: catalog:deps
         version: 8.0.14(@types/node@25.9.1)(esbuild@0.28.0)(jiti@2.7.0)(tsx@4.22.3)(yaml@2.9.0)
@@ -595,9 +595,6 @@ importers:
       strip-ansi:
         specifier: ^7.2.0
         version: 7.2.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.6.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -617,13 +614,16 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      type-fest:
+        specifier: catalog:deps
+        version: 5.6.0
 
   packages/tsconfig: {}
 
   packages/tsdown-config:
     dependencies:
       tsdown:
-        specifier: catalog:peer
+        specifier: catalog:deps
         version: 0.22.0(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(tsx@4.22.3)(typescript@6.0.3)
     devDependencies:
       '@seedcord/eslint-config':
@@ -641,12 +641,6 @@ importers:
 
   packages/types:
     dependencies:
-      discord.js:
-        specifier: catalog:deps
-        version: 14.26.4
-      type-fest:
-        specifier: catalog:deps
-        version: 5.6.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -660,6 +654,12 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      type-fest:
+        specifier: catalog:deps
+        version: 5.6.0
 
   packages/ui:
     dependencies:
@@ -739,9 +739,6 @@ importers:
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
-      type-fest:
-        specifier: catalog:deps
-        version: 5.6.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -755,6 +752,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      type-fest:
+        specifier: catalog:deps
+        version: 5.6.0
 
 packages:
 

@@ -40,7 +40,23 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "kysely": "^0.29.2",
+        "mongoose": "catalog:peer",
+        "pg": "^8.21.0",
+        "reflect-metadata": "catalog:peer",
+        "seedcord": "workspace:^",
         "typescript": "catalog:peer"
+    },
+    "peerDependenciesMeta": {
+        "kysely": {
+            "optional": true
+        },
+        "mongoose": {
+            "optional": true
+        },
+        "pg": {
+            "optional": true
+        }
     },
     "dependencies": {
         "@seedcord/cli": "workspace:*",
@@ -48,19 +64,19 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "envapt": "catalog:deps",
-        "kysely": "^0.29.2",
-        "mongoose": "catalog:deps",
-        "pg": "^8.21.0",
-        "reflect-metadata": "catalog:deps",
-        "seedcord": "workspace:*",
-        "type-fest": "catalog:deps"
+        "envapt": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
-        "@types/pg": "^8.20.0"
+        "@types/pg": "^8.20.0",
+        "kysely": "^0.29.2",
+        "mongoose": "catalog:peer",
+        "pg": "^8.21.0",
+        "reflect-metadata": "catalog:peer",
+        "seedcord": "workspace:*",
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

@@ -50,6 +50,8 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "discord.js": "catalog:peer",
+        "reflect-metadata": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "dependencies": {
@@ -58,15 +60,15 @@
         "@seedcord/services": "workspace:*",
         "@seedcord/cli": "workspace:*",
         "chalk": "catalog:deps",
-        "discord.js": "catalog:deps",
-        "envapt": "catalog:deps",
-        "type-fest": "catalog:deps",
-        "reflect-metadata": "catalog:deps"
+        "envapt": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "discord.js": "catalog:peer",
+        "reflect-metadata": "catalog:peer",
+        "type-fest": "catalog:deps",
         "vite": "catalog:deps"
     },
     "publishConfig": {

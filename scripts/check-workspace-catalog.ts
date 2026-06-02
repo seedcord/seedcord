@@ -2,6 +2,8 @@
 /**
  * Enforces the workspace catalog rule:
  *   - Any dep in 2+ `package.json` files MUST be referenced via `catalog:*` in `pnpm-workspace.yaml`.
+ *     A dep listed in several dependency fields of ONE package (e.g. an optional peer that is also a
+ *     devDependency for local build) counts as a single consumer, not a cross-package duplicate.
  *   - Conversely, any catalog entry MUST be referenced by 2+ packages (catalog is for shared deps;
  *     single-use entries belong inline in the package that needs them).
  *
@@ -138,7 +140,11 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
     const seen = new Set<string>();
 
     for (const [depName, refs] of byName.entries()) {
-        if (refs.length < 2) continue;
+        // The rule counts distinct package.json files, not raw refs: a dep listed in both
+        // peerDependencies and devDependencies of one package (the optional-peer-plus-dev pattern)
+        // is a single consumer, not a cross-package duplicate.
+        const distinctPackages = new Set(refs.map((r) => r.packageJsonPath));
+        if (distinctPackages.size < 2) continue;
 
         const literalRefs = refs.filter((r) => !isInternalRef(r.version));
         if (literalRefs.length > 0) {

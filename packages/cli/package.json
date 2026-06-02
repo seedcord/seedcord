@@ -63,7 +63,7 @@
         "jiti": "^2.7.0",
         "minimatch": "^10.2.5",
         "react": "catalog:react",
-        "tsx": "catalog:peer",
+        "tsx": "catalog:deps",
         "vite": "catalog:deps"
     },
     "devDependencies": {

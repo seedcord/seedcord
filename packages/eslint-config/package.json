@@ -66,7 +66,7 @@
         "@types/eslint-plugin-security": "^3.0.0",
         "@typescript-eslint/eslint-plugin": "^8.59.4",
         "@typescript-eslint/parser": "^8.59.4",
-        "eslint": "catalog:peer",
+        "eslint": "catalog:deps",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.4",
         "eslint-plugin-better-tailwindcss": "^4.5.0",

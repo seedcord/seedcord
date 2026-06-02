@@ -60,14 +60,14 @@
         "chalk": "catalog:deps",
         "envapt": "catalog:deps",
         "strip-ansi": "^7.2.0",
-        "type-fest": "catalog:deps",
         "winston": "^3.19.0",
         "winston-transport": "^4.9.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

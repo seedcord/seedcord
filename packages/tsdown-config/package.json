@@ -40,7 +40,7 @@
         "coverage": "vitest run --coverage"
     },
     "dependencies": {
-        "tsdown": "catalog:peer"
+        "tsdown": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

@@ -50,16 +50,20 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "discord.js": "catalog:peer",
         "typescript": "catalog:peer"
     },
-    "dependencies": {
-        "type-fest": "catalog:deps",
-        "discord.js": "catalog:deps"
+    "peerDependenciesMeta": {
+        "discord.js": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "discord.js": "catalog:peer",
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

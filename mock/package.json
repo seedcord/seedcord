@@ -26,10 +26,10 @@
     },
     "dependencies": {
         "@seedcord/plugins": "workspace:*",
-        "discord.js": "catalog:deps",
+        "discord.js": "catalog:peer",
         "envapt": "catalog:deps",
-        "mongoose": "catalog:deps",
-        "reflect-metadata": "catalog:deps",
+        "mongoose": "catalog:peer",
+        "reflect-metadata": "catalog:peer",
         "seedcord": "workspace:*"
     },
     "devDependencies": {

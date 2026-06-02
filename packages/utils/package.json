@@ -43,13 +43,13 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/types": "workspace:*",
-        "type-fest": "catalog:deps"
+        "@seedcord/types": "workspace:*"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",
