@@ -10,8 +10,7 @@ const resolveAppPath = (segment: string): string => fileURLToPath(new URL(segmen
 export default mergeConfig(
     rootConfig,
     defineConfig({
-        // The app's tsconfig sets jsx: "preserve" for Next, which the default oxc transform honors and leaves
-        // JSX untransformed under vitest. Force the React automatic runtime for the test transform.
+        // The test transform needs the React automatic runtime; oxc defaults to classic otherwise.
         oxc: { jsx: { runtime: 'automatic' } },
         resolve: {
             alias: {
@@ -25,7 +24,8 @@ export default mergeConfig(
         test: {
             globals: true,
             environment: 'jsdom',
-            setupFiles: ['./tests/test-setup.ts']
+            setupFiles: ['./tests/test-setup.ts'],
+            testTimeout: 5000
         }
     })
 );
