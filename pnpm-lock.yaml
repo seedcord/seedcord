@@ -104,6 +104,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: ^21.0.1
         version: 21.0.1
+      '@seedcord/docs-engine':
+        specifier: workspace:*
+        version: link:packages/docs-engine
       '@seedcord/docs-generator':
         specifier: workspace:*
         version: link:packages/docs-generator
@@ -383,6 +386,9 @@ importers:
       prettier:
         specifier: catalog:deps
         version: 3.8.3
+      semver:
+        specifier: ^7.8.1
+        version: 7.8.1
     devDependencies:
       '@seedcord/docs-generator':
         specifier: workspace:*
@@ -396,6 +402,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
 
   packages/docs-generator:
     dependencies:
@@ -3037,6 +3046,9 @@ packages:
 
   '@types/react@19.2.15':
     resolution: {integrity: sha512-eRwcGNHve+E8qtEQSSRl6urh+rFop4v8gm6O8rGv25CodbvFdLjA1vVQ1KkiFE0w0UPOnb8tDiFKL5lp0rtY5Q==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/supports-color@8.1.3':
     resolution: {integrity: sha512-Hy6UMpxhE3j1tLpl27exp1XqHD7n8chAiNPzWfz16LPZoMMoSc4dzLl6w9qijkEb/r5O1ozdu1CWGA2L83ZeZg==}
@@ -9139,6 +9151,8 @@ snapshots:
   '@types/react@19.2.15':
     dependencies:
       csstype: 3.2.3
+
+  '@types/semver@7.7.1': {}
 
   '@types/supports-color@8.1.3': {}
 

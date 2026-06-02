@@ -47,11 +47,16 @@ export class IndexLoader {
     /**
      * Resolves a UI selector to a concrete published version. `latest` / `prerelease` map to the
      * channel head; `v1` / `1` to the latest of a major line; `0.2` to the latest of a minor line;
-     * a full version passes through only when it is one of the published line heads.
+     * a full version passes through only when it is a published line head (stable or the prerelease).
      */
     resolveVersion(entry: PackageIndexEntry, selector: string): ResolvedVersion | null {
         if (selector === 'prerelease' || selector === 'next') {
             return entry.prerelease ? { version: entry.prerelease.latest, channel: 'prerelease' } : null;
+        }
+
+        // A concrete prerelease id (the value surfaced in the version dropdown) resolves back to its channel.
+        if (entry.prerelease?.latest === selector) {
+            return { version: selector, channel: 'prerelease' };
         }
 
         const { stable } = entry;

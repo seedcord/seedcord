@@ -82,6 +82,13 @@ describe('IndexLoader', () => {
             expect(loader.resolveVersion(entry, '1.3.2')).toEqual({ version: '1.3.2', channel: 'stable' });
             expect(loader.resolveVersion(entry, '9.9.9')).toBeNull();
         });
+
+        it('resolves a concrete prerelease head by its version string', () => {
+            expect(loader.resolveVersion(entry, '2.0.0-alpha.1')).toEqual({
+                version: '2.0.0-alpha.1',
+                channel: 'prerelease'
+            });
+        });
     });
 
     it('builds project URLs from the path templates relative to the index base', () => {

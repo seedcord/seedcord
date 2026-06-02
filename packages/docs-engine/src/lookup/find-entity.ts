@@ -1,8 +1,11 @@
 import { kindName } from '@src/kinds';
 import { resolveEntityTone, type EntityTone } from '@src/tones';
 
+import type { VersionedDocsEngine } from '@remote/VersionedDocsEngine';
 import type { DocsEngine } from '@src/DocsEngine';
 import type { DocNode, DocPackageModel } from '@src/types';
+
+type LookupEngine = DocsEngine | VersionedDocsEngine;
 
 export interface EntityLookupParams {
     manifestPackage: string;
@@ -41,15 +44,15 @@ function pickPreferredNode(nodes: DocNode[]): DocNode | null {
     return preferred ?? null;
 }
 
-function findNodeBySlug(engine: DocsEngine, manifestPackage: string, slug: string): DocNode | null {
+function findNodeBySlug(engine: LookupEngine, manifestPackage: string, slug: string): DocNode | null {
     return engine.getNodeByGlobalSlug(manifestPackage, slug) ?? engine.getNodeBySlug(manifestPackage, slug) ?? null;
 }
 
-function findNodeByQualifiedName(engine: DocsEngine, manifestPackage: string, qualifiedName: string): DocNode | null {
+function findNodeByQualifiedName(engine: LookupEngine, manifestPackage: string, qualifiedName: string): DocNode | null {
     return engine.getNodeByQualifiedName(manifestPackage, qualifiedName);
 }
 
-function listPackageNodes(engine: DocsEngine, manifestPackage: string): DocNode[] {
+function listPackageNodes(engine: LookupEngine, manifestPackage: string): DocNode[] {
     const pkg: DocPackageModel | null = engine.getPackage(manifestPackage);
     if (!pkg) {
         return [];
@@ -59,7 +62,7 @@ function listPackageNodes(engine: DocsEngine, manifestPackage: string): DocNode[
 }
 
 function findNodeByName(
-    engine: DocsEngine,
+    engine: LookupEngine,
     manifestPackage: string,
     symbol: string,
     kind: EntityTone | null
@@ -90,7 +93,7 @@ function findNodeByName(
     return null;
 }
 
-export function findEntityNode(engine: DocsEngine, params: EntityLookupParams): DocNode | null {
+export function findEntityNode(engine: LookupEngine, params: EntityLookupParams): DocNode | null {
     const { manifestPackage, slug, qualifiedName, symbol, kind } = params;
 
     if (slug) {

@@ -84,6 +84,21 @@ describe('VersionedDocsEngine', () => {
         );
     });
 
+    it('exposes loaded nodes by global slug and qualified name', async () => {
+        const engine = makeEngine(fixtureFetcher());
+        await engine.setVersion(MOCK_FOLDER, 'latest');
+
+        const node = engine.getNodeByGlobalSlug(MOCK_PACKAGE_FULL_NAME, 'mock-class');
+        expect(node?.name).toBe('MockClass');
+        expect(node).not.toBeNull();
+        if (node) {
+            expect(engine.getNodeByQualifiedName(MOCK_PACKAGE_FULL_NAME, node.qualifiedName)?.name).toBe('MockClass');
+        }
+
+        expect(engine.getNodeByGlobalSlug('@seedcord/services', 'logger')).toBeNull();
+        expect(engine.getNodeByQualifiedName(MOCK_PACKAGE_FULL_NAME, 'DoesNotExist')).toBeNull();
+    });
+
     it('degrades a cross-package reference to a package-scoped URL target', async () => {
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');

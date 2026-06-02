@@ -1,7 +1,5 @@
 import { rawExternalLinks } from '@packages/external-links';
 
-import type { DocsEngine } from '@src/DocsEngine';
-
 const EXTERNAL_DOCUMENTATION_LINKS: ReadonlyMap<string, string> = new Map(
     Object.entries(rawExternalLinks).map(([key, value]) => [sanitizeExternalKey(key), value])
 );
@@ -129,30 +127,37 @@ function computePackageAliases(available: readonly string[]): Map<string, string
     return map;
 }
 
-export function resolveManifestPackageName(engine: DocsEngine, requested?: string | null): string {
-    const packages = engine.listPackages();
-    if (!packages.length) {
-        return DEFAULT_MANIFEST_PACKAGE;
+export interface PackageIdentity {
+    folder: string;
+    fullName: string;
+}
+
+/**
+ * Resolve a requested package string (folder, scoped name, last segment, or override alias) to its
+ * index identity. Defaults to `seedcord` when present, else the first package; returns null only for
+ * an empty list.
+ */
+export function resolvePackageIdentity(
+    packages: readonly PackageIdentity[],
+    requested?: string | null
+): PackageIdentity | null {
+    if (packages.length === 0) {
+        return null;
     }
+
+    const byFullName = new Map(packages.map((pkg) => [pkg.fullName, pkg] as const));
+    const fallback = byFullName.get(DEFAULT_MANIFEST_PACKAGE) ?? packages[0] ?? null;
 
     if (!requested) {
-        const fallback = packages[0] ?? DEFAULT_MANIFEST_PACKAGE;
-        return packages.includes(DEFAULT_MANIFEST_PACKAGE) ? DEFAULT_MANIFEST_PACKAGE : fallback;
+        return fallback;
     }
 
-    const aliasMap = computePackageAliases(packages);
-    const normalized = normalizeKey(requested);
-    const resolved = aliasMap.get(normalized);
-
+    const aliasMap = computePackageAliases(packages.map((pkg) => pkg.fullName));
+    const resolved = aliasMap.get(normalizeKey(requested));
     if (resolved) {
-        return resolved;
+        return byFullName.get(resolved) ?? fallback;
     }
 
-    const direct = packages.find((pkg) => normalizeKey(pkg) === normalized);
-    if (direct) {
-        return direct;
-    }
-
-    const fallback = packages[0] ?? DEFAULT_MANIFEST_PACKAGE;
-    return packages.includes(DEFAULT_MANIFEST_PACKAGE) ? DEFAULT_MANIFEST_PACKAGE : fallback;
+    const byFolder = packages.find((pkg) => normalizeKey(pkg.folder) === normalizeKey(requested));
+    return byFolder ?? fallback;
 }

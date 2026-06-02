@@ -4,11 +4,14 @@ import { memberFragment } from '@src/anchors';
 import { kindName } from '@src/kinds';
 import { resolveEntityTone } from '@src/tones';
 
+import type { VersionedDocsEngine } from '@remote/VersionedDocsEngine';
 import type { DocsEngine } from '@src/DocsEngine';
 import type { DocNode, DocReference } from '@src/types';
 
+type ReferenceEngine = DocsEngine | VersionedDocsEngine;
+
 interface ResolveReferenceOptions {
-    engine: DocsEngine;
+    engine: ReferenceEngine;
     currentPackage: string;
 }
 
@@ -20,7 +23,7 @@ function getParentSlug(slug: string): string | null {
     return segments.slice(0, -1).join('/');
 }
 
-function walkToEntityNode(engine: DocsEngine, packageName: string, slug: string): DocNode | null {
+function walkToEntityNode(engine: ReferenceEngine, packageName: string, slug: string): DocNode | null {
     const segments = slug.split('/');
 
     for (let index = segments.length; index > 0; index -= 1) {
@@ -36,7 +39,7 @@ function walkToEntityNode(engine: DocsEngine, packageName: string, slug: string)
     return null;
 }
 
-function buildInternalHref(engine: DocsEngine, packageName: string, slug: string): string {
+function buildInternalHref(engine: ReferenceEngine, packageName: string, slug: string): string {
     const node = engine.getNodeByGlobalSlug(packageName, slug) ?? engine.getNodeBySlug(packageName, slug);
 
     if (!node) {
@@ -64,7 +67,7 @@ function buildInternalHref(engine: DocsEngine, packageName: string, slug: string
     });
 }
 
-function buildMemberHrefFromNode(engine: DocsEngine, packageName: string, node: DocNode): string {
+function buildMemberHrefFromNode(engine: ReferenceEngine, packageName: string, node: DocNode): string {
     const entityNode = walkToEntityNode(engine, packageName, node.slug);
 
     if (entityNode) {
@@ -106,7 +109,12 @@ function buildMemberHrefFromNode(engine: DocsEngine, packageName: string, node: 
 
 // A `@link` to a parameter resolves to the owning method/constructor anchor; parameters
 // render inline on the parent's signature, not as their own scroll target.
-function buildParameterAnchor(engine: DocsEngine, packageName: string, entityHref: string, parentSlug: string): string {
+function buildParameterAnchor(
+    engine: ReferenceEngine,
+    packageName: string,
+    entityHref: string,
+    parentSlug: string
+): string {
     const parentNode =
         engine.getNodeByGlobalSlug(packageName, parentSlug) ?? engine.getNodeBySlug(packageName, parentSlug);
     if (!parentNode) return entityHref;
@@ -114,7 +122,7 @@ function buildParameterAnchor(engine: DocsEngine, packageName: string, entityHre
     return `${entityHref}#${memberFragment(parentNode)}`;
 }
 
-function findOwnerNode(engine: DocsEngine, packageName: string, node: DocNode | null): DocNode | null {
+function findOwnerNode(engine: ReferenceEngine, packageName: string, node: DocNode | null): DocNode | null {
     if (!node) return null;
     if (!node.slug.includes('/')) return null;
     if (typeof node.qualifiedName !== 'string' || !node.qualifiedName.includes('.')) return null;

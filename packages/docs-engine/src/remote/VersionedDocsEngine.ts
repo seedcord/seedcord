@@ -102,6 +102,16 @@ export class VersionedDocsEngine {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
 
+    // Same lookup as getNodeBySlug here (only loaded packages exist), kept distinct so
+    // resolveReferenceHref can run against this engine or DocsEngine through one interface.
+    getNodeByGlobalSlug(packageName: string, slug: string): DocNode | null {
+        return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
+    }
+
+    getNodeByQualifiedName(packageName: string, qualifiedName: string): DocNode | null {
+        return this.models.get(packageName)?.indexes.byQName.get(qualifiedName) ?? null;
+    }
+
     getNodeByKey(key: GlobalId): DocNode | null {
         return this.byKey.get(key) ?? null;
     }
@@ -141,7 +151,7 @@ export class VersionedDocsEngine {
             }
         }
 
-        // Target package not loaded in the lazy model: return a package-scoped URL target for the renderer.
+        // Target package not loaded, so it has no node to resolve against; fall back to a package URL.
         return crossPackageUrlRef(reference);
     }
 

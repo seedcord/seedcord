@@ -5,14 +5,13 @@ import {
     DEFAULT_VERSION,
     formatDisplayPackageName,
     resolveExternalPackageUrl,
-    resolveManifestPackageName
+    resolvePackageIdentity
 } from '@packages/identity';
 
-import type { DocsEngine } from '@src/DocsEngine';
+import type { PackageIdentity } from '@packages/identity';
 
-function makeEngine(packages: string[]): DocsEngine {
-    return { listPackages: () => packages } as unknown as DocsEngine;
-}
+const id = (fullName: string): PackageIdentity => ({ folder: formatDisplayPackageName(fullName), fullName });
+const ids = (...fullNames: string[]): PackageIdentity[] => fullNames.map(id);
 
 describe('packages module constants', () => {
     it('exposes the default manifest package and version', () => {
@@ -100,68 +99,73 @@ describe('resolveExternalPackageUrl', () => {
     });
 });
 
-describe('resolveManifestPackageName', () => {
-    it('returns the default when the engine reports no packages', () => {
-        const engine = makeEngine([]);
-        expect(resolveManifestPackageName(engine, 'anything')).toBe(DEFAULT_MANIFEST_PACKAGE);
-        expect(resolveManifestPackageName(engine, null)).toBe(DEFAULT_MANIFEST_PACKAGE);
-        expect(resolveManifestPackageName(engine, undefined)).toBe(DEFAULT_MANIFEST_PACKAGE);
+describe('resolvePackageIdentity', () => {
+    it('returns null for an empty package list', () => {
+        expect(resolvePackageIdentity([], 'anything')).toBeNull();
+        expect(resolvePackageIdentity([], null)).toBeNull();
     });
 
     it('falls back to seedcord when present and no request was made', () => {
-        const engine = makeEngine(['@seedcord/services', 'seedcord', '@seedcord/plugins']);
-        expect(resolveManifestPackageName(engine, null)).toBe('seedcord');
-        expect(resolveManifestPackageName(engine, '')).toBe('seedcord');
+        const list = ids('@seedcord/services', 'seedcord', '@seedcord/plugins');
+        expect(resolvePackageIdentity(list, null)?.fullName).toBe('seedcord');
+        expect(resolvePackageIdentity(list, '')?.fullName).toBe('seedcord');
     });
 
     it('falls back to the first package when seedcord is absent and no request', () => {
-        const engine = makeEngine(['@seedcord/services', '@seedcord/plugins']);
-        expect(resolveManifestPackageName(engine, null)).toBe('@seedcord/services');
+        const list = ids('@seedcord/services', '@seedcord/plugins');
+        expect(resolvePackageIdentity(list, null)?.fullName).toBe('@seedcord/services');
     });
 
     it('resolves a scoped name directly', () => {
-        const engine = makeEngine(['seedcord', '@seedcord/services']);
-        expect(resolveManifestPackageName(engine, '@seedcord/services')).toBe('@seedcord/services');
+        const list = ids('seedcord', '@seedcord/services');
+        expect(resolvePackageIdentity(list, '@seedcord/services')?.fullName).toBe('@seedcord/services');
     });
 
-    it('resolves the display alias to the scoped manifest name', () => {
-        const engine = makeEngine(['seedcord', '@seedcord/services', '@seedcord/plugins']);
-        expect(resolveManifestPackageName(engine, 'services')).toBe('@seedcord/services');
-        expect(resolveManifestPackageName(engine, 'plugins')).toBe('@seedcord/plugins');
+    it('resolves the display alias to the identity (folder + fullName)', () => {
+        const list = ids('seedcord', '@seedcord/services', '@seedcord/plugins');
+        expect(resolvePackageIdentity(list, 'services')).toEqual({
+            folder: 'services',
+            fullName: '@seedcord/services'
+        });
+        expect(resolvePackageIdentity(list, 'plugins')?.fullName).toBe('@seedcord/plugins');
     });
 
     it('resolves last-segment alias for scoped packages', () => {
-        const engine = makeEngine(['@seedcord/types']);
-        expect(resolveManifestPackageName(engine, 'types')).toBe('@seedcord/types');
+        expect(resolvePackageIdentity(ids('@seedcord/types'), 'types')?.fullName).toBe('@seedcord/types');
+    });
+
+    it('resolves by folder directly', () => {
+        const list = ids('seedcord', '@seedcord/eslint-config');
+        expect(resolvePackageIdentity(list, 'eslint-config')?.fullName).toBe('@seedcord/eslint-config');
     });
 
     it('is case-insensitive on the requested name', () => {
-        const engine = makeEngine(['seedcord', '@seedcord/services']);
-        expect(resolveManifestPackageName(engine, 'SERVICES')).toBe('@seedcord/services');
-        expect(resolveManifestPackageName(engine, '  Services  ')).toBe('@seedcord/services');
-        expect(resolveManifestPackageName(engine, '@SEEDCORD/Services')).toBe('@seedcord/services');
+        const list = ids('seedcord', '@seedcord/services');
+        expect(resolvePackageIdentity(list, 'SERVICES')?.fullName).toBe('@seedcord/services');
+        expect(resolvePackageIdentity(list, '  Services  ')?.fullName).toBe('@seedcord/services');
+        expect(resolvePackageIdentity(list, '@SEEDCORD/Services')?.fullName).toBe('@seedcord/services');
     });
 
     it('resolves explicit override aliases', () => {
-        const engine = makeEngine(['seedcord', '@seedcord/eslint-config', '@seedcord/cli']);
-        expect(resolveManifestPackageName(engine, 'eslint')).toBe('@seedcord/eslint-config');
-        expect(resolveManifestPackageName(engine, 'cli')).toBe('@seedcord/cli');
-        expect(resolveManifestPackageName(engine, 'core')).toBe('seedcord');
+        const list = ids('seedcord', '@seedcord/eslint-config', '@seedcord/cli');
+        expect(resolvePackageIdentity(list, 'eslint')?.fullName).toBe('@seedcord/eslint-config');
+        expect(resolvePackageIdentity(list, 'cli')?.fullName).toBe('@seedcord/cli');
+        expect(resolvePackageIdentity(list, 'core')?.fullName).toBe('seedcord');
     });
 
     it('synthesises an @seedcord/<name> alias for unscoped manifest names', () => {
-        const engine = makeEngine(['utils-extra']);
-        expect(resolveManifestPackageName(engine, '@seedcord/utils-extra')).toBe('utils-extra');
-        expect(resolveManifestPackageName(engine, 'utils-extra')).toBe('utils-extra');
+        const list = ids('utils-extra');
+        expect(resolvePackageIdentity(list, '@seedcord/utils-extra')?.fullName).toBe('utils-extra');
+        expect(resolvePackageIdentity(list, 'utils-extra')?.fullName).toBe('utils-extra');
     });
 
     it('falls back to the default when the requested name is unknown', () => {
-        const engine = makeEngine(['seedcord', '@seedcord/services']);
-        expect(resolveManifestPackageName(engine, 'no-such-package')).toBe('seedcord');
+        const list = ids('seedcord', '@seedcord/services');
+        expect(resolvePackageIdentity(list, 'no-such-package')?.fullName).toBe('seedcord');
     });
 
     it('falls back to the first package when seedcord is absent and request is unknown', () => {
-        const engine = makeEngine(['@seedcord/services', '@seedcord/plugins']);
-        expect(resolveManifestPackageName(engine, 'no-such-package')).toBe('@seedcord/services');
+        const list = ids('@seedcord/services', '@seedcord/plugins');
+        expect(resolvePackageIdentity(list, 'no-such-package')?.fullName).toBe('@seedcord/services');
     });
 });
