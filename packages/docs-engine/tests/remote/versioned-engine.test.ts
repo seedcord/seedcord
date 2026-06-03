@@ -49,6 +49,21 @@ describe('VersionedDocsEngine', () => {
                     fullName: MOCK_PACKAGE_FULL_NAME,
                     stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
                     prerelease: null
+                },
+                // In the index but never loaded: the known-but-unloaded cross-package case. The gate
+                // reads its entity map to build a correct URL without loading it.
+                services: {
+                    fullName: '@seedcord/services',
+                    stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
+                    prerelease: null,
+                    entities: { logger: 'class' }
+                },
+                // Known but declares no entities here: a ref mis-attributed to it re-homes elsewhere.
+                plugins: {
+                    fullName: '@seedcord/plugins',
+                    stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
+                    prerelease: null,
+                    entities: {}
                 }
             }
         };
@@ -56,7 +71,9 @@ describe('VersionedDocsEngine', () => {
 
     it('lists packages from the index without loading any project', async () => {
         const engine = makeEngine(fixtureFetcher());
-        expect(await engine.listPackages()).toEqual([{ folder: MOCK_FOLDER, fullName: MOCK_PACKAGE_FULL_NAME }]);
+        const packages = await engine.listPackages();
+        expect(packages).toContainEqual({ folder: MOCK_FOLDER, fullName: MOCK_PACKAGE_FULL_NAME });
+        expect(packages).toContainEqual({ folder: 'services', fullName: '@seedcord/services' });
         expect(engine.loadedPackages()).toEqual([]);
     });
 
@@ -76,12 +93,13 @@ describe('VersionedDocsEngine', () => {
 
         const target = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-function');
         expect(target).not.toBeNull();
-        expect(engine.resolveReference(MOCK_PACKAGE_FULL_NAME, { name: target!.name, targetKey: target!.key })).toEqual(
-            {
-                packageName: MOCK_PACKAGE_FULL_NAME,
-                slug: 'mock-function'
-            }
-        );
+        expect(
+            engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, { name: target!.name, targetKey: target!.key })
+        ).toEqual({
+            kind: 'internal',
+            packageName: MOCK_PACKAGE_FULL_NAME,
+            slug: 'mock-function'
+        });
     });
 
     it('exposes loaded nodes by global slug and qualified name', async () => {
@@ -99,18 +117,83 @@ describe('VersionedDocsEngine', () => {
         expect(engine.getNodeByQualifiedName(MOCK_PACKAGE_FULL_NAME, 'DoesNotExist')).toBeNull();
     });
 
-    it('degrades a cross-package reference to a package-scoped URL target', async () => {
+    it('resolves a known-but-unloaded cross-package entity to a tone+version URL', async () => {
+        const engine = makeEngine(fixtureFetcher());
+        await engine.setVersion(MOCK_FOLDER, 'latest');
+
+        const ref = {
+            name: 'Logger',
+            packageName: '@seedcord/services',
+            qualifiedName: 'Logger#debug',
+            targetKey: 'services!Logger#debug:member(1)'
+        };
+        expect(engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, ref)).toEqual({
+            kind: 'internal',
+            packageName: '@seedcord/services',
+            slug: 'logger/debug'
+        });
+        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe(
+            '/packages/services/0.0.0/classes/logger#debug'
+        );
+    });
+
+    it('points a cross-package parameter ref at its owning member anchor, not the parameter', async () => {
+        const engine = makeEngine(fixtureFetcher());
+        await engine.setVersion(MOCK_FOLDER, 'latest');
+
+        // `Logger#debug.arg` -> slug `logger/debug/arg`; the fragment must be the member `debug`,
+        // matching AnchorStrategy.buildParameterAnchor for loaded packages (not the param `arg`).
+        const ref = { name: 'arg', packageName: '@seedcord/services', qualifiedName: 'Logger#debug.arg' };
+        expect(engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, ref)).toEqual({
+            kind: 'internal',
+            packageName: '@seedcord/services',
+            slug: 'logger/debug/arg'
+        });
+        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe(
+            '/packages/services/0.0.0/classes/logger#debug'
+        );
+    });
+
+    it('gates a known-but-unloaded non-entity reference to unresolved', async () => {
+        const engine = makeEngine(fixtureFetcher());
+        await engine.setVersion(MOCK_FOLDER, 'latest');
+
+        // `Ghost` is attributed to services but absent from its entity map and re-homes nowhere.
+        expect(
+            engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, {
+                name: 'Ghost',
+                packageName: '@seedcord/services',
+                qualifiedName: 'Ghost'
+            })
+        ).toEqual({ kind: 'unresolved' });
+    });
+
+    it('re-homes a mis-attributed entity to the package that exports it', async () => {
+        const engine = makeEngine(fixtureFetcher());
+        await engine.setVersion(MOCK_FOLDER, 'latest');
+
+        const ref = { name: 'Logger', packageName: '@seedcord/plugins', qualifiedName: 'Logger' };
+        expect(engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, ref)).toEqual({
+            kind: 'internal',
+            packageName: '@seedcord/services',
+            slug: 'logger'
+        });
+        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe('/packages/services/0.0.0/classes/logger');
+    });
+
+    it('returns an unresolved target for an external package absent from the index', async () => {
+        // discord.js has no docs page; href() must fall through to the external-URL table instead of
+        // building a 404 internal /packages/discord.js/... link.
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 
         expect(
-            engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-                name: 'Logger',
-                packageName: '@seedcord/services',
-                qualifiedName: 'Logger#debug',
-                targetKey: 'services!Logger#debug:member(1)'
+            engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, {
+                name: 'Client',
+                packageName: 'discord.js',
+                qualifiedName: 'Client'
             })
-        ).toEqual({ packageName: '@seedcord/services', slug: 'logger/debug' });
+        ).toEqual({ kind: 'unresolved' });
     });
 
     it('throws PackageVersionNotFoundError for an unknown package or version', async () => {

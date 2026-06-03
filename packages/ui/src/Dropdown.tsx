@@ -10,16 +10,20 @@ import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 import type { ReactElement, ReactNode } from 'react';
 
 const dropdownTriggerBaseClassName = [
-    tw`inline-flex w-full items-center justify-between gap-2`,
-    tw`rounded-lg`,
-    tw`border border-(--border) bg-(--bg-popover) font-medium text-(--text)`,
+    tw`inline-flex items-center font-medium`,
     tw`transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-out`,
     tw`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)`,
-    tw`hover:border-(--accent-b)/50`,
-    tw`data-[state=open]:border-(--accent-b) data-[state=open]:bg-(--bg-accent-b-moderate)`,
-    tw`disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`,
-    tw`aria-invalid:border-(--accent-a) aria-invalid:focus-visible:outline-(--accent-a)`
+    tw`disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`
 ].join(' ');
+
+const dropdownTriggerVariantClasses = {
+    // Bordered field that fills its container.
+    default: tw`w-full justify-between gap-2 rounded-lg border border-(--border) bg-(--bg-popover) text-(--text) hover:border-(--accent-b)/50 data-[state=open]:border-(--accent-b) data-[state=open]:bg-(--bg-accent-b-moderate) aria-invalid:border-(--accent-a) aria-invalid:focus-visible:outline-(--accent-a)`,
+    // Borderless, content-width trigger for inlining in a bar (e.g. an inline search scope filter).
+    ghost: tw`gap-1 rounded-md px-1 py-0.5 text-(--text-muted) hover:text-(--text) data-[state=open]:text-(--accent-b)`
+} as const;
+
+export type DropdownVariant = keyof typeof dropdownTriggerVariantClasses;
 
 const dropdownTriggerSizeClasses = {
     sm: tw`h-8 px-3 text-sm`,
@@ -111,7 +115,10 @@ export interface DropdownProps {
     onChange: (value: string) => void;
     leadingIcon?: ReactNode;
     minWidth?: string;
+    variant?: DropdownVariant;
     fieldSize?: DropdownSize;
+    // Portal target for the listbox (see PopoverContent.container); needed inside a modal Dialog.
+    container?: HTMLElement | null;
     error?: boolean;
     disabled?: boolean;
     id?: string;
@@ -128,7 +135,9 @@ export function Dropdown({
     groups,
     onChange,
     minWidth,
+    variant = 'default',
     fieldSize = 'md',
+    container,
     error = false,
     disabled = false,
     id,
@@ -155,7 +164,12 @@ export function Dropdown({
                     aria-invalid={error || undefined}
                     disabled={disabled}
                     style={minWidth !== undefined ? { minWidth } : undefined}
-                    className={cn(dropdownTriggerBaseClassName, dropdownTriggerSizeClasses[fieldSize], className)}
+                    className={cn(
+                        dropdownTriggerBaseClassName,
+                        dropdownTriggerVariantClasses[variant],
+                        variant === 'default' ? dropdownTriggerSizeClasses[fieldSize] : '',
+                        className
+                    )}
                 >
                     {leadingIcon ? (
                         <span aria-hidden className={cn('inline-flex shrink-0 items-center text-(--text-muted)')}>
@@ -173,7 +187,12 @@ export function Dropdown({
                     />
                 </button>
             </PopoverTrigger>
-            <PopoverContent align="start" sideOffset={6} className={dropdownContentClassName}>
+            <PopoverContent
+                align="start"
+                sideOffset={6}
+                container={container ?? null}
+                className={dropdownContentClassName}
+            >
                 <DropdownListbox
                     listboxId={listboxId}
                     groups={resolvedGroups}

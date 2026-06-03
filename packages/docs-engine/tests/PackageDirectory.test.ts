@@ -52,6 +52,21 @@ describe('PackageDirectory', () => {
         expect(entities).toEqual(directory.snapshot());
     });
 
+    it('maps every top-level entity slug to its tone', () => {
+        const toneMap = directory.toneMap();
+        expect(toneMap['mock-class']).toBe('class');
+        expect(toneMap['base-class']).toBe('class');
+        expect(toneMap['mock-interface']).toBe('interface');
+        expect(toneMap['mock-enum']).toBe('enum');
+        expect(toneMap['mock-union']).toBe('type');
+        expect(toneMap['mock-function']).toBe('function');
+        expect(toneMap['mock-variable']).toBe('variable');
+
+        const snapshot = directory.snapshot();
+        const totalEntities = Object.values(snapshot).reduce((sum, slugs) => sum + slugs.length, 0);
+        expect(Object.keys(toneMap)).toHaveLength(totalEntities);
+    });
+
     it('retrieves nodes by slug within an entity', () => {
         const node = directory.get('classes', 'mock-class');
         expect(node?.slug).toBe('mock-class');

@@ -2,41 +2,34 @@ import { PackageVersionNotFoundError } from '@remote/errors';
 import { IndexLoader } from '@remote/index-loader';
 import { deserializeProject } from '@remote/project-file';
 import { ProjectLoader } from '@remote/project-loader';
-import {
-    crossPackageUrlRef,
-    findByQualifiedName,
-    orderedPackageCandidates,
-    resolveWithinPackage
-} from '@routing/resolve-helpers';
+import { AnchorStrategy } from '@routing/AnchorStrategy';
+import { ReferenceResolver } from '@routing/ReferenceResolver';
+import { orderedPackageCandidates } from '@routing/resolve-helpers';
 import { DocSearch } from '@services/Search';
 
 import type { IndexJson, PackageIndexEntry } from '@remote/index-json';
 import type { Fetcher } from '@remote/index-loader';
+import type { CrossPackageEntity, CrossPackageEntityHome, NodeLookup, PackageRegistry } from '@routing/lookup';
 import type { GlobalId } from '@src/ids';
 import type { DirectorySnapshot, PackageDirectory } from '@src/PackageDirectory';
-import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocReference, DocSearchEntry } from '@src/types';
-
-export interface ReferenceResolution {
-    packageName?: string;
-    slug?: string;
-    externalUrl?: string;
-}
+import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '@src/types';
 
 const defaultFetcher: Fetcher = (url) => globalThis.fetch(url);
 
 /**
  * Version-aware engine for the remote (jsDelivr) docs. Holds one loaded model per package, keyed by
  * full name; `setVersion(folder, selector)` fetches and swaps a single package's active version.
- * Search and reference resolution are scoped to the loaded set; a reference into an unloaded package
- * resolves to a cross-package URL via {@link crossPackageUrlRef}. Construct one per request: it carries
- * mutable per-package state and must not be shared across requests.
+ * Search and reference resolution are scoped to the loaded set; resolution runs through the shared
+ * {@link ReferenceResolver} via `resolver()`. Construct one per request: it carries mutable per-package
+ * state and must not be shared across requests.
  */
-export class VersionedDocsEngine {
+export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     private readonly models = new Map<string, DocPackageModel>();
     private readonly active = new Map<string, string>();
     private readonly byKey = new Map<GlobalId, DocNode>();
     private docSearch: DocSearch | null = null;
     private index: IndexJson | null = null;
+    private resolverInstance: ReferenceResolver | null = null;
 
     constructor(
         private readonly indexLoader: IndexLoader = new IndexLoader(),
@@ -102,8 +95,8 @@ export class VersionedDocsEngine {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
 
-    // Same lookup as getNodeBySlug here (only loaded packages exist), kept distinct so
-    // resolveReferenceHref can run against this engine or DocsEngine through one interface.
+    // Same lookup as getNodeBySlug here (only loaded packages exist), kept distinct so the
+    // ReferenceResolver runs against this engine or DocsEngine through the NodeLookup interface.
     getNodeByGlobalSlug(packageName: string, slug: string): DocNode | null {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
@@ -120,39 +113,39 @@ export class VersionedDocsEngine {
         return this.docSearch ? this.docSearch.search(query, packageName) : [];
     }
 
-    resolveReference(currentPackage: string, reference: DocReference | null): ReferenceResolution {
-        if (!reference) {
-            return {};
-        }
-        if (reference.externalUrl) {
-            return { externalUrl: reference.externalUrl };
-        }
+    resolver(): ReferenceResolver {
+        this.resolverInstance ??= new ReferenceResolver(this, this, new AnchorStrategy(this));
+        return this.resolverInstance;
+    }
 
-        if (reference.targetKey) {
-            const node = this.getNodeByKey(reference.targetKey);
-            if (node) {
-                return { packageName: node.packageName, slug: node.slug };
-            }
-        }
+    candidatePackages(currentPackage: string, hinted?: string): string[] {
+        return orderedPackageCandidates(currentPackage, hinted, this.loadedPackages());
+    }
 
-        for (const name of orderedPackageCandidates(currentPackage, reference.packageName, this.loadedPackages())) {
-            const pkg = this.models.get(name);
-            if (!pkg) continue;
-            const resolved = resolveWithinPackage(reference, pkg);
-            if (resolved) {
-                return { packageName: pkg.manifest.name, slug: resolved.slug };
-            }
-        }
+    isKnownPackage(fullName: string): boolean {
+        return this.entryByFullName(fullName) !== null;
+    }
 
-        if (reference.qualifiedName) {
-            const node = findByQualifiedName(Array.from(this.models.values()), reference.qualifiedName);
-            if (node) {
-                return { packageName: node.packageName, slug: node.slug };
-            }
-        }
+    crossPackageEntity(fullName: string, slug: string): CrossPackageEntity | null {
+        const entry = this.entryByFullName(fullName);
+        return entry ? entityFromEntry(entry, slug) : null;
+    }
 
-        // Target package not loaded, so it has no node to resolve against; fall back to a package URL.
-        return crossPackageUrlRef(reference);
+    findEntityAcrossPackages(slug: string): CrossPackageEntityHome | null {
+        if (!this.index) return null;
+        for (const entry of Object.values(this.index.packages)) {
+            const entity = entityFromEntry(entry, slug);
+            if (entity) return { fullName: entry.fullName, ...entity };
+        }
+        return null;
+    }
+
+    private entryByFullName(fullName: string): PackageIndexEntry | null {
+        if (!this.index) return null;
+        for (const entry of Object.values(this.index.packages)) {
+            if (entry.fullName === fullName) return entry;
+        }
+        return null;
     }
 
     private rebuild(): void {
@@ -178,4 +171,21 @@ export class VersionedDocsEngine {
 
 function emptyManifest(packages: DocManifest['packages']): DocManifest {
     return { generatedAt: '', tool: '', apiExtractorVersion: '', outputDir: '', packages };
+}
+
+// Resolve a (possibly member) slug against one package's index entry: the entity must be listed, and
+// the entry must include a concrete version. `fragment` is the member segment when the slug is nested.
+function entityFromEntry(entry: PackageIndexEntry, slug: string): CrossPackageEntity | null {
+    const segments = slug.split('/');
+    const entitySlug = segments[0];
+    if (!entitySlug) return null;
+
+    const tone = entry.entities?.[entitySlug];
+    if (!tone) return null;
+
+    const version = entry.stable?.latest ?? entry.prerelease?.latest;
+    if (!version) return null;
+
+    const fragment = segments.length > 1 ? segments[1] : undefined;
+    return fragment ? { tone, version, entitySlug, fragment } : { tone, version, entitySlug };
 }

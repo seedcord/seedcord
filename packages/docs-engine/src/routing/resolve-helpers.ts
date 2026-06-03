@@ -36,17 +36,6 @@ export function resolveWithinPackage(reference: DocReference, pkg: DocPackageMod
     return null;
 }
 
-export function findByQualifiedName(packages: DocPackageModel[], qualifiedName: string): DocNode | null {
-    for (const pkg of packages) {
-        const node = pkg.indexes.byQName.get(qualifiedName);
-        if (node) {
-            return node;
-        }
-    }
-
-    return null;
-}
-
 /**
  * Best-effort cross-package link target for the lazy engine, where the referenced package is not
  * loaded so its node cannot be looked up. The canonical qualified name joins segments with `.`/`#`,

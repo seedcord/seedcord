@@ -10,6 +10,7 @@ export * from './Dropdown';
 export * from './GithubIcon';
 export * from './Icon';
 export * from './IconSwap';
+export * from './Input';
 export * from './Popover';
 export * from './ScrollToTopButton';
 export * from './SegmentedControl';

@@ -3,7 +3,7 @@
 import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { MEMBER_TITLES } from '../constants';
+import { MEMBER_TITLES } from '@components/docs/entity/constants';
 
 import type { EntityMemberSummary, MemberPrefix } from '@lib/docs/types';
 import type { ReactElement } from 'react';

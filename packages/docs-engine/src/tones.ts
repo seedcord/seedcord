@@ -37,7 +37,7 @@ const TONE_SYNONYMS: Partial<Record<string, EntityTone>> = {
     enumeration: 'enum'
 };
 
-function isEntityTone(value: string): value is EntityTone {
+export function isEntityTone(value: string): value is EntityTone {
     return value in TONE_LABELS;
 }
 

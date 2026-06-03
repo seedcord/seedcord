@@ -1,6 +1,6 @@
 import { type ReactElement, Fragment } from 'react';
 
-import { EntityMembersSection } from '../../EntityMembersSection';
+import { EntityMembersSection } from '@components/docs/entity/EntityMembersSection';
 
 import type { ClassLikeModel } from '@lib/docs/types';
 

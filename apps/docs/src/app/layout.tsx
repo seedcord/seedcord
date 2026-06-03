@@ -4,11 +4,11 @@ import Script from 'next/script';
 
 import './globals.css';
 
-import { Navbar } from '../components/header/Navbar';
-import { HotkeyProvider } from '../components/providers/HotkeyProvider';
-import { MotionProvider } from '../components/providers/MotionProvider';
-import { ThemeProvider } from '../components/providers/ThemeProvider';
-import { CommandPalette } from '../components/search/command-palette';
+import { Navbar } from '@components/header/Navbar';
+import { HotkeyProvider } from '@components/providers/HotkeyProvider';
+import { MotionProvider } from '@components/providers/MotionProvider';
+import { ThemeProvider } from '@components/providers/ThemeProvider';
+import { CommandPalette } from '@components/search/command-palette';
 
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';

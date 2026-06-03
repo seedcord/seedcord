@@ -177,6 +177,46 @@ function LongListRow(): ReactElement {
     );
 }
 
+const SCOPE_OPTIONS: DropdownOption[] = [
+    { value: 'all', label: 'All packages' },
+    { value: 'seedcord', label: 'seedcord' },
+    { value: 'services', label: '@seedcord/services' }
+];
+
+const KIND_OPTIONS: DropdownOption[] = [
+    { value: 'all', label: 'All kinds' },
+    { value: 'class', label: 'Classes' },
+    { value: 'function', label: 'Functions' }
+];
+
+function GhostVariantRow(): ReactElement {
+    const [scope, setScope] = useState('all');
+    const [kind, setKind] = useState('all');
+    return (
+        <div
+            className={tw`flex max-w-md items-center gap-1 rounded-lg border border-(--border) bg-surface-subtle px-3 py-2`}
+        >
+            <Dropdown
+                variant="ghost"
+                placeholderLabel="All packages"
+                value={scope}
+                options={SCOPE_OPTIONS}
+                onChange={setScope}
+                aria-label="Scope"
+            />
+            <span className={tw`text-(--text-faint)`}>/</span>
+            <Dropdown
+                variant="ghost"
+                placeholderLabel="All kinds"
+                value={kind}
+                options={KIND_OPTIONS}
+                onChange={setKind}
+                aria-label="Kind"
+            />
+        </div>
+    );
+}
+
 function DropdownPage(): ReactElement {
     return (
         <div className={tw`space-y-10 pb-32`}>
@@ -205,6 +245,9 @@ function DropdownPage(): ReactElement {
             </DevSection>
             <DevSection title="Long option list (scrolls within max-h-72)">
                 <LongListRow />
+            </DevSection>
+            <DevSection title="Ghost variant (borderless, inline in a bar)">
+                <GhostVariantRow />
             </DevSection>
         </div>
     );

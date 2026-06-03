@@ -1,7 +1,7 @@
 import { buildMemberSummary } from './buildMemberSummary';
 import { buildTypeParameterSummaries } from './buildTypeParameterSummaries';
 
-import type { BaseEntityModel, ClassLikeEntityModel, FormatContext } from '../types';
+import type { BaseEntityModel, ClassLikeEntityModel, FormatContext } from '@lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 const PROPERTY_KINDS = new Set(['kind_property', 'kind_accessor']);

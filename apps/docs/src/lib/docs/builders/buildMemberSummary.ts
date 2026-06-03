@@ -1,4 +1,7 @@
-import { memberFragment, resolveReferenceHref } from '@seedcord/docs-engine';
+import { memberFragment } from '@seedcord/docs-engine';
+
+import { formatCommentRich } from '@lib/docs/comments/formatter';
+import { opensInNewTab } from '@lib/docs/crossPackage';
 
 import { buildSignatureDetails } from './buildSignatureDetails';
 import {
@@ -10,9 +13,8 @@ import {
     resolveHeaderSignature,
     selectDescription
 } from './utils';
-import { formatCommentRich } from '../comments/formatter';
 
-import type { FormatContext, SeeAlsoEntryWithoutTarget, EntityMemberSummary } from '../types';
+import type { FormatContext, SeeAlsoEntryWithoutTarget, EntityMemberSummary } from '@lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildMemberSummary(node: DocNode, context: FormatContext): Promise<EntityMemberSummary> {
@@ -59,11 +61,14 @@ export async function buildMemberSummary(node: DocNode, context: FormatContext):
     if (accessorType) summary.accessorType = accessorType;
     if (node.sourceUrl) summary.sourceUrl = node.sourceUrl;
     if (node.inheritedFrom?.name) {
-        const href = resolveReferenceHref(node.inheritedFrom, {
-            engine: context.engine,
-            currentPackage: context.manifestPackage
-        });
-        summary.inheritedFrom = href ? { name: node.inheritedFrom.name, href } : node.inheritedFrom.name;
+        const href = context.engine.resolver().href(context.manifestPackage, node.inheritedFrom);
+        if (href) {
+            const entry: { name: string; href: string; external?: boolean } = { name: node.inheritedFrom.name, href };
+            if (opensInNewTab(href, context.manifestPackage)) entry.external = true;
+            summary.inheritedFrom = entry;
+        } else {
+            summary.inheritedFrom = node.inheritedFrom.name;
+        }
     }
 
     return summary;

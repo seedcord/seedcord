@@ -62,6 +62,24 @@ const PRIMITIVES = [
         label: 'Disclosure',
         description:
             'compound headless disclosure; uncontrolled/controlled/storage modes; CSS grid-rows height animation'
+    },
+    {
+        href: '/dev/input',
+        label: 'Input',
+        description: 'text field: default/ghost variants, sizes, leading/trailing slots, search-field composition'
+    }
+] as const;
+
+const DOCS_BEHAVIORS = [
+    {
+        href: '/dev/cross-pkg-link',
+        label: 'Cross-package links',
+        description: 'new-tab + prose arrow indicator for cross-package and external references (no icon in code)'
+    },
+    {
+        href: '/dev/search-scope',
+        label: 'Search scope',
+        description: 'three candidate behaviors for cross-package discoverability in the command palette'
     }
 ] as const;
 
@@ -71,14 +89,27 @@ function DevIndex(): ReactElement {
             <header className={cn('space-y-2')}>
                 <h1 className={cn('text-2xl font-semibold tracking-tight text-(--text)')}>Dev playground</h1>
                 <p className={cn('text-subtle text-sm')}>
-                    Per-primitive routes for @seedcord/ui. Built incrementally during TASK-09 Stages 1.6 and 1.7. Each
-                    route renders the variant matrix in light + dark; use the theme toggle in the docs navbar above.
+                    Per-primitive routes for @seedcord/ui. Each route renders the variant matrix in light + dark; use
+                    the theme toggle in the docs navbar above.
                 </p>
             </header>
             <section className={cn('space-y-3')}>
                 <h2 className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>Primitives</h2>
                 <ul className={cn('space-y-1 text-sm')}>
                     {PRIMITIVES.map(({ href, label, description }) => (
+                        <li key={href}>
+                            <Link href={href} className={cn('text-(--text) hover:text-(--accent-a)')}>
+                                {label}
+                            </Link>
+                            <span className={cn('text-subtle')}>: {description}</span>
+                        </li>
+                    ))}
+                </ul>
+            </section>
+            <section className={cn('space-y-3')}>
+                <h2 className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>Docs rendering</h2>
+                <ul className={cn('space-y-1 text-sm')}>
+                    {DOCS_BEHAVIORS.map(({ href, label, description }) => (
                         <li key={href}>
                             <Link href={href} className={cn('text-(--text) hover:text-(--accent-a)')}>
                                 {label}

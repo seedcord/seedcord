@@ -27,11 +27,15 @@ export const PopoverTrigger = PopoverPrimitive.Trigger;
 export const PopoverAnchor = PopoverPrimitive.Anchor;
 export const PopoverClose = PopoverPrimitive.Close;
 
-interface PopoverContentProps extends ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {}
+interface PopoverContentProps extends ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {
+    // Portal target. Pass the content node of a modal Dialog so the popover lands inside its
+    // react-remove-scroll region; otherwise the default body portal cannot be scrolled inside a dialog.
+    container?: HTMLElement | null;
+}
 
-export function PopoverContent({ className, sideOffset = 8, ...props }: PopoverContentProps): ReactElement {
+export function PopoverContent({ className, sideOffset = 8, container, ...props }: PopoverContentProps): ReactElement {
     return (
-        <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Portal container={container ?? undefined}>
             <PopoverPrimitive.Content
                 sideOffset={sideOffset}
                 className={cn(popoverContentBaseClassName, className)}

@@ -1,6 +1,4 @@
-import { resolveReferenceHref } from '@seedcord/docs-engine';
-
-import type { InlineTagPart, FormatContext } from '../types';
+import type { InlineTagPart, FormatContext } from '@lib/docs/types';
 import type { VersionedDocsEngine, DocNode, DocReference } from '@seedcord/docs-engine';
 
 function listPackageCandidates(engine: VersionedDocsEngine, currentPackage: string): string[] {
@@ -41,7 +39,7 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
             packageName: node.packageName
         };
 
-        return resolveReferenceHref(reference, { engine: context.engine, currentPackage: context.manifestPackage });
+        return context.engine.resolver().href(context.manifestPackage, reference);
     };
 
     const tryResolveStringTarget = (): string | null => {
@@ -67,10 +65,7 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
         if (typeof t.externalUrl === 'string') reference.externalUrl = t.externalUrl;
 
         if (reference.name || reference.packageName || reference.qualifiedName || reference.externalUrl) {
-            return resolveReferenceHref(reference as DocReference, {
-                engine: context.engine,
-                currentPackage: context.manifestPackage
-            });
+            return context.engine.resolver().href(context.manifestPackage, reference as DocReference);
         }
 
         return null;
@@ -95,7 +90,7 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
             packageName: node.packageName
         };
 
-        return resolveReferenceHref(reference, { engine: context.engine, currentPackage: context.manifestPackage });
+        return context.engine.resolver().href(context.manifestPackage, reference);
     };
 
     return (
@@ -106,8 +101,4 @@ export function resolveInlineHref(part: InlineTagPart, context: FormatContext): 
         tryResolveBySearch() ??
         null
     );
-}
-
-export function resolveOptions(context: FormatContext): { engine: VersionedDocsEngine; currentPackage: string } {
-    return { engine: context.engine, currentPackage: context.manifestPackage };
 }

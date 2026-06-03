@@ -10,7 +10,6 @@ import {
     type ResolveHref,
     type TypeParameter
 } from '@seedcord/docs-engine';
-import { resolveExternalPackageUrl, resolveReferenceHref } from '@seedcord/docs-engine';
 
 import { sanitizeHtml } from '@lib/sanitizeHtml';
 import {
@@ -21,19 +20,26 @@ import {
     type CodeLink
 } from '@lib/shiki';
 
-import { resolveOptions } from './comments/resolvers';
+import { opensInNewTab } from './crossPackage';
 
 import type { CodeRepresentation, FormatContext } from './types';
 
 function buildResolveHref(context: FormatContext): ResolveHref {
-    const options = resolveOptions(context);
-    return (reference) => resolveReferenceHref(reference, options) ?? resolveExternalPackageUrl(reference.name) ?? null;
+    return (reference) => context.engine.resolver().href(context.manifestPackage, reference);
 }
 
-function refsToLinks(refs: readonly RefRange[]): CodeLink[] {
+function refsToLinks(refs: readonly RefRange[], currentPackage: string): CodeLink[] {
     const links: CodeLink[] = [];
     for (const r of refs) {
-        if (r.href) links.push({ name: r.name, href: r.href, start: r.start, end: r.end });
+        if (r.href) {
+            links.push({
+                name: r.name,
+                href: r.href,
+                start: r.start,
+                end: r.end,
+                external: opensInNewTab(r.href, currentPackage)
+            });
+        }
     }
     return links;
 }
@@ -63,7 +69,7 @@ export async function formatDeclarationHeader(
     context: FormatContext
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context));
-    const links = refsToLinks(refs);
+    const links = refsToLinks(refs, context.manifestPackage);
     // Property/type-parameter declarations (no leading keyword) need a class-body wrap so shiki
     // tokenizes `protected`/`readonly`/type-param `extends` as keywords; keyword-led top-level
     // declarations (`class Foo`, `type Y = ...`) are valid TS at the file level without it.
@@ -80,14 +86,18 @@ export async function formatSignature(
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedSignaturePretty(signature, buildResolveHref(context));
     if (!prefix) {
-        const links = refsToLinks(refs);
+        const links = refsToLinks(refs, context.manifestPackage);
         return { text, html: await safeHighlight((c) => highlightSignatureToHtml(c, links), text) };
     }
     // A modifier prefix (`async`, `public get`, ...) sits outside the engine's offset map, so shift
     // every ref past it and highlight the prefixed text with the shifted links.
     const offset = prefix.length + 1;
     const prefixedText = `${prefix} ${text}`;
-    const links = refsToLinks(refs).map((link) => ({ ...link, start: link.start + offset, end: link.end + offset }));
+    const links = refsToLinks(refs, context.manifestPackage).map((link) => ({
+        ...link,
+        start: link.start + offset,
+        end: link.end + offset
+    }));
     return {
         text: prefixedText,
         html: await safeHighlight((c) => highlightSignatureToHtml(c, links), prefixedText)
@@ -104,13 +114,12 @@ export async function highlightCode(code: string, lang = 'ts'): Promise<CodeRepr
 
 export async function formatTypeParameter(param: TypeParameter, context: FormatContext): Promise<CodeRepresentation> {
     const { text, refs } = await formatTypeParameterPretty(param, buildResolveHref(context));
-    const links = refsToLinks(refs);
+    const links = refsToLinks(refs, context.manifestPackage);
     return { text, html: await safeHighlight((c) => highlightTypeParamToHtml(c, links), text) };
 }
 
-// Plain text of an inline type with refs resolved. Use for metadata fields (`model.returnType`,
-// `model.type`) that get displayed outside a code block, where markdown link syntax would render
-// as raw text.
+// For metadata fields (`model.returnType`, `model.type`) shown outside a code block, where markdown
+// link syntax would render as raw text. Returns plain text with refs resolved, no markup.
 export async function inlineTypeText(inline: InlineType, context: FormatContext): Promise<string> {
     const { text } = await formatInlineTypePretty(inline, buildResolveHref(context));
     return text;
@@ -123,9 +132,8 @@ export interface ParameterFormatInput {
     defaultValue?: string;
 }
 
-// Highlights a parameter row (`name(?): Type [= default]`) with links woven from the type
-// portion. Uses the member-wrap (`class _ { … }`) so shiki's TS grammar tokenizes the `name:
-// type` shape as a class-field declaration, not as a labeled statement.
+// Uses the member-wrap (`class _ { … }`) so shiki's TS grammar tokenizes the `name: type` shape as a
+// class-field declaration, not as a labeled statement.
 export async function formatParameter(
     input: ParameterFormatInput,
     context: FormatContext
@@ -140,6 +148,6 @@ export async function formatParameter(
             refs.push({ name: r.name, href: r.href, start: r.start + offset, end: r.end + offset });
     }
     if (input.defaultValue !== undefined) text += ` = ${input.defaultValue}`;
-    const links = refsToLinks(refs);
+    const links = refsToLinks(refs, context.manifestPackage);
     return { text, html: await safeHighlight((c) => highlightMemberToHtml(c, links), text) };
 }

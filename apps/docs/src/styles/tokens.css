@@ -31,9 +31,6 @@
     --badge-resource-bg: color-mix(in oklab, var(--accent-r) 18%, var(--surface));
     --badge-resource-text: color-mix(in oklab, var(--text) 88%, var(--accent-r) 12%);
 
-    --entity-tint-12: color-mix(in oklab, var(--entity-function) 12%, var(--surface));
-    --entity-tint-14: color-mix(in oklab, var(--entity-function) 14%, var(--surface));
-
     --command-overlay: color-mix(in oklab, var(--bg) 55%, #070917 45%);
 
     /* Per-tone Presentation Tokens */

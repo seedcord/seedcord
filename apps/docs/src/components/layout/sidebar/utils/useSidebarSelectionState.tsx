@@ -2,8 +2,8 @@ import { useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 
 import { resolveRestSegments } from './resolveRestSegments';
 
-import type { SidebarProps } from '../types';
 import type { PendingSidebarSelection } from './useSidebarPersistence';
+import type { SidebarProps } from '@components/layout/sidebar/types';
 
 function trimTrailingSlash(value: string): string {
     if (value.length > 1 && value.endsWith('/')) return value.slice(0, -1);

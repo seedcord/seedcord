@@ -2,12 +2,12 @@
 
 import { cn } from '@seedcord/ui';
 
-import { SeeAlso } from '../../SeeAlso';
-import { CommentExamples } from '../comments/CommentExamples';
-import { CommentParagraphs } from '../comments/CommentParagraphs';
-import { SignaturePanel } from '../signatures/SignaturePanel';
-import { SignatureSelector } from '../signatures/SignatureSelector';
-import { useActiveSignature } from '../utils/useActiveSignature';
+import { CommentExamples } from '@components/docs/entity/comments/CommentExamples';
+import { CommentParagraphs } from '@components/docs/entity/comments/CommentParagraphs';
+import { SignaturePanel } from '@components/docs/entity/signatures/SignaturePanel';
+import { SignatureSelector } from '@components/docs/entity/signatures/SignatureSelector';
+import { useActiveSignature } from '@components/docs/entity/utils/useActiveSignature';
+import { SeeAlso } from '@components/docs/SeeAlso';
 
 import type { EntityMemberSummary, WithParentDeprecationStatus } from '@lib/docs/types';
 import type { ReactElement } from 'react';
@@ -46,7 +46,12 @@ export function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBody
                     {typeof member.inheritedFrom === 'string' ? (
                         <span>{member.inheritedFrom}</span>
                     ) : member.inheritedFrom.href ? (
-                        <a href={member.inheritedFrom.href} className={cn('link underline')}>
+                        <a
+                            href={member.inheritedFrom.href}
+                            target={member.inheritedFrom.external ? '_blank' : undefined}
+                            rel={member.inheritedFrom.external ? 'noopener noreferrer' : undefined}
+                            className={cn('link underline', member.inheritedFrom.external && 'cross-ref')}
+                        >
                             {member.inheritedFrom.name}
                         </a>
                     ) : (

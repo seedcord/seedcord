@@ -85,7 +85,12 @@ async function main(): Promise<void> {
             ? syntheticVersions(real)
             : [{ version: real, channel: isPrerelease(real) ? 'prerelease' : 'stable' } satisfies SyntheticVersion];
 
-        inputs.push({ folder, fullName, versions: versions.map((entry) => entry.version) });
+        inputs.push({
+            folder,
+            fullName,
+            versions: versions.map((entry) => entry.version),
+            entities: pkg.directory.toneMap()
+        });
         for (const { version, channel } of versions) {
             projects.push({ folder, version, channel, file });
         }

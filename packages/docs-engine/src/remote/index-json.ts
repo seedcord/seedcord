@@ -1,4 +1,5 @@
 import { IndexFetchError } from '@remote/errors';
+import { isEntityTone, type EntityTone } from '@src/tones';
 
 /**
  * Root `index.json` published to the artifacts repo. `packages` is keyed by the unscoped folder
@@ -23,6 +24,10 @@ export interface PackageIndexEntry {
     fullName: string;
     stable: StableChannel | null;
     prerelease: { latest: string } | null;
+    // Entity slug -> tone for the latest version (`logger` -> `class`). The lazy engine reads this to
+    // build `/tone/version/slug` URLs for an unloaded package and to drop links to non-entities
+    // (params, mis-attributed externals). Absent on legacy indexes.
+    entities?: Record<string, EntityTone>;
 }
 
 export function validateIndex(value: unknown): IndexJson {
@@ -53,7 +58,7 @@ export function validateIndex(value: unknown): IndexJson {
 function validateEntry(folder: string, value: unknown): PackageIndexEntry {
     const where = `index.json.packages.${folder}`;
     const entry = asObject(value, where);
-    return {
+    const base: PackageIndexEntry = {
         fullName: asString(entry.fullName, `${where}.fullName`),
         stable: isNullish(entry.stable) ? null : validateStable(where, entry.stable),
         prerelease: isNullish(entry.prerelease)
@@ -65,6 +70,12 @@ function validateEntry(folder: string, value: unknown): PackageIndexEntry {
                   )
               }
     };
+
+    if (!isNullish(entry.entities)) {
+        base.entities = asEntityToneRecord(entry.entities, `${where}.entities`);
+    }
+
+    return base;
 }
 
 function validateStable(where: string, value: unknown): StableChannel {
@@ -99,6 +110,19 @@ function asStringRecord(value: unknown, where: string): Record<string, string> {
     const out: Record<string, string> = {};
     for (const [key, entry] of Object.entries(record)) {
         out[key] = asString(entry, `${where}.${key}`);
+    }
+    return out;
+}
+
+function asEntityToneRecord(value: unknown, where: string): Record<string, EntityTone> {
+    const record = asObject(value, where);
+    const out: Record<string, EntityTone> = {};
+    for (const [key, entry] of Object.entries(record)) {
+        const tone = asString(entry, `${where}.${key}`);
+        if (!isEntityTone(tone)) {
+            throw new IndexFetchError(null, `${where}.${key} is not a valid entity tone: ${tone}`);
+        }
+        out[key] = tone;
     }
     return out;
 }

@@ -1,8 +1,8 @@
 import { cn, CodeBlock } from '@seedcord/ui';
 
-import { CommentExamples } from '../comments/CommentExamples';
-import { CommentParagraphs } from '../comments/CommentParagraphs';
-import { DeprecatedEntity } from '../DeprecatedEntity';
+import { CommentExamples } from '@components/docs/entity/comments/CommentExamples';
+import { CommentParagraphs } from '@components/docs/entity/comments/CommentParagraphs';
+import { DeprecatedEntity } from '@components/docs/entity/DeprecatedEntity';
 
 import type { MemberSignatureDetail, WithParentDeprecationStatus, DeprecationStatus } from '@lib/docs/types';
 import type { ReactElement } from 'react';

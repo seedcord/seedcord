@@ -10,7 +10,6 @@
             "@routing/*": ["./src/routing/*"],
             "@services/*": ["./src/services/*"],
             "@transformers/*": ["./src/transformers/*"],
-            "@lookup/*": ["./src/lookup/*"],
             "@packages/*": ["./src/packages/*"],
             "@remote/*": ["./src/remote/*"]
         }

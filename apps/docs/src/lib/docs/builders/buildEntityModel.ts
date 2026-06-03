@@ -1,5 +1,8 @@
 import { formatDisplayPackageName } from '@seedcord/docs-engine';
 
+import { createFormatContext } from '@lib/docs/comments/creators';
+import { formatCommentRich } from '@lib/docs/comments/formatter';
+
 import { buildBaseEntityModel } from './baseEntityModel';
 import { buildClassLikeEntity } from './buildClassLikeEntity';
 import { buildEnumEntity } from './buildEnumEntity';
@@ -8,10 +11,8 @@ import { buildTypeEntity } from './buildTypeEntity';
 import { buildVariableEntity } from './buildVariableEntity';
 import { resolveEntityKind } from './resolveEntityKind';
 import { resolveHeaderSignature } from './utils';
-import { createFormatContext } from '../comments/creators';
-import { formatCommentRich } from '../comments/formatter';
 
-import type { EntityModel } from '../types';
+import type { EntityModel } from '@lib/docs/types';
 import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 export async function buildEntityModel(engine: VersionedDocsEngine, node: DocNode): Promise<EntityModel> {

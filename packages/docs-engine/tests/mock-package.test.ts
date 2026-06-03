@@ -1,10 +1,14 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
 import { DocKind } from '@model/kinds';
+import { AnchorStrategy } from '@routing/AnchorStrategy';
+import { ReferenceResolver } from '@routing/ReferenceResolver';
+import { orderedPackageCandidates } from '@routing/resolve-helpers';
 
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getManifest, getMockPackage, getNodeBySlug } from './utils/test-helpers';
 
+import type { PackageRegistry } from '@routing/lookup';
 import type { DocsEngine } from '@src/DocsEngine';
 import type { DocNode, DocPackageModel } from '@src/types';
 
@@ -233,39 +237,42 @@ describe('DocsEngine mock package integration', () => {
     });
 
     it('resolves references using keys, package hints, and external URLs', async () => {
+        // DocsEngine is the eager NodeLookup; pair it with a registry over its loaded packages. The
+        // eager engine resolves every ref through loaded nodes, so the index-driven cross-package gate
+        // is never reached here.
+        const registry: PackageRegistry = {
+            isKnownPackage: (name) => engine.getPackage(name) !== null,
+            candidatePackages: (current, hinted) => orderedPackageCandidates(current, hinted, engine.listPackages()),
+            crossPackageEntity: () => null,
+            findEntityAcrossPackages: () => null
+        };
+        const resolver = new ReferenceResolver(engine, registry, new AnchorStrategy(engine));
         const target = await getNodeBySlug('mock-function');
-        const byKey = engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-            name: target.name,
-            targetKey: target.key
-        });
-        expect(byKey).toEqual({ packageName: MOCK_PACKAGE_FULL_NAME, slug: 'mock-function' });
 
-        const byQualifiedName = engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-            name: 'publicMethod',
-            qualifiedName: 'MockClass.publicMethod'
+        expect(resolver.resolve(MOCK_PACKAGE_FULL_NAME, { name: target.name, targetKey: target.key })).toEqual({
+            kind: 'internal',
+            packageName: MOCK_PACKAGE_FULL_NAME,
+            slug: 'mock-function'
         });
-        expect(byQualifiedName).toEqual({ packageName: MOCK_PACKAGE_FULL_NAME, slug: 'mock-class/public-method' });
 
-        const byPackageHint = engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-            name: 'MockEnum',
-            packageName: MOCK_PACKAGE_FULL_NAME
-        });
-        expect(byPackageHint).toEqual({ packageName: MOCK_PACKAGE_FULL_NAME, slug: 'mock-enum' });
+        expect(
+            resolver.resolve(MOCK_PACKAGE_FULL_NAME, { name: 'publicMethod', qualifiedName: 'MockClass.publicMethod' })
+        ).toEqual({ kind: 'internal', packageName: MOCK_PACKAGE_FULL_NAME, slug: 'mock-class/public-method' });
 
-        const byQualifiedNameOnly = engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-            name: 'MockClass.publicMethod'
-        });
-        expect(byQualifiedNameOnly).toEqual({ packageName: MOCK_PACKAGE_FULL_NAME, slug: 'mock-class/public-method' });
+        expect(
+            resolver.resolve(MOCK_PACKAGE_FULL_NAME, { name: 'MockEnum', packageName: MOCK_PACKAGE_FULL_NAME })
+        ).toEqual({ kind: 'internal', packageName: MOCK_PACKAGE_FULL_NAME, slug: 'mock-enum' });
 
-        const external = engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-            name: 'MDN',
-            externalUrl: 'https://developer.mozilla.org/'
+        expect(resolver.resolve(MOCK_PACKAGE_FULL_NAME, { name: 'MockClass.publicMethod' })).toEqual({
+            kind: 'internal',
+            packageName: MOCK_PACKAGE_FULL_NAME,
+            slug: 'mock-class/public-method'
         });
-        expect(external).toEqual({ externalUrl: 'https://developer.mozilla.org/' });
 
-        const missing = engine.resolveReference(MOCK_PACKAGE_FULL_NAME, {
-            name: 'NonExistentSymbol'
-        });
-        expect(missing).toEqual({});
+        expect(
+            resolver.resolve(MOCK_PACKAGE_FULL_NAME, { name: 'MDN', externalUrl: 'https://developer.mozilla.org/' })
+        ).toEqual({ kind: 'external', url: 'https://developer.mozilla.org/' });
+
+        expect(resolver.resolve(MOCK_PACKAGE_FULL_NAME, { name: 'NonExistentSymbol' })).toEqual({ kind: 'unresolved' });
     });
 });

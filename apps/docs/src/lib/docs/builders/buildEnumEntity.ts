@@ -1,6 +1,6 @@
 import { buildEnumMember } from './buildEnumMember';
 
-import type { BaseEntityModel, EnumEntityModel, FormatContext } from '../types';
+import type { BaseEntityModel, EnumEntityModel, FormatContext } from '@lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 const ENUM_MEMBER_KIND = 'kind_enum_member';

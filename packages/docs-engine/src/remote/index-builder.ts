@@ -1,11 +1,13 @@
 import { major, minor, prerelease, rcompare, valid } from 'semver';
 
 import type { IndexJson, PackageIndexEntry, StableChannel } from '@remote/index-json';
+import type { EntityTone } from '@src/tones';
 
 export interface PackageVersionsInput {
     folder: string;
     fullName: string;
     versions: readonly string[];
+    entities?: Record<string, EntityTone>;
 }
 
 export interface BuildIndexOptions {
@@ -26,7 +28,7 @@ const DEFAULT_PATH_TEMPLATES = {
 export function buildIndex(packages: readonly PackageVersionsInput[], options: BuildIndexOptions): IndexJson {
     const entries: Record<string, PackageIndexEntry> = {};
     for (const pkg of packages) {
-        entries[pkg.folder] = buildEntry(pkg.fullName, pkg.versions);
+        entries[pkg.folder] = buildEntry(pkg.fullName, pkg.versions, pkg.entities);
     }
 
     return {
@@ -37,16 +39,26 @@ export function buildIndex(packages: readonly PackageVersionsInput[], options: B
     };
 }
 
-function buildEntry(fullName: string, versions: readonly string[]): PackageIndexEntry {
+function buildEntry(
+    fullName: string,
+    versions: readonly string[],
+    entities?: Record<string, EntityTone>
+): PackageIndexEntry {
     const valids = versions.filter((version) => valid(version) !== null);
     const stable = valids.filter((version) => prerelease(version) === null);
     const pre = valids.filter((version) => prerelease(version) !== null);
 
-    return {
+    const entry: PackageIndexEntry = {
         fullName,
         stable: buildStable(stable),
         prerelease: buildPrerelease(pre)
     };
+
+    if (entities && Object.keys(entities).length > 0) {
+        entry.entities = entities;
+    }
+
+    return entry;
 }
 
 function buildStable(versions: readonly string[]): StableChannel | null {

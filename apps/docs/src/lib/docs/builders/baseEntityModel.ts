@@ -8,7 +8,7 @@ import type {
     EntityKind,
     WithSeeAlso,
     WithThrows
-} from '../types';
+} from '@lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 function buildEntityTags(node: DocNode): string[] {

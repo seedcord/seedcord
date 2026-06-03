@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FormatContext } from '../../../../../src/lib/docs/types';
+import type { FormatContext } from '@lib/docs/types';
 import type { DocComment, DocCommentBlockTag, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 const resolveInlineHrefMock = vi.fn<(...args: unknown[]) => string | null>(() => null);
@@ -8,7 +8,7 @@ vi.mock('../../../../../src/lib/docs/comments/resolvers', () => ({
     resolveInlineHref: (...args: unknown[]) => resolveInlineHrefMock(...args)
 }));
 
-const { renderSeeAlso } = await import('../../../../../src/lib/docs/comments/renderers/renderSeeAlso');
+const { renderSeeAlso } = await import('@lib/docs/comments/renderers/renderSeeAlso');
 
 type DisplayPart =
     | { kind: 'text'; text: string }
@@ -105,7 +105,21 @@ describe('renderSeeAlso', () => {
         };
         const comment = makeComment([makeSeeTag('', [inline])]);
         expect(renderSeeAlso(comment, makeContext())).toEqual([
-            { name: 'Linked', href: 'https://example.com/x', target: 42 }
+            { name: 'Linked', href: 'https://example.com/x', external: true, target: 42 }
+        ]);
+    });
+
+    it('flags an external href as external (new tab) and leaves a same-package href un-flagged', () => {
+        resolveInlineHrefMock.mockReturnValueOnce('/packages/utils/latest/functions/clamp');
+        const crossPkg = makeComment([makeSeeTag('clamp')]);
+        expect(renderSeeAlso(crossPkg, makeContext())).toEqual([
+            { name: 'clamp', href: '/packages/utils/latest/functions/clamp', external: true }
+        ]);
+
+        resolveInlineHrefMock.mockReturnValueOnce('/packages/seedcord/latest/classes/Seedcord');
+        const samePkg = makeComment([makeSeeTag('Seedcord')]);
+        expect(renderSeeAlso(samePkg, makeContext())).toEqual([
+            { name: 'Seedcord', href: '/packages/seedcord/latest/classes/Seedcord' }
         ]);
     });
 
@@ -148,7 +162,7 @@ describe('renderSeeAlso', () => {
         };
         const comment = makeComment([makeSeeTag('FromBlockText', [inline])]);
         expect(renderSeeAlso(comment, makeContext())).toEqual([
-            { name: 'FromBlockText', href: 'https://example.com/u' }
+            { name: 'FromBlockText', href: 'https://example.com/u', external: true }
         ]);
     });
 
@@ -162,8 +176,8 @@ describe('renderSeeAlso', () => {
         };
         const comment = makeComment([makeSeeTag('', [inline])]);
         expect(renderSeeAlso(comment, makeContext())).toEqual([
-            { name: 'Foo', href: 'https://example.com/group', target: 99 },
-            { name: 'Bar', href: 'https://example.com/group', target: 99 }
+            { name: 'Foo', href: 'https://example.com/group', external: true, target: 99 },
+            { name: 'Bar', href: 'https://example.com/group', external: true, target: 99 }
         ]);
     });
 

@@ -1,9 +1,10 @@
 import { memberFragment, withOverload } from '@seedcord/docs-engine';
 
+import { cloneCommentParagraphs } from '@lib/docs/comments/creators';
+import { formatCommentRich } from '@lib/docs/comments/formatter';
+import { formatSignature, highlightCode } from '@lib/docs/formatting';
+
 import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
-import { cloneCommentParagraphs } from '../comments/creators';
-import { formatCommentRich } from '../comments/formatter';
-import { formatSignature, highlightCode } from '../formatting';
 
 import type {
     CodeRepresentation,
@@ -12,7 +13,7 @@ import type {
     FormatContext,
     FormattedComment,
     EntityMemberSummary
-} from '../types';
+} from '@lib/docs/types';
 import type { DocSignature, DocNode, DocCommentBlockTag, DocComment } from '@seedcord/docs-engine';
 
 interface SignatureDetailsOptions {

@@ -3,7 +3,7 @@ import { renderParagraphs } from './renderers/renderParagraphs';
 import { renderSeeAlso } from './renderers/renderSeeAlso';
 import { renderThrows } from './renderers/renderThrows';
 
-import type { FormatContext, FormattedComment } from '../types';
+import type { FormatContext, FormattedComment } from '@lib/docs/types';
 import type { DocComment } from '@seedcord/docs-engine';
 
 export async function formatCommentRich(

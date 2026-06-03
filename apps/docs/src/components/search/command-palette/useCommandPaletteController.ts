@@ -9,7 +9,7 @@ import { useUIStore, type UIStore } from '@store/ui';
 
 import { FOCUS_DELAY_MS } from './constants';
 
-import type { CommandAction } from './types';
+import type { CommandAction, DocsPackageOption } from './types';
 
 // `action.href` already carries the correct member fragment from the search route; this only
 // strips the origin for router.push / window.open.
@@ -22,13 +22,41 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
+// The scope dropdown lists every documented package; fetch it once the palette first opens.
+function usePackageList(open: boolean): DocsPackageOption[] {
+    const [packages, setPackages] = useState<DocsPackageOption[]>([]);
+
+    useEffect(() => {
+        if (!open || packages.length > 0) return undefined;
+
+        const abort = new AbortController();
+        fetch('/search?list=packages', { signal: abort.signal })
+            .then((response) => (response.ok ? (response.json() as Promise<{ packages?: DocsPackageOption[] }>) : null))
+            .then((payload) => {
+                if (payload && Array.isArray(payload.packages)) setPackages(payload.packages);
+            })
+            .catch(() => undefined);
+
+        return () => {
+            abort.abort();
+        };
+    }, [open, packages.length]);
+
+    return packages;
+}
+
 export interface CommandPaletteController {
     open: boolean;
     mounted: boolean;
     searchValue: string;
+    scope: string;
+    kind: string;
+    packages: DocsPackageOption[];
     inputRef: RefObject<HTMLInputElement | null>;
     handleOpenChange: (open: boolean) => void;
     handleValueChange: (value: string) => void;
+    handleScopeChange: (scope: string) => void;
+    handleKindChange: (kind: string) => void;
     handleClose: () => void;
     handleSelect: (action: CommandAction) => void;
 }
@@ -44,7 +72,9 @@ export function useCommandPaletteController(): CommandPaletteController {
     const pathname = usePathname();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchValue, setSearchValue] = useState('');
+    const [filters, setFilters] = useState<{ scope: string; kind: string }>({ scope: 'all', kind: 'all' });
     const [mounted] = useState(() => typeof window !== 'undefined');
+    const packages = usePackageList(open);
 
     useEffect(() => {
         if (!mounted) return undefined;
@@ -66,11 +96,17 @@ export function useCommandPaletteController(): CommandPaletteController {
 
     const handleOpenChange = useCallback(
         (next: boolean): void => {
-            if (next) setSearchValue('');
+            if (next) {
+                setSearchValue('');
+                setFilters({ scope: 'all', kind: 'all' });
+            }
             setCommandPaletteOpen(next);
         },
         [setCommandPaletteOpen]
     );
+
+    const handleScopeChange = useCallback((scope: string) => setFilters((prev) => ({ ...prev, scope })), []);
+    const handleKindChange = useCallback((kind: string) => setFilters((prev) => ({ ...prev, kind })), []);
 
     const handleClose = useCallback(() => setCommandPaletteOpen(false), [setCommandPaletteOpen]);
 
@@ -99,9 +135,14 @@ export function useCommandPaletteController(): CommandPaletteController {
         open,
         mounted,
         searchValue,
+        scope: filters.scope,
+        kind: filters.kind,
+        packages,
         inputRef,
         handleOpenChange,
         handleValueChange: setSearchValue,
+        handleScopeChange,
+        handleKindChange,
         handleClose,
         handleSelect
     };

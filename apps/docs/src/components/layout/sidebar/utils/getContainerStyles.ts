@@ -1,6 +1,6 @@
 import { MOBILE_MAX_HEIGHT } from './constants';
 
-import type { SidebarVariant } from '../types';
+import type { SidebarVariant } from '@components/layout/sidebar/types';
 import type { CSSProperties } from 'react';
 
 export function getContainerStyles(variant: SidebarVariant | undefined): CSSProperties | undefined {

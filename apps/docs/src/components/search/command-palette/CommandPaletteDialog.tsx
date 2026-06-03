@@ -10,7 +10,7 @@ import { CommandListItem } from './CommandListItem';
 import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from './constants';
 import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
-import type { CommandAction } from './types';
+import type { CommandAction, SearchGroup } from './types';
 import type { CommandPaletteController } from './useCommandPaletteController';
 import type { KeyboardEvent, ReactElement } from 'react';
 
@@ -20,26 +20,69 @@ function optionId(id: string): string {
     return `command-option-${id}`;
 }
 
+// The scope/kind dropdowns portal their listbox outside the dialog, so a click on an option reads as an
+// outside interaction; ignore anything inside a Radix popper wrapper so selecting a filter never closes
+// the palette.
+function isWithinPopover(target: EventTarget | null): boolean {
+    return target instanceof Element && target.closest('[data-radix-popper-content-wrapper]') !== null;
+}
+
 interface CommandListContentProps {
     showInitialHint: boolean;
     isSearching: boolean;
     errorMessage?: string;
-    results: CommandAction[];
+    groups: SearchGroup[];
     activeIndex: number;
     onSelect: (action: CommandAction) => void;
     onActivate: (index: number) => void;
+}
+
+// Each group's rows occupy a contiguous slice of the flat active-index space, so a running offset maps a
+// row to its global index for keyboard nav.
+function renderGroups(
+    groups: SearchGroup[],
+    activeIndex: number,
+    onSelect: (action: CommandAction) => void,
+    onActivate: (index: number) => void
+): ReactElement[] {
+    let offset = 0;
+    return groups.map((group) => {
+        const start = offset;
+        offset += group.results.length;
+        return (
+            <div key={group.label} role="presentation">
+                <div className={cn('flex items-center justify-between px-3 pt-2 pb-1')}>
+                    <span className={cn('text-subtle text-xs font-semibold tracking-wide')}>
+                        {group.current ? `${group.label} (current)` : group.label}
+                    </span>
+                    <span className={cn('text-xs text-(--text-faint)')}>{group.results.length}</span>
+                </div>
+                {group.results.map((action, index) => (
+                    <CommandListItem
+                        key={action.id}
+                        action={action}
+                        onSelect={onSelect}
+                        isActive={start + index === activeIndex}
+                        optionId={optionId(action.id)}
+                        index={start + index}
+                        onActivate={onActivate}
+                    />
+                ))}
+            </div>
+        );
+    });
 }
 
 function CommandListContent({
     showInitialHint,
     isSearching,
     errorMessage,
-    results,
+    groups,
     activeIndex,
     onSelect,
     onActivate
 }: CommandListContentProps): ReactElement | null {
-    const hasResults = results.length > 0;
+    const hasResults = groups.length > 0;
     // Items stay visible during a refresh (stale results) so the list doesn't flicker; the header spinner
     // signals loading. The "no results" fallback waits for loading to finish to avoid a false flash.
     const shouldShowItems = !showInitialHint && !errorMessage && hasResults;
@@ -72,17 +115,7 @@ function CommandListContent({
             {emptyContent}
             {shouldShowItems ? (
                 <div id={COMMAND_LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {results.map((action, index) => (
-                        <CommandListItem
-                            key={action.id}
-                            action={action}
-                            onSelect={onSelect}
-                            isActive={index === activeIndex}
-                            optionId={optionId(action.id)}
-                            index={index}
-                            onActivate={onActivate}
-                        />
-                    ))}
+                    {renderGroups(groups, activeIndex, onSelect, onActivate)}
                 </div>
             ) : null}
         </div>
@@ -100,7 +133,7 @@ function deriveListProps(
     return {
         showInitialHint,
         isSearching,
-        results: searchState.results,
+        groups: searchState.groups,
         ...(resolvedError ? { errorMessage: resolvedError } : {})
     };
 }
@@ -113,17 +146,25 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const observerRef = useRef<ResizeObserver | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
+    // The dropdown listboxes portal here (inside the dialog) so their lists scroll under the scroll lock.
+    const [container, setContainer] = useState<HTMLElement | null>(null);
 
     const normalizedSearch = useMemo(() => searchValue.trim(), [searchValue]);
-    const searchState = useCommandPaletteSearch({ query: normalizedSearch, open });
+    const searchState = useCommandPaletteSearch({
+        query: normalizedSearch,
+        open,
+        scope: controller.scope,
+        kind: controller.kind
+    });
     const listProps = deriveListProps(searchState, normalizedSearch);
-    const { results } = listProps;
+    const { groups } = listProps;
+    const results = useMemo(() => groups.flatMap((group) => group.results), [groups]);
 
     // A new result set re-anchors the active row to the top. Adjusting during render (not in an effect)
     // avoids a wasted render pass and the set-state-in-effect smell.
-    const [trackedResults, setTrackedResults] = useState(results);
-    if (trackedResults !== results) {
-        setTrackedResults(results);
+    const [trackedGroups, setTrackedGroups] = useState(groups);
+    if (trackedGroups !== groups) {
+        setTrackedGroups(groups);
         setActiveIndex(0);
     }
 
@@ -192,15 +233,22 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                     className={cn('fixed inset-0 z-60 bg-(--command-overlay)/70 backdrop-blur-sm')}
                 />
                 <Dialog.Content
+                    ref={setContainer}
                     data-command-content
                     className={cn(
                         'fixed inset-0 z-70 flex items-start justify-center px-4 pt-20 pb-8 sm:px-6 sm:pt-24 md:pt-28 md:pb-12 lg:pt-32 lg:pb-16'
                     )}
-                    onInteractOutside={handleClose}
+                    onInteractOutside={(event) => {
+                        if (isWithinPopover(event.detail.originalEvent.target)) {
+                            event.preventDefault();
+                            return;
+                        }
+                        handleClose();
+                    }}
                     onPointerDown={(event) => {
                         const target = event.target as Node | null;
                         if (!commandRef.current || !target) return;
-                        if (!commandRef.current.contains(target)) {
+                        if (!commandRef.current.contains(target) && !isWithinPopover(target)) {
                             handleClose();
                         }
                     }}
@@ -225,6 +273,12 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                                 isSearching={listProps.isSearching}
                                 activeId={activeId}
                                 listExpanded={listExpanded}
+                                scope={controller.scope}
+                                kind={controller.kind}
+                                packages={controller.packages}
+                                container={container}
+                                onScopeChange={controller.handleScopeChange}
+                                onKindChange={controller.handleKindChange}
                             />
                             <m.div
                                 animate={{ height: contentHeight }}

@@ -3,11 +3,12 @@
 import { cn, ScrollToTopButton } from '@seedcord/ui';
 import { useLayoutEffect, useRef, useState } from 'react';
 
+import { Sidebar } from '@components/layout/sidebar/Sidebar';
+import { SIDEBAR_WIDTH } from '@components/layout/sidebar/utils/constants';
+
 import { DesktopSidebarFrame } from './DesktopSidebarFrame';
 import { MobileNavigationToggle } from './MobileNavigationToggle';
 import { MobilePanelDialog } from './MobilePanelDialog';
-import { Sidebar } from '../../Sidebar';
-import { SIDEBAR_WIDTH } from '../constants';
 
 import type { DocsCatalog } from '@lib/docs/types';
 import type { CSSProperties, ReactNode } from 'react';

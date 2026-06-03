@@ -15,10 +15,12 @@ export {
     type ResolveHref,
     type TypeParameter
 } from '@transformers/pretty-formatter';
-export * from '@routing/reference-resolver';
-export * from '@lookup/find-entity';
+export { ReferenceResolver } from '@routing/ReferenceResolver';
+export { AnchorStrategy } from '@routing/AnchorStrategy';
+export type { NodeLookup, PackageRegistry } from '@routing/lookup';
+export * from '@routing/find-entity';
 
-export { VersionedDocsEngine, type ReferenceResolution } from '@remote/VersionedDocsEngine';
+export { VersionedDocsEngine } from '@remote/VersionedDocsEngine';
 export { IndexLoader, type Fetcher, type ResolvedVersion } from '@remote/index-loader';
 export { ProjectLoader } from '@remote/project-loader';
 export { serializeProject, deserializeProject, validateProjectFile, type DocProjectFile } from '@remote/project-file';

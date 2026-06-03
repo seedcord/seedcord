@@ -2,14 +2,13 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 import { buildCollection, type ResolveOptions } from '@builders/collection-builder';
-import { findByQualifiedName, orderedPackageCandidates, resolveWithinPackage } from '@routing/resolve-helpers';
 import { DocSearch } from '@services/Search';
 import { resolveManifestPath } from '@src/constants';
 import { ManifestReader } from '@src/ManifestReader';
 
 import type { GlobalId } from '@src/ids';
 import type { DirectorySnapshot, PackageDirectory } from '@src/PackageDirectory';
-import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocReference, DocSearchEntry } from '@src/types';
+import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '@src/types';
 
 export interface DocsEngineOptions {
     generatedRoot: string;
@@ -100,49 +99,6 @@ export class DocsEngine {
 
     search(query: string, pkgName?: string): DocSearchEntry[] {
         return this.docSearch.search(query, pkgName);
-    }
-
-    resolveReference(
-        currentPackage: string,
-        reference: DocReference | null
-    ): { packageName?: string; slug?: string; externalUrl?: string } {
-        if (!reference) {
-            return {};
-        }
-
-        if (reference.externalUrl) {
-            return { externalUrl: reference.externalUrl };
-        }
-
-        if (reference.targetKey) {
-            const targetNode = this.getNodeByKey(reference.targetKey);
-            if (targetNode) {
-                return { packageName: targetNode.packageName, slug: targetNode.slug };
-            }
-        }
-
-        const packageOrder = orderedPackageCandidates(currentPackage, reference.packageName, this.listPackages());
-
-        for (const pkgName of packageOrder) {
-            const pkg = this.getPackage(pkgName);
-            if (!pkg) {
-                continue;
-            }
-
-            const resolved = resolveWithinPackage(reference, pkg);
-            if (resolved) {
-                return { packageName: pkg.manifest.name, slug: resolved.slug };
-            }
-        }
-
-        if (reference.qualifiedName) {
-            const node = findByQualifiedName(this.collection.packages, reference.qualifiedName);
-            if (node) {
-                return { packageName: node.packageName, slug: node.slug };
-            }
-        }
-
-        return {};
     }
 }
 

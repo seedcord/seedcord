@@ -5,7 +5,7 @@ import { MotionProvider } from '@components/providers/MotionProvider';
 import { CommandPaletteDialog } from '@components/search/command-palette/CommandPaletteDialog';
 import { COMMAND_LISTBOX_ID } from '@components/search/command-palette/constants';
 
-import type { CommandAction } from '@components/search/command-palette/types';
+import type { CommandAction, SearchGroup } from '@components/search/command-palette/types';
 import type { CommandPaletteController } from '@components/search/command-palette/useCommandPaletteController';
 import type { ReactElement } from 'react';
 
@@ -22,15 +22,21 @@ const RESULTS: CommandAction[] = [
 ];
 
 const optionId = (id: string): string => `command-option-${id}`;
+const groupOf = (results: CommandAction[]): SearchGroup[] => [{ label: 'seedcord', current: true, results }];
 
 function makeController(overrides: Partial<CommandPaletteController> = {}): CommandPaletteController {
     return {
         open: true,
         mounted: true,
         searchValue: 'alpha',
+        scope: 'all',
+        kind: 'all',
+        packages: [],
         inputRef: { current: null },
         handleOpenChange: vi.fn(),
         handleValueChange: vi.fn(),
+        handleScopeChange: vi.fn(),
+        handleKindChange: vi.fn(),
         handleClose: vi.fn(),
         handleSelect: vi.fn(),
         ...overrides
@@ -61,7 +67,7 @@ class StubResizeObserver {
 
 describe('CommandPaletteDialog', () => {
     beforeEach(() => {
-        searchHook.mockReturnValue({ results: RESULTS, status: 'success' });
+        searchHook.mockReturnValue({ groups: groupOf(RESULTS), status: 'success' });
         vi.stubGlobal('ResizeObserver', StubResizeObserver);
         window.HTMLElement.prototype.scrollIntoView = vi.fn();
     });
@@ -136,10 +142,10 @@ describe('CommandPaletteDialog', () => {
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('b'));
 
         searchHook.mockReturnValue({
-            results: [
+            groups: groupOf([
                 { id: 'x', label: 'Xi', path: '/x', href: '/x', kind: 'page' },
                 { id: 'y', label: 'Psi', path: '/y', href: '/y', kind: 'class' }
-            ] satisfies CommandAction[],
+            ]),
             status: 'success'
         });
         rerender(makeController());

@@ -22,6 +22,9 @@ export interface CodeLink {
     href: string;
     start: number;
     end: number;
+    // True when the link points outside the current package (cross-package or external), which sets
+    // target="_blank". When undefined, applyLinkMarkers falls back to the href protocol.
+    external?: boolean;
 }
 
 async function ensureHighlighter(langs: BundledLanguage[]): Promise<Highlighter> {
@@ -133,7 +136,7 @@ interface SentinelLink {
     href: string;
 }
 
-// Shiki escapes our PUA chars as numeric entities; decode them back before the post-render scan.
+// Shiki escapes the PUA chars as numeric entities; decode them back before the post-render scan.
 function normalizeSentinels(html: string): string {
     return html.replace(/&#(x?)([0-9a-fA-F]+);/g, (match, isHex: string, value: string) => {
         const code = Number.parseInt(value, isHex ? HEX_RADIX : DECIMAL_RADIX);
@@ -143,12 +146,10 @@ function normalizeSentinels(html: string): string {
     });
 }
 
-// Walk the code string and insert sentinel wrappers around each link range. Returns the
-// instrumented code and the per-link sentinel pairs for later post-render substitution.
 function instrumentLinks(code: string, links: readonly CodeLink[]): { code: string; markers: SentinelLink[] } {
     if (links.length === 0) return { code, markers: [] };
 
-    // Order links by start position so the byte-offset advance is left-to-right.
+    // Sorted by start so the cursor advance below stays left-to-right.
     const ordered = [...links].sort((a, b) => a.start - b.start);
     const markers: SentinelLink[] = [];
     let result = '';
@@ -188,8 +189,8 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
         const marker = markers[i];
         const link = links[i];
         if (!marker || !link) continue;
-        const isExternal = EXTERNAL_URL_RE.test(link.href);
-        const attrs = isExternal ? ' target="_blank" rel="noreferrer noopener"' : '';
+        const opensNewTab = link.external ?? EXTERNAL_URL_RE.test(link.href);
+        const attrs = opensNewTab ? ' target="_blank" rel="noreferrer noopener"' : '';
         const pattern = new RegExp(`${escapeRegex(marker.open)}([\\s\\S]*?)${escapeRegex(marker.close)}`, 'g');
         result = result.replace(
             pattern,
@@ -241,9 +242,9 @@ const stripMemberWrap: ShikiTransformer = {
 
 // Dual-render: shiki's CSS-variable dual-theme mode (`themes: {…}` + `defaultColor: false`)
 // breaks in Safari because per-span `color: var(--shiki-dark)` against an inline custom property
-// declared on the SAME span doesn't resolve in WebKit. Fix: render twice with a single `theme:`
-// each, tag each `<pre>` with `shiki-light`/`shiki-dark`, wrap in `.shiki-theme-group`, and let
-// globals.css toggle visibility. Each pre carries fully-resolved inline `color:#X`.
+// on the SAME span does not resolve in WebKit. Fix: render twice with a single `theme:` each, tag
+// each `<pre>` with `shiki-light`/`shiki-dark`, wrap in `.shiki-theme-group`, and toggle visibility
+// from globals.css. Each pre has fully-resolved inline `color:#X`.
 
 function decorateBlock(html: string, variant: 'light' | 'dark'): string {
     return html.replace('<pre class="shiki', `<pre class="shiki shiki-${variant}`);
@@ -370,9 +371,8 @@ export async function highlightTypeParamToHtml(code: string, links: readonly Cod
 
 const CODE_INNER_RE = /<code[^>]*>([\s\S]*?)<\/code>/;
 
-// Inline equivalent of `renderDual`. Render twice with single `theme:` each, lift the inner
-// `<code>` body out of each `<pre>`, and emit a sibling pair inside `.shiki-inline-group`.
-// Globals.css toggles `display: none/inline` to pick the active theme.
+// Inline form of `renderDual`: the same per-theme single-render to avoid the WebKit bug, emitting a
+// `shiki-light`/`shiki-dark` sibling pair that globals.css switches via `display`.
 export async function highlightInlineToHtml(code: string, lang: BundledLanguage = 'ts'): Promise<string | null> {
     if (!code) return '';
 

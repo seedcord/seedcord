@@ -50,4 +50,21 @@ describe('buildIndex', () => {
         expect(index.packages.x?.stable?.latest).toBe('1.0.0');
         expect(index.packages.x?.prerelease).toBeNull();
     });
+
+    it('carries the entity slug -> tone map onto the entry', () => {
+        const index = buildIndex(
+            [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], entities: { logger: 'class', core: 'interface' } }],
+            { updatedAt: UPDATED_AT }
+        );
+
+        expect(index.packages.x?.entities).toEqual({ logger: 'class', core: 'interface' });
+    });
+
+    it('omits an empty entity map', () => {
+        const index = buildIndex([{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], entities: {} }], {
+            updatedAt: UPDATED_AT
+        });
+
+        expect(index.packages.x?.entities).toBeUndefined();
+    });
 });

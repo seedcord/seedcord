@@ -1,7 +1,7 @@
-import { highlightCode } from '../../formatting';
-import { DEFAULT_INLINE_LANG, FENCE_PREFIX_LENGTH, FENCE_SUFFIX } from '../constants';
+import { DEFAULT_INLINE_LANG, FENCE_PREFIX_LENGTH, FENCE_SUFFIX } from '@lib/docs/comments/constants';
+import { highlightCode } from '@lib/docs/formatting';
 
-import type { CommentExample } from '../../types';
+import type { CommentExample } from '@lib/docs/types';
 import type { DocComment, DocCommentExample } from '@seedcord/docs-engine';
 
 export async function renderExamples(comment: DocComment): Promise<CommentExample[]> {

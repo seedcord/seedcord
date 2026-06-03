@@ -17,7 +17,6 @@ export default mergeConfig(
                 '@routing': path.resolve(__dirname, './src/routing'),
                 '@services': path.resolve(__dirname, './src/services'),
                 '@transformers': path.resolve(__dirname, './src/transformers'),
-                '@lookup': path.resolve(__dirname, './src/lookup'),
                 '@packages': path.resolve(__dirname, './src/packages'),
                 '@remote': path.resolve(__dirname, './src/remote')
             }

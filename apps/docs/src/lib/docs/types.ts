@@ -42,6 +42,8 @@ export interface CommentExample {
 export interface SeeAlsoEntry {
     name: string;
     href?: string;
+    // True when href points outside the current package: cross-package internal link or external URL.
+    external?: boolean;
     target?: unknown;
 }
 
@@ -232,7 +234,7 @@ export interface EntityMemberSummary extends WithSourceUrl, WithThrows, WithSeeA
     sharedDocumentation: CommentParagraph[];
     sharedExamples: CommentExample[];
     signatures: MemberSignatureDetail[];
-    inheritedFrom?: string | { name: string; href?: string };
+    inheritedFrom?: string | { name: string; href?: string; external?: boolean };
     tags?: readonly string[];
     access?: MemberAccessLevel;
     accessorType?: MemberAccessorType;

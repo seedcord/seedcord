@@ -46,6 +46,26 @@
     display: inline;
 }
 
+/* Cross-package/external indicator, emitted by decorateProseLinks (prose) and the SeeAlso /
+ * inheritedFrom anchors; code-block links open in a new tab without this glyph. nowrap keeps the
+ * glyph on the link's last line. */
+a.cross-ref {
+    white-space: nowrap;
+}
+
+a.cross-ref::after {
+    content: '';
+    display: inline-block;
+    width: 0.8em;
+    height: 0.8em;
+    margin-left: 0.15em;
+    vertical-align: -0.02em;
+    background-color: currentColor;
+    opacity: 0.6;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 17 17 7M8 7h9v9'/%3E%3C/svg%3E")
+        no-repeat center / contain;
+}
+
 @keyframes commandOverlayShow {
     from {
         opacity: 0;

@@ -1,6 +1,6 @@
 import { buildFunctionSignature } from './buildFunctionSignature';
 
-import type { BaseEntityModel, FormatContext, FunctionEntityModel } from '../types';
+import type { BaseEntityModel, FormatContext, FunctionEntityModel } from '@lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildFunctionEntity(

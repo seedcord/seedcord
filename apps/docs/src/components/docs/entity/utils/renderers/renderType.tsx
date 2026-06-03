@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import { MemberDetailGroup } from '../../member/MemberDetailGroup';
+import { MemberDetailGroup } from '@components/docs/entity/member/MemberDetailGroup';
 
 import type { TypeModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';

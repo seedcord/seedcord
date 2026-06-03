@@ -1,15 +1,17 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { parseActiveDocsTarget } from './activeTarget';
 import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from './constants';
 
-import type { CommandAction } from './types';
+import type { SearchGroup } from './types';
 
 type SearchStatus = 'idle' | 'loading' | 'success' | 'error';
 
 interface SearchState {
-    results: CommandAction[];
+    groups: SearchGroup[];
     status: SearchStatus;
     error?: string;
 }
@@ -17,42 +19,48 @@ interface SearchState {
 interface UseCommandPaletteSearchOptions {
     open: boolean;
     query: string;
+    scope: string;
+    kind: string;
 }
 
 const SEARCH_ENDPOINT = '/search';
 
 interface SearchResponse {
-    results?: CommandAction[];
+    groups?: SearchGroup[];
 }
 
-const DEFAULT_STATE: SearchState = { results: [], status: 'idle' };
+const DEFAULT_STATE: SearchState = { groups: [], status: 'idle' };
 
-export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearchOptions): SearchState {
+export function useCommandPaletteSearch({ query, open, scope, kind }: UseCommandPaletteSearchOptions): SearchState {
     const [state, setState] = useState<SearchState>(DEFAULT_STATE);
     // Re-opening with a previously-resolved query must skip the fetch, otherwise the UI flickers cached -> loading -> cached.
-    const cacheRef = useRef<Map<string, CommandAction[]>>(new Map());
+    const cacheRef = useRef<Map<string, SearchGroup[]>>(new Map());
     const trimmed = query.trim();
     const active = open && trimmed.length >= MIN_SEARCH_QUERY_LENGTH;
+    const { pkg, version } = parseActiveDocsTarget(usePathname());
 
     useEffect(() => {
         if (!active) return undefined;
 
         let cancelled = false;
         const controller = new AbortController();
-        // justified: every input path (cache hit and fresh fetch) waits the same debounce window so
-        // fast typing does not flash intermediate cached results between keystrokes.
+        // Key the cache to every input that changes the result set (current package/version + the scope
+        // and kind filters) so one combination never returns another's results.
+        const cacheKey = `${pkg}::${version}::${scope}::${kind}::${trimmed}`;
+        // Cache check sits inside the debounce so both paths (hit and fresh fetch) wait the same
+        // window; checking before would flash intermediate cached results between keystrokes.
         const timeout = window.setTimeout(() => {
-            const cached = cacheRef.current.get(trimmed);
+            const cached = cacheRef.current.get(cacheKey);
             if (cached) {
-                setState({ results: cached, status: 'success' });
+                setState({ groups: cached, status: 'success' });
                 return;
             }
 
             // Keep the previous results visible while the next query resolves; the header spinner signals the
-            // refresh. Clearing to [] here is what made the list flicker to the caption between keystrokes.
-            setState((prev) => ({ results: prev.results, status: 'loading' }));
+            // refresh. Clearing here is what made the list flicker to the caption between keystrokes.
+            setState((prev) => ({ groups: prev.groups, status: 'loading' }));
 
-            const params = new URLSearchParams({ q: trimmed });
+            const params = new URLSearchParams({ q: trimmed, pkg, version, scope, kind });
 
             fetch(`${SEARCH_ENDPOINT}?${params.toString()}`, { signal: controller.signal })
                 .then((response) => {
@@ -65,9 +73,9 @@ export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearch
                     if (cancelled) {
                         return;
                     }
-                    const results = Array.isArray(payload.results) ? payload.results : [];
-                    cacheRef.current.set(trimmed, results);
-                    setState({ results, status: 'success' });
+                    const groups = Array.isArray(payload.groups) ? payload.groups : [];
+                    cacheRef.current.set(cacheKey, groups);
+                    setState({ groups, status: 'success' });
                 })
                 .catch((error: unknown) => {
                     if (cancelled || (error instanceof DOMException && error.name === 'AbortError')) {
@@ -75,7 +83,7 @@ export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearch
                     }
 
                     setState({
-                        results: [],
+                        groups: [],
                         status: 'error',
                         error: error instanceof Error ? error.message : 'Unknown search error'
                     });
@@ -87,7 +95,7 @@ export function useCommandPaletteSearch({ query, open }: UseCommandPaletteSearch
             controller.abort();
             window.clearTimeout(timeout);
         };
-    }, [active, trimmed]);
+    }, [active, trimmed, pkg, version, scope, kind]);
 
     // Returning `state` while `!active` preserves results during the close animation so Esc doesn't flash the empty caption mid-collapse.
     return state;

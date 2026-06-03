@@ -24,3 +24,14 @@ export interface CommandAction {
     description?: string;
     isExternal?: boolean;
 }
+
+export interface SearchGroup {
+    label: string;
+    current: boolean;
+    results: CommandAction[];
+}
+
+export interface DocsPackageOption {
+    folder: string;
+    label: string;
+}

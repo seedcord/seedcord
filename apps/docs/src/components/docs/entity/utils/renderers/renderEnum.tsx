@@ -1,4 +1,4 @@
-import { EnumMembersSection } from '../../enums/EnumMembersSection';
+import { EnumMembersSection } from '@components/docs/entity/enums/EnumMembersSection';
 
 import type { EnumModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';

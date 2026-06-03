@@ -1,6 +1,7 @@
-import { resolveInlineHref } from '../resolvers';
+import { resolveInlineHref } from '@lib/docs/comments/resolvers';
+import { opensInNewTab } from '@lib/docs/crossPackage';
 
-import type { FormatContext, InlineTagPart, SeeAlsoEntry, SeeAlsoEntryWithoutTarget } from '../../types';
+import type { FormatContext, InlineTagPart, SeeAlsoEntry, SeeAlsoEntryWithoutTarget } from '@lib/docs/types';
 import type { DocComment, DocCommentBlockTag } from '@seedcord/docs-engine';
 
 type DocCommentPart = DocCommentBlockTag['content'][number];
@@ -59,7 +60,7 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
                 );
                 if (resolved) href = resolved;
             } catch {
-                // ignore
+                // An unresolved target stays a plain-text see-also entry.
             }
         }
 
@@ -68,7 +69,10 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
 
         for (const nm of names) {
             const see: SeeAlsoEntry = { name: nm };
-            if (typeof href === 'string' && href.length) see.href = href;
+            if (typeof href === 'string' && href.length) {
+                see.href = href;
+                if (opensInNewTab(href, context.manifestPackage)) see.external = true;
+            }
             if (typeof entry.target !== 'undefined') see.target = entry.target;
             results.push(see);
         }

@@ -4,7 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SEARCH_DEBOUNCE_MS } from '@components/search/command-palette/constants';
 import { useCommandPaletteSearch } from '@components/search/command-palette/useCommandPaletteSearch';
 
-import type { CommandAction } from '@components/search/command-palette/types';
+import type { CommandAction, SearchGroup } from '@components/search/command-palette/types';
+
+const router = vi.hoisted(() => ({ pathname: '/' }));
+vi.mock('next/navigation', () => ({ usePathname: () => router.pathname }));
 
 const DEBOUNCE_MS = SEARCH_DEBOUNCE_MS;
 
@@ -41,6 +44,15 @@ async function flushMicrotasks(): Promise<void> {
 }
 
 const SAMPLE: CommandAction[] = [{ id: '1', label: 'Foo', path: '/foo', href: '/foo', kind: 'page' }];
+const SAMPLE_GROUPS: SearchGroup[] = [{ label: 'seedcord', current: true, results: SAMPLE }];
+
+// Default the new scope/kind filters so each test reads as a plain (query, open) call.
+function render(
+    query: string,
+    open = true
+): ReturnType<typeof renderHook<ReturnType<typeof useCommandPaletteSearch>, void>> {
+    return renderHook(() => useCommandPaletteSearch({ open, query, scope: 'all', kind: 'all' }));
+}
 
 function takePending(list: DeferredFetch[], index: number): DeferredFetch {
     const entry = list[index];
@@ -53,6 +65,7 @@ describe('useCommandPaletteSearch', () => {
     let pending: DeferredFetch[];
 
     beforeEach(() => {
+        router.pathname = '/';
         vi.useFakeTimers();
         pending = [];
         fetchMock = vi.fn((_url: string, init?: RequestInit) => {
@@ -72,18 +85,18 @@ describe('useCommandPaletteSearch', () => {
     });
 
     it('returns DEFAULT_STATE without fetching when query is shorter than the minimum', () => {
-        const { result } = renderHook(() => useCommandPaletteSearch({ open: true, query: 'ab' }));
+        const { result } = render('ab');
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS * 5);
         });
 
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(result.current).toEqual({ results: [], status: 'idle' });
+        expect(result.current).toEqual({ groups: [], status: 'idle' });
     });
 
     it('returns DEFAULT_STATE without fetching when the palette is closed', () => {
-        renderHook(() => useCommandPaletteSearch({ open: false, query: 'hello' }));
+        render('hello', false);
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS * 5);
@@ -92,8 +105,8 @@ describe('useCommandPaletteSearch', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it('debounces an active query and resolves to success with results', async () => {
-        const { result } = renderHook(() => useCommandPaletteSearch({ open: true, query: 'foo' }));
+    it('debounces an active query and resolves to success with grouped results', async () => {
+        const { result } = render('foo');
 
         expect(fetchMock).not.toHaveBeenCalled();
         expect(result.current.status).toBe('idle');
@@ -104,20 +117,61 @@ describe('useCommandPaletteSearch', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-        expect(url).toBe('/search?q=foo');
+        // Off a package route the scope defaults to seedcord@latest; the filters ride along as all/all.
+        expect(url).toBe('/search?q=foo&pkg=seedcord&version=latest&scope=all&kind=all');
         expect(result.current.status).toBe('loading');
 
         await act(async () => {
-            takePending(pending, 0).resolve(jsonResponse({ results: SAMPLE }));
+            takePending(pending, 0).resolve(jsonResponse({ groups: SAMPLE_GROUPS }));
             await Promise.resolve();
             await Promise.resolve();
         });
 
-        expect(result.current).toEqual({ results: SAMPLE, status: 'success' });
+        expect(result.current).toEqual({ groups: SAMPLE_GROUPS, status: 'success' });
+    });
+
+    it('scopes the fetch to the active (pkg, version) from the docs URL', () => {
+        router.pathname = '/packages/utils/1.2.0/functions/clamp';
+        render('foo');
+
+        act(() => {
+            vi.advanceTimersByTime(DEBOUNCE_MS);
+        });
+
+        const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+        expect(url).toBe('/search?q=foo&pkg=utils&version=1.2.0&scope=all&kind=all');
+    });
+
+    it('caches per (pkg, version) so switching version re-fetches', async () => {
+        router.pathname = '/packages/seedcord/1.0.0/classes/Seedcord';
+        const { rerender } = renderHook(
+            ({ q }: { q: string }) => useCommandPaletteSearch({ open: true, query: q, scope: 'all', kind: 'all' }),
+            { initialProps: { q: 'foo' } }
+        );
+
+        act(() => {
+            vi.advanceTimersByTime(DEBOUNCE_MS);
+        });
+        await act(async () => {
+            takePending(pending, 0).resolve(jsonResponse({ groups: SAMPLE_GROUPS }));
+            await flushMicrotasks();
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+
+        // Same query, different version: the prior cache entry must not be reused.
+        router.pathname = '/packages/seedcord/2.0.0/classes/Seedcord';
+        rerender({ q: 'foo' });
+        act(() => {
+            vi.advanceTimersByTime(DEBOUNCE_MS);
+        });
+
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+        const [secondUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
+        expect(secondUrl).toBe('/search?q=foo&pkg=seedcord&version=2.0.0&scope=all&kind=all');
     });
 
     it('aborts the in-flight request when the consumer unmounts', () => {
-        const { unmount } = renderHook(() => useCommandPaletteSearch({ open: true, query: 'foo' }));
+        const { unmount } = render('foo');
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS);
@@ -133,7 +187,7 @@ describe('useCommandPaletteSearch', () => {
 
     it('aborts the previous request when the query changes mid-flight', async () => {
         const { rerender, result } = renderHook(
-            ({ query }: { query: string }) => useCommandPaletteSearch({ open: true, query }),
+            ({ query }: { query: string }) => useCommandPaletteSearch({ open: true, query, scope: 'all', kind: 'all' }),
             { initialProps: { query: 'foo' } }
         );
 
@@ -153,17 +207,17 @@ describe('useCommandPaletteSearch', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
 
         await act(async () => {
-            takePending(pending, 1).resolve(jsonResponse({ results: SAMPLE }));
+            takePending(pending, 1).resolve(jsonResponse({ groups: SAMPLE_GROUPS }));
             await Promise.resolve();
             await Promise.resolve();
         });
 
-        expect(result.current).toEqual({ results: SAMPLE, status: 'success' });
+        expect(result.current).toEqual({ groups: SAMPLE_GROUPS, status: 'success' });
     });
 
     it('does not flash the loading flag for typing bursts shorter than the debounce', () => {
         const { rerender, result } = renderHook(
-            ({ query }: { query: string }) => useCommandPaletteSearch({ open: true, query }),
+            ({ query }: { query: string }) => useCommandPaletteSearch({ open: true, query, scope: 'all', kind: 'all' }),
             { initialProps: { query: 'foo' } }
         );
 
@@ -192,7 +246,7 @@ describe('useCommandPaletteSearch', () => {
 
     it('reverts to DEFAULT_STATE when the query shrinks below the minimum without a stale loading flag', async () => {
         const { rerender, result } = renderHook(
-            ({ query }: { query: string }) => useCommandPaletteSearch({ open: true, query }),
+            ({ query }: { query: string }) => useCommandPaletteSearch({ open: true, query, scope: 'all', kind: 'all' }),
             { initialProps: { query: 'foo' } }
         );
 
@@ -200,7 +254,7 @@ describe('useCommandPaletteSearch', () => {
             vi.advanceTimersByTime(DEBOUNCE_MS);
         });
         await act(async () => {
-            takePending(pending, 0).resolve(jsonResponse({ results: SAMPLE }));
+            takePending(pending, 0).resolve(jsonResponse({ groups: SAMPLE_GROUPS }));
             await Promise.resolve();
             await Promise.resolve();
         });
@@ -217,7 +271,7 @@ describe('useCommandPaletteSearch', () => {
     });
 
     it('reports an error state when the server responds non-OK', async () => {
-        const { result } = renderHook(() => useCommandPaletteSearch({ open: true, query: 'foo' }));
+        const { result } = render('foo');
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS);
@@ -238,7 +292,7 @@ describe('useCommandPaletteSearch', () => {
     });
 
     it('swallows AbortError so an aborted fetch never produces an error state', async () => {
-        const { unmount } = renderHook(() => useCommandPaletteSearch({ open: true, query: 'foo' }));
+        const { unmount } = render('foo');
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS);
@@ -255,18 +309,18 @@ describe('useCommandPaletteSearch', () => {
         expect(takePending(pending, 0).signal.aborted).toBe(true);
     });
 
-    it('coerces a non-array results payload to an empty array', async () => {
-        const { result } = renderHook(() => useCommandPaletteSearch({ open: true, query: 'foo' }));
+    it('coerces a non-array groups payload to an empty array', async () => {
+        const { result } = render('foo');
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS);
         });
 
         await act(async () => {
-            takePending(pending, 0).resolve(jsonResponse({ results: 'not-an-array' }));
+            takePending(pending, 0).resolve(jsonResponse({ groups: 'not-an-array' }));
             await flushMicrotasks();
         });
 
-        expect(result.current).toEqual({ results: [], status: 'success' });
+        expect(result.current).toEqual({ groups: [], status: 'success' });
     });
 });

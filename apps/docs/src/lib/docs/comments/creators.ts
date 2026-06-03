@@ -1,6 +1,6 @@
 import { escapeHtml } from './cleaners';
 
-import type { CommentParagraph, FormatContext } from '../types';
+import type { CommentParagraph, FormatContext } from '@lib/docs/types';
 import type { VersionedDocsEngine } from '@seedcord/docs-engine';
 
 export function createPlainParagraph(text: string): CommentParagraph {

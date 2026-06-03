@@ -1,11 +1,12 @@
 import { marked } from 'marked';
 
+import { resolveInlineHref } from '@lib/docs/comments/resolvers';
 import { sanitizeHtml } from '@lib/sanitizeHtml';
 import { highlightToHtml, highlightInlineToHtml } from '@lib/shiki';
 
-import { resolveInlineHref } from '../resolvers';
+import { decorateProseLinks } from './decorateProseLinks';
 
-import type { FormatContext, CommentParagraph, CommentDisplayPart } from '../../types';
+import type { FormatContext, CommentParagraph, CommentDisplayPart } from '@lib/docs/types';
 import type { DocComment } from '@seedcord/docs-engine';
 
 marked.use({
@@ -60,7 +61,8 @@ export async function renderParagraphs(comment: DocComment, context: FormatConte
         }
     }
 
-    const html = sanitizeHtml(await marked.parse(markdown, { async: true }));
+    const parsed = await marked.parse(markdown, { async: true });
+    const html = sanitizeHtml(decorateProseLinks(parsed, context.manifestPackage));
 
     return [
         {

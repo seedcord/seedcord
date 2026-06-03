@@ -1,8 +1,8 @@
 import { Card, Icon, CopyAnchorButton, cn } from '@seedcord/ui';
 import { Code } from 'lucide-react';
 
-import { CommentParagraphs } from '../comments/CommentParagraphs';
-import { DeprecatedEntity } from '../DeprecatedEntity';
+import { CommentParagraphs } from '@components/docs/entity/comments/CommentParagraphs';
+import { DeprecatedEntity } from '@components/docs/entity/DeprecatedEntity';
 
 import type { DeprecationStatus, EnumMemberModel } from '@lib/docs/types';
 import type { ReactElement } from 'react';

@@ -1,7 +1,7 @@
-import { formatCommentRich } from '../comments/formatter';
-import { formatParameter, inlineTypeText, type ParameterFormatInput } from '../formatting';
+import { formatCommentRich } from '@lib/docs/comments/formatter';
+import { formatParameter, inlineTypeText, type ParameterFormatInput } from '@lib/docs/formatting';
 
-import type { FunctionSignatureParameterModel, FormatContext } from '../types';
+import type { FunctionSignatureParameterModel, FormatContext } from '@lib/docs/types';
 import type { DocSignature, InlineType, RenderedSignature } from '@seedcord/docs-engine';
 
 export const isInlineType = (v: unknown): v is InlineType =>

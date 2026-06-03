@@ -1,9 +1,10 @@
 import { cn } from '@seedcord/ui';
 
+import { DeprecatedEntity } from '@components/docs/entity/DeprecatedEntity';
+import { buildTagList } from '@components/docs/entity/utils/buildTagList';
+
 import { MemberRowBody } from './MemberRowBody';
 import { MemberRowHeader } from './MemberRowHeader';
-import { DeprecatedEntity } from '../DeprecatedEntity';
-import { buildTagList } from '../utils/buildTagList';
 
 import type {
     EntityMemberSummary,

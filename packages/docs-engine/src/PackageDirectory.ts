@@ -1,5 +1,6 @@
 import { DocKind } from '@model/kinds';
 
+import type { EntityTone } from '@src/tones';
 import type { DocIndexes, DocNode } from '@src/types';
 
 export type DirectoryEntity = 'classes' | 'interfaces' | 'enums' | 'types' | 'functions' | 'variables';
@@ -13,6 +14,15 @@ const ENTITY_KIND_MAP: Record<DirectoryEntity, number[]> = {
     types: [DocKind.TypeAlias],
     functions: [DocKind.Function],
     variables: [DocKind.Variable]
+};
+
+const ENTITY_TONE_MAP: Record<DirectoryEntity, EntityTone> = {
+    classes: 'class',
+    interfaces: 'interface',
+    enums: 'enum',
+    types: 'type',
+    functions: 'function',
+    variables: 'variable'
 };
 
 export class PackageDirectory {
@@ -63,6 +73,18 @@ export class PackageDirectory {
             functions: this.listNames('functions'),
             variables: this.listNames('variables')
         };
+    }
+
+    // Flat slug -> tone map of every top-level exported entity, the shape stored in the published
+    // index.json so the lazy engine builds cross-package URLs without loading the package.
+    toneMap(): Record<string, EntityTone> {
+        const map: Record<string, EntityTone> = {};
+        for (const [entity, tone] of Object.entries(ENTITY_TONE_MAP)) {
+            for (const slug of this.maps[entity as DirectoryEntity].keys()) {
+                map[slug] = tone;
+            }
+        }
+        return map;
     }
 
     toRecord(): Record<DirectoryEntity, Map<string, DocNode>> {

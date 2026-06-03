@@ -1,7 +1,8 @@
 import { kindName, type DocSearchEntry, type DocNode } from '@seedcord/docs-engine';
 import {
     memberFragment,
-    DEFAULT_MANIFEST_PACKAGE,
+    DEFAULT_VERSION,
+    formatDisplayPackageName,
     resolvePackageIdentity,
     buildEntityHref,
     buildPackageBasePath
@@ -37,8 +38,35 @@ interface CommandActionPayload {
     description?: string;
 }
 
-interface SearchResponse {
+interface SearchGroupPayload {
+    label: string;
+    current: boolean;
     results: CommandActionPayload[];
+}
+
+interface SearchPayload {
+    groups: SearchGroupPayload[];
+}
+
+interface PackagesPayload {
+    packages: { folder: string; label: string }[];
+}
+
+type KindFilter = 'all' | 'class' | 'interface' | 'type' | 'enum' | 'function' | 'variable' | 'member';
+
+const MEMBER_RESULT_KINDS = new Set<SearchResultKind>([
+    'constructor',
+    'method',
+    'property',
+    'parameter',
+    'typeParameter',
+    'enumMember'
+]);
+
+function matchesKind(resultKind: SearchResultKind, filter: KindFilter): boolean {
+    if (filter === 'all') return true;
+    if (filter === 'member') return MEMBER_RESULT_KINDS.has(resultKind);
+    return resultKind === filter;
 }
 
 const KIND_TO_RESULT = new Map<string, SearchResultKind>([
@@ -226,43 +254,90 @@ const mapSearchEntry = (
     return payload;
 };
 
-export async function GET(request: NextRequest): Promise<NextResponse<SearchResponse>> {
-    const url = request.nextUrl;
-    const rawQuery = url.searchParams.get('q') ?? '';
-    const query = rawQuery.trim();
+type Engine = Awaited<ReturnType<typeof getDocsEngine>>;
+type PackageRef = { folder: string; fullName: string };
 
-    if (query.length < MIN_QUERY_LENGTH) {
-        return NextResponse.json({ results: [] });
+function dedupe(rawResults: DocSearchEntry[], kind: KindFilter): DocSearchEntry[] {
+    // A member's overload signatures share slug+kind; key by package too so a same-named entity in
+    // another package (Logger in seedcord and services) stays a distinct result.
+    const seen = new Set<string>();
+    const out: DocSearchEntry[] = [];
+    for (const entry of rawResults) {
+        const resultKind = getResultKind(entry.kind);
+        if (!matchesKind(resultKind, kind)) continue;
+        const key = `${entry.packageName}::${entry.slug}::${resultKind}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(entry);
+        if (out.length >= MAX_RESULTS) break;
+    }
+    return out;
+}
+
+// Groups entries by package, current package first, then the rest in index order.
+function groupByPackage(
+    engine: Engine,
+    entries: DocSearchEntry[],
+    packages: PackageRef[],
+    currentFullName: string
+): SearchGroupPayload[] {
+    const byPackage = new Map<string, DocSearchEntry[]>();
+    for (const entry of entries) {
+        const list = byPackage.get(entry.packageName) ?? [];
+        list.push(entry);
+        byPackage.set(entry.packageName, list);
     }
 
+    const ordered = [
+        currentFullName,
+        ...packages.map((pkg) => pkg.fullName).filter((name) => name !== currentFullName)
+    ];
+    return ordered.reduce<SearchGroupPayload[]>((groups, fullName) => {
+        const list = byPackage.get(fullName);
+        if (!list) return groups;
+        const results = list
+            .map((entry) => mapSearchEntry(engine, entry))
+            .filter((entry): entry is CommandActionPayload => entry !== null);
+        if (results.length) {
+            groups.push({ label: formatDisplayPackageName(fullName), current: fullName === currentFullName, results });
+        }
+        return groups;
+    }, []);
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse<SearchPayload | PackagesPayload>> {
+    const url = request.nextUrl;
     const engine = await getDocsEngine();
     const packages = await engine.listPackages();
-    // Load every package's latest so search spans the whole library, not just the active package.
-    await Promise.all(packages.map((pkg) => engine.setVersion(pkg.folder, 'latest').catch(() => undefined)));
 
-    const pkgParam = url.searchParams.get('pkg');
-    const manifestPackage = pkgParam ? (resolvePackageIdentity(packages, pkgParam)?.fullName ?? undefined) : undefined;
-    const rawResults = engine.search(query, manifestPackage);
-
-    const grouped = new Map<string, DocSearchEntry[]>();
-    for (const entry of rawResults) {
-        const key = `${entry.slug}::${getResultKind(entry.kind)}`;
-        const list = grouped.get(key) ?? [];
-        list.push(entry);
-        grouped.set(key, list);
+    if (url.searchParams.get('list') === 'packages') {
+        return NextResponse.json({
+            packages: packages.map((pkg) => ({ folder: pkg.folder, label: formatDisplayPackageName(pkg.fullName) }))
+        });
     }
 
-    const filteredEntries: DocSearchEntry[] = [];
-    for (const [, group] of grouped) {
-        const preferred = group.find((e) => e.packageName === DEFAULT_MANIFEST_PACKAGE) ?? group[0];
-        if (preferred) filteredEntries.push(preferred);
-        if (filteredEntries.length >= MAX_RESULTS) break;
+    const query = (url.searchParams.get('q') ?? '').trim();
+    const current = resolvePackageIdentity(packages, url.searchParams.get('pkg'));
+    if (query.length < MIN_QUERY_LENGTH || !current) {
+        return NextResponse.json({ groups: [] });
     }
 
-    const payload = filteredEntries
-        .map((entry) => mapSearchEntry(engine, entry))
-        .filter((entry): entry is CommandActionPayload => entry !== null)
-        .slice(0, MAX_RESULTS);
+    const scopeParam = url.searchParams.get('scope') ?? 'all';
+    const scoped = scopeParam === 'all' ? null : resolvePackageIdentity(packages, scopeParam);
+    const kind = (url.searchParams.get('kind') ?? 'all') as KindFilter;
+    const version = url.searchParams.get('version') ?? DEFAULT_VERSION;
 
-    return NextResponse.json({ results: payload });
+    // 'all' loads every package (the current one at its version, the rest at latest) so cross-package
+    // matches surface; a specific scope loads only that package.
+    const targets = scoped ? packages.filter((pkg) => pkg.folder === scoped.folder) : packages;
+    for (const pkg of targets) {
+        await engine
+            .setVersion(pkg.folder, pkg.folder === current.folder ? version : DEFAULT_VERSION)
+            .catch(() => undefined);
+    }
+
+    const rawResults = scoped ? engine.search(query, scoped.fullName) : engine.search(query);
+    const groups = groupByPackage(engine, dedupe(rawResults, kind), packages, current.fullName);
+
+    return NextResponse.json({ groups });
 }

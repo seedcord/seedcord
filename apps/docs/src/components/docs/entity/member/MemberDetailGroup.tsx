@@ -2,7 +2,8 @@
 
 import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, Icon } from '@seedcord/ui';
 
-import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '../constants';
+import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '@components/docs/entity/constants';
+
 import { MemberRow } from './MemberRow';
 
 import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '@lib/docs/types';

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-import type { SignatureSelection } from '../member/MemberRowBody';
+import type { SignatureSelection } from '@components/docs/entity/member/MemberRowBody';
 import type { EntityMemberSummary } from '@lib/docs/types';
 
 export function useActiveSignature(member: EntityMemberSummary): SignatureSelection {
