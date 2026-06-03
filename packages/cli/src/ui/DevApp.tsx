@@ -1,36 +1,18 @@
-import { Box, measureElement, Text, useInput, useStdout } from 'ink';
-import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { Box, measureElement, useInput, useWindowSize } from 'ink';
+import React, { useEffect, useRef, useState } from 'react';
 
-import {
-    Banner,
-    ChannelSelector,
-    CommandRefreshPrompt,
-    ErrorDisplay,
-    Footer,
-    LogPanel,
-    StatusBadge
-} from '@ui/components';
-import { isSessionLive } from '@ui/stores/devPhase';
+import { useDevState } from '@ui/hooks/useDevState';
+import { useLogs } from '@ui/hooks/useLogs';
+import { useScroll } from '@ui/hooks/useScroll';
+import { useUptime } from '@ui/hooks/useUptime';
+import { dispatchHotkey } from '@ui/hotkeys';
+import { DevLayout } from '@ui/layout/DevLayout';
 import { LogStore } from '@ui/stores/LogStore';
 
-import type { FooterMode } from '@ui/components';
-import type { DevState, DevStore } from '@ui/stores/DevStore';
+import type { DevStore } from '@ui/stores/DevStore';
+import type { LogEntry } from '@ui/stores/LogStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
-
-function useDevState(store: DevStore): DevState {
-    const subscribe = useCallback(
-        (onChange: () => void) => {
-            store.on('change', onChange);
-            return () => {
-                store.off('change', onChange);
-            };
-        },
-        [store]
-    );
-    const getSnapshot = useCallback(() => store.getState(), [store]);
-    return useSyncExternalStore(subscribe, getSnapshot);
-}
 
 interface DevAppProps {
     readonly store: DevStore;
@@ -41,121 +23,59 @@ interface DevAppProps {
     readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
 }
 
-const MIN_LOG_LINES = 3;
-const BORDER_ROWS = 2;
+function logKey(entry: LogEntry): number {
+    return entry.id;
+}
 
-// eslint-disable-next-line max-lines-per-function -- single root component; splitting the layout tree adds indirection without reducing complexity
-export function DevApp({
-    store,
-    onReady,
-    onQuit,
-    onDisconnect,
-    onRestart,
-    onRefreshCommands
-}: DevAppProps): ReactElement {
-    const { phase, status, error, isBusy, config, restartRequired, commandUpdatePrompt } = useDevState(store);
+export function DevApp(props: DevAppProps): ReactElement {
+    const { store, onReady } = props;
+    const state = useDevState(store);
+    const { rows, columns } = useWindowSize();
 
-    const [showChannels, setShowChannels] = useState(false);
-    const [selectedChannel, setSelectedChannel] = useState<string | undefined>(undefined);
+    const [enabled, setEnabled] = useState<ReadonlySet<string>>(() => new Set());
+    const [showToggles, setShowToggles] = useState(false);
+    const [cursor, setCursor] = useState(0);
 
-    const { stdout } = useStdout();
-    const DEFAULT_ROWS = 24;
-    const DEFAULT_COLUMNS = 80;
-    const [terminalHeight, setTerminalHeight] = useState(stdout.rows || DEFAULT_ROWS);
-    const [terminalWidth, setTerminalWidth] = useState(stdout.columns || DEFAULT_COLUMNS);
+    const logBoxRef = useRef<DOMElement | null>(null);
+    const [logBoxHeight, setLogBoxHeight] = useState(0);
+
+    const logs = useLogs(enabled);
+    const viewportHeight = Math.max(1, logBoxHeight);
+    const scroll = useScroll(logs, viewportHeight, logKey);
+    const uptimeMs = useUptime(state);
+
+    const interactive = !state.isBusy || state.restartRequired;
+
+    // Re-measure only when something can change the box height: a terminal resize, or a notification card
+    // appearing/clearing. The measured height is the exact log-line budget for the scroll window.
+    useEffect(() => {
+        if (!logBoxRef.current) return;
+        const measured = measureElement(logBoxRef.current).height;
+        setLogBoxHeight((prev) => (prev === measured ? prev : measured));
+    }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt]);
+
+    useInput((input, key) => {
+        dispatchHotkey({
+            input,
+            key,
+            state,
+            interactive,
+            scroll,
+            store,
+            enabled,
+            setEnabled,
+            showToggles,
+            setShowToggles,
+            cursor,
+            setCursor,
+            onQuit: props.onQuit,
+            onDisconnect: props.onDisconnect,
+            onRestart: props.onRestart,
+            onRefreshCommands: props.onRefreshCommands
+        });
+    });
+
     const isInitialized = useRef(false);
-
-    // The log slot flexes to fill whatever the header (banner + badge), an error/prompt above it, and the
-    // footer leave behind; measureElement reads that laid-out height so the log tail slices to exactly fit.
-    // Everything renders inside the bounded column so it can never grow past terminalHeight (Ink corrupts
-    // frames when it does), and the error sits above the logs rather than replacing them.
-    const logSlotRef = useRef<DOMElement | null>(null);
-    const [logSlotHeight, setLogSlotHeight] = useState(0);
-
-    useEffect(() => {
-        // useStdout() types stdout as always present, but it is undefined when stdout is not a TTY.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see above
-        if (!stdout) return;
-
-        const onResize = (): void => {
-            setTerminalHeight(stdout.rows);
-            setTerminalWidth(stdout.columns);
-        };
-
-        stdout.on('resize', onResize);
-        return () => {
-            stdout.off('resize', onResize);
-        };
-    }, [stdout]);
-
-    useEffect(() => {
-        if (logSlotRef.current) {
-            setLogSlotHeight(measureElement(logSlotRef.current).height);
-        }
-        // Anything that shrinks the log slot (terminal size, banner growth on config load, an error or
-        // prompt above it) must trigger a re-measure so the tail re-slices to the new height.
-    }, [terminalHeight, terminalWidth, config, error, commandUpdatePrompt, showChannels]);
-
-    const logLines = Math.max(0, logSlotHeight - BORDER_ROWS);
-    const interactive = !isBusy || restartRequired;
-    const footerMode: FooterMode = commandUpdatePrompt ? 'prompt' : showChannels ? 'channels' : 'default';
-
-    useInput(
-        // eslint-disable-next-line max-statements, complexity -- flat keypress dispatch; each branch is one hotkey, splitting it would only hide the dispatch table
-        (input, key) => {
-            // Ink puts stdin in raw mode, so Ctrl-C arrives as a keypress, not a SIGINT the process handler
-            // could catch. Treat it as quit here so it always works regardless of the current state.
-            if (key.ctrl && input === 'c') {
-                store.beginQuit();
-                void onQuit?.();
-                return;
-            }
-
-            if (commandUpdatePrompt) {
-                if (input === 'y') {
-                    void onRefreshCommands?.(true);
-                    store.clearPrompt();
-                } else if (input === 'n') {
-                    void onRefreshCommands?.(false);
-                    store.clearPrompt();
-                }
-                return;
-            }
-
-            if (showChannels) return; // ChannelSelector will handle input
-
-            if (input === 'q') {
-                store.beginQuit();
-                void onQuit?.();
-                return;
-            }
-
-            if (!interactive) return;
-
-            if (input === 'd') {
-                if (!isSessionLive(phase)) return; // nothing to disconnect when already stopped
-                store.beginDisconnect();
-                void onDisconnect?.();
-                return;
-            }
-
-            if (input === 'r') {
-                store.beginRestart();
-                void onRestart?.();
-                return;
-            }
-
-            if (input === 'c' && !key.ctrl) {
-                setShowChannels(true);
-                return;
-            }
-
-            if (input === 'l') {
-                LogStore.instance.clear(selectedChannel);
-            }
-        }
-    );
-
     useEffect(() => {
         if (isInitialized.current) return;
         isInitialized.current = true;
@@ -170,31 +90,20 @@ export function DevApp({
     }, [onReady]);
 
     return (
-        <Box flexDirection="column" width={terminalWidth} height={terminalHeight} overflow="hidden">
-            <Banner config={config} />
-            <StatusBadge phase={phase} detail={status} />
-            <Box flexGrow={1} flexDirection="column" overflow="hidden">
-                {commandUpdatePrompt && <CommandRefreshPrompt files={commandUpdatePrompt} />}
-                {error && <ErrorDisplay error={error} />}
-                {showChannels ? (
-                    <ChannelSelector
-                        currentChannel={selectedChannel}
-                        onSelect={setSelectedChannel}
-                        onClose={() => setShowChannels(false)}
-                    />
-                ) : (
-                    <Box ref={logSlotRef} flexGrow={1} flexDirection="column" overflow="hidden">
-                        {logSlotHeight === 0 ? null : logLines >= MIN_LOG_LINES ? (
-                            <LogPanel height={logLines} channel={selectedChannel} />
-                        ) : (
-                            <Text color="yellow" wrap="truncate">
-                                Terminal too small to show logs.
-                            </Text>
-                        )}
-                    </Box>
-                )}
-            </Box>
-            <Footer phase={phase} interactive={interactive} mode={footerMode} />
+        <Box flexDirection="column" width={columns} height={rows} overflow="hidden">
+            <DevLayout
+                state={state}
+                columns={columns}
+                logBoxRef={logBoxRef}
+                scroll={scroll}
+                viewportHeight={viewportHeight}
+                measured={logBoxHeight > 0}
+                enabled={enabled}
+                showToggles={showToggles}
+                cursor={cursor}
+                interactive={interactive}
+                uptimeMs={uptimeMs}
+            />
         </Box>
     );
 }

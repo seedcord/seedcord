@@ -1,25 +1,30 @@
-import { Box, Text } from 'ink';
+import { Text } from 'ink';
 import Spinner from 'ink-spinner';
 import React from 'react';
 
 import { PHASE_META } from '@ui/stores/devPhase';
+
+import { RunningAnimation } from './primitives/RunningAnimation';
 
 import type { DevPhase } from '@ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
 interface StatusBadgeProps {
     readonly phase: DevPhase;
-    readonly detail: string;
 }
 
-export function StatusBadge({ phase, detail }: StatusBadgeProps): ReactElement {
+function Glyph({ phase }: { phase: DevPhase }): ReactElement {
+    const meta = PHASE_META[phase];
+    if (meta.kind === 'spinner') return <Spinner type="balloon2" />;
+    if (meta.kind === 'arc') return <RunningAnimation active color={meta.color} />;
+    return <Text>{meta.icon}</Text>;
+}
+
+export function StatusBadge({ phase }: StatusBadgeProps): ReactElement {
     const meta = PHASE_META[phase];
     return (
-        <Box paddingY={1}>
-            <Text color={meta.color} bold>
-                {meta.spinner ? <Spinner type="balloon2" /> : meta.icon} {meta.label}
-            </Text>
-            {detail ? <Text dimColor>{`  ${detail}`}</Text> : null}
-        </Box>
+        <Text color={meta.color} bold>
+            <Glyph phase={phase} /> {meta.label}
+        </Text>
     );
 }

@@ -6,12 +6,13 @@ import { isSessionLive } from '@ui/stores/devPhase';
 import type { DevPhase } from '@ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
-export type FooterMode = 'default' | 'prompt' | 'channels';
+type HotkeyBarMode = 'default' | 'toggles';
 
-interface FooterProps {
+interface HotkeyBarProps {
     readonly phase: DevPhase;
     readonly interactive: boolean;
-    readonly mode: FooterMode;
+    readonly mode: HotkeyBarMode;
+    readonly following: boolean;
 }
 
 interface HotkeyProps {
@@ -33,38 +34,42 @@ function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyP
     );
 }
 
-// r is the suggested action once a session settles into a state the user recovers from with a restart.
+// Highlight r in the phases the user recovers from with a restart.
 const RESTART_HINT_PHASES = new Set<DevPhase>(['restart-required', 'disconnected', 'error']);
 
-function DefaultBar({ phase, interactive }: { phase: DevPhase; interactive: boolean }): ReactElement {
+function DefaultKeys({
+    phase,
+    interactive,
+    following
+}: {
+    phase: DevPhase;
+    interactive: boolean;
+    following: boolean;
+}): ReactElement {
     return (
         <>
             <Hotkey keyLabel="q" action="quit" />
             <Hotkey keyLabel="r" action="restart" enabled={interactive} highlight={RESTART_HINT_PHASES.has(phase)} />
             <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isSessionLive(phase)} />
             <Hotkey keyLabel="c" action="channels" enabled={interactive} />
-            <Hotkey keyLabel="l" action="clear logs" enabled={interactive} />
+            <Hotkey keyLabel="l" action="clear" enabled={interactive} />
+            <Hotkey keyLabel="↑↓" action="scroll" />
+            <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
         </>
     );
 }
 
-export function Footer({ phase, interactive, mode }: FooterProps): ReactElement {
+export function HotkeyBar({ phase, interactive, mode, following }: HotkeyBarProps): ReactElement {
     return (
-        <Box borderStyle="single" borderColor="gray" borderBottom={false} borderLeft={false} borderRight={false}>
-            {mode === 'prompt' && (
+        <Box flexDirection="column" flexWrap="wrap">
+            {mode === 'toggles' && (
                 <>
-                    <Hotkey keyLabel="y" action="refresh commands" highlight />
-                    <Hotkey keyLabel="n" action="skip" />
+                    <Hotkey keyLabel="↑↓" action="move" />
+                    <Hotkey keyLabel="space" action="toggle" />
+                    <Hotkey keyLabel="esc" action="done" />
                 </>
             )}
-            {mode === 'channels' && (
-                <>
-                    <Hotkey keyLabel="↑↓" action="navigate" />
-                    <Hotkey keyLabel="↵" action="select" />
-                    <Hotkey keyLabel="esc" action="close" />
-                </>
-            )}
-            {mode === 'default' && <DefaultBar phase={phase} interactive={interactive} />}
+            {mode === 'default' && <DefaultKeys phase={phase} interactive={interactive} following={following} />}
         </Box>
     );
 }

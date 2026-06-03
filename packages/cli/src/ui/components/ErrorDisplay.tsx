@@ -33,6 +33,15 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
                     {hidden > 0 && <Text dimColor>{`… ${hidden} more line${hidden === 1 ? '' : 's'}`}</Text>}
                 </Box>
             )}
+            <Box marginTop={1}>
+                <Text>
+                    press{' '}
+                    <Text color="yellow" bold>
+                        r
+                    </Text>{' '}
+                    to restart
+                </Text>
+            </Box>
         </Box>
     );
 }

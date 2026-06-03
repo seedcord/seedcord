@@ -25,11 +25,9 @@ const INITIAL: DevState = {
     commandUpdatePrompt: null
 };
 
-/**
- * Single source of truth for the dev UI. The runner pushes scalar updates through the setters; runtime
- * events reduce through `apply`. `DevApp` subscribes via `useSyncExternalStore`. `getState` returns a
- * stable reference between mutations, which `useSyncExternalStore` requires to avoid render loops.
- */
+// Single source of truth for the dev UI. The runner pushes scalar updates through the setters; runtime
+// events reduce through `apply`. `getState` returns a stable reference between mutations, which
+// `useSyncExternalStore` requires to avoid render loops.
 export class DevStore extends StrictEventEmitter<{ change: [] }> {
     private state: DevState = INITIAL;
 
@@ -62,7 +60,7 @@ export class DevStore extends StrictEventEmitter<{ change: [] }> {
     }
 
     // Optimistic UI transitions: the user pressed r/d, so reset to a busy "reconnecting" state in one atomic
-    // patch (one render) before the runner tears the session down and starts the next one.
+    // patch (one render) before the runner stops the session and starts the next one.
     public beginRestart(): void {
         this.patch({ phase: 'starting', isBusy: true, restartRequired: false, error: null, status: 'Restarting...' });
     }

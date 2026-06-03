@@ -4,7 +4,9 @@ import { LogStore } from '@ui/stores/LogStore';
 
 import type { LogEntry } from '@ui/stores/LogStore';
 
-export function useLogs(channel?: string): readonly LogEntry[] {
+// `enabled` must be a stable reference between unchanged renders (the shell holds it in state), or the memo
+// recomputes every render. An empty/absent set means all channels.
+export function useLogs(enabled?: ReadonlySet<string>): readonly LogEntry[] {
     const store = LogStore.instance;
 
     const subscribe = useCallback(
@@ -22,7 +24,7 @@ export function useLogs(channel?: string): readonly LogEntry[] {
     const allLogs = useSyncExternalStore(subscribe, getSnapshot);
 
     return useMemo(() => {
-        if (!channel) return allLogs;
-        return allLogs.filter((l) => l.channel === channel);
-    }, [allLogs, channel]);
+        if (!enabled || enabled.size === 0) return allLogs;
+        return allLogs.filter((l) => enabled.has(l.channel));
+    }, [allLogs, enabled]);
 }

@@ -14,6 +14,15 @@
         "types": ["react", "vite/client"],
         "jsx": "react"
     },
-    "include": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "tsup.config.ts", "vitest.config.ts"],
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "tests/**/*.ts",
+        "tests/**/*.tsx",
+        "playground/**/*.ts",
+        "playground/**/*.tsx",
+        "tsup.config.ts",
+        "vitest.config.ts"
+    ],
     "exclude": ["node_modules", "dist"]
 }

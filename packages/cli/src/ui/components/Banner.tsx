@@ -10,6 +10,8 @@ const CORD_COLOR = '#6fab49';
 
 interface BannerProps {
     readonly config: Config | null;
+    // Drops the config paths; Sidebar sets this when the rail is too short for them.
+    readonly compact?: boolean;
 }
 
 function ConfigPath({ path }: { path: string | null | undefined }): ReactElement {
@@ -17,26 +19,32 @@ function ConfigPath({ path }: { path: string | null | undefined }): ReactElement
     return <Text dimColor>{formatFilePath(path)}</Text>;
 }
 
-export function Banner({ config }: BannerProps): ReactElement {
+function Wordmark(): ReactElement {
+    return (
+        <Text bold>
+            <Text color={SEED_COLOR}>seed</Text>
+            <Text color={CORD_COLOR}>cord</Text>
+        </Text>
+    );
+}
+
+export function Banner({ config, compact = false }: BannerProps): ReactElement {
+    if (compact || !config) return <Wordmark />;
+
     return (
         <Box flexDirection="column">
-            <Text bold>
-                <Text color={SEED_COLOR}>seed</Text>
-                <Text color={CORD_COLOR}>cord</Text>
-            </Text>
-            {config && (
-                <Box flexDirection="column" paddingTop={1}>
-                    <Text>
-                        <Text color="blue">➜</Text> Interactions: <ConfigPath path={config.bot.interactions.path} />
-                    </Text>
-                    <Text>
-                        <Text color="blue">➜</Text> Events: <ConfigPath path={config.bot.events.path} />
-                    </Text>
-                    <Text>
-                        <Text color="blue">➜</Text> Pub/Sub: <ConfigPath path={config.subscribers.path} />
-                    </Text>
-                </Box>
-            )}
+            <Wordmark />
+            <Box flexDirection="column" paddingTop={1}>
+                <Text wrap="truncate">
+                    <Text color="blue">➜</Text> Interactions: <ConfigPath path={config.bot.interactions.path} />
+                </Text>
+                <Text wrap="truncate">
+                    <Text color="blue">➜</Text> Events: <ConfigPath path={config.bot.events.path} />
+                </Text>
+                <Text wrap="truncate">
+                    <Text color="blue">➜</Text> Pub/Sub: <ConfigPath path={config.subscribers.path} />
+                </Text>
+            </Box>
         </Box>
     );
 }

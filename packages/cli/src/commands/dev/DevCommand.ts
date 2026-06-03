@@ -1,3 +1,5 @@
+import { LoggerChannelRegistry } from '@seedcord/services';
+import { formatFilePath } from '@seedcord/utils';
 import { render } from 'ink';
 import React from 'react';
 
@@ -10,11 +12,6 @@ import { SilentLogger } from '@utils/SilentLogger';
 import { DevRunner } from './DevRunner';
 
 import type { Command } from '@commander-js/extra-typings';
-
-// console.clear scrolls rather than clears in many terminals; ESC[2J ESC[3J ESC[H wipes screen + scrollback.
-// eslint-disable-next-line no-magic-numbers -- 27 is the ESC control code
-const ESC = String.fromCharCode(27);
-const CLEAR_SCREEN = `${ESC}[2J${ESC}[3J${ESC}[H`;
 
 export class DevCommand extends BaseCommand {
     private readonly runner: DevRunner;
@@ -31,8 +28,6 @@ export class DevCommand extends BaseCommand {
             .command(this.name)
             .description(this.description)
             .action(async () => {
-                process.stdout.write(CLEAR_SCREEN);
-
                 // SIGTERM (and SIGINT when stdin is not raw) trigger a graceful quit; Ink handles the raw-mode
                 // Ctrl-C keypress itself. once() self-removes; the finally removes them on a normal exit.
                 const onSignal = (): void => {
@@ -51,10 +46,20 @@ export class DevCommand extends BaseCommand {
                     process.off('SIGTERM', onSignal);
                 }
 
+                // The alternate screen has been restored by now, so this lands in the normal terminal: a
+                // pointer to the on-disk log file, since the in-UI logs are gone once the UI unmounts.
+                this.printLogLocation();
+
                 // Ink's raw-mode stdin and the Vite dev server keep the event loop alive after teardown;
                 // runDevApp already awaited unmount + shutdown, so exit explicitly instead of hanging.
                 process.exit();
             });
+    }
+
+    private printLogLocation(): void {
+        const registry = LoggerChannelRegistry.instance;
+        const path = registry.getLogFilePath(registry.getDefaultChannel());
+        if (path) process.stdout.write(`seedcord dev stopped. logs: ${formatFilePath(path)}\n`);
     }
 
     private async runDevApp(): Promise<void> {
@@ -69,13 +74,15 @@ export class DevCommand extends BaseCommand {
                 onRefreshCommands: (shouldRefresh: boolean) => this.runner.refreshCommands(shouldRefresh),
                 onReady: () => {
                     runResult = this.runner.run().finally(async () => {
-                        // Drain buffered logs before tearing down Ink so the final lines aren't dropped.
+                        // Drain buffered logs before unmounting Ink so the final lines aren't dropped.
                         await LogStore.instance.flush();
                         unmount();
                     });
                 }
             }),
-            { exitOnCtrlC: false }
+            // Alternate screen (like vim/lazygit): the original terminal + scrollback are restored on quit,
+            // and Ink's ESC[3J scrollback purge never fires.
+            { exitOnCtrlC: false, alternateScreen: true }
         );
 
         await waitUntilExit();

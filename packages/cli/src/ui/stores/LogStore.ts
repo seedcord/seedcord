@@ -13,7 +13,7 @@ interface LogStoreEvents {
     change: [];
 }
 
-// Buffered log batches flush on this debounce so a noisy bot doesn't re-render the panel per line.
+// Buffered log batches flush on this debounce so a noisy bot doesn't re-render the log view per line.
 const UPDATE_DEBOUNCE_MS = 30;
 
 // eslint-disable-next-line no-magic-numbers -- 27 is the ESC control code
@@ -71,19 +71,22 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
         this.scheduleUpdate();
     }
 
-    public getLogs(channel?: string): readonly LogEntry[] {
-        if (!channel) return this.entries;
-        return this.entries.filter((e) => e.channel === channel);
+    // Stays a stable reference for useSyncExternalStore; channel filtering happens in useLogs.
+    public getLogs(): readonly LogEntry[] {
+        return this.entries;
     }
 
-    public clear(channel?: string): void {
-        if (channel) {
-            this.entries = this.entries.filter((e) => e.channel !== channel);
-            this.buffer = this.buffer.filter((e) => e.channel !== channel);
-        } else {
-            this.entries = [];
-            this.buffer = [];
-        }
+    // Source channels from real log entries, not the registry, so the toggle list never shows an empty
+    // "default" placeholder.
+    public getChannels(): readonly string[] {
+        const seen = new Set<string>();
+        for (const entry of this.entries) seen.add(entry.channel);
+        return [...seen].sort();
+    }
+
+    public clear(): void {
+        this.entries = [];
+        this.buffer = [];
         this.emit('change');
     }
 
