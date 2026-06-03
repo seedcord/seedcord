@@ -61,7 +61,7 @@ function EntityHeaderMock(): ReactElement {
     return (
         <div className={cn('space-y-2')}>
             <p className={cn('text-subtle text-xs')}>
-                Real-world cluster from `EntityHeader` — entity-tone badge with icon, package, version chip, internal
+                Real-world cluster from `EntityHeader`: entity-tone badge with icon, package, version chip, internal
                 tag. All four Pill sites migrated to Badge in the same commit.
             </p>
             <div className={cn('flex flex-wrap items-center gap-2.5')}>
@@ -86,7 +86,7 @@ function ChipUsageRow(): ReactElement {
     return (
         <div className={cn('space-y-2')}>
             <p className={cn('text-subtle text-xs')}>
-                variant=&quot;chip&quot; — non-uppercase, sentence-case, for inline category/labels.
+                variant=&quot;chip&quot;: non-uppercase, sentence-case, for inline category/labels.
             </p>
             <div className={cn('flex flex-wrap items-center gap-3')}>
                 <Badge variant="chip" tone="neutral">
@@ -127,7 +127,7 @@ function BadgePage(): ReactElement {
             <DevSection title="EntityHeader cluster (real-world consumer)">
                 <EntityHeaderMock />
             </DevSection>
-            <DevSection title="Chip variant — inline labels">
+            <DevSection title="Chip variant: inline labels">
                 <ChipUsageRow />
             </DevSection>
         </div>

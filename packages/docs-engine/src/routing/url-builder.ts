@@ -1,5 +1,5 @@
 import { formatDisplayPackageName } from '@packages/identity';
-import { resolveEntityTone, toneToDirectory, type EntityTone } from '@src/tones';
+import { resolveEntityTone, resolveEntityToneStrict, toneToDirectory, type EntityTone } from '@src/tones';
 
 export interface BuildEntityHrefOptions {
     name: string;
@@ -49,10 +49,14 @@ export function parseEntityPathSegments(segments?: string[] | null): ParsedEntit
         } satisfies ParsedEntityPath;
     }
 
-    const [maybeTone, ...rest] = segments;
-    const tone = maybeTone ? resolveEntityTone(maybeTone) : null;
+    const [first, ...rest] = segments;
+    // The leading segment is the tone only when it names an entity tone (the plural directory
+    // buildEntityHref emits, or a singular/synonym form). A non-tone, non-empty leading segment is
+    // part of the slug instead of collapsing into the 'class' default; an empty one is dropped.
+    const tone = first ? resolveEntityToneStrict(first) : null;
+    const slugSegments = tone || !first ? rest : segments;
 
-    if (!rest.length) {
+    if (!slugSegments.length) {
         return {
             tone,
             slug: null,
@@ -60,7 +64,7 @@ export function parseEntityPathSegments(segments?: string[] | null): ParsedEntit
         } satisfies ParsedEntityPath;
     }
 
-    const slug = decodeURIComponent(rest.join('/'));
+    const slug = decodeURIComponent(slugSegments.join('/'));
 
     return {
         tone,

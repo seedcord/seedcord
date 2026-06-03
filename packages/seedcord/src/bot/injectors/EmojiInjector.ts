@@ -38,7 +38,7 @@ export type InjectedEmojiMap = {
 export const Emojis = emojiStorage as InjectedEmojiMap;
 
 /**
- * Emoji Injector responsible for loading and injecting emojis based on bot configuration.
+ * Loads and injects emojis based on bot configuration.
  *
  * For emojis injected from specific guilds, ensure that the Guilds intent is provided in client options.
  *
@@ -52,7 +52,6 @@ export class EmojiInjector {
     public async init(): Promise<void> {
         this.clearEmojis();
 
-        // Check if we have emoji config
         if (!this.core.config.bot.emojis || Object.keys(this.core.config.bot.emojis).length === 0) {
             this.logger.info(chalk.bold.yellow('No emojis configured, skipping emoji injection.'));
             return;
@@ -87,8 +86,7 @@ export class EmojiInjector {
     }
 
     /**
-     * Handle emoji config values in tuple form: [emojiName, guildId]
-     * Returns 1 when the emoji was found and stored as an emoji object, otherwise 0.
+     * Tuple `[emojiName, guildId]`: looks up the emoji in that guild. Returns 1 when found and stored as an emoji object, otherwise 0.
      */
     private handleTuple(key: string, value: readonly [string, string]): number {
         const [emojiName, guildId] = value;

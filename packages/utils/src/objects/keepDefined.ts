@@ -1,10 +1,10 @@
 /**
- * Pulls out only the keys from an object that actually have values.
+ * Copies only the keys whose values are defined.
  *
  * @typeParam TObject - the original object type you're pulling from
- * @typeParam TKey - the specific keys you want to copy if they're defined
+ * @typeParam TKey - the keys to copy when defined
  * @param source - the object to read values from
- * @param keys - optional list of keys you want to include if they exist. If omitted, all keys are considered
+ * @param keys - optional list of keys to include when present. If omitted, all keys are considered
  *
  * @example
  * ```ts

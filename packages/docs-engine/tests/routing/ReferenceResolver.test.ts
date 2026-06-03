@@ -110,14 +110,7 @@ function makeFake(options: FakeOptions = {}): Fake {
     const registry: PackageRegistry = {
         isKnownPackage: (name) => known.includes(name),
         candidatePackages: (current, hinted) => orderedPackageCandidates(current, hinted, loaded),
-        crossPackageEntity: (fullName, slug) => entityFromCross(fullName, slug),
-        findEntityAcrossPackages: (slug) => {
-            for (const fullName of Object.keys(cross)) {
-                const entity = entityFromCross(fullName, slug);
-                if (entity) return { fullName, ...entity };
-            }
-            return null;
-        }
+        crossPackageEntity: (fullName, slug) => entityFromCross(fullName, slug)
     };
 
     return { lookup, registry, spies: { byKey, bySlug, byGlobalSlug, byQName } };
@@ -360,24 +353,9 @@ describe('ReferenceResolver.resolve', () => {
             known: ['seedcord', '@seedcord/services'],
             cross: SERVICES_CROSS
         });
-        // `Ghost` is not an entity in the services index, and nothing re-homes it.
+        // `Ghost` is not an entity in the services index, so it does not resolve.
         const ref: DocReference = { name: 'Ghost', packageName: '@seedcord/services', qualifiedName: 'Ghost' };
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });
-    });
-
-    it('re-homes a mis-attributed entity to the package that actually exports it', () => {
-        const { resolver } = makeResolver({
-            loaded: ['seedcord'],
-            known: ['seedcord', '@seedcord/plugins', '@seedcord/services'],
-            cross: SERVICES_CROSS
-        });
-        // bundledPackages attributed Logger to plugins; it is actually exported by services.
-        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/plugins', qualifiedName: 'Logger' };
-        expect(resolver.resolve('seedcord', ref)).toEqual({
-            kind: 'internal',
-            packageName: '@seedcord/services',
-            slug: 'logger'
-        });
     });
 
     it('falls through to unresolved when crossPackageUrlRef yields nothing (no qualifiedName)', () => {
@@ -408,24 +386,14 @@ describe('ReferenceResolver.href cross-package', () => {
         expect(resolver.href('seedcord', ref)).toBe('/packages/services/0.5.0/classes/logger#debug');
     });
 
-    it('builds the re-homed URL when the owner was mis-attributed', () => {
-        const { resolver } = makeResolver({
-            loaded: ['seedcord'],
-            known: ['seedcord', '@seedcord/plugins', '@seedcord/services'],
-            cross: SERVICES_CROSS
-        });
-        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/plugins', qualifiedName: 'Logger' };
-        expect(resolver.href('seedcord', ref)).toBe('/packages/services/0.5.0/classes/logger');
-    });
-
-    it('routes a mis-attributed external (EventEmitter) to its node.js docs, not a 404 link', () => {
+    it('routes a known-package non-entity (EventEmitter) to its node.js docs, not a 404 link', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
             known: ['seedcord', '@seedcord/services'],
             cross: SERVICES_CROSS
         });
-        // bundledPackages attributes EventEmitter to a real package, but it is not an entity there and
-        // re-homes nowhere, so href falls through to the external-link table.
+        // EventEmitter is not an entity in the services index, so href falls through to the
+        // external-link table instead of building a 404 internal link.
         const ref: DocReference = {
             name: 'EventEmitter',
             packageName: '@seedcord/services',

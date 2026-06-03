@@ -4,6 +4,7 @@ import { buildEntityHref } from '@routing/url-builder';
 
 import type { AnchorStrategy } from '@routing/AnchorStrategy';
 import type { NodeLookup, PackageRegistry, RefTarget } from '@routing/lookup';
+import type { EntityTone } from '@src/tones';
 import type { DocReference } from '@src/types';
 
 /**
@@ -46,24 +47,28 @@ export class ReferenceResolver {
         return this.resolveCrossPackage(reference) ?? { kind: 'unresolved' };
     }
 
-    // Emit a cross-package ref only for a known package whose index lists the target as a real
-    // entity. The lazy engine does not load the package to check, so without this gate it builds
-    // 404 links for params/predicates and mis-attributed externals (e.g. EventEmitter). An unknown
-    // package (discord.js) or an unverifiable slug returns null, falling through to the external-URL table.
+    // Emit a cross-package ref only for a known package whose index lists the target as a real entity.
+    // The lazy engine does not load the package to check, so without this gate it builds 404 links for
+    // params/predicates. An unknown package (discord.js) or an unverifiable slug returns null, falling
+    // through to the external-URL table.
     private resolveCrossPackage(reference: DocReference): RefTarget | null {
         if (!reference.packageName || !this.registry.isKnownPackage(reference.packageName)) return null;
 
         const { slug } = crossPackageUrlRef(reference);
         if (!slug) return null;
 
-        if (this.registry.crossPackageEntity(reference.packageName, slug)) {
-            return { kind: 'internal', packageName: reference.packageName, slug };
-        }
+        return this.registry.crossPackageEntity(reference.packageName, slug)
+            ? { kind: 'internal', packageName: reference.packageName, slug }
+            : null;
+    }
 
-        // The owner may be mis-attributed (API-Extractor bundledPackages): re-home to the package that
-        // actually exports this entity.
-        const rehomed = this.registry.findEntityAcrossPackages(slug);
-        return rehomed ? { kind: 'internal', packageName: rehomed.fullName, slug } : null;
+    // The cross-package entity's tone (its kind / dot color) for a reference, null when it resolves to
+    // no known cross-package entity. Used by the umbrella overview to tint each re-export chip.
+    crossPackageTone(reference: DocReference): EntityTone | null {
+        if (!reference.packageName) return null;
+        const { slug } = crossPackageUrlRef(reference);
+        if (!slug) return null;
+        return this.registry.crossPackageEntity(reference.packageName, slug)?.tone ?? null;
     }
 
     href(currentPackage: string, reference: DocReference | null): string | null {

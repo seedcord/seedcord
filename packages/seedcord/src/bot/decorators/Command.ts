@@ -86,7 +86,7 @@ export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
     return (ctor: CommandCtor): void => {
         const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
 
-        // Make sure command is EITHER global or guild-scoped.
+        // Reject a second @RegisterCommand on the same class.
         const existingMeta = Reflect.getOwnMetadata(CommandMetadataKey, ctor) as CommandMeta | undefined;
         if (existingMeta) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandAlreadyRegistered, [

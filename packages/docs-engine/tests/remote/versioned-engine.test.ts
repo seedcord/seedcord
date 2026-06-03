@@ -158,7 +158,7 @@ describe('VersionedDocsEngine', () => {
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 
-        // `Ghost` is attributed to services but absent from its entity map and re-homes nowhere.
+        // `Ghost` is attributed to services but absent from its entity map, so it does not resolve.
         expect(
             engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, {
                 name: 'Ghost',
@@ -166,19 +166,6 @@ describe('VersionedDocsEngine', () => {
                 qualifiedName: 'Ghost'
             })
         ).toEqual({ kind: 'unresolved' });
-    });
-
-    it('re-homes a mis-attributed entity to the package that exports it', async () => {
-        const engine = makeEngine(fixtureFetcher());
-        await engine.setVersion(MOCK_FOLDER, 'latest');
-
-        const ref = { name: 'Logger', packageName: '@seedcord/plugins', qualifiedName: 'Logger' };
-        expect(engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, ref)).toEqual({
-            kind: 'internal',
-            packageName: '@seedcord/services',
-            slug: 'logger'
-        });
-        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe('/packages/services/0.0.0/classes/logger');
     });
 
     it('returns an unresolved target for an external package absent from the index', async () => {

@@ -7,5 +7,4 @@ export default createTsdownConfig({
         skipNodeModulesBundle: true,
         neverBundle: ['commander', '@commander-js/extra-typings', 'chalk', 'jiti', 'tsx/esm/api', 'typescript']
     }
-    // No banner needed — tsdown's `shims: true` (from createTsdownConfig defaults) inserts the createRequire shim automatically.
 });

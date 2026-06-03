@@ -201,10 +201,10 @@ describe('parseEntityPathSegments', () => {
         });
     });
 
-    it('falls back to the class tone for malformed tone segments', () => {
+    it('keeps a non-tone leading segment in the slug (tone-less URL, not a class fallback)', () => {
         expect(parseEntityPathSegments(['not-a-real-kind', 'thing'])).toStrictEqual({
-            tone: 'class',
-            slug: 'thing',
+            tone: null,
+            slug: 'not-a-real-kind/thing',
             rawSegments: ['not-a-real-kind', 'thing']
         });
     });

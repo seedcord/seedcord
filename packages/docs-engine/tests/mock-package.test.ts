@@ -243,8 +243,7 @@ describe('DocsEngine mock package integration', () => {
         const registry: PackageRegistry = {
             isKnownPackage: (name) => engine.getPackage(name) !== null,
             candidatePackages: (current, hinted) => orderedPackageCandidates(current, hinted, engine.listPackages()),
-            crossPackageEntity: () => null,
-            findEntityAcrossPackages: () => null
+            crossPackageEntity: () => null
         };
         const resolver = new ReferenceResolver(engine, registry, new AnchorStrategy(engine));
         const target = await getNodeBySlug('mock-function');

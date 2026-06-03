@@ -170,7 +170,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
 
     // The animated container follows the measured body height. A callback ref re-attaches the observer every
     // time the dialog opens (the measured node only exists in the DOM while the Radix portal is mounted); the
-    // observer fires on observe() and on every later content change, so it owns the measurement.
+    // observer fires on observe() and on every later content change.
     const measureRef = useCallback((el: HTMLDivElement | null) => {
         observerRef.current?.disconnect();
         if (!el) {

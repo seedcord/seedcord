@@ -44,7 +44,7 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
     abstract init(): Promise<void>;
 
     /**
-     * Handle HMR updates
+     * Reloads plugin state on an HMR update.
      * @param _event - The HMR update event
      * @virtual Override this method to handle HMR updates
      */

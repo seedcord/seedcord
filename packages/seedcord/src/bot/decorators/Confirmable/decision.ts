@@ -7,7 +7,7 @@ export async function decide<TComponentType extends MessageComponentType>(
 ): Promise<boolean> {
     const { decision } = opts;
     if (decision.kind === 'resolver') {
-        // We ensure `i` matches `componentType` in `awaitComponent`
+        // `i` matches `componentType` (guaranteed in `awaitComponent`)
         return decision.resolve(i as ComponentInteractionFor<TComponentType>);
     }
 

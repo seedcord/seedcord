@@ -90,7 +90,7 @@ class SeedcordDevSession {
             onReady?.();
 
             // Block until stop() is called (by a UI action or the single signal handler in DevCommand). The session
-            // owns no process signals itself, so restarts never accumulate listeners.
+            // registers no process-signal handlers itself, so restarts never accumulate listeners.
             await new Promise<void>((resolve) => {
                 this.stopResolve = resolve;
             });

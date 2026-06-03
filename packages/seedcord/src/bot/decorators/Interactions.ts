@@ -180,7 +180,6 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
         const routes = Array.isArray(commandRoutes) ? commandRoutes : [commandRoutes];
         const fields = Array.isArray(focusedFields) ? focusedFields : [focusedFields];
 
-        // Create unique keys for each route-focused combination
         routes.forEach((route) => {
             fields.forEach((field) => {
                 const autocompleteKey = `${route}:${field}`;

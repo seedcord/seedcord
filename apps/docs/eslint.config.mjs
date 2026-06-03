@@ -30,7 +30,7 @@ export default createConfig({
             }
         },
 
-        // Next.js owns these filenames and resolves each by its default export, so the
+        // Next.js reserves these filenames and resolves each by its default export, so the
         // no-default-export ban above would break routing/metadata if left on here.
         {
             files: [

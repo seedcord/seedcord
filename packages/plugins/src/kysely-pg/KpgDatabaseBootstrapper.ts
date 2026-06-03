@@ -4,7 +4,7 @@ import { Pool, type PoolConfig } from 'pg';
 import type { Logger } from 'seedcord';
 
 /**
- * Handles ensuring the target Postgres database exists, creating it if necessary.
+ * Ensures the target Postgres database exists, creating it if missing.
  */
 export class KpgDatabaseBootstrapper {
     private static readonly ADMIN_DB = 'postgres';

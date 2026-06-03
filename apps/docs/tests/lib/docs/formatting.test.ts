@@ -18,8 +18,7 @@ const emptyLookup: NodeLookup = {
 const emptyRegistry: PackageRegistry = {
     isKnownPackage: () => false,
     candidatePackages: (current) => [current],
-    crossPackageEntity: () => null,
-    findEntityAcrossPackages: () => null
+    crossPackageEntity: () => null
 };
 const resolver = new ReferenceResolver(emptyLookup, emptyRegistry, new AnchorStrategy(emptyLookup));
 

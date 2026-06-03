@@ -127,7 +127,7 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     }
 
     /**
-     * Use this method when you want to stop the execution of a handler after a `runChecks()` call without throwing an error. It's checked after the runChecks executes. And no, you don't need to write the Handler `WithChecks`.
+     * Stops handler execution after `runChecks()` without throwing. Checked after `runChecks()` runs; does not require `Handler WithChecks`.
      */
     public setBreak(): void {
         this.break = true;

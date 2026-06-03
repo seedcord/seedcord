@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 
 import { resolveManifestPath } from '@src/constants';
 
-import type { DocManifest, DocManifestPackage } from '@src/types';
+import type { DocManifest, DocManifestPackage, PackageSourceIndex } from '@src/types';
 
 export interface ManifestReaderOptions {
     rootDir?: string;
@@ -70,7 +70,7 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
     const warningCount = typeof pkg.warningCount === 'number' ? pkg.warningCount : warnings.length;
     const errorCount = typeof pkg.errorCount === 'number' ? pkg.errorCount : errors.length;
 
-    return {
+    const result: DocManifestPackage = {
         name,
         version,
         entryPoints,
@@ -80,7 +80,18 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
         warningCount,
         errorCount,
         succeeded: Boolean(pkg.succeeded)
-    } satisfies DocManifestPackage;
+    };
+
+    // `sources` + `reexports` come from the generator and are accepted with a shallow shape check, not
+    // re-validated per entry.
+    if (isRecordShape(pkg.sources)) result.sources = pkg.sources;
+    if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
+
+    return result;
+}
+
+function isRecordShape(value: PackageSourceIndex | undefined): value is PackageSourceIndex {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function parseRepository(value: unknown): DocManifest['repository'] | undefined {

@@ -8,26 +8,11 @@ import { readPackageManifest, resolveEntryPoints, unscopedName } from './workspa
 import type { ApiDocsPaths } from './paths';
 import type { PackageDocResult } from './types';
 
-/**
- * Workspace deps a package re-exports become `bundledPackages` so API Extractor
- * folds their symbols into this package's surface (otherwise `export * from '@seedcord/x'`
- * symbols are treated as external and dropped). Over-listing is harmless: only symbols that
- * actually appear in this package's API are pulled in.
- */
-function resolveBundledPackages(manifest: { dependencies?: Record<string, string> }): string[] {
-    const deps = manifest.dependencies ?? {};
-    return Object.entries(deps)
-        .filter(([name, range]) => name.startsWith('@seedcord/') && range.startsWith('workspace:'))
-        .map(([name]) => name);
-}
-
 function buildConfigObject(options: {
     packageDir: string;
     entryPoint: string;
     tsconfigPath: string;
     apiJsonPath: string;
-    projectFolderUrl?: string;
-    bundledPackages: string[];
 }): IConfigFile {
     const docModel: IConfigFile['docModel'] = {
         enabled: true,
@@ -37,12 +22,13 @@ function buildConfigObject(options: {
         // render-time badge here, not an API-surface gate, so internal symbols still get pages.
         releaseTagsToTrim: []
     };
-    if (options.projectFolderUrl) docModel.projectFolderUrl = options.projectFolderUrl;
 
     return {
         projectFolder: options.packageDir,
         mainEntryPointFilePath: options.entryPoint,
-        bundledPackages: options.bundledPackages,
+        // No bundledPackages: each package documents only its own surface. Folding a re-exported
+        // workspace dep's symbols inline made API Extractor mis-stamp their owning package (rushstack
+        // #3521/#3593); re-exports now resolve cross-package and the umbrella package lists them.
         compiler: { tsconfigFilePath: options.tsconfigPath },
         apiReport: { enabled: false },
         docModel,
@@ -84,15 +70,15 @@ async function resolveDeclarationEntry(packageDir: string): Promise<string | nul
  */
 export async function extractPackageApiModel(
     packageDir: string,
-    paths: ApiDocsPaths,
-    projectFolderUrl?: string
+    paths: ApiDocsPaths
 ): Promise<PackageDocResult | null> {
     const manifest = await readPackageManifest(packageDir);
     if (manifest.private) return null;
 
     // A package with no resolvable source entry (e.g. a config-only package) is not documentable.
     const srcEntries = await resolveEntryPoints(packageDir, manifest);
-    if (srcEntries.length === 0) return null;
+    const primaryEntry = srcEntries[0];
+    if (!primaryEntry) return null;
 
     const entryPoint = await resolveDeclarationEntry(packageDir);
     if (!entryPoint) {
@@ -117,9 +103,7 @@ export async function extractPackageApiModel(
             packageDir,
             entryPoint,
             tsconfigPath,
-            apiJsonPath,
-            ...(projectFolderUrl ? { projectFolderUrl } : {}),
-            bundledPackages: resolveBundledPackages(manifest)
+            apiJsonPath
         })
     });
 
@@ -139,6 +123,8 @@ export async function extractPackageApiModel(
         name: manifest.name,
         version: manifest.version,
         entryPoints: [path.relative(packageDir, entryPoint)],
+        // The src entry the source pass must walk (matches AE's, honoring a seedcordDocs override).
+        sourceEntry: path.relative(packageDir, primaryEntry).split(path.sep).join('/'),
         outputPath: result.succeeded ? apiJsonPath : null,
         warnings,
         errors,

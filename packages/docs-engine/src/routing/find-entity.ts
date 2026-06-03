@@ -1,5 +1,5 @@
 import { kindName } from '@src/kinds';
-import { resolveEntityTone, type EntityTone } from '@src/tones';
+import { resolveEntityToneStrict, type EntityTone } from '@src/tones';
 
 import type { VersionedDocsEngine } from '@remote/VersionedDocsEngine';
 import type { DocsEngine } from '@src/DocsEngine';
@@ -20,8 +20,9 @@ function matchesKind(node: DocNode, kind: EntityTone | null): boolean {
         return true;
     }
 
-    const nodeKind = resolveEntityTone(kindName(node.kind));
-    return nodeKind === kind;
+    // Strict: a non-entity kind (accessor, constructor) resolves to null and matches no tone filter,
+    // rather than collapsing into 'class'.
+    return resolveEntityToneStrict(kindName(node.kind)) === kind;
 }
 
 function pickPreferredNode(nodes: DocNode[]): DocNode | null {
@@ -80,14 +81,11 @@ function findNodeByName(
         return pickPreferredNode(nodes);
     }
 
+    // Search is the last-resort fallback; like the by-name fallback above it accepts the hit
+    // regardless of kind.
     const [searchResult] = engine.search(symbol, manifestPackage);
     if (searchResult?.packageName) {
-        const node = findNodeBySlug(engine, searchResult.packageName, searchResult.slug);
-        if (node && matchesKind(node, kind)) {
-            return node;
-        }
-
-        return node;
+        return findNodeBySlug(engine, searchResult.packageName, searchResult.slug);
     }
 
     return null;

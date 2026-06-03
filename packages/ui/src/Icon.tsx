@@ -16,7 +16,7 @@ export interface IconProps {
     className?: string;
 }
 
-// Use as the wrapper for any lucide-react / GithubIcon glyph. Handles sizing + a11y label.
+// Wraps a lucide-react / GithubIcon glyph and applies size + aria-label.
 export function Icon({ icon: IconComponent, size = 18, title, className }: IconProps): ReactElement {
     if (title) {
         return (

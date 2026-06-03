@@ -28,7 +28,7 @@ export interface EventCatchableOptions {
 /**
  * Catches and handles errors in event handler methods.
  *
- * Automatically handles errors in event handlers and sends error responses
+ * Catches errors thrown in event handlers and sends error responses
  * if the event contains a Discord message object.
  *
  * @param options - Configuration for error handling behavior

@@ -12,7 +12,8 @@ Options:
     --packages <dir>            Directory that contains the packages to extract from.
     --source-path <dir>         Alias for --packages; point at a checked-out tag's packages root.
     --package <name>            Extract only this package (e.g. @seedcord/utils or utils).
-    --project-folder-url <url>  Base GitHub URL for view-source links (e.g. the tag's tree URL).
+    --project-folder-url <url>  GitHub repo base for source links (e.g. https://github.com/seedcord/seedcord).
+    --ref <ref>                 Git ref the source links point at (default branch locally, the tag per archive).
     --repo <dir>                Repository root used to compute relative paths.
     --manifest <path>           Custom manifest.json path to write inside the output directory.
     --help                      Show this message and exit.
@@ -22,7 +23,8 @@ interface SmokeOptions {
     outputDir?: string;
     packagesDir?: string;
     packageName?: string;
-    projectFolderUrl?: string;
+    githubBase?: string;
+    ref?: string;
     repoRoot?: string;
     manifestPath?: string;
 }
@@ -70,7 +72,13 @@ const FLAG_HANDLERS = new Map<string, FlagHandler>([
     [
         '--project-folder-url',
         (value, options) => {
-            options.projectFolderUrl = value;
+            options.githubBase = value;
+        }
+    ],
+    [
+        '--ref',
+        (value, options) => {
+            options.ref = value;
         }
     ],
     [
@@ -161,7 +169,8 @@ const createGeneratorOptions = (options: SmokeOptions): ApiDocsGeneratorOptions 
     if (options.outputDir) generatorOptions.outputDir = options.outputDir;
     if (options.packagesDir) generatorOptions.packagesDir = options.packagesDir;
     if (options.packageName) generatorOptions.packageName = options.packageName;
-    if (options.projectFolderUrl) generatorOptions.projectFolderUrl = options.projectFolderUrl;
+    if (options.githubBase) generatorOptions.githubBase = options.githubBase;
+    if (options.ref) generatorOptions.ref = options.ref;
     if (options.repoRoot) generatorOptions.repoRoot = options.repoRoot;
     if (options.manifestPath) generatorOptions.manifestPath = options.manifestPath;
     return generatorOptions;

@@ -36,7 +36,7 @@ interface BuildInput {
 /**
  * Creates Winston transports with proper formatting and file path resolution.
  *
- * Handles console and file transports with environment-aware defaults,
+ * Builds console and file transports with environment-aware defaults,
  * filename template expansion, and format selection.
  * @internal
  */

@@ -28,7 +28,17 @@ export async function discoverWorkspacePackages(paths: ApiDocsPaths = defaultPat
 export async function readPackageManifest(packageDir: string): Promise<PackageManifest> {
     const packageJsonPath = path.join(packageDir, 'package.json');
     const raw = await readFile(packageJsonPath, 'utf8');
-    return JSON.parse(raw) as PackageManifest;
+    const parsed: unknown = JSON.parse(raw);
+    if (!isPackageManifest(parsed)) {
+        throw new Error(`Malformed package.json at ${packageJsonPath}: "name" and "version" must be strings.`);
+    }
+    return parsed;
+}
+
+function isPackageManifest(value: unknown): value is PackageManifest {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Record<string, unknown>;
+    return typeof candidate.name === 'string' && typeof candidate.version === 'string';
 }
 
 /** The unscoped package name: `@seedcord/utils` becomes `utils`; a bare `utils` is returned as-is. */

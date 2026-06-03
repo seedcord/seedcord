@@ -12,7 +12,6 @@ const inputWrapperBaseClassName = [
 ].join(' ');
 
 const inputVariantClasses = {
-    // Standalone field: own border + focus ring.
     default: tw`border border-(--border) bg-transparent focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-outline-b)`,
     // No chrome of its own; the consumer styles the wrapper via `className` (e.g. a search header with
     // its own border + focus-within treatment). Keeps the flex/gap/sizing from the base + size classes.

@@ -64,16 +64,13 @@ export class Seedcord extends Pluggable implements Core {
 
         Seedcord.isInstantiated = true;
 
-        // Create lifecycle instances
         const shutdown = new CoordinatedShutdown(config.shutdownEnabled);
         const startup = new CoordinatedStartup();
 
-        // Pass them to parent constructor
         super(shutdown, startup);
 
         setBotColor(config.botColor);
 
-        // Store references for public access
         this.shutdown = shutdown;
         this.startup = startup;
 

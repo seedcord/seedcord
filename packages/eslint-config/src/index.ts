@@ -72,7 +72,7 @@ interface CreateConfigOptions {
      * - `better-tailwindcss/enforce-canonical-classes` (shorthand combining, e.g. `h-N w-N → size-N`)
      * - `tailwind-canonical-classes/tailwind-canonical-classes` (arbitrary-value scale normalization)
      *
-     * When omitted, both rules are off — useful for packages with no Tailwind surface (CLI, framework, types).
+     * When omitted, both rules are off, useful for packages with no Tailwind surface (CLI, framework, types).
      * Shared packages without their own `globals.css` should pass a sibling app's entry via {@link resolveSharedTailwindEntry}.
      *
      * Requires `tailwindcss` to be installed in the consuming package (an optional peerDependency).

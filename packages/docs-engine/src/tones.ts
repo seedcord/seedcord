@@ -1,5 +1,5 @@
 // Node-free, so this is exported from the client subset. Presentation (icons, Tailwind classes)
-// lives in the consuming app, not here.
+// is defined in the consuming app, not here.
 export type EntityTone = 'class' | 'interface' | 'type' | 'function' | 'enum' | 'variable';
 
 const TONE_DIRECTORY_MAP = {
@@ -64,11 +64,14 @@ function buildToneCandidates(value: string): string[] {
     return [...candidates];
 }
 
-export function resolveEntityTone(input?: string | null): EntityTone {
-    if (!input) return 'class';
+// Returns null when the input names no entity tone. resolveEntityTone defaults that to 'class' for
+// URL assembly; membership and parse callers use this strict form so a non-entity kind (method,
+// accessor, namespace) does not silently collapse into the 'class' bucket.
+export function resolveEntityToneStrict(input?: string | null): EntityTone | null {
+    if (!input) return null;
 
     const normalized = input.trim().toLowerCase();
-    if (!normalized) return 'class';
+    if (!normalized) return null;
 
     for (const candidate of buildToneCandidates(normalized)) {
         const synonymTone = TONE_SYNONYMS[candidate];
@@ -76,7 +79,11 @@ export function resolveEntityTone(input?: string | null): EntityTone {
         if (isEntityTone(candidate)) return candidate;
     }
 
-    return 'class';
+    return null;
+}
+
+export function resolveEntityTone(input?: string | null): EntityTone {
+    return resolveEntityToneStrict(input) ?? 'class';
 }
 
 export function formatEntityKindLabel(input?: string | null): string {

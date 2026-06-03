@@ -1,7 +1,7 @@
 import { buildEntityHref } from '@routing/url-builder';
 import { memberFragment } from '@src/anchors';
 import { kindName } from '@src/kinds';
-import { resolveEntityTone } from '@src/tones';
+import { resolveEntityToneStrict } from '@src/tones';
 
 import type { NodeLookup } from '@routing/lookup';
 import type { DocNode } from '@src/types';
@@ -33,7 +33,7 @@ export class AnchorStrategy {
             return this.buildMemberHref(packageName, node);
         }
 
-        const tone = resolveEntityTone(kindName(node.kind));
+        const tone = resolveEntityToneStrict(kindName(node.kind));
         return buildEntityHref({
             name: node.sourcePackage.name,
             slug: node.slug,
@@ -63,7 +63,7 @@ export class AnchorStrategy {
         const entityNode = this.walkToEntityNode(packageName, node.slug);
 
         if (entityNode) {
-            const entityTone = resolveEntityTone(kindName(entityNode.kind));
+            const entityTone = resolveEntityToneStrict(kindName(entityNode.kind));
             const entityHref = buildEntityHref({
                 name: entityNode.sourcePackage.name,
                 slug: entityNode.slug,
@@ -84,7 +84,7 @@ export class AnchorStrategy {
 
         const owner = this.findOwnerNode(packageName, node);
         if (owner) {
-            const ownerTone = resolveEntityTone(kindName(owner.kind));
+            const ownerTone = resolveEntityToneStrict(kindName(owner.kind));
             return buildEntityHref({
                 name: owner.sourcePackage.name,
                 slug: owner.slug,

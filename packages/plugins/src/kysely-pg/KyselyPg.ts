@@ -203,7 +203,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     }
 
     /**
-     * Lists every migration the manager knows about along with its execution state.
+     * Lists every migration registered with the manager along with its execution state.
      */
     public listMigrations(): Promise<readonly MigrationInfo[]> {
         return this.getMigrationManager().listMigrations();

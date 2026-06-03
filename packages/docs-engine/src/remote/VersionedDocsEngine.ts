@@ -9,7 +9,7 @@ import { DocSearch } from '@services/Search';
 
 import type { IndexJson, PackageIndexEntry } from '@remote/index-json';
 import type { Fetcher } from '@remote/index-loader';
-import type { CrossPackageEntity, CrossPackageEntityHome, NodeLookup, PackageRegistry } from '@routing/lookup';
+import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '@routing/lookup';
 import type { GlobalId } from '@src/ids';
 import type { DirectorySnapshot, PackageDirectory } from '@src/PackageDirectory';
 import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '@src/types';
@@ -128,16 +128,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
 
     crossPackageEntity(fullName: string, slug: string): CrossPackageEntity | null {
         const entry = this.entryByFullName(fullName);
-        return entry ? entityFromEntry(entry, slug) : null;
-    }
-
-    findEntityAcrossPackages(slug: string): CrossPackageEntityHome | null {
-        if (!this.index) return null;
-        for (const entry of Object.values(this.index.packages)) {
-            const entity = entityFromEntry(entry, slug);
-            if (entity) return { fullName: entry.fullName, ...entity };
-        }
-        return null;
+        return entry ? entityFromEntry(entry, slug, this.active.get(fullName)) : null;
     }
 
     private entryByFullName(fullName: string): PackageIndexEntry | null {
@@ -175,7 +166,7 @@ function emptyManifest(packages: DocManifest['packages']): DocManifest {
 
 // Resolve a (possibly member) slug against one package's index entry: the entity must be listed, and
 // the entry must include a concrete version. `fragment` is the member segment when the slug is nested.
-function entityFromEntry(entry: PackageIndexEntry, slug: string): CrossPackageEntity | null {
+function entityFromEntry(entry: PackageIndexEntry, slug: string, activeVersion?: string): CrossPackageEntity | null {
     const segments = slug.split('/');
     const entitySlug = segments[0];
     if (!entitySlug) return null;
@@ -183,7 +174,9 @@ function entityFromEntry(entry: PackageIndexEntry, slug: string): CrossPackageEn
     const tone = entry.entities?.[entitySlug];
     if (!tone) return null;
 
-    const version = entry.stable?.latest ?? entry.prerelease?.latest;
+    // Prefer the version actually loaded for this package so a cross-package link stays consistent
+    // with what the reader is viewing, not always the latest head.
+    const version = activeVersion ?? entry.stable?.latest ?? entry.prerelease?.latest;
     if (!version) return null;
 
     const fragment = segments.length > 1 ? segments[1] : undefined;

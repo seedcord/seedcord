@@ -1,5 +1,13 @@
+import type {
+    ManifestRepository,
+    PackageSourceIndex,
+    ReexportEntry as DocReexport,
+    SourceEntry as ManifestSourceEntry
+} from '@seedcord/docs-generator';
 import type { GlobalId } from '@src/ids';
 import type { PackageDirectory } from '@src/PackageDirectory';
+
+export type { DocReexport, ManifestRepository, ManifestSourceEntry, PackageSourceIndex };
 
 export type SigPart =
     | { kind: 'text'; text: string }
@@ -54,6 +62,8 @@ export interface DocManifestPackage {
     warningCount: number;
     errorCount: number;
     succeeded: boolean;
+    sources?: PackageSourceIndex;
+    reexports?: DocReexport[];
 }
 
 export interface DocManifest {
@@ -61,11 +71,7 @@ export interface DocManifest {
     tool: string;
     apiExtractorVersion: string;
     outputDir: string;
-    repository?: {
-        url: string;
-        branch?: string;
-        commit?: string;
-    };
+    repository?: ManifestRepository;
     packages: DocManifestPackage[];
 }
 
@@ -239,6 +245,9 @@ export interface DocNode {
     implementationOf?: DocReference | null;
     header?: RenderedDeclarationHeader;
     headerText?: string;
+    // Set on the package root only: symbols re-exported from a workspace dependency, each a
+    // cross-package reference to its owner's page.
+    reexports?: DocReference[];
 }
 
 export interface DocSearchEntry {

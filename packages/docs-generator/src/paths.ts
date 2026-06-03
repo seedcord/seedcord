@@ -15,12 +15,10 @@ function resolveWithBases(input: string, bases: (string | undefined)[]): string 
         return path.normalize(input);
     }
 
-    for (const base of bases) {
-        if (!base) continue;
-        return path.normalize(path.resolve(base, input));
-    }
-
-    return path.normalize(path.resolve(input));
+    // First defined base wins (earlier-priority entries like INIT_CWD may be undefined); later
+    // always-defined entries are unreachable fallbacks kept only to express the priority order.
+    const base = bases.find((candidate): candidate is string => Boolean(candidate));
+    return path.normalize(base ? path.resolve(base, input) : path.resolve(input));
 }
 
 export interface ApiDocsPathConfig {

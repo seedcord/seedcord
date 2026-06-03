@@ -83,7 +83,7 @@ function MultiInstanceRow(): ReactElement {
     return (
         <div className={tw`space-y-2`}>
             <p className={tw`text-subtle text-xs`}>
-                Two SegmentedControls side by side — each `useId()`-scoped, so the gliding pill animations don&apos;t
+                Two SegmentedControls side by side, each `useId()`-scoped, so the gliding pill animations don&apos;t
                 cross-contaminate.
             </p>
             <div className={tw`flex flex-wrap items-center gap-4`}>

@@ -92,7 +92,7 @@ export interface BotConfig {
     /**
      * Optional emoji mappings. Pass an object with emojis mappings (e.g. below). These emojis will be loaded from the Application Emojis that you've uploaded via the Dev-Dashboard
      *
-     * Key: The name of the object key you want to use in your codebase
+     * Key: the object key name used in your codebase
      *
      * Value: The emoji identifier used in Discord
      *

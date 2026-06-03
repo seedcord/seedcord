@@ -49,7 +49,7 @@ interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unk
 }
 
 /**
- * Handles Hot Module Replacement (HMR) for modules of type THandler and optional TMiddleware.
+ * Reloads THandler and optional TMiddleware modules on HMR updates.
  *
  * You can either implement a custom `onHmr()` method in your class by extending `HmrAware`, or if it's a plugin, override the existing `onHmr()` with fully custom logic. Or, use this class's `handle()` method inside your `onHmr()` to get standard HMR handling for your modules based on the provided options you give to the constructor.
  *

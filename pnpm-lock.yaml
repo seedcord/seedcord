@@ -414,6 +414,9 @@ importers:
       '@microsoft/api-extractor':
         specifier: 7.58.7
         version: 7.58.7(@types/node@25.9.1)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*

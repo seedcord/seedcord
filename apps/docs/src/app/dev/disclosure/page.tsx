@@ -19,8 +19,8 @@ function FillerList(): ReactElement {
     return (
         <ul className={tw`mt-3 space-y-2 text-sm`}>
             <li>First item in the panel</li>
-            <li>Second item — panels animate height + opacity together</li>
-            <li>Third item — the grid-rows-[0fr → 1fr] trick handles the height</li>
+            <li>Second item: panels animate height + opacity together</li>
+            <li>Third item: the grid-rows-[0fr → 1fr] trick handles the height</li>
             <li>Fourth item with a longer label so the row count is realistic</li>
         </ul>
     );
@@ -48,7 +48,7 @@ function DefaultOpenVsClosedRow(): ReactElement {
             <Disclosure defaultOpen className={tw`space-y-2`}>
                 <DisclosureTrigger className={tw`text-sm font-semibold text-(--text)`}>
                     <DisclosureChevron />
-                    <span>defaultOpen — already expanded</span>
+                    <span>defaultOpen (already expanded)</span>
                 </DisclosureTrigger>
                 <DisclosurePanel>
                     <p className={tw`text-subtle pt-2 text-xs`}>Body content for the default-open disclosure.</p>
@@ -57,7 +57,7 @@ function DefaultOpenVsClosedRow(): ReactElement {
             <Disclosure className={tw`space-y-2`}>
                 <DisclosureTrigger className={tw`text-sm font-semibold text-(--text)`}>
                     <DisclosureChevron />
-                    <span>default closed — click to expand</span>
+                    <span>default closed (click to expand)</span>
                 </DisclosureTrigger>
                 <DisclosurePanel>
                     <p className={tw`text-subtle pt-2 text-xs`}>Body content for the default-closed disclosure.</p>
@@ -128,7 +128,7 @@ function StorageDemoRow(): ReactElement {
     return (
         <div className={tw`max-w-md space-y-2`}>
             <p className={tw`text-subtle text-xs`}>
-                Reload the page after toggling — state persists via localStorage under the storageKey.
+                Reload the page after toggling: state persists via localStorage under the storageKey.
             </p>
             <Disclosure storageKey="seedcord-dev-disclosure-demo" className={tw`space-y-2`}>
                 <DisclosureTrigger className={tw`text-sm font-semibold text-(--text)`}>

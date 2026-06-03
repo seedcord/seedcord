@@ -5,14 +5,19 @@ import { Extractor } from '@microsoft/api-extractor';
 import { defaultPaths } from './paths';
 
 import type { ApiDocsPaths } from './paths';
-import type { PackageDocResult } from './types';
+import type { ManifestRepository, PackageDocResult } from './types';
 
-export async function writeManifest(results: PackageDocResult[], paths: ApiDocsPaths = defaultPaths): Promise<void> {
+export async function writeManifest(
+    results: PackageDocResult[],
+    paths: ApiDocsPaths = defaultPaths,
+    repository?: ManifestRepository
+): Promise<void> {
     const payload = {
         generatedAt: new Date().toISOString(),
         tool: 'api-extractor',
         apiExtractorVersion: Extractor.version,
         outputDir: paths.toRepoRelative(paths.outputDir),
+        ...(repository ? { repository } : {}),
         packages: results.map((result) => ({
             name: result.name,
             version: result.version,
@@ -22,7 +27,9 @@ export async function writeManifest(results: PackageDocResult[], paths: ApiDocsP
             errorCount: result.errors.length,
             warnings: result.warnings,
             errors: result.errors,
-            succeeded: result.succeeded
+            succeeded: result.succeeded,
+            ...(result.sources ? { sources: result.sources } : {}),
+            ...(result.reexports ? { reexports: result.reexports } : {})
         }))
     };
 

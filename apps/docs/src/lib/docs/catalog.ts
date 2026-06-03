@@ -165,6 +165,38 @@ export const loadActiveVersion = cache(async (folder: string, versionId: string)
     return buildCategories(engine.getPackageDirectory(entry.fullName));
 });
 
+export interface ReexportLink {
+    name: string;
+    owner: string;
+    href: string;
+    tone: EntityTone | null;
+}
+
+// The umbrella package re-exports symbols declared in sibling packages; resolve each to its declaring
+// package's page so the overview href targets the canonical entity instead of a duplicate.
+export const loadReexports = cache(async (folder: string, versionId: string): Promise<ReexportLink[]> => {
+    const engine = await getDocsEngine();
+    const entry = await engine.getEntry(folder);
+    if (!entry) return [];
+
+    try {
+        await engine.setVersion(folder, versionId);
+    } catch {
+        return [];
+    }
+
+    const reexports = engine.getPackage(entry.fullName)?.root.reexports ?? [];
+    const resolver = engine.resolver();
+    return reexports.reduce<ReexportLink[]>((acc, ref) => {
+        // A re-export reference always carries its declaring package (set in adapter.buildReexports);
+        // a missing one is dropped rather than rendered with a blank owner.
+        if (!ref.packageName) return acc;
+        const href = resolver.href(entry.fullName, ref);
+        if (href) acc.push({ name: ref.name, owner: ref.packageName, href, tone: resolver.crossPackageTone(ref) });
+        return acc;
+    }, []);
+});
+
 export const findCatalogEntry = (catalog: DocsCatalog, packageId: string): PackageCatalogEntry | undefined =>
     catalog.find((entry) => entry.id === packageId);
 

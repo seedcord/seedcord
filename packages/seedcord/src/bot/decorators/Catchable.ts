@@ -19,7 +19,7 @@ export interface CatchableOptions {
 }
 
 /**
- * Catches and handles errors in interaction handler methods
+ * Catches errors thrown in interaction handler methods and sends an error response.
  *
  * Automatically sends error responses to users and prevents uncaught exceptions.
  * Should be applied to the execute() or runChecks() methods of interaction handlers.

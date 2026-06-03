@@ -18,8 +18,8 @@ import type {
 /**
  * Manages Winston logger instances per channel with caching.
  *
- * Handles channel configuration, transport creation,
- * and environment-aware defaults.
+ * Stores channel configuration and creates transports for each channel
+ * with environment-aware defaults.
  */
 export class LoggerChannelRegistry {
     private static _instance: LoggerChannelRegistry | null = null;

@@ -37,8 +37,7 @@ export interface TailwindBlockParams {
 
     /**
      * Absolute path to the Tailwind entry CSS file. When `undefined`, the block is a no-op
-     * (just declares `files` with no plugins or rules), keeping the lint surface clean
-     * for packages with no Tailwind concept.
+     * (just declares `files` with no plugins or rules), so packages with no Tailwind surface register no canonical-class rules.
      */
     entryPoint: string | undefined;
 
@@ -53,9 +52,9 @@ export interface TailwindBlockParams {
  * Builds the flat-config block that registers the canonical-class lint plugins.
  *
  * Registers:
- *   - `better-tailwindcss/enforce-canonical-classes` — shorthand combining, logical/physical pairs
+ *   - `better-tailwindcss/enforce-canonical-classes`: shorthand combining, logical/physical pairs
  *     (e.g. `h-N w-N` → `size-N`). Supports tagged template literals via `tags`.
- *   - `tailwind-canonical-classes/tailwind-canonical-classes` — arbitrary-value scale normalization
+ *   - `tailwind-canonical-classes/tailwind-canonical-classes`: arbitrary-value scale normalization
  *     (e.g. `max-w-[180px]` → `max-w-45` when a scale match exists) + Tailwind v4 modifier
  *     position rewrites (`hover:!bg-x` → `hover:bg-x!`).
  *

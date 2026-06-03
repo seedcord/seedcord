@@ -4,11 +4,18 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '@components/docs/entity/EntityContent';
-import { findCatalogEntry, findCatalogVersion, loadActiveVersion, loadDocsCatalog } from '@lib/docs/catalog';
+import {
+    findCatalogEntry,
+    findCatalogVersion,
+    loadActiveVersion,
+    loadDocsCatalog,
+    loadReexports
+} from '@lib/docs/catalog';
 import { getDocsEngine } from '@lib/docs/engine';
 import { loadEntityModel } from '@lib/docs/loadEntityModel';
 import { getToneConfig } from '@lib/tonePresentation';
 
+import type { ReexportLink } from '@lib/docs/catalog';
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
 import type { ReactElement } from 'react';
 
@@ -74,15 +81,66 @@ function renderCategory(category: NavigationCategory): ReactElement {
     );
 }
 
+function groupReexports(reexports: readonly ReexportLink[]): [string, ReexportLink[]][] {
+    const groups = new Map<string, ReexportLink[]>();
+    for (const link of reexports) {
+        const list = groups.get(link.owner) ?? [];
+        list.push(link);
+        groups.set(link.owner, list);
+    }
+    return [...groups.entries()];
+}
+
+function renderReexportGroup([owner, links]: [string, ReexportLink[]]): ReactElement {
+    return (
+        <section key={owner} className={cn('space-y-3')}>
+            <header className={cn('flex items-center gap-2')}>
+                <span className={cn('text-subtle text-sm font-semibold tracking-wide uppercase')}>
+                    Re-exported from {owner}
+                </span>
+                <span className={cn('text-xs text-(--text-faint)')}>
+                    {links.length} symbol{links.length === 1 ? '' : 's'}
+                </span>
+            </header>
+            <div className={cn('flex flex-wrap gap-2')}>
+                {links.map((link) => {
+                    const toneStyles = link.tone ? getToneConfig(link.tone).styles : null;
+                    // Re-exports point at the owning package's page: open in a new tab, matching the
+                    // cross-package link convention.
+                    return (
+                        <Link
+                            key={link.name}
+                            href={link.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(chipBaseClassName, toneStyles?.item)}
+                        >
+                            {toneStyles ? (
+                                <span aria-hidden className={cn('size-1.5 shrink-0 rounded-full', toneStyles.dot)} />
+                            ) : null}
+                            {link.name}
+                        </Link>
+                    );
+                })}
+            </div>
+        </section>
+    );
+}
+
 function PackageVersionOverview({
     entry,
     version,
-    categories
+    categories,
+    reexports
 }: {
     entry: PackageCatalogEntry;
     version: PackageVersionCatalog;
     categories: readonly NavigationCategory[];
+    reexports: readonly ReexportLink[];
 }): ReactElement {
+    const reexportGroups = groupReexports(reexports);
+    const isEmpty = categories.length === 0 && reexportGroups.length === 0;
+
     return (
         <section className={cn('space-y-8')}>
             <header className={cn('space-y-3')}>
@@ -94,12 +152,15 @@ function PackageVersionOverview({
                 </h1>
             </header>
             <div className={cn('space-y-8')}>
-                {categories.length ? (
-                    categories.map(renderCategory)
-                ) : (
+                {isEmpty ? (
                     <p className={cn('text-subtle text-sm')}>
                         No reference entries are available for this version yet.
                     </p>
+                ) : (
+                    <>
+                        {categories.map(renderCategory)}
+                        {reexportGroups.map(renderReexportGroup)}
+                    </>
                 )}
             </div>
         </section>
@@ -121,7 +182,8 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
     const normalizedSegments: string[] | undefined = normalizeSegments(rawSegments);
 
     if (!normalizedSegments || normalizedSegments.length === 0) {
-        return <PackageVersionOverview entry={entry} version={version} categories={categories} />;
+        const reexports = await loadReexports(entry.id, version.id);
+        return <PackageVersionOverview entry={entry} version={version} categories={categories} reexports={reexports} />;
     }
 
     const parsedSegments = parseEntityPathSegments(normalizedSegments);

@@ -142,13 +142,10 @@ export async function finalizeUi(
             .catch(() => ix.deleteReply().catch(() => undefined));
     } else {
         // Component interaction
-        // Try to edit the message object directly first.
         try {
             await msg.edit(payload as Parameters<typeof msg.edit>[0]);
         } catch {
-            // Edit failed (e.g. ephemeral message gone, or permissions?)
-            // If we wanted to clear (payload has empty components?), maybe delete?
-            // "If not deletable, just stop. Trying to delete via interaction is not a real fallback for a normal message."
+            // Edit can fail (ephemeral expired, lost perms). Only delete if deletable; deleting via interaction is not a fallback for a normal message.
             if (msg.deletable) {
                 await msg.delete().catch(() => undefined);
             }

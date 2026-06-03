@@ -182,7 +182,7 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
     let result = normalizeSentinels(html);
     // Sentinels sometimes land alone inside their own <span> (when shiki tokenizes them as
     // standalone punctuation/identifier). Unwrap those single-sentinel spans first so the
-    // open/close regex can see the bare sentinels.
+    // open/close regex matches the bare sentinels.
     result = result.replace(/<span[^>]*>\s*([-])\s*<\/span>/g, '$1');
 
     for (let i = 0; i < markers.length; i += 1) {
@@ -288,7 +288,7 @@ export async function highlightToHtml(
 
 // Method-shape signatures aren't valid top-level TS: shiki's grammar tokenizes `extends`
 // inside `<T extends X>` as a keyword only when a leading statement-context anchor is present.
-// We wrap as a top-level function declaration (which also handles multi-line type-param
+// Wrap as a top-level function declaration (which also supports multi-line type-param
 // constraints, unlike `class _ {…}`), then strip the wrap structurally via a transformer.
 export async function highlightSignatureToHtml(code: string, links: readonly CodeLink[] = []): Promise<string | null> {
     if (!code) return '';

@@ -1,5 +1,4 @@
 import {
-    ApiDeclaredItem,
     ApiDocumentedItem,
     ApiExportedMixin,
     ApiInitializerMixin,
@@ -77,22 +76,32 @@ export class ApiAdapter {
         const members = pkg.entryPoints[0]?.members ?? [];
         root.children = this.visitMembers(members, []);
         root.groups = synthGroups(root.children);
+        const reexports = this.buildReexports();
+        if (reexports.length > 0) root.reexports = reexports;
         return root;
+    }
+
+    // Each re-exported symbol maps to a cross-package reference to its declaring package, so the
+    // umbrella page href targets that package's canonical page instead of a duplicate.
+    private buildReexports(): DocReference[] {
+        return (this.manifest.reexports ?? []).map((entry) => ({
+            name: entry.name,
+            qualifiedName: entry.name,
+            packageName: entry.owner
+        }));
     }
 
     private resolveLink(): LinkResolver {
         return (codeDestination, fallbackText) => {
-            try {
-                const resolved = this.model.resolveDeclarationReference(
-                    codeDestination as Parameters<ApiModel['resolveDeclarationReference']>[0],
-                    undefined
-                );
-                const target = resolved.resolvedApiItem;
-                if (target?.canonicalReference) {
-                    return referenceFromCanonical(target.canonicalReference, fallbackText);
-                }
-            } catch {
-                /* unresolved → plain text, matching the pre-migration behaviour */
+            // justified: codeDestination is the opaque TSDoc DeclarationReference forwarded to AE;
+            // resolveDeclarationReference returns an error result (never throws) for an unresolved link.
+            const resolved = this.model.resolveDeclarationReference(
+                codeDestination as Parameters<ApiModel['resolveDeclarationReference']>[0],
+                undefined
+            );
+            const target = resolved.resolvedApiItem;
+            if (target?.canonicalReference) {
+                return referenceFromCanonical(target.canonicalReference, fallbackText);
             }
             return undefined;
         };
@@ -110,6 +119,8 @@ export class ApiAdapter {
         const flags = isPackageRoot ? buildFlags(item) : this.flagsFor(item, kind, member.ownClassMember);
         if (member.inheritedFrom) flags.isInherited = true;
 
+        const qualifiedName = path.join('.');
+        const sources = this.sourcesFor(qualifiedName);
         const node: DocNode = {
             id: this.idCounter++,
             key: canonicalKey(item.canonicalReference),
@@ -117,7 +128,7 @@ export class ApiAdapter {
             packageName: this.manifest.name,
             sourcePackage: this.sourcePackage(),
             path,
-            qualifiedName: path.join('.'),
+            qualifiedName,
             slug: slugForNode(this.slugger, path),
             kind,
             kindLabel: frozenKindLabel(kind),
@@ -128,7 +139,7 @@ export class ApiAdapter {
             signatures: [],
             children: [],
             groups: [],
-            sources: this.sourcesFor(item),
+            sources,
             inheritance: emptyInheritance(),
             overwrites: null,
             inheritedFrom: member.inheritedFrom,
@@ -141,8 +152,8 @@ export class ApiAdapter {
             if (initializer) node.defaultValue = initializer;
         }
 
-        const url = this.sourceUrlFor(item);
-        if (url) node.sourceUrl = url;
+        const sourceUrl = sources[0]?.url;
+        if (sourceUrl) node.sourceUrl = sourceUrl;
 
         if (!isPackageRoot) this.applyHeader(node, item, kind, flags);
         return node;
@@ -191,21 +202,17 @@ export class ApiAdapter {
         });
     }
 
-    private sourcesFor(item: ApiItem): DocSource[] {
-        if (!(item instanceof ApiDeclaredItem)) return [];
-        const loc = item.sourceLocation;
-        // justified: SourceLocation.fileUrlPath is a model field absent from the published type.
-        const fileUrlPath = (loc as { fileUrlPath?: string }).fileUrlPath;
-        if (!fileUrlPath) return [];
-        const source: DocSource = { fileName: fileUrlPath, line: 0, character: 0 };
-        if (loc.fileUrl) source.url = loc.fileUrl;
-        return [source];
-    }
-
-    private sourceUrlFor(item: ApiItem): string | undefined {
-        if (!(item instanceof ApiDeclaredItem)) return undefined;
-        const fileUrl = item.sourceLocation.fileUrl;
-        return fileUrl !== undefined && fileUrl.length > 0 ? fileUrl : undefined;
+    // Source positions come from the generator's TS-compiler pass (manifest.sources), keyed by the
+    // same dotted qualified name a node builds from its path. API Extractor's own fileUrlPath points
+    // into the bundled `dist/index.d.mts` rollup and carries no line/column, so it is not used.
+    private sourcesFor(qualifiedName: string): DocSource[] {
+        const entries = this.manifest.sources?.[qualifiedName];
+        if (!entries) return [];
+        return entries.map((entry) => {
+            const source: DocSource = { fileName: entry.file, line: entry.line, character: entry.column };
+            if (entry.url) source.url = entry.url;
+            return source;
+        });
     }
 
     private applyHeader(node: DocNode, item: ApiItem, kind: number, flags: DocFlags): void {
@@ -336,6 +343,7 @@ export class ApiAdapter {
     private buildSignature(item: ApiItem, owner: DocNode, index: number, total: number): DocSignature {
         const overloadIndex = ApiParameterListMixin.isBaseClassOf(item) ? item.overloadIndex - 1 : index;
         const fragment = total > 1 ? `overload-${overloadIndex + 1}` : '';
+        const source = this.signatureSource(owner, overloadIndex);
 
         const { docParams: parameters, renderParams: renderParameters } = this.signatureParameters(item);
 
@@ -361,21 +369,31 @@ export class ApiAdapter {
             anchor: fragment,
             overloadIndex,
             kindLabel: owner.kindLabel,
-            flags: owner.flags,
+            // Snapshot so a signature never aliases the node's mutable DocFlags (applyAccessor mutates it).
+            flags: { ...owner.flags },
             parameters,
             typeParameters,
             comment,
-            sources: owner.sources,
+            sources: source.sources,
             render,
             renderText: formatRenderedSignature(render),
             overwrites: null,
             inheritedFrom: null,
             implementationOf: null
         };
-        if (owner.sourceUrl) signature.sourceUrl = owner.sourceUrl;
+        if (source.sourceUrl) signature.sourceUrl = source.sourceUrl;
         if (returnsComment) signature.returnsComment = returnsComment;
         const throwsTags = comment?.blockTags.filter((tag: DocCommentBlockTag) => tag.tag === '@throws');
         if (throwsTags && throwsTags.length > 0) signature.throws = throwsTags;
         return signature;
+    }
+
+    // owner.sources is one entry per documented overload in source-declaration order, matching API
+    // Extractor's overloadIndex (TS requires overloads adjacent); a missing index falls back to primary.
+    private signatureSource(owner: DocNode, overloadIndex: number): { sources: DocSource[]; sourceUrl?: string } {
+        const overloadSource = owner.sources[overloadIndex];
+        const sources = overloadSource ? [overloadSource] : owner.sources;
+        const sourceUrl = overloadSource?.url ?? owner.sourceUrl;
+        return sourceUrl ? { sources, sourceUrl } : { sources };
     }
 }

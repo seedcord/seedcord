@@ -106,7 +106,7 @@ export function buildDeclarationHeader(
     return header;
 }
 
-export function declarationKeyword(kind: number, flags: DocFlags): string | null {
+function declarationKeyword(kind: number, flags: DocFlags): string | null {
     switch (kind) {
         case DocKind.Class:
             return 'class';
@@ -125,7 +125,7 @@ export function declarationKeyword(kind: number, flags: DocFlags): string | null
     }
 }
 
-export function modifiersOf(flags: DocFlags, kind: number): string[] {
+function modifiersOf(flags: DocFlags, kind: number): string[] {
     const modifiers: string[] = [];
     if (flags.access) modifiers.push(flags.access);
     // A `const` variable's keyword already conveys readonly; TypeDoc doesn't double it up.
@@ -159,7 +159,7 @@ export function paramFlags(isOptional: boolean): DocFlags {
     };
 }
 
-export function heritageInline(types: readonly HeritageType[] | undefined): InlineType[] | undefined {
+function heritageInline(types: readonly HeritageType[] | undefined): InlineType[] | undefined {
     if (!types || types.length === 0) return undefined;
     const rendered = types
         .map((entry) => excerptToInlineType(entry.excerpt))
@@ -226,7 +226,7 @@ export function accessorHasSetter(item: ApiItem): boolean {
     return accessorRole(item) === 'getter' && (item as AeShapes).isReadonly === false;
 }
 
-export interface SignatureBuildDeps {
+interface SignatureBuildDeps {
     nextId: () => number;
     resolveLink: LinkResolver;
 }
@@ -260,7 +260,9 @@ export function buildAccessorSignature(
         anchor: '',
         overloadIndex: index,
         kindLabel: frozenKindLabel(sigKind),
-        flags: owner.flags,
+        // Snapshot, not owner.flags by reference: applyAccessor sets node.flags.accessor in place,
+        // so each signature keeps its own DocFlags instead of aliasing the node's.
+        flags: { ...owner.flags },
         parameters,
         typeParameters: [],
         comment,
@@ -280,8 +282,8 @@ export function buildAccessorSignature(
 }
 
 /**
- * Group adjacent same-name callable overloads (and get/set accessor pairs) into one logical member;
- * everything else passes through singly.
+ * Group same-name callable overloads (TypeScript guarantees they are written adjacently) and get/set
+ * accessor pairs into one logical member; everything else passes through singly.
  */
 export function groupOverloads(members: readonly ApiItem[]): ApiItem[][] {
     const groups: ApiItem[][] = [];

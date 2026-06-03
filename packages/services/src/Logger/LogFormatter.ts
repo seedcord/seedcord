@@ -28,7 +28,7 @@ export interface JsonFormatOptions {
 }
 
 /**
- * Handles log formatting for console and file outputs.
+ * Formats log records for console and file outputs.
  *
  * Supports pretty-printed colored logs for development
  * and JSON logs for production with optional ANSI stripping.

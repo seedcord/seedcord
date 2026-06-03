@@ -145,7 +145,7 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
             this.hot.send('seedcord:hmr', payload);
         }
 
-        // Returning [] suppresses Vite's default client HMR; we drive invalidation through the runtime instead.
+        // Returning [] suppresses Vite's default client HMR; invalidation runs through the runtime instead.
         return [];
     }
 

@@ -1,8 +1,10 @@
 import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
 
 import { extractPackageApiModel } from './ae-extractor';
 import { writeManifest } from './manifest';
 import { ApiDocsPaths } from './paths';
+import { buildSourceIndex } from './source-index';
 import { discoverWorkspacePackages, readPackageManifest, unscopedName } from './workspace';
 
 import type { ApiDocsPathConfig } from './paths';
@@ -14,8 +16,10 @@ export interface ApiDocsGeneratorOptions extends ApiDocsPathConfig {
     logger?: ConsoleLike;
     /** Scope extraction to a single package, by full (`@seedcord/utils`) or unscoped (`utils`) name. */
     packageName?: string;
-    /** GitHub base URL for the source tree being extracted; sets view-source links (e.g. at a tag). */
-    projectFolderUrl?: string;
+    /** GitHub repo base for source links, e.g. `https://github.com/seedcord/seedcord`. */
+    githubBase?: string;
+    /** Git ref the source links point at: the default branch locally, the tag for an archived version. */
+    ref?: string;
 }
 
 export interface ApiDocsGeneratorResult {
@@ -31,7 +35,8 @@ export class ApiDocsGenerator {
     private readonly paths: ApiDocsPaths;
     private readonly logger: ConsoleLike;
     private readonly packageName?: string;
-    private readonly projectFolderUrl?: string;
+    private readonly githubBase?: string;
+    private readonly ref: string;
     private lastResults: PackageDocResult[] = [];
     private lastPackages: string[] = [];
 
@@ -46,7 +51,8 @@ export class ApiDocsGenerator {
         this.paths = new ApiDocsPaths(pathConfig);
         this.logger = options.logger ?? console;
         if (options.packageName) this.packageName = options.packageName;
-        if (options.projectFolderUrl) this.projectFolderUrl = options.projectFolderUrl;
+        if (options.githubBase) this.githubBase = options.githubBase;
+        this.ref = options.ref ?? 'next';
     }
 
     getPaths(): ApiDocsPaths {
@@ -110,13 +116,23 @@ export class ApiDocsGenerator {
         return matches;
     }
 
+    private async buildPackageNames(): Promise<Record<string, string>> {
+        const dirs = await discoverWorkspacePackages(this.paths);
+        const names: Record<string, string> = {};
+        for (const dir of dirs) names[path.basename(dir)] = (await readPackageManifest(dir)).name;
+        return names;
+    }
+
     async run(): Promise<ApiDocsGeneratorResult> {
         await this.ensureOutputDirectory();
         const packageDirs = await this.discoverPackages();
+        // Built from every workspace package (not just the scoped ones) so a re-export's declaring
+        // package always resolves to its real npm name even under `--package`.
+        const packageNames = await this.buildPackageNames();
         const results: PackageDocResult[] = [];
 
         for (const packageDir of packageDirs) {
-            const result = await extractPackageApiModel(packageDir, this.paths, this.projectFolderUrl);
+            const result = await extractPackageApiModel(packageDir, this.paths);
             if (!result) continue;
 
             results.push(result);
@@ -125,9 +141,24 @@ export class ApiDocsGenerator {
             if (!result.succeeded) {
                 throw new Error(`API Extractor extraction failed for ${result.name}. see logs above.`);
             }
+
+            const scan = buildSourceIndex({
+                packageDir,
+                repoRoot: this.paths.repoRoot,
+                githubBase: this.githubBase ?? '',
+                ref: this.ref,
+                packageNames,
+                ...(result.sourceEntry ? { entry: result.sourceEntry } : {})
+            });
+            result.sources = scan.sources;
+            if (scan.reexports.length > 0) result.reexports = scan.reexports;
         }
 
-        await writeManifest(results, this.paths);
+        await writeManifest(
+            results,
+            this.paths,
+            this.githubBase ? { url: this.githubBase, branch: this.ref } : undefined
+        );
         this.lastResults = results;
 
         this.logger.log(

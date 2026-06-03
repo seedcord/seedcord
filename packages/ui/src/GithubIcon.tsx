@@ -9,7 +9,6 @@ export interface GithubIconProps extends Omit<SVGAttributes<SVGSVGElement>, 'chi
 
 const DEFAULT_STROKE_WIDTH = 12;
 
-// Use for the inline GitHub mark; lucide-react doesn't ship one at the weight we want.
 export function GithubIcon({ size = 18, className, title, ...props }: GithubIconProps): ReactElement {
     return (
         <svg

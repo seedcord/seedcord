@@ -67,12 +67,15 @@ export class IndexLoader {
             return { version: stable.latest, channel: 'stable' };
         }
 
-        const byMajor = stable.latestByMajor[selector.replace(/^v/, '')];
+        // Strip leading v from version selectors
+        const normalized = selector.replace(/^v/, '');
+
+        const byMajor = stable.latestByMajor[normalized];
         if (byMajor) {
             return { version: byMajor, channel: 'stable' };
         }
 
-        const byMinor = stable.latestByMinor[selector];
+        const byMinor = stable.latestByMinor[normalized];
         if (byMinor) {
             return { version: byMinor, channel: 'stable' };
         }
