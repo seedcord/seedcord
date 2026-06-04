@@ -22,6 +22,8 @@
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/ui": "workspace:*",
+        "@shikijs/langs": "^4.1.0",
+        "@shikijs/themes": "^4.1.0",
         "@tailwindcss/postcss": "^4.3.0",
         "isomorphic-dompurify": "^3.14.0",
         "lucide-react": "catalog:deps",

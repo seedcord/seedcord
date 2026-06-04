@@ -182,6 +182,12 @@ importers:
       '@seedcord/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@shikijs/langs':
+        specifier: ^4.1.0
+        version: 4.1.0
+      '@shikijs/themes':
+        specifier: ^4.1.0
+        version: 4.1.0
       '@tailwindcss/postcss':
         specifier: ^4.3.0
         version: 4.3.0

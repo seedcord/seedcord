@@ -1,10 +1,15 @@
-import {
-    getSingletonHighlighter,
-    type BundledLanguage,
-    type BundledTheme,
-    type Highlighter,
-    type ShikiTransformer
-} from 'shiki';
+import langBash from '@shikijs/langs/bash';
+import langJs from '@shikijs/langs/javascript';
+import langJson from '@shikijs/langs/json';
+import langJsx from '@shikijs/langs/jsx';
+import langTsx from '@shikijs/langs/tsx';
+import langTs from '@shikijs/langs/typescript';
+import themeLatte from '@shikijs/themes/catppuccin-latte';
+import themeMacchiato from '@shikijs/themes/catppuccin-macchiato';
+import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
+import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
+
+import type { BundledLanguage, BundledTheme, ShikiTransformer } from 'shiki';
 
 const THEMES = {
     light: 'catppuccin-latte',
@@ -14,8 +19,6 @@ const THEMES = {
     // light: 'rose-pine-dawn',
     // dark: 'rose-pine'
 } as const satisfies Record<'light' | 'dark', BundledTheme>;
-
-const COMMON_LANGS: BundledLanguage[] = ['ts', 'tsx', 'js', 'jsx', 'json'];
 
 export interface CodeLink {
     name: string;
@@ -27,12 +30,16 @@ export interface CodeLink {
     external?: boolean;
 }
 
-async function ensureHighlighter(langs: BundledLanguage[]): Promise<Highlighter> {
-    const uniqueLangs = Array.from(new Set<BundledLanguage>([...COMMON_LANGS, ...langs]));
-    return getSingletonHighlighter({
-        themes: [THEMES.light, THEMES.dark],
-        langs: uniqueLangs
+// Explicit langs + themes (not shiki's barrel registry) so only what's listed gets traced into the
+// standalone bundle. Oniguruma engine kept so tokenization matches the barrel build the transformers expect.
+let highlighterPromise: Promise<HighlighterCore> | null = null;
+function ensureHighlighter(): Promise<HighlighterCore> {
+    highlighterPromise ??= createHighlighterCore({
+        themes: [themeLatte, themeMacchiato],
+        langs: [langTs, langTsx, langJs, langJsx, langJson, langBash],
+        engine: createOnigurumaEngine(import('shiki/wasm'))
     });
+    return highlighterPromise;
 }
 
 interface HastTextNode {
@@ -257,7 +264,7 @@ async function renderDual(
     lang: BundledLanguage,
     transformers: ShikiTransformer[] = []
 ): Promise<string> {
-    const highlighter = await ensureHighlighter([lang]);
+    const highlighter = await ensureHighlighter();
     const lightRaw = decorateBlock(
         highlighter.codeToHtml(instrumented, { lang, theme: THEMES.light, transformers }),
         'light'
@@ -377,7 +384,7 @@ export async function highlightInlineToHtml(code: string, lang: BundledLanguage 
     if (!code) return '';
 
     try {
-        const highlighter = await ensureHighlighter([lang]);
+        const highlighter = await ensureHighlighter();
         const lightInner = highlighter.codeToHtml(code, { lang, theme: THEMES.light }).match(CODE_INNER_RE);
         const darkInner = highlighter.codeToHtml(code, { lang, theme: THEMES.dark }).match(CODE_INNER_RE);
         if (!lightInner || !darkInner) return null;
