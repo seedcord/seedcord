@@ -4,7 +4,7 @@ import { IndexFetchError } from '@remote/errors';
 import { validateIndex } from '@remote/index-json';
 import { IndexLoader } from '@remote/index-loader';
 
-import type { IndexJson } from '@remote/index-json';
+import type { IndexJson, PackageIndexEntry } from '@remote/index-json';
 import type { Fetcher } from '@remote/index-loader';
 
 const INDEX_URL = 'https://cdn.test/gh/seedcord/artifacts@main/index.json';
@@ -87,6 +87,37 @@ describe('IndexLoader', () => {
             expect(loader.resolveVersion(entry, '2.0.0-alpha.1')).toEqual({
                 version: '2.0.0-alpha.1',
                 channel: 'prerelease'
+            });
+        });
+
+        describe('0-stable (prerelease-only) package', () => {
+            const prereleaseOnly: PackageIndexEntry = {
+                fullName: '@seedcord/cli',
+                stable: null,
+                prerelease: { latest: '0.11.0-next.0' }
+            };
+            const empty: PackageIndexEntry = { fullName: '@seedcord/empty', stable: null, prerelease: null };
+
+            it("resolves 'latest' to the prerelease head when there is no stable channel", () => {
+                expect(loader.resolveVersion(prereleaseOnly, 'latest')).toEqual({
+                    version: '0.11.0-next.0',
+                    channel: 'prerelease'
+                });
+            });
+
+            it("'prerelease' and 'next' still resolve the prerelease head", () => {
+                expect(loader.resolveVersion(prereleaseOnly, 'prerelease')).toEqual({
+                    version: '0.11.0-next.0',
+                    channel: 'prerelease'
+                });
+                expect(loader.resolveVersion(prereleaseOnly, 'next')).toEqual({
+                    version: '0.11.0-next.0',
+                    channel: 'prerelease'
+                });
+            });
+
+            it("returns null for 'latest' only when both channels are empty", () => {
+                expect(loader.resolveVersion(empty, 'latest')).toBeNull();
             });
         });
     });

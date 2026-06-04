@@ -59,12 +59,18 @@ export class IndexLoader {
             return { version: selector, channel: 'prerelease' };
         }
 
+        // `latest` prefers the stable head but falls back to the prerelease head on a 0-stable package
+        // (the prerelease-only archive before the first stable cut). Null only when both channels are empty.
+        if (selector === 'latest') {
+            if (entry.stable) return { version: entry.stable.latest, channel: 'stable' };
+            if (entry.prerelease) return { version: entry.prerelease.latest, channel: 'prerelease' };
+            return null;
+        }
+
+        // major/minor/passthrough selectors are stable-only by definition.
         const { stable } = entry;
         if (!stable) {
             return null;
-        }
-        if (selector === 'latest') {
-            return { version: stable.latest, channel: 'stable' };
         }
 
         // Strip leading v from version selectors
