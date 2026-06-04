@@ -1,17 +1,26 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
+import type { PackageIndexEntry } from '@seedcord/docs-engine';
+
+const { engineStub } = vi.hoisted(() => ({
+    engineStub: {
+        ready: vi.fn<() => Promise<void>>(),
+        listPackages: vi.fn<() => Promise<{ folder: string; fullName: string }[]>>(),
+        getEntry: vi.fn<(folder: string) => Promise<PackageIndexEntry | null>>()
+    }
+}));
 
 // justified: stub transitive imports so the test stays hermetic and dodges the '@lib/*' alias vitest can't resolve without vite-tsconfig-paths.
 vi.mock('../../../src/lib/docs/engine', () => ({
-    getDocsEngine: () => Promise.resolve({})
+    getDocsEngine: () => Promise.resolve(engineStub)
 }));
 vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
     ...(await importOriginal<typeof import('@seedcord/docs-engine')>()),
     formatVersionLabel: (v: string) => v
 }));
 
-const { findCatalogVersion, withActiveCategories } = await import('@lib/docs/catalog');
+const { findCatalogVersion, loadDocsCatalog, withActiveCategories } = await import('@lib/docs/catalog');
 
 function makeVersion(
     id: string,
@@ -68,6 +77,41 @@ describe('findCatalogVersion', () => {
         const pre = makeVersion('1.0.0-next.1', { channel: 'prerelease' });
         const entry = makeEntry([pre]);
         expect(findCatalogVersion(entry, 'latest')).toBe(pre);
+    });
+});
+
+describe('loadDocsCatalog version badges', () => {
+    it('anchors the latest badge on the prerelease head for a 0-stable package, and on stable otherwise', async () => {
+        const prereleaseOnly: PackageIndexEntry = {
+            fullName: '@seedcord/cli',
+            stable: null,
+            prerelease: { latest: '0.11.0-next.0' }
+        };
+        const stableAndPre: PackageIndexEntry = {
+            fullName: '@seedcord/utils',
+            stable: { latest: '1.2.0', latestByMinor: { '1.2': '1.2.0' }, latestByMajor: { '1': '1.2.0' } },
+            prerelease: { latest: '2.0.0-next.0' }
+        };
+        const entries: Record<string, PackageIndexEntry> = { cli: prereleaseOnly, utils: stableAndPre };
+
+        engineStub.ready.mockResolvedValue(undefined);
+        engineStub.listPackages.mockResolvedValue([
+            { folder: 'cli', fullName: '@seedcord/cli' },
+            { folder: 'utils', fullName: '@seedcord/utils' }
+        ]);
+        engineStub.getEntry.mockImplementation((folder) => Promise.resolve(entries[folder] ?? null));
+
+        const catalog = await loadDocsCatalog();
+        const cli = catalog.find((entry) => entry.manifestName === '@seedcord/cli');
+        const utils = catalog.find((entry) => entry.manifestName === '@seedcord/utils');
+
+        expect(cli?.versions).toHaveLength(1);
+        expect(cli?.versions[0]).toMatchObject({ id: '0.11.0-next.0', channel: 'prerelease', isLatest: true });
+
+        const stableHead = utils?.versions.find((version) => version.id === '1.2.0');
+        const preHead = utils?.versions.find((version) => version.id === '2.0.0-next.0');
+        expect(stableHead).toMatchObject({ channel: 'stable', isLatest: true });
+        expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false });
     });
 });
 

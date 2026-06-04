@@ -107,7 +107,9 @@ function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersi
     }
 
     if (entry.prerelease) {
-        versions.push(buildVersion(fullName, entry.prerelease.latest, 'prerelease', false));
+        // The prerelease head carries the "latest" badge only on a 0-stable package; when a stable
+        // channel exists the stable head stays "latest" and the prerelease is just another entry.
+        versions.push(buildVersion(fullName, entry.prerelease.latest, 'prerelease', !entry.stable));
     }
 
     return versions;
