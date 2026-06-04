@@ -21,7 +21,7 @@ export class IndexLoader {
         private readonly fetcher: Fetcher = defaultFetcher
     ) {}
 
-    /** `force` re-fetches past the in-memory cache; it does NOT bust the jsDelivr CDN cache. */
+    /** `force` re-fetches past the in-memory cache; it does NOT bust the R2/CDN edge cache. */
     async load(force = false): Promise<IndexJson> {
         if (this.cache && !force) {
             return this.cache;

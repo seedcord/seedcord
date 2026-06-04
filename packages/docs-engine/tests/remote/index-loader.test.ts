@@ -7,7 +7,7 @@ import { IndexLoader } from '@remote/index-loader';
 import type { IndexJson, PackageIndexEntry } from '@remote/index-json';
 import type { Fetcher } from '@remote/index-loader';
 
-const INDEX_URL = 'https://cdn.test/gh/seedcord/artifacts@main/index.json';
+const INDEX_URL = 'https://cdn.test/index.json';
 
 const fixture: IndexJson = {
     schemaVersion: 1,
@@ -126,10 +126,10 @@ describe('IndexLoader', () => {
         const loader = new IndexLoader(INDEX_URL, okFetcher(fixture));
 
         expect(loader.buildProjectUrl(fixture, 'utils', '1.3.2', 'stable')).toBe(
-            'https://cdn.test/gh/seedcord/artifacts@main/packages/utils/releases/1.3.2/project.json'
+            'https://cdn.test/packages/utils/releases/1.3.2/project.json'
         );
         expect(loader.buildProjectUrl(fixture, 'utils', '2.0.0-alpha.1', 'prerelease')).toBe(
-            'https://cdn.test/gh/seedcord/artifacts@main/packages/utils/prerelease/2.0.0-alpha.1/project.json'
+            'https://cdn.test/packages/utils/prerelease/2.0.0-alpha.1/project.json'
         );
     });
 

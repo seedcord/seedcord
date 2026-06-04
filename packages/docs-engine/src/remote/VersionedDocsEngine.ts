@@ -17,7 +17,7 @@ import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEnt
 const defaultFetcher: Fetcher = (url) => globalThis.fetch(url);
 
 /**
- * Version-aware engine for the remote (jsDelivr) docs. Holds one loaded model per package, keyed by
+ * Version-aware engine for the remote (R2) docs. Holds one loaded model per package, keyed by
  * full name; `setVersion(folder, selector)` fetches and swaps a single package's active version.
  * Search and reference resolution are scoped to the loaded set; resolution runs through the shared
  * {@link ReferenceResolver} via `resolver()`. Construct one per request: it carries mutable per-package
