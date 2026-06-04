@@ -1,4 +1,4 @@
-import { buildEntityHref, resolvePackageIdentity } from '@seedcord/docs-engine';
+import { buildEntityHref, buildPackageBasePath, resolvePackageIdentity } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
 import { getDocsEngine } from '@lib/docs/engine';
@@ -31,23 +31,34 @@ function readEntityQuery(params: URLSearchParams): EntityQuery {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
     const { pkg, lookup } = readEntityQuery(request.nextUrl.searchParams);
-    const fallback = (): NextResponse => NextResponse.redirect(new URL('/', request.url), HTTP_TEMPORARY_REDIRECT);
+    const redirect = (target: string | URL): NextResponse =>
+        NextResponse.redirect(new URL(target, request.url), HTTP_TEMPORARY_REDIRECT);
+    // No package to land on (empty index / unresolved version): `/` is the only sensible target.
+    const homeFallback = (): NextResponse => redirect('/');
 
     const engine = await getDocsEngine();
     const identity = resolvePackageIdentity(await engine.listPackages(), pkg);
     if (!identity) {
-        return fallback();
+        return homeFallback();
     }
 
     try {
         await engine.setVersion(identity.folder, 'latest');
     } catch {
-        return fallback();
+        return homeFallback();
     }
 
     const entity = await loadEntityModel(engine, identity.fullName, lookup);
     if (!entity) {
-        return fallback();
+        // Package resolves but the symbol is gone (renamed/removed in a newer version): keep the reader in
+        // context on the target package index with a `moved` flag, rather than bouncing to `/`.
+        const movedSlug = lookup.slug ?? lookup.symbol ?? lookup.qualifiedName ?? '';
+        const base = new URL(
+            buildPackageBasePath(identity.fullName, engine.activeVersion(identity.fullName)),
+            request.url
+        );
+        if (movedSlug) base.searchParams.set('moved', movedSlug);
+        return redirect(base);
     }
 
     const href = buildEntityHref({
@@ -57,5 +68,5 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         tone: entity.kind
     });
 
-    return NextResponse.redirect(new URL(href, request.url), HTTP_TEMPORARY_REDIRECT);
+    return redirect(href);
 }

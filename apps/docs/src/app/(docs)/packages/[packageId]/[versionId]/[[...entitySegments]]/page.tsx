@@ -2,8 +2,10 @@ import { parseEntityPathSegments } from '@seedcord/docs-engine';
 import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 
 import { EntityContent } from '@components/docs/entity/EntityContent';
+import { MovedEntityNotice } from '@components/docs/MovedEntityNotice';
 import {
     findCatalogEntry,
     findCatalogVersion,
@@ -183,7 +185,14 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
 
     if (!normalizedSegments || normalizedSegments.length === 0) {
         const reexports = await loadReexports(entry.id, version.id);
-        return <PackageVersionOverview entry={entry} version={version} categories={categories} reexports={reexports} />;
+        return (
+            <div className={cn('space-y-8')}>
+                <Suspense fallback={null}>
+                    <MovedEntityNotice packageLabel={entry.label} />
+                </Suspense>
+                <PackageVersionOverview entry={entry} version={version} categories={categories} reexports={reexports} />
+            </div>
+        );
     }
 
     const parsedSegments = parseEntityPathSegments(normalizedSegments);
