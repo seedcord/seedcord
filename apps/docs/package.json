@@ -4,6 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev",
+        "dev:published": "SEEDCORD_DOCS_INDEX_URL=https://cdn.jsdelivr.net/gh/seedcord/artifacts@${SEEDCORD_DOCS_INDEX_BRANCH:-main}/index.json next dev",
         "build": "next build",
         "start": "next start",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
