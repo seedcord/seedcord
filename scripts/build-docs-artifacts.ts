@@ -1,5 +1,5 @@
-/* eslint-disable no-console -- developer-facing CLI script; console is its output channel */
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+/* eslint-disable no-console -- CLI script so console is ok */
+import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -51,6 +51,7 @@ interface ProjectArtifact {
     version: string;
     channel: 'stable' | 'prerelease';
     file: DocProjectFile;
+    apiSource: string;
 }
 
 async function writeArtifacts(index: IndexJson, projects: readonly ProjectArtifact[]): Promise<void> {
@@ -65,6 +66,10 @@ async function writeArtifacts(index: IndexJson, projects: readonly ProjectArtifa
         const dest = path.join(ARTIFACTS_ROOT, relative);
         await mkdir(path.dirname(dest), { recursive: true });
         await writeFile(dest, `${JSON.stringify(project.file)}\n`);
+
+        // Keep the raw API-Extractor model beside project.json. The engine never fetches it, but
+        // storing it lets project.json be re-derived when the render shape changes, without re-extracting.
+        await copyFile(project.apiSource, path.join(path.dirname(dest), 'api.json'));
     }
 }
 
@@ -80,6 +85,9 @@ async function main(): Promise<void> {
 
         const real = pkg.manifest.version;
         const folder = formatDisplayPackageName(fullName);
+        // The extractor names api.json by the unscoped package name, which can diverge from the
+        // display folder if a displayName override is set; key the copy off the source name.
+        const apiSource = path.join(GENERATED_ROOT, `${fullName.split('/').pop() ?? fullName}.api.json`);
         const file = serializeProject(pkg);
         const versions = USE_FIXTURES
             ? syntheticVersions(real)
@@ -92,7 +100,7 @@ async function main(): Promise<void> {
             entities: pkg.directory.toneMap()
         });
         for (const { version, channel } of versions) {
-            projects.push({ folder, version, channel, file });
+            projects.push({ folder, version, channel, file, apiSource });
         }
     }
 
@@ -100,7 +108,7 @@ async function main(): Promise<void> {
     await writeArtifacts(index, projects);
 
     console.log(
-        `Wrote ${String(projects.length)} project.json + index.json to ${path.relative(INIT_CWD, ARTIFACTS_ROOT)}${
+        `Wrote ${String(projects.length)} project.json + api.json + index.json to ${path.relative(INIT_CWD, ARTIFACTS_ROOT)}${
             USE_FIXTURES ? ' (with synthetic fixture versions)' : ''
         }`
     );

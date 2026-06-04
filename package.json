@@ -45,6 +45,7 @@
         "docs:artifacts": "pnpm tsx scripts/build-docs-artifacts.ts",
         "docs:artifacts:fixtures": "pnpm tsx scripts/build-docs-artifacts.ts --fixtures",
         "docs:local": "pnpm docs:extract && pnpm docs:artifacts",
+        "seed:artifacts": "pnpm tsx scripts/seed-artifacts.ts",
         "docs:smoke": "pnpm docs:extract && pnpm --filter @seedcord/docs-engine run smoke ./generated -o ./debugging/samples",
         "p:stop": "bash scripts/kill-seedcord.sh",
         "p:stop:list": "bash scripts/kill-seedcord.sh --list",
