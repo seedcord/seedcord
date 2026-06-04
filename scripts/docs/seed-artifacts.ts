@@ -2,14 +2,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import {
-    cacheControlFor,
-    createR2Client,
-    listFiles,
-    putToR2,
-    r2ConfigFromEnv,
-    servedFiles
-} from './lib/artifacts-repo';
+import { cacheControlFor, createR2Client, listFiles, putToR2, r2ConfigFromEnv, servedFiles } from './artifacts-repo';
 
 // Seeds the local docs tree (generated/artifacts/) to R2. Build it first with `pnpm docs:local`.
 
