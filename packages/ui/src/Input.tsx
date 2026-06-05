@@ -59,7 +59,8 @@ export function Input({
                 ref={ref}
                 type={type}
                 className={cn(
-                    tw`min-w-0 flex-1 bg-transparent text-(--text) outline-hidden placeholder:text-subtle`,
+                    // pointer-coarse:text-base pins the font to 16px on touch devices; iOS Safari zooms a focused input under 16px.
+                    tw`min-w-0 flex-1 bg-transparent text-(--text) outline-hidden pointer-coarse:text-base placeholder:text-subtle`,
                     inputClassName
                 )}
                 {...props}

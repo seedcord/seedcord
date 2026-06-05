@@ -21,8 +21,7 @@ const KIND_OPTIONS: DropdownOption[] = [
 
 const SEPARATOR = tw`text-(--text-faint) text-sm`;
 
-interface FiltersProps {
-    isSearching: boolean;
+interface FilterControlsProps {
     scope: string;
     kind: string;
     packages: DocsPackageOption[];
@@ -31,17 +30,17 @@ interface FiltersProps {
     onKindChange: (kind: string) => void;
 }
 
-// Search glyph + inline borderless scope/kind dropdowns, rendered as the input's leading content. The
-// dropdowns portal into `container` (the dialog) so their lists scroll inside the palette's scroll lock.
-function SearchFilters({
-    isSearching,
+// Borderless scope/kind dropdowns. They portal into `container` (the dialog) so their lists scroll inside
+// the palette's scroll lock. Rendered twice: inline in the field on sm+, and on their own row on mobile
+// (CSS toggles which is visible) so a narrow screen doesn't crush the query input.
+function FilterDropdowns({
     scope,
     kind,
     packages,
     container,
     onScopeChange,
     onKindChange
-}: FiltersProps): ReactElement {
+}: FilterControlsProps): ReactElement {
     const scopeOptions: DropdownOption[] = [
         { value: 'all', label: 'All packages' },
         ...packages.map((pkg) => ({ value: pkg.folder, label: pkg.label }))
@@ -49,14 +48,6 @@ function SearchFilters({
 
     return (
         <span className={cn('flex items-center gap-1')}>
-            <IconSwap
-                active={isSearching}
-                idleIcon={Search}
-                activeIcon={LoaderCircle}
-                size={16}
-                className={cn('text-subtle')}
-                activeClassName={cn('animate-spin motion-reduce:animate-none')}
-            />
             <Dropdown
                 variant="ghost"
                 placeholderLabel="All packages"
@@ -76,7 +67,27 @@ function SearchFilters({
                 container={container}
                 aria-label="Kind filter"
             />
-            <span className={SEPARATOR}>/</span>
+        </span>
+    );
+}
+
+// The input's leading content: the search glyph, plus the filters inline on sm+. On mobile the filters
+// are hidden here and rendered on their own row above the input instead.
+function SearchLeading({ isSearching, ...controls }: FilterControlsProps & { isSearching: boolean }): ReactElement {
+    return (
+        <span className={cn('flex items-center gap-1')}>
+            <IconSwap
+                active={isSearching}
+                idleIcon={Search}
+                activeIcon={LoaderCircle}
+                size={16}
+                className={cn('text-subtle')}
+                activeClassName={cn('animate-spin motion-reduce:animate-none')}
+            />
+            <span className={cn('hidden items-center gap-1 sm:flex')}>
+                <FilterDropdowns {...controls} />
+                <span className={SEPARATOR}>/</span>
+            </span>
         </span>
     );
 }
@@ -143,6 +154,17 @@ export function CommandHeader({
 }: CommandHeaderProps): ReactElement {
     return (
         <div className={cn('border-border border-b px-4 py-3')}>
+            {/* On mobile the filters get their own row; the sm+ copy lives inline in the input's leading. */}
+            <div className={cn('mb-2 flex items-center gap-1 sm:hidden')}>
+                <FilterDropdowns
+                    scope={scope}
+                    kind={kind}
+                    packages={packages}
+                    container={container}
+                    onScopeChange={onScopeChange}
+                    onKindChange={onKindChange}
+                />
+            </div>
             <Input
                 ref={inputRef}
                 role="combobox"
@@ -161,7 +183,7 @@ export function CommandHeader({
                     'bg-surface-subtle border border-(--border)/80 focus-within:border-(--border-accent-b-subtle) focus-within:bg-(--surface-accent-b-subtle)'
                 )}
                 leading={
-                    <SearchFilters
+                    <SearchLeading
                         isSearching={isSearching}
                         scope={scope}
                         kind={kind}

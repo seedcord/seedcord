@@ -70,6 +70,7 @@ describe('CommandPaletteDialog', () => {
         searchHook.mockReturnValue({ groups: groupOf(RESULTS), status: 'success' });
         vi.stubGlobal('ResizeObserver', StubResizeObserver);
         window.HTMLElement.prototype.scrollIntoView = vi.fn();
+        window.HTMLElement.prototype.scrollTo = vi.fn();
     });
 
     afterEach(() => {

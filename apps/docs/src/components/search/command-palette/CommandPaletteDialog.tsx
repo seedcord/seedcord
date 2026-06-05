@@ -143,6 +143,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const { open, handleOpenChange, searchValue, handleValueChange, handleClose, handleSelect, inputRef } = controller;
 
     const commandRef = useRef<HTMLDivElement | null>(null);
+    const scrollRef = useRef<HTMLDivElement | null>(null);
     const observerRef = useRef<ResizeObserver | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
@@ -190,8 +191,13 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
 
     useEffect(() => {
         if (!activeId) return;
+        // Fixes first searched entity being scrolled up to be flush with the top when it should keep the padding and header.
+        if (activeIndex === 0) {
+            scrollRef.current?.scrollTo({ top: 0 });
+            return;
+        }
         document.getElementById(activeId)?.scrollIntoView({ block: 'nearest' });
-    }, [activeId]);
+    }, [activeId, activeIndex]);
 
     const handleListKeyDown = useCallback(
         (event: KeyboardEvent<HTMLInputElement>) => {
@@ -281,6 +287,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                                 onKindChange={controller.handleKindChange}
                             />
                             <m.div
+                                ref={scrollRef}
                                 animate={{ height: contentHeight }}
                                 transition={{ duration: HEIGHT_ANIMATION_S, ease: [...easeOutStrong] }}
                                 className={cn('max-h-[calc(78vh-5.25rem)] overflow-y-auto overscroll-contain px-2')}
