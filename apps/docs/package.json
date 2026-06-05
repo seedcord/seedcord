@@ -7,6 +7,7 @@
         "dev:published": "SEEDCORD_DOCS_INDEX_URL=https://cdn.seedcord.org/index.json next dev",
         "build": "next build",
         "start": "next start",
+        "start:standalone": "HOSTNAME=0.0.0.0 node .next/standalone/apps/docs/server.js",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
