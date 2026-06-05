@@ -5,7 +5,8 @@
         "build": {
             "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", ".env*"],
-            "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+            "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+            "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
         "dev": {
             "cache": false,
