@@ -130,10 +130,14 @@ async function extractPackage(pkg: PublishedPackage, projectFolderUrl: string): 
     ]);
 }
 
-async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry> {
+// Returns null for a published package with no documentable API (a pure-config package like
+// @seedcord/tsconfig): it publishes to npm but extraction yields no manifest entry, so it has nothing
+// to render and is skipped rather than failing the whole sync.
+async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry | null> {
     const found = engine.getPackage(pkg.name);
     if (!found) {
-        throw new Error(`package "${pkg.name}" is not in generated/manifest.json; extract it before emitting`);
+        console.log(`⏭️  ${pkg.name}@${pkg.version} has no documentable API; skipping`);
+        return null;
     }
     const folder = formatDisplayPackageName(pkg.name);
     const channel: EmittedEntry['channel'] = isPrerelease(pkg.version) ? 'prerelease' : 'stable';
@@ -153,12 +157,16 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
         for (const pkg of opts.published) {
             await extractPackage(pkg, opts.projectFolderUrl);
             const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
-            emitted.push(await emitVersionDir(engine, pkg));
+            const entry = await emitVersionDir(engine, pkg);
+            if (entry) emitted.push(entry);
         }
     } else {
         // generated/ already holds every published package (local / rehearsal path).
         const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
-        for (const pkg of opts.published) emitted.push(await emitVersionDir(engine, pkg));
+        for (const pkg of opts.published) {
+            const entry = await emitVersionDir(engine, pkg);
+            if (entry) emitted.push(entry);
+        }
     }
     return emitted;
 }
