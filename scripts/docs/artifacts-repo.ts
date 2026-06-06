@@ -1,5 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
-import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 import {
     DeleteObjectCommand,
@@ -22,27 +21,6 @@ const HTTP_NOT_FOUND = 404;
 
 export function cacheControlFor(relativePath: string): string {
     return relativePath === 'index.json' ? 'no-cache' : IMMUTABLE_CACHE_CONTROL;
-}
-
-// include api.json in case engine changes later so we can regenerate project.json from it
-export function servedFiles(files: readonly string[]): string[] {
-    return files.filter(
-        (file) => file === 'index.json' || file.endsWith('/project.json') || file.endsWith('/api.json')
-    );
-}
-
-export async function listFiles(root: string, base: string = root): Promise<string[]> {
-    const entries = await readdir(root, { withFileTypes: true });
-    const files: string[] = [];
-    for (const entry of entries) {
-        const full = path.join(root, entry.name);
-        if (entry.isDirectory()) {
-            files.push(...(await listFiles(full, base)));
-        } else {
-            files.push(path.relative(base, full).split(path.sep).join('/'));
-        }
-    }
-    return files.sort();
 }
 
 export interface R2Config {
