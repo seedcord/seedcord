@@ -146,6 +146,9 @@ importers:
       prettier:
         specifier: catalog:deps
         version: 3.8.3
+      prettier-plugin-tailwindcss:
+        specifier: catalog:deps
+        version: 0.8.0(prettier@3.8.3)
       react-doctor:
         specifier: ^0.2.5
         version: 0.2.5(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)(eslint-plugin-react-hooks@7.1.1(eslint@9.39.2(jiti@2.7.0)))

@@ -79,6 +79,7 @@
         "lint-staged": "^17.0.5",
         "markdownlint-cli2": "^0.22.1",
         "prettier": "catalog:deps",
+        "prettier-plugin-tailwindcss": "catalog:deps",
         "react-doctor": "^0.2.5",
         "tsd": "^0.33.0",
         "tsdown": "catalog:deps",
