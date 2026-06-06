@@ -3,46 +3,48 @@ packages:
   - packages/*
   - apps/*
 
+embedReadme: true
+
 allowBuilds:
-  '@swc/core': true
-  '@tailwindcss/oxide': true
-  esbuild: true
-  msgpackr-extract: true
-  sharp: true
-  unrs-resolver: true
+    '@swc/core': true
+    '@tailwindcss/oxide': true
+    esbuild: true
+    msgpackr-extract: true
+    sharp: true
+    unrs-resolver: true
 
 catalogs:
-  deps:
-    '@types/node': ^25.9.1
-    chalk: ^5.6.2
-    envapt: ^5.0.3
-    eslint: ^9.39.2
-    lucide-react: ^1.16.0
-    motion: ^12.40.0
-    prettier: ^3.8.3
-    prettier-plugin-tailwindcss: ^0.8.0
-    tailwindcss: ^4.3.0
-    tsdown: ^0.22.0
-    tsx: ^4.22.3
-    type-fest: ^5.6.0
-    vite: ^8.0.14
-  peer:
-    discord.js: ^14.26.4
-    mongoose: ^9.6.2
-    reflect-metadata: ^0.2.2
-    typescript: ^6.0.3
-  test:
-    '@testing-library/jest-dom': ^6.9.1
-    '@testing-library/react': ^16.3.2
-    '@testing-library/user-event': ^14.6.1
-    '@vitest/coverage-v8': ^4.1.7
-    jsdom: ^29.1.1
-    vitest: ^4.1.7
-  react:
-    '@types/react': ^19.2.15
-    '@types/react-dom': ^19.2.3
-    react: ^19.2.6
-    react-dom: ^19.2.6
+    deps:
+        '@types/node': ^25.9.1
+        chalk: ^5.6.2
+        envapt: ^5.0.3
+        eslint: ^9.39.2
+        lucide-react: ^1.16.0
+        motion: ^12.40.0
+        prettier: ^3.8.3
+        prettier-plugin-tailwindcss: ^0.8.0
+        tailwindcss: ^4.3.0
+        tsdown: ^0.22.0
+        tsx: ^4.22.3
+        type-fest: ^5.6.0
+        vite: ^8.0.14
+    peer:
+        discord.js: ^14.26.4
+        mongoose: ^9.6.2
+        reflect-metadata: ^0.2.2
+        typescript: ^6.0.3
+    test:
+        '@testing-library/jest-dom': ^6.9.1
+        '@testing-library/react': ^16.3.2
+        '@testing-library/user-event': ^14.6.1
+        '@vitest/coverage-v8': ^4.1.7
+        jsdom: ^29.1.1
+        vitest: ^4.1.7
+    react:
+        '@types/react': ^19.2.15
+        '@types/react-dom': ^19.2.3
+        react: ^19.2.6
+        react-dom: ^19.2.6
 
 minimumReleaseAgeExclude:
   - oxlint-plugin-react-doctor@0.2.5
