@@ -7,7 +7,9 @@ import { highlightToHtml } from '@lib/shiki';
 
 import type { ReactElement } from 'react';
 
-export const dynamic = 'force-static';
+// The landing page resolves the current default version from the (mutable) index, so it must render
+// against a fresh index.
+export const dynamic = 'force-dynamic';
 
 const INSTALL_COMMANDS = [
     {
