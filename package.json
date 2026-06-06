@@ -48,10 +48,7 @@
         "docs:local": "pnpm docs:extract && pnpm docs:artifacts",
         "seed:artifacts": "pnpm tsx scripts/docs/seed-artifacts.ts",
         "docs:sync": "pnpm tsx scripts/docs/sync-docs-to-artifacts.ts",
-        "docs:smoke": "pnpm docs:extract && pnpm --filter @seedcord/docs-engine run smoke ./generated -o ./debugging/samples",
-        "p:stop": "bash scripts/kill-seedcord.sh",
-        "p:stop:list": "bash scripts/kill-seedcord.sh --list",
-        "p:stop:no-ports": "bash scripts/kill-seedcord.sh --no-ports"
+        "docs:smoke": "pnpm docs:extract && pnpm --filter @seedcord/docs-engine run smoke ./generated -o ./debugging/samples"
     },
     "keywords": [
         "discord",
