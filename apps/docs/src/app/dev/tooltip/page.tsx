@@ -114,7 +114,7 @@ function AnimationTrials(): ReactElement {
                     <Tooltip
                         content="Animation: opacity"
                         side="top"
-                        contentClassName={tw`transition-opacity! duration-120! ease-out! data-[state=closed]:opacity-0! data-[state=delayed-open]:opacity-100! data-[state=delayed-open]:animate-none! data-[state=closed]:animate-none!`}
+                        contentClassName={tw`transition-opacity! duration-120! ease-out! data-[state=closed]:animate-none! data-[state=closed]:opacity-0! data-[state=delayed-open]:animate-none! data-[state=delayed-open]:opacity-100!`}
                     >
                         <Button variant="outline" size="sm">
                             Hover opacity
@@ -128,7 +128,7 @@ function AnimationTrials(): ReactElement {
                     <Tooltip
                         content="Animation: pop"
                         side="top"
-                        contentClassName={tw`data-[state=delayed-open]:zoom-in-90 data-[state=closed]:zoom-out-90 data-[state=delayed-open]:duration-180`}
+                        contentClassName={tw`data-[state=closed]:zoom-out-90 data-[state=delayed-open]:duration-180 data-[state=delayed-open]:zoom-in-90`}
                     >
                         <Button variant="outline" size="sm">
                             Hover pop

@@ -155,7 +155,7 @@ function Rows({ groupKey, items, highlight, onHover }: RowsProps): ReactElement 
     );
 }
 
-const SEPARATOR = tw`text-(--text-faint) text-sm`;
+const SEPARATOR = tw`text-sm text-(--text-faint)`;
 
 interface ScopeBarProps {
     query: string;
@@ -228,7 +228,7 @@ function ResultsList({ ready, groups, currentPkg, scope, highlight, onHover }: R
                             <span className={tw`text-subtle text-xs font-semibold tracking-wide`}>
                                 {group.pkg === currentPkg && scope === 'all' ? `${group.pkg} (current)` : group.pkg}
                             </span>
-                            <span className={tw`text-(--text-faint) text-xs`}>{group.items.length}</span>
+                            <span className={tw`text-xs text-(--text-faint)`}>{group.items.length}</span>
                         </div>
                         <Rows groupKey={group.pkg} items={group.items} highlight={highlight} onHover={onHover} />
                     </section>
@@ -279,7 +279,7 @@ function SearchScopePage(): ReactElement {
             </div>
 
             <div
-                className={tw`mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-(--border) bg-(--bg-dim) shadow-soft`}
+                className={tw`shadow-soft mx-auto w-full max-w-2xl overflow-hidden rounded-2xl border border-(--border) bg-(--bg-dim)`}
             >
                 <ScopeBar
                     query={query}

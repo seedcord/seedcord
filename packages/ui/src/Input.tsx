@@ -39,7 +39,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
     ref?: Ref<HTMLInputElement>;
 }
 
-const slotClassName = tw`flex shrink-0 items-center text-subtle`;
+const slotClassName = tw`text-subtle flex shrink-0 items-center`;
 
 export function Input({
     className,
@@ -60,7 +60,7 @@ export function Input({
                 type={type}
                 className={cn(
                     // pointer-coarse:text-base pins the font to 16px on touch devices; iOS Safari zooms a focused input under 16px.
-                    tw`min-w-0 flex-1 bg-transparent text-(--text) outline-hidden pointer-coarse:text-base placeholder:text-subtle`,
+                    tw`placeholder:text-subtle min-w-0 flex-1 bg-transparent text-(--text) outline-hidden pointer-coarse:text-base`,
                     inputClassName
                 )}
                 {...props}

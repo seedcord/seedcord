@@ -19,7 +19,7 @@ const KIND_OPTIONS: DropdownOption[] = [
     { value: 'member', label: 'Members' }
 ];
 
-const SEPARATOR = tw`text-(--text-faint) text-sm`;
+const SEPARATOR = tw`text-sm text-(--text-faint)`;
 
 interface FilterControlsProps {
     scope: string;
@@ -110,7 +110,7 @@ function CloseButtons({ onClose }: { onClose: () => void }): ReactElement {
                 onClick={onClose}
                 aria-label="Close command palette"
                 className={cn(
-                    'border-border bg-surface-moderate text-subtle hidden h-auto items-center rounded-md border px-2 py-1 text-xs leading-none font-semibold tracking-wide uppercase hover:bg-surface-moderate hover:text-(--text) sm:inline-flex'
+                    'border-border bg-surface-moderate text-subtle hover:bg-surface-moderate hidden h-auto items-center rounded-md border px-2 py-1 text-xs leading-none font-semibold tracking-wide uppercase hover:text-(--text) sm:inline-flex'
                 )}
             >
                 Esc

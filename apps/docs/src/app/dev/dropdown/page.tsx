@@ -92,7 +92,7 @@ function SizesRow(): ReactElement {
     const [sm, setSm] = useState('en-US');
     const [md, setMd] = useState('en-US');
     return (
-        <div className={tw`flex flex-col gap-3 max-w-sm`}>
+        <div className={tw`flex max-w-sm flex-col gap-3`}>
             <div className={tw`space-y-1`}>
                 <p className={tw`text-subtle text-xs tracking-wide`}>fieldSize=&quot;sm&quot;</p>
                 <Dropdown
@@ -135,7 +135,7 @@ function LeadingIconRow(): ReactElement {
 function StatesRow(): ReactElement {
     const [val, setVal] = useState('');
     return (
-        <div className={tw`flex flex-col gap-3 max-w-sm`}>
+        <div className={tw`flex max-w-sm flex-col gap-3`}>
             <div className={tw`space-y-1`}>
                 <p className={tw`text-subtle text-xs tracking-wide`}>Placeholder (no value selected)</p>
                 <Dropdown placeholderLabel="Pick a locale" value={val} options={LOCALE_OPTIONS} onChange={setVal} />
@@ -194,7 +194,7 @@ function GhostVariantRow(): ReactElement {
     const [kind, setKind] = useState('all');
     return (
         <div
-            className={tw`flex max-w-md items-center gap-1 rounded-lg border border-(--border) bg-surface-subtle px-3 py-2`}
+            className={tw`bg-surface-subtle flex max-w-md items-center gap-1 rounded-lg border border-(--border) px-3 py-2`}
         >
             <Dropdown
                 variant="ghost"

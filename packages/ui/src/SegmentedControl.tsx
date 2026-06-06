@@ -16,7 +16,7 @@ const segmentedControlContainerClassName = [
 const segmentedControlOptionBaseClassName = [
     tw`relative inline-flex items-center justify-center gap-1.5 font-medium`,
     tw`transition-colors duration-150 ease-out`,
-    tw`focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-offset-(-2) focus-visible:outline-(--focus-outline-b)`,
+    tw`focus-visible:outline-offset-(-2) focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-(--focus-outline-b)`,
     tw`text-(--text-muted) hover:text-(--text)`,
     tw`aria-checked:text-(--text-accent-b-faint)`
 ].join(' ');
