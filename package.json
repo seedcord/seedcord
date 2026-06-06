@@ -47,6 +47,7 @@
         "docs:artifacts:fixtures": "pnpm tsx scripts/docs/build-docs-artifacts.ts --fixtures",
         "docs:local": "pnpm docs:extract && pnpm docs:artifacts",
         "docs:sync": "pnpm tsx scripts/docs/sync-docs-to-artifacts.ts",
+        "docs:purge": "pnpm tsx scripts/docs/purge-cdn-cache.ts",
         "docs:smoke": "pnpm docs:extract && pnpm --filter @seedcord/docs-engine run smoke ./generated -o ./debugging/samples"
     },
     "keywords": [

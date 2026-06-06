@@ -54,6 +54,7 @@ export interface DropdownOption {
     value: string;
     label: string;
     trailing?: ReactNode;
+    disabled?: boolean;
 }
 
 export interface DropdownGroup {
@@ -80,6 +81,17 @@ function DropdownListbox({ listboxId, groups, value, onSelect }: DropdownListbox
                         </li>
                     ) : null}
                     {group.options.map((opt) => {
+                        if (opt.disabled) {
+                            return (
+                                <li
+                                    key={opt.value}
+                                    role="presentation"
+                                    className={cn('px-3 py-2 text-sm text-(--text-faint) select-none')}
+                                >
+                                    {opt.label}
+                                </li>
+                            );
+                        }
                         const isSelected = opt.value === value;
                         return (
                             <li key={opt.value}>

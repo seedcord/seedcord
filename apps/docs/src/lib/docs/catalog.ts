@@ -82,13 +82,15 @@ function buildVersion(
     fullName: string,
     version: string,
     channel: 'stable' | 'prerelease',
-    isLatest: boolean
+    isLatest: boolean,
+    badge: PackageVersionCatalog['badge']
 ): PackageVersionCatalog {
     return {
         id: version,
         label: formatVersionLabel(version),
         basePath: buildPackageBasePath(fullName, version),
         isLatest,
+        badge,
         channel,
         categories: []
     } satisfies PackageVersionCatalog;
@@ -102,14 +104,14 @@ function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersi
     if (entry.stable) {
         const { latest } = entry.stable;
         for (const version of stableLineHeads(entry.stable)) {
-            versions.push(buildVersion(fullName, version, 'stable', version === latest));
+            const isLatest = version === latest;
+            versions.push(buildVersion(fullName, version, 'stable', isLatest, isLatest ? 'latest' : null));
         }
     }
 
     if (entry.prerelease) {
-        // The prerelease head carries the "latest" badge only on a 0-stable package; when a stable
-        // channel exists the stable head stays "latest" and the prerelease is just another entry.
-        versions.push(buildVersion(fullName, entry.prerelease.latest, 'prerelease', !entry.stable));
+        // 'next' selected by default when no 'latest' release
+        versions.push(buildVersion(fullName, entry.prerelease.latest, 'prerelease', !entry.stable, 'next'));
     }
 
     return versions;

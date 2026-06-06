@@ -24,13 +24,14 @@ const { findCatalogVersion, loadDocsCatalog, withActiveCategories } = await impo
 
 function makeVersion(
     id: string,
-    opts: { isLatest?: boolean; channel?: 'stable' | 'prerelease' } = {}
+    opts: { isLatest?: boolean; channel?: 'stable' | 'prerelease'; badge?: PackageVersionCatalog['badge'] } = {}
 ): PackageVersionCatalog {
     return {
         id,
         label: id,
         basePath: `/pkg/${id}`,
         isLatest: opts.isLatest ?? false,
+        badge: opts.badge ?? null,
         channel: opts.channel ?? 'stable',
         categories: []
     };
@@ -81,7 +82,7 @@ describe('findCatalogVersion', () => {
 });
 
 describe('loadDocsCatalog version badges', () => {
-    it('anchors the latest badge on the prerelease head for a 0-stable package, and on stable otherwise', async () => {
+    it("badges the stable head 'latest' and the prerelease head 'next', keeping the prerelease the default head on a 0-stable package", async () => {
         const prereleaseOnly: PackageIndexEntry = {
             fullName: '@seedcord/cli',
             stable: null,
@@ -106,12 +107,17 @@ describe('loadDocsCatalog version badges', () => {
         const utils = catalog.find((entry) => entry.manifestName === '@seedcord/utils');
 
         expect(cli?.versions).toHaveLength(1);
-        expect(cli?.versions[0]).toMatchObject({ id: '0.11.0-next.0', channel: 'prerelease', isLatest: true });
+        expect(cli?.versions[0]).toMatchObject({
+            id: '0.11.0-next.0',
+            channel: 'prerelease',
+            isLatest: true,
+            badge: 'next'
+        });
 
         const stableHead = utils?.versions.find((version) => version.id === '1.2.0');
         const preHead = utils?.versions.find((version) => version.id === '2.0.0-next.0');
-        expect(stableHead).toMatchObject({ channel: 'stable', isLatest: true });
-        expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false });
+        expect(stableHead).toMatchObject({ channel: 'stable', isLatest: true, badge: 'latest' });
+        expect(preHead).toMatchObject({ channel: 'prerelease', isLatest: false, badge: 'next' });
     });
 });
 

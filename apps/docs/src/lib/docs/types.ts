@@ -106,6 +106,7 @@ export interface PackageVersionCatalog {
     label: string;
     basePath: string;
     isLatest: boolean;
+    badge: 'latest' | 'next' | null;
     channel: 'stable' | 'prerelease';
     categories: readonly NavigationCategory[];
 }
