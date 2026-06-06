@@ -1,12 +1,24 @@
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+    DeleteObjectCommand,
+    GetObjectCommand,
+    HeadObjectCommand,
+    ListObjectsV2Command,
+    PutObjectCommand,
+    S3Client
+} from '@aws-sdk/client-s3';
 import { Converters, Envapter } from 'envapt';
+
+import { validateIndex } from '@seedcord/docs-engine';
+
+import type { IndexJson } from '@seedcord/docs-engine';
 
 // Shared helpers for publishing the docs artifact tree (generated/artifacts/) to Cloudflare R2
 
 const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+const HTTP_NOT_FOUND = 404;
 
 export function cacheControlFor(relativePath: string): string {
     return relativePath === 'index.json' ? 'no-cache' : IMMUTABLE_CACHE_CONTROL;
@@ -68,7 +80,7 @@ export interface PutToR2Options {
     cacheControl: string;
 }
 
-// Every served artifact is JSON; no caller needs to override the content type.
+// Every served artifact is JSON, so the content type is hardcoded.
 export async function putToR2(options: PutToR2Options): Promise<void> {
     const body = await readFile(options.filePath);
     await options.client.send(
@@ -80,4 +92,66 @@ export async function putToR2(options: PutToR2Options): Promise<void> {
             CacheControl: options.cacheControl
         })
     );
+}
+
+// err.name is inconsistent across operations (NoSuchKey on GET, NotFound on HEAD), so the 404 status is the reliable check.
+function isR2NotFound(error: unknown): boolean {
+    if (typeof error !== 'object' || error === null) return false;
+    const candidate = error as { name?: unknown; $metadata?: { httpStatusCode?: unknown } };
+    return (
+        candidate.$metadata?.httpStatusCode === HTTP_NOT_FOUND ||
+        candidate.name === 'NoSuchKey' ||
+        candidate.name === 'NotFound'
+    );
+}
+
+export interface RemoteRef {
+    client: S3Client;
+    bucket: string;
+    prefix: string;
+}
+
+// Returns null on the first publish, when the bucket has no index yet.
+export async function fetchRemoteIndex(ref: RemoteRef): Promise<IndexJson | null> {
+    try {
+        const res = await ref.client.send(new GetObjectCommand({ Bucket: ref.bucket, Key: `${ref.prefix}index.json` }));
+        const text = await res.Body?.transformToString();
+        if (!text) return null;
+        const parsed: unknown = JSON.parse(text);
+        return validateIndex(parsed);
+    } catch (error) {
+        if (isR2NotFound(error)) return null;
+        throw error;
+    }
+}
+
+// Versioned files are immutable, so a re-run can skip any that already exist.
+export async function objectExists(options: { client: S3Client; bucket: string; key: string }): Promise<boolean> {
+    try {
+        await options.client.send(new HeadObjectCommand({ Bucket: options.bucket, Key: options.key }));
+        return true;
+    } catch (error) {
+        if (isR2NotFound(error)) return false;
+        throw error;
+    }
+}
+
+// Collects the full live key set that --prune diffs against the desired union.
+export async function listRemoteKeys(ref: RemoteRef): Promise<string[]> {
+    const keys: string[] = [];
+    let token: string | undefined;
+    do {
+        const res = await ref.client.send(
+            new ListObjectsV2Command({ Bucket: ref.bucket, Prefix: ref.prefix, ContinuationToken: token })
+        );
+        for (const object of res.Contents ?? []) {
+            if (object.Key) keys.push(object.Key);
+        }
+        token = res.IsTruncated ? res.NextContinuationToken : undefined;
+    } while (token);
+    return keys;
+}
+
+export async function deleteFromR2(options: { client: S3Client; bucket: string; key: string }): Promise<void> {
+    await options.client.send(new DeleteObjectCommand({ Bucket: options.bucket, Key: options.key }));
 }

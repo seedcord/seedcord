@@ -4,7 +4,7 @@ on:
     workflow_run:
         workflows: ['tests']
         types: [completed]
-        branches: [main]
+        branches: [main, next]
     workflow_dispatch: {}
 
 permissions:
@@ -13,8 +13,9 @@ permissions:
     pull-requests: write
 
 concurrency:
-    group: release-${{ github.ref_name }}
-    cancel-in-progress: true
+    # github.ref_name is the default branch for both workflow_run triggers; head_branch separates main from next.
+    group: release-${{ github.event.workflow_run.head_branch || github.ref_name }}
+    cancel-in-progress: false
 
 jobs:
     dry-run-npm:
@@ -33,6 +34,9 @@ jobs:
         needs: dry-run-npm
         runs-on: ubuntu-latest
         timeout-minutes: 30
+        outputs:
+            published: ${{ steps.changesets.outputs.published }}
+            publishedPackages: ${{ steps.changesets.outputs.publishedPackages }}
         permissions:
             contents: write
             id-token: write
@@ -56,6 +60,21 @@ jobs:
             - run: npm config get registry && npm ping
             - run: pnpm run prepublishOnly
 
+            # Without pre.json, changesets on next publishes STABLE versions to npm's latest tag.
+            - name: Require pre-release mode on next
+              if: ${{ github.event.workflow_run.head_branch == 'next' }}
+              run: |
+                  if [ ! -f .changeset/pre.json ]; then
+                    echo "::error::On 'next' without .changeset/pre.json: refusing to publish (would cut STABLE versions). Enter pre-mode first."
+                    exit 1
+                  fi
+                  mode=$(jq -r '.mode' .changeset/pre.json)
+                  if [ "$mode" != "pre" ]; then
+                    echo "::error::.changeset/pre.json mode is '$mode', expected 'pre'."
+                    exit 1
+                  fi
+                  echo "pre-release mode confirmed on next (tag: $(jq -r '.tag' .changeset/pre.json))"
+
             - id: changesets
               uses: changesets/action@v1
               if: ${{ github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
@@ -63,7 +82,45 @@ jobs:
                   publish: pnpm run release
                   commit: 'chore(release): version packages'
                   title: 'chore: release packages'
-                  branch: 'main'
+                  branch: ${{ github.event.workflow_run.head_branch }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   HUSKY: 0
+
+    docs-publish:
+        needs: [npm-publish]
+        if: ${{ needs.npm-publish.outputs.published == 'true' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
+            - name: Turbo cache
+              uses: ./.github/actions/turbo-cache
+              with:
+                  turbo_token: ${{ secrets.TURBO_TOKEN }}
+                  turbo_team: ${{ vars.TURBO_TEAM }}
+                  enable_fallback_cache: 'true'
+            - name: Setup workspace
+              uses: ./.github/actions/setup
+
+            - name: Build
+              run: pnpm build
+
+            - name: Sync published docs to R2
+              run: pnpm docs:sync --extract --published '${{ needs.npm-publish.outputs.publishedPackages }}'
+              env:
+                  R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+                  R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+                  R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+                  R2_BUCKET: ${{ vars.R2_BUCKET }}
+
+            - name: Redeploy prod docs
+              run: |
+                  npm i -g @railway/cli
+                  railway redeploy --service "${{ vars.RAILWAY_DOCS_SERVICE }}" --environment production --yes
+              env:
+                  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

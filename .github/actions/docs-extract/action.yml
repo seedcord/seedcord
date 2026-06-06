@@ -1,19 +1,34 @@
-name: "Docs Extract"
-description: "Composite action to run the repository `docs:extract` command and produce generated/manifest.json"
+name: 'Docs Extract'
+description: 'Composite action to run the repository docs extract and produce generated/manifest.json'
 inputs:
     output-dir:
-        description: "Output directory for generated JSON files"
+        description: 'Output directory for generated JSON files'
         required: false
-        default: "./generated"
+        default: './generated'
     packages-dir:
-        description: "Directory containing packages to extract from"
+        description: 'Directory containing packages to extract from'
         required: false
-        default: "./packages"
+        default: './packages'
+    package:
+        description: 'Extract only this package (e.g. @seedcord/utils). Empty extracts all.'
+        required: false
+        default: ''
+    ref:
+        description: 'Git ref the source links point at (the tag for a published archive).'
+        required: false
+        default: ''
+    project-folder-url:
+        description: 'GitHub repo base used to build source links.'
+        required: false
+        default: ''
 runs:
-    using: "composite"
+    using: 'composite'
     steps:
-      - name: Run docs extraction
-        shell: bash
-        run: |
-            echo "Running docs extraction: output=${{ inputs.output-dir }}, packages=${{ inputs.packages-dir }}"
-            pnpm tsx scripts/extract-docs.ts -o "${{ inputs.output-dir }}" -p "${{ inputs.packages-dir }}"
+        - name: Run docs extraction
+          shell: bash
+          run: |
+              args=(-o "${{ inputs.output-dir }}" -p "${{ inputs.packages-dir }}")
+              [ -n "${{ inputs.package }}" ] && args+=(--package "${{ inputs.package }}")
+              [ -n "${{ inputs.ref }}" ] && args+=(--ref "${{ inputs.ref }}")
+              [ -n "${{ inputs.project-folder-url }}" ] && args+=(--project-folder-url "${{ inputs.project-folder-url }}")
+              pnpm tsx scripts/docs/extract-docs.ts "${args[@]}"
