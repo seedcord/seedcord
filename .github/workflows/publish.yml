@@ -12,6 +12,11 @@ permissions:
     id-token: write
     pull-requests: write
 
+env:
+    # Every build step here (dry-run, prepublishOnly, release, docs-publish) builds apps/docs, which
+    # prerenders against the published R2 index; CI has no local generated/ artifacts.
+    SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
+
 concurrency:
     # github.ref_name is the default branch for both workflow_run triggers; head_branch separates main from next.
     group: release-${{ github.event.workflow_run.head_branch || github.ref_name }}
