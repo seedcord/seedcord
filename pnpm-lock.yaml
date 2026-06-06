@@ -527,6 +527,9 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 5.0.3
+      seedcord:
+        specifier: workspace:*
+        version: link:../seedcord
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -555,9 +558,6 @@ importers:
       reflect-metadata:
         specifier: catalog:peer
         version: 0.2.2
-      seedcord:
-        specifier: workspace:*
-        version: link:../seedcord
       type-fest:
         specifier: catalog:deps
         version: 5.6.0

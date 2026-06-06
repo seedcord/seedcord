@@ -44,7 +44,6 @@
         "mongoose": "catalog:peer",
         "pg": "^8.21.0",
         "reflect-metadata": "catalog:peer",
-        "seedcord": "workspace:^",
         "typescript": "catalog:peer"
     },
     "peerDependenciesMeta": {
@@ -64,7 +63,8 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "envapt": "catalog:deps"
+        "envapt": "catalog:deps",
+        "seedcord": "workspace:*"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
@@ -75,7 +75,6 @@
         "mongoose": "catalog:peer",
         "pg": "^8.21.0",
         "reflect-metadata": "catalog:peer",
-        "seedcord": "workspace:*",
         "type-fest": "catalog:deps"
     },
     "publishConfig": {
