@@ -1,5 +1,36 @@
 # @seedcord/utils
 
+## 0.4.0-next.0
+
+### Minor Changes
+
+- 0083461: seedcord instance brand
+- 7e6d80e: most packages were exporting more than what they should be exporting and now have smaller imports as they should
+
+### Patch Changes
+
+- 225977a: export "version" variable with the actual semantic version of each package
+- 0083461: new method to format a file path relative to the root directory
+- 0083461: new fully typed hasKeys function that can check for the existence of a key and narrow the type based on the distributive union the key is coming from. works with nested keys too
+- 5e4bf42: Reclassify singleton runtime dependencies as peer dependencies so a consumer resolves a single shared instance.
+    - `seedcord`: `discord.js` and `reflect-metadata` are now required peer dependencies.
+    - `@seedcord/plugins`: `mongoose`, `pg`, and `kysely` are optional peer dependencies (install only the backend your plugin uses); `reflect-metadata` and `seedcord` are required peers.
+    - `@seedcord/types`: `discord.js` is now an optional peer dependency.
+    - `@seedcord/services` and `@seedcord/utils`: `type-fest` moved to `devDependencies` (its types are inlined into the published declarations).
+
+- 7308d36: `filterCirculars` now returns a serializable `{ '[unserializable]': reason }` placeholder when a value cannot be made JSON-safe, instead of returning the original value (which would re-throw in the caller's own `JSON.stringify`). `traverseDirectory` logs the directory path and cause on a read failure.
+- fe77998: build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.
+- fe77998: bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes.
+- Updated dependencies [225977a]
+- Updated dependencies [a34366b]
+- Updated dependencies [5e4bf42]
+- Updated dependencies [7308d36]
+- Updated dependencies [fe77998]
+- Updated dependencies [a34366b]
+- Updated dependencies [fe77998]
+- Updated dependencies [7e6d80e]
+    - @seedcord/types@0.4.0-next.0
+
 ## 0.3.8
 
 ### Patch Changes
