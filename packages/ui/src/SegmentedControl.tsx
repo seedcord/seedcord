@@ -17,8 +17,9 @@ const segmentedControlOptionBaseClassName = [
     tw`relative inline-flex items-center justify-center gap-1.5 font-medium`,
     tw`transition-colors duration-150 ease-out`,
     tw`focus-visible:outline-offset-(-2) focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-(--focus-outline-b)`,
-    tw`text-(--text-muted) hover:text-(--text)`,
-    tw`aria-checked:text-(--text-accent-b-faint)`
+    tw`text-(--text-muted) hover:text-(--text-muted-light)`,
+    tw`aria-checked:text-(--text-accent-b-faint)`,
+    tw`disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:text-(--text-muted)`
 ].join(' ');
 
 const segmentedControlOptionSizeClasses = {
@@ -34,6 +35,7 @@ export interface SegmentedControlOption<TValue extends string> {
     value: TValue;
     label: ReactNode;
     leadingIcon?: ReactNode;
+    disabled?: boolean;
 }
 
 export interface SegmentedControlProps<TValue extends string> {
@@ -41,6 +43,7 @@ export interface SegmentedControlProps<TValue extends string> {
     value: TValue;
     onChange: (next: TValue) => void;
     size?: SegmentedControlSize;
+    fullWidth?: boolean;
     className?: string;
     'aria-label'?: string;
 }
@@ -52,6 +55,7 @@ export function SegmentedControl<TValue extends string>({
     value,
     onChange,
     size = 'md',
+    fullWidth = false,
     className,
     'aria-label': ariaLabel
 }: SegmentedControlProps<TValue>): ReactElement {
@@ -60,17 +64,26 @@ export function SegmentedControl<TValue extends string>({
 
     return (
         <LayoutGroup id={layoutId}>
-            <div role="radiogroup" aria-label={ariaLabel} className={cn(segmentedControlContainerClassName, className)}>
+            <div
+                role="radiogroup"
+                aria-label={ariaLabel}
+                className={cn(segmentedControlContainerClassName, fullWidth && tw`flex w-full`, className)}
+            >
                 {options.map((opt) => {
-                    const isActive = opt.value === value;
+                    const isActive = opt.value === value && !opt.disabled;
                     return (
                         <button
                             key={opt.value}
                             type="button"
                             role="radio"
                             aria-checked={isActive}
+                            disabled={opt.disabled}
                             onClick={() => onChange(opt.value)}
-                            className={cn(segmentedControlOptionBaseClassName, segmentedControlOptionSizeClasses[size])}
+                            className={cn(
+                                segmentedControlOptionBaseClassName,
+                                segmentedControlOptionSizeClasses[size],
+                                fullWidth && tw`flex-1`
+                            )}
                         >
                             {isActive ? (
                                 <m.span
