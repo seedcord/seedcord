@@ -1,13 +1,13 @@
 'use client';
 
 import { cn, ScrollToTopButton } from '@seedcord/ui';
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 
 import { Sidebar } from '@components/layout/sidebar/Sidebar';
 import { SIDEBAR_WIDTH } from '@components/layout/sidebar/utils/constants';
+import { useUIStore } from '@store/ui';
 
 import { DesktopSidebarFrame } from './DesktopSidebarFrame';
-import { MobileNavigationToggle } from './MobileNavigationToggle';
 import { MobilePanelDialog } from './MobilePanelDialog';
 
 import type { DocsCatalog } from '@lib/docs/types';
@@ -32,7 +32,8 @@ export function Container({
     className
 }: ContainerProps): ReactNode {
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const [navigationOpen, setNavigationOpen] = useState(false);
+    const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
+    const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
 
     useLayoutEffect(() => {
         const updateNavigationHeight = (): void => {
@@ -62,16 +63,14 @@ export function Container({
 
     return (
         <div ref={containerRef} style={containerStyle} className={cn('flex w-full flex-1 flex-col gap-5', className)}>
-            <MobileNavigationToggle onOpen={() => setNavigationOpen(true)} />
-
-            <MobilePanelDialog open={navigationOpen} onOpenChange={setNavigationOpen} title="Navigation">
+            <MobilePanelDialog open={isMobileNavOpen} onOpenChange={setMobileNavOpen} title="Navigation">
                 <Sidebar
                     catalog={catalog}
                     activePackageId={activePackageId}
                     activeVersionId={activeVersionId}
                     variant="mobile"
                     className={cn(SIDEBAR_BASE_CLASS, MOBILE_SIDEBAR_OVERRIDES)}
-                    onSelect={() => setNavigationOpen(false)}
+                    onSelect={() => setMobileNavOpen(false)}
                 />
             </MobilePanelDialog>
 

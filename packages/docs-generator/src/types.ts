@@ -62,4 +62,5 @@ export interface PackageDocResult {
     succeeded: boolean;
     sources?: PackageSourceIndex;
     reexports?: ReexportEntry[];
+    readme?: string;
 }

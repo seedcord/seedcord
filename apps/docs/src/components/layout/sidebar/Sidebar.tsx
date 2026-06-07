@@ -4,6 +4,7 @@ import { Card, cn } from '@seedcord/ui';
 import { usePathname } from 'next/navigation';
 
 import { SidebarCategoryList } from './SidebarCategoryList';
+import { SidebarCategoryListSkeleton } from './SidebarCategoryListSkeleton';
 import { SidebarEmptyState } from './SidebarEmptyState';
 import { SidebarHeader } from './SidebarHeader';
 import { getContainerStyles } from './utils/getContainerStyles';
@@ -37,7 +38,8 @@ export function Sidebar({
         fallbackVersionId,
         effectivePackageId,
         effectiveVersionId,
-        setPendingSelection
+        setPendingSelection,
+        isPendingSelection
     } = useSidebarSelectionState(catalog, pathname, activePackageId, activeVersionId);
 
     const { scrollRef, collapsedStorageKey } = useSidebarPersistence(fallbackPackageId, fallbackVersionId);
@@ -106,12 +108,16 @@ export function Sidebar({
                 style={listStyles}
                 onWheel={handleWheel}
             >
-                <SidebarCategoryList
-                    categories={activeVersion.categories}
-                    activeHref={pathname}
-                    storageKey={collapsedStorageKey}
-                    {...(onSelect ? { onSelect } : {})}
-                />
+                {isPendingSelection ? (
+                    <SidebarCategoryListSkeleton />
+                ) : (
+                    <SidebarCategoryList
+                        categories={activeVersion.categories}
+                        activeHref={pathname}
+                        storageKey={collapsedStorageKey}
+                        {...(onSelect ? { onSelect } : {})}
+                    />
+                )}
             </div>
         </Card>
     );

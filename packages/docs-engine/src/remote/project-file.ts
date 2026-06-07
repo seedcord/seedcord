@@ -11,18 +11,21 @@ export interface DocProjectFile {
     schemaVersion: 1;
     package: { name: string; version: string };
     root: DocNode;
+    // This will be absent for versions published before README capture.
+    readme?: string;
 }
 
 export function serializeProject(model: DocPackageModel): DocProjectFile {
     return {
         schemaVersion: 1,
         package: { name: model.manifest.name, version: model.manifest.version },
-        root: model.root
+        root: model.root,
+        ...(model.manifest.readme ? { readme: model.manifest.readme } : {})
     };
 }
 
 export function deserializeProject(file: DocProjectFile): DocPackageModel {
-    return buildPackageFromModel(manifestShell(file.package), file.root);
+    return buildPackageFromModel(manifestShell(file.package, file.readme), file.root);
 }
 
 export function validateProjectFile(value: unknown): DocProjectFile {
@@ -49,13 +52,14 @@ export function validateProjectFile(value: unknown): DocProjectFile {
     return {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },
-        root: root.root as DocNode
+        root: root.root as DocNode,
+        ...(typeof root.readme === 'string' ? { readme: root.readme } : {})
     };
 }
 
 // project.json carries only name + version; the rest of DocManifestPackage describes the extraction
 // run (entry points, warnings, errors), which the render path never reads.
-function manifestShell(pkg: DocProjectFile['package']): DocManifestPackage {
+function manifestShell(pkg: DocProjectFile['package'], readme?: string): DocManifestPackage {
     return {
         name: pkg.name,
         version: pkg.version,
@@ -65,6 +69,7 @@ function manifestShell(pkg: DocProjectFile['package']): DocManifestPackage {
         errors: [],
         warningCount: 0,
         errorCount: 0,
-        succeeded: true
+        succeeded: true,
+        ...(readme ? { readme } : {})
     };
 }

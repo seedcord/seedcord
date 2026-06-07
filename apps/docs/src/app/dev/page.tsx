@@ -72,6 +72,26 @@ const PRIMITIVES = [
 
 const DOCS_BEHAVIORS = [
     {
+        href: '/dev/package-overview-tabs',
+        label: 'PackageOverviewTabs',
+        description: 'README | Reference Overview segmented toggle; README default, disabled when a version has none'
+    },
+    {
+        href: '/dev/overview-header',
+        label: 'Overview header layouts',
+        description: 'candidate layouts for the package title + version + Overview/Reference toggle (pick one)'
+    },
+    {
+        href: '/dev/overview-header-mobile',
+        label: 'Overview header (mobile)',
+        description: 'mobile header layouts in a 380px frame: centered, full-width tabs, left stack (pick one)'
+    },
+    {
+        href: '/dev/skeletons',
+        label: 'Skeletons',
+        description: 'sidebar category + overview loading placeholders, in isolation (they flash too fast live)'
+    },
+    {
         href: '/dev/cross-pkg-link',
         label: 'Cross-package links',
         description: 'new-tab + prose arrow indicator for cross-package and external references (no icon in code)'

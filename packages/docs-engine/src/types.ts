@@ -64,6 +64,7 @@ export interface DocManifestPackage {
     succeeded: boolean;
     sources?: PackageSourceIndex;
     reexports?: DocReexport[];
+    readme?: string;
 }
 
 export interface DocManifest {
