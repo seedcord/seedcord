@@ -7,12 +7,14 @@ import { formatMemberAccessLabel, type MemberAccessLevel } from '@lib/memberAcce
 
 interface UIState {
     isCommandPaletteOpen: boolean;
+    isMobileNavOpen: boolean;
     memberAccessLevel: MemberAccessLevel;
 }
 
 interface UIActions {
     setCommandPaletteOpen: (open: boolean) => void;
     toggleCommandPalette: () => void;
+    setMobileNavOpen: (open: boolean) => void;
     setMemberAccessLevel: (level: MemberAccessLevel) => void;
 }
 
@@ -22,11 +24,17 @@ const DEFAULT_ACCESS_LEVEL: MemberAccessLevel = 'protected';
 
 export const useUIStore = create<UIStore>((set) => ({
     isCommandPaletteOpen: false,
+    isMobileNavOpen: false,
     memberAccessLevel: DEFAULT_ACCESS_LEVEL,
 
     setCommandPaletteOpen: (open) => {
         log('Command palette visibility updated', { open });
         set({ isCommandPaletteOpen: open });
+    },
+
+    setMobileNavOpen: (open) => {
+        log('Mobile navigation visibility updated', { open });
+        set({ isMobileNavOpen: open });
     },
 
     toggleCommandPalette: () =>
