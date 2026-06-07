@@ -2,41 +2,53 @@ name: publish
 
 on:
     workflow_run:
-        workflows: ['tests']
+        workflows: ['checks']
         types: [completed]
         branches: [main, next]
     workflow_dispatch: {}
 
 permissions:
-    contents: write
-    id-token: write
-    pull-requests: write
-
-env:
-    # Every build step here (dry-run, prepublishOnly, release, docs-publish) builds apps/docs, which
-    # prerenders against the published R2 index; CI has no local generated/ artifacts.
-    SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
+    contents: read
 
 concurrency:
-    # github.ref_name is the default branch for both workflow_run triggers; head_branch separates main from next.
+    # head_branch (not ref_name) tells main from next: workflow_run sets ref_name to the default branch.
     group: release-${{ github.event.workflow_run.head_branch || github.ref_name }}
     cancel-in-progress: false
 
+env:
+    SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
+
 jobs:
+    eligibility:
+        if: ${{ (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success') && github.repository == 'seedcord/seedcord' }}
+        runs-on: ubuntu-latest
+        outputs:
+            publish: ${{ steps.gate.outputs.publish }}
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - id: gate
+              uses: ./.github/actions/check-eligibility
+              with:
+                  branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+
     dry-run-npm:
-        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        needs: eligibility
+        if: ${{ needs.eligibility.outputs.publish == 'true' }}
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v6
               with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
                   fetch-depth: 0
             - name: Setup workspace
               uses: ./.github/actions/setup
             - run: pnpm publish --dry-run --workspace-root --no-git-checks
 
     npm-publish:
-        if: ${{ github.event.workflow_run.conclusion == 'success' }}
-        needs: dry-run-npm
+        needs: [eligibility, dry-run-npm]
+        if: ${{ needs.eligibility.outputs.publish == 'true' }}
         runs-on: ubuntu-latest
         timeout-minutes: 30
         outputs:
@@ -49,6 +61,7 @@ jobs:
         steps:
             - uses: actions/checkout@v6
               with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
                   fetch-depth: 0
             - name: Turbo cache
               uses: ./.github/actions/turbo-cache
@@ -65,36 +78,21 @@ jobs:
             - run: npm config get registry && npm ping
             - run: pnpm run prepublishOnly
 
-            # Without pre.json, changesets on next publishes STABLE versions to npm's latest tag.
-            - name: Require pre-release mode on next
-              if: ${{ github.event.workflow_run.head_branch == 'next' }}
-              run: |
-                  if [ ! -f .changeset/pre.json ]; then
-                    echo "::error::On 'next' without .changeset/pre.json: refusing to publish (would cut STABLE versions). Enter pre-mode first."
-                    exit 1
-                  fi
-                  mode=$(jq -r '.mode' .changeset/pre.json)
-                  if [ "$mode" != "pre" ]; then
-                    echo "::error::.changeset/pre.json mode is '$mode', expected 'pre'."
-                    exit 1
-                  fi
-                  echo "pre-release mode confirmed on next (tag: $(jq -r '.tag' .changeset/pre.json))"
-
             - id: changesets
-              uses: changesets/action@v1
-              if: ${{ github.event.workflow_run.event == 'push' && github.event.workflow_run.head_repository.full_name == github.repository }}
+              uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0
               with:
                   publish: pnpm run release
                   commit: 'chore(release): version packages'
                   title: 'chore: release packages'
-                  branch: ${{ github.event.workflow_run.head_branch }}
+                  branch: ${{ github.event.workflow_run.head_branch || github.ref_name }}
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_CONFIG_PROVENANCE: 'true'
                   HUSKY: 0
 
     docs-publish:
-        needs: [npm-publish]
-        if: ${{ needs.npm-publish.outputs.published == 'true' && github.event.workflow_run.head_repository.full_name == github.repository }}
+        needs: npm-publish
+        if: ${{ needs.npm-publish.outputs.published == 'true' }}
         runs-on: ubuntu-latest
         timeout-minutes: 30
         permissions:
@@ -102,6 +100,7 @@ jobs:
         steps:
             - uses: actions/checkout@v6
               with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
                   fetch-depth: 0
             - name: Turbo cache
               uses: ./.github/actions/turbo-cache

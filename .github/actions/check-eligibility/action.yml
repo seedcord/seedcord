@@ -1,0 +1,27 @@
+name: 'Check release eligibility'
+description: "Decide whether the given branch may publish. 'next' is pre-release only and must be in changesets pre mode."
+
+inputs:
+    branch:
+        description: 'Branch being considered for publish.'
+        required: true
+
+outputs:
+    publish:
+        description: "'true' when this branch is allowed to publish, otherwise 'false'."
+        value: ${{ steps.gate.outputs.publish }}
+
+runs:
+    using: composite
+    steps:
+        - id: gate
+          shell: bash
+          run: |
+              set -euo pipefail
+              if [ "${{ inputs.branch }}" = "next" ] \
+                 && { [ ! -f .changeset/pre.json ] || [ "$(jq -r '.mode // empty' .changeset/pre.json)" != "pre" ]; }; then
+                echo "On 'next' without pre-release mode; skipping publish."
+                echo "publish=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "publish=true" >> "$GITHUB_OUTPUT"
+              fi
