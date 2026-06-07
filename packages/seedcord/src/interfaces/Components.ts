@@ -2,6 +2,9 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ChannelSelectMenuBuilder,
+    CheckboxBuilder,
+    CheckboxGroupBuilder,
+    CheckboxGroupOptionBuilder,
     ContainerBuilder,
     ContextMenuCommandBuilder,
     EmbedBuilder,
@@ -12,6 +15,8 @@ import {
     MediaGalleryBuilder,
     MentionableSelectMenuBuilder,
     ModalBuilder,
+    RadioGroupBuilder,
+    RadioGroupOptionBuilder,
     RoleSelectMenuBuilder,
     SectionBuilder,
     SeparatorBuilder,
@@ -31,7 +36,7 @@ import { getBotColor } from '@miscellaneous/botColorHolder';
 import type { Join, NonEmptyTuple } from 'type-fest';
 
 /**
- * Available Discord.js builder classes for use with BuilderComponent
+ * Available Discord.js builder classes for use with BuilderComponent for commands, embeds, modals, etc.
  *
  * @internal
  */
@@ -50,6 +55,11 @@ export const BuilderTypes = {
     label: LabelBuilder,
     text_input: TextInputBuilder,
     file_upload: FileUploadBuilder,
+    checkbox: CheckboxBuilder,
+    checkbox_group: CheckboxGroupBuilder,
+    checkbox_group_option: CheckboxGroupOptionBuilder,
+    radio_group: RadioGroupBuilder,
+    radio_group_option: RadioGroupOptionBuilder,
 
     // Action Row Components
     button: ButtonBuilder,
@@ -70,7 +80,7 @@ export const BuilderTypes = {
 };
 
 /**
- * Available Discord.js action row classes for use with RowComponent
+ * Available Discord.js action row classes for use with RowComponent for Select Menus and Buttons
  *
  * @internal
  */
