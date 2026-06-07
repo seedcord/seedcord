@@ -169,6 +169,20 @@ export const loadActiveVersion = cache(async (folder: string, versionId: string)
     return buildCategories(engine.getPackageDirectory(entry.fullName));
 });
 
+export const loadReadme = cache(async (folder: string, versionId: string): Promise<string | null> => {
+    const engine = await getDocsEngine();
+    const entry = await engine.getEntry(folder);
+    if (!entry) return null;
+
+    try {
+        await engine.setVersion(folder, versionId);
+    } catch {
+        return null;
+    }
+
+    return engine.getPackage(entry.fullName)?.manifest.readme ?? null;
+});
+
 export interface ReexportLink {
     name: string;
     owner: string;

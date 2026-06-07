@@ -6,15 +6,19 @@ import { Suspense } from 'react';
 
 import { EntityContent } from '@components/docs/entity/EntityContent';
 import { MovedEntityNotice } from '@components/docs/MovedEntityNotice';
+import { PackageOverviewTabs } from '@components/docs/PackageOverviewTabs';
+import { ReadmeBlock } from '@components/docs/ReadmeBlock';
 import {
     findCatalogEntry,
     findCatalogVersion,
     loadActiveVersion,
     loadDocsCatalog,
+    loadReadme,
     loadReexports
 } from '@lib/docs/catalog';
 import { getDocsEngine } from '@lib/docs/engine';
 import { loadEntityModel } from '@lib/docs/loadEntityModel';
+import { renderReadme } from '@lib/docs/renderReadme';
 import { getToneConfig } from '@lib/tonePresentation';
 
 import type { ReexportLink } from '@lib/docs/catalog';
@@ -130,42 +134,23 @@ function renderReexportGroup([owner, links]: [string, ReexportLink[]]): ReactEle
 }
 
 function PackageVersionOverview({
-    entry,
-    version,
     categories,
     reexports
 }: {
-    entry: PackageCatalogEntry;
-    version: PackageVersionCatalog;
     categories: readonly NavigationCategory[];
     reexports: readonly ReexportLink[];
 }): ReactElement {
     const reexportGroups = groupReexports(reexports);
-    const isEmpty = categories.length === 0 && reexportGroups.length === 0;
+
+    if (categories.length === 0 && reexportGroups.length === 0) {
+        return <p className={cn('text-subtle text-sm')}>No reference entries are available for this version yet.</p>;
+    }
 
     return (
-        <section className={cn('space-y-8')}>
-            <header className={cn('space-y-3')}>
-                <p className={cn('text-subtle text-xs font-semibold tracking-[0.35em] uppercase')}>
-                    Reference overview
-                </p>
-                <h1 className={cn('text-3xl font-semibold text-(--text) sm:text-4xl')}>
-                    {entry.label} · {version.label}
-                </h1>
-            </header>
-            <div className={cn('space-y-8')}>
-                {isEmpty ? (
-                    <p className={cn('text-subtle text-sm')}>
-                        No reference entries are available for this version yet.
-                    </p>
-                ) : (
-                    <>
-                        {categories.map(renderCategory)}
-                        {reexportGroups.map(renderReexportGroup)}
-                    </>
-                )}
-            </div>
-        </section>
+        <div className={cn('space-y-8')}>
+            {categories.map(renderCategory)}
+            {reexportGroups.map(renderReexportGroup)}
+        </div>
     );
 }
 
@@ -184,13 +169,22 @@ async function PackageEntityPage({ params }: { params: Promise<PageParams> }): P
     const normalizedSegments: string[] | undefined = normalizeSegments(rawSegments);
 
     if (!normalizedSegments || normalizedSegments.length === 0) {
-        const reexports = await loadReexports(entry.id, version.id);
+        const [reexports, readmeMarkdown] = await Promise.all([
+            loadReexports(entry.id, version.id),
+            loadReadme(entry.id, version.id)
+        ]);
+        const readmeHtml = readmeMarkdown ? await renderReadme(readmeMarkdown) : null;
         return (
             <div className={cn('space-y-8')}>
                 <Suspense fallback={null}>
                     <MovedEntityNotice packageLabel={entry.label} />
                 </Suspense>
-                <PackageVersionOverview entry={entry} version={version} categories={categories} reexports={reexports} />
+                <PackageOverviewTabs
+                    title={entry.label}
+                    version={version.label}
+                    readme={readmeHtml ? <ReadmeBlock html={readmeHtml} /> : null}
+                    reference={<PackageVersionOverview categories={categories} reexports={reexports} />}
+                />
             </div>
         );
     }
