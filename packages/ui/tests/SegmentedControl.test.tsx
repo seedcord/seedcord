@@ -149,11 +149,10 @@ describe('SegmentedControl active pill (motion layout)', () => {
 });
 
 describe('SegmentedControl segment interactivity', () => {
-    it('treats every option as clickable (no per-segment disabled flag yet)', () => {
+    it('leaves options without a disabled flag interactive', () => {
         render(<Harness />);
         for (const r of screen.getAllByRole('radio')) {
             expect(r).not.toBeDisabled();
-            expect(r).not.toHaveAttribute('aria-disabled', 'true');
         }
     });
 
@@ -165,6 +164,64 @@ describe('SegmentedControl segment interactivity', () => {
         await user.click(grid);
         await user.click(grid);
         expect(spy).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('SegmentedControl disabled option', () => {
+    const WITH_DISABLED: readonly SegmentedControlOption<View>[] = [
+        { value: 'list', label: 'List' },
+        { value: 'grid', label: 'Grid', disabled: true },
+        { value: 'table', label: 'Table' }
+    ];
+
+    it('renders the disabled option as a non-interactive radio', () => {
+        render(
+            <SegmentedControl aria-label="View mode" options={WITH_DISABLED} value="list" onChange={() => undefined} />
+        );
+        expect(screen.getByRole('radio', { name: 'Grid' })).toBeDisabled();
+        expect(screen.getByRole('radio', { name: 'List' })).not.toBeDisabled();
+    });
+
+    it('does not fire onChange when a disabled option is clicked', async () => {
+        const user = userEvent.setup();
+        const spy = vi.fn();
+        render(<SegmentedControl aria-label="View mode" options={WITH_DISABLED} value="list" onChange={spy} />);
+        await user.click(screen.getByRole('radio', { name: 'Grid' }));
+        expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('reflects selection on a disabled option', () => {
+        const { container } = render(
+            <SegmentedControl aria-label="View mode" options={WITH_DISABLED} value="grid" onChange={() => undefined} />
+        );
+        const grid = screen.getByRole('radio', { name: 'Grid' });
+        expect(grid).toBeDisabled();
+        expect(grid).toHaveAttribute('aria-checked', 'true');
+        expect(grid.querySelector('[aria-hidden="true"]')).not.toBeNull();
+        expect(container.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+    });
+});
+
+describe('SegmentedControl full-width layout', () => {
+    it('stretches the group and every option when fullWidth is set', () => {
+        render(
+            <SegmentedControl
+                aria-label="View mode"
+                options={OPTIONS}
+                value="list"
+                onChange={() => undefined}
+                fullWidth
+            />
+        );
+        expect(screen.getByRole('radiogroup', { name: 'View mode' }).className).toContain('w-full');
+        for (const r of screen.getAllByRole('radio')) {
+            expect(r.className).toContain('flex-1');
+        }
+    });
+
+    it('does not stretch by default', () => {
+        render(<SegmentedControl aria-label="View mode" options={OPTIONS} value="list" onChange={() => undefined} />);
+        expect(screen.getByRole('radiogroup', { name: 'View mode' }).className).not.toContain('w-full');
     });
 });
 

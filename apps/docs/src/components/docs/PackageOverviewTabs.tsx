@@ -12,8 +12,12 @@ const TAB_STORAGE_KEY = 'docs.overview.tab';
 const tabListeners = new Set<() => void>();
 
 function readStoredTab(): OverviewTab | null {
-    const stored = window.localStorage.getItem(TAB_STORAGE_KEY);
-    return stored === 'readme' || stored === 'reference' ? stored : null;
+    try {
+        const stored = window.localStorage.getItem(TAB_STORAGE_KEY);
+        return stored === 'readme' || stored === 'reference' ? stored : null;
+    } catch {
+        return null;
+    }
 }
 
 function subscribeStoredTab(callback: () => void): () => void {
@@ -26,7 +30,11 @@ function subscribeStoredTab(callback: () => void): () => void {
 }
 
 function writeStoredTab(tab: OverviewTab): void {
-    window.localStorage.setItem(TAB_STORAGE_KEY, tab);
+    try {
+        window.localStorage.setItem(TAB_STORAGE_KEY, tab);
+    } catch {
+        // storage blocked (private mode / disabled); the preference just won't persist
+    }
     // 'storage' fires only in other tabs, not the one that wrote it.
     tabListeners.forEach((callback) => callback());
 }

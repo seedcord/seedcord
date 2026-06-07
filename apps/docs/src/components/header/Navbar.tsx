@@ -14,6 +14,7 @@ import type { ReactElement } from 'react';
 
 export function Navbar(): ReactElement {
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
+    const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
 
     return (
         <header className={cn('border-border sticky top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}>
@@ -33,6 +34,8 @@ export function Navbar(): ReactElement {
                                 variant="ghost"
                                 size="icon"
                                 aria-label="Open navigation menu"
+                                aria-haspopup="dialog"
+                                aria-expanded={isMobileNavOpen}
                                 className={cn('text-(--text) lg:hidden')}
                                 onClick={() => setMobileNavOpen(true)}
                             >

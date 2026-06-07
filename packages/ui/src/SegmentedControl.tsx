@@ -70,7 +70,7 @@ export function SegmentedControl<TValue extends string>({
                 className={cn(segmentedControlContainerClassName, fullWidth && tw`flex w-full`, className)}
             >
                 {options.map((opt) => {
-                    const isActive = opt.value === value && !opt.disabled;
+                    const isActive = opt.value === value;
                     return (
                         <button
                             key={opt.value}
