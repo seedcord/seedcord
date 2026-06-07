@@ -17,5 +17,7 @@
     "@seedcord/ui": "0.1.0",
     "@seedcord/utils": "0.4.0"
   },
-  "changesets": []
+  "changesets": [
+    "ninety-lemons-sell"
+  ]
 }
