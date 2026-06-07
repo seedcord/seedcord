@@ -1,10 +1,4 @@
-export {
-    BuilderComponent,
-    CustomError,
-    RowComponent,
-    type ActionRowComponentType,
-    type BuilderType
-} from './Components';
+export { BuilderComponent, CustomError, RowComponent, type RowType, type BuilderType } from './Components';
 export {
     AutocompleteHandler,
     EventHandler,
