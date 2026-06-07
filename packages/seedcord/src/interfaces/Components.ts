@@ -113,12 +113,12 @@ export type InstantiatedBuilder<BuilderKey extends BuilderType> = InstanceType<(
 /**
  * Available Discord.js action row types for use with RowComponent
  */
-export type ActionRowComponentType = keyof typeof RowTypes;
+export type RowType = keyof typeof RowTypes;
 
 /**
  * @internal
  */
-export type InstantiatedActionRow<RowKey extends ActionRowComponentType> = InstanceType<(typeof RowTypes)[RowKey]>;
+export type InstantiatedActionRow<RowKey extends RowType> = InstanceType<(typeof RowTypes)[RowKey]>;
 
 /**
  * Base class for Discord component wrappers
@@ -144,7 +144,7 @@ export abstract class BaseComponent<TComponent> {
      * Please do not use for further configuration, use `this.instance` for that.
      * @example new SomeComponent().component
      */
-    public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<ActionRowComponentType>;
+    public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<RowType>;
 
     /**
      * Gets the component instance for configuration
@@ -240,9 +240,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
  *
  * @typeParam RowKey - The Discord.js action row type being wrapped
  */
-export abstract class RowComponent<RowKey extends ActionRowComponentType> extends BaseComponent<
-    InstantiatedActionRow<RowKey>
-> {
+export abstract class RowComponent<RowKey extends RowType> extends BaseComponent<InstantiatedActionRow<RowKey>> {
     protected constructor(public readonly type: RowKey) {
         const ComponentClass = RowTypes[type] as unknown;
         super(ComponentClass as new () => InstantiatedActionRow<RowKey>);
