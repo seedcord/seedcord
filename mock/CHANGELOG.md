@@ -1,5 +1,31 @@
 # @seedcord/mock
 
+## 0.2.18
+
+### Patch Changes
+
+- 225977a: export "version" variable with the actual semantic version of each package
+- Updated dependencies [225977a]
+- Updated dependencies [2c4201b]
+- Updated dependencies [80ec3d0]
+- Updated dependencies [a34366b]
+- Updated dependencies [d14a6b2]
+- Updated dependencies [0083461]
+- Updated dependencies [d938005]
+- Updated dependencies [5a529d5]
+- Updated dependencies [5e4bf42]
+- Updated dependencies [fe77998]
+- Updated dependencies [cf9766d]
+- Updated dependencies [7308d36]
+- Updated dependencies [7308d36]
+- Updated dependencies [7308d36]
+- Updated dependencies [fe77998]
+- Updated dependencies [a34366b]
+- Updated dependencies [fe77998]
+- Updated dependencies [7e6d80e]
+    - seedcord@0.11.0
+    - @seedcord/plugins@0.6.0
+
 ## 0.2.18-next.0
 
 ### Patch Changes
