@@ -41,6 +41,12 @@ function isPackageManifest(value: unknown): value is PackageManifest {
     return typeof candidate.name === 'string' && typeof candidate.version === 'string';
 }
 
+export async function readReadme(packageDir: string): Promise<string | null> {
+    const readmePath = path.join(packageDir, 'README.md');
+    if (!(await pathExists(readmePath))) return null;
+    return readFile(readmePath, 'utf8');
+}
+
 /** The unscoped package name: `@seedcord/utils` becomes `utils`; a bare `utils` is returned as-is. */
 export function unscopedName(name: string): string {
     return name.split('/').pop() ?? name;

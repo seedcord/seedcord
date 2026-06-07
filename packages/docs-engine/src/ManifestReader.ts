@@ -86,6 +86,7 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
     // re-validated per entry.
     if (isRecordShape(pkg.sources)) result.sources = pkg.sources;
     if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
+    if (typeof pkg.readme === 'string') result.readme = pkg.readme;
 
     return result;
 }
