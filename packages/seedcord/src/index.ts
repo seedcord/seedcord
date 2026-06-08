@@ -15,6 +15,9 @@ export * from '@bUtilities/index';
 // Interfaces exports
 export * from '@interfaces/index';
 
+// CustomId codec exports
+export * from '@customId/index';
+
 // Pub/Sub exports
 export * from '@subscribers/index';
 
