@@ -58,6 +58,21 @@ export enum SeedcordErrorCode {
     /** StrictEventEmitter.waitFor exceeded its configured timeout. */
     EventEmitterWaitForTimeout = 1502,
 
+    /** A customId definition prefix contains a reserved character (a colon or a control char). */
+    CustomIdInvalidPrefix = 1601,
+    /** A customId field name is integer-like, which JS would silently reorder. */
+    CustomIdReservedFieldName = 1602,
+    /** A oneOf() field was declared with no choices. */
+    CustomIdEmptyChoices = 1603,
+    /** An int() field was declared with min greater than max. */
+    CustomIdInvalidBounds = 1604,
+    /** A value passed to encode() is outside its field's allowed range. */
+    CustomIdValueOutOfRange = 1605,
+    /** An encoded customId exceeds Discord's 100-character limit. */
+    CustomIdWireTooLong = 1606,
+    /** A field name is declared more than once in the same customId chain. */
+    CustomIdDuplicateFieldName = 1607,
+
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
     /** Mongo model class is missing the `@RegisterMongoModel` decorator. */

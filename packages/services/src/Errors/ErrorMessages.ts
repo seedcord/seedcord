@@ -51,6 +51,21 @@ const messages = {
     [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
     [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
 
+    [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
+        `customId prefix ${JSON.stringify(prefix)} may not contain a colon or control characters.`,
+    [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>
+        `customId field name ${JSON.stringify(field)} is integer-like, which JS reorders. Use a non-numeric name.`,
+    [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string) =>
+        `customId field ${JSON.stringify(field)} uses oneOf() with no choices.`,
+    [SeedcordErrorCode.CustomIdInvalidBounds]: (field: string, min: number, max: number) =>
+        `customId field ${JSON.stringify(field)} has min ${min} greater than max ${max}.`,
+    [SeedcordErrorCode.CustomIdValueOutOfRange]: (field: string, value: string) =>
+        `customId field ${JSON.stringify(field)} got value ${value} outside its allowed range.`,
+    [SeedcordErrorCode.CustomIdWireTooLong]: (length: number) =>
+        `Encoded customId is ${length} characters, Discord allows at most 100.`,
+    [SeedcordErrorCode.CustomIdDuplicateFieldName]: (field: string) =>
+        `customId field ${JSON.stringify(field)} is already defined in this chain.`,
+
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
     [SeedcordErrorCode.PluginMongoModelDecoratorMissing]: (className: string) =>
