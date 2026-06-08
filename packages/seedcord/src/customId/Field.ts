@@ -1,6 +1,10 @@
 // the field types a customId carries. the chain methods on CustomId build these at runtime.
 
-/** One field in a customId shape, its wire kind plus the type it decodes to. */
+/**
+ * One field in a customId shape, its wire kind plus the type it decodes to.
+ *
+ * @internal
+ */
 export interface CustomIdField<Decoded> {
     /** Which wire encoding this field uses. */
     readonly kind: 'snowflake' | 'uuid' | 'int' | 'bool' | 'oneOf' | 'string';
@@ -14,10 +18,18 @@ export interface CustomIdField<Decoded> {
     readonly decoded?: Decoded;
 }
 
-/** The set of fields a customId carries, keyed by name. */
+/**
+ * The set of fields a customId carries, keyed by name.
+ *
+ * @internal
+ */
 export type CustomIdShape = Record<string, CustomIdField<unknown>>;
 
-/** The decoded result, each field name mapped to its decoded type. */
+/**
+ * The decoded result, each field name mapped to its decoded type.
+ *
+ * @internal
+ */
 export type DecodedParams<Shape extends CustomIdShape> = {
     [Name in keyof Shape]: Shape[Name] extends CustomIdField<infer Decoded> ? Decoded : never;
 };

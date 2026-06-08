@@ -16,8 +16,8 @@ function routeKeyOf(wire: string): string {
     return colon < 0 ? '' : wire.slice(0, colon);
 }
 
-// the routeKey is the prefix followed by the hash, so dropping the last HASH_LENGTH chars leaves the prefix.
-function prefixOf(wire: string): string {
+/** Strip the layout hash off the routeKey to recover the stable prefix the controller routes by. @internal */
+export function prefixOf(wire: string): string {
     const key = routeKeyOf(wire);
     return key.length <= HASH_LENGTH ? '' : key.slice(0, key.length - HASH_LENGTH);
 }
@@ -39,8 +39,8 @@ function prefixOf(wire: string): string {
  * new ButtonBuilder().setCustomId(ApproveId.encode({ userId: '123', action: 'approve' }));
  *
  * // reading in the handler: userId comes back a string
- * const { userId, action } = this.event.params; // userId: string, action: 'approve' | 'deny'
- * await interaction.guild?.members.fetch(userId);
+ * const { userId, action } = this.params; // userId: string, action: 'approve' | 'deny'
+ * await this.event.guild?.members.fetch(userId);
  * ```
  */
 export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
@@ -52,8 +52,11 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     readonly routeKey: string;
 
     constructor(prefix: Prefix, shape: Shape = {} as Shape) {
-        // reject a prefix the wire format cannot represent, at declaration time.
-        if (/[:\x1b\x1f]/.test(prefix)) throw new SeedcordError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
+        // an empty prefix would make the routeKey all-hash so prefixOf strips it to nothing and the
+        // controller cannot route it, and a colon or control char would break the wire framing.
+        if (!prefix || /[:\x1b\x1f]/.test(prefix)) {
+            throw new SeedcordError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
+        }
         this.prefix = prefix;
         this.shape = shape;
         this.routeKey = prefix + computeLayoutHash(shape);
@@ -204,17 +207,29 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 }
 
-/** Any customId, for places where the exact prefix and shape do not matter. */
+/**
+ * Any customId, for places where the exact prefix and shape do not matter.
+ *
+ * @internal
+ */
 export type AnyCustomId = CustomId<string, CustomIdShape>;
 
-/** The outcome of decoding a wire against several customIds, the matched prefix paired with its values. */
+/**
+ * The outcome of decoding a wire against several customIds, the matched prefix paired with its values.
+ *
+ * @internal
+ */
 export type DecodedRoute<Defs extends readonly AnyCustomId[]> = {
     [Index in keyof Defs]: Defs[Index] extends AnyCustomId
         ? { readonly prefix: Defs[Index]['prefix']; readonly params: DecodedParams<Defs[Index]['shape']> }
         : never;
 }[number];
 
-/** Find the customId whose prefix owns this wire, decode against it, and report which one matched. */
+/**
+ * Find the customId whose prefix owns this wire, decode against it, and report which one matched.
+ *
+ * @internal
+ */
 export function decodeFor<Defs extends readonly AnyCustomId[]>(defs: Defs, wire: string): DecodedRoute<Defs> {
     const match = defs.find((def) => def.owns(wire));
     if (!match) throw new InvalidCustomId(`no customId owns ${JSON.stringify(routeKeyOf(wire))}`);

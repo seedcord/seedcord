@@ -25,6 +25,7 @@ const CHAR_TO_VALUE = new Map([...ALPHABET].map((char, index) => [char, index] a
 const DELIMITER = '\x1f';
 const ESCAPE = '\x1b';
 
+/** @internal */
 export const HASH_LENGTH = 3;
 
 const SAFE_MAX = BigInt(Number.MAX_SAFE_INTEGER);
@@ -201,6 +202,8 @@ function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unk
 /**
  * A short fingerprint of the shape. Change the shape and the hash changes, so an old customId no
  * longer matches the current routeKey and decode catches it as stale.
+ *
+ * @internal
  */
 export function computeLayoutHash(shape: CustomIdShape): string {
     // a structured json signature, never a joined string, so a value holding a separator cannot collide.
@@ -225,7 +228,11 @@ export function computeLayoutHash(shape: CustomIdShape): string {
     return text;
 }
 
-/** Pack values into a body. Bounded fields fold into one integer, unbounded fields trail after it. */
+/**
+ * Pack values into a body. Bounded fields fold into one integer, unbounded fields trail after it.
+ *
+ * @internal
+ */
 export function encodeBody(shape: CustomIdShape, values: Record<string, unknown>): string {
     const fields = Object.entries(shape);
     const pieces: string[] = [];
@@ -263,7 +270,11 @@ function unpackBounded(
     if (packed !== 0n) throw new InvalidCustomId('leftover bits after unpacking');
 }
 
-/** Reverse of encodeBody. Rejects any malformed or truncated body. */
+/**
+ * Reverse of encodeBody. Rejects any malformed or truncated body.
+ *
+ * @internal
+ */
 export function decodeBody(shape: CustomIdShape, body: string): Record<string, unknown> {
     const fields = Object.entries(shape);
     const bounded = fields.filter(([, field]) => isBounded(field));
