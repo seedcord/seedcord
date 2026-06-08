@@ -52,7 +52,7 @@ describe('InteractionController Integration', () => {
             @SlashRoute('ping')
             export class PingHandler extends InteractionHandler<ChatInputCommandInteraction> {
                 public async execute() {
-                    await this.interaction.reply('Pong!');
+                    await this.event.reply('Pong!');
                 }
             }
             `
@@ -82,13 +82,14 @@ describe('InteractionController Integration', () => {
         const filePath = await testEnv.createFile(
             `${interactionsDir}/Button.ts`,
             `
-            import { InteractionHandler, ButtonRoute } from '${seedcordPath}';
-            import { ButtonInteraction } from 'discord.js';
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
 
-            @ButtonRoute('click-me')
-            export class ButtonHandler extends InteractionHandler<ButtonInteraction> {
+            const ClickMe = new CustomId('click-me');
+
+            @ButtonRoute(ClickMe)
+            export class ClickButton extends ButtonHandler<[typeof ClickMe]> {
                 public async execute() {
-                    await this.interaction.reply('Clicked!');
+                    await this.event.reply('Clicked!');
                 }
             }
             `
@@ -116,13 +117,14 @@ describe('InteractionController Integration', () => {
         await testEnv.createFile(
             `${interactionsDir}/Button.ts`,
             `
-            import { InteractionHandler, ButtonRoute } from '${seedcordPath}';
-            import { ButtonInteraction } from 'discord.js';
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
 
-            @ButtonRoute('dont-click-me')
-            export class ButtonHandler extends InteractionHandler<ButtonInteraction> {
+            const DontClickMe = new CustomId('dont-click-me');
+
+            @ButtonRoute(DontClickMe)
+            export class ClickButton extends ButtonHandler<[typeof DontClickMe]> {
                 public async execute() {
-                    await this.interaction.reply('Why did you click?');
+                    await this.event.reply('Why did you click?');
                 }
             }
             `

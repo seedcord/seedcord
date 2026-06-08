@@ -83,16 +83,13 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     private errored = false;
 
     protected readonly event: ValidEvent;
-    protected readonly args: string[] = [];
     protected readonly logger: Logger;
 
     protected constructor(
         event: ValidEvent,
-        public core: Core,
-        args?: string[]
+        public core: Core
     ) {
         this.event = event;
-        this.args = args ?? [];
         this.logger = new Logger(this.constructor.name);
 
         this.populate();
@@ -105,7 +102,7 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     abstract execute(): Promise<void>;
 
     /**
-     * Populates the handler with necessary data before execution. Override this method in your handler classes to customize population logic. This method is called at the end of the constructor before all async operations.
+     * Override this in your handler classes to customize population logic. It runs at the end of the constructor before any async work.
      */
     protected populate(): void {
         // Does nothing unless overriden
@@ -142,25 +139,6 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     public getEvent(): ValidEvent {
         return this.event;
     }
-
-    /**
-     * Gets arguments parsed from interaction customId
-     *
-     * Arguments are extracted from customId using `:` and `-` separators.
-     * For customId `accept:user123-guild456`, returns `["user123", "guild456"]`
-     */
-    protected getArgs(): string[] {
-        return this.args;
-    }
-
-    /**
-     * Gets a specific argument by index from parsed customId
-     * @param index - Zero-based index of the argument to retrieve
-     * @returns The argument at the specified index, or undefined if not found
-     */
-    protected getArg(index: number): string | undefined {
-        return this.args[index];
-    }
 }
 
 /**
@@ -175,8 +153,8 @@ export abstract class InteractionHandler<Repliable extends Repliables>
     extends BaseHandler<Repliable>
     implements Handler
 {
-    constructor(event: Repliable, core: Core, args?: string[]) {
-        super(event, core, args);
+    constructor(event: Repliable, core: Core) {
+        super(event, core);
     }
 }
 
@@ -192,8 +170,8 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
     extends BaseHandler<Repliable>
     implements Handler
 {
-    constructor(event: Repliable, core: Core, args?: string[]) {
-        super(event, core, args);
+    constructor(event: Repliable, core: Core) {
+        super(event, core);
     }
 }
 
@@ -209,8 +187,8 @@ export abstract class AutocompleteHandler extends BaseHandler<AutocompleteIntera
     /** The currently focused autocomplete option (Based on what you set in {@link AutocompleteRoute}) */
     protected readonly focused: AutocompleteFocusedOption;
 
-    constructor(event: AutocompleteInteraction, core: Core, args?: string[]) {
-        super(event, core, args);
+    constructor(event: AutocompleteInteraction, core: Core) {
+        super(event, core);
         this.focused = this.event.options.getFocused(true);
     }
 }
@@ -227,8 +205,8 @@ export abstract class EventHandler<Repliable extends ValidNonInteractionKeys>
     extends BaseHandler<ClientEvents[Repliable]>
     implements Handler
 {
-    constructor(event: ClientEvents[Repliable], core: Core, args?: string[]) {
-        super(event, core, args);
+    constructor(event: ClientEvents[Repliable], core: Core) {
+        super(event, core);
     }
 }
 
@@ -241,8 +219,8 @@ export abstract class EventMiddleware<EventName extends ValidNonInteractionKeys>
     extends BaseHandler<ClientEvents[EventName]>
     implements Handler
 {
-    constructor(event: ClientEvents[EventName], core: Core, args?: string[]) {
-        super(event, core, args);
+    constructor(event: ClientEvents[EventName], core: Core) {
+        super(event, core);
     }
 }
 
@@ -268,8 +246,7 @@ export type InteractionMiddlewareConstructor = TypedConstructor<typeof Interacti
 export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware> &
     (new <EventName extends ValidNonInteractionKeys>(
         event: ClientEvents[EventName],
-        core: Core,
-        args?: string[]
+        core: Core
     ) => EventMiddleware<EventName>);
 
 /**
@@ -278,7 +255,7 @@ export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware
  * @internal
  */
 export type AutocompleteHandlerConstructor = TypedConstructor<typeof AutocompleteHandler> &
-    (new (event: AutocompleteInteraction, core: Core, args?: string[]) => AutocompleteHandler);
+    (new (event: AutocompleteInteraction, core: Core) => AutocompleteHandler);
 
 /**
  * Constructor type for Discord client event handlers

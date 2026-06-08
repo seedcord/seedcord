@@ -10,6 +10,7 @@ import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interact
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { UnhandledEvent } from '@bot/defaults';
 import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
+import { prefixOf } from '@customId/CustomId';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
@@ -297,36 +298,27 @@ export class InteractionController implements Initializeable, HmrAware {
         });
     }
 
-    private parseCustomId(customId: string): { prefix: string; args: string[] } {
-        const parts = customId.split(':');
-        const prefix = parts[0] ?? '';
-        const argString = parts[1] ?? '';
-        const args = argString ? argString.split('-') : [];
-
-        return { prefix, args };
-    }
-
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
         interaction: TInteraction,
         getMap: () => Collection<string, HandlerConstructor>,
         interactionType: string
     ): Promise<void> {
-        const { prefix, args } = this.parseCustomId(interaction.customId);
+        // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
+        // reaches its handler, where reading this.params throws StaleCustomId and @Catchable replies.
+        const prefix = prefixOf(interaction.customId);
         if (!prefix) return this.logger.warn(`${interactionType} has invalid customId: ${interaction.customId}`);
 
         await this.processInteraction(
             interaction,
             () => prefix,
-            (key) => getMap().get(key),
-            args
+            (key) => getMap().get(key)
         );
     }
 
     public async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
         extractKey: (i: TInteraction) => string,
-        getHandler: (key: string) => HandlerConstructor | undefined,
-        args?: string[]
+        getHandler: (key: string) => HandlerConstructor | undefined
     ): Promise<void> {
         const key = extractKey(interaction);
         if (
@@ -340,7 +332,7 @@ export class InteractionController implements Initializeable, HmrAware {
         // Autocomplete interactions skip middlewares.
         if (!interaction.isAutocomplete()) {
             for (const { ctor } of this.middlewares) {
-                const middleware = new ctor(interaction as Repliables, this.core, args);
+                const middleware = new ctor(interaction as Repliables, this.core);
                 if (middleware.hasChecks()) await middleware.runChecks();
                 if (middleware.shouldBreak() || middleware.hasErrors()) return;
 
@@ -357,7 +349,7 @@ export class InteractionController implements Initializeable, HmrAware {
 
         this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
         // @ts-expect-error TS can't infer the type of interaction here
-        const handler = new HandlerCtor(interaction as Repliables, this.core, args);
+        const handler = new HandlerCtor(interaction as Repliables, this.core);
         if (handler.hasChecks()) await handler.runChecks();
         if (handler.shouldBreak()) return;
         if (!handler.hasErrors()) await handler.execute();

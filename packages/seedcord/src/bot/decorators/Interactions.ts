@@ -1,8 +1,12 @@
+import { ComponentDefsKey } from '@customId/routing';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
+import type { AnyCustomId } from '@customId/CustomId';
+import type { HasComponentDefs } from '@customId/routing';
 import type { InteractionHandler, AutocompleteHandler, HandlerConstructor, Repliables } from '@interfaces/Handler';
 import type {
     ButtonInteraction,
+    CacheType,
     ChannelSelectMenuInteraction,
     ChatInputCommandInteraction,
     ContextMenuCommandInteraction,
@@ -114,36 +118,42 @@ export function SlashRoute(routeOrRoutes: string | string[]) {
 }
 
 /**
- * Routes button interactions to handler classes
+ * Routes button interactions to handler classes.
  *
- * Matches the customId prefix before the first colon.
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
+ * matches the stable prefix, so a wire minted from an older shape still reaches the handler, where
+ * reading this.params throws StaleCustomId and the Catchable decorator turns it into a reply.
  *
- * For customId `accept:user123`, use `@ButtonRoute("accept")`.
- *
- * @param routeOrRoutes - CustomId prefix(es) to handle
+ * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
  */
-export function ButtonRoute(routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<ButtonInteraction, TCtor>
     ): void {
-        storeMetadata(InteractionRoutes.Button, routeOrRoutes, constructor as HandlerConstructor);
+        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeComponentRoute(InteractionRoutes.Button, defs, constructor as HandlerConstructor);
     };
 }
 
 /**
- * Routes modal submissions to handler classes
+ * Routes modal submissions to handler classes.
  *
- * Matches the customId prefix before the first colon.
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
+ * matches the stable prefix, so an older-shape wire still reaches the handler and throws StaleCustomId
+ * on read, the same as a button route.
  *
- * @param routeOrRoutes - CustomId prefix(es) to handle
+ * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
  */
-export function ModalRoute(routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<ModalSubmitInteraction, TCtor>
     ): void {
-        storeMetadata(InteractionRoutes.Modal, routeOrRoutes, constructor as HandlerConstructor);
+        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeComponentRoute(InteractionRoutes.Modal, defs, constructor as HandlerConstructor);
     };
 }
 
@@ -194,38 +204,45 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
  *
  * @internal
  */
-export type SelectMenuInteractionFor<SelectMenu extends SelectMenuType> = SelectMenu extends SelectMenuType.String
-    ? StringSelectMenuInteraction
+export type SelectMenuInteractionFor<
+    SelectMenu extends SelectMenuType,
+    Cache extends CacheType = CacheType
+> = SelectMenu extends SelectMenuType.String
+    ? StringSelectMenuInteraction<Cache>
     : SelectMenu extends SelectMenuType.User
-      ? UserSelectMenuInteraction
+      ? UserSelectMenuInteraction<Cache>
       : SelectMenu extends SelectMenuType.Role
-        ? RoleSelectMenuInteraction
+        ? RoleSelectMenuInteraction<Cache>
         : SelectMenu extends SelectMenuType.Channel
-          ? ChannelSelectMenuInteraction
+          ? ChannelSelectMenuInteraction<Cache>
           : SelectMenu extends SelectMenuType.Mentionable
-            ? MentionableSelectMenuInteraction
+            ? MentionableSelectMenuInteraction<Cache>
             : never;
 
 /**
- * Routes select menu interactions to handler classes
+ * Routes select menu interactions to handler classes.
  *
- * Matches the customId prefix before the first colon.
+ * Pass the select kind and the {@link CustomId} definition(s) this handler decodes. The handler's
+ * generic must list the same definitions, and its second generic argument must be the matching select
+ * interaction type, or it is a compile error.
  *
- * @param type - Select menu type from {@link SelectMenuType}
- * @param routeOrRoutes - CustomId prefix(es) to handle
- *
+ * @param type - Select menu kind from {@link SelectMenuType}.
+ * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
  *
  * @example
  * ```typescript
- * \@SelectMenuRoute(SelectMenuType.String, 'fruits')
- * class RoleSelectHandler extends InteractionHandler {
- *   // handles string select menus with customId starting with 'fruits'
+ * \@SelectMenuRoute(SelectMenuType.User, AssignId)
+ * class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof AssignId]> {
+ *   // handles user select menus minted from AssignId
  * }
  * ```
  */
-export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectMenu, routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs extends readonly AnyCustomId[]>(
+    type: SelectMenu,
+    ...defs: Defs
+) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<SelectMenuInteractionFor<SelectMenu>, TCtor>
     ): void {
         const routeMap = {
@@ -236,8 +253,24 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectM
             [SelectMenuType.Mentionable]: InteractionRoutes.MentionableMenu
         };
 
-        storeMetadata(routeMap[type], routeOrRoutes, constructor as HandlerConstructor);
+        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeComponentRoute(routeMap[type], defs, constructor as HandlerConstructor);
     };
+}
+
+// store each definition's stable prefix as a routing key for the controller, and the full defs array on
+// the constructor so the handler base can decode against them.
+function storeComponentRoute(
+    symbol: InteractionRoutes,
+    defs: readonly AnyCustomId[],
+    constructor: HandlerConstructor
+): void {
+    storeMetadata(
+        symbol,
+        defs.map((def) => def.prefix),
+        constructor
+    );
+    Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }
 
 /**
