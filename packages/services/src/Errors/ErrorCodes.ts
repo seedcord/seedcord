@@ -72,6 +72,10 @@ export enum SeedcordErrorCode {
     CustomIdWireTooLong = 1606,
     /** A field name is declared more than once in the same customId chain. */
     CustomIdDuplicateFieldName = 1607,
+    /** A component handler is missing its route decorator (\@ButtonRoute / \@ModalRoute / \@SelectMenuRoute). */
+    CustomIdHandlerRouteMissing = 1608,
+    /** match() received a decoded route with no matching arm. */
+    CustomIdMatchArmMissing = 1609,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,

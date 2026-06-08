@@ -52,7 +52,7 @@ const messages = {
     [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
 
     [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
-        `customId prefix ${JSON.stringify(prefix)} may not contain a colon or control characters.`,
+        `customId prefix ${JSON.stringify(prefix)} must be a non-empty string without a colon or control character.`,
     [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>
         `customId field name ${JSON.stringify(field)} is integer-like, which JS reorders. Use a non-numeric name.`,
     [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string) =>
@@ -65,6 +65,10 @@ const messages = {
         `Encoded customId is ${length} characters, Discord allows at most 100.`,
     [SeedcordErrorCode.CustomIdDuplicateFieldName]: (field: string) =>
         `customId field ${JSON.stringify(field)} is already defined in this chain.`,
+    [SeedcordErrorCode.CustomIdHandlerRouteMissing]: (className: string) =>
+        `${className} is missing its route decorator (@ButtonRoute, @ModalRoute, or @SelectMenuRoute).`,
+    [SeedcordErrorCode.CustomIdMatchArmMissing]: (prefix: string) =>
+        `match() has no arm for the decoded route ${JSON.stringify(prefix)}.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
