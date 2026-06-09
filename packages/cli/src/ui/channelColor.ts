@@ -14,3 +14,8 @@ export function channelColor(channel: string): ChannelColor {
     assigned.set(channel, color);
     return color;
 }
+
+// the map is module-level, so clear it per dev session or stale channels skew the next session's colors.
+export function resetChannelColors(): void {
+    assigned.clear();
+}

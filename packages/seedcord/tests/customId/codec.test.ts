@@ -56,6 +56,11 @@ describe('CustomId round-trips', () => {
         expect(Counter.decode(Counter.encode({ total: Number.MAX_SAFE_INTEGER })).total).toBe(Number.MAX_SAFE_INTEGER);
     });
 
+    it('encodes the declared max of a bounded int whose range spans 2^53', () => {
+        const Big = new CustomId('big').int('n', 0, 2 ** 53);
+        expect(Big.decode(Big.encode({ n: 2 ** 53 })).n).toBe(2 ** 53);
+    });
+
     it('round-trips a customId with no fields', () => {
         const Refresh = new CustomId('refresh');
         expect(Refresh.decode(Refresh.encode({}))).toEqual({});
@@ -146,6 +151,11 @@ describe('CustomId encode guards', () => {
         expect(thrownCode(() => Long.encode({ a: 'z'.repeat(60), b: 'z'.repeat(60) }))).toBe(
             SeedcordErrorCode.CustomIdWireTooLong
         );
+    });
+
+    it('rejects an unbounded int beyond the safe-integer range at encode time', () => {
+        const Counter = new CustomId('counter').int('total');
+        expect(thrownCode(() => Counter.encode({ total: 2 ** 53 }))).toBe(SeedcordErrorCode.CustomIdValueOutOfRange);
     });
 });
 

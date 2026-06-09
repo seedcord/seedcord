@@ -52,4 +52,27 @@ describe('DevRunner command refresh', () => {
             expect(codegen.run).toHaveBeenCalledWith(false);
         });
     });
+
+    it('skips a second regeneration while one is in flight, then allows the next', async () => {
+        let release: () => void = () => undefined;
+        const codegen = {
+            run: vi.fn(
+                () =>
+                    new Promise<void>((resolve) => {
+                        release = resolve;
+                    })
+            )
+        };
+        const runner = makeRunner(codegen);
+
+        runner.refreshCommands(true);
+        runner.refreshCommands(true);
+        expect(codegen.run).toHaveBeenCalledTimes(1);
+
+        release();
+        await vi.waitFor(() => expect(codegen.run).toHaveBeenCalledTimes(1));
+
+        runner.refreshCommands(true);
+        expect(codegen.run).toHaveBeenCalledTimes(2);
+    });
 });

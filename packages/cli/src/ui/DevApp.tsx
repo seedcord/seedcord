@@ -41,6 +41,7 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const railRef = useRef<DOMElement | null>(null);
     const [railWidth, setRailWidth] = useState<number | null>(null);
+    const measuredConfig = useRef<unknown>(null);
 
     const logs = useLogs(enabled);
     const viewportHeight = Math.max(1, logBoxHeight);
@@ -57,13 +58,16 @@ export function DevApp(props: DevAppProps): ReactElement {
         setLogBoxHeight((prev) => (prev === measured ? prev : measured));
     }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt]);
 
-    // Measure the rail's natural content width once the config (its widest content) has loaded, then keep it
-    // so the rail never reflows as logs stream.
+    // Measure the rail's content width once per loaded config, so it holds as logs stream but re-fits when a
+    // restart loads a wider config.
     useEffect(() => {
-        if (railWidth !== null || !railRef.current || !state.config) return;
+        if (!railRef.current || !state.config || measuredConfig.current === state.config) return;
         const measured = measureElement(railRef.current).width;
-        if (measured > 0) setRailWidth(measured);
-    }, [railWidth, rows, columns, state.config]);
+        if (measured > 0) {
+            measuredConfig.current = state.config;
+            setRailWidth(measured);
+        }
+    }, [rows, columns, state.config]);
 
     useInput((input, key) => {
         dispatchHotkey({

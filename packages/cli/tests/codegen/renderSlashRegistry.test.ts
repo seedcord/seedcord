@@ -16,6 +16,10 @@ describe('renderSlashRegistry', () => {
 // Run \`seedcord codegen\` after changing a command's options.
 
 declare module 'seedcord' {
+    /**
+     * These option types come from your command source. Redeploy your commands to Discord after regenerating,
+     * or an interaction from a stale command can return null for an option this file types as non-null.
+     */
     interface SlashOptionRegistry {
         ban: { target: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
     }
@@ -42,6 +46,10 @@ export {};
 // Run \`seedcord codegen\` after changing a command's options.
 
 declare module 'seedcord' {
+    /**
+     * These option types come from your command source. Redeploy your commands to Discord after regenerating,
+     * or an interaction from a stale command can return null for an option this file types as non-null.
+     */
     interface SlashOptionRegistry {
         ban: { target: { kind: 'user'; required: true } };
         config: { scope: { kind: 'string'; required: true; choices: ['guild', 'global'] }; level: { kind: 'integer'; required: false; choices: [1, 2] } };
@@ -72,6 +80,10 @@ export {};
 // Run \`seedcord codegen\` after changing a command's options.
 
 declare module 'seedcord' {
+    /**
+     * These option types come from your command source. Redeploy your commands to Discord after regenerating,
+     * or an interaction from a stale command can return null for an option this file types as non-null.
+     */
     interface SlashOptionRegistry {
         survey: { answer: { kind: 'string'; required: true; choices: ['don\\'t', 'yes'] } };
     }
@@ -114,6 +126,24 @@ export {};
         });
 
         expect(output).toContain("choices: ['café', 'naïve']");
+    });
+
+    it('escapes a newline in a string choice value', () => {
+        const output = renderSlashRegistry({
+            note: { tone: { kind: 'string', required: true, choices: ['a\nb'] } }
+        });
+
+        expect(output).toContain("choices: ['a\\nb']");
+        expect(output).not.toContain('a\nb');
+    });
+
+    it('quotes a route key and option name containing a hyphen', () => {
+        const output = renderSlashRegistry({
+            'my-command': { 'dry-run': { kind: 'boolean', required: false } }
+        });
+
+        expect(output).toContain("'my-command': {");
+        expect(output).toContain("'dry-run': { kind: 'boolean'; required: false }");
     });
 
     it('renders number choices unquoted', () => {
@@ -179,6 +209,10 @@ export {};
 // Run \`seedcord codegen\` after changing a command's options.
 
 declare module 'seedcord' {
+    /**
+     * These option types come from your command source. Redeploy your commands to Discord after regenerating,
+     * or an interaction from a stale command can return null for an option this file types as non-null.
+     */
     interface SlashOptionRegistry {
 
     }
@@ -221,6 +255,10 @@ export {};
 // Run \`seedcord codegen\` after changing a command's options.
 
 declare module 'seedcord' {
+    /**
+     * These option types come from your command source. Redeploy your commands to Discord after regenerating,
+     * or an interaction from a stale command can return null for an option this file types as non-null.
+     */
     interface SlashOptionRegistry {
         'mod/ban': { target: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false; choices: ['don\\'t', 'other'] } };
         ping: {};

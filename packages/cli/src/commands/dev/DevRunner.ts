@@ -9,6 +9,7 @@ import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
+import { resetChannelColors } from '@ui/channelColor';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
@@ -144,6 +145,7 @@ export class DevRunner {
     private shouldQuit = false;
     private isDisconnected = false;
     private isRunning = false;
+    private isRegenerating = false;
 
     constructor(
         private readonly locator: ConfigLocator,
@@ -198,6 +200,7 @@ export class DevRunner {
     }
 
     private async runSession(): Promise<void> {
+        resetChannelColors();
         this.store.setPhase('starting');
         this.store.setBusy(true);
         const config = await this.loadConfig();
@@ -255,10 +258,14 @@ export class DevRunner {
     // bot's re-registration, and tsc picks up the new option types when it finishes. codegen throws instead of
     // logging its own failures, so surface one here and leave the dev session running.
     private async regenerateRegistry(): Promise<void> {
+        if (this.isRegenerating) return;
+        this.isRegenerating = true;
         try {
             await this.codegen.run(false);
         } catch (error: unknown) {
             this.codegenLogger.error('Slash registry regeneration failed', error);
+        } finally {
+            this.isRegenerating = false;
         }
     }
 

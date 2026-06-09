@@ -143,6 +143,22 @@ describe('CodegenRunner', () => {
         expect(written).toContain('ban: {}');
     });
 
+    it('scans a command once when a barrel re-exports it, instead of throwing a duplicate route', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        await writeFile(join(cmdDir, 'index.ts'), 'export {};', 'utf8');
+
+        class BanCommand {
+            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
+        }
+        // ban.ts and index.ts both yield the same class object, as a re-export would.
+        await scanRunner(root, cmdDir, () => ({ BanCommand }), silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain('ban: {}');
+    });
+
     it('throws CliCodegenCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
         const root = await mkdtemp(join(tmpdir(), 'codegen-'));
         const missing = join(root, 'does-not-exist');

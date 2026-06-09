@@ -73,13 +73,13 @@ export class CodegenRunner {
         if (!commandsDir) return [];
 
         const commands: ScannedCommand[] = [];
-        await this.walk(commandsDir, commands, true);
+        await this.walk(commandsDir, commands, new Set(), true);
         return commands;
     }
 
     // the bot's own scan runs under tsx/vite, so its import() handles .ts. codegen runs under plain node, so
     // it imports each command file through the tsx-backed module loader instead.
-    private async walk(dir: string, commands: ScannedCommand[], isRoot: boolean): Promise<void> {
+    private async walk(dir: string, commands: ScannedCommand[], seen: Set<unknown>, isRoot: boolean): Promise<void> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
@@ -94,10 +94,13 @@ export class CodegenRunner {
         for (const entry of entries) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
-                await this.walk(fullPath, commands, false);
+                await this.walk(fullPath, commands, seen, false);
             } else if (isTsOrJsFile(entry)) {
                 const imported = await this.moduleLoader.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {
+                    // a barrel re-exports the same class object, so scan each command once.
+                    if (seen.has(exported)) continue;
+                    seen.add(exported);
                     const json = this.commandJsonOf(exported);
                     if (json) commands.push({ sourceFile: fullPath, json });
                 }

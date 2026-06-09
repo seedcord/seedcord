@@ -120,7 +120,8 @@ function radixOf(field: CustomIdField<unknown>): bigint {
             // isBounded only routes a min-and-max int here, so a missing bound means a corrupt shape.
             if (field.min === undefined || field.max === undefined)
                 throw new InvalidCustomId('bounded int field is missing a bound');
-            return BigInt(field.max - field.min + 1);
+            // bigint before the math, max - min + 1 in float64 drops the +1 at 2^53.
+            return BigInt(field.max) - BigInt(field.min) + 1n;
         default:
             throw new InvalidCustomId(`field kind ${field.kind} has no radix`);
     }
@@ -187,8 +188,11 @@ function bigintToUuid(value: bigint): string {
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-function encodeUnboundedToken(field: CustomIdField<unknown>, value: unknown): string {
-    if (field.kind === 'int') return bigintToBase64(zigzagEncode(value as number));
+function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value: unknown): string {
+    if (field.kind === 'int') {
+        if (!Number.isSafeInteger(value)) outOfRange(name, value);
+        return bigintToBase64(zigzagEncode(value as number));
+    }
     return escapeToken(value as string);
 }
 function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unknown {
@@ -246,7 +250,7 @@ export function encodeBody(shape: CustomIdShape, values: Record<string, unknown>
         pieces.push(bigintToBase64(packed));
     }
     for (const [name, field] of fields) {
-        if (!isBounded(field)) pieces.push(encodeUnboundedToken(field, values[name]));
+        if (!isBounded(field)) pieces.push(encodeUnboundedToken(field, name, values[name]));
     }
     return pieces.join(DELIMITER);
 }

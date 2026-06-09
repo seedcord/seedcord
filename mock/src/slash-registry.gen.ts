@@ -2,6 +2,10 @@
 // Run `seedcord codegen` after changing a command's options.
 
 declare module 'seedcord' {
+    /**
+     * These option types come from your command source. Redeploy your commands to Discord after regenerating,
+     * or an interaction from a stale command can return null for an option this file types as non-null.
+     */
     interface SlashOptionRegistry {
         maintenance: { notify: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
         'test/confirmable/classic': {};
