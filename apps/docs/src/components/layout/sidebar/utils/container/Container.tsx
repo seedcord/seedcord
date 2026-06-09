@@ -36,7 +36,7 @@ interface ContainerProps {
     className?: string;
 }
 
-const SIDEBAR_BASE_CLASS = 'flex size-full flex-col';
+const SIDEBAR_BASE_CLASS = 'flex w-full flex-col';
 const MOBILE_SIDEBAR_OVERRIDES = 'border-transparent bg-transparent shadow-none';
 
 export function Container({

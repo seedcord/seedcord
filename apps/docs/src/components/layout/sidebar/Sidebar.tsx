@@ -79,17 +79,30 @@ export function Sidebar({
 
     const isDesktop = variant === 'desktop';
 
+    const listContent = isPendingSelection ? (
+        <SidebarCategoryListSkeleton />
+    ) : (
+        <SidebarCategoryList
+            categories={activeVersion.categories}
+            activeHref={pathname}
+            storageKey={collapsedStorageKey}
+            {...(onSelect ? { onSelect } : {})}
+        />
+    );
+
     return (
         <Card
             as="nav"
             size="none"
             aria-label="Library navigation"
             className={cn(
-                'flex h-full flex-col p-4',
-                isDesktop ? 'rounded-none border-0 bg-(--bg-surface-moderate-transparent) shadow-none' : 'bg-surface',
+                'flex min-h-0 flex-col',
+                isDesktop
+                    ? 'h-full rounded-none border-0 bg-(--bg-surface-moderate-transparent) p-4 shadow-none'
+                    : 'flex-1 bg-surface',
                 className
             )}
-            style={FILL}
+            style={isDesktop ? FILL : undefined}
         >
             <div className={cn('shrink-0')}>
                 <SidebarHeader
@@ -107,16 +120,7 @@ export function Sidebar({
                 style={LIST}
                 onWheel={handleWheel}
             >
-                {isPendingSelection ? (
-                    <SidebarCategoryListSkeleton />
-                ) : (
-                    <SidebarCategoryList
-                        categories={activeVersion.categories}
-                        activeHref={pathname}
-                        storageKey={collapsedStorageKey}
-                        {...(onSelect ? { onSelect } : {})}
-                    />
-                )}
+                {listContent}
             </div>
         </Card>
     );

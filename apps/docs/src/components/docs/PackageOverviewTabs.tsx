@@ -133,8 +133,8 @@ export function PackageOverviewTabs({
                 </div>
                 <hr className={cn('border-(--border)')} />
             </div>
-            <div className={cn('relative overflow-hidden')}>
-                <AnimatePresence mode="popLayout" initial={false} custom={direction}>
+            <div className={cn('grid items-start overflow-hidden')}>
+                <AnimatePresence initial={false} custom={direction}>
                     <m.div
                         key={tab}
                         custom={direction}
@@ -143,6 +143,7 @@ export function PackageOverviewTabs({
                         animate="center"
                         exit="exit"
                         transition={{ duration: SLIDE_DURATION, ease: [...easeOutStrong] }}
+                        className={cn('col-start-1 row-start-1')}
                     >
                         {tab === 'readme' ? readme : reference}
                     </m.div>

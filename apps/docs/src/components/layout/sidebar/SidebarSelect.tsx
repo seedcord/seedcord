@@ -34,13 +34,9 @@ export function SidebarSelect({ id, label, value, options, groups, onChange }: S
 
     return (
         <div className={cn('space-y-1')}>
-            <label
-                id={labelId}
-                className={cn('text-subtle text-xs font-semibold tracking-wide uppercase')}
-                htmlFor={id}
-            >
+            <span id={labelId} className={cn('text-subtle block text-xs font-semibold tracking-wide uppercase')}>
                 {label}
-            </label>
+            </span>
             <Dropdown
                 id={id}
                 aria-labelledby={labelId}
