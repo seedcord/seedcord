@@ -106,6 +106,9 @@ export class CodegenRunner {
     }
 
     private async resolveCommandsDir(config: ResolvedSeedcordDevConfig): Promise<string | undefined> {
+        // loading the instance constructs the bot to read commands.path, so its lifecycle and plugin setup logs
+        // follow this line. codegen never starts the bot, nothing logs in or connects.
+        this.logger.info('Loading instance to resolve the commands directory');
         const module = await this.moduleLoader.importModule(config.instance);
         const instance = resolveDefaultExport(module);
         if (!this.isSeedcordInstance(instance)) {

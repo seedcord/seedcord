@@ -8,6 +8,7 @@ import { DevRunner, isSeedcordInstance } from '@commands/dev/DevRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { DevStore } from '@ui/stores/DevStore';
 
+import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
 import type { SeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
@@ -149,11 +150,13 @@ describe('DevRunner', () => {
             }))
         };
 
-        // fixture doubles: only locate()/load() are exercised on this path
+        // fixture doubles: only locate()/load() are exercised on this path, codegen runs on refresh only
         const runner = new DevRunner(
             locator as unknown as ConfigLocator,
             configLoader as unknown as ConfigLoader,
-            new DevStore()
+            new DevStore(),
+            { run: vi.fn() } as unknown as CodegenRunner,
+            silentLogger
         );
 
         // run() swallows session errors through handleError; rethrow so the assertion below can see it.

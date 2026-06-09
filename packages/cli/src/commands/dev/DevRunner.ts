@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 import { SeedcordBrand, type Brandable } from '@seedcord/types/internal';
 
+import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
@@ -149,15 +150,18 @@ export class DevRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
-        private readonly store: DevStore
+        private readonly store: DevStore,
+        private readonly codegen: CodegenRunner,
+        private readonly codegenLogger: ILogger
     ) {}
 
     public static create(logger: ILogger, store: DevStore): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
+        const codegenLogger = new Logger('CLI:Codegen');
 
-        return new DevRunner(locator, configLoader, store);
+        return new DevRunner(locator, configLoader, store, CodegenRunner.create(codegenLogger), codegenLogger);
     }
 
     public async run(): Promise<void> {
@@ -245,7 +249,19 @@ export class DevRunner {
     }
 
     public refreshCommands(shouldRefresh: boolean): void {
+        if (shouldRefresh) void this.regenerateRegistry();
         this.currentSession?.refreshCommands(shouldRefresh);
+    }
+
+    // an accepted refresh means the command files changed, so regenerate the typed registry alongside the
+    // bot's re-registration, and tsc picks up the new option types when it finishes. codegen throws instead of
+    // logging its own failures, so surface one here and leave the dev session running.
+    private async regenerateRegistry(): Promise<void> {
+        try {
+            await this.codegen.run(false);
+        } catch (error: unknown) {
+            this.codegenLogger.error('Slash registry regeneration failed', error);
+        }
     }
 
     private async waitForSignal(): Promise<void> {
