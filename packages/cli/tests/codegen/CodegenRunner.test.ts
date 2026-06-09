@@ -1,8 +1,10 @@
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
+import { SlashCommandBuilder } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';
@@ -43,6 +45,44 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
     return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
 }
 
+// path-branching double: the instance path returns the branded Seedcord instance, every other path
+// returns the command module under test so resolveCommandsDir and walk see the shapes they each expect.
+function scanRunner(
+    root: string,
+    commandsPath: string | null,
+    moduleByPath: (entryPath: string) => Record<string, unknown>,
+    logger: ILogger
+): CodegenRunner {
+    const instancePath = resolve(root, 'bot.ts');
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const configLoader = {
+        load: () => Promise.resolve({ root, instance: instancePath })
+    } as unknown as ConfigLoader;
+    const moduleLoader = {
+        importModule: (entryPath: string) =>
+            entryPath === instancePath
+                ? Promise.resolve({
+                      default: { [SeedcordBrand]: true, config: { bot: { commands: { path: commandsPath } } } }
+                  })
+                : Promise.resolve(moduleByPath(entryPath))
+    } as unknown as ModuleLoader;
+
+    return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
+}
+
+// instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
+function invalidRunner(root: string, logger: ILogger): CodegenRunner {
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const configLoader = {
+        load: () => Promise.resolve({ root, instance: resolve(root, 'bot.ts') })
+    } as unknown as ConfigLoader;
+    const moduleLoader = {
+        importModule: () => Promise.resolve({ default: { not: 'branded' } })
+    } as unknown as ModuleLoader;
+
+    return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
+}
+
 describe('CodegenRunner', () => {
     afterEach(() => {
         process.exitCode = 0;
@@ -72,6 +112,124 @@ describe('CodegenRunner', () => {
         await makeRunner(root, silentLogger()).run(false);
 
         await makeRunner(root, silentLogger()).run(true);
+        expect(process.exitCode).toBe(0);
+    });
+
+    it('renders an empty registry when the instance declares no commands path', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        await makeRunner(root, silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain('interface SlashOptionRegistry {\n\n    }');
+        expect(written).not.toContain('kind:');
+    });
+
+    it('scans command classes and skips non-command exports', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+
+        class BanCommand {
+            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
+        }
+        class NotACommand {
+            greet(): string {
+                return 'hi';
+            }
+        }
+        const NOT_A_FUNCTION = { hello: 'world' };
+
+        await scanRunner(root, cmdDir, () => ({ BanCommand, NotACommand, NOT_A_FUNCTION }), silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain('ban: {}');
+    });
+
+    it('throws CliCodegenCommandsDirUnreadable when the top-level commands dir is unreadable', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const missing = join(root, 'does-not-exist');
+
+        let caught: unknown;
+        try {
+            await scanRunner(root, missing, () => ({}), silentLogger()).run(false);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandsDirUnreadable });
+        expect((caught as Error).message).toContain(missing);
+    });
+
+    it('warns and skips a nested unreadable subdir instead of throwing', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+        const locked = join(cmdDir, 'locked');
+        await mkdir(locked);
+        await writeFile(join(locked, 'x.ts'), 'export {};', 'utf8');
+        await chmod(locked, 0o000);
+
+        class BanCommand {
+            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
+        }
+        const warnings: string[] = [];
+        try {
+            await scanRunner(
+                root,
+                cmdDir,
+                () => ({ BanCommand }),
+                silentLogger({ warn: (message) => warnings.push(String(message)) })
+            ).run(false);
+        } finally {
+            await chmod(locked, 0o755);
+        }
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain('ban: {}');
+        expect(warnings.some((warning) => warning.includes('locked'))).toBe(true);
+    });
+
+    it('resolves the commands path relative to cwd', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const relativePath = 'no/such/rel';
+
+        let caught: unknown;
+        try {
+            await scanRunner(root, relativePath, () => ({}), silentLogger()).run(false);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenCommandsDirUnreadable });
+        expect((caught as Error).message).toContain(resolve(process.cwd(), relativePath));
+    });
+
+    it('throws CliInstanceInvalid when the instance is not a Seedcord instance', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+
+        let caught: unknown;
+        try {
+            await invalidRunner(root, silentLogger()).run(false);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliInstanceInvalid });
+    });
+
+    it('--check exits zero and writes nothing when the registry is current', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'ban.ts'), 'export {};', 'utf8');
+
+        class BanCommand {
+            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
+        }
+        const exports = (): Record<string, unknown> => ({ BanCommand });
+
+        await scanRunner(root, cmdDir, exports, silentLogger()).run(false);
+        await scanRunner(root, cmdDir, exports, silentLogger()).run(true);
+
         expect(process.exitCode).toBe(0);
     });
 });

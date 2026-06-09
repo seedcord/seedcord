@@ -3,7 +3,8 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { SlashRoute } from '@bDecorators/Interactions';
 import { SlashHandler } from '@interfaces/SlashHandler';
 
-import type { User } from 'discord.js';
+import type { TypedOptions } from '@interfaces/TypedOptions';
+import type { CommandInteractionOption, User } from 'discord.js';
 
 // Compile-time spec for SlashHandler. The execute() bodies are typechecked but never run, so each guarded
 // mistake below fails the build if it stops being a compile error. Distinct routes from typed-options.test.ts
@@ -12,6 +13,9 @@ declare module '@seedcord/types' {
     interface SlashOptionRegistry {
         kick: { member: { kind: 'user'; required: true } };
         warn: { user: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
+        mute: { target: { kind: 'user'; required: true }; minutes: { kind: 'integer'; required: true } };
+        note: { target: { kind: 'user'; required: true }; text: { kind: 'string'; required: true } };
+        'demo/setup': { channel: { kind: 'channel'; required: true } };
     }
 }
 
@@ -97,6 +101,79 @@ class ExtraRoute extends SlashHandler<'kick'> {
     }
 }
 
+// this.options on a union route keeps only the options common to every member route
+class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
+    async execute(): Promise<void> {
+        // 'target' is a user option on both mute and note, so it survives the union and stays typed
+        expectTypeOf(this.options.getUser('target')).toEqualTypeOf<User>();
+        // @ts-expect-error mute has an integer option but note does not, so getInteger is absent on the union.
+        void this.options.getInteger;
+        // @ts-expect-error note has a string option but mute does not, so getString is absent on the union.
+        void this.options.getString;
+        await Promise.resolve();
+    }
+}
+
+// each match arm is typed for its own route, recovering getters the union view drops
+class PerArmNarrowing extends SlashHandler<'mute' | 'note'> {
+    async execute(): Promise<void> {
+        await this.match({
+            mute: (options) => {
+                expectTypeOf(options.getInteger('minutes')).toEqualTypeOf<number>();
+            },
+            note: (options) => {
+                expectTypeOf(options.getString('text')).toEqualTypeOf<string>();
+            }
+        });
+    }
+}
+
+// an arm keyed by a route outside the handler's union is rejected
+class ExtraArmHandler extends SlashHandler<'mute' | 'note'> {
+    async execute(): Promise<void> {
+        await this.match({
+            mute: (options) => {
+                void options.getInteger('minutes');
+            },
+            note: (options) => {
+                void options.getString('text');
+            },
+            // @ts-expect-error 'warn' is not a route this handler is registered for.
+            warn: (_options: TypedOptions<'warn'>) => {
+                void 0;
+            }
+        });
+    }
+}
+
+// a subcommand (slash-path) route is a normal registry key for both the decorator and this.options
+@SlashRoute('demo/setup')
+class SubcommandHandler extends SlashHandler<'demo/setup'> {
+    async execute(): Promise<void> {
+        expectTypeOf(this.options.getChannel('channel')).toEqualTypeOf<
+            NonNullable<CommandInteractionOption<'cached'>['channel']>
+        >();
+        await Promise.resolve();
+    }
+}
+
+// the decorator only accepts registered routes, the keyof constraint that also drives route autocomplete
+// @ts-expect-error 'ghost' is not a key of SlashOptionRegistry.
+@SlashRoute('ghost')
+class UnknownDecoratorRoute extends SlashHandler<'kick'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+
+// the SlashHandler generic itself is constrained to registered routes
+// @ts-expect-error 'ghost' is not a key of SlashOptionRegistry.
+class UnknownGenericRoute extends SlashHandler<'ghost'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+
 describe('SlashHandler', () => {
     it('exposes the typed slash handlers', () => {
         expect([KickHandler, ModerationHandler, MissingArm, CrossRoute]).toHaveLength(4);
@@ -104,5 +181,16 @@ describe('SlashHandler', () => {
 
     it('cross-checks @SlashRoute against the handler generic', () => {
         expect([DecoratedSingle, DecoratedMulti, OmitsRoute, ExtraRoute]).toHaveLength(4);
+    });
+
+    it('exposes the additional typed slash handlers', () => {
+        expect([
+            UnionOptionsHandler,
+            PerArmNarrowing,
+            ExtraArmHandler,
+            SubcommandHandler,
+            UnknownDecoratorRoute,
+            UnknownGenericRoute
+        ]).toHaveLength(6);
     });
 });
