@@ -19,9 +19,6 @@ export interface SlashRouteLeaf {
  * single leaf at its name. Each subcommand and grouped subcommand is its own leaf, keyed through
  * {@link buildSlashRoute} so a generated registry and a dispatched interaction resolve to the same string. A
  * subcommand group with no subcommands deploys nothing on Discord, so it yields no leaf.
- *
- * `seedcord codegen` and the framework's boot-time route check both read leaves from here, which is why the
- * walk lives in this shared package rather than in either consumer.
  */
 export function routeLeavesOf(json: RESTPostAPIChatInputApplicationCommandsJSONBody): SlashRouteLeaf[] {
     const options = json.options ?? [];

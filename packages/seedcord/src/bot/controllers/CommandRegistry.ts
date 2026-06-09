@@ -8,6 +8,7 @@ import { Collection, SlashCommandBuilder } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { CommandMetadataKey } from '@bDecorators/Command';
+import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { BuilderComponent } from '@interfaces/Components';
 
@@ -215,5 +216,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
             });
             this.logger.utils.item(`${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
+    }
+
+    /** The deduplicated slash route keys across every global and guild command. @internal */
+    public routeLeaves(): Set<string> {
+        return slashRouteLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
     }
 }

@@ -133,6 +133,22 @@ export class InteractionController implements Initializeable, HmrAware {
         });
     }
 
+    /**
+     * Warns for each expected command route that has no registered slash handler. Such a route dispatches to
+     * UnhandledEvent at runtime, so surface it at boot. The reverse, a handler with no command, cannot happen
+     * because `@SlashRoute` only accepts keys from the generated registry. Warns rather than throws, a bot may
+     * route some commands outside the registry.
+     *
+     * @internal
+     */
+    public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
+        for (const route of commandLeaves) {
+            if (!this.slashMap.has(route)) {
+                this.logger.warn(`Slash route \`${route}\` has no registered @SlashRoute handler.`);
+            }
+        }
+    }
+
     private getArtifacts(handlerClass: HandlerConstructor): InteractionArtifact[] {
         const artifacts: InteractionArtifact[] = [];
         for (const [routeType] of this.routeTypes) {
