@@ -185,6 +185,14 @@ export const loadReadme = cache(async (folder: string, versionId: string): Promi
     return engine.getPackage(entry.fullName)?.manifest.readme ?? null;
 });
 
+export const loadChangelogUrl = cache(async (folder: string, versionId: string): Promise<string | null> => {
+    const entry = await ensureActiveVersion(folder, versionId);
+    if (!entry) return null;
+
+    const engine = await getDocsEngine();
+    return engine.getPackage(entry.fullName)?.manifest.changelogUrl ?? null;
+});
+
 export interface ReexportLink {
     name: string;
     owner: string;

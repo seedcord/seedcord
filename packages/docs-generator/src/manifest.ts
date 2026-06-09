@@ -30,7 +30,8 @@ export async function writeManifest(
             succeeded: result.succeeded,
             ...(result.sources ? { sources: result.sources } : {}),
             ...(result.reexports ? { reexports: result.reexports } : {}),
-            ...(result.readme ? { readme: result.readme } : {})
+            ...(result.readme ? { readme: result.readme } : {}),
+            ...(result.changelogUrl ? { changelogUrl: result.changelogUrl } : {})
         }))
     };
 

@@ -1,6 +1,8 @@
 'use client';
 
-import { SegmentedControl, cn, type SegmentedControlOption } from '@seedcord/ui';
+import { Button, SegmentedControl, cn, type SegmentedControlOption } from '@seedcord/ui';
+import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';
 import { useSyncExternalStore } from 'react';
 
 import type { ReactElement, ReactNode } from 'react';
@@ -48,11 +50,18 @@ function resolveTab(stored: OverviewTab | null, hasReadme: boolean): OverviewTab
 interface PackageOverviewTabsProps {
     title: string;
     version: string;
+    changelogHref?: string | null;
     readme: ReactNode | null;
     reference: ReactNode;
 }
 
-export function PackageOverviewTabs({ title, version, readme, reference }: PackageOverviewTabsProps): ReactElement {
+export function PackageOverviewTabs({
+    title,
+    version,
+    changelogHref,
+    readme,
+    reference
+}: PackageOverviewTabsProps): ReactElement {
     const hasReadme = readme !== null;
     // Server snapshot is null so hydration matches the default render; the stored preference applies after.
     const storedTab = useSyncExternalStore(subscribeStoredTab, readStoredTab, () => null);
@@ -73,24 +82,33 @@ export function PackageOverviewTabs({ title, version, readme, reference }: Packa
                             {title} <span className={cn('font-normal text-(--text-muted)')}>{version}</span>
                         </h1>
                     </div>
-                    {/* Two instances: per-breakpoint full-width can't come from one control (option flex-1 isn't responsive). */}
-                    <SegmentedControl
-                        options={options}
-                        value={tab}
-                        onChange={writeStoredTab}
-                        size="md"
-                        fullWidth
-                        aria-label="Package view"
-                        className={cn('lg:hidden')}
-                    />
-                    <SegmentedControl
-                        options={options}
-                        value={tab}
-                        onChange={writeStoredTab}
-                        size="md"
-                        aria-label="Package view"
-                        className={cn('hidden lg:inline-flex')}
-                    />
+                    <div className={cn('flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-2')}>
+                        {changelogHref ? (
+                            <Button asChild variant="ghost" size="md" className={cn('w-full lg:w-auto')}>
+                                <Link href={changelogHref} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink size={16} aria-hidden />
+                                    Changelog
+                                </Link>
+                            </Button>
+                        ) : null}
+                        <SegmentedControl
+                            options={options}
+                            value={tab}
+                            onChange={writeStoredTab}
+                            size="md"
+                            fullWidth
+                            aria-label="Package view"
+                            className={cn('lg:hidden')}
+                        />
+                        <SegmentedControl
+                            options={options}
+                            value={tab}
+                            onChange={writeStoredTab}
+                            size="md"
+                            aria-label="Package view"
+                            className={cn('hidden lg:inline-flex')}
+                        />
+                    </div>
                 </div>
                 <hr className={cn('border-(--border)')} />
             </div>
