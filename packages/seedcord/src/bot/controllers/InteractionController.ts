@@ -144,7 +144,9 @@ export class InteractionController implements Initializeable, HmrAware {
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
         for (const route of commandLeaves) {
             if (!this.slashMap.has(route)) {
-                this.logger.warn(`Slash route \`${route}\` has no registered @SlashRoute handler.`);
+                this.logger.warn(
+                    `Slash route ${chalk.bold.cyan(route)} has no registered ${chalk.bold('@SlashRoute')} handler.`
+                );
             }
         }
     }

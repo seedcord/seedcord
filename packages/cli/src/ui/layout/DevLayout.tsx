@@ -13,13 +13,11 @@ import type { LogEntry } from '@ui/stores/LogStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
-const MAX_RAIL = 40;
-const MIN_RAIL = 26;
-const RAIL_FRACTION = 0.32;
-
 export interface DevLayoutProps {
     readonly state: DevState;
-    readonly columns: number;
+    // Measured once to size the rail to its content, then held; null until that first measurement lands.
+    readonly railRef: Ref<DOMElement>;
+    readonly railWidth: number | null;
     // The shell measures this box to size the scroll window; it must be attached or the viewport is empty.
     readonly logBoxRef: Ref<DOMElement>;
     readonly scroll: ScrollApi<LogEntry>;
@@ -36,13 +34,13 @@ export interface DevLayoutProps {
 // vertical divider. The log column shows its live/scroll status on top, then the scrolling logs, then
 // notification cards docked beneath where there's room for stack traces.
 export function DevLayout(props: DevLayoutProps): ReactElement {
-    const { state, columns, logBoxRef, scroll, viewportHeight, measured } = props;
+    const { state, railRef, railWidth, logBoxRef, scroll, viewportHeight, measured } = props;
     const { enabled, showToggles, cursor, interactive, uptimeMs } = props;
-    const railWidth = Math.min(MAX_RAIL, Math.max(MIN_RAIL, Math.floor(columns * RAIL_FRACTION)));
 
     return (
         <Box flexGrow={1}>
             <Sidebar
+                ref={railRef}
                 state={state}
                 enabled={enabled}
                 uptimeMs={uptimeMs}
@@ -55,6 +53,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
             <Box
                 flexDirection="column"
                 flexGrow={1}
+                minWidth={0}
                 borderStyle="single"
                 borderColor="gray"
                 borderTop={false}

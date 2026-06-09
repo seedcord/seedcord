@@ -11,10 +11,14 @@ import { ChannelToggles } from './ChannelToggles';
 import { HotkeyBar } from './HotkeyBar';
 
 import type { DevState } from '@ui/stores/DevStore';
-import type { ReactElement } from 'react';
+import type { DOMElement } from 'ink';
+import type { ReactElement, Ref } from 'react';
 
 // Below this many terminal rows the rail drops the config paths so the rest still fits.
 const COMPACT_ROWS = 26;
+
+// Upper bound for the content-measured rail width.
+const MAX_RAIL = 40;
 
 // Pads the metadata labels so their values line up into a column.
 const META_LABEL_WIDTH = 5;
@@ -34,12 +38,13 @@ interface SidebarProps {
     readonly interactive: boolean;
     readonly showToggles: boolean;
     readonly cursor: number;
-    readonly width: number;
+    readonly width: number | null;
+    readonly ref?: Ref<DOMElement>;
 }
 
 function Meta({ label, value }: { label: string; value: string }): ReactElement {
     return (
-        <Text wrap="truncate">
+        <Text>
             <Text dimColor>{label.padEnd(META_LABEL_WIDTH)}</Text>
             {value}
         </Text>
@@ -51,7 +56,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
     return (
         <Box flexDirection="column">
             <StatusBadge phase={state.phase} />
-            {state.status ? <Text wrap="truncate">{state.status}</Text> : null}
+            {state.status ? <Text>{state.status}</Text> : null}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {dir === null ? null : <Meta label="logs" value={dir} />}
         </Box>
@@ -69,13 +74,22 @@ export function Sidebar({
     interactive,
     showToggles,
     cursor,
-    width
+    width,
+    ref
 }: SidebarProps): ReactElement {
     const { rows } = useWindowSize();
     const compact = rows < COMPACT_ROWS;
 
     return (
-        <Box flexDirection="column" width={width} paddingX={1} overflow="hidden">
+        <Box
+            ref={ref}
+            flexDirection="column"
+            width={width ?? undefined}
+            maxWidth={MAX_RAIL}
+            flexShrink={0}
+            paddingX={1}
+            overflow="hidden"
+        >
             <Box flexShrink={0}>
                 <Banner config={state.config} compact={compact} />
             </Box>

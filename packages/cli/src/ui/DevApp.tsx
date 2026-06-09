@@ -39,6 +39,9 @@ export function DevApp(props: DevAppProps): ReactElement {
     const logBoxRef = useRef<DOMElement | null>(null);
     const [logBoxHeight, setLogBoxHeight] = useState(0);
 
+    const railRef = useRef<DOMElement | null>(null);
+    const [railWidth, setRailWidth] = useState<number | null>(null);
+
     const logs = useLogs(enabled);
     const viewportHeight = Math.max(1, logBoxHeight);
     const scroll = useScroll(logs, viewportHeight, logKey);
@@ -53,6 +56,14 @@ export function DevApp(props: DevAppProps): ReactElement {
         const measured = measureElement(logBoxRef.current).height;
         setLogBoxHeight((prev) => (prev === measured ? prev : measured));
     }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt]);
+
+    // Measure the rail's natural content width once the config (its widest content) has loaded, then keep it
+    // so the rail never reflows as logs stream.
+    useEffect(() => {
+        if (railWidth !== null || !railRef.current || !state.config) return;
+        const measured = measureElement(railRef.current).width;
+        if (measured > 0) setRailWidth(measured);
+    }, [railWidth, rows, columns, state.config]);
 
     useInput((input, key) => {
         dispatchHotkey({
@@ -93,7 +104,8 @@ export function DevApp(props: DevAppProps): ReactElement {
         <Box flexDirection="column" width={columns} height={rows} overflow="hidden">
             <DevLayout
                 state={state}
-                columns={columns}
+                railRef={railRef}
+                railWidth={railWidth}
                 logBoxRef={logBoxRef}
                 scroll={scroll}
                 viewportHeight={viewportHeight}

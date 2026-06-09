@@ -35,13 +35,13 @@ export function Banner({ config, compact = false }: BannerProps): ReactElement {
         <Box flexDirection="column">
             <Wordmark />
             <Box flexDirection="column" paddingTop={1}>
-                <Text wrap="truncate">
+                <Text>
                     <Text color="blue">➜</Text> Interactions: <ConfigPath path={config.bot.interactions.path} />
                 </Text>
-                <Text wrap="truncate">
+                <Text>
                     <Text color="blue">➜</Text> Events: <ConfigPath path={config.bot.events.path} />
                 </Text>
-                <Text wrap="truncate">
+                <Text>
                     <Text color="blue">➜</Text> Pub/Sub: <ConfigPath path={config.subscribers.path} />
                 </Text>
             </Box>
