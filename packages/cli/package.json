@@ -49,6 +49,7 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "discord.js": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "dependencies": {
@@ -72,6 +73,7 @@
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@types/react": "catalog:react",
+        "discord.js": "catalog:peer",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",

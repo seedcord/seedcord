@@ -1,0 +1,68 @@
+import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
+
+import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
+import { InteractionHandler } from '@interfaces/Handler';
+
+import type { TypedOptions } from '@interfaces/TypedOptions';
+import type { SlashOptionRegistry } from '@seedcord/types';
+import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
+import type { Promisable } from 'type-fest';
+
+// one arm per command this handler is registered for, keyed by route, each receiving that route's typed options.
+type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends CacheType, Ret> = {
+    [Key in Route]: (options: TypedOptions<Key, Cache>) => Promisable<Ret>;
+};
+
+/**
+ * Base class for a chat-input (slash) command handler.
+ *
+ * Pass the route from the generated registry as the generic, the same string as `@SlashRoute`, then read
+ * `this.options` for a single command or `this.match` for several. Command authoring stays plain
+ * discord.js, `seedcord codegen` reads its `toJSON()` to type these options.
+ *
+ * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'ban'` or `'ban' | 'kick'`.
+ * @typeParam Cache - The interaction cache state, `'cached'` by default.
+ *
+ * @example
+ * ```ts
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> {
+ *     \@Catchable()
+ *     async execute() {
+ *         const target = this.options.getUser('target'); // User
+ *         const reason = this.options.getString('reason'); // string | null
+ *     }
+ * }
+ * ```
+ */
+export abstract class SlashHandler<
+    Route extends keyof SlashOptionRegistry,
+    Cache extends CacheType = 'cached'
+> extends InteractionHandler<ChatInputCommandInteraction<Cache>> {
+    /**
+     * The typed options for this command's route. Required options drop the null, choices narrow to their
+     * literal union, and only the getters for kinds this command actually uses appear. Use `this.event.options`
+     * directly for anything outside this view, such as narrowing a channel option by type.
+     */
+    protected get options(): TypedOptions<Route, Cache> {
+        // the djs resolver already carries every getter, TypedOptions is its stricter registry-typed view.
+        return this.event.options as TypedOptions<Route, Cache>;
+    }
+
+    /**
+     * Run the arm for whichever command fired, when this handler is registered for several routes.
+     *
+     * Provide one arm per route, keyed by its route string, and each arm receives that route's typed
+     * options. A missing arm is a compile error.
+     *
+     * @param arms - One handler per registered route, keyed by route string.
+     * @returns The result of the arm that ran.
+     */
+    protected async match<Ret>(arms: SlashMatchArms<Route, Cache, Ret>): Promise<Ret> {
+        const route = slashRouteOf(this.event);
+        const arm = (arms as Record<string, (options: TypedOptions<Route, Cache>) => Promisable<Ret>>)[route];
+        if (!arm) throw new SeedcordError(SeedcordErrorCode.SlashMatchArmMissing, [route]);
+        return await arm(this.options);
+    }
+}

@@ -377,6 +377,9 @@ importers:
       '@types/react':
         specifier: catalog:react
         version: 19.2.15
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
       eslint-plugin-react:
         specifier: ^7.37.5
         version: 7.37.5(eslint@9.39.2(jiti@2.7.0))

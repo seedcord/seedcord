@@ -9,7 +9,7 @@ import { Envapter } from 'envapt';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { UnhandledEvent } from '@bot/defaults';
-import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
+import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { prefixOf } from '@customId/CustomId';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
@@ -397,7 +397,7 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-        const route = buildSlashRoute(interaction);
+        const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
             () => route,
@@ -450,7 +450,7 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
-        const route = buildSlashRoute(interaction);
+        const route = slashRouteOf(interaction);
         const focused = interaction.options.getFocused(true);
         const autocompleteKey = `${route}:${focused.name}`;
 

@@ -12,6 +12,8 @@ export {
     type WithChecks
 } from './Handler';
 export { Pluggable, Plugin, type Initializeable, type PluginArgs, type PluginCtor } from './Plugin';
+export { SlashHandler } from './SlashHandler';
 
 // Type exports
 export type * from './Core';
+export type { TypedOptions } from './TypedOptions';

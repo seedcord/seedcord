@@ -50,9 +50,6 @@ export enum SeedcordErrorCode {
     /** Middleware priority provided by the decorator was not a finite number. */
     DecoratorInvalidMiddlewarePriority = 1306,
 
-    /** buildSlashRoute received an invalid argument. */
-    UtilInvalidSlashRouteArgument = 1403,
-
     /** StrictEventEmitter.waitFor was aborted via its AbortSignal. */
     EventEmitterWaitForAborted = 1501,
     /** StrictEventEmitter.waitFor exceeded its configured timeout. */
@@ -76,6 +73,8 @@ export enum SeedcordErrorCode {
     CustomIdHandlerRouteMissing = 1608,
     /** match() received a decoded route with no matching arm. */
     CustomIdMatchArmMissing = 1609,
+    /** A slash handler's match() has no arm for the command route that fired. */
+    SlashMatchArmMissing = 1610,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
@@ -150,5 +149,7 @@ export enum SeedcordErrorCode {
     /** Config hmr options must be an object when provided. */
     CliConfigInvalidHmr = 3120,
     /** Config hmr restart patterns must be an array of strings when provided. */
-    CliConfigInvalidHmrRestart = 3121
+    CliConfigInvalidHmrRestart = 3121,
+    /** Two commands resolve to the same slash route during codegen. */
+    CliCodegenDuplicateRoute = 3122
 }

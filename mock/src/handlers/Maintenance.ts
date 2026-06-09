@@ -1,13 +1,16 @@
-import { ChatInputCommandInteraction, MessageFlags, TextChannel } from 'discord.js';
-import { Catchable, SlashRoute, InteractionHandler } from 'seedcord';
+import { MessageFlags, TextChannel } from 'discord.js';
+import { Catchable, SlashRoute, SlashHandler } from 'seedcord';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 
 @SlashRoute('maintenance')
-export class Maintenance extends InteractionHandler<ChatInputCommandInteraction> {
+export class Maintenance extends SlashHandler<'maintenance'> {
     @Catchable()
     public async execute(): Promise<void> {
         await this.event.deferReply({ flags: MessageFlags.Ephemeral });
+
+        const notify = this.options.getUser('notify'); // User, required so never null
+        const reason = this.options.getString('reason'); // string | null
         const channel = this.event.channel as TextChannel;
 
         await channel.send({
@@ -15,7 +18,7 @@ export class Maintenance extends InteractionHandler<ChatInputCommandInteraction>
         });
 
         await this.event.editReply({
-            content: 'Maintenance message sent.'
+            content: `Maintenance message sent, notified <@${notify.id}>${reason ? ` (${reason})` : ''}.`
         });
     }
 }

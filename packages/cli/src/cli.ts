@@ -2,6 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 import { Logger } from '@seedcord/services';
 
 import { BuildCommand } from '@commands/build/BuildCommand';
+import { CodegenCommand } from '@commands/codegen/CodegenCommand';
 import { DevCommand } from '@commands/dev/DevCommand';
 
 import { version } from '.';
@@ -17,6 +18,7 @@ async function main(): Promise<void> {
 
     new DevCommand().register(program);
     new BuildCommand().register(program);
+    new CodegenCommand().register(program);
 
     await program.parseAsync(process.argv);
 }

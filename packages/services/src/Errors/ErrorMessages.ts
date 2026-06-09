@@ -46,8 +46,6 @@ const messages = {
         'RegisterCommand("guild") requires a non-empty guilds array.',
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: () => 'Middleware priority must be a finite number.',
 
-    [SeedcordErrorCode.UtilInvalidSlashRouteArgument]: () => 'Invalid argument passed to buildSlashRoute.',
-
     [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
     [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
 
@@ -69,6 +67,8 @@ const messages = {
         `${className} is missing its route decorator (@ButtonRoute, @ModalRoute, or @SelectMenuRoute).`,
     [SeedcordErrorCode.CustomIdMatchArmMissing]: (prefix: string) =>
         `match() has no arm for the decoded route ${JSON.stringify(prefix)}.`,
+    [SeedcordErrorCode.SlashMatchArmMissing]: (route: string) =>
+        `match() has no arm for the command route ${JSON.stringify(route)}.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
@@ -129,7 +129,9 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
-        'Config `hmr.restart` must be an array of strings when provided.'
+        'Config `hmr.restart` must be an array of strings when provided.',
+    [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
+        `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`
 } satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**

@@ -4,11 +4,12 @@ import { areRoutes } from '@miscellaneous/areRoutes';
 import type { AnyCustomId } from '@customId/CustomId';
 import type { HasComponentDefs } from '@customId/routing';
 import type { InteractionHandler, AutocompleteHandler, HandlerConstructor, Repliables } from '@interfaces/Handler';
+import type { SlashHandler } from '@interfaces/SlashHandler';
+import type { SlashOptionRegistry } from '@seedcord/types';
 import type {
     ButtonInteraction,
     CacheType,
     ChannelSelectMenuInteraction,
-    ChatInputCommandInteraction,
     ContextMenuCommandInteraction,
     MentionableSelectMenuInteraction,
     ModalSubmitInteraction,
@@ -78,42 +79,61 @@ type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionH
         : TCtor;
 
 /**
- * Routes slash commands to handler classes
+ * The slash route(s) a handler serves, read off its `SlashHandler` generic.
  *
- * Supports single commands, subcommands, and subcommand groups.
- * Use forward slashes to separate subcommand paths.
+ * @internal
+ */
+type SlashRouteOf<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+    InstanceType<TCtor> extends SlashHandler<infer Route, CacheType> ? Route : never;
+
+/**
+ * Compile-time assertion that the decorator's routes match the handler's `SlashHandler` generic exactly.
+ * On a mismatch this resolves to a non-constructor type, so applying the decorator is a TS1238.
  *
- * @param routeOrRoutes - Command path(s) to handle
+ * @internal
+ */
+type AssertSlashRoute<Route extends string, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> = [
+    Route
+] extends [SlashRouteOf<TCtor>]
+    ? [SlashRouteOf<TCtor>] extends [Route]
+        ? TCtor
+        : Constructor<['SlashHandler declares a route the SlashRoute decorator does not list', SlashRouteOf<TCtor>]>
+    : Constructor<['SlashRoute does not match the SlashHandler generic', Route]>;
+
+/**
+ * Routes one or more slash commands to a {@link SlashHandler}.
+ *
+ * Pass the same route string(s) as the handler's generic. A single command reads `this.options`, several
+ * commands branch with `this.match`. The decorator routes and the generic must match exactly, so listing
+ * fewer or more than the handler declares is a compile error. Subcommands use a slash path.
+ *
+ * @param routes - The route string(s) this handler serves, e.g. `'ban'`, `'ban', 'kick'`, or `'demo/setup'`.
  * @decorator
  * @example
- * ```typescript
- * \@SlashRoute('ping')
- * class PingCommand extends InteractionHandler {
- *   // handles /ping command
+ * ```ts
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> {
+ *     async execute() {
+ *         const target = this.options.getUser('target');
+ *     }
  * }
  * ```
  *
  * @example
- * ```
- * \@SlashRoute(['ban', 'kick'])
- * class ModerationHandler extends InteractionHandler {
- *   // handles /ban and /kick commands
- * }
- * ```
- *
- * @example
- * ```
- * \@SlashRoute('admin/user/promote')
- * class PromoteHandler extends InteractionHandler {
- *   // handles /admin user promote subcommand
+ * ```ts
+ * \@SlashRoute('ban', 'kick')
+ * class ModerationHandler extends SlashHandler<'ban' | 'kick'> {
+ *     async execute() {
+ *         await this.match({ ban: (o) => o.getUser('target'), kick: (o) => o.getUser('member') });
+ *     }
  * }
  * ```
  */
-export function SlashRoute(routeOrRoutes: string | string[]) {
+export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...routes: Route[]) {
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
-        constructor: AssertHandles<ChatInputCommandInteraction, TCtor>
+        constructor: AssertSlashRoute<Route, TCtor>
     ): void {
-        storeMetadata(InteractionRoutes.Slash, routeOrRoutes, constructor as HandlerConstructor);
+        storeMetadata(InteractionRoutes.Slash, routes, constructor as HandlerConstructor);
     };
 }
 
