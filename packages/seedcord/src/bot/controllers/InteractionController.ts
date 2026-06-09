@@ -469,12 +469,10 @@ export class InteractionController implements Initializeable, HmrAware {
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
         const route = slashRouteOf(interaction);
-        const focused = interaction.options.getFocused(true);
-        const autocompleteKey = `${route}:${focused.name}`;
 
         await this.processInteraction(
             interaction,
-            () => autocompleteKey,
+            () => route,
             (key) => this.autocompleteMap.get(key)
         );
     }

@@ -100,6 +100,28 @@ describe('SlashTableGenerator', () => {
         });
     });
 
+    it('captures the autocomplete flag on string, integer, and number options and omits it elsewhere', () => {
+        const tables = tablesFor(
+            new SlashCommandBuilder()
+                .setName('search')
+                .setDescription('d')
+                .addStringOption((o) => o.setName('query').setDescription('d').setRequired(true).setAutocomplete(true))
+                .addIntegerOption((o) => o.setName('limit').setDescription('d').setAutocomplete(true))
+                .addNumberOption((o) => o.setName('ratio').setDescription('d').setAutocomplete(true))
+                .addStringOption((o) => o.setName('plain').setDescription('d'))
+        );
+
+        expect(tables).toEqual({
+            search: {
+                query: { kind: 'string', required: true, autocomplete: true },
+                limit: { kind: 'integer', required: false, autocomplete: true },
+                ratio: { kind: 'number', required: false, autocomplete: true },
+                plain: { kind: 'string', required: false }
+            }
+        });
+        expect(tables.search?.plain).not.toHaveProperty('autocomplete');
+    });
+
     it('throws naming both source files when two commands resolve to the same route', () => {
         const generator = new SlashTableGenerator(silentLogger);
         const commands = [

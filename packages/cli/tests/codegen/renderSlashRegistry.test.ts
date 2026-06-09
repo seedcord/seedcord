@@ -146,6 +146,19 @@ export {};
         expect(output).toContain("'dry-run': { kind: 'boolean'; required: false }");
     });
 
+    it('renders the autocomplete flag on autocompletable options', () => {
+        const output = renderSlashRegistry({
+            search: {
+                query: { kind: 'string', required: true, autocomplete: true },
+                limit: { kind: 'integer', required: false, autocomplete: true }
+            }
+        });
+
+        expect(output).toContain(
+            "search: { query: { kind: 'string'; required: true; autocomplete: true }; limit: { kind: 'integer'; required: false; autocomplete: true } };"
+        );
+    });
+
     it('renders number choices unquoted', () => {
         const output = renderSlashRegistry({
             level: {

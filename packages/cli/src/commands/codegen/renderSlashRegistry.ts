@@ -36,6 +36,7 @@ function renderRow(options: RouteOptions): string {
 function renderOption(opt: SlashOption): string {
     const parts = [`kind: '${opt.kind}'`, `required: ${opt.required}`];
     if (opt.choices && opt.choices.length > 0) parts.push(`choices: [${opt.choices.map(renderChoice).join(', ')}]`);
+    if (opt.autocomplete) parts.push('autocomplete: true');
     return `{ ${parts.join('; ')} }`;
 }
 

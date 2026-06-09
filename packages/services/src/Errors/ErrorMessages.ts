@@ -65,6 +65,8 @@ const messages = {
         `match() has no arm for the decoded route ${JSON.stringify(prefix)}.`,
     [SeedcordErrorCode.SlashMatchArmMissing]: (route: string) =>
         `match() has no arm for the command route ${JSON.stringify(route)}.`,
+    [SeedcordErrorCode.AutocompleteMatchArmMissing]: (field: string) =>
+        `match() has no arm for the focused field ${JSON.stringify(field)}.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,

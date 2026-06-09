@@ -1,18 +1,24 @@
-import { Logger } from '@seedcord/services';
+import { Logger, SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordError } from '@seedcord/services/internal';
 
+import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
+
+import type { AutocompleteOptions, FocusedArms, FocusedField } from './AutocompleteOptions';
 import type { Core } from './Core';
-import type { TypedConstructor } from '@seedcord/types';
+import type { SlashOptionRegistry, TypedConstructor } from '@seedcord/types';
 import type {
     AnySelectMenuInteraction,
-    AutocompleteFocusedOption,
+    ApplicationCommandOptionChoiceData,
     AutocompleteInteraction,
     ButtonInteraction,
+    CacheType,
     ChatInputCommandInteraction,
     ClientEvents,
     ContextMenuCommandInteraction,
     Events,
     ModalSubmitInteraction
 } from 'discord.js';
+import type { Promisable } from 'type-fest';
 
 export type ValidInteractionTypes =
     | ChatInputCommandInteraction
@@ -161,21 +167,91 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
     }
 }
 
-/**
- * Handler for Discord autocomplete interactions
- *
- * Extend this class to provide autocomplete suggestions for slash command options.
- * The focused option is automatically available via the `focused` property.
- *
- * Middlewares do not work on Autocomplete Interactions.
- */
-export abstract class AutocompleteHandler extends BaseHandler<AutocompleteInteraction> implements Handler {
-    /** The currently focused autocomplete option (Based on what you set in {@link AutocompleteRoute}) */
-    protected readonly focused: AutocompleteFocusedOption;
+// decode the focused option once per instance, cached in a module WeakMap. a subclass field would initialize
+// after BaseHandler.populate() runs inside super(), so the cache cannot live on the instance.
+const focusedCache = new WeakMap<object, { name: string; value: string }>();
 
-    constructor(event: AutocompleteInteraction, core: Core) {
+/**
+ * Base class for a Discord autocomplete handler.
+ *
+ * Pass the command route(s) from the generated registry as the generic, the same string(s) as
+ * `@AutocompleteRoute`. Branch on the focused field with `this.match`, read already-entered sibling options
+ * with `this.options`, and find which command fired with `this.route`.
+ *
+ * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'search'` or `'search' | 'find'`.
+ * @typeParam Cache - The interaction cache state, `'cached'` by default.
+ *
+ * @example
+ * ```ts
+ * \@AutocompleteRoute('search')
+ * class SearchAutocomplete extends AutocompleteHandler<'search'> {
+ *     async execute() {
+ *         await this.match({
+ *             query: (value, respond) => respond([{ name: value, value }])
+ *         });
+ *     }
+ * }
+ * ```
+ */
+export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistry, Cache extends CacheType = 'cached'>
+    extends BaseHandler<AutocompleteInteraction<Cache>>
+    implements Handler
+{
+    constructor(event: AutocompleteInteraction<Cache>, core: Core) {
         super(event, core);
-        this.focused = this.event.options.getFocused(true);
+    }
+
+    /**
+     * The focused option for this interaction. `value` is always the raw partial string the user is typing,
+     * even for an integer or number option, so coerce it yourself when you need a number.
+     */
+    protected get focused(): FocusedField<Route> {
+        const cached = focusedCache.get(this);
+        if (cached) return cached as FocusedField<Route>;
+        const raw = this.event.options.getFocused(true);
+        const focused = { name: raw.name, value: raw.value };
+        focusedCache.set(this, focused);
+        // the registry fixes the autocompletable names, a focused field outside that set fails the match lookup.
+        return focused as FocusedField<Route>;
+    }
+
+    /**
+     * Run the arm for the focused field.
+     *
+     * Provide one arm per autocompletable field across the registered commands. Each arm receives the
+     * focused partial value and a `respond` pinned to that field's choice value type. A missing arm is a
+     * compile error. A focused field with no arm, only reachable from a stale-deployed command, throws.
+     *
+     * @param arms - One handler per autocompletable field, keyed by field name.
+     * @returns The result of the arm that ran.
+     */
+    protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
+        const { name, value } = this.focused;
+        const respond = (choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> =>
+            this.event.respond(choices);
+        // justified: FocusedArms is keyed by field literals, the Record cast indexes it with the runtime field name.
+        type Arm = (
+            value: string,
+            respond: (choices: readonly ApplicationCommandOptionChoiceData[]) => Promise<void>
+        ) => Promisable<Ret>;
+        const arm = (arms as Record<string, Arm>)[name];
+        if (!arm) throw new SeedcordError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
+        return await arm(value, respond);
+    }
+
+    /** The firing command route, for a field whose completion differs per registered command. */
+    protected get route(): Route {
+        return slashRouteOf(this.event) as Route;
+    }
+
+    /**
+     * The already-entered options on this command, restricted to the kinds Discord resolves during autocomplete
+     * (string, integer, number, boolean) with every read nullable, since a sibling is partial while the user
+     * types the focused field. Read the focused field from `this.focused`, not here.
+     */
+    protected get options(): AutocompleteOptions<Route> {
+        // the autocomplete resolver already carries these getters, AutocompleteOptions is its registry-typed view.
+        return this.event.options as AutocompleteOptions<Route>;
     }
 }
 
@@ -222,9 +298,6 @@ export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware
         event: ClientEvents[EventName],
         core: Core
     ) => EventMiddleware<EventName>);
-
-/** @internal */
-export type AutocompleteHandlerConstructor = TypedConstructor<typeof AutocompleteHandler>;
 
 /** @internal */
 export type EventHandlerConstructor = TypedConstructor<typeof EventHandler>;

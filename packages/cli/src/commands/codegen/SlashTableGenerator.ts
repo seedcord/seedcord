@@ -92,10 +92,12 @@ export class SlashTableGenerator {
 
             const choices =
                 'choices' in option && option.choices ? option.choices.map((choice) => choice.value) : undefined;
+            const autocomplete = 'autocomplete' in option && option.autocomplete === true ? true : undefined;
             table[option.name] = {
                 kind: KIND_BY_TYPE[option.type],
                 required: option.required ?? false,
-                ...(choices ? { choices } : {})
+                ...(choices ? { choices } : {}),
+                ...(autocomplete ? { autocomplete } : {})
             };
         }
         return table;

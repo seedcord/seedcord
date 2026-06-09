@@ -14,7 +14,10 @@ export type OptionKind =
 export interface SlashOption {
     kind: OptionKind;
     required: boolean;
+
+    // these two are mutually exclusive. Djs makes sure of that.
     choices?: readonly (string | number)[];
+    autocomplete?: true;
 }
 
 /**

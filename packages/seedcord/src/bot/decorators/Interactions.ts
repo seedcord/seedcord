@@ -3,10 +3,17 @@ import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { AnyCustomId } from '@customId/CustomId';
 import type { HasComponentDefs } from '@customId/routing';
-import type { InteractionHandler, AutocompleteHandler, HandlerConstructor, Repliables } from '@interfaces/Handler';
+import type {
+    BaseHandler,
+    InteractionHandler,
+    AutocompleteHandler,
+    HandlerConstructor,
+    Repliables
+} from '@interfaces/Handler';
 import type { SlashHandler } from '@interfaces/SlashHandler';
 import type { SlashOptionRegistry } from '@seedcord/types';
 import type {
+    AutocompleteInteraction,
     ButtonInteraction,
     CacheType,
     ChannelSelectMenuInteraction,
@@ -178,28 +185,58 @@ export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string
 }
 
 /**
- * Routes autocomplete interactions to handler classes
+ * The command route(s) an autocomplete handler serves, read off its `AutocompleteHandler` generic.
  *
- * Handles autocomplete requests for specific command options.
- * Creates routes for each command-field combination.
- *
- * @param commandRoutes - Command path(s) to handle
- * @param focusedFields - Option name(s) to provide completions for
- * @example \@AutocompleteRoute('user', 'name') // Single command, single field
- * @example \@AutocompleteRoute(['user', 'profile'], ['name', 'bio']) // Multiple commands, multiple fields
- * @decorator
+ * @internal
  */
-export function AutocompleteRoute(commandRoutes: string | string[], focusedFields: string | string[]) {
-    return function (constructor: Constructor<AutocompleteHandler>): void {
-        const routes = Array.isArray(commandRoutes) ? commandRoutes : [commandRoutes];
-        const fields = Array.isArray(focusedFields) ? focusedFields : [focusedFields];
+type AutocompleteRouteOf<TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>> =
+    InstanceType<TCtor> extends AutocompleteHandler<infer Route, CacheType> ? Route : never;
 
-        routes.forEach((route) => {
-            fields.forEach((field) => {
-                const autocompleteKey = `${route}:${field}`;
-                storeMetadata(InteractionRoutes.Autocomplete, autocompleteKey, constructor);
-            });
-        });
+/**
+ * On a route/generic mismatch, resolves to a non-constructor type so applying the decorator is a TS1238.
+ *
+ * @internal
+ */
+type AssertAutocompleteRoute<
+    Route extends keyof SlashOptionRegistry,
+    TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>
+> = [Route] extends [AutocompleteRouteOf<TCtor>]
+    ? [AutocompleteRouteOf<TCtor>] extends [Route]
+        ? TCtor
+        : Constructor<
+              [
+                  'AutocompleteHandler declares a command the AutocompleteRoute decorator does not list',
+                  AutocompleteRouteOf<TCtor>
+              ]
+          >
+    : Constructor<['AutocompleteRoute does not match the AutocompleteHandler generic', Route]>;
+
+/**
+ * Routes one or more commands' autocomplete to an {@link AutocompleteHandler}.
+ *
+ * Pass the same command route string(s) as the handler's generic. One command branches with `this.match`
+ * over its autocompletable fields, several commands share one handler whose arms span every command's
+ * fields. The decorator routes and the generic must match exactly, so listing fewer or more than the
+ * handler declares is a compile error.
+ *
+ * @param routes - The command route string(s) this handler serves, e.g. `'search'` or `'search', 'find'`.
+ * @decorator
+ * @example
+ * ```ts
+ * \@AutocompleteRoute('search')
+ * class SearchAutocomplete extends AutocompleteHandler<'search'> {
+ *     async execute() {
+ *         await this.match({ query: (value, respond) => respond([{ name: value, value }]) });
+ *     }
+ * }
+ * ```
+ */
+export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>(...routes: Route[]) {
+    return function <TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>>(
+        constructor: AssertAutocompleteRoute<Route, TCtor>
+    ): void {
+        // justified: AssertAutocompleteRoute has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeMetadata(InteractionRoutes.Autocomplete, routes, constructor as HandlerConstructor);
     };
 }
 
@@ -276,7 +313,7 @@ function storeComponentRoute(
 function storeMetadata(
     symbol: InteractionRoutes,
     routes: string | string[],
-    constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler>
+    constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler<keyof SlashOptionRegistry, CacheType>>
 ): void {
     const savedRoutes: unknown = Reflect.getMetadata(symbol, constructor);
     const existing: string[] = areRoutes(savedRoutes) ? savedRoutes : [];

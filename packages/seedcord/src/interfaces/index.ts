@@ -15,5 +15,6 @@ export { Pluggable, Plugin, type Initializeable, type PluginArgs, type PluginCto
 export { SlashHandler } from './SlashHandler';
 
 // Type exports
+export type { AutocompleteOptions } from './AutocompleteOptions';
 export type * from './Core';
 export type { TypedOptions } from './TypedOptions';
