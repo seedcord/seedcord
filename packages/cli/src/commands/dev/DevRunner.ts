@@ -45,8 +45,7 @@ class SeedcordDevSession {
             }
         });
 
-        // Detect a missing entry structurally; the resolved instance path is absolute. Relying on vite's
-        // "Does the file exist" wording broke the moment that phrasing changed across a minor.
+        // detect a missing entry by path rather than vite's error message, because that wording changed across a minor and broke detection.
         if (!existsSync(this.config.instance)) {
             throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.config.instance]);
         }
@@ -101,8 +100,7 @@ class SeedcordDevSession {
         }
     }
 
-    // quit()/restart()/disconnect() call stop(), and the run loop's finally calls dispose() -> stop() again;
-    // memoize so the abort + shutdown sequence runs exactly once instead of double-shutting-down.
+    // quit(), restart(), and disconnect() all call stop(), and the run loop's finally calls dispose() which calls stop() again, so memoize to run the abort and shutdown sequence exactly once.
     public async stop(): Promise<void> {
         this.stopPromise ??= this.runStop();
         return this.stopPromise;

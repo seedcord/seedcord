@@ -19,11 +19,7 @@ import type {
 } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
-/**
- * Enum defining interaction route types for decorators
- *
- * @internal
- */
+/** @internal */
 export enum InteractionRoutes {
     Slash = 'interaction:slash',
     Button = 'interaction:button',
@@ -49,27 +45,15 @@ export enum SelectMenuType {
     Mentionable = 'mentionable'
 }
 
-/**
- * Metadata key used to mark classes as interaction handlers
- *
- * @internal
- */
+/** @internal */
 export const InteractionMetadataKey = Symbol('interaction:metadata');
 
-/**
- * Extract the event type from an InteractionHandler subclass
- *
- * Used by the interaction routing decorators.
- *
- * @internal
- */
+/** @internal */
 type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
     InstanceType<TCtor> extends InteractionHandler<infer TEvent> ? TEvent : never;
 
 /**
- * Compile time assertion that the required event type(s) `TRequired` are included in the handler event union.
- *
- * Used by the interaction routing decorators.
+ * Compile-time assertion that the required event type(s) `TRequired` are included in the handler event union.
  *
  * @internal
  */
@@ -87,8 +71,7 @@ type SlashRouteOf<TCtor extends new (...args: any[]) => InteractionHandler<Repli
     InstanceType<TCtor> extends SlashHandler<infer Route, CacheType> ? Route : never;
 
 /**
- * Compile-time assertion that the decorator's routes match the handler's `SlashHandler` generic exactly.
- * On a mismatch this resolves to a non-constructor type, so applying the decorator is a TS1238.
+ * On a route/generic mismatch, resolves to a non-constructor type so applying the decorator is a TS1238.
  *
  * @internal
  */
@@ -220,11 +203,7 @@ export function AutocompleteRoute(commandRoutes: string | string[], focusedField
     };
 }
 
-/**
- * Select menu interaction type mapping
- *
- * @internal
- */
+/** @internal */
 export type SelectMenuInteractionFor<
     SelectMenu extends SelectMenuType,
     Cache extends CacheType = CacheType
@@ -294,9 +273,6 @@ function storeComponentRoute(
     Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
 }
 
-/**
- * Helper to store route(s) in an array on reflect metadata.
- */
 function storeMetadata(
     symbol: InteractionRoutes,
     routes: string | string[],

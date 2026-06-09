@@ -10,7 +10,7 @@ const CORD_COLOR = '#6fab49';
 
 interface BannerProps {
     readonly config: Config | null;
-    // Drops the config paths; Sidebar sets this when the rail is too short for them.
+    // omits config paths. Sidebar sets this when the rail is too short.
     readonly compact?: boolean;
 }
 

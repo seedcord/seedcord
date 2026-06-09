@@ -3,7 +3,7 @@ import { CustomError } from '@interfaces/Components';
 /**
  * Thrown when a customId was minted by an older version of its shape.
  *
- * This is normal after the shape changes so it just asks the user to run the command again.
+ * This is normal after the shape changes. The reply tells the user to run the command again.
  */
 export class StaleCustomId extends CustomError {
     constructor(prefix: string) {

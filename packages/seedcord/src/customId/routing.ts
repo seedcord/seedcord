@@ -10,8 +10,7 @@ export const ComponentDefsKey = Symbol('seedcord:customId:componentDefs');
 
 /**
  * The phantom a component handler base carries. A route decorator constrains its argument to this, so
- * passing different definitions to the decorator and the handler's generic is a compile error. It is
- * never set at runtime.
+ * passing different definitions to the decorator and the handler's generic is a compile error. Never set at runtime.
  *
  * @internal
  */

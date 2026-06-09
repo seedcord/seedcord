@@ -30,8 +30,7 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
     };
 }
 
-// fixture doubles: only locate()/load()/importModule() are exercised, and the instance has no commands path
-// so the scan is empty and the rendered registry is deterministic.
+// no commands path, so the scan is empty and the rendered registry is deterministic.
 function makeRunner(root: string, logger: ILogger): CodegenRunner {
     const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = {
@@ -45,8 +44,7 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
     return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
 }
 
-// path-branching double: the instance path returns the branded Seedcord instance, every other path
-// returns the command module under test so resolveCommandsDir and walk see the shapes they each expect.
+// importModule returns the branded instance for instancePath and the command module for every other path.
 function scanRunner(
     root: string,
     commandsPath: string | null,

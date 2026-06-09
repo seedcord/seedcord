@@ -4,7 +4,6 @@ const PALETTE = ['cyan', 'green', 'yellow', 'magenta', 'blue', 'cyanBright'] as 
 
 type ChannelColor = (typeof PALETTE)[number];
 
-// map to prevent reuse of colors
 const assigned = new Map<string, ChannelColor>();
 
 export function channelColor(channel: string): ChannelColor {

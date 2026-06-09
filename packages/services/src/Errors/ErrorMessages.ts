@@ -1,10 +1,6 @@
 import { SeedcordErrorCode } from './ErrorCodes';
 
-/**
- * Mapping of Seedcord error codes to their corresponding message formatters.
- *
- * @internal
- */
+/** @internal */
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
     [SeedcordErrorCode.ConfigIncorrectDiscordToken]: () => 'Invalid DISCORD_BOT_TOKEN value.',
@@ -134,20 +130,12 @@ const messages = {
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
         `Could not read the commands directory ${dir} during codegen. ${reason}.`
-} satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
+} satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
-/**
- * Argument types for Seedcord error messages.
- *
- * @internal
- */
+/** @internal */
 export type SeedcordErrorArguments<Code extends SeedcordErrorCode> = Parameters<(typeof messages)[Code]>;
 
-/**
- * Formats a Seedcord error message based on the provided code and arguments.
- *
- * @internal
- */
+/** @internal */
 export function formatSeedcordErrorMessage<Code extends SeedcordErrorCode>(
     code: Code,
     args?: SeedcordErrorArguments<Code>

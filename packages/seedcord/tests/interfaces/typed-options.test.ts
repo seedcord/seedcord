@@ -3,8 +3,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import type { TypedOptions } from '@interfaces/TypedOptions';
 import type { GuildMember, User } from 'discord.js';
 
-// Compile-time spec for TypedOptions. The assertions live in a function the typecheck validates but vitest
-// never runs, so each @ts-expect-error fails the build if the guard it describes ever stops being an error.
+// each @ts-expect-error fails the typecheck if its guard stops being an error. vitest never runs these.
 
 // augment the registry exactly as `seedcord codegen` would emit it for one command
 declare module '@seedcord/types' {
@@ -18,13 +17,9 @@ declare module '@seedcord/types' {
 }
 
 function typeChecks(options: TypedOptions<'ban'>): void {
-    // a required option drops the null
     expectTypeOf(options.getUser('target')).toEqualTypeOf<User>();
-    // an optional option is nullable, never undefined
     expectTypeOf(options.getString('reason')).toEqualTypeOf<string | null>();
-    // choices narrow to their literal union
     expectTypeOf(options.getString('scope')).toEqualTypeOf<'guild' | 'global'>();
-    // a user option also exposes getMember, always nullable
     expectTypeOf(options.getMember('target')).toEqualTypeOf<GuildMember | null>();
 
     // @ts-expect-error 'nope' is not an option on this command.

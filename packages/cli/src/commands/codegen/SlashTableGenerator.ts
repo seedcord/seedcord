@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
-import { routeLeavesOf } from '@seedcord/utils/internal';
+import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType } from 'discord-api-types/v10';
 
 import type { ILogger, OptionKind, SlashOption } from '@seedcord/types';
@@ -21,7 +21,7 @@ export interface ScannedCommand {
     json: RESTPostAPIChatInputApplicationCommandsJSONBody;
 }
 
-type CommandOption = NonNullable<RESTPostAPIChatInputApplicationCommandsJSONBody['options']>[number];
+type CommandOption = SlashRouteLeaf['options'][number];
 
 // keyed by the djs enum so a renamed member breaks here, and constrained to the full set of basic option
 // types so a new upstream option kind fails to satisfy until it is mapped.

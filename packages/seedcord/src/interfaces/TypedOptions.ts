@@ -9,8 +9,7 @@ type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKin
     [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;
 }[keyof Row<Route>];
 
-// the resolved value for one option. choices narrow to their literal union, and the rich kinds derive
-// straight off CommandInteractionOption so they always equal what the djs resolver returns.
+// choices narrow to their literal union. rich kinds derive straight off CommandInteractionOption so they equal what the djs resolver returns
 type ResolvedValue<Cache extends CacheType, Entry> = Entry extends { choices: readonly (infer Choice)[] }
     ? Choice
     : Entry extends { kind: 'string' }
@@ -31,7 +30,7 @@ type ResolvedValue<Cache extends CacheType, Entry> = Entry extends { choices: re
                     ? NonNullable<CommandInteractionOption<Cache>['attachment']>
                     : never;
 
-// required options drop the null, optional options add it. djs returns `T | null`, never `| undefined`.
+// djs returns T | null on optional options, never T | undefined
 type Returned<Cache extends CacheType, Entry> = Entry extends { required: true }
     ? ResolvedValue<Cache, Entry>
     : ResolvedValue<Cache, Entry> | null;

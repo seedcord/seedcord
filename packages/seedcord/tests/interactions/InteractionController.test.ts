@@ -113,7 +113,6 @@ describe('InteractionController Integration', () => {
         let controller = testBot.interactions;
         expect(controller.buttonMap.has('click-me')).toBe(true);
 
-        // Simulate HMR update: Change ID
         await testEnv.createFile(
             `${interactionsDir}/Button.ts`,
             `

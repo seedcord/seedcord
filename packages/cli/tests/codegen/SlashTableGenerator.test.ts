@@ -420,7 +420,6 @@ describe('SlashTableGenerator', () => {
         // sees no routing and emits a flat empty-table route. Context menus are actually filtered
         // upstream in CodegenRunner.isChatInput, not here.
         const cm = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
-        // context menu body is a structural subset of the chat-input body the generator reads (only .name and .options)
         const json = cm.toJSON() as unknown as RESTPostAPIChatInputApplicationCommandsJSONBody;
 
         const tables = new SlashTableGenerator(silentLogger).generate([{ sourceFile: 'report.ts', json }]);

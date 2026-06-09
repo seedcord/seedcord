@@ -150,7 +150,7 @@ describe('DevRunner', () => {
             }))
         };
 
-        // fixture doubles: only locate()/load() are exercised on this path, codegen runs on refresh only
+        // locator and configLoader are the only doubles exercised here, codegen runs on refresh only.
         const runner = new DevRunner(
             locator as unknown as ConfigLocator,
             configLoader as unknown as ConfigLoader,
@@ -159,7 +159,7 @@ describe('DevRunner', () => {
             silentLogger
         );
 
-        // run() swallows session errors through handleError; rethrow so the assertion below can see it.
+        // run() swallows session errors through handleError, so rethrow here to let the assertion observe them.
         // @ts-expect-error accessing private method
         vi.spyOn(runner, 'handleError').mockImplementation((error: unknown) => {
             throw error;

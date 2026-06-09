@@ -107,7 +107,7 @@ export class InteractionController implements Initializeable, HmrAware {
 
         const interactionsDir = this.core.config.bot.interactions.path;
         if (!interactionsDir) {
-            // Unreachable: InteractionController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping handler loading.
+            // unreachable, InteractionController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping handler loading.
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
                 'InteractionController',
                 'interactions'
@@ -333,7 +333,7 @@ export class InteractionController implements Initializeable, HmrAware {
         );
     }
 
-    public async processInteraction<TInteraction extends Interaction>(
+    private async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
         extractKey: (i: TInteraction) => string,
         getHandler: (key: string) => HandlerConstructor | undefined

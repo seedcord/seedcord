@@ -3,15 +3,12 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 import { ButtonRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
 import { ButtonHandler, CustomId, SelectHandler } from '@customId/index';
 
-// Compile-time footgun tests. Each @ts-expect-error fails the typecheck if the mistake it guards ever
-// stops being a compile error, so this file is the type-safety regression suite. The classes are
-// referenced in the it() block below only so they are not reported unused.
+// each @ts-expect-error fails the typecheck if the mistake it guards stops being a compile error.
 
 const Approve = new CustomId('approve').snowflake('userId').oneOf('action', ['approve', 'deny']);
 const Deny = new CustomId('deny').snowflake('userId').str('reason');
 const Assign = new CustomId('assign').snowflake('roleId');
 
-// a matching single-route handler compiles, and this.params infers each field's decoded type.
 @ButtonRoute(Approve)
 class GoodButton extends ButtonHandler<[typeof Approve]> {
     async execute(): Promise<void> {
@@ -20,7 +17,6 @@ class GoodButton extends ButtonHandler<[typeof Approve]> {
     }
 }
 
-// the decorator's definition and the generic's definition disagree.
 // @ts-expect-error a handler typed for Approve cannot be routed with Deny.
 @ButtonRoute(Deny)
 class MismatchedButton extends ButtonHandler<[typeof Approve]> {
@@ -40,7 +36,6 @@ class MissingArm extends ButtonHandler<[typeof Approve, typeof Deny]> {
     }
 }
 
-// an unknown arm is rejected.
 @ButtonRoute(Approve)
 class ExtraArm extends ButtonHandler<[typeof Approve]> {
     async execute(): Promise<void> {
@@ -52,7 +47,6 @@ class ExtraArm extends ButtonHandler<[typeof Approve]> {
     }
 }
 
-// a field that is not on the shape is rejected.
 @ButtonRoute(Approve)
 class WrongField extends ButtonHandler<[typeof Approve]> {
     async execute(): Promise<void> {
@@ -71,7 +65,6 @@ class MultiParams extends ButtonHandler<[typeof Approve, typeof Deny]> {
     }
 }
 
-// the select kind in the generic must match the kind in the decorator.
 // @ts-expect-error a user-select handler cannot be routed as a role select.
 @SelectMenuRoute(SelectMenuType.Role, Assign)
 class MismatchedSelect extends SelectHandler<SelectMenuType.User, [typeof Assign]> {
@@ -80,7 +73,6 @@ class MismatchedSelect extends SelectHandler<SelectMenuType.User, [typeof Assign
     }
 }
 
-// a matching select compiles and narrows this.params.
 @SelectMenuRoute(SelectMenuType.User, Assign)
 class GoodSelect extends SelectHandler<SelectMenuType.User, [typeof Assign]> {
     async execute(): Promise<void> {

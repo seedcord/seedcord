@@ -11,20 +11,20 @@ const GUILD = '697894561234567890';
 const ROLE = '912345678901234567';
 const MSG = '1284567890123456789';
 
-const core = {} as unknown as Core; // fixture
+const core = {} as unknown as Core;
 
 // the bases read only a couple fields off the event, so a minimal fake per kind is enough.
 function button(customId: string): ButtonInteraction<'cached'> {
-    return { customId } as unknown as ButtonInteraction<'cached'>; // fixture
+    return { customId } as unknown as ButtonInteraction<'cached'>;
 }
 function modal(customId: string, inputs: Record<string, string>): ModalSubmitInteraction<'cached'> {
     return {
         customId,
         fields: { getTextInputValue: (id: string) => inputs[id] ?? '' }
-    } as unknown as ModalSubmitInteraction<'cached'>; // fixture
+    } as unknown as ModalSubmitInteraction<'cached'>;
 }
 function userSelect(customId: string, values: string[]): UserSelectMenuInteraction<'cached'> {
-    return { customId, values } as unknown as UserSelectMenuInteraction<'cached'>; // fixture
+    return { customId, values } as unknown as UserSelectMenuInteraction<'cached'>;
 }
 
 // a moderation approve button carrying one field of every kind.
@@ -45,7 +45,6 @@ class ApproveButton extends ButtonHandler<[typeof Approve]> {
     }
 }
 
-// a button with no route decorator, to prove the runtime guard fires.
 class Undecorated extends ButtonHandler<[typeof Approve]> {
     async execute(): Promise<void> {
         await Promise.resolve();
@@ -125,8 +124,7 @@ describe('this.params on a single-route handler', () => {
     });
 
     it('throws InvalidCustomId on a corrupt wire', () => {
-        // the Approve body already holds several delimited pieces, so this extra one pushes the count
-        // past what the shape expects and decode rejects it.
+        // appending a delimited piece pushes the field count past what the shape expects
         const wire = Approve.encode({ userId: USER, caseId: 1, urgent: false, action: 'approve', note: '' });
         const handler = new ApproveButton(button(`${wire}\x1fJUNK`), core);
         expect(() => handler.read()).toThrow(InvalidCustomId);

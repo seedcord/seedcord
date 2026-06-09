@@ -24,7 +24,7 @@ export function prefixOf(wire: string): string {
 
 /**
  * A typed customId. The single source of truth shared by the component that mints it and the handler
- * that reads it. This gives you typed reads on the `.customId` field in components. Furthermore, you can fit more string per string because CustomId encodes your values into a compact format instead of plain stringification, so you can pack more data into the same 100 chars.
+ * that reads it. This gives you typed reads on the `.customId` field in components. Values are packed into a compact wire string rather than plain stringified tokens, so the 100-char Discord limit goes further. More string per string, basically.
  *
  * @typeParam Prefix - The stable route prefix, e.g. 'approve'.
  * @typeParam Shape - The accumulated fields, filled in by the chain.
@@ -44,9 +44,7 @@ export function prefixOf(wire: string): string {
  * ```
  */
 export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
-    /** The stable route prefix, e.g. 'approve'. */
     readonly prefix: Prefix;
-    /** The fields this customId carries, keyed by name. */
     readonly shape: Shape;
     /** The prefix plus a short hash of the shape, the part of the wire before the colon. */
     readonly routeKey: string;

@@ -49,7 +49,7 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const interactive = !state.isBusy || state.restartRequired;
 
-    // Re-measure only when something can change the box height: a terminal resize, or a notification card
+    // Re-measure only when something can change the box height, a terminal resize or a notification card
     // appearing/clearing. The measured height is the exact log-line budget for the scroll window.
     useEffect(() => {
         if (!logBoxRef.current) return;

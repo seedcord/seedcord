@@ -12,10 +12,7 @@ import type {
     User
 } from 'discord.js';
 
-// Compile-time spec for the rich-kind and cache-variant surface of TypedOptions. The assertions live in
-// functions the typecheck validates but vitest never runs, so each @ts-expect-error fails the build if the
-// guard it describes stops being an error. Routes are distinct from the other type-test files because every
-// declare-module augmentation in the package merges during one tc run.
+// functions are typechecked but never run. routes are distinct from the other type-test files because all declare-module augmentations merge during one tc run
 declare module '@seedcord/types' {
     interface SlashOptionRegistry {
         purge: {
@@ -91,7 +88,6 @@ function memberAlwaysNullable(options: TypedOptions<'purge'>): void {
 
 function channelIsWide(options: TypedOptions<'purge'>): void {
     expectTypeOf(options.getChannel('where')).toEqualTypeOf<GuildBasedChannel>();
-    // the typed getChannel takes only the name, no channelTypes second arg
     // @ts-expect-error getChannel accepts only the option name, not a channelTypes argument
     void options.getChannel('where', []);
 }

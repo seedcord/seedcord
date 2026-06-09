@@ -15,10 +15,10 @@ import type { ReactElement, Ref } from 'react';
 
 export interface DevLayoutProps {
     readonly state: DevState;
-    // Measured once to size the rail to its content, then held; null until that first measurement lands.
+    // measured once to size the rail to its content, then held. null until that first measurement lands
     readonly railRef: Ref<DOMElement>;
     readonly railWidth: number | null;
-    // The shell measures this box to size the scroll window; it must be attached or the viewport is empty.
+    // the shell measures this box to size the scroll window. it must be attached or the viewport is empty
     readonly logBoxRef: Ref<DOMElement>;
     readonly scroll: ScrollApi<LogEntry>;
     readonly viewportHeight: number;
