@@ -7,8 +7,6 @@ import { SidebarCategoryList } from './SidebarCategoryList';
 import { SidebarCategoryListSkeleton } from './SidebarCategoryListSkeleton';
 import { SidebarEmptyState } from './SidebarEmptyState';
 import { SidebarHeader } from './SidebarHeader';
-import { getContainerStyles } from './utils/getContainerStyles';
-import { getListStyles } from './utils/getListStyles';
 import { useSidebarNavigationHandlers } from './utils/useSidebarNavigationHandlers';
 import { useSidebarPersistence } from './utils/useSidebarPersistence';
 import { useSidebarScrollGuards } from './utils/useSidebarScrollGuards';
@@ -16,7 +14,10 @@ import { useSidebarSelection } from './utils/useSidebarSelection';
 import { useSidebarSelectionState } from './utils/useSidebarSelectionState';
 
 import type { SidebarProps } from './types';
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
+
+const FILL: CSSProperties = { height: '100%', maxHeight: '100%' };
+const LIST: CSSProperties = { ...FILL, WebkitOverflowScrolling: 'touch' };
 
 // eslint-disable-next-line max-lines-per-function -- composes selection state, persistence, navigation handlers, store wiring, and the full sidebar tree
 export function Sidebar({
@@ -28,8 +29,6 @@ export function Sidebar({
     onSelect
 }: SidebarProps): ReactElement {
     const pathname = usePathname();
-    const containerStyles = getContainerStyles(variant);
-    const listStyles = getListStyles(variant);
     const { handleWheel } = useSidebarScrollGuards();
 
     const {
@@ -90,9 +89,9 @@ export function Sidebar({
                 isDesktop ? 'rounded-none border-0 bg-(--bg-surface-moderate-transparent) shadow-none' : 'bg-surface',
                 className
             )}
-            style={containerStyles}
+            style={FILL}
         >
-            <div className={cn('shrink-0 space-y-3')}>
+            <div className={cn('shrink-0')}>
                 <SidebarHeader
                     packageOptions={packageOptions}
                     versionOptions={versionOptions}
@@ -105,7 +104,7 @@ export function Sidebar({
             <div
                 ref={scrollRef}
                 className={cn('nice-scroll relative mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain pe-1')}
-                style={listStyles}
+                style={LIST}
                 onWheel={handleWheel}
             >
                 {isPendingSelection ? (
