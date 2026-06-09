@@ -1,10 +1,13 @@
 import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
-import { buildSlashRoute } from '@seedcord/utils/internal';
-import { ApplicationCommandOptionType } from 'discord.js';
+import { routeLeavesOf } from '@seedcord/utils/internal';
+import { ApplicationCommandOptionType } from 'discord-api-types/v10';
 
 import type { ILogger, OptionKind, SlashOption } from '@seedcord/types';
-import type { APIApplicationCommandBasicOption, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import type {
+    APIApplicationCommandBasicOption,
+    RESTPostAPIChatInputApplicationCommandsJSONBody
+} from 'discord-api-types/v10';
 
 /** One leaf's option set, keyed by option name. */
 export type RouteOptions = Record<string, SlashOption>;
@@ -48,58 +51,33 @@ export class SlashTableGenerator {
         const tables: SlashTables = {};
         const sourceByRoute = new Map<string, string>();
         for (const command of commands) {
-            for (const [route, options] of this.leavesOf(command.json)) {
+            this.warnEmptyGroups(command.json);
+            for (const leaf of routeLeavesOf(command.json)) {
                 // an interface registry merges duplicate keys silently, so the route collision must be caught here.
-                const firstFile = sourceByRoute.get(route);
+                const firstFile = sourceByRoute.get(leaf.route);
                 if (firstFile !== undefined) {
                     throw new SeedcordError(SeedcordErrorCode.CliCodegenDuplicateRoute, [
-                        route,
+                        leaf.route,
                         firstFile,
                         command.sourceFile
                     ]);
                 }
-                sourceByRoute.set(route, command.sourceFile);
-                tables[route] = options;
+                sourceByRoute.set(leaf.route, command.sourceFile);
+                tables[leaf.route] = this.mapOptions(leaf.options);
             }
         }
         this.logger.debug(`Generated slash tables for ${Object.keys(tables).length} route(s)`);
         return tables;
     }
 
-    // a command's options are EITHER all leaves OR all subs/groups (Discord forbids mixing), so any sub/group
-    // means the root is not executable and only the leaves get a route.
-    private leavesOf(json: RESTPostAPIChatInputApplicationCommandsJSONBody): [string, RouteOptions][] {
-        const options = json.options ?? [];
-        const hasRouting = options.some(
-            (option) =>
-                option.type === ApplicationCommandOptionType.Subcommand ||
-                option.type === ApplicationCommandOptionType.SubcommandGroup
-        );
-        if (!hasRouting) return [[buildSlashRoute(json.name), this.mapOptions(options)]];
-
-        const leaves: [string, RouteOptions][] = [];
-        for (const option of options) {
-            if (option.type === ApplicationCommandOptionType.SubcommandGroup) {
-                const subs = option.options ?? [];
-                // toJSON() does not reject an empty group, but Discord rejects it at deploy, so flag it here.
-                if (subs.length === 0) {
-                    // a group with no subcommands has no route leaf, so name it directly for the diagnostic.
-                    this.logger.warn(
-                        `Slash group \`${json.name}/${option.name}\` has no subcommands and will not deploy.`
-                    );
-                    continue;
-                }
-                for (const sub of subs) {
-                    leaves.push([
-                        buildSlashRoute(json.name, sub.name, option.name),
-                        this.mapOptions(sub.options ?? [])
-                    ]);
-                }
-            } else if (option.type === ApplicationCommandOptionType.Subcommand) {
-                leaves.push([buildSlashRoute(json.name, option.name), this.mapOptions(option.options ?? [])]);
+    // routeLeavesOf drops an empty group silently because it has no route. toJSON() allows one, but Discord
+    // rejects it at deploy, so surface it here where the command's source file is known.
+    private warnEmptyGroups(json: RESTPostAPIChatInputApplicationCommandsJSONBody): void {
+        for (const option of json.options ?? []) {
+            if (option.type === ApplicationCommandOptionType.SubcommandGroup && (option.options ?? []).length === 0) {
+                this.logger.warn(`Slash group \`${json.name}/${option.name}\` has no subcommands and will not deploy.`);
             }
         }
-        return leaves;
     }
 
     private mapOptions(options: readonly CommandOption[]): RouteOptions {

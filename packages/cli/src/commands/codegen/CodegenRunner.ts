@@ -6,7 +6,7 @@ import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 import { SeedcordBrand, type Brandable } from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils';
-import { ApplicationCommandType } from 'discord.js';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
@@ -20,7 +20,7 @@ import type { ScannedCommand } from './SlashTableGenerator';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger, SeedcordInstance } from '@seedcord/types';
-import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 const OUTPUT_FILENAME = 'slash-registry.gen.ts';
 

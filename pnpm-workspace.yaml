@@ -17,6 +17,7 @@ catalogs:
     deps:
         '@types/node': ^25.9.1
         chalk: ^5.6.2
+        discord-api-types: ^0.38.40
         envapt: ^5.0.3
         eslint: ^9.39.2
         lucide-react: ^1.16.0

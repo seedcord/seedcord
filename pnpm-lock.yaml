@@ -12,6 +12,9 @@ catalogs:
     chalk:
       specifier: ^5.6.2
       version: 5.6.2
+    discord-api-types:
+      specifier: ^0.38.40
+      version: 0.38.47
     envapt:
       specifier: ^5.0.3
       version: 5.0.3
@@ -340,6 +343,9 @@ importers:
       commander:
         specifier: ^15.0.0
         version: 15.0.0
+      discord-api-types:
+        specifier: catalog:deps
+        version: 0.38.47
       fix-esm-import-path:
         specifier: ^1.10.3
         version: 1.10.3
@@ -772,6 +778,9 @@ importers:
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
+      discord-api-types:
+        specifier: catalog:deps
+        version: 0.38.47
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -785,6 +794,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
       type-fest:
         specifier: catalog:deps
         version: 5.6.0
