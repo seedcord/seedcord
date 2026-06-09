@@ -17,7 +17,7 @@ import type { Core } from '@interfaces/Core';
 import type { EventHandlerConstructor, EventMiddlewareConstructor, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;

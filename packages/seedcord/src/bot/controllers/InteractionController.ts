@@ -19,7 +19,7 @@ import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { Core } from '@interfaces/Core';
 import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

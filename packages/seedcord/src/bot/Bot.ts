@@ -13,7 +13,7 @@ import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
 import type { Core } from '@interfaces/Core';
-import type { HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
 /**
  * Types of events emitted by the {@link Core.bot} instance.

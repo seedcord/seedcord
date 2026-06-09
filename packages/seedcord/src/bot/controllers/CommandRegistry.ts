@@ -15,7 +15,7 @@ import { BuilderComponent } from '@interfaces/Components';
 import type { CommandMeta } from '@bDecorators/Command';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type { ContextMenuCommandBuilder } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;

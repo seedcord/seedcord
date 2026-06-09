@@ -29,9 +29,6 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
-        },
-        "./vite-hmr": {
-            "types": "./dist/api/vite-hmr.d.mts"
         }
     },
     "scripts": {

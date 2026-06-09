@@ -2,7 +2,6 @@ import { SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 
 import type { Core } from './Core';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
 import type {
     SENoEvents,
     CoordinatedShutdown,
@@ -12,6 +11,7 @@ import type {
     SEEventMapLike
 } from '@seedcord/services';
 import type { Tail } from '@seedcord/types';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 
 /** Interface for objects that can be initialized asynchronously */
 export interface Initializeable {

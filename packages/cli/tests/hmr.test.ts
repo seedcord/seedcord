@@ -5,7 +5,7 @@ import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HmrPlugin } from '@commands/dev/runtime/HmrPlugin';
 
-import type { HmrUpdateEvent } from '@api/Hmr';
+import type { HmrUpdateEvent } from '@seedcord/types/internal';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 
 const HMR_EVENT_NAME = 'seedcord:hmr';

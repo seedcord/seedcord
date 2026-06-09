@@ -518,9 +518,6 @@ importers:
 
   packages/plugins:
     dependencies:
-      '@seedcord/cli':
-        specifier: workspace:*
-        version: link:../cli
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services
@@ -573,9 +570,6 @@ importers:
 
   packages/seedcord:
     dependencies:
-      '@seedcord/cli':
-        specifier: workspace:*
-        version: link:../cli
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services

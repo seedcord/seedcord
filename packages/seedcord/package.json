@@ -58,7 +58,6 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "@seedcord/services": "workspace:*",
-        "@seedcord/cli": "workspace:*",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps"
     },

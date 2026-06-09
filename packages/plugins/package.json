@@ -58,7 +58,6 @@
         }
     },
     "dependencies": {
-        "@seedcord/cli": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
