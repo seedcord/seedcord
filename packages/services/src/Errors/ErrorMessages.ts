@@ -131,7 +131,9 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
         'Config `hmr.restart` must be an array of strings when provided.',
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
-        `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`
+        `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
+    [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
+        `Could not read the commands directory ${dir} during codegen. ${reason}.`
 } satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
 
 /**

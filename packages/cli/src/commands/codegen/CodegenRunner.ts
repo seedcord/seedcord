@@ -73,25 +73,28 @@ export class CodegenRunner {
         if (!commandsDir) return [];
 
         const commands: ScannedCommand[] = [];
-        await this.walk(commandsDir, commands);
+        await this.walk(commandsDir, commands, true);
         return commands;
     }
 
     // the bot's own scan runs under tsx/vite, so its import() handles .ts. codegen runs under plain node, so
     // it imports each command file through the tsx-backed module loader instead.
-    private async walk(dir: string, commands: ScannedCommand[]): Promise<void> {
+    private async walk(dir: string, commands: ScannedCommand[], isRoot: boolean): Promise<void> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
-            this.logger.error(`Failed to read commands directory ${dir}`, error);
+            const reason = error instanceof Error ? error.message : 'Unknown error';
+            // an unreadable top-level commands dir would silently pass --check against a stale registry, so fail.
+            if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandsDirUnreadable, [dir, reason]);
+            this.logger.warn(`Skipping unreadable directory ${dir}. ${reason}.`);
             return;
         }
 
         for (const entry of entries) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
-                await this.walk(fullPath, commands);
+                await this.walk(fullPath, commands, false);
             } else if (isTsOrJsFile(entry)) {
                 const imported = await this.moduleLoader.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {
@@ -104,13 +107,14 @@ export class CodegenRunner {
 
     private async resolveCommandsDir(config: ResolvedSeedcordDevConfig): Promise<string | undefined> {
         const module = await this.moduleLoader.importModule(config.instance);
-        const instance = await Promise.resolve(resolveDefaultExport(module));
+        const instance = resolveDefaultExport(module);
         if (!this.isSeedcordInstance(instance)) {
             throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
         }
 
+        // the bot resolves commands.path relative to cwd, so codegen must too or it scans the wrong dir.
         const commandsPath = instance.config.bot.commands.path;
-        return commandsPath ? resolve(dirname(config.instance), commandsPath) : undefined;
+        return commandsPath ? resolve(process.cwd(), commandsPath) : undefined;
     }
 
     private commandJsonOf(exported: unknown): RESTPostAPIChatInputApplicationCommandsJSONBody | undefined {

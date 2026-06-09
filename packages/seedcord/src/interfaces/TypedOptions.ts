@@ -1,10 +1,10 @@
 import type { OptionKind, SlashOptionRegistry } from '@seedcord/types';
 import type { CacheType, CommandInteractionOption } from 'discord.js';
 
-/** The option table generated for one route. */
+// the option table generated for one route
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
 
-/** The option names on a route whose kind is `Kind`. */
+// the option names on a route whose kind is Kind
 type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKind> = {
     [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;
 }[keyof Row<Route>];

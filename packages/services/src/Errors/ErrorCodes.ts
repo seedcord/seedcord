@@ -151,5 +151,7 @@ export enum SeedcordErrorCode {
     /** Config hmr restart patterns must be an array of strings when provided. */
     CliConfigInvalidHmrRestart = 3121,
     /** Two commands resolve to the same slash route during codegen. */
-    CliCodegenDuplicateRoute = 3122
+    CliCodegenDuplicateRoute = 3122,
+    /** The commands directory could not be read during codegen. */
+    CliCodegenCommandsDirUnreadable = 3123
 }

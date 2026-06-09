@@ -133,6 +133,7 @@ export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...rou
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
         constructor: AssertSlashRoute<Route, TCtor>
     ): void {
+        // justified: AssertSlashRoute has already narrowed the ctor, this erases it to the metadata-store shape.
         storeMetadata(InteractionRoutes.Slash, routes, constructor as HandlerConstructor);
     };
 }

@@ -33,7 +33,9 @@ function renderOption(opt: SlashOption): string {
 }
 
 function renderChoice(value: string | number): string {
-    return typeof value === 'string' ? `'${value}'` : String(value);
+    if (typeof value !== 'string') return String(value);
+    // a choice value is an arbitrary Discord string, so escape backslashes then quotes or it emits invalid TS.
+    return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
 }
 
 function renderKey(name: string): string {
