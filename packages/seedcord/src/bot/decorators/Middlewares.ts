@@ -24,11 +24,15 @@ export const MiddlewareMetadataKey = Symbol('middleware:metadata');
  *
  * @typeParam MType - The type of middleware being registered
  */
-export interface MiddlewareOptions<MType extends MiddlewareType> {
+export interface MiddlewareOptions<
+    MType extends MiddlewareType,
+    Events extends readonly ValidNonInteractionKeys[] = readonly ValidNonInteractionKeys[]
+> {
     /**
-     * Restrict event middleware execution to specific Discord client events
+     * Restrict event middleware execution to specific Discord client events. The middleware's `EventMiddleware`
+     * generic must list the same events, or applying the decorator is a compile error.
      */
-    readonly events?: MType extends MiddlewareType.Event ? readonly ValidNonInteractionKeys[] : never;
+    readonly events?: MType extends MiddlewareType.Event ? Events : never;
 }
 
 /**
@@ -70,17 +74,17 @@ export interface MiddlewareMetadata {
  * @throws A {@link SeedcordTypeError} If priority is not a finite number
  * @throws A {@link SeedcordError} If interaction middleware specifies event filters
  */
-export function Middleware<MType extends MiddlewareType>(
+export function Middleware<MType extends MiddlewareType, const Events extends readonly ValidNonInteractionKeys[] = []>(
     type: MType,
     priority = 0,
-    options: MiddlewareOptions<MType> = {}
+    options: MiddlewareOptions<MType, Events> = {}
 ) {
     return (
-        ctor: Constructor<
-            MType extends MiddlewareType.Interaction
-                ? InteractionMiddleware<Repliables>
-                : EventMiddleware<ValidNonInteractionKeys>
-        >
+        ctor: MType extends MiddlewareType.Interaction
+            ? Constructor<InteractionMiddleware<Repliables>>
+            : Events extends readonly []
+              ? Constructor<EventMiddleware<ValidNonInteractionKeys>>
+              : Constructor<EventMiddleware<Events[number]>>
     ): void => {
         const normalizedPriority = Number(priority);
         if (!Number.isFinite(normalizedPriority)) {

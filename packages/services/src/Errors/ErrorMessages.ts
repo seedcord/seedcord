@@ -69,6 +69,8 @@ const messages = {
         `match() has no arm for the focused field ${JSON.stringify(field)}.`,
     [SeedcordErrorCode.EventMatchArmMissing]: (event: string) =>
         `match() has no arm for the event ${JSON.stringify(event)}.`,
+    [SeedcordErrorCode.EventMiddlewareNameUnavailable]: () =>
+        `this.eventName is only available on middleware the controller constructed with a fired event name.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,

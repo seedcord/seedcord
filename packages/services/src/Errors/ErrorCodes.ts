@@ -79,6 +79,8 @@ export enum SeedcordErrorCode {
     AutocompleteMatchArmMissing = 1611,
     /** An event handler's match() has no arm for the event name that fired. */
     EventMatchArmMissing = 1612,
+    /** Event middleware read `this.eventName` but was constructed without a fired event name. */
+    EventMiddlewareNameUnavailable = 1613,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,

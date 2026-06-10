@@ -326,16 +326,40 @@ export abstract class EventHandler<Names extends ValidNonInteractionKeys>
 }
 
 /**
- * Base class for Discord event middleware
+ * Base class for Discord event middleware.
  *
- * Middleware runs before event handlers and can modify behavior or block execution.
+ * Middleware runs before event handlers and can block execution with `setBreak()`. Unlike `EventHandler`, it
+ * runs the SAME for every event it is registered for, so it has no `match`. Specify a single event in the
+ * generic and `{ events }` to read `this.event` fully typed. Span several events (or omit `{ events }` for a
+ * catchall) and `this.event` narrows to `never`, read `this.eventName` and do work that does not depend on the
+ * payload shape. A middleware that needs each event's payload is written one event per class.
+ *
+ * @typeParam EventName - One or more `ClientEvents` keys. Defaults to every event (catchall).
  */
-export abstract class EventMiddleware<EventName extends ValidNonInteractionKeys>
+export abstract class EventMiddleware<in out EventName extends ValidNonInteractionKeys = ValidNonInteractionKeys>
     extends BaseHandler<ClientEvents[EventName]>
     implements Handler
 {
-    constructor(event: ClientEvents[EventName], core: Core) {
+    // the fired event name, threaded by the controller. undefined when constructed directly, e.g. in a test.
+    private readonly firedEvent: EventName | undefined;
+
+    constructor(event: ClientEvents[EventName], core: Core, eventName?: EventName) {
         super(event, core);
+        this.firedEvent = eventName;
+    }
+
+    // a concrete tuple for one event, never for several or a catchall, so reading the payload on a multi-event
+    // middleware is a compile error. branch on this.eventName and do payload-shape-independent work instead.
+    declare protected readonly event: SingleEventPayload<EventName>;
+
+    /**
+     * The event that fired this middleware. Read it on a catchall or multi-event middleware, where `this.event`
+     * is `never`, to do work that does not depend on the payload shape. A single-event middleware reads
+     * `this.event` directly and does not need this.
+     */
+    protected get eventName(): EventName {
+        if (this.firedEvent === undefined) throw new SeedcordError(SeedcordErrorCode.EventMiddlewareNameUnavailable);
+        return this.firedEvent;
     }
 }
 
@@ -349,7 +373,8 @@ export type InteractionMiddlewareConstructor = TypedConstructor<typeof Interacti
 export type EventMiddlewareConstructor = TypedConstructor<typeof EventMiddleware> &
     (new <EventName extends ValidNonInteractionKeys>(
         event: ClientEvents[EventName],
-        core: Core
+        core: Core,
+        eventName?: EventName
     ) => EventMiddleware<EventName>);
 
 /** @internal */

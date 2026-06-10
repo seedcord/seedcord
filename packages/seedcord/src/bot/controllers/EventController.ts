@@ -210,7 +210,7 @@ export class EventController implements Initializeable, HmrAware {
             if (events && !events.includes(eventName)) continue;
 
             try {
-                const middleware = new ctor(args, this.core);
+                const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
                 if (middleware.hasChecks()) await middleware.runChecks();
 
                 if (middleware.shouldBreak() || middleware.hasErrors()) return false;
