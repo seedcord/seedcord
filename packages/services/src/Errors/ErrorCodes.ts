@@ -77,6 +77,8 @@ export enum SeedcordErrorCode {
     SlashMatchArmMissing = 1610,
     /** An autocomplete handler's match() has no arm for the focused field that fired. */
     AutocompleteMatchArmMissing = 1611,
+    /** An event handler's match() has no arm for the event name that fired. */
+    EventMatchArmMissing = 1612,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,

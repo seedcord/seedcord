@@ -1,5 +1,6 @@
 import type { OptionKind, SlashOptionRegistry } from '@seedcord/types';
 import type { CacheType, CommandInteractionOption } from 'discord.js';
+import type { IsNever } from 'type-fest';
 
 // the option table generated for one route
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
@@ -43,20 +44,20 @@ type Getter<
     Cache extends CacheType,
     Kind extends OptionKind,
     Method extends string
-> = [NamesOfKind<Route, Kind>] extends [never]
-    ? unknown
-    : Record<Method, <Name extends NamesOfKind<Route, Kind>>(name: Name) => Returned<Cache, Row<Route>[Name]>>;
+> =
+    IsNever<NamesOfKind<Route, Kind>> extends true
+        ? unknown
+        : Record<Method, <Name extends NamesOfKind<Route, Kind>>(name: Name) => Returned<Cache, Row<Route>[Name]>>;
 
 // a user option also exposes getMember, which djs always types as nullable (no required overload).
-type MemberGetter<Route extends keyof SlashOptionRegistry, Cache extends CacheType> = [
-    NamesOfKind<Route, 'user'>
-] extends [never]
-    ? unknown
-    : {
-          getMember: <Name extends NamesOfKind<Route, 'user'>>(
-              name: Name
-          ) => NonNullable<CommandInteractionOption<Cache>['member']> | null;
-      };
+type MemberGetter<Route extends keyof SlashOptionRegistry, Cache extends CacheType> =
+    IsNever<NamesOfKind<Route, 'user'>> extends true
+        ? unknown
+        : {
+              getMember: <Name extends NamesOfKind<Route, 'user'>>(
+                  name: Name
+              ) => NonNullable<CommandInteractionOption<Cache>['member']> | null;
+          };
 
 /**
  * The typed view over a chat-input command's options for one route. Each getter mirrors the discord.js

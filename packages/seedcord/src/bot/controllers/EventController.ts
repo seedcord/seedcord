@@ -330,7 +330,7 @@ export class EventController implements Initializeable, HmrAware {
     ): Promise<void> {
         try {
             this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.name)}`);
-            const handler = new ctor(args, this.core);
+            const handler = new ctor(args, this.core, eventName); // event name so match can route by it
             if (handler.hasChecks()) await handler.runChecks();
 
             if (handler.shouldBreak()) return;

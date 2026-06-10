@@ -99,7 +99,7 @@ export function Sidebar({
                 'flex min-h-0 flex-col',
                 isDesktop
                     ? 'h-full rounded-none border-0 bg-(--bg-surface-moderate-transparent) p-4 shadow-none'
-                    : 'flex-1 bg-surface',
+                    : 'bg-surface flex-1',
                 className
             )}
             style={isDesktop ? FILL : undefined}

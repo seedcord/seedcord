@@ -1,6 +1,6 @@
 import type { OptionKind, SlashOptionRegistry } from '@seedcord/types';
 import type { ApplicationCommandOptionChoiceData } from 'discord.js';
-import type { Promisable } from 'type-fest';
+import type { IsNever, Promisable } from 'type-fest';
 
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
 
@@ -63,14 +63,13 @@ type ResolvedValue<Entry> = Entry extends { choices: readonly (infer Choice)[] }
 
 // a sibling getter for one kind, present only when a registered command has an option of that kind. every read
 // is nullable because a sibling is partial while the user types the focused field.
-type Getter<Route extends keyof SlashOptionRegistry, Kind extends OptionKind, Method extends string> = [
-    NamesOfKind<Route, Kind>
-] extends [never]
-    ? unknown
-    : Record<
-          Method,
-          <Name extends NamesOfKind<Route, Kind>>(name: Name) => ResolvedValue<EntryFor<Route, Name>> | null
-      >;
+type Getter<Route extends keyof SlashOptionRegistry, Kind extends OptionKind, Method extends string> =
+    IsNever<NamesOfKind<Route, Kind>> extends true
+        ? unknown
+        : Record<
+              Method,
+              <Name extends NamesOfKind<Route, Kind>>(name: Name) => ResolvedValue<EntryFor<Route, Name>> | null
+          >;
 
 /**
  * The sibling-option view for an autocomplete handler. Only the four kinds Discord resolves during autocomplete
