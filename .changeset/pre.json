@@ -18,6 +18,21 @@
     "@seedcord/utils": "0.4.0"
   },
   "changesets": [
-    "ninety-lemons-sell"
+    "boot-unhandled-route-warning",
+    "codegen-on-command-refresh",
+    "handler-bases-restructure",
+    "hmr-types-relocation",
+    "internal-slash-route-builder",
+    "many-camels-camp",
+    "ninety-lemons-sell",
+    "proud-maps-talk",
+    "remove-buildcustomid",
+    "shared-route-leaves-walk",
+    "typed-autocomplete-handler",
+    "typed-context-menus",
+    "typed-customid-routing",
+    "typed-event-middleware",
+    "typed-multi-event-match",
+    "typed-slash-options"
   ]
 }
