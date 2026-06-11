@@ -254,6 +254,6 @@ export type ConfirmableOptions<TComponentType extends MessageComponentType = Com
 /**
  * Supported signature for the question argument passed to {@link Confirmable}.
  *
- * Can either be a static string or a factory that resolves the question dynamically (the handler context is bound to `this` and passed as the first argument).
+ * Can either be a static string or a factory that resolves the question dynamically, with the handler instance bound to `this`.
  */
 export type ConfirmableQuestionInput = string | ((this: RepliableInteractionHandler) => Promisable<string>);

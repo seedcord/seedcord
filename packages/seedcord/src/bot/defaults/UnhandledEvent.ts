@@ -6,7 +6,9 @@ import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { Repliables } from '@handlers/BaseHandler';
 
 /**
- * Default handler for unhandled interaction.
+ * Default handler for unhandled interactions.
+ *
+ * @internal
  */
 export class UnhandledEvent extends InteractionHandler<Repliables> {
     @Catchable()

@@ -5,7 +5,7 @@ import { isMessageComponentIx } from './utils';
 import type { ConfirmableOptions, ConfirmablePayload } from './types';
 import type { Repliables } from '@handlers/BaseHandler';
 
-export function shouldDefer<TComponentType extends MessageComponentType>(
+function shouldDefer<TComponentType extends MessageComponentType>(
     ix: Repliables,
     opts: ConfirmableOptions<TComponentType>,
     _isSlash: boolean,

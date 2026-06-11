@@ -71,7 +71,7 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
 
     protected constructor(
         event: ValidEvent,
-        public core: Core
+        public readonly core: Core
     ) {
         this.event = event;
         this.logger = new Logger(this.constructor.name);
@@ -87,9 +87,7 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     /**
      * Override this in your handler classes to customize population logic. It runs at the end of the constructor before any async work.
      */
-    protected populate(): void {
-        // Does nothing unless overriden
-    }
+    protected populate(): void {}
 
     /** @internal */
     public hasChecks(): this is HandlerWithChecks {
