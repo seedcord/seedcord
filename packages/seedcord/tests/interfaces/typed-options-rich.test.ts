@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { TypedOptions } from '@interfaces/TypedOptions';
+import type { SlashOptions } from '@inputs/SlashOptions';
 import type {
     APIInteractionDataResolvedChannel,
     APIInteractionDataResolvedGuildMember,
@@ -50,7 +50,7 @@ declare module '@seedcord/types' {
     }
 }
 
-function purgeRequired(options: TypedOptions<'purge'>): void {
+function purgeRequired(options: SlashOptions<'purge'>): void {
     expectTypeOf(options.getString('label')).toEqualTypeOf<string>();
     expectTypeOf(options.getInteger('count')).toEqualTypeOf<number>();
     expectTypeOf(options.getNumber('ratio')).toEqualTypeOf<number>();
@@ -62,7 +62,7 @@ function purgeRequired(options: TypedOptions<'purge'>): void {
     expectTypeOf(options.getAttachment('file')).toEqualTypeOf<Attachment>();
 }
 
-function purgeOptional(options: TypedOptions<'purgeOpt'>): void {
+function purgeOptional(options: SlashOptions<'purgeOpt'>): void {
     expectTypeOf(options.getString('label')).toEqualTypeOf<string | null>();
     expectTypeOf(options.getUser('who')).toEqualTypeOf<User | null>();
     expectTypeOf(options.getChannel('where')).toEqualTypeOf<GuildBasedChannel | null>();
@@ -71,28 +71,28 @@ function purgeOptional(options: TypedOptions<'purgeOpt'>): void {
     expectTypeOf(options.getAttachment('file')).toEqualTypeOf<Attachment | null>();
 }
 
-function auditStringChoices(options: TypedOptions<'audit'>): void {
+function auditStringChoices(options: SlashOptions<'audit'>): void {
     expectTypeOf(options.getString('mode')).toEqualTypeOf<'fast' | 'deep'>();
     expectTypeOf(options.getString('mode')).not.toEqualTypeOf<string>();
 }
 
-function auditIntegerChoices(options: TypedOptions<'audit'>): void {
+function auditIntegerChoices(options: SlashOptions<'audit'>): void {
     expectTypeOf(options.getInteger('level')).toEqualTypeOf<1 | 2 | 3>();
     expectTypeOf(options.getInteger('level')).not.toEqualTypeOf<number>();
 }
 
-function memberAlwaysNullable(options: TypedOptions<'purge'>): void {
+function memberAlwaysNullable(options: SlashOptions<'purge'>): void {
     expectTypeOf(options.getMember('who')).toEqualTypeOf<GuildMember | null>();
     expectTypeOf(options.getMember('who')).not.toEqualTypeOf<GuildMember>();
 }
 
-function channelIsWide(options: TypedOptions<'purge'>): void {
+function channelIsWide(options: SlashOptions<'purge'>): void {
     expectTypeOf(options.getChannel('where')).toEqualTypeOf<GuildBasedChannel>();
     // @ts-expect-error getChannel accepts only the option name, not a channelTypes argument
     void options.getChannel('where', []);
 }
 
-function rawCacheVariant(options: TypedOptions<'report', 'raw'>): void {
+function rawCacheVariant(options: SlashOptions<'report', 'raw'>): void {
     expectTypeOf(options.getUser('who')).toEqualTypeOf<User>();
     expectTypeOf(options.getChannel('where')).toEqualTypeOf<APIInteractionDataResolvedChannel>();
     expectTypeOf(options.getRole('what')).toEqualTypeOf<APIRole>();
@@ -102,13 +102,13 @@ function rawCacheVariant(options: TypedOptions<'report', 'raw'>): void {
     >();
 }
 
-function mentionableHasMemberArm(options: TypedOptions<'purge'>): void {
+function mentionableHasMemberArm(options: SlashOptions<'purge'>): void {
     expectTypeOf(options.getMentionable('anyone')).extract<GuildMember>().toEqualTypeOf<GuildMember>();
     expectTypeOf(options.getMentionable('anyone')).not.toEqualTypeOf<Role | User>();
     expectTypeOf(options.getUser('who')).not.toEqualTypeOf<GuildMember | Role | User>();
 }
 
-function onlyPresentKindGetters(options: TypedOptions<'flag'>): void {
+function onlyPresentKindGetters(options: SlashOptions<'flag'>): void {
     expectTypeOf(options.getString('reason')).toEqualTypeOf<string>();
     // route has no user option, so getMember and getUser do not exist
     // @ts-expect-error getMember is absent without a user option
@@ -131,7 +131,7 @@ function onlyPresentKindGetters(options: TypedOptions<'flag'>): void {
     void options.getNumber;
 }
 
-function unknownNameRejected(options: TypedOptions<'purge'>): void {
+function unknownNameRejected(options: SlashOptions<'purge'>): void {
     // @ts-expect-error 'nope' is not an option on this route
     void options.getUser('nope');
     // @ts-expect-error 'nope' is not an option on this route
@@ -140,7 +140,7 @@ function unknownNameRejected(options: TypedOptions<'purge'>): void {
     void options.getChannel('nope');
 }
 
-function wrongKindRejected(options: TypedOptions<'purge'>): void {
+function wrongKindRejected(options: SlashOptions<'purge'>): void {
     // @ts-expect-error 'who' is a user option, not a string option
     void options.getString('who');
     // @ts-expect-error 'label' is a string option, not a user option
@@ -151,7 +151,7 @@ function wrongKindRejected(options: TypedOptions<'purge'>): void {
     void options.getChannel('who');
 }
 
-describe('TypedOptions rich kinds and cache variants', () => {
+describe('SlashOptions rich kinds and cache variants', () => {
     it('exposes the type-checked rich-option surface', () => {
         expect(typeof purgeRequired).toBe('function');
         expect(typeof purgeOptional).toBe('function');

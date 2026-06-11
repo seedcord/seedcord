@@ -1,5 +1,6 @@
+import type { Repliables } from '@handlers/BaseHandler';
+import type { RepliableInteractionHandler } from '@handlers/repliable';
 import type { BuilderComponent, RowComponent } from '@interfaces/Components';
-import type { RepliableInteractionHandler, Repliables } from '@interfaces/Handler';
 import type {
     ButtonInteraction,
     ChannelSelectMenuInteraction,

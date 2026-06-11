@@ -1,9 +1,9 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { SlashRoute } from '@bDecorators/Interactions';
-import { SlashHandler } from '@interfaces/SlashHandler';
+import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
-import type { TypedOptions } from '@interfaces/TypedOptions';
+import type { SlashOptions } from '@inputs/SlashOptions';
 import type { CommandInteractionOption, User } from 'discord.js';
 
 // Compile-time spec for SlashHandler. The execute() bodies are typechecked but never run, so each guarded
@@ -139,7 +139,7 @@ class ExtraArmHandler extends SlashHandler<'mute' | 'note'> {
                 void options.getString('text');
             },
             // @ts-expect-error 'warn' is not a route this handler is registered for.
-            warn: (_options: TypedOptions<'warn'>) => {
+            warn: (_options: SlashOptions<'warn'>) => {
                 void 0;
             }
         });

@@ -2,16 +2,16 @@ import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError } from '@seedcord/services/internal';
 
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { InteractionHandler } from '@interfaces/Handler';
+import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
-import type { TypedOptions } from '@interfaces/TypedOptions';
+import type { SlashOptions } from '@inputs/SlashOptions';
 import type { SlashOptionRegistry } from '@seedcord/types';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
 // one arm per command this handler is registered for, keyed by route, each receiving that route's typed options.
 type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends CacheType, Ret> = {
-    [Key in Route]: (options: TypedOptions<Key, Cache>) => Promisable<Ret>;
+    [Key in Route]: (options: SlashOptions<Key, Cache>) => Promisable<Ret>;
 };
 
 /**
@@ -45,9 +45,9 @@ export abstract class SlashHandler<
      * literal union, and only the getters for kinds this command actually uses appear. Use `this.event.options`
      * directly for anything outside this view, such as narrowing a channel option by type.
      */
-    protected get options(): TypedOptions<Route, Cache> {
-        // the djs resolver already carries every getter, TypedOptions is its stricter registry-typed view.
-        return this.event.options as TypedOptions<Route, Cache>;
+    protected get options(): SlashOptions<Route, Cache> {
+        // the djs resolver already carries every getter, SlashOptions is its stricter registry-typed view.
+        return this.event.options as SlashOptions<Route, Cache>;
     }
 
     /**
@@ -62,7 +62,7 @@ export abstract class SlashHandler<
     protected async match<Ret>(arms: SlashMatchArms<Route, Cache, Ret>): Promise<Ret> {
         const route = slashRouteOf(this.event);
         // justified: SlashMatchArms is keyed by Route literals, the Record cast indexes it with the runtime route string.
-        const arm = (arms as Record<string, (options: TypedOptions<Route, Cache>) => Promisable<Ret>>)[route];
+        const arm = (arms as Record<string, (options: SlashOptions<Route, Cache>) => Promisable<Ret>>)[route];
         if (!arm) throw new SeedcordError(SeedcordErrorCode.SlashMatchArmMissing, [route]);
         return await arm(this.options);
     }

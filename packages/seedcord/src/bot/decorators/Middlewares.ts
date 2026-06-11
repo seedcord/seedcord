@@ -1,7 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/services/internal';
 
-import type { EventMiddleware, InteractionMiddleware, Repliables, ValidNonInteractionKeys } from '@interfaces/Handler';
+import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
+import type { EventMiddleware } from '@handlers/event';
+import type { InteractionMiddleware } from '@handlers/interaction';
 import type { Constructor } from 'type-fest';
 
 /**

@@ -3,14 +3,11 @@ import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { AnyCustomId } from '@customId/CustomId';
 import type { HasComponentDefs } from '@customId/routing';
-import type {
-    BaseHandler,
-    InteractionHandler,
-    AutocompleteHandler,
-    HandlerConstructor,
-    Repliables
-} from '@interfaces/Handler';
-import type { SlashHandler } from '@interfaces/SlashHandler';
+import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
+import type { HandlerConstructor } from '@handlers/constructors';
+import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+import type { SlashHandler } from '@handlers/interaction/SlashHandler';
 import type { SlashOptionRegistry } from '@seedcord/types';
 import type {
     AutocompleteInteraction,

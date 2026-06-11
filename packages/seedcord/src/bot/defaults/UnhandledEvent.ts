@@ -1,7 +1,9 @@
 import { MessageFlags } from 'discord.js';
 
 import { Catchable } from '@bDecorators/Catchable';
-import { InteractionHandler, Repliables } from '@interfaces/Handler';
+import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+
+import type { Repliables } from '@handlers/BaseHandler';
 
 /**
  * Default handler for unhandled interaction.

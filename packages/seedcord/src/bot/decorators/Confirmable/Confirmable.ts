@@ -12,7 +12,7 @@ import type {
     ConfirmableResolution,
     ConfirmableQuestionInput
 } from './types';
-import type { RepliableInteractionHandler } from '@interfaces/Handler';
+import type { RepliableInteractionHandler } from '@handlers/repliable';
 import type { MessageComponentType, ComponentType } from 'discord.js';
 
 const logger = new Logger('Confirmable');

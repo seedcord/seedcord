@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
-import { ButtonHandler, CustomId, InvalidCustomId, ModalHandler, SelectHandler, StaleCustomId } from '@customId/index';
+import { CustomId, InvalidCustomId, StaleCustomId } from '@customId/index';
+import { ButtonHandler, ModalHandler, SelectHandler } from '@handlers/interaction/components';
 
 import type { Core } from '@interfaces/Core';
 import type { ButtonInteraction, ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';

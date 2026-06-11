@@ -4,7 +4,7 @@ import { MessageFlags } from 'discord.js';
 
 import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
-import type { RepliableInteractionHandler } from '@interfaces/Handler';
+import type { RepliableInteractionHandler } from '@handlers/repliable';
 
 const logger = new Logger('Catchable');
 

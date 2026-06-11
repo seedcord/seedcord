@@ -11,13 +11,14 @@ import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares'
 import { UnhandledEvent } from '@bot/defaults';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { prefixOf } from '@customId/CustomId';
+import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@handlers/interaction';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { Repliables } from '@handlers/BaseHandler';
+import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type {

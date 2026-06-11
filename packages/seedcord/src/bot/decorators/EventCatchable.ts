@@ -4,8 +4,9 @@ import { Message } from 'discord.js';
 
 import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
+import type { EventHandler } from '@handlers/event';
+import type { RepliableEventHandler } from '@handlers/repliable';
 import type { CustomError } from '@interfaces/Components';
-import type { EventHandler, RepliableEventHandler } from '@interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 import type { NonEmptyTuple } from 'type-fest';
 

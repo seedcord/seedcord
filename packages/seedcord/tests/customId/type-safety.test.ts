@@ -1,7 +1,8 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { ButtonRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
-import { ButtonHandler, CustomId, SelectHandler } from '@customId/index';
+import { CustomId } from '@customId/index';
+import { ButtonHandler, SelectHandler } from '@handlers/interaction/components';
 
 // each @ts-expect-error fails the typecheck if the mistake it guards stops being a compile error.
 

@@ -7,14 +7,15 @@ import { Envapter } from 'envapt';
 
 import { EventMetadataKey } from '@bDecorators/Events';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { EventHandler, EventMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
+import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { EventHandlerConstructor, EventMiddlewareConstructor, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';

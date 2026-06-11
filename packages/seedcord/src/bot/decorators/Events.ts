@@ -1,4 +1,5 @@
-import type { EventHandler, ValidNonInteractionKeys } from '@interfaces/Handler';
+import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
+import type { EventHandler } from '@handlers/event';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { ClientEvents } from 'discord.js';
 import type { Constructor } from 'type-fest';

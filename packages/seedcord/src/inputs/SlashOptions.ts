@@ -71,7 +71,7 @@ type MemberGetter<Route extends keyof SlashOptionRegistry, Cache extends CacheTy
  * @typeParam Route - A route key from the generated {@link SlashOptionRegistry}.
  * @typeParam Cache - The interaction cache state, `'cached'` by default.
  */
-export type TypedOptions<Route extends keyof SlashOptionRegistry, Cache extends CacheType = 'cached'> = Getter<
+export type SlashOptions<Route extends keyof SlashOptionRegistry, Cache extends CacheType = 'cached'> = Getter<
     Route,
     Cache,
     'string',

@@ -1,4 +1,4 @@
-import type { Handler } from '@interfaces/Handler';
+import type { Handler } from '@handlers/BaseHandler';
 import type { Constructor } from 'type-fest';
 
 /**

@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { TypedOptions } from '@interfaces/TypedOptions';
+import type { SlashOptions } from '@inputs/SlashOptions';
 import type { GuildMember, User } from 'discord.js';
 
 // each @ts-expect-error fails the typecheck if its guard stops being an error. vitest never runs these.
@@ -16,7 +16,7 @@ declare module '@seedcord/types' {
     }
 }
 
-function typeChecks(options: TypedOptions<'ban'>): void {
+function typeChecks(options: SlashOptions<'ban'>): void {
     expectTypeOf(options.getUser('target')).toEqualTypeOf<User>();
     expectTypeOf(options.getString('reason')).toEqualTypeOf<string | null>();
     expectTypeOf(options.getString('scope')).toEqualTypeOf<'guild' | 'global'>();
@@ -32,7 +32,7 @@ function typeChecks(options: TypedOptions<'ban'>): void {
     void options.getChannel;
 }
 
-describe('TypedOptions', () => {
+describe('SlashOptions', () => {
     it('exposes the type-checked option surface', () => {
         expect(typeof typeChecks).toBe('function');
     });

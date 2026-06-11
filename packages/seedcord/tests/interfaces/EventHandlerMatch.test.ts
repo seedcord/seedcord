@@ -4,8 +4,8 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { EventCatchable } from '@bDecorators/EventCatchable';
 import { RegisterEvent } from '@bDecorators/Events';
+import { EventHandler } from '@handlers/event';
 import { CustomError } from '@interfaces/Components';
-import { EventHandler } from '@interfaces/Handler';
 
 import type { Core } from '@interfaces/Core';
 import type { ClientEvents } from 'discord.js';

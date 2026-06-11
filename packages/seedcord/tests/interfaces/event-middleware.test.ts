@@ -3,10 +3,11 @@ import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { Middleware, MiddlewareType } from '@bDecorators/Middlewares';
-import { EventMiddleware, InteractionMiddleware } from '@interfaces/Handler';
+import { EventMiddleware } from '@handlers/event';
+import { InteractionMiddleware } from '@handlers/interaction';
 
+import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
-import type { Repliables, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;

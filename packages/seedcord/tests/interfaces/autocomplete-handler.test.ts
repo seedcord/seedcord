@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/services';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { AutocompleteRoute } from '@bDecorators/Interactions';
-import { AutocompleteHandler } from '@interfaces/Handler';
+import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 
 import type { Core } from '@interfaces/Core';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction } from 'discord.js';
