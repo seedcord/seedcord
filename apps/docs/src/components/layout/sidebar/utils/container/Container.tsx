@@ -1,8 +1,10 @@
 'use client';
 
-import { cn, ScrollToTopButton } from '@seedcord/ui';
+import { Button, GithubIcon, Icon, cn, ScrollToTopButton } from '@seedcord/ui';
+import Link from 'next/link';
 import { useLayoutEffect, useRef } from 'react';
 
+import { ClearHistoryRow } from '@components/header/settings/ClearHistoryRow';
 import { Sidebar } from '@components/layout/sidebar/Sidebar';
 import { SIDEBAR_WIDTH } from '@components/layout/sidebar/utils/constants';
 import { useUIStore } from '@store/ui';
@@ -13,6 +15,19 @@ import { MobilePanelDialog } from './MobilePanelDialog';
 import type { DocsCatalog } from '@lib/docs/types';
 import type { CSSProperties, ReactNode } from 'react';
 
+const mobilePanelFooter = (
+    <div className={cn('flex items-center gap-2')}>
+        <div className={cn('min-w-0 flex-1')}>
+            <ClearHistoryRow />
+        </div>
+        <Button asChild variant="ghost" size="icon" aria-label="Open GitHub repository">
+            <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
+                <Icon icon={GithubIcon} size={18} />
+            </Link>
+        </Button>
+    </div>
+);
+
 interface ContainerProps {
     catalog: DocsCatalog;
     activePackageId: string;
@@ -21,8 +36,8 @@ interface ContainerProps {
     className?: string;
 }
 
-const SIDEBAR_BASE_CLASS = 'flex size-full flex-col';
-const MOBILE_SIDEBAR_OVERRIDES = 'h-auto overflow-visible border-transparent bg-transparent shadow-none';
+const SIDEBAR_BASE_CLASS = 'flex w-full flex-col';
+const MOBILE_SIDEBAR_OVERRIDES = 'border-transparent bg-transparent shadow-none';
 
 export function Container({
     catalog,
@@ -63,7 +78,12 @@ export function Container({
 
     return (
         <div ref={containerRef} style={containerStyle} className={cn('flex w-full flex-1 flex-col gap-5', className)}>
-            <MobilePanelDialog open={isMobileNavOpen} onOpenChange={setMobileNavOpen} title="Navigation">
+            <MobilePanelDialog
+                open={isMobileNavOpen}
+                onOpenChange={setMobileNavOpen}
+                title="Navigation"
+                footer={mobilePanelFooter}
+            >
                 <Sidebar
                     catalog={catalog}
                     activePackageId={activePackageId}

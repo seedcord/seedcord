@@ -13,7 +13,7 @@ import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
 import type { Core } from '@interfaces/Core';
-import type { HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
 /**
  * Types of events emitted by the {@link Core.bot} instance.
@@ -55,7 +55,7 @@ export class Bot extends Plugin<BotEvents> {
     }
 
     /** @internal */
-    constructor(protected core: Core) {
+    constructor(core: Core) {
         super(core);
 
         this._client = new Client(core.config.bot.clientOptions);
@@ -101,6 +101,8 @@ export class Bot extends Plugin<BotEvents> {
         if (this.commands) {
             await this.commands.init();
             await this.commands.setCommands();
+            this.interactions?.warnUnhandledRoutes(this.commands.routeLeaves());
+            this.interactions?.warnUnhandledContextMenuRoutes(this.commands.contextMenuLeaves());
         }
 
         await this.emojiInjector.init();
@@ -153,6 +155,7 @@ export class Bot extends Plugin<BotEvents> {
     override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
 
     override emit(event: string, ...args: unknown[]): boolean {
+        // justified, runtime emit forwards to the base emitter; TS cannot correlate the overload generics across super.emit.
         return super.emit(event as never, ...(args as never));
     }
 }

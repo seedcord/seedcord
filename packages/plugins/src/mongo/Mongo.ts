@@ -21,7 +21,7 @@ import { MongoService } from './MongoService';
 import type { MongoServiceConstructor } from './MongoService';
 import type { MongoOptions } from './types/MongoOptions';
 import type { MongoServices } from './types/MongoServices';
-import type { HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrUpdateEvent } from '@seedcord/types/internal';
 import type { Mongoose } from 'mongoose';
 import type { Core } from 'seedcord';
 

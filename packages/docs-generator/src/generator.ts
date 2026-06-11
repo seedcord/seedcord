@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -155,6 +156,11 @@ export class ApiDocsGenerator {
 
             const readme = await readReadme(packageDir);
             if (readme) result.readme = readme;
+
+            if (this.githubBase && existsSync(path.join(packageDir, 'CHANGELOG.md'))) {
+                const repoRelativeDir = this.paths.toRepoRelative(packageDir).split(path.sep).join('/');
+                result.changelogUrl = `${this.githubBase}/blob/${this.ref}/${repoRelativeDir}/CHANGELOG.md`;
+            }
         }
 
         await writeManifest(

@@ -1,7 +1,7 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
 
 export default createTsdownConfig({
-    entry: ['src/index.ts', 'src/cli.ts', 'src/api/vite-hmr.ts'],
+    entry: ['src/index.ts', 'src/cli.ts'],
     format: ['esm'],
     deps: {
         skipNodeModulesBundle: true,

@@ -1,18 +1,13 @@
-import { Events } from 'discord.js';
 import { EventMiddleware, Middleware, MiddlewareType } from 'seedcord';
 
 /**
- * Logs incoming interactions before handlers execute.
+ * A catchall that logs every client event before its handlers run. With no `{ events }` filter `this.event` is
+ * `never`, so the fired event is read from `this.eventName`.
  */
-@Middleware(MiddlewareType.Event, 2, { events: [Events.MessageCreate, Events.MessageDelete, Events.MessageUpdate] })
-export class MiddlewareLogger2 extends EventMiddleware<
-    Events.MessageCreate | Events.MessageDelete | Events.MessageUpdate
-> {
+@Middleware(MiddlewareType.Event, 2)
+export class MiddlewareLogger2 extends EventMiddleware {
     public async execute(): Promise<void> {
-        const message = this.event[0];
-        this.logger.info(`event received → Priority 2 by ${message.author?.username} (${message.author?.id})`);
-        await message.react('🫁');
-
+        this.logger.info(`event → Priority 2 (${this.eventName})`);
         await Promise.resolve();
     }
 }

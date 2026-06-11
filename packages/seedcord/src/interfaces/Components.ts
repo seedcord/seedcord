@@ -33,8 +33,6 @@ import {
 
 import { getBotColor } from '@miscellaneous/botColorHolder';
 
-import type { Join, NonEmptyTuple } from 'type-fest';
-
 /**
  * Available Discord.js builder classes for use with BuilderComponent for commands, embeds, modals, etc.
  *
@@ -156,35 +154,6 @@ export abstract class BaseComponent<TComponent> {
      */
     protected get instance(): TComponent {
         return this._component;
-    }
-
-    /**
-     * Builds a customId string for interactive components with no arguments
-     *
-     * @param prefix - The route prefix that handlers will match against
-     * @returns The prefix as the customId
-     */
-    public buildCustomId<Prefix extends string>(prefix: Prefix): Prefix;
-    /**
-     * Builds a customId string for interactive components
-     *
-     * Creates customIds in the format `prefix:arg1-arg2-arg3` for buttons, modals, etc.
-     * Arguments are joined with hyphens and separated from prefix with a colon.
-     *
-     * @param prefix - The route prefix that handlers will match against
-     * @param args - Additional arguments to encode in the customId
-     * @returns Formatted customId string
-     */
-    public buildCustomId<Prefix extends string, Args extends NonEmptyTuple<string>>(
-        prefix: Prefix,
-        ...args: Args
-    ): `${Prefix}:${Join<Args, '-'>}`;
-
-    public buildCustomId<Prefix extends string, Args extends NonEmptyTuple<string> | []>(
-        prefix: Prefix,
-        ...args: Args
-    ): Prefix | `${Prefix}:${string}` {
-        return args.length === 0 ? prefix : `${prefix}:${args.join('-')}`;
     }
 }
 

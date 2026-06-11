@@ -5,9 +5,6 @@ export * from './channels/sendInText';
 // Bot Utilities Messages exports
 export * from './messages/attemptSendDM';
 
-// Bot Utilities Miscellaneous exports
-export * from './miscellaneous/buildSlashRoute';
-
 // Bot Utilities Permissions exports
 export * from './permissions/checkBotPermissions';
 export {

@@ -1,9 +1,23 @@
 'use client';
 
-import { SegmentedControl, cn, type SegmentedControlOption } from '@seedcord/ui';
-import { useSyncExternalStore } from 'react';
+import { Button, SegmentedControl, cn, easeOutStrong, type SegmentedControlOption } from '@seedcord/ui';
+import { ExternalLink } from 'lucide-react';
+import { AnimatePresence, m } from 'motion/react';
+import Link from 'next/link';
+import { useState, useSyncExternalStore } from 'react';
 
+import type { Variants } from 'motion/react';
 import type { ReactElement, ReactNode } from 'react';
+
+const SLIDE_DURATION = 0.5;
+const SLIDE_X = 40;
+const BLUR_PX = 5;
+
+const panelVariants: Variants = {
+    enter: (dir: number) => ({ x: dir * -SLIDE_X, opacity: 0, filter: `blur(${BLUR_PX}px)` }),
+    center: { x: 0, opacity: 1, filter: 'blur(0px)' },
+    exit: (dir: number) => ({ x: dir * SLIDE_X, opacity: 0, filter: `blur(${BLUR_PX}px)` })
+};
 
 type OverviewTab = 'readme' | 'reference';
 
@@ -48,15 +62,31 @@ function resolveTab(stored: OverviewTab | null, hasReadme: boolean): OverviewTab
 interface PackageOverviewTabsProps {
     title: string;
     version: string;
+    changelogHref?: string | null;
     readme: ReactNode | null;
     reference: ReactNode;
 }
 
-export function PackageOverviewTabs({ title, version, readme, reference }: PackageOverviewTabsProps): ReactElement {
+export function PackageOverviewTabs({
+    title,
+    version,
+    changelogHref,
+    readme,
+    reference
+}: PackageOverviewTabsProps): ReactElement {
     const hasReadme = readme !== null;
     // Server snapshot is null so hydration matches the default render; the stored preference applies after.
     const storedTab = useSyncExternalStore(subscribeStoredTab, readStoredTab, () => null);
     const tab = resolveTab(storedTab, hasReadme);
+
+    // directional transition
+    const [direction, setDirection] = useState(1);
+    const handleTabChange = (next: OverviewTab): void => {
+        const nextIndex = next === 'readme' ? 0 : 1;
+        const currentIndex = tab === 'readme' ? 0 : 1;
+        setDirection(nextIndex >= currentIndex ? 1 : -1);
+        writeStoredTab(next);
+    };
 
     const options: SegmentedControlOption<OverviewTab>[] = [
         { value: 'readme', label: 'Overview', disabled: !hasReadme },
@@ -73,29 +103,52 @@ export function PackageOverviewTabs({ title, version, readme, reference }: Packa
                             {title} <span className={cn('font-normal text-(--text-muted)')}>{version}</span>
                         </h1>
                     </div>
-                    {/* Two instances: per-breakpoint full-width can't come from one control (option flex-1 isn't responsive). */}
-                    <SegmentedControl
-                        options={options}
-                        value={tab}
-                        onChange={writeStoredTab}
-                        size="md"
-                        fullWidth
-                        aria-label="Package view"
-                        className={cn('lg:hidden')}
-                    />
-                    <SegmentedControl
-                        options={options}
-                        value={tab}
-                        onChange={writeStoredTab}
-                        size="md"
-                        aria-label="Package view"
-                        className={cn('hidden lg:inline-flex')}
-                    />
+                    <div className={cn('flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-2')}>
+                        {changelogHref ? (
+                            <Button asChild variant="ghost" size="md" className={cn('w-full lg:w-auto')}>
+                                <Link href={changelogHref} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink size={16} aria-hidden />
+                                    Changelog
+                                </Link>
+                            </Button>
+                        ) : null}
+                        <SegmentedControl
+                            options={options}
+                            value={tab}
+                            onChange={handleTabChange}
+                            size="md"
+                            fullWidth
+                            aria-label="Package view"
+                            className={cn('lg:hidden')}
+                        />
+                        <SegmentedControl
+                            options={options}
+                            value={tab}
+                            onChange={handleTabChange}
+                            size="md"
+                            aria-label="Package view"
+                            className={cn('hidden lg:inline-flex')}
+                        />
+                    </div>
                 </div>
                 <hr className={cn('border-(--border)')} />
             </div>
-            {hasReadme ? <div hidden={tab !== 'readme'}>{readme}</div> : null}
-            <div hidden={tab !== 'reference'}>{reference}</div>
+            <div className={cn('grid items-start overflow-hidden')}>
+                <AnimatePresence initial={false} custom={direction}>
+                    <m.div
+                        key={tab}
+                        custom={direction}
+                        variants={panelVariants}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: SLIDE_DURATION, ease: [...easeOutStrong] }}
+                        className={cn('col-start-1 row-start-1')}
+                    >
+                        {tab === 'readme' ? readme : reference}
+                    </m.div>
+                </AnimatePresence>
+            </div>
         </div>
     );
 }

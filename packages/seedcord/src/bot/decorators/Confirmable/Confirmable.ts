@@ -12,7 +12,7 @@ import type {
     ConfirmableResolution,
     ConfirmableQuestionInput
 } from './types';
-import type { RepliableInteractionHandler } from '@interfaces/Handler';
+import type { RepliableInteractionHandler } from '@handlers/repliable';
 import type { MessageComponentType, ComponentType } from 'discord.js';
 
 const logger = new Logger('Confirmable');
@@ -26,7 +26,8 @@ const logger = new Logger('Confirmable');
  * @example
  * ### Classic Mode (Buttons)
  * ```ts
- * class BanHandler extends InteractionHandler {
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> {
  *   \@Confirmable('Are you sure you want to ban this user?', {
  *      mode: 'classic',
  *      decision: { kind: 'customIds', confirm: ['confirm_ban'], cancel: ['cancel_ban'] },
@@ -36,7 +37,8 @@ const logger = new Logger('Confirmable');
  *   })
  *   public async execute() {
  *     // Only runs if confirmed
- *     await this.target.ban();
+ *     const target = this.options.getUser('target');
+ *     await this.event.guild?.members.ban(target);
  *   }
  * }
  * ```
@@ -44,7 +46,8 @@ const logger = new Logger('Confirmable');
  * @example
  * ### Classic Mode (Select Menu with Resolver)
  * ```ts
- * class RoleHandler extends InteractionHandler {
+ * \@SlashRoute('assignrole')
+ * class RoleHandler extends SlashHandler<'assignrole'> {
  *   \@Confirmable('Choose a role to assign', {
  *      mode: 'classic',
  *      // Use a custom resolver function instead of ID matching
@@ -65,8 +68,9 @@ const logger = new Logger('Confirmable');
  * @example
  * ### V2 Mode (Container)
  * ```ts
- * class SettingsHandler extends InteractionHandler {
- *   \@Confirmable(async () => `Update settings for ${this.user.username}?`, {
+ * \@SlashRoute('settings')
+ * class SettingsHandler extends SlashHandler<'settings'> {
+ *   \@Confirmable(async function () { return `Update settings for ${this.getEvent().user.username}?`; }, {
  *      mode: 'v2',
  *      container: containerFactory, // Returns ContainerBuilder
  *      decision: { kind: 'customIds', confirm: ['save_settings'] }

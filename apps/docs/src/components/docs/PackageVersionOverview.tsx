@@ -48,11 +48,11 @@ function groupReexports(reexports: readonly ReexportLink[]): [string, ReexportLi
 function renderReexportGroup([owner, links]: [string, ReexportLink[]]): ReactElement {
     return (
         <section key={owner} className={cn('space-y-3')}>
-            <header className={cn('flex items-center gap-2')}>
+            <header className={cn('flex flex-wrap items-baseline gap-x-2 gap-y-1')}>
                 <span className={cn('text-subtle text-sm font-semibold tracking-wide uppercase')}>
                     Re-exported from {owner}
                 </span>
-                <span className={cn('text-xs text-(--text-faint)')}>
+                <span className={cn('shrink-0 text-xs text-(--text-faint)')}>
                     {links.length} symbol{links.length === 1 ? '' : 's'}
                 </span>
             </header>

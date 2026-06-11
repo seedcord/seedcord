@@ -63,4 +63,5 @@ export interface PackageDocResult {
     sources?: PackageSourceIndex;
     reexports?: ReexportEntry[];
     readme?: string;
+    changelogUrl?: string;
 }

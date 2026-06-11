@@ -7,17 +7,18 @@ import { Envapter } from 'envapt';
 
 import { EventMetadataKey } from '@bDecorators/Events';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { EventHandler, EventMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
+import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { EventHandlerConstructor, EventMiddlewareConstructor, ValidNonInteractionKeys } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;
@@ -210,7 +211,7 @@ export class EventController implements Initializeable, HmrAware {
             if (events && !events.includes(eventName)) continue;
 
             try {
-                const middleware = new ctor(args, this.core);
+                const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
                 if (middleware.hasChecks()) await middleware.runChecks();
 
                 if (middleware.shouldBreak() || middleware.hasErrors()) return false;
@@ -330,7 +331,7 @@ export class EventController implements Initializeable, HmrAware {
     ): Promise<void> {
         try {
             this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.name)}`);
-            const handler = new ctor(args, this.core);
+            const handler = new ctor(args, this.core, eventName); // event name so match can route by it
             if (handler.hasChecks()) await handler.runChecks();
 
             if (handler.shouldBreak()) return;

@@ -13,6 +13,8 @@ export interface DocProjectFile {
     root: DocNode;
     // This will be absent for versions published before README capture.
     readme?: string;
+    // Absent for versions published before changelog-url capture.
+    changelogUrl?: string;
 }
 
 export function serializeProject(model: DocPackageModel): DocProjectFile {
@@ -20,12 +22,13 @@ export function serializeProject(model: DocPackageModel): DocProjectFile {
         schemaVersion: 1,
         package: { name: model.manifest.name, version: model.manifest.version },
         root: model.root,
-        ...(model.manifest.readme ? { readme: model.manifest.readme } : {})
+        ...(model.manifest.readme ? { readme: model.manifest.readme } : {}),
+        ...(model.manifest.changelogUrl ? { changelogUrl: model.manifest.changelogUrl } : {})
     };
 }
 
 export function deserializeProject(file: DocProjectFile): DocPackageModel {
-    return buildPackageFromModel(manifestShell(file.package, file.readme), file.root);
+    return buildPackageFromModel(manifestShell(file.package, file.readme, file.changelogUrl), file.root);
 }
 
 export function validateProjectFile(value: unknown): DocProjectFile {
@@ -53,13 +56,14 @@ export function validateProjectFile(value: unknown): DocProjectFile {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },
         root: root.root as DocNode,
-        ...(typeof root.readme === 'string' ? { readme: root.readme } : {})
+        ...(typeof root.readme === 'string' ? { readme: root.readme } : {}),
+        ...(typeof root.changelogUrl === 'string' ? { changelogUrl: root.changelogUrl } : {})
     };
 }
 
 // project.json carries only name + version; the rest of DocManifestPackage describes the extraction
 // run (entry points, warnings, errors), which the render path never reads.
-function manifestShell(pkg: DocProjectFile['package'], readme?: string): DocManifestPackage {
+function manifestShell(pkg: DocProjectFile['package'], readme?: string, changelogUrl?: string): DocManifestPackage {
     return {
         name: pkg.name,
         version: pkg.version,
@@ -70,6 +74,7 @@ function manifestShell(pkg: DocProjectFile['package'], readme?: string): DocMani
         warningCount: 0,
         errorCount: 0,
         succeeded: true,
-        ...(readme ? { readme } : {})
+        ...(readme ? { readme } : {}),
+        ...(changelogUrl ? { changelogUrl } : {})
     };
 }

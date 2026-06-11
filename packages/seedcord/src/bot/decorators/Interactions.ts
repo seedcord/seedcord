@@ -1,11 +1,22 @@
+import { ApplicationCommandType } from 'discord.js';
+
+import { ComponentDefsKey } from '@customId/routing';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
-import type { InteractionHandler, AutocompleteHandler, HandlerConstructor, Repliables } from '@interfaces/Handler';
+import type { AnyCustomId } from '@customId/CustomId';
+import type { HasComponentDefs } from '@customId/routing';
+import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
+import type { HandlerConstructor } from '@handlers/constructors';
+import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
+import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+import type { SlashHandler } from '@handlers/interaction/SlashHandler';
+import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/types';
 import type {
+    AutocompleteInteraction,
     ButtonInteraction,
+    CacheType,
     ChannelSelectMenuInteraction,
-    ChatInputCommandInteraction,
-    ContextMenuCommandInteraction,
     MentionableSelectMenuInteraction,
     ModalSubmitInteraction,
     RoleSelectMenuInteraction,
@@ -14,11 +25,7 @@ import type {
 } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
-/**
- * Enum defining interaction route types for decorators
- *
- * @internal
- */
+/** @internal */
 export enum InteractionRoutes {
     Slash = 'interaction:slash',
     Button = 'interaction:button',
@@ -44,27 +51,15 @@ export enum SelectMenuType {
     Mentionable = 'mentionable'
 }
 
-/**
- * Metadata key used to mark classes as interaction handlers
- *
- * @internal
- */
+/** @internal */
 export const InteractionMetadataKey = Symbol('interaction:metadata');
 
-/**
- * Extract the event type from an InteractionHandler subclass
- *
- * Used by the interaction routing decorators.
- *
- * @internal
- */
+/** @internal */
 type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
     InstanceType<TCtor> extends InteractionHandler<infer TEvent> ? TEvent : never;
 
 /**
- * Compile time assertion that the required event type(s) `TRequired` are included in the handler event union.
- *
- * Used by the interaction routing decorators.
+ * Compile-time assertion that the required event type(s) `TRequired` are included in the handler event union.
  *
  * @internal
  */
@@ -74,158 +69,277 @@ type AssertHandles<TRequired, TCtor extends new (...args: any[]) => InteractionH
         : TCtor;
 
 /**
- * Routes slash commands to handler classes
- *
- * Supports single commands, subcommands, and subcommand groups.
- * Use forward slashes to separate subcommand paths.
- *
- * @param routeOrRoutes - Command path(s) to handle
- * @decorator
- * @example
- * ```typescript
- * \@SlashRoute('ping')
- * class PingCommand extends InteractionHandler {
- *   // handles /ping command
- * }
- * ```
- *
- * @example
- * ```
- * \@SlashRoute(['ban', 'kick'])
- * class ModerationHandler extends InteractionHandler {
- *   // handles /ban and /kick commands
- * }
- * ```
- *
- * @example
- * ```
- * \@SlashRoute('admin/user/promote')
- * class PromoteHandler extends InteractionHandler {
- *   // handles /admin user promote subcommand
- * }
- * ```
- */
-export function SlashRoute(routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
-        constructor: AssertHandles<ChatInputCommandInteraction, TCtor>
-    ): void {
-        storeMetadata(InteractionRoutes.Slash, routeOrRoutes, constructor as HandlerConstructor);
-    };
-}
-
-/**
- * Routes button interactions to handler classes
- *
- * Matches the customId prefix before the first colon.
- *
- * For customId `accept:user123`, use `@ButtonRoute("accept")`.
- *
- * @param routeOrRoutes - CustomId prefix(es) to handle
- * @decorator
- */
-export function ButtonRoute(routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
-        constructor: AssertHandles<ButtonInteraction, TCtor>
-    ): void {
-        storeMetadata(InteractionRoutes.Button, routeOrRoutes, constructor as HandlerConstructor);
-    };
-}
-
-/**
- * Routes modal submissions to handler classes
- *
- * Matches the customId prefix before the first colon.
- *
- * @param routeOrRoutes - CustomId prefix(es) to handle
- * @decorator
- */
-export function ModalRoute(routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
-        constructor: AssertHandles<ModalSubmitInteraction, TCtor>
-    ): void {
-        storeMetadata(InteractionRoutes.Modal, routeOrRoutes, constructor as HandlerConstructor);
-    };
-}
-
-/**
- * Routes context menu commands to handler classes
- *
- * @param type - Context menu type: 'message' for message context menus, 'user' for user context menus
- * @param routeOrRoutes - Command name(s) to handle
- * @decorator
- */
-export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
-        constructor: AssertHandles<ContextMenuCommandInteraction, TCtor>
-    ): void {
-        const routeType = type === 'message' ? InteractionRoutes.MessageContextMenu : InteractionRoutes.UserContextMenu;
-        storeMetadata(routeType, routeOrRoutes, constructor as HandlerConstructor);
-    };
-}
-
-/**
- * Routes autocomplete interactions to handler classes
- *
- * Handles autocomplete requests for specific command options.
- * Creates routes for each command-field combination.
- *
- * @param commandRoutes - Command path(s) to handle
- * @param focusedFields - Option name(s) to provide completions for
- * @example \@AutocompleteRoute('user', 'name') // Single command, single field
- * @example \@AutocompleteRoute(['user', 'profile'], ['name', 'bio']) // Multiple commands, multiple fields
- * @decorator
- */
-export function AutocompleteRoute(commandRoutes: string | string[], focusedFields: string | string[]) {
-    return function (constructor: Constructor<AutocompleteHandler>): void {
-        const routes = Array.isArray(commandRoutes) ? commandRoutes : [commandRoutes];
-        const fields = Array.isArray(focusedFields) ? focusedFields : [focusedFields];
-
-        routes.forEach((route) => {
-            fields.forEach((field) => {
-                const autocompleteKey = `${route}:${field}`;
-                storeMetadata(InteractionRoutes.Autocomplete, autocompleteKey, constructor);
-            });
-        });
-    };
-}
-
-/**
- * Select menu interaction type mapping
+ * The slash route(s) a handler serves, read off its `SlashHandler` generic.
  *
  * @internal
  */
-export type SelectMenuInteractionFor<SelectMenu extends SelectMenuType> = SelectMenu extends SelectMenuType.String
-    ? StringSelectMenuInteraction
+type SlashRouteOf<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+    InstanceType<TCtor> extends SlashHandler<infer Route, CacheType> ? Route : never;
+
+/**
+ * On a route/generic mismatch, resolves to a non-constructor type so applying the decorator is a TS1238.
+ *
+ * @internal
+ */
+type AssertSlashRoute<Route extends string, TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> = [
+    Route
+] extends [SlashRouteOf<TCtor>]
+    ? [SlashRouteOf<TCtor>] extends [Route]
+        ? TCtor
+        : Constructor<['SlashHandler declares a route the SlashRoute decorator does not list', SlashRouteOf<TCtor>]>
+    : Constructor<['SlashRoute does not match the SlashHandler generic', Route]>;
+
+/**
+ * Routes one or more slash commands to a {@link SlashHandler}.
+ *
+ * Pass the same route string(s) as the handler's generic. A single command reads `this.options`, several
+ * commands branch with `this.match`. The decorator routes and the generic must match exactly, so listing
+ * fewer or more than the handler declares is a compile error. Subcommands use a slash path.
+ *
+ * @param routes - The route string(s) this handler serves, e.g. `'ban'`, `'ban', 'kick'`, or `'demo/setup'`.
+ * @decorator
+ * @example
+ * ```ts
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> {
+ *     async execute() {
+ *         const target = this.options.getUser('target');
+ *     }
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * \@SlashRoute('ban', 'kick')
+ * class ModerationHandler extends SlashHandler<'ban' | 'kick'> {
+ *     async execute() {
+ *         await this.match({ ban: (o) => o.getUser('target'), kick: (o) => o.getUser('member') });
+ *     }
+ * }
+ * ```
+ */
+export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...routes: Route[]) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertSlashRoute<Route, TCtor>
+    ): void {
+        // justified: AssertSlashRoute has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeMetadata(InteractionRoutes.Slash, routes, constructor as HandlerConstructor);
+    };
+}
+
+/**
+ * Routes button interactions to handler classes.
+ *
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
+ * matches the stable prefix, so a wire minted from an older shape still reaches the handler, where
+ * reading this.params throws StaleCustomId and the Catchable decorator turns it into a reply.
+ *
+ * @param defs - The customId definition(s) this handler decodes, one per route.
+ * @decorator
+ */
+export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
+        constructor: AssertHandles<ButtonInteraction, TCtor>
+    ): void {
+        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeComponentRoute(InteractionRoutes.Button, defs, constructor as HandlerConstructor);
+    };
+}
+
+/**
+ * Routes modal submissions to handler classes.
+ *
+ * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
+ * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
+ * matches the stable prefix, so an older-shape wire still reaches the handler and throws StaleCustomId
+ * on read, the same as a button route.
+ *
+ * @param defs - The customId definition(s) this handler decodes, one per route.
+ * @decorator
+ */
+export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: Defs) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
+        constructor: AssertHandles<ModalSubmitInteraction, TCtor>
+    ): void {
+        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeComponentRoute(InteractionRoutes.Modal, defs, constructor as HandlerConstructor);
+    };
+}
+
+/** The context-menu command names valid for a kind, read off the matching registry. @internal */
+type NamesFor<Kind extends ApplicationCommandType.User | ApplicationCommandType.Message> =
+    Kind extends ApplicationCommandType.User ? keyof UserContextMenuRegistry : keyof MessageContextMenuRegistry;
+
+/**
+ * The context-menu kind a handler serves, read off its event's `commandType` discriminant. Reading the
+ * literal off the event rather than inferring the `ContextMenuHandler` generic directly keeps the kind from
+ * widening to the whole union, the handler's conditional members make the generic inference imprecise.
+ *
+ * @internal
+ */
+type ContextMenuKindOf<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+    InstanceType<TCtor> extends ContextMenuHandler<infer Kind, CacheType>
+        ? [Kind] extends [ApplicationCommandType.User | ApplicationCommandType.Message]
+            ? HandlerEventType<TCtor> extends { commandType: infer K }
+                ? Extract<K, ApplicationCommandType.User | ApplicationCommandType.Message>
+                : never
+            : never
+        : never;
+
+/**
+ * On a kind mismatch between the decorator and the handler generic, resolves to a non-constructor type so
+ * applying the decorator is a TS1238. Cross-checks both directions, mirroring {@link AssertSlashRoute}.
+ *
+ * @internal
+ */
+type AssertContextMenuRoute<
+    Kind extends ApplicationCommandType.User | ApplicationCommandType.Message,
+    TCtor extends new (...args: any[]) => InteractionHandler<Repliables>
+> = [Kind] extends [ContextMenuKindOf<TCtor>]
+    ? [ContextMenuKindOf<TCtor>] extends [Kind]
+        ? TCtor
+        : Constructor<
+              [
+                  'ContextMenuHandler declares a kind the ContextMenuRoute decorator does not match',
+                  ContextMenuKindOf<TCtor>
+              ]
+          >
+    : Constructor<['ContextMenuRoute does not match the ContextMenuHandler generic', Kind]>;
+
+/**
+ * Routes one or more context-menu commands to a {@link ContextMenuHandler}.
+ *
+ * Pass the kind (`ApplicationCommandType.User` or `ApplicationCommandType.Message`) and the command name(s),
+ * each checked against that kind's registry, so a typo is a compile error. The same kind must sit on the
+ * handler's generic, cross-checked both directions. Context menus carry no options, so a multi-name handler
+ * reads `this.target` uniformly with no branch.
+ *
+ * @param kind - The context-menu kind, `ApplicationCommandType.User` or `ApplicationCommandType.Message`.
+ * @param names - The command name(s) this handler serves, keyed off the matching registry.
+ * @decorator
+ * @example
+ * ```ts
+ * \@ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
+ * class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {
+ *     async execute() {
+ *         const user = this.target;
+ *     }
+ * }
+ * ```
+ */
+export function ContextMenuRoute<const Kind extends ApplicationCommandType.User | ApplicationCommandType.Message>(
+    kind: Kind,
+    ...names: NamesFor<Kind>[]
+) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+        constructor: AssertContextMenuRoute<Kind, TCtor>
+    ): void {
+        const routeType =
+            kind === ApplicationCommandType.User
+                ? InteractionRoutes.UserContextMenu
+                : InteractionRoutes.MessageContextMenu;
+        // justified: AssertContextMenuRoute has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeMetadata(routeType, names, constructor as HandlerConstructor);
+    };
+}
+
+/**
+ * The command route(s) an autocomplete handler serves, read off its `AutocompleteHandler` generic.
+ *
+ * @internal
+ */
+type AutocompleteRouteOf<TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>> =
+    InstanceType<TCtor> extends AutocompleteHandler<infer Route, CacheType> ? Route : never;
+
+/**
+ * On a route/generic mismatch, resolves to a non-constructor type so applying the decorator is a TS1238.
+ *
+ * @internal
+ */
+type AssertAutocompleteRoute<
+    Route extends keyof SlashOptionRegistry,
+    TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>
+> = [Route] extends [AutocompleteRouteOf<TCtor>]
+    ? [AutocompleteRouteOf<TCtor>] extends [Route]
+        ? TCtor
+        : Constructor<
+              [
+                  'AutocompleteHandler declares a command the AutocompleteRoute decorator does not list',
+                  AutocompleteRouteOf<TCtor>
+              ]
+          >
+    : Constructor<['AutocompleteRoute does not match the AutocompleteHandler generic', Route]>;
+
+/**
+ * Routes one or more commands' autocomplete to an {@link AutocompleteHandler}.
+ *
+ * Pass the same command route string(s) as the handler's generic. One command branches with `this.match`
+ * over its autocompletable fields, several commands share one handler whose arms span every command's
+ * fields. The decorator routes and the generic must match exactly, so listing fewer or more than the
+ * handler declares is a compile error.
+ *
+ * @param routes - The command route string(s) this handler serves, e.g. `'search'` or `'search', 'find'`.
+ * @decorator
+ * @example
+ * ```ts
+ * \@AutocompleteRoute('search')
+ * class SearchAutocomplete extends AutocompleteHandler<'search'> {
+ *     async execute() {
+ *         await this.match({ query: (value, respond) => respond([{ name: value, value }]) });
+ *     }
+ * }
+ * ```
+ */
+export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>(...routes: Route[]) {
+    return function <TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>>(
+        constructor: AssertAutocompleteRoute<Route, TCtor>
+    ): void {
+        // justified: AssertAutocompleteRoute has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeMetadata(InteractionRoutes.Autocomplete, routes, constructor as HandlerConstructor);
+    };
+}
+
+/** @internal */
+export type SelectMenuInteractionFor<
+    SelectMenu extends SelectMenuType,
+    Cache extends CacheType = CacheType
+> = SelectMenu extends SelectMenuType.String
+    ? StringSelectMenuInteraction<Cache>
     : SelectMenu extends SelectMenuType.User
-      ? UserSelectMenuInteraction
+      ? UserSelectMenuInteraction<Cache>
       : SelectMenu extends SelectMenuType.Role
-        ? RoleSelectMenuInteraction
+        ? RoleSelectMenuInteraction<Cache>
         : SelectMenu extends SelectMenuType.Channel
-          ? ChannelSelectMenuInteraction
+          ? ChannelSelectMenuInteraction<Cache>
           : SelectMenu extends SelectMenuType.Mentionable
-            ? MentionableSelectMenuInteraction
+            ? MentionableSelectMenuInteraction<Cache>
             : never;
 
 /**
- * Routes select menu interactions to handler classes
+ * Routes select menu interactions to handler classes.
  *
- * Matches the customId prefix before the first colon.
+ * Pass the select kind and the {@link CustomId} definition(s) this handler decodes. The handler's
+ * generic must list the same definitions, and its second generic argument must be the matching select
+ * interaction type, or it is a compile error.
  *
- * @param type - Select menu type from {@link SelectMenuType}
- * @param routeOrRoutes - CustomId prefix(es) to handle
- *
+ * @param type - Select menu kind from {@link SelectMenuType}.
+ * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
  *
  * @example
  * ```typescript
- * \@SelectMenuRoute(SelectMenuType.String, 'fruits')
- * class RoleSelectHandler extends InteractionHandler {
- *   // handles string select menus with customId starting with 'fruits'
+ * \@SelectMenuRoute(SelectMenuType.User, AssignId)
+ * class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof AssignId]> {
+ *   // handles user select menus minted from AssignId
  * }
  * ```
  */
-export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectMenu, routeOrRoutes: string | string[]) {
-    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
+export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs extends readonly AnyCustomId[]>(
+    type: SelectMenu,
+    ...defs: Defs
+) {
+    return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<SelectMenuInteractionFor<SelectMenu>, TCtor>
     ): void {
         const routeMap = {
@@ -236,17 +350,30 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuType>(type: SelectM
             [SelectMenuType.Mentionable]: InteractionRoutes.MentionableMenu
         };
 
-        storeMetadata(routeMap[type], routeOrRoutes, constructor as HandlerConstructor);
+        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeComponentRoute(routeMap[type], defs, constructor as HandlerConstructor);
     };
 }
 
-/**
- * Helper to store route(s) in an array on reflect metadata.
- */
+// store each definition's stable prefix as a routing key for the controller, and the full defs array on
+// the constructor so the handler base can decode against them.
+function storeComponentRoute(
+    symbol: InteractionRoutes,
+    defs: readonly AnyCustomId[],
+    constructor: HandlerConstructor
+): void {
+    storeMetadata(
+        symbol,
+        defs.map((def) => def.prefix),
+        constructor
+    );
+    Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
+}
+
 function storeMetadata(
     symbol: InteractionRoutes,
     routes: string | string[],
-    constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler>
+    constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler<keyof SlashOptionRegistry, CacheType>>
 ): void {
     const savedRoutes: unknown = Reflect.getMetadata(symbol, constructor);
     const existing: string[] = areRoutes(savedRoutes) ? savedRoutes : [];

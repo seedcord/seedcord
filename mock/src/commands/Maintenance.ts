@@ -9,6 +9,8 @@ export class MaintenanceCommand extends BuilderComponent<'command'> {
         this.instance
             .setName('maintenance')
             .setDescription('Post maintenance message')
-            .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+            .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+            .addUserOption((option) => option.setName('notify').setDescription('Member to notify').setRequired(true))
+            .addStringOption((option) => option.setName('reason').setDescription('Why'));
     }
 }

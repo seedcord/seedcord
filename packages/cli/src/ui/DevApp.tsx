@@ -39,6 +39,10 @@ export function DevApp(props: DevAppProps): ReactElement {
     const logBoxRef = useRef<DOMElement | null>(null);
     const [logBoxHeight, setLogBoxHeight] = useState(0);
 
+    const railRef = useRef<DOMElement | null>(null);
+    const [railWidth, setRailWidth] = useState<number | null>(null);
+    const measuredConfig = useRef<unknown>(null);
+
     const logs = useLogs(enabled);
     const viewportHeight = Math.max(1, logBoxHeight);
     const scroll = useScroll(logs, viewportHeight, logKey);
@@ -46,13 +50,24 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const interactive = !state.isBusy || state.restartRequired;
 
-    // Re-measure only when something can change the box height: a terminal resize, or a notification card
+    // Re-measure only when something can change the box height, a terminal resize or a notification card
     // appearing/clearing. The measured height is the exact log-line budget for the scroll window.
     useEffect(() => {
         if (!logBoxRef.current) return;
         const measured = measureElement(logBoxRef.current).height;
         setLogBoxHeight((prev) => (prev === measured ? prev : measured));
     }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt]);
+
+    // Measure the rail's content width once per loaded config, so it holds as logs stream but re-fits when a
+    // restart loads a wider config.
+    useEffect(() => {
+        if (!railRef.current || !state.config || measuredConfig.current === state.config) return;
+        const measured = measureElement(railRef.current).width;
+        if (measured > 0) {
+            measuredConfig.current = state.config;
+            setRailWidth(measured);
+        }
+    }, [rows, columns, state.config]);
 
     useInput((input, key) => {
         dispatchHotkey({
@@ -93,7 +108,8 @@ export function DevApp(props: DevAppProps): ReactElement {
         <Box flexDirection="column" width={columns} height={rows} overflow="hidden">
             <DevLayout
                 state={state}
-                columns={columns}
+                railRef={railRef}
+                railWidth={railWidth}
                 logBoxRef={logBoxRef}
                 scroll={scroll}
                 viewportHeight={viewportHeight}

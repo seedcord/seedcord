@@ -41,18 +41,20 @@ export function Navbar(): ReactElement {
                             >
                                 <Icon icon={Menu} size={20} />
                             </Button>
-                            <HeaderSettingsPopover />
-                            <Button
-                                asChild
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Open GitHub repository"
-                                className={cn('text-(--text)')}
-                            >
-                                <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
-                                    <Icon icon={GithubIcon} size={20} />
-                                </Link>
-                            </Button>
+                            <div className={cn('hidden items-center gap-2 lg:flex')}>
+                                <HeaderSettingsPopover />
+                                <Button
+                                    asChild
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Open GitHub repository"
+                                    className={cn('text-(--text)')}
+                                >
+                                    <Link href="https://github.com/seedcord/seedcord" target="_blank" rel="noreferrer">
+                                        <Icon icon={GithubIcon} size={20} />
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 </div>

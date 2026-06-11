@@ -1,10 +1,6 @@
 import { SeedcordErrorCode } from './ErrorCodes';
 
-/**
- * Mapping of Seedcord error codes to their corresponding message formatters.
- *
- * @internal
- */
+/** @internal */
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
     [SeedcordErrorCode.ConfigIncorrectDiscordToken]: () => 'Invalid DISCORD_BOT_TOKEN value.',
@@ -46,10 +42,35 @@ const messages = {
         'RegisterCommand("guild") requires a non-empty guilds array.',
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: () => 'Middleware priority must be a finite number.',
 
-    [SeedcordErrorCode.UtilInvalidSlashRouteArgument]: () => 'Invalid argument passed to buildSlashRoute.',
-
     [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
     [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
+
+    [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
+        `customId prefix ${JSON.stringify(prefix)} must be a non-empty string without a colon or control character.`,
+    [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>
+        `customId field name ${JSON.stringify(field)} is integer-like, which JS reorders. Use a non-numeric name.`,
+    [SeedcordErrorCode.CustomIdEmptyChoices]: (field: string) =>
+        `customId field ${JSON.stringify(field)} uses oneOf() with no choices.`,
+    [SeedcordErrorCode.CustomIdInvalidBounds]: (field: string, min: number, max: number) =>
+        `customId field ${JSON.stringify(field)} has min ${min} greater than max ${max}.`,
+    [SeedcordErrorCode.CustomIdValueOutOfRange]: (field: string, value: string) =>
+        `customId field ${JSON.stringify(field)} got value ${value} outside its allowed range.`,
+    [SeedcordErrorCode.CustomIdWireTooLong]: (length: number) =>
+        `Encoded customId is ${length} characters, Discord allows at most 100.`,
+    [SeedcordErrorCode.CustomIdDuplicateFieldName]: (field: string) =>
+        `customId field ${JSON.stringify(field)} is already defined in this chain.`,
+    [SeedcordErrorCode.CustomIdHandlerRouteMissing]: (className: string) =>
+        `${className} is missing its route decorator (@ButtonRoute, @ModalRoute, or @SelectMenuRoute).`,
+    [SeedcordErrorCode.CustomIdMatchArmMissing]: (prefix: string) =>
+        `match() has no arm for the decoded route ${JSON.stringify(prefix)}.`,
+    [SeedcordErrorCode.SlashMatchArmMissing]: (route: string) =>
+        `match() has no arm for the command route ${JSON.stringify(route)}.`,
+    [SeedcordErrorCode.AutocompleteMatchArmMissing]: (field: string) =>
+        `match() has no arm for the focused field ${JSON.stringify(field)}.`,
+    [SeedcordErrorCode.EventMatchArmMissing]: (event: string) =>
+        `match() has no arm for the event ${JSON.stringify(event)}.`,
+    [SeedcordErrorCode.EventMiddlewareNameUnavailable]: () =>
+        `this.eventName is only available on middleware the controller constructed with a fired event name.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
@@ -110,21 +131,24 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
-        'Config `hmr.restart` must be an array of strings when provided.'
-} satisfies Record<SeedcordErrorCode, (...args: any[]) => string>;
+        'Config `hmr.restart` must be an array of strings when provided.',
+    [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
+        `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
+    [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
+        `Could not read the commands directory ${dir} during codegen. ${reason}.`,
+    [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
+        kind: string,
+        name: string,
+        firstFile: string,
+        secondFile: string
+    ) =>
+        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`
+} satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
-/**
- * Argument types for Seedcord error messages.
- *
- * @internal
- */
+/** @internal */
 export type SeedcordErrorArguments<Code extends SeedcordErrorCode> = Parameters<(typeof messages)[Code]>;
 
-/**
- * Formats a Seedcord error message based on the provided code and arguments.
- *
- * @internal
- */
+/** @internal */
 export function formatSeedcordErrorMessage<Code extends SeedcordErrorCode>(
     code: Code,
     args?: SeedcordErrorArguments<Code>

@@ -50,13 +50,37 @@ export enum SeedcordErrorCode {
     /** Middleware priority provided by the decorator was not a finite number. */
     DecoratorInvalidMiddlewarePriority = 1306,
 
-    /** buildSlashRoute received an invalid argument. */
-    UtilInvalidSlashRouteArgument = 1403,
-
     /** StrictEventEmitter.waitFor was aborted via its AbortSignal. */
     EventEmitterWaitForAborted = 1501,
     /** StrictEventEmitter.waitFor exceeded its configured timeout. */
     EventEmitterWaitForTimeout = 1502,
+
+    /** A customId definition prefix contains a reserved character (a colon or a control char). */
+    CustomIdInvalidPrefix = 1601,
+    /** A customId field name is integer-like, which JS would silently reorder. */
+    CustomIdReservedFieldName = 1602,
+    /** A oneOf() field was declared with no choices. */
+    CustomIdEmptyChoices = 1603,
+    /** An int() field was declared with min greater than max. */
+    CustomIdInvalidBounds = 1604,
+    /** A value passed to encode() is outside its field's allowed range. */
+    CustomIdValueOutOfRange = 1605,
+    /** An encoded customId exceeds Discord's 100-character limit. */
+    CustomIdWireTooLong = 1606,
+    /** A field name is declared more than once in the same customId chain. */
+    CustomIdDuplicateFieldName = 1607,
+    /** A component handler is missing its route decorator (\@ButtonRoute / \@ModalRoute / \@SelectMenuRoute). */
+    CustomIdHandlerRouteMissing = 1608,
+    /** match() received a decoded route with no matching arm. */
+    CustomIdMatchArmMissing = 1609,
+    /** A slash handler's match() has no arm for the command route that fired. */
+    SlashMatchArmMissing = 1610,
+    /** An autocomplete handler's match() has no arm for the focused field that fired. */
+    AutocompleteMatchArmMissing = 1611,
+    /** An event handler's match() has no arm for the event name that fired. */
+    EventMatchArmMissing = 1612,
+    /** Event middleware read `this.eventName` but was constructed without a fired event name. */
+    EventMiddlewareNameUnavailable = 1613,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
@@ -131,5 +155,11 @@ export enum SeedcordErrorCode {
     /** Config hmr options must be an object when provided. */
     CliConfigInvalidHmr = 3120,
     /** Config hmr restart patterns must be an array of strings when provided. */
-    CliConfigInvalidHmrRestart = 3121
+    CliConfigInvalidHmrRestart = 3121,
+    /** Two commands resolve to the same slash route during codegen. */
+    CliCodegenDuplicateRoute = 3122,
+    /** The commands directory could not be read during codegen. */
+    CliCodegenCommandsDirUnreadable = 3123,
+    /** Two context-menu commands of the same kind share a name during codegen. */
+    CliCodegenDuplicateContextMenu = 3124
 }

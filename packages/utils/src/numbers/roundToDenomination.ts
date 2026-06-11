@@ -15,7 +15,7 @@ export interface RoundToDenomOptions {
  * @example
  * ```ts
  * roundToDenomination(1234); // "1.2K"
- * roundToDenomination(10000, ['k', 'm', 'b', 't', 'q']); // "10k"
+ * roundToDenomination(10000, { suffixes: ['k', 'm', 'b', 't', 'q'] }); // "10k"
  * roundToDenomination(12345678); // "12.3M"
  * ```
  * @returns The rounded number as a string with a denomination suffix.

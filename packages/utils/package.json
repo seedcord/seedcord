@@ -19,6 +19,16 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
+        },
+        "./internal": {
+            "import": {
+                "types": "./dist/internal.index.d.mts",
+                "default": "./dist/internal.index.mjs"
+            },
+            "require": {
+                "types": "./dist/internal.index.d.cts",
+                "default": "./dist/internal.index.cjs"
+            }
         }
     },
     "files": [
@@ -43,12 +53,14 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/types": "workspace:*"
+        "@seedcord/types": "workspace:*",
+        "discord-api-types": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "discord.js": "catalog:peer",
         "type-fest": "catalog:deps"
     },
     "publishConfig": {
