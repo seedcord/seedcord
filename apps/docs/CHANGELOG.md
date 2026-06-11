@@ -1,5 +1,15 @@
 # @seedcord/docs
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+    - @seedcord/types@0.5.0
+
 ## 0.1.1
 
 ### Patch Changes
