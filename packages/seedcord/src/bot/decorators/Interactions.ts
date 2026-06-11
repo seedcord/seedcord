@@ -1,3 +1,5 @@
+import { ApplicationCommandType } from 'discord.js';
+
 import { ComponentDefsKey } from '@customId/routing';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
@@ -6,15 +8,15 @@ import type { HasComponentDefs } from '@customId/routing';
 import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
 import type { HandlerConstructor } from '@handlers/constructors';
 import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { SlashHandler } from '@handlers/interaction/SlashHandler';
-import type { SlashOptionRegistry } from '@seedcord/types';
+import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/types';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,
     CacheType,
     ChannelSelectMenuInteraction,
-    ContextMenuCommandInteraction,
     MentionableSelectMenuInteraction,
     ModalSubmitInteraction,
     RoleSelectMenuInteraction,
@@ -165,19 +167,80 @@ export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: D
     };
 }
 
+/** The context-menu command names valid for a kind, read off the matching registry. @internal */
+type NamesFor<Kind extends ApplicationCommandType.User | ApplicationCommandType.Message> =
+    Kind extends ApplicationCommandType.User ? keyof UserContextMenuRegistry : keyof MessageContextMenuRegistry;
+
 /**
- * Routes context menu commands to handler classes
+ * The context-menu kind a handler serves, read off its event's `commandType` discriminant. Reading the
+ * literal off the event rather than inferring the `ContextMenuHandler` generic directly keeps the kind from
+ * widening to the whole union, the handler's conditional members make the generic inference imprecise.
  *
- * @param type - Context menu type: 'message' for message context menus, 'user' for user context menus
- * @param routeOrRoutes - Command name(s) to handle
- * @decorator
+ * @internal
  */
-export function ContextMenuRoute(type: 'message' | 'user', routeOrRoutes: string | string[]) {
+type ContextMenuKindOf<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
+    InstanceType<TCtor> extends ContextMenuHandler<infer Kind, CacheType>
+        ? [Kind] extends [ApplicationCommandType.User | ApplicationCommandType.Message]
+            ? HandlerEventType<TCtor> extends { commandType: infer K }
+                ? Extract<K, ApplicationCommandType.User | ApplicationCommandType.Message>
+                : never
+            : never
+        : never;
+
+/**
+ * On a kind mismatch between the decorator and the handler generic, resolves to a non-constructor type so
+ * applying the decorator is a TS1238. Cross-checks both directions, mirroring {@link AssertSlashRoute}.
+ *
+ * @internal
+ */
+type AssertContextMenuRoute<
+    Kind extends ApplicationCommandType.User | ApplicationCommandType.Message,
+    TCtor extends new (...args: any[]) => InteractionHandler<Repliables>
+> = [Kind] extends [ContextMenuKindOf<TCtor>]
+    ? [ContextMenuKindOf<TCtor>] extends [Kind]
+        ? TCtor
+        : Constructor<
+              [
+                  'ContextMenuHandler declares a kind the ContextMenuRoute decorator does not match',
+                  ContextMenuKindOf<TCtor>
+              ]
+          >
+    : Constructor<['ContextMenuRoute does not match the ContextMenuHandler generic', Kind]>;
+
+/**
+ * Routes one or more context-menu commands to a {@link ContextMenuHandler}.
+ *
+ * Pass the kind (`ApplicationCommandType.User` or `ApplicationCommandType.Message`) and the command name(s),
+ * each checked against that kind's registry, so a typo is a compile error. The same kind must sit on the
+ * handler's generic, cross-checked both directions. Context menus carry no options, so a multi-name handler
+ * reads `this.target` uniformly with no branch.
+ *
+ * @param kind - The context-menu kind, `ApplicationCommandType.User` or `ApplicationCommandType.Message`.
+ * @param names - The command name(s) this handler serves, keyed off the matching registry.
+ * @decorator
+ * @example
+ * ```ts
+ * \@ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
+ * class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {
+ *     async execute() {
+ *         const user = this.target;
+ *     }
+ * }
+ * ```
+ */
+export function ContextMenuRoute<const Kind extends ApplicationCommandType.User | ApplicationCommandType.Message>(
+    kind: Kind,
+    ...names: NamesFor<Kind>[]
+) {
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
-        constructor: AssertHandles<ContextMenuCommandInteraction, TCtor>
+        constructor: AssertContextMenuRoute<Kind, TCtor>
     ): void {
-        const routeType = type === 'message' ? InteractionRoutes.MessageContextMenu : InteractionRoutes.UserContextMenu;
-        storeMetadata(routeType, routeOrRoutes, constructor as HandlerConstructor);
+        const routeType =
+            kind === ApplicationCommandType.User
+                ? InteractionRoutes.UserContextMenu
+                : InteractionRoutes.MessageContextMenu;
+        // justified: AssertContextMenuRoute has already narrowed the ctor, this erases it to the metadata-store shape.
+        storeMetadata(routeType, names, constructor as HandlerConstructor);
     };
 }
 

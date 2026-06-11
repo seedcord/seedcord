@@ -17,6 +17,7 @@ import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { Repliables } from '@handlers/BaseHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
@@ -148,6 +149,30 @@ export class InteractionController implements Initializeable, HmrAware {
             if (!this.slashMap.has(route)) {
                 this.logger.warn(
                     `Slash route ${chalk.bold.cyan(route)} has no registered ${chalk.bold('@SlashRoute')} handler.`
+                );
+            }
+        }
+    }
+
+    /**
+     * Warns for each registered context-menu command, per kind, that has no matching handler. Such a command
+     * dispatches to UnhandledEvent at runtime, so surface it at boot, parallel to {@link warnUnhandledRoutes}.
+     * A user command and a message command may share a name, so each kind checks its own map.
+     *
+     * @internal
+     */
+    public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
+        for (const name of leaves.user) {
+            if (!this.userContextMenuMap.has(name)) {
+                this.logger.warn(
+                    `User context menu ${chalk.bold.cyan(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                );
+            }
+        }
+        for (const name of leaves.message) {
+            if (!this.messageContextMenuMap.has(name)) {
+                this.logger.warn(
+                    `Message context menu ${chalk.bold.cyan(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
                 );
             }
         }

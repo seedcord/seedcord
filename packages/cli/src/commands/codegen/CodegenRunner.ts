@@ -13,16 +13,16 @@ import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
-import { renderSlashRegistry } from './renderSlashRegistry';
-import { SlashTableGenerator } from './SlashTableGenerator';
+import { RegistryGenerator } from './RegistryGenerator';
+import { renderRegistry } from './renderRegistry';
 
-import type { ScannedCommand } from './SlashTableGenerator';
+import type { ScannedCommand } from './RegistryGenerator';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger, SeedcordInstance } from '@seedcord/types';
-import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
-const OUTPUT_FILENAME = 'slash-registry.gen.ts';
+const OUTPUT_FILENAME = 'command-registry.gen.ts';
 
 interface BuilderLike {
     component: { toJSON: () => unknown };
@@ -38,7 +38,7 @@ export class CodegenRunner {
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
         private readonly moduleLoader: ModuleLoader,
-        private readonly generator: SlashTableGenerator,
+        private readonly generator: RegistryGenerator,
         private readonly logger: ILogger
     ) {}
 
@@ -46,14 +46,14 @@ export class CodegenRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
-        const generator = new SlashTableGenerator(logger);
+        const generator = new RegistryGenerator(logger);
 
         return new CodegenRunner(locator, configLoader, moduleLoader, generator, logger);
     }
 
     public async run(check: boolean): Promise<void> {
         const config = await this.loadConfig();
-        const rendered = renderSlashRegistry(this.generator.generate(await this.scan(config)));
+        const rendered = renderRegistry(this.generator.generate(await this.scan(config)));
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
 
         if (check) {
@@ -123,7 +123,7 @@ export class CodegenRunner {
         return commandsPath ? resolve(process.cwd(), commandsPath) : undefined;
     }
 
-    private commandJsonOf(exported: unknown): RESTPostAPIChatInputApplicationCommandsJSONBody | undefined {
+    private commandJsonOf(exported: unknown): RESTPostAPIApplicationCommandsJSONBody | undefined {
         if (typeof exported !== 'function') return undefined;
 
         let instance: unknown;
@@ -136,7 +136,7 @@ export class CodegenRunner {
 
         if (!this.isBuilderLike(instance)) return undefined;
         const json = instance.component.toJSON();
-        if (!this.isChatInputCommand(json)) return undefined;
+        if (!this.isApplicationCommand(json)) return undefined;
         return json;
     }
 
@@ -150,11 +150,18 @@ export class CodegenRunner {
         );
     }
 
-    private isChatInputCommand(json: unknown): json is RESTPostAPIChatInputApplicationCommandsJSONBody {
+    private isApplicationCommand(json: unknown): json is RESTPostAPIApplicationCommandsJSONBody {
         if (typeof json !== 'object' || json === null) return false;
         const { name, type } = json as { name?: unknown; type?: unknown };
-        // chat-input commands omit type or set it to ChatInput, context menus set User/Message and carry no options.
-        return typeof name === 'string' && (type === undefined || type === ApplicationCommandType.ChatInput);
+        if (typeof name !== 'string') return false;
+        // chat-input commands omit type or set it to ChatInput, context menus set User/Message. A
+        // PrimaryEntryPoint or any other type is not something codegen registers, so drop it.
+        return (
+            type === undefined ||
+            type === ApplicationCommandType.ChatInput ||
+            type === ApplicationCommandType.User ||
+            type === ApplicationCommandType.Message
+        );
     }
 
     private isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
@@ -164,14 +171,14 @@ export class CodegenRunner {
     private async write(rendered: string, outputPath: string): Promise<void> {
         await mkdir(dirname(outputPath), { recursive: true });
         await writeFile(outputPath, rendered, 'utf8');
-        this.logger.info(`Slash registry written to ${outputPath}`);
+        this.logger.info(`Command registry written to ${outputPath}`);
     }
 
     private async check(rendered: string, outputPath: string): Promise<void> {
         const onDisk = existsSync(outputPath) ? await readFile(outputPath, 'utf8') : '';
         if (onDisk === rendered) return;
 
-        this.logger.error(`Slash registry is out of date. Run \`seedcord codegen\` and commit ${outputPath}.`);
+        this.logger.error(`Command registry is out of date. Run \`seedcord codegen\` and commit ${outputPath}.`);
         process.exitCode = 1;
     }
 }

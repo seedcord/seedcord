@@ -10,7 +10,11 @@ export class CodegenCommand extends BaseCommand {
     private readonly runner: CodegenRunner;
 
     constructor() {
-        super('codegen', 'Generate the typed slash-option registry from your commands', 'CLI:Codegen');
+        super(
+            'codegen',
+            'Generate the typed command registry (slash options and context menus) from your commands',
+            'CLI:Codegen'
+        );
         this.runner = CodegenRunner.create(this.logger);
     }
 

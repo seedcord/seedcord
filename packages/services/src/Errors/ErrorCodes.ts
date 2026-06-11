@@ -159,5 +159,7 @@ export enum SeedcordErrorCode {
     /** Two commands resolve to the same slash route during codegen. */
     CliCodegenDuplicateRoute = 3122,
     /** The commands directory could not be read during codegen. */
-    CliCodegenCommandsDirUnreadable = 3123
+    CliCodegenCommandsDirUnreadable = 3123,
+    /** Two context-menu commands of the same kind share a name during codegen. */
+    CliCodegenDuplicateContextMenu = 3124
 }

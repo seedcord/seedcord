@@ -102,6 +102,7 @@ export class Bot extends Plugin<BotEvents> {
             await this.commands.init();
             await this.commands.setCommands();
             this.interactions?.warnUnhandledRoutes(this.commands.routeLeaves());
+            this.interactions?.warnUnhandledContextMenuRoutes(this.commands.contextMenuLeaves());
         }
 
         await this.emojiInjector.init();

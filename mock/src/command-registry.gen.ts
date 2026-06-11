@@ -13,6 +13,12 @@ declare module 'seedcord' {
         'test/confirmable/v2': {};
         throw: {};
     }
+    interface UserContextMenuRegistry {
+        'View Profile': true;
+    }
+    interface MessageContextMenuRegistry {
+        'Report Message': true;
+    }
 }
 
 export {};

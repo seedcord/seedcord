@@ -4,18 +4,18 @@ import { join, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
-import { SlashCommandBuilder } from 'discord.js';
+import { ApplicationCommandType, ContextMenuCommandBuilder, SlashCommandBuilder } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';
-import { SlashTableGenerator } from '@commands/codegen/SlashTableGenerator';
+import { RegistryGenerator } from '@commands/codegen/RegistryGenerator';
 
 import type { ConfigLoader } from '@core/config/ConfigLoader';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
-const OUTPUT = 'slash-registry.gen.ts';
+const OUTPUT = 'command-registry.gen.ts';
 
 function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
     return {
@@ -41,7 +41,7 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
             Promise.resolve({ default: { [SeedcordBrand]: true, config: { bot: { commands: { path: null } } } } })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
+    return new CodegenRunner(locator, configLoader, moduleLoader, new RegistryGenerator(logger), logger);
 }
 
 // importModule returns the branded instance for instancePath and the command module for every other path.
@@ -65,7 +65,7 @@ function scanRunner(
                 : Promise.resolve(moduleByPath(entryPath))
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
+    return new CodegenRunner(locator, configLoader, moduleLoader, new RegistryGenerator(logger), logger);
 }
 
 // instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
@@ -78,7 +78,7 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
         importModule: () => Promise.resolve({ default: { not: 'branded' } })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new SlashTableGenerator(logger), logger);
+    return new CodegenRunner(locator, configLoader, moduleLoader, new RegistryGenerator(logger), logger);
 }
 
 describe('CodegenRunner', () => {
@@ -245,5 +245,30 @@ describe('CodegenRunner', () => {
         await scanRunner(root, cmdDir, exports, silentLogger()).run(true);
 
         expect(process.exitCode).toBe(0);
+    });
+
+    it('emits context-menu commands into the user and message registries alongside slash routes', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const cmdDir = await mkdtemp(join(tmpdir(), 'cmds-'));
+        await writeFile(join(cmdDir, 'commands.ts'), 'export {};', 'utf8');
+
+        class BanCommand {
+            component = new SlashCommandBuilder().setName('ban').setDescription('Ban a member');
+        }
+        class ViewProfile {
+            component = new ContextMenuCommandBuilder().setName('View Profile').setType(ApplicationCommandType.User);
+        }
+        class ReportMessage {
+            component = new ContextMenuCommandBuilder()
+                .setName('Report Message')
+                .setType(ApplicationCommandType.Message);
+        }
+
+        await scanRunner(root, cmdDir, () => ({ BanCommand, ViewProfile, ReportMessage }), silentLogger()).run(false);
+
+        const written = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(written).toContain('ban: {}');
+        expect(written).toContain("    interface UserContextMenuRegistry {\n        'View Profile': true;\n    }");
+        expect(written).toContain("    interface MessageContextMenuRegistry {\n        'Report Message': true;\n    }");
     });
 });

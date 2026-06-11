@@ -135,7 +135,14 @@ const messages = {
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
-        `Could not read the commands directory ${dir} during codegen. ${reason}.`
+        `Could not read the commands directory ${dir} during codegen. ${reason}.`,
+    [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
+        kind: string,
+        name: string,
+        firstFile: string,
+        secondFile: string
+    ) =>
+        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

@@ -263,7 +263,7 @@ export class DevRunner {
         try {
             await this.codegen.run(false);
         } catch (error: unknown) {
-            this.codegenLogger.error('Slash registry regeneration failed', error);
+            this.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
             this.isRegenerating = false;
         }

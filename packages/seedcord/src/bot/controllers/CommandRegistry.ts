@@ -8,11 +8,13 @@ import { Collection, SlashCommandBuilder } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { CommandMetadataKey } from '@bDecorators/Command';
+import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { BuilderComponent } from '@interfaces/Components';
 
 import type { CommandMeta } from '@bDecorators/Command';
+import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
@@ -221,5 +223,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
     /** The deduplicated slash route keys across every global and guild command. @internal */
     public routeLeaves(): Set<string> {
         return slashRouteLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
+    }
+
+    /** The registered context-menu command names, split by kind, across every global and guild command. @internal */
+    public contextMenuLeaves(): ContextMenuLeaves {
+        return contextMenuLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
     }
 }

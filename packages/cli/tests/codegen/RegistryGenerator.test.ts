@@ -2,11 +2,11 @@ import { SeedcordErrorCode } from '@seedcord/services';
 import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { SlashTableGenerator } from '@commands/codegen/SlashTableGenerator';
+import { RegistryGenerator } from '@commands/codegen/RegistryGenerator';
 
-import type { SlashTables } from '@commands/codegen/SlashTableGenerator';
+import type { SlashTables } from '@commands/codegen/RegistryGenerator';
 import type { ILogger } from '@seedcord/types';
-import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
 
 const silentLogger: ILogger = {
     error: () => undefined,
@@ -18,13 +18,13 @@ const silentLogger: ILogger = {
     silly: () => undefined
 };
 
-function tablesFor(...commands: { toJSON: () => RESTPostAPIChatInputApplicationCommandsJSONBody }[]): SlashTables {
-    return new SlashTableGenerator(silentLogger).generate(
+function tablesFor(...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]): SlashTables {
+    return new RegistryGenerator(silentLogger).generate(
         commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() }))
-    );
+    ).slash;
 }
 
-describe('SlashTableGenerator', () => {
+describe('RegistryGenerator', () => {
     it('builds a flat command into one route with its option table', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
@@ -123,7 +123,7 @@ describe('SlashTableGenerator', () => {
     });
 
     it('throws naming both source files when two commands resolve to the same route', () => {
-        const generator = new SlashTableGenerator(silentLogger);
+        const generator = new RegistryGenerator(silentLogger);
         const commands = [
             {
                 sourceFile: 'commands/ban.ts',
@@ -159,9 +159,9 @@ describe('SlashTableGenerator', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const tables = new SlashTableGenerator(logger).generate([{ sourceFile: 'admin.ts', json }]);
+        const { slash } = new RegistryGenerator(logger).generate([{ sourceFile: 'admin.ts', json }]);
 
-        expect(tables).toEqual({ 'admin/ping': {} });
+        expect(slash).toEqual({ 'admin/ping': {} });
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
@@ -385,15 +385,15 @@ describe('SlashTableGenerator', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const tables = new SlashTableGenerator(logger).generate([{ sourceFile: 'admin.ts', json }]);
+        const { slash } = new RegistryGenerator(logger).generate([{ sourceFile: 'admin.ts', json }]);
 
-        expect(tables).toEqual({ 'admin/ping': {} });
-        expect(tables).not.toHaveProperty('admin/empty');
+        expect(slash).toEqual({ 'admin/ping': {} });
+        expect(slash).not.toHaveProperty('admin/empty');
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
     });
 
     it('throws CliCodegenDuplicateRoute naming both files when a flat command and a group leaf collide', () => {
-        const generator = new SlashTableGenerator(silentLogger);
+        const generator = new RegistryGenerator(silentLogger);
         const commands = [
             {
                 sourceFile: 'commands/role-add-user.ts',
@@ -437,15 +437,90 @@ describe('SlashTableGenerator', () => {
         expect(message).toContain('commands/dup.ts');
     });
 
-    it('treats a context menu command as a flat empty route rather than skipping it', () => {
-        // ContextMenuCommandBuilder.toJSON() is { name, type } with no options, so this generator
-        // sees no routing and emits a flat empty-table route. Context menus are actually filtered
-        // upstream in CodegenRunner.isChatInput, not here.
-        const cm = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
-        const json = cm.toJSON() as unknown as RESTPostAPIChatInputApplicationCommandsJSONBody;
+    it('collects user and message context menus into their own sets, never as slash routes', () => {
+        const view = new ContextMenuCommandBuilder().setName('View Profile').setType(ApplicationCommandType.User);
+        const report = new ContextMenuCommandBuilder()
+            .setName('Report Message')
+            .setType(ApplicationCommandType.Message);
 
-        const tables = new SlashTableGenerator(silentLogger).generate([{ sourceFile: 'report.ts', json }]);
+        const registry = new RegistryGenerator(silentLogger).generate([
+            { sourceFile: 'view.ts', json: view.toJSON() },
+            { sourceFile: 'report.ts', json: report.toJSON() }
+        ]);
 
-        expect(tables).toEqual({ Report: {} });
+        expect(registry.slash).toEqual({});
+        expect(registry.userContextMenus).toEqual(['View Profile']);
+        expect(registry.messageContextMenus).toEqual(['Report Message']);
+    });
+
+    it('allows a user command and a message command to share a name', () => {
+        const userReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.User);
+        const messageReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
+
+        const registry = new RegistryGenerator(silentLogger).generate([
+            { sourceFile: 'user-report.ts', json: userReport.toJSON() },
+            { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
+        ]);
+
+        expect(registry.userContextMenus).toEqual(['Report']);
+        expect(registry.messageContextMenus).toEqual(['Report']);
+    });
+
+    it('throws naming both files when two user context menus share a name', () => {
+        const generator = new RegistryGenerator(silentLogger);
+        const commands = [
+            {
+                sourceFile: 'commands/view-a.ts',
+                json: new ContextMenuCommandBuilder()
+                    .setName('View Profile')
+                    .setType(ApplicationCommandType.User)
+                    .toJSON()
+            },
+            {
+                sourceFile: 'commands/view-b.ts',
+                json: new ContextMenuCommandBuilder()
+                    .setName('View Profile')
+                    .setType(ApplicationCommandType.User)
+                    .toJSON()
+            }
+        ];
+
+        let caught: unknown;
+        try {
+            generator.generate(commands);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenDuplicateContextMenu });
+        const message = (caught as Error).message;
+        expect(message).toContain('user');
+        expect(message).toContain('View Profile');
+        expect(message).toContain('commands/view-a.ts');
+        expect(message).toContain('commands/view-b.ts');
+    });
+
+    it('throws naming both files when two message context menus share a name', () => {
+        const generator = new RegistryGenerator(silentLogger);
+        const commands = [
+            {
+                sourceFile: 'commands/report-a.ts',
+                json: new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message).toJSON()
+            },
+            {
+                sourceFile: 'commands/report-b.ts',
+                json: new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message).toJSON()
+            }
+        ];
+
+        let caught: unknown;
+        try {
+            generator.generate(commands);
+        } catch (error: unknown) {
+            caught = error;
+        }
+
+        expect(caught).toMatchObject({ code: SeedcordErrorCode.CliCodegenDuplicateContextMenu });
+        expect((caught as Error).message).toContain('message');
     });
 });
