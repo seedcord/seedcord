@@ -7,14 +7,12 @@ import { InvalidCustomId } from './Errors';
 
 import type { CustomIdField, CustomIdShape } from './Field';
 
-// the wire is the routeKey, then a colon, then the body. the routeKey is the stable prefix plus
-// a short shape hash, so when the shape changes the routeKey changes and decode catches an old
-// wire as stale. the body holds the values. every bounded field (one with a known range) folds
-// into a single base64 integer by mixed-radix packing, which is far shorter than one token per
-// field. fields that cannot pack (a free string, an int with no bounds) trail the integer as
-// delimited tokens. so basically, you get more string per string for your custom id.
+// wire is routeKey, a colon, then the body. the routeKey is the stable prefix plus a short shape
+// hash, so a shape change moves the routeKey and decode catches an old wire as stale. bounded
+// fields (known range) fold into one base64 integer by mixed-radix packing, unbounded ones (free
+// string, unbounded int) trail it as delimited tokens.
 //
-// works on runtime values (unknown). the typed facade in CustomId.ts guarantees the types.
+// works on runtime values (unknown), the typed facade in CustomId.ts guarantees the types.
 
 // url-safe base64, one utf-16 unit per char so discord never rewrites it.
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -144,7 +142,8 @@ function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown
             return BigInt(value);
         }
         case 'uuid': {
-            const hex = (value as string).replace(/-/g, '');
+            if (typeof value !== 'string') return outOfRange(name, value);
+            const hex = value.replace(/-/g, '');
             if (!/^[0-9a-fA-F]{32}$/.test(hex)) return outOfRange(name, value);
             return BigInt(`0x${hex}`);
         }
@@ -154,8 +153,10 @@ function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown
             const index = (field.choices ?? []).indexOf(value as string);
             return index < 0 ? outOfRange(name, value) : BigInt(index);
         }
-        case 'int':
+        case 'int': {
+            if (!Number.isInteger(value)) return outOfRange(name, value);
             return BigInt((value as number) - (field.min ?? 0));
+        }
         default:
             return outOfRange(name, value);
     }
@@ -197,6 +198,8 @@ function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value
 }
 function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unknown {
     if (field.kind !== 'int') return unescapeToken(piece);
+    // an int always encodes to at least one char, so an empty piece is a truncated wire
+    if (piece === '') throw new InvalidCustomId('empty integer token');
     const decoded = zigzagDecode(base64ToBigint(piece));
     // an unbounded int is authored as a js number, so anything past 2^53 was tampered with.
     if (decoded > SAFE_MAX || decoded < SAFE_MIN) throw new InvalidCustomId('integer out of safe range');

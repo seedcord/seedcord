@@ -137,10 +137,8 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     /**
-     * Warns for each expected command route that has no registered slash handler. Such a route dispatches to
-     * UnhandledEvent at runtime, so surface it at boot. The reverse, a handler with no command, cannot happen
-     * because `@SlashRoute` only accepts keys from the generated registry. Warns rather than throws, a bot may
-     * route some commands outside the registry.
+     * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
+     * UnhandledEvent at runtime. Warns rather than throws since a bot may route commands outside the registry.
      *
      * @internal
      */
@@ -155,9 +153,8 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     /**
-     * Warns for each registered context-menu command, per kind, that has no matching handler. Such a command
-     * dispatches to UnhandledEvent at runtime, so surface it at boot, parallel to {@link warnUnhandledRoutes}.
-     * A user command and a message command may share a name, so each kind checks its own map.
+     * Warns for each context-menu command with no matching handler, which would fall through to UnhandledEvent
+     * at runtime. Checked per kind since a user and a message command can share a name.
      *
      * @internal
      */
@@ -496,6 +493,12 @@ export class InteractionController implements Initializeable, HmrAware {
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
         const route = slashRouteOf(interaction);
+
+        if (!this.autocompleteMap.has(route)) {
+            this.logger.warn(`No autocomplete handler for ${chalk.bold.cyan(route)}.`);
+            await interaction.respond([]);
+            return;
+        }
 
         await this.processInteraction(
             interaction,

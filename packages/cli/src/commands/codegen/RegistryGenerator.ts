@@ -47,11 +47,9 @@ const KIND_BY_TYPE = {
 } as const satisfies Record<APIApplicationCommandBasicOption['type'], OptionKind>;
 
 /**
- * Builds the generated registry from each command's `toJSON()`. Chat-input commands become the typed
- * slash-option tables, context-menu commands contribute their name to the user or message set.
- *
- * The discord.js builder is the single source of truth, codegen reads it back because djs erases option
- * names at the type level. Route leaves match `buildSlashRoute`'s `cmd` / `cmd/sub` / `cmd/group/sub` strings.
+ * Builds the generated registry from each command's `toJSON()`. Chat-input commands become the slash-option
+ * tables, context-menu commands contribute their name to the user or message set. Reads the builder back
+ * because djs erases option names at the type level.
  */
 export class RegistryGenerator {
     constructor(private readonly logger: ILogger) {}
@@ -103,8 +101,7 @@ export class RegistryGenerator {
         }
     }
 
-    // a user name and a message name may match, so each kind dedupes against its own map. A clash within one
-    // kind would merge silently in the interface registry, so catch it here where the source file is known.
+    // each kind dedupes against its own map, a same-kind clash would merge silently
     private collectContextMenu(
         kind: 'user' | 'message',
         json: RESTPostAPIContextMenuApplicationCommandsJSONBody,
@@ -143,8 +140,11 @@ export class RegistryGenerator {
                 continue;
             }
 
+            // empty choices would narrow the value to never
             const choices =
-                'choices' in option && option.choices ? option.choices.map((choice) => choice.value) : undefined;
+                'choices' in option && option.choices && option.choices.length > 0
+                    ? option.choices.map((choice) => choice.value)
+                    : undefined;
             const autocomplete = 'autocomplete' in option && option.autocomplete === true ? true : undefined;
             table[option.name] = {
                 kind: KIND_BY_TYPE[option.type],
