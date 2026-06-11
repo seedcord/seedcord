@@ -2,7 +2,7 @@ import { ButtonInteraction, ComponentType, ContainerBuilder } from 'discord.js';
 import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
 import { Confirmable } from '@bDecorators/Confirmable';
-import { InteractionHandler } from '@handlers/interaction';
+import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { BuilderComponent } from '@interfaces/Components';
 
 import type { ConfirmableClassicOptions, ConfirmableOptions, RowLike } from '@bDecorators/Confirmable/types';

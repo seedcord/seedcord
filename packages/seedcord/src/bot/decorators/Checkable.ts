@@ -11,11 +11,18 @@ import type { Constructor } from 'type-fest';
  * @param ctor - The handler to mark as checkable (Do not pass this directly. Just call the decorator without a `()`)
  * @decorator
  * @example
- * ```typescript
+ * ```ts
  * \@Checkable
- * class AdminCommand extends InteractionHandler implements WithChecks {
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> implements WithChecks {
+ *   \@Catchable()
  *   async runChecks() {
- *     // Perform admin permission checks
+ *     if (!this.event.memberPermissions?.has('BanMembers')) throw new Error('Missing permission');
+ *   }
+ *
+ *   \@Catchable()
+ *   async execute() {
+ *     await this.event.reply('banned');
  *   }
  * }
  * ```

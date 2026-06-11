@@ -82,6 +82,8 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     extends BaseHandler<AutocompleteInteraction<Cache>>
     implements Handler
 {
+    // keep this ctor. it gives typeof AutocompleteHandler a public construct signature that HandlerConstructor
+    // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses HandlerConstructor to never.
     constructor(event: AutocompleteInteraction<Cache>, core: Core) {
         super(event, core);
     }

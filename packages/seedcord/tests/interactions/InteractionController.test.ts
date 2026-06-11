@@ -46,11 +46,10 @@ describe('InteractionController Integration', () => {
         await testEnv.createFile(
             `${interactionsDir}/Ping.ts`,
             `
-            import { InteractionHandler, SlashRoute } from '${seedcordPath}';
-            import { ChatInputCommandInteraction } from 'discord.js';
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
             @SlashRoute('ping')
-            export class PingHandler extends InteractionHandler<ChatInputCommandInteraction> {
+            export class PingHandler extends SlashHandler<'ping'> {
                 public async execute() {
                     await this.event.reply('Pong!');
                 }

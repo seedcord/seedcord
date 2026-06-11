@@ -15,6 +15,8 @@ export abstract class InteractionMiddleware<Repliable extends Repliables>
     extends BaseHandler<Repliable>
     implements Handler
 {
+    // keep this ctor. it gives typeof InteractionMiddleware a public construct signature that
+    // InteractionMiddlewareConstructor needs, and dropping it collapses that type to never.
     constructor(event: Repliable, core: Core) {
         super(event, core);
     }

@@ -11,7 +11,8 @@ import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares'
 import { UnhandledEvent } from '@bot/defaults';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { prefixOf } from '@customId/CustomId';
-import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@handlers/interaction';
+import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
+import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 

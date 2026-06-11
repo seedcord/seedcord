@@ -27,11 +27,13 @@ export interface CatchableOptions {
  * @param options - Configuration for error handling behavior
  * @decorator
  * @example
- * ```typescript
- * class MyHandler extends InteractionHandler {
+ * ```ts
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> {
  *   \@Catchable({ log: true })
  *   async execute() {
- *     // method implementation
+ *     const target = this.options.getUser('target');
+ *     await this.event.reply(`banned ${target.username}`);
  *   }
  * }
  * ```

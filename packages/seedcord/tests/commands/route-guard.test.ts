@@ -61,11 +61,10 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         await testEnv.createFile(
             'interactions/ConfigSet.ts',
             `
-            import { InteractionHandler, SlashRoute } from '${seedcordPath}';
-            import { ChatInputCommandInteraction } from 'discord.js';
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
             @SlashRoute('config/set')
-            export class ConfigSetHandler extends InteractionHandler<ChatInputCommandInteraction> {
+            export class ConfigSetHandler extends SlashHandler<'config/set'> {
                 public async execute() {
                     await this.event.reply('ok');
                 }
@@ -116,11 +115,10 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         await testEnv.createFile(
             'interactions/Ping.ts',
             `
-            import { InteractionHandler, SlashRoute } from '${seedcordPath}';
-            import { ChatInputCommandInteraction } from 'discord.js';
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
 
             @SlashRoute('ping')
-            export class PingHandler extends InteractionHandler<ChatInputCommandInteraction> {
+            export class PingHandler extends SlashHandler<'ping'> {
                 public async execute() {
                     await this.event.reply('Pong!');
                 }
