@@ -9,16 +9,20 @@ import { Envapter } from 'envapt';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { UnhandledEvent } from '@bot/defaults';
-import { buildSlashRoute } from '@bUtilities/miscellaneous/buildSlashRoute';
+import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
+import { prefixOf } from '@customId/CustomId';
+import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
+import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { AutocompleteHandler, InteractionHandler, InteractionMiddleware } from '@interfaces/Handler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
+import type { Repliables } from '@handlers/BaseHandler';
+import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { HandlerConstructor, InteractionMiddlewareConstructor, Repliables } from '@interfaces/Handler';
 import type { Initializeable } from '@interfaces/Plugin';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,
@@ -106,7 +110,7 @@ export class InteractionController implements Initializeable, HmrAware {
 
         const interactionsDir = this.core.config.bot.interactions.path;
         if (!interactionsDir) {
-            // Unreachable: InteractionController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping handler loading.
+            // unreachable, InteractionController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping handler loading.
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
                 'InteractionController',
                 'interactions'
@@ -130,6 +134,45 @@ export class InteractionController implements Initializeable, HmrAware {
             logger: this.logger,
             name: 'Interaction'
         });
+    }
+
+    /**
+     * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
+     * UnhandledEvent at runtime. Warns rather than throws since a bot may route commands outside the registry.
+     *
+     * @internal
+     */
+    public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
+        for (const route of commandLeaves) {
+            if (!this.slashMap.has(route)) {
+                this.logger.warn(
+                    `Slash route ${chalk.bold.cyan(route)} has no registered ${chalk.bold('@SlashRoute')} handler.`
+                );
+            }
+        }
+    }
+
+    /**
+     * Warns for each context-menu command with no matching handler, which would fall through to UnhandledEvent
+     * at runtime. Checked per kind since a user and a message command can share a name.
+     *
+     * @internal
+     */
+    public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
+        for (const name of leaves.user) {
+            if (!this.userContextMenuMap.has(name)) {
+                this.logger.warn(
+                    `User context menu ${chalk.bold.cyan(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                );
+            }
+        }
+        for (const name of leaves.message) {
+            if (!this.messageContextMenuMap.has(name)) {
+                this.logger.warn(
+                    `Message context menu ${chalk.bold.cyan(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                );
+            }
+        }
     }
 
     private getArtifacts(handlerClass: HandlerConstructor): InteractionArtifact[] {
@@ -297,36 +340,27 @@ export class InteractionController implements Initializeable, HmrAware {
         });
     }
 
-    private parseCustomId(customId: string): { prefix: string; args: string[] } {
-        const parts = customId.split(':');
-        const prefix = parts[0] ?? '';
-        const argString = parts[1] ?? '';
-        const args = argString ? argString.split('-') : [];
-
-        return { prefix, args };
-    }
-
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
         interaction: TInteraction,
         getMap: () => Collection<string, HandlerConstructor>,
         interactionType: string
     ): Promise<void> {
-        const { prefix, args } = this.parseCustomId(interaction.customId);
+        // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
+        // reaches its handler, where reading this.params throws StaleCustomId and @Catchable replies.
+        const prefix = prefixOf(interaction.customId);
         if (!prefix) return this.logger.warn(`${interactionType} has invalid customId: ${interaction.customId}`);
 
         await this.processInteraction(
             interaction,
             () => prefix,
-            (key) => getMap().get(key),
-            args
+            (key) => getMap().get(key)
         );
     }
 
-    public async processInteraction<TInteraction extends Interaction>(
+    private async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
         extractKey: (i: TInteraction) => string,
-        getHandler: (key: string) => HandlerConstructor | undefined,
-        args?: string[]
+        getHandler: (key: string) => HandlerConstructor | undefined
     ): Promise<void> {
         const key = extractKey(interaction);
         if (
@@ -340,7 +374,7 @@ export class InteractionController implements Initializeable, HmrAware {
         // Autocomplete interactions skip middlewares.
         if (!interaction.isAutocomplete()) {
             for (const { ctor } of this.middlewares) {
-                const middleware = new ctor(interaction as Repliables, this.core, args);
+                const middleware = new ctor(interaction as Repliables, this.core);
                 if (middleware.hasChecks()) await middleware.runChecks();
                 if (middleware.shouldBreak() || middleware.hasErrors()) return;
 
@@ -357,7 +391,7 @@ export class InteractionController implements Initializeable, HmrAware {
 
         this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
         // @ts-expect-error TS can't infer the type of interaction here
-        const handler = new HandlerCtor(interaction as Repliables, this.core, args);
+        const handler = new HandlerCtor(interaction as Repliables, this.core);
         if (handler.hasChecks()) await handler.runChecks();
         if (handler.shouldBreak()) return;
         if (!handler.hasErrors()) await handler.execute();
@@ -405,7 +439,7 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     private async handleSlashCommand(interaction: ChatInputCommandInteraction): Promise<void> {
-        const route = buildSlashRoute(interaction);
+        const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
             () => route,
@@ -458,13 +492,17 @@ export class InteractionController implements Initializeable, HmrAware {
     }
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
-        const route = buildSlashRoute(interaction);
-        const focused = interaction.options.getFocused(true);
-        const autocompleteKey = `${route}:${focused.name}`;
+        const route = slashRouteOf(interaction);
+
+        if (!this.autocompleteMap.has(route)) {
+            this.logger.warn(`No autocomplete handler for ${chalk.bold.cyan(route)}.`);
+            await interaction.respond([]);
+            return;
+        }
 
         await this.processInteraction(
             interaction,
-            () => autocompleteKey,
+            () => route,
             (key) => this.autocompleteMap.get(key)
         );
     }

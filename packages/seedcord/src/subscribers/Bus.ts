@@ -15,8 +15,8 @@ import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
 import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { HmrUpdateEvent } from '@seedcord/cli';
 import type { TypedConstructor } from '@seedcord/types';
+import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
 type SubscriberConstructor = TypedConstructor<typeof Subscriber>;
 interface RegisteredSubscriberHandlerEntry {

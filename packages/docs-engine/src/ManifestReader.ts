@@ -82,12 +82,16 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
         succeeded: Boolean(pkg.succeeded)
     };
 
-    // `sources` + `reexports` come from the generator and are accepted with a shallow shape check, not
-    // re-validated per entry.
-    if (isRecordShape(pkg.sources)) result.sources = pkg.sources;
-    if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
+    attachOptionalFields(result, pkg);
 
     return result;
+}
+
+function attachOptionalFields(result: DocManifestPackage, pkg: Partial<DocManifestPackage>): void {
+    if (isRecordShape(pkg.sources)) result.sources = pkg.sources;
+    if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
+    if (typeof pkg.readme === 'string') result.readme = pkg.readme;
+    if (typeof pkg.changelogUrl === 'string') result.changelogUrl = pkg.changelogUrl;
 }
 
 function isRecordShape(value: PackageSourceIndex | undefined): value is PackageSourceIndex {

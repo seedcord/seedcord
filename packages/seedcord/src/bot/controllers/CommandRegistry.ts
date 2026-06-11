@@ -8,13 +8,16 @@ import { Collection, SlashCommandBuilder } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { CommandMetadataKey } from '@bDecorators/Command';
+import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
+import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { BuilderComponent } from '@interfaces/Components';
 
 import type { CommandMeta } from '@bDecorators/Command';
+import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type { ContextMenuCommandBuilder } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
@@ -105,7 +108,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         await this.setCommands();
     }
 
-    /** @internal For use in dev mode */
+    /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         const commandsDir = this.core.config.bot.commands.path;
         if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {
@@ -215,5 +218,15 @@ export class CommandRegistry implements Initializeable, HmrAware {
             });
             this.logger.utils.item(`${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
+    }
+
+    /** The deduplicated slash route keys across every global and guild command. @internal */
+    public routeLeaves(): Set<string> {
+        return slashRouteLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
+    }
+
+    /** The registered context-menu command names, split by kind, across every global and guild command. @internal */
+    public contextMenuLeaves(): ContextMenuLeaves {
+        return contextMenuLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
     }
 }

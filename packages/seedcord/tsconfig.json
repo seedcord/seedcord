@@ -10,6 +10,9 @@
             "@subscribers/*": ["./src/subscribers/*"],
             "@hmr/*": ["./src/hmr/*"],
             "@interfaces/*": ["./src/interfaces/*"],
+            "@handlers/*": ["./src/handlers/*"],
+            "@inputs/*": ["./src/inputs/*"],
+            "@customId/*": ["./src/customId/*"],
             "@miscellaneous/*": ["./src/miscellaneous/*"],
 
             // Paths inside src/bot

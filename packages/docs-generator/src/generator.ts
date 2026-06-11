@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -5,7 +6,7 @@ import { extractPackageApiModel } from './ae-extractor';
 import { writeManifest } from './manifest';
 import { ApiDocsPaths } from './paths';
 import { buildSourceIndex } from './source-index';
-import { discoverWorkspacePackages, readPackageManifest, unscopedName } from './workspace';
+import { discoverWorkspacePackages, readPackageManifest, readReadme, unscopedName } from './workspace';
 
 import type { ApiDocsPathConfig } from './paths';
 import type { PackageDocResult } from './types';
@@ -152,6 +153,14 @@ export class ApiDocsGenerator {
             });
             result.sources = scan.sources;
             if (scan.reexports.length > 0) result.reexports = scan.reexports;
+
+            const readme = await readReadme(packageDir);
+            if (readme) result.readme = readme;
+
+            if (this.githubBase && existsSync(path.join(packageDir, 'CHANGELOG.md'))) {
+                const repoRelativeDir = this.paths.toRepoRelative(packageDir).split(path.sep).join('/');
+                result.changelogUrl = `${this.githubBase}/blob/${this.ref}/${repoRelativeDir}/CHANGELOG.md`;
+            }
         }
 
         await writeManifest(

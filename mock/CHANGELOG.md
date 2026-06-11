@@ -1,5 +1,24 @@
 # @seedcord/mock
 
+## 0.2.19
+
+### Patch Changes
+
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [b1c36ff]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+    - seedcord@0.12.0
+    - @seedcord/plugins@0.6.1
+
 ## 0.2.18
 
 ### Patch Changes

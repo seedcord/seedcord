@@ -152,21 +152,45 @@ export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     return sortCatalogEntries(entries.filter((entry): entry is PackageCatalogEntry => entry !== null));
 });
 
-// Cached so the layout and page share one fetch + setVersion per (folder, version).
-export const loadActiveVersion = cache(async (folder: string, versionId: string): Promise<NavigationCategory[]> => {
+// One setVersion per (folder, version) per request, shared via cache() across the layout and the
+// page's categories/reexports/readme loaders, so project.json is fetched and the model rebuilt once
+// rather than once per loader. Returns the entry (callers read by fullName) or null when unresolved.
+const ensureActiveVersion = cache(async (folder: string, versionId: string): Promise<PackageIndexEntry | null> => {
     const engine = await getDocsEngine();
     const entry = await engine.getEntry(folder);
-    if (!entry) {
-        return [];
-    }
+    if (!entry) return null;
 
     try {
         await engine.setVersion(folder, versionId);
     } catch {
-        return [];
+        return null;
     }
 
+    return entry;
+});
+
+export const loadActiveVersion = cache(async (folder: string, versionId: string): Promise<NavigationCategory[]> => {
+    const entry = await ensureActiveVersion(folder, versionId);
+    if (!entry) return [];
+
+    const engine = await getDocsEngine();
     return buildCategories(engine.getPackageDirectory(entry.fullName));
+});
+
+export const loadReadme = cache(async (folder: string, versionId: string): Promise<string | null> => {
+    const entry = await ensureActiveVersion(folder, versionId);
+    if (!entry) return null;
+
+    const engine = await getDocsEngine();
+    return engine.getPackage(entry.fullName)?.manifest.readme ?? null;
+});
+
+export const loadChangelogUrl = cache(async (folder: string, versionId: string): Promise<string | null> => {
+    const entry = await ensureActiveVersion(folder, versionId);
+    if (!entry) return null;
+
+    const engine = await getDocsEngine();
+    return engine.getPackage(entry.fullName)?.manifest.changelogUrl ?? null;
 });
 
 export interface ReexportLink {
@@ -179,16 +203,10 @@ export interface ReexportLink {
 // The umbrella package re-exports symbols declared in sibling packages; resolve each to its declaring
 // package's page so the overview href targets the canonical entity instead of a duplicate.
 export const loadReexports = cache(async (folder: string, versionId: string): Promise<ReexportLink[]> => {
-    const engine = await getDocsEngine();
-    const entry = await engine.getEntry(folder);
+    const entry = await ensureActiveVersion(folder, versionId);
     if (!entry) return [];
 
-    try {
-        await engine.setVersion(folder, versionId);
-    } catch {
-        return [];
-    }
-
+    const engine = await getDocsEngine();
     const reexports = engine.getPackage(entry.fullName)?.root.reexports ?? [];
     const resolver = engine.resolver();
     return reexports.reduce<ReexportLink[]>((acc, ref) => {

@@ -72,7 +72,13 @@ interface DropdownListboxProps {
 
 function DropdownListbox({ listboxId, groups, value, onSelect }: DropdownListboxProps): ReactElement {
     return (
-        <ul id={listboxId} role="listbox" className={cn('max-h-72 space-y-0.5 overflow-y-auto overscroll-y-contain')}>
+        <ul
+            id={listboxId}
+            role="listbox"
+            className={cn(
+                'max-h-[min(18rem,var(--radix-popover-content-available-height))] space-y-0.5 overflow-y-auto overscroll-y-contain'
+            )}
+        >
             {groups.map((group, index) => (
                 <Fragment key={group.id}>
                     {index > 0 ? (
@@ -202,6 +208,7 @@ export function Dropdown({
             <PopoverContent
                 align="start"
                 sideOffset={6}
+                collisionPadding={8}
                 container={container ?? null}
                 className={dropdownContentClassName}
             >

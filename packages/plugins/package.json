@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/plugins",
     "type": "module",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "description": "Official plugins for Seedcord Discord bot framework",
     "repository": {
         "type": "git",
@@ -58,7 +58,6 @@
         }
     },
     "dependencies": {
-        "@seedcord/cli": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

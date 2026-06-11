@@ -1,5 +1,5 @@
 import type { ConfirmableContext, ConfirmableFactory } from './types';
-import type { Repliables } from '@interfaces/Handler';
+import type { Repliables } from '@handlers/BaseHandler';
 import type { MessageComponentInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

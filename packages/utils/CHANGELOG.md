@@ -1,5 +1,23 @@
 # @seedcord/utils
 
+## 0.5.0
+
+### Minor Changes
+
+- 19bae0a: Add `routeLeavesOf` to `@seedcord/utils/internal`, the single walk that turns a slash command's JSON into its route-leaf keys. `@seedcord/cli` codegen now reads route leaves from there and depends on `discord-api-types` for its API enums and types instead of the full `discord.js` runtime.
+
+### Patch Changes
+
+- 19bae0a: - **BREAKING**: removed the public `buildSlashRoute` builder and the `CommandRouteString` type from `seedcord`. Slash routes are autocompletable typed literals from the generated registry now, so write them directly, e.g. `@SlashRoute('demo/setup')`.
+    - Moved the route-string assembly to `@seedcord/utils/internal`, shared by the framework and `seedcord codegen` so a dispatched interaction and a generated registry key can never diverge. The interaction-to-route extraction is internal now.
+    - Removed the unused `SeedcordErrorCode.UtilInvalidSlashRouteArgument`.
+- 19bae0a: Fix `roundToDenomination`'s second example
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+- Updated dependencies [19bae0a]
+    - @seedcord/types@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

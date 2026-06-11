@@ -17,6 +17,8 @@ interface SidebarSelectionState {
     effectivePackageId: string;
     effectiveVersionId: string;
     setPendingSelection: Dispatch<SetStateAction<PendingSidebarSelection | null>>;
+    // True until the switch commits; the catalog still holds the prior selection's categories.
+    isPendingSelection: boolean;
 }
 export function useSidebarSelectionState(
     catalog: SidebarProps['catalog'],
@@ -82,6 +84,7 @@ export function useSidebarSelectionState(
         fallbackVersionId,
         effectivePackageId,
         effectiveVersionId,
-        setPendingSelection
+        setPendingSelection,
+        isPendingSelection: pendingSelection !== null
     } satisfies SidebarSelectionState;
 }

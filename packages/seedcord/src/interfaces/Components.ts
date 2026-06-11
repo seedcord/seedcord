@@ -2,6 +2,9 @@ import {
     ActionRowBuilder,
     ButtonBuilder,
     ChannelSelectMenuBuilder,
+    CheckboxBuilder,
+    CheckboxGroupBuilder,
+    CheckboxGroupOptionBuilder,
     ContainerBuilder,
     ContextMenuCommandBuilder,
     EmbedBuilder,
@@ -12,6 +15,8 @@ import {
     MediaGalleryBuilder,
     MentionableSelectMenuBuilder,
     ModalBuilder,
+    RadioGroupBuilder,
+    RadioGroupOptionBuilder,
     RoleSelectMenuBuilder,
     SectionBuilder,
     SeparatorBuilder,
@@ -28,10 +33,8 @@ import {
 
 import { getBotColor } from '@miscellaneous/botColorHolder';
 
-import type { Join, NonEmptyTuple } from 'type-fest';
-
 /**
- * Available Discord.js builder classes for use with BuilderComponent
+ * Available Discord.js builder classes for use with BuilderComponent for commands, embeds, modals, etc.
  *
  * @internal
  */
@@ -50,6 +53,11 @@ export const BuilderTypes = {
     label: LabelBuilder,
     text_input: TextInputBuilder,
     file_upload: FileUploadBuilder,
+    checkbox: CheckboxBuilder,
+    checkbox_group: CheckboxGroupBuilder,
+    checkbox_group_option: CheckboxGroupOptionBuilder,
+    radio_group: RadioGroupBuilder,
+    radio_group_option: RadioGroupOptionBuilder,
 
     // Action Row Components
     button: ButtonBuilder,
@@ -70,7 +78,7 @@ export const BuilderTypes = {
 };
 
 /**
- * Available Discord.js action row classes for use with RowComponent
+ * Available Discord.js action row classes for use with RowComponent for Select Menus and Buttons
  *
  * @internal
  */
@@ -103,12 +111,12 @@ export type InstantiatedBuilder<BuilderKey extends BuilderType> = InstanceType<(
 /**
  * Available Discord.js action row types for use with RowComponent
  */
-export type ActionRowComponentType = keyof typeof RowTypes;
+export type RowType = keyof typeof RowTypes;
 
 /**
  * @internal
  */
-export type InstantiatedActionRow<RowKey extends ActionRowComponentType> = InstanceType<(typeof RowTypes)[RowKey]>;
+export type InstantiatedActionRow<RowKey extends RowType> = InstanceType<(typeof RowTypes)[RowKey]>;
 
 /**
  * Base class for Discord component wrappers
@@ -134,7 +142,7 @@ export abstract class BaseComponent<TComponent> {
      * Please do not use for further configuration, use `this.instance` for that.
      * @example new SomeComponent().component
      */
-    public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<ActionRowComponentType>;
+    public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<RowType>;
 
     /**
      * Gets the component instance for configuration
@@ -146,35 +154,6 @@ export abstract class BaseComponent<TComponent> {
      */
     protected get instance(): TComponent {
         return this._component;
-    }
-
-    /**
-     * Builds a customId string for interactive components with no arguments
-     *
-     * @param prefix - The route prefix that handlers will match against
-     * @returns The prefix as the customId
-     */
-    public buildCustomId<Prefix extends string>(prefix: Prefix): Prefix;
-    /**
-     * Builds a customId string for interactive components
-     *
-     * Creates customIds in the format `prefix:arg1-arg2-arg3` for buttons, modals, etc.
-     * Arguments are joined with hyphens and separated from prefix with a colon.
-     *
-     * @param prefix - The route prefix that handlers will match against
-     * @param args - Additional arguments to encode in the customId
-     * @returns Formatted customId string
-     */
-    public buildCustomId<Prefix extends string, Args extends NonEmptyTuple<string>>(
-        prefix: Prefix,
-        ...args: Args
-    ): `${Prefix}:${Join<Args, '-'>}`;
-
-    public buildCustomId<Prefix extends string, Args extends NonEmptyTuple<string> | []>(
-        prefix: Prefix,
-        ...args: Args
-    ): Prefix | `${Prefix}:${string}` {
-        return args.length === 0 ? prefix : `${prefix}:${args.join('-')}`;
     }
 }
 
@@ -230,9 +209,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
  *
  * @typeParam RowKey - The Discord.js action row type being wrapped
  */
-export abstract class RowComponent<RowKey extends ActionRowComponentType> extends BaseComponent<
-    InstantiatedActionRow<RowKey>
-> {
+export abstract class RowComponent<RowKey extends RowType> extends BaseComponent<InstantiatedActionRow<RowKey>> {
     protected constructor(public readonly type: RowKey) {
         const ComponentClass = RowTypes[type] as unknown;
         super(ComponentClass as new () => InstantiatedActionRow<RowKey>);

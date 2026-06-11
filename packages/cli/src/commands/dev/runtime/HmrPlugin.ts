@@ -5,8 +5,8 @@ import chalk from 'chalk';
 import { minimatch } from 'minimatch';
 
 import type { DevEvent } from './events';
-import type { HmrEventType, HmrUpdateEvent } from '@api/Hmr';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types/internal';
 import type {
     EnvironmentModuleNode,
     HotUpdateOptions,

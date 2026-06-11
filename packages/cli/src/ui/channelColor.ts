@@ -4,9 +4,18 @@ const PALETTE = ['cyan', 'green', 'yellow', 'magenta', 'blue', 'cyanBright'] as 
 
 type ChannelColor = (typeof PALETTE)[number];
 
+const assigned = new Map<string, ChannelColor>();
+
 export function channelColor(channel: string): ChannelColor {
-    // Cheap order-insensitive sum; collisions are purely cosmetic across the handful of dev channels.
-    let hash = 0;
-    for (const char of channel) hash = (hash + char.charCodeAt(0)) % PALETTE.length;
-    return PALETTE[hash] ?? PALETTE[0];
+    const existing = assigned.get(channel);
+    if (existing) return existing;
+
+    const color = PALETTE[assigned.size % PALETTE.length] ?? PALETTE[0];
+    assigned.set(channel, color);
+    return color;
+}
+
+// the map is module-level, so clear it per dev session or stale channels skew the next session's colors.
+export function resetChannelColors(): void {
+    assigned.clear();
 }

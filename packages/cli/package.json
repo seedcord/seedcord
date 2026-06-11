@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/cli",
     "type": "module",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "CLI for seedcord",
     "bin": {
         "seedcord": "./bin/seedcord.mjs"
@@ -29,9 +29,6 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
-        },
-        "./vite-hmr": {
-            "types": "./dist/api/vite-hmr.d.mts"
         }
     },
     "scripts": {
@@ -58,6 +55,7 @@
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "commander": "^15.0.0",
+        "discord-api-types": "catalog:deps",
         "fix-esm-import-path": "^1.10.3",
         "ink": "7.0.3",
         "ink-spinner": "^5.0.0",
@@ -72,6 +70,7 @@
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@types/react": "catalog:react",
+        "discord.js": "catalog:peer",
         "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",

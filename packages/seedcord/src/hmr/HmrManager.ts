@@ -3,7 +3,7 @@ import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/cli';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });
