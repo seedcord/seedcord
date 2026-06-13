@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/seedcord/seedcord/main/assets/banner.png" alt="seedcord" width="100%" />
+  <img src="https://cdn.seedcord.org/assets/banner.webp" alt="seedcord" width="100%" />
 </p>
 
 ---

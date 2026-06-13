@@ -10,7 +10,7 @@ import { CommandListItem } from './CommandListItem';
 import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from './constants';
 import { useCommandPaletteSearch } from './useCommandPaletteSearch';
 
-import type { CommandAction, SearchGroup } from './types';
+import type { CommandAction } from './types';
 import type { CommandPaletteController } from './useCommandPaletteController';
 import type { KeyboardEvent, ReactElement } from 'react';
 
@@ -31,58 +31,22 @@ interface CommandListContentProps {
     showInitialHint: boolean;
     isSearching: boolean;
     errorMessage?: string;
-    groups: SearchGroup[];
+    results: CommandAction[];
     activeIndex: number;
     onSelect: (action: CommandAction) => void;
     onActivate: (index: number) => void;
-}
-
-// Each group's rows occupy a contiguous slice of the flat active-index space, so a running offset maps a
-// row to its global index for keyboard nav.
-function renderGroups(
-    groups: SearchGroup[],
-    activeIndex: number,
-    onSelect: (action: CommandAction) => void,
-    onActivate: (index: number) => void
-): ReactElement[] {
-    let offset = 0;
-    return groups.map((group) => {
-        const start = offset;
-        offset += group.results.length;
-        return (
-            <div key={group.label} role="presentation">
-                <div className={cn('flex items-center justify-between px-3 pt-2 pb-1')}>
-                    <span className={cn('text-subtle text-xs font-semibold tracking-wide')}>
-                        {group.current ? `${group.label} (current)` : group.label}
-                    </span>
-                    <span className={cn('text-xs text-(--text-faint)')}>{group.results.length}</span>
-                </div>
-                {group.results.map((action, index) => (
-                    <CommandListItem
-                        key={action.id}
-                        action={action}
-                        onSelect={onSelect}
-                        isActive={start + index === activeIndex}
-                        optionId={optionId(action.id)}
-                        index={start + index}
-                        onActivate={onActivate}
-                    />
-                ))}
-            </div>
-        );
-    });
 }
 
 function CommandListContent({
     showInitialHint,
     isSearching,
     errorMessage,
-    groups,
+    results,
     activeIndex,
     onSelect,
     onActivate
 }: CommandListContentProps): ReactElement | null {
-    const hasResults = groups.length > 0;
+    const hasResults = results.length > 0;
     // Items stay visible during a refresh (stale results) so the list doesn't flicker; the header spinner
     // signals loading. The "no results" fallback waits for loading to finish to avoid a false flash.
     const shouldShowItems = !showInitialHint && !errorMessage && hasResults;
@@ -115,7 +79,17 @@ function CommandListContent({
             {emptyContent}
             {shouldShowItems ? (
                 <div id={COMMAND_LISTBOX_ID} role="listbox" aria-label="Search results">
-                    {renderGroups(groups, activeIndex, onSelect, onActivate)}
+                    {results.map((action, index) => (
+                        <CommandListItem
+                            key={action.id}
+                            action={action}
+                            onSelect={onSelect}
+                            isActive={index === activeIndex}
+                            optionId={optionId(action.id)}
+                            index={index}
+                            onActivate={onActivate}
+                        />
+                    ))}
                 </div>
             ) : null}
         </div>
@@ -133,7 +107,7 @@ function deriveListProps(
     return {
         showInitialHint,
         isSearching,
-        groups: searchState.groups,
+        results: searchState.results,
         ...(resolvedError ? { errorMessage: resolvedError } : {})
     };
 }
@@ -155,17 +129,17 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
         query: normalizedSearch,
         open,
         scope: controller.scope,
-        kind: controller.kind
+        kind: controller.kind,
+        prerelease: controller.prerelease
     });
     const listProps = deriveListProps(searchState, normalizedSearch);
-    const { groups } = listProps;
-    const results = useMemo(() => groups.flatMap((group) => group.results), [groups]);
+    const { results } = listProps;
 
     // A new result set re-anchors the active row to the top. Adjusting during render (not in an effect)
     // avoids a wasted render pass and the set-state-in-effect smell.
-    const [trackedGroups, setTrackedGroups] = useState(groups);
-    if (trackedGroups !== groups) {
-        setTrackedGroups(groups);
+    const [trackedResults, setTrackedResults] = useState(results);
+    if (trackedResults !== results) {
+        setTrackedResults(results);
         setActiveIndex(0);
     }
 
@@ -281,10 +255,12 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
                                 listExpanded={listExpanded}
                                 scope={controller.scope}
                                 kind={controller.kind}
+                                prerelease={controller.prerelease}
                                 packages={controller.packages}
                                 container={container}
                                 onScopeChange={controller.handleScopeChange}
                                 onKindChange={controller.handleKindChange}
+                                onPrereleaseChange={controller.handlePrereleaseChange}
                             />
                             <m.div
                                 ref={scrollRef}

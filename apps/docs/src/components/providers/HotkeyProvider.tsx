@@ -12,13 +12,13 @@ interface HotkeyProviderProps {
 }
 
 export function HotkeyProvider({ children }: HotkeyProviderProps): ReactNode {
-    const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
+    const toggleCommandPalette = useUIStore((state) => state.toggleCommandPalette);
 
     useEffect(() => {
-        const unregister = registerCommandPaletteHotkey(setCommandPaletteOpen);
+        const unregister = registerCommandPaletteHotkey(toggleCommandPalette);
 
         return unregister;
-    }, [setCommandPaletteOpen]);
+    }, [toggleCommandPalette]);
 
     return children;
 }

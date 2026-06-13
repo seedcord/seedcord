@@ -262,6 +262,7 @@ export interface DocSearchEntry {
     summary: string | null;
     aliases?: string[];
     file?: string;
+    value?: string;
     tokens: string[];
 }
 

@@ -36,16 +36,11 @@ interface CommandActionPayload {
     href: string;
     kind: SearchResultKind;
     description?: string;
-}
-
-interface SearchGroupPayload {
-    label: string;
-    current: boolean;
-    results: CommandActionPayload[];
+    value?: string;
 }
 
 interface SearchPayload {
-    groups: SearchGroupPayload[];
+    results: CommandActionPayload[];
 }
 
 interface PackagesPayload {
@@ -166,6 +161,10 @@ function createBasePayload(entry: DocSearchEntry, kind: SearchResultKind): Comma
         payload.description = entry.summary;
     }
 
+    if (entry.value) {
+        payload.value = entry.value;
+    }
+
     return payload;
 }
 
@@ -254,9 +253,6 @@ const mapSearchEntry = (
     return payload;
 };
 
-type Engine = Awaited<ReturnType<typeof getDocsEngine>>;
-type PackageRef = { folder: string; fullName: string };
-
 function dedupe(rawResults: DocSearchEntry[], kind: KindFilter): DocSearchEntry[] {
     // A member's overload signatures share slug+kind; key by package too so a same-named entity in
     // another package (Logger in seedcord and services) stays a distinct result.
@@ -274,35 +270,25 @@ function dedupe(rawResults: DocSearchEntry[], kind: KindFilter): DocSearchEntry[
     return out;
 }
 
-// Groups entries by package, current package first, then the rest in index order.
-function groupByPackage(
-    engine: Engine,
-    entries: DocSearchEntry[],
-    packages: PackageRef[],
-    currentFullName: string
-): SearchGroupPayload[] {
-    const byPackage = new Map<string, DocSearchEntry[]>();
-    for (const entry of entries) {
-        const list = byPackage.get(entry.packageName) ?? [];
-        list.push(entry);
-        byPackage.set(entry.packageName, list);
-    }
-
-    const ordered = [
-        currentFullName,
-        ...packages.map((pkg) => pkg.fullName).filter((name) => name !== currentFullName)
-    ];
-    return ordered.reduce<SearchGroupPayload[]>((groups, fullName) => {
-        const list = byPackage.get(fullName);
-        if (!list) return groups;
-        const results = list
-            .map((entry) => mapSearchEntry(engine, entry))
-            .filter((entry): entry is CommandActionPayload => entry !== null);
-        if (results.length) {
-            groups.push({ label: formatDisplayPackageName(fullName), current: fullName === currentFullName, results });
+// the package you're viewing is searched at its URL version so older versions stay searchable. the
+// other packages follow the toggle, stable heads when off and pre-release heads when on.
+async function loadSearchTargets(
+    engine: Awaited<ReturnType<typeof getDocsEngine>>,
+    targets: readonly { folder: string }[],
+    currentFolder: string,
+    version: string,
+    prerelease: boolean
+): Promise<void> {
+    for (const pkg of targets) {
+        if (pkg.folder === currentFolder) {
+            await engine.setVersion(pkg.folder, version).catch(() => undefined);
+            continue;
         }
-        return groups;
-    }, []);
+        const entry = await engine.getEntry(pkg.folder);
+        const channel = prerelease ? entry?.prerelease : entry?.stable;
+        if (!channel) continue;
+        await engine.setVersion(pkg.folder, channel.latest).catch(() => undefined);
+    }
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse<SearchPayload | PackagesPayload>> {
@@ -319,25 +305,22 @@ export async function GET(request: NextRequest): Promise<NextResponse<SearchPayl
     const query = (url.searchParams.get('q') ?? '').trim();
     const current = resolvePackageIdentity(packages, url.searchParams.get('pkg'));
     if (query.length < MIN_QUERY_LENGTH || !current) {
-        return NextResponse.json({ groups: [] });
+        return NextResponse.json({ results: [] });
     }
 
     const scopeParam = url.searchParams.get('scope') ?? 'all';
     const scoped = scopeParam === 'all' ? null : resolvePackageIdentity(packages, scopeParam);
     const kind = (url.searchParams.get('kind') ?? 'all') as KindFilter;
     const version = url.searchParams.get('version') ?? DEFAULT_VERSION;
+    const prerelease = url.searchParams.get('prerelease') === '1';
 
-    // 'all' loads every package (the current one at its version, the rest at latest) so cross-package
-    // matches surface; a specific scope loads only that package.
     const targets = scoped ? packages.filter((pkg) => pkg.folder === scoped.folder) : packages;
-    for (const pkg of targets) {
-        await engine
-            .setVersion(pkg.folder, pkg.folder === current.folder ? version : DEFAULT_VERSION)
-            .catch(() => undefined);
-    }
+    await loadSearchTargets(engine, targets, current.folder, version, prerelease);
 
     const rawResults = scoped ? engine.search(query, scoped.fullName) : engine.search(query);
-    const groups = groupByPackage(engine, dedupe(rawResults, kind), packages, current.fullName);
+    const results = dedupe(rawResults, kind)
+        .map((entry) => mapSearchEntry(engine, entry))
+        .filter((entry): entry is CommandActionPayload => entry !== null);
 
-    return NextResponse.json({ groups });
+    return NextResponse.json({ results });
 }

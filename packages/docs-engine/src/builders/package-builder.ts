@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { ApiAdapter } from '@model/adapter';
+import { DocKind } from '@model/kinds';
 import { PackageDirectory } from '@src/PackageDirectory';
 import { inlineTypeToText, sigPartsToText } from '@transformers/signature-renderer';
 
@@ -90,6 +91,10 @@ function createSearchEntry(node: DocNode, manifest: DocManifestPackage): DocSear
 
     if (file) {
         entry.file = file;
+    }
+
+    if (node.kind === DocKind.EnumMember && node.defaultValue) {
+        entry.value = node.defaultValue;
     }
 
     return entry;
@@ -221,6 +226,12 @@ function collectTokens(node: DocNode, summary: string, file: string | undefined,
 
     for (const source of textSources) {
         addTokensFromText(tokens, source);
+    }
+
+    // enum members only. a blanket defaultValue index would also pull noise like the `true` on a
+    // brand field into search.
+    if (node.kind === DocKind.EnumMember) {
+        addTokensFromText(tokens, node.defaultValue);
     }
 
     for (const signature of node.signatures) {

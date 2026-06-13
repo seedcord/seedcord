@@ -1,35 +1,29 @@
 /* eslint-disable no-console -- CLI script so console is ok */
 import { Converters, Envapter } from 'envapt';
 
+import { buildPurgeBody } from './purge-args';
+
 // Purges the Cloudflare edge cache for the docs CDN.
 //
 // Needs CLOUDFLARE_CACHE_PURGE_TOKEN (Zone -> Cache Purge) + CLOUDFLARE_ZONE_ID
-//   pnpm docs:purge                  # purge everything on the zone
-//   pnpm docs:purge --files <url...> # purge specific URLs only
-//   pnpm docs:purge --dry-run        # print the request, but don't actually send it
+//   pnpm docs:purge                     # purge everything on the zone
+//   pnpm docs:purge --files <url...>    # purge specific full URLs
+//   pnpm docs:purge --prefixes <p...>   # purge by URL prefix, host plus path, no scheme, max 30
+//   pnpm docs:purge --dry-run           # print the request, but don't actually send it
 
 const CF_API = 'https://api.cloudflare.com/client/v4';
-
-type PurgeBody = { purge_everything: true } | { files: string[] };
 
 function read(key: string): string {
     return Envapter.getUsing(key, { converter: Converters.String, required: true });
 }
 
-function parseFiles(argv: readonly string[]): string[] {
-    const index = argv.indexOf('--files');
-    if (index < 0) return [];
-    return argv.slice(index + 1).filter((value) => !value.startsWith('--'));
-}
-
 async function main(): Promise<void> {
     const argv = process.argv.slice(2);
     const dryRun = argv.includes('--dry-run');
-    const files = parseFiles(argv);
     const token = read('CLOUDFLARE_CACHE_PURGE_TOKEN');
     const zoneId = read('CLOUDFLARE_ZONE_ID');
 
-    const body: PurgeBody = files.length > 0 ? { files } : { purge_everything: true };
+    const body = buildPurgeBody(argv);
     console.log(`${dryRun ? '[dry-run] would purge' : 'purging'}: ${JSON.stringify(body)}`);
     if (dryRun) return;
 

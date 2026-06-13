@@ -11,6 +11,7 @@ import { getMockPackage } from '../utils/test-helpers';
 import type { IndexJson } from '@remote/index-json';
 import type { Fetcher } from '@remote/index-loader';
 import type { DocProjectFile } from '@remote/project-file';
+import type { DocPackageModel } from '@src/types';
 
 const INDEX_URL = 'https://cdn.test/index.json';
 const MOCK_FOLDER = 'mock-docs';
@@ -22,8 +23,9 @@ function jsonResponse(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), { status });
 }
 
-function makeEngine(fetcher: Fetcher): VersionedDocsEngine {
-    return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher), fetcher);
+// default to a fresh per-engine cache so tests stay isolated while the model-cache test shares one.
+function makeEngine(fetcher: Fetcher, modelCache = new Map<string, DocPackageModel>()): VersionedDocsEngine {
+    return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher), fetcher, modelCache);
 }
 
 function fixtureFetcher(): Fetcher {
@@ -85,6 +87,25 @@ describe('VersionedDocsEngine', () => {
         expect(engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-class')?.name).toBe('MockClass');
         expect(engine.listPackageEntities(MOCK_PACKAGE_FULL_NAME)?.classes).toContain('mock-class');
         expect(engine.search('MockClass', MOCK_PACKAGE_FULL_NAME).length).toBeGreaterThan(0);
+    });
+
+    it('deserializes a package once per version across engines sharing a model cache', async () => {
+        const cache = new Map<string, DocPackageModel>();
+        const fetched: string[] = [];
+        const counting: Fetcher = (url) => {
+            fetched.push(url);
+            return fixtureFetcher()(url);
+        };
+
+        const first = makeEngine(counting, cache);
+        await first.setVersion(MOCK_FOLDER, 'latest');
+        const second = makeEngine(counting, cache);
+        await second.setVersion(MOCK_FOLDER, 'latest');
+
+        const projectFetches = fetched.filter((url) => url.includes(`/${MOCK_FOLDER}/`)).length;
+        expect(projectFetches).toBe(1);
+        expect(second.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-class')?.name).toBe('MockClass');
+        expect(second.search('MockClass', MOCK_PACKAGE_FULL_NAME).length).toBeGreaterThan(0);
     });
 
     it('resolves an in-package reference by key', async () => {

@@ -4,37 +4,23 @@ import { log } from './logger';
 
 type Unregister = () => void;
 
-type OpenPalette = (nextOpen: boolean) => void;
-
 const HOTKEY = 'k';
 
-function isTextInput(element: Element | null): boolean {
-    if (!element) {
-        return false;
-    }
-
-    const tagName = element.tagName.toLowerCase();
-
-    return tagName === 'input' || tagName === 'textarea' || element.hasAttribute('contenteditable');
-}
-
-export function registerCommandPaletteHotkey(update: OpenPalette): Unregister {
+export function registerCommandPaletteHotkey(toggle: () => void): Unregister {
     const handler = (event: KeyboardEvent): void => {
         if (event.key.toLowerCase() !== HOTKEY) {
             return;
         }
 
+        // no text-input guard, the cmd/ctrl modifier already separates this chord from a typed "k" so it
+        // fires even while the palette's own input has focus.
         if (!(event.metaKey || event.ctrlKey)) {
-            return;
-        }
-
-        if (isTextInput(event.target as Element)) {
             return;
         }
 
         event.preventDefault();
         log('Command palette hotkey pressed', { platform: navigator.platform });
-        update(true);
+        toggle();
     };
 
     window.addEventListener('keydown', handler);

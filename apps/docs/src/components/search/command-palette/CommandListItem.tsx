@@ -97,6 +97,9 @@ export function CommandListItem({
                     >
                         {action.label}
                     </span>
+                    {action.value ? (
+                        <span className={cn('text-subtle shrink-0 font-mono text-xs')}>= {action.value}</span>
+                    ) : null}
                 </div>
                 <span className={cn('text-subtle truncate font-mono text-xs transition-colors')}>{action.path}</span>
                 {action.description ? <span className={cn('text-subtle text-xs')}>{action.description}</span> : null}

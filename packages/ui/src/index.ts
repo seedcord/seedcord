@@ -14,6 +14,7 @@ export * from './Input';
 export * from './Popover';
 export * from './ScrollToTopButton';
 export * from './SegmentedControl';
+export * from './Switch';
 export * from './Tooltip';
 export * from './lib/cn';
 export * from './lib/motion';

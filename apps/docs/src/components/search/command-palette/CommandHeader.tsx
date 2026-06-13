@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Icon, IconSwap, Input, Dropdown, cn, tw, type DropdownOption } from '@seedcord/ui';
+import { Button, Icon, IconSwap, Input, Dropdown, Switch, cn, tw, type DropdownOption } from '@seedcord/ui';
 import { LoaderCircle, Search, X } from 'lucide-react';
 
 import { COMMAND_LISTBOX_ID } from './constants';
@@ -119,6 +119,16 @@ function CloseButtons({ onClose }: { onClose: () => void }): ReactElement {
     );
 }
 
+function PrereleaseToggle({
+    checked,
+    onChange
+}: {
+    checked: boolean;
+    onChange: (next: boolean) => void;
+}): ReactElement {
+    return <Switch size="sm" checked={checked} onCheckedChange={onChange} label="Pre-release" />;
+}
+
 interface CommandHeaderProps {
     inputRef: RefObject<HTMLInputElement | null>;
     onClose: () => void;
@@ -130,10 +140,12 @@ interface CommandHeaderProps {
     listExpanded: boolean;
     scope: string;
     kind: string;
+    prerelease: boolean;
     packages: DocsPackageOption[];
     container: HTMLElement | null;
     onScopeChange: (scope: string) => void;
     onKindChange: (kind: string) => void;
+    onPrereleaseChange: (next: boolean) => void;
 }
 
 export function CommandHeader({
@@ -147,15 +159,18 @@ export function CommandHeader({
     listExpanded,
     scope,
     kind,
+    prerelease,
     packages,
     container,
     onScopeChange,
-    onKindChange
+    onKindChange,
+    onPrereleaseChange
 }: CommandHeaderProps): ReactElement {
     return (
-        <div className={cn('border-border border-b px-4 py-3')}>
-            {/* On mobile the filters get their own row; the sm+ copy lives inline in the input's leading. */}
-            <div className={cn('mb-2 flex items-center gap-1 sm:hidden')}>
+        <div className={cn('px-4 py-3', listExpanded && 'border-border border-b')}>
+            {/* On mobile the filters and toggle share one row. On sm+ the filters move inline into the
+                input's leading and the toggle into its trailing, so neither needs its own row. */}
+            <div className={cn('mb-2 flex items-center justify-between gap-2 sm:hidden')}>
                 <FilterDropdowns
                     scope={scope}
                     kind={kind}
@@ -164,6 +179,7 @@ export function CommandHeader({
                     onScopeChange={onScopeChange}
                     onKindChange={onKindChange}
                 />
+                <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} />
             </div>
             <Input
                 ref={inputRef}
@@ -193,7 +209,15 @@ export function CommandHeader({
                         onKindChange={onKindChange}
                     />
                 }
-                trailing={<CloseButtons onClose={onClose} />}
+                trailing={
+                    <span className={cn('flex items-center gap-2')}>
+                        <span className={cn('hidden sm:flex')}>
+                            <PrereleaseToggle checked={prerelease} onChange={onPrereleaseChange} />
+                        </span>
+                        <span className={cn('hidden h-4 w-px bg-(--border) sm:block')} aria-hidden />
+                        <CloseButtons onClose={onClose} />
+                    </span>
+                }
             />
         </div>
     );

@@ -32,6 +32,15 @@ describe('DocsEngine search integration', () => {
         expect(results.some((entry) => entry.slug === 'mock-class/rest-method')).toBe(true);
     });
 
+    it('indexes numeric enum member values for code lookups', () => {
+        expect(engine.search('10').some((entry) => entry.name === 'Second')).toBe(true);
+        expect(engine.search('20').some((entry) => entry.name === 'Fifth')).toBe(true);
+    });
+
+    it('exposes the enum member value on the search entry for display', () => {
+        expect(engine.search('Second').find((entry) => entry.name === 'Second')?.value).toBe('10');
+    });
+
     it('indexes signature tokens for overloads', () => {
         const results = engine.search('rest parameters');
         const match = results.find((entry) => entry.slug === 'mock-class/rest-method');
