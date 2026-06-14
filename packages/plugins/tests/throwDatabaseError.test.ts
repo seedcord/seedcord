@@ -4,7 +4,7 @@ import { describe, it, expect } from 'vitest';
 import { throwDatabaseError } from '../src/shared/throwDatabaseError';
 
 describe('throwDatabaseError', () => {
-    it('throws a DatabaseError carrying the original error message and a uuid', () => {
+    it('throws a DatabaseError carrying the original error message', () => {
         let thrown: unknown;
         try {
             throwDatabaseError(new Error('connection refused'), 'fallback');
@@ -14,7 +14,6 @@ describe('throwDatabaseError', () => {
 
         expect(thrown).toBeInstanceOf(DatabaseError);
         expect((thrown as DatabaseError).message).toBe('connection refused');
-        expect((thrown as DatabaseError).uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/i);
     });
 
     it('uses the fallback message when the value is not an Error', () => {

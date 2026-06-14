@@ -1,13 +1,13 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { CustomError } from 'seedcord';
+import { Denial } from 'seedcord';
 
 import { throwDatabaseError } from './throwDatabaseError';
 
 /**
  * Catches and wraps database operation errors.
  *
- * Wraps non-CustomError exceptions in DatabaseError instances
+ * Wraps non-Denial exceptions in DatabaseError instances
  * with UUID tracking. Should be applied to database service methods.
  *
  * @typeParam TypeReturn - The return type of the decorated method
@@ -24,7 +24,7 @@ import { throwDatabaseError } from './throwDatabaseError';
  * ```
  *
  * @see {@link DatabaseError}
- * @see {@link CustomError}
+ * @see {@link Denial}
  * @see {@link MongoService}
  */
 export function WrapDatabaseError<TypeReturn>(errorMessage: string) {
@@ -43,7 +43,7 @@ export function WrapDatabaseError<TypeReturn>(errorMessage: string) {
             try {
                 return await originalMethod.apply(this, args);
             } catch (error) {
-                if (!(error instanceof CustomError)) {
+                if (!(error instanceof Denial)) {
                     throwDatabaseError(error, errorMessage);
                 } else {
                     throw error;
