@@ -1,4 +1,5 @@
 import type { EmojiMap } from './EmojiMap';
+import type { ErrorsConfig } from './Errors';
 import type { ClientOptions, ColorResolvable } from 'discord.js';
 
 // interactions, events, commands, services, bus subscribers
@@ -164,11 +165,9 @@ export interface Config {
     subscribers: SubscribersConfig;
 
     /**
-     * Whether to show the error stack trace in the terminal in errors caught by the `@Catchable` decorator
-     *
-     * `false` by default
+     * Settings for how the framework renders errors and reports faults.
      */
-    errorStack?: boolean;
+    errors?: ErrorsConfig;
 
     /**
      * Accent and embed color applied to every `BuilderComponent` (embeds, containers).
