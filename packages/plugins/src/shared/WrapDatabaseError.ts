@@ -1,5 +1,6 @@
-import { CustomError, SeedcordErrorCode } from 'seedcord';
-import { SeedcordError } from 'seedcord/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { CustomError } from 'seedcord';
 
 import { throwDatabaseError } from './throwDatabaseError';
 

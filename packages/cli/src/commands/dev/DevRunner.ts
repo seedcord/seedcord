@@ -1,8 +1,9 @@
 import { existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { Logger, SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { Logger } from '@seedcord/services';
 import { SeedcordBrand, type Brandable } from '@seedcord/types/internal';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';

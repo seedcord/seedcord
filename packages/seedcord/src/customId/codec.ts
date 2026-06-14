@@ -1,7 +1,7 @@
 /* eslint-disable no-magic-numbers -- lots of bigints */
 
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordRangeError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordRangeError } from '@seedcord/errors/internal';
 
 import { InvalidCustomId } from './Errors';
 

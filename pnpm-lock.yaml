@@ -328,6 +328,9 @@ importers:
       '@commander-js/extra-typings':
         specifier: ^15.0.0
         version: 15.0.0(commander@15.0.0)
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services
@@ -537,6 +540,9 @@ importers:
 
   packages/plugins:
     dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services
@@ -589,6 +595,9 @@ importers:
 
   packages/seedcord:
     dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services

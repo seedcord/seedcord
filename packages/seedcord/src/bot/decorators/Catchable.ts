@@ -1,5 +1,6 @@
-import { Logger, SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { Logger } from '@seedcord/services';
 import { MessageFlags } from 'discord.js';
 
 import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';

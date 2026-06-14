@@ -4,8 +4,8 @@ import { mkdir } from 'node:fs/promises';
 import { createRequire as createNodeRequire } from 'node:module';
 import { dirname, extname, relative, resolve } from 'node:path';
 
-import { isSeedcordError, SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';

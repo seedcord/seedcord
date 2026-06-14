@@ -1,5 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError, SeedcordRangeError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, SeedcordRangeError } from '@seedcord/errors/internal';
 
 import { computeLayoutHash, decodeBody, encodeBody, HASH_LENGTH } from './codec';
 import { InvalidCustomId, StaleCustomId } from './Errors';

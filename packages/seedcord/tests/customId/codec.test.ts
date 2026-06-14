@@ -1,10 +1,10 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { decodeFor, prefixOf } from '@customId/CustomId';
 import { CustomId, InvalidCustomId, StaleCustomId } from '@customId/index';
 
-import type { SeedcordError } from '@seedcord/services/internal';
+import type { SeedcordError } from '@seedcord/errors/internal';
 
 // the SeedcordError code a thrown error carries, or undefined when it threw something else.
 function thrownCode(run: () => unknown): SeedcordErrorCode | undefined {

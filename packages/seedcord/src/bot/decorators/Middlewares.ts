@@ -1,5 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
 import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventMiddleware } from '@handlers/event';

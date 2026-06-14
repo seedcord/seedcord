@@ -55,6 +55,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/errors": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

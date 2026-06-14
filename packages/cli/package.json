@@ -50,6 +50,7 @@
     },
     "dependencies": {
         "@commander-js/extra-typings": "^15.0.0",
+        "@seedcord/errors": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

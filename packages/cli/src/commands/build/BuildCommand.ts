@@ -1,4 +1,4 @@
-import { isSeedcordError } from '@seedcord/services';
+import { isSeedcordError } from '@seedcord/errors';
 
 import { BaseCommand } from '@core/BaseCommand';
 

@@ -34,6 +34,7 @@ export * from '@hmr/index';
 export * from './Seedcord';
 
 // Export other packages
+export * from '@seedcord/errors';
 export * from '@seedcord/services';
 export type * from '@seedcord/types';
 export * from '@seedcord/utils';

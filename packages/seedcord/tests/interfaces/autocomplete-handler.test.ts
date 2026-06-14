@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { AutocompleteRoute } from '@bDecorators/Interactions';

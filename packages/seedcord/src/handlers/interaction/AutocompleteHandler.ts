@@ -1,5 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '@handlers/BaseHandler';

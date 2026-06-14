@@ -1,11 +1,6 @@
-import {
-    HealthCheck,
-    CoordinatedShutdown,
-    CoordinatedStartup,
-    SeedcordErrorCode,
-    StartupPhase
-} from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 

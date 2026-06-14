@@ -1,11 +1,12 @@
 import 'reflect-metadata';
 
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
-import { HmrModuleHandler, keepDefined, Logger, Plugin, SeedcordErrorCode, ShutdownPhase } from 'seedcord';
+import { HmrModuleHandler, keepDefined, Logger, Plugin, ShutdownPhase } from 'seedcord';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
