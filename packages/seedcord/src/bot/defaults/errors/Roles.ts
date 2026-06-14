@@ -1,13 +1,30 @@
 import { GuildMember, Role, TextChannel } from 'discord.js';
 
-import { CustomError } from '@interfaces/Components';
+import { Denial, DenialEmbed } from '@interfaces/Components';
 
+import type { ReplyResponse } from '@seedcord/types';
 import type { Guild } from 'discord.js';
+
+type PermSubject = Role | TextChannel | Guild | GuildMember;
+
+function mentionFor(subject: PermSubject): string {
+    if (subject instanceof Role) return `<@&${subject.id}>`;
+    if (subject instanceof TextChannel) return `<#${subject.id}>`;
+    if (subject instanceof GuildMember) return `<@${subject.id}>`;
+    return `\`${subject.name}\``;
+}
+
+function labelFor(subject: PermSubject): string {
+    if (subject instanceof Role) return 'role';
+    if (subject instanceof TextChannel) return 'channel';
+    if (subject instanceof GuildMember) return 'member';
+    return 'guild';
+}
 
 /**
  * Error thrown when attempting to modify a role higher than the bot's highest role.
  */
-export class RoleHigherThanMe extends CustomError {
+export class RoleHigherThanMe extends Denial {
     /**
      * Creates a new RoleHigherThanMe error.
      *
@@ -19,18 +36,21 @@ export class RoleHigherThanMe extends CustomError {
         public botRole: Role
     ) {
         super(message);
+    }
 
-        this.response.setDescription(
+    render(): ReplyResponse {
+        const embed = new DenialEmbed(
             `I cannot assign a role that is higher than me.\n\n` +
                 `The role <@&${this.role.id}> is higher than my role <@&${this.botRole.id}> in the hierarchy.`
         );
+        return { kind: 'embed', embeds: [embed.component] };
     }
 }
 
 /**
  * Error thrown when attempting to assign a managed/bot role.
  */
-export class CannotAssignBotRole extends CustomError {
+export class CannotAssignBotRole extends Denial {
     /**
      * Creates a new CannotAssignBotRole error.
      *
@@ -38,15 +58,18 @@ export class CannotAssignBotRole extends CustomError {
      */
     constructor(message = 'I cannot assign a managed role.') {
         super(message);
+    }
 
-        this.response.setDescription('I cannot assign a managed role.');
+    render(): ReplyResponse {
+        const embed = new DenialEmbed('I cannot assign a managed role.');
+        return { kind: 'embed', embeds: [embed.component] };
     }
 }
 
 /**
  * Error thrown when a requested role does not exist.
  */
-export class RoleDoesNotExist extends CustomError {
+export class RoleDoesNotExist extends Denial {
     /**
      * Creates a new RoleDoesNotExist error.
      *
@@ -58,59 +81,46 @@ export class RoleDoesNotExist extends CustomError {
         public roleId: string
     ) {
         super(message);
+    }
 
-        this.response.setDescription(`The role with ID \`${this.roleId}\` does not exist.`);
+    render(): ReplyResponse {
+        const embed = new DenialEmbed(`The role with ID \`${this.roleId}\` does not exist.`);
+        return { kind: 'embed', embeds: [embed.component] };
     }
 }
 
 /**
  * Error thrown when required permissions are missing.
  */
-export class MissingPermissions extends CustomError {
+export class MissingPermissions extends Denial {
     /**
      * Creates a new MissingPermissions error.
      *
      * @param message - The error message
-     * @param missingPerms - Array of missing permission names
      * @param where - Location or subject where permissions are missing
+     * @param missingPerms - Array of missing permission names
      */
     constructor(
         message: string,
-        public where: Role | TextChannel | Guild | GuildMember,
+        public where: PermSubject,
         public missingPerms: string[]
     ) {
         super(message);
+    }
 
+    render(): ReplyResponse {
         const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
-
-        const mention =
-            this.where instanceof Role
-                ? `<@&${this.where.id}>`
-                : this.where instanceof TextChannel
-                  ? `<#${this.where.id}>`
-                  : this.where instanceof GuildMember
-                    ? `<@${this.where.id}>`
-                    : `\`${this.where.name}\``;
-
-        const label =
-            this.where instanceof Role
-                ? 'role'
-                : this.where instanceof TextChannel
-                  ? 'channel'
-                  : this.where instanceof GuildMember
-                    ? 'member'
-                    : 'guild';
-
-        this.response.setDescription(
-            `The ${label} ${mention} is missing the following permission entries:\n\n${bullets}`
+        const embed = new DenialEmbed(
+            `The ${labelFor(this.where)} ${mentionFor(this.where)} is missing the following permission entries:\n\n${bullets}`
         );
+        return { kind: 'embed', embeds: [embed.component] };
     }
 }
 
 /**
  * Error thrown when a target has permissions that must not be present.
  */
-export class HasDangerousPermissions extends CustomError {
+export class HasDangerousPermissions extends Denial {
     /**
      * Creates a new HasDangerousPermissions error.
      *
@@ -120,33 +130,17 @@ export class HasDangerousPermissions extends CustomError {
      */
     constructor(
         message: string,
-        public target: Role | TextChannel | Guild | GuildMember,
+        public target: PermSubject,
         public dangerousPerms: string[]
     ) {
         super(message);
+    }
 
+    render(): ReplyResponse {
         const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-
-        const mention =
-            this.target instanceof Role
-                ? `<@&${this.target.id}>`
-                : this.target instanceof TextChannel
-                  ? `<#${this.target.id}>`
-                  : this.target instanceof GuildMember
-                    ? `<@${this.target.id}>`
-                    : `\`${this.target.name}\``;
-
-        const label =
-            this.target instanceof Role
-                ? 'role'
-                : this.target instanceof TextChannel
-                  ? 'channel'
-                  : this.target instanceof GuildMember
-                    ? 'member'
-                    : 'guild';
-
-        this.response.setDescription(
-            `The ${label} ${mention} has the following permission entries that must not be enabled:\n\n${bullets}`
+        const embed = new DenialEmbed(
+            `The ${labelFor(this.target)} ${mentionFor(this.target)} has the following permission entries that must not be enabled:\n\n${bullets}`
         );
+        return { kind: 'embed', embeds: [embed.component] };
     }
 }

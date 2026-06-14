@@ -1,32 +1,31 @@
-import { CustomError } from '@interfaces/Components';
+import { Denial, DenialEmbed } from '@interfaces/Components';
 
-import type { UUID } from 'crypto';
+import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 /**
- * Generic database operation error with UUID tracking.
+ * Generic database operation error.
  *
- * Thrown for various database operation failures and includes
- * a UUID for error tracking and debugging purposes.
+ * A reported fault. The user sees the database message while the framework logs it and routes it to the
+ * `handledException` bus with the threaded uuid.
  *
  * @internal
  */
-export class DatabaseError extends CustomError {
+export class DatabaseError extends Denial {
     /**
      * Creates a new DatabaseError.
      *
      * @param message - The error message describing what went wrong
-     * @param uuid - A unique identifier for this specific error instance
      */
-    constructor(
-        message: string,
-        public uuid: UUID
-    ) {
+    constructor(message: string) {
         super(message);
-        this.emit = true; // Emit in logs regardless of environment
-        this.name = 'DatabaseError';
+        this.report = true;
+    }
 
-        this.response
-            .setTitle('Database Error')
-            .setDescription(`An error occurred while interacting with the database.\n### UUID: \`${this.uuid}\``);
+    render(ctx: RenderContext): ReplyResponse {
+        const embed = new DenialEmbed(
+            `An error occurred while interacting with the database.\n### UUID: \`${ctx.uuid}\``,
+            'Database Error'
+        );
+        return { kind: 'embed', embeds: [embed.component] };
     }
 }

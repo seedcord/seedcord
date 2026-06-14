@@ -8,6 +8,7 @@ import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { Plugin } from '@interfaces/Plugin';
 
 import { SubscribeMetadataKey } from './decorators/Subscribe';
+import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { Subscriber } from './Subscriber';
 
@@ -15,10 +16,11 @@ import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
 import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { TypedConstructor } from '@seedcord/types';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
-type SubscriberConstructor = TypedConstructor<typeof Subscriber>;
+// `data: never` so a concrete subscriber (which takes one subscription's payload) is assignable here
+// for storage. The per-key map restores the precise payload type at dispatch.
+type SubscriberConstructor = new (data: never, core: Core) => Subscriber<SubscriptionKey>;
 interface RegisteredSubscriberHandlerEntry {
     ctor: SubscriberConstructor;
     frequency: EventFrequency;
@@ -71,6 +73,9 @@ export class Bus extends Plugin<SubscriptionTuples> {
         this.isInitialized = true;
 
         this.registerSubscriber(UnknownException);
+        this.registerSubscriber(HandledException);
+
+        Envapter.require('UNKNOWN_EXCEPTION_WEBHOOK_URL', 'HANDLED_EXCEPTION_WEBHOOK_URL');
 
         const subscribersDir = this.core.config.subscribers.path;
         if (subscribersDir) {
@@ -154,7 +159,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
         void this.processSubscriber(event, data);
-        return super.emit(event, data);
+        // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
+        return super.emit(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
     }
 
     private async processSubscriber<KeyOfSubscribers extends SubscriptionKey>(
@@ -176,7 +182,12 @@ export class Bus extends Plugin<SubscriptionTuples> {
                     this.executedOnceHandlers.add(entry.ctor);
                 }
 
-                const instance = new entry.ctor(data, this.core);
+                // the map keys each subscriber to one subscription, so data matches this ctor's payload arm
+                const Ctor = entry.ctor as new (
+                    data: AllSubscriptions[KeyOfSubscribers],
+                    core: Core
+                ) => Subscriber<KeyOfSubscribers>;
+                const instance = new Ctor(data, this.core);
                 await instance.execute();
             } catch (err) {
                 this.logger.error(`Error in subscriber ${String(subscriberName)} handler ${entry.ctor.name}:`, err);

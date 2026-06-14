@@ -1,8 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
-import { MessageFlags } from 'discord.js';
 
+import { ReplySender } from '@bot/ReplySender';
+import { Halt } from '@interfaces/Halt';
 import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
 import type { RepliableInteractionHandler } from '@handlers/repliable';
@@ -15,8 +16,6 @@ const logger = new Logger('Catchable');
 export interface CatchableOptions {
     /** Whether to log caught errors via the framework Logger {@default false} */
     log?: boolean;
-    /** Always use followUp instead of reply/editReply {@default false} */
-    forceFollowup?: boolean;
 }
 
 /**
@@ -46,7 +45,6 @@ export function Catchable(options?: CatchableOptions) {
         descriptor: TypedPropertyDescriptor<(...args: any[]) => Promise<void>>
     ): void {
         const log = options?.log ?? false;
-        const forceFollowup = options?.forceFollowup ?? false;
 
         const originalMethod = descriptor.value;
 
@@ -58,37 +56,24 @@ export function Catchable(options?: CatchableOptions) {
             try {
                 await originalMethod.apply(this, args);
             } catch (error) {
+                if (error instanceof Halt) {
+                    if (error.reason !== undefined) logger.debug(`Halt: ${error.reason}`);
+                    return;
+                }
                 if (!(error instanceof Error)) throw error;
 
                 this.setErrored();
 
                 if (log) logger.error('Caught handler error', error);
 
-                const { response } = extractErrorResponse(
-                    error,
-                    this.core,
-                    interaction.guild,
-                    interaction.user,
-                    interaction
-                );
+                const { response } = extractErrorResponse(error, this.core, {
+                    interaction,
+                    guild: interaction.guild,
+                    user: interaction.user,
+                    metadata: interaction
+                });
 
-                const res = {
-                    embeds: [response],
-                    components: []
-                };
-
-                if (forceFollowup) {
-                    await interaction.followUp({ flags: MessageFlags.Ephemeral, ...res });
-                    return;
-                }
-
-                if (interaction.replied) {
-                    await interaction.followUp({ flags: MessageFlags.Ephemeral, ...res });
-                } else if (interaction.deferred) {
-                    await interaction.editReply(res);
-                } else {
-                    await interaction.reply({ flags: MessageFlags.Ephemeral, ...res });
-                }
+                await new ReplySender(interaction).send(response);
             }
         };
     };

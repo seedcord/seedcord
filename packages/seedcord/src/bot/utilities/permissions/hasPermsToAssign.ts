@@ -5,22 +5,18 @@ import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/
 import { checkBotPermissions } from './checkBotPermissions';
 import { getBotRole } from '../roles/getBotRole';
 
-import type { CustomError } from '@interfaces/Components';
+import type { Denial } from '@interfaces/Components';
 
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.
  */
 export interface AssignRoleErrorCtors {
     /** Custom error for role higher than bot */
-    higher?: new (message: string, role: Role, botRole: Role) => CustomError;
+    higher?: new (message: string, role: Role, botRole: Role) => Denial;
     /** Custom error for managed role assignment */
-    managed?: new (message: string) => CustomError;
+    managed?: new (message: string) => Denial;
     /** Custom error for missing Manage Roles permission */
-    missing?: new (
-        message: string,
-        where: Role | TextChannel | Guild | GuildMember,
-        missingPerms: string[]
-    ) => CustomError;
+    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Denial;
 }
 
 /**

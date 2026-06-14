@@ -8,4 +8,11 @@ export { Subscribe, type SubscribeOptions } from './decorators/Subscribe';
 export { WebhookLog } from './bases/WebhookLog';
 
 // Types
-export type { Subscriptions, SubscriptionData, SubscriptionKey, AllSubscriptions } from './types/Subscriptions';
+export type {
+    Subscriptions,
+    SubscriptionData,
+    SubscriptionKey,
+    AllSubscriptions,
+    FaultSource,
+    InteractionFaultSource
+} from './types/Subscriptions';

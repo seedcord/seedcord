@@ -1,13 +1,15 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
-import { Message } from 'discord.js';
+import { Message, MessageFlags } from 'discord.js';
 
+import { Halt } from '@interfaces/Halt';
 import { extractErrorResponse } from '@src/miscellaneous/extractErrorResponse';
 
 import type { EventHandler } from '@handlers/event';
 import type { RepliableEventHandler } from '@handlers/repliable';
-import type { CustomError } from '@interfaces/Components';
+import type { Denial } from '@interfaces/Components';
+import type { ReplyResponse } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 import type { NonEmptyTuple } from 'type-fest';
 
@@ -22,9 +24,26 @@ export interface EventCatchableOptions {
     /**
      * Whether to fail silently without trying to send a message {@default false}.
      *
-     * Can pass a list of {@link CustomError} types to only silence those specific errors.
+     * Can pass a list of {@link Denial} types to only silence those specific errors.
      */
-    silent?: boolean | NonEmptyTuple<typeof CustomError>;
+    silent?: boolean | NonEmptyTuple<typeof Denial>;
+}
+
+function isSilenced(silent: boolean | NonEmptyTuple<typeof Denial>, err: Error): boolean {
+    if (typeof silent === 'boolean') return silent;
+    return silent.some((errorType) => err instanceof errorType);
+}
+
+async function replyToMessage(message: Message, response: ReplyResponse): Promise<void> {
+    if (response.kind === 'v2') {
+        await message.reply({ flags: MessageFlags.IsComponentsV2, components: response.components });
+        return;
+    }
+    await message.reply(
+        response.content === undefined
+            ? { embeds: response.embeds }
+            : { embeds: response.embeds, content: response.content }
+    );
 }
 
 /**
@@ -39,7 +58,7 @@ export interface EventCatchableOptions {
  * @example
  * ```typescript
  * class MessageHandler extends EventHandler {
- *   \@EventCatchable({ log: true, silent: [MyCustomError] })
+ *   \@EventCatchable({ log: true, silent: [MyDenial] })
  *   async execute() {
  *     // Event handling logic
  *   }
@@ -62,6 +81,10 @@ export function EventCatchable(options?: EventCatchableOptions) {
             try {
                 await original.apply(this, args);
             } catch (err) {
+                if (err instanceof Halt) {
+                    if (err.reason !== undefined) logger.debug(`Halt: ${err.reason}`);
+                    return;
+                }
                 if (!(err instanceof Error)) throw err;
 
                 this.setErrored();
@@ -70,22 +93,16 @@ export function EventCatchable(options?: EventCatchableOptions) {
                 const eventArgs = Array.isArray(this.getEvent()) ? (this.getEvent() as unknown[]) : [this.getEvent()];
                 const msg = eventArgs.find((x): x is Message => x instanceof Message);
 
-                const { response } = extractErrorResponse(
-                    err,
-                    this.core,
-                    msg?.guild ?? null,
-                    msg?.author ?? null,
-                    eventArgs
-                );
+                const { response } = extractErrorResponse(err, this.core, {
+                    guild: msg?.guild ?? null,
+                    user: msg?.author ?? null,
+                    metadata: eventArgs
+                });
 
-                if (typeof silent === 'boolean' && silent) return;
-                if (typeof silent !== 'boolean' && silent.some((errorType) => err instanceof errorType)) {
-                    return;
-                }
-
+                if (isSilenced(silent, err)) return;
                 if (!msg) return;
 
-                await msg.reply({ embeds: [response], components: [] });
+                await replyToMessage(msg, response);
             }
         };
     };

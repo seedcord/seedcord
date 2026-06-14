@@ -3,7 +3,7 @@ import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 
 import { HasDangerousPermissions, MissingPermissions } from '@bot/defaults/errors/Roles';
 
-import type { CustomError } from '@interfaces/Components';
+import type { Denial } from '@interfaces/Components';
 import type { Nullable } from '@seedcord/types';
 import type { PermissionsBitField, TextChannel } from 'discord.js';
 
@@ -25,17 +25,13 @@ export type BotPermissionScope = readonly bigint[];
  */
 export interface PermissionErrorCtors {
     /* Error thrown when required permissions are missing */
-    missing?: new (
-        message: string,
-        where: Role | TextChannel | Guild | GuildMember,
-        missingPerms: string[]
-    ) => CustomError;
+    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Denial;
     /* Error thrown when dangerous permissions are present */
     dangerous?: new (
         message: string,
         target: Role | TextChannel | Guild | GuildMember,
         dangerousPerms: string[]
-    ) => CustomError;
+    ) => Denial;
 }
 
 /**

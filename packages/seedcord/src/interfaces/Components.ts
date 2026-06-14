@@ -33,6 +33,8 @@ import {
 
 import { getBotColor } from '@miscellaneous/botColorHolder';
 
+import type { RenderContext, ReplyResponse } from '@seedcord/types';
+
 /**
  * Available Discord.js builder classes for use with BuilderComponent for commands, embeds, modals, etc.
  *
@@ -135,11 +137,10 @@ export abstract class BaseComponent<TComponent> {
     }
 
     /**
-     * Gets the built component (should be considered read-only)
+     * Returns the live builder, ready to send in a Discord message or nest in another component.
      *
-     * Returns the finalized component ready for use in Discord messages.
-     *
-     * Please do not use for further configuration, use `this.instance` for that.
+     * Configure it through `this.instance`, not here. Reading this can apply the bot color (see
+     * {@link BuilderComponent}), so a read is not side-effect free.
      * @example new SomeComponent().component
      */
     public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<RowType>;
@@ -223,51 +224,49 @@ export abstract class RowComponent<RowKey extends RowType> extends BaseComponent
 /**
  * Pre-configured error embed with default styling
  *
- * This is bundled in {@link CustomError}s as the response.
+ * Built fresh inside a {@link Denial}'s `render` to back the embed arm of its reply.
  *
  * @internal
  */
-export class BaseErrorEmbed extends BuilderComponent<'embed'> {
+export class DenialEmbed extends BuilderComponent<'embed'> {
     /**
-     * Creates a new error embed with default configuration.
+     * Creates a new error embed.
+     *
+     * @param description - The body text shown to the user.
+     * @param title - The heading shown above the body. Defaults to `Cannot Proceed`.
      */
-    public constructor() {
+    public constructor(description: string, title = 'Cannot Proceed') {
         super('embed');
-        this.instance.setTitle('Cannot Proceed');
+        this.instance.setTitle(title).setDescription(description);
     }
 }
 
 /**
- * Base class for custom error types with Discord embed responses
+ * Base class for a user-facing refusal or a reported fault.
  *
- * Errors extending CustomError should be used with the `Catchable` decorators to implement a control flow. These errors will be caught and handled by the framework to show the user the configured response.
+ * Throw a `Denial` to stop a handler and reply to the user. The framework catches it at the controller
+ * boundary and renders {@link Denial.render}, which always decides what the user sees. With `report`
+ * false (the default) that render is all that happens. With `report` true the framework also logs the
+ * fault and publishes it to the `handledException` bus. A raw, non-Denial throw shows the generic message.
  */
-export abstract class CustomError extends Error {
-    private _emit = false;
-    public readonly response = new BaseErrorEmbed().component;
+export abstract class Denial extends Error {
+    /**
+     * Whether this denial is a reported fault. True also logs it and publishes it to the `handledException`
+     * bus. The user always sees {@link Denial.render} either way.
+     */
+    public report = false;
 
-    protected constructor(public override message: string) {
-        super(message);
+    protected constructor(message: string, options?: ErrorOptions) {
+        super(message, options);
 
+        // Error sets name to 'Error', so stamp the concrete subclass name for logs and the fault report
+        this.name = new.target.name;
         Error.captureStackTrace(this, this.constructor);
     }
 
     /**
-     * Whether this error should be emitted to logs
-     *
-     * Controls logging behavior. Errors with emit=true will always be logged,
-     * while emit=false errors may be suppressed in production.
-     *
-     * @returns True if the error should be logged
+     * Builds what the user sees. Called fresh each time the denial is shown, so the builders are new
+     * and the bot color resolves at render time rather than at construction time.
      */
-    public get emit(): boolean {
-        return this._emit;
-    }
-
-    /**
-     * Sets whether this error should be emitted to logs
-     */
-    public set emit(value: boolean) {
-        this._emit = value;
-    }
+    public abstract render(ctx: RenderContext): ReplyResponse;
 }

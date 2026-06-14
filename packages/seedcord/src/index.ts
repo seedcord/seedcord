@@ -12,6 +12,9 @@ export * from '@bot/injectors/index';
 // Bot Utilities exports
 export * from '@bUtilities/index';
 
+// Reply delivery
+export { ReplySender } from '@bot/ReplySender';
+
 // Interfaces exports
 export * from '@interfaces/index';
 
