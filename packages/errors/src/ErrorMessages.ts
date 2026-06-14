@@ -7,6 +7,9 @@ const messages = {
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing]: () =>
         'Missing UNKNOWN_EXCEPTION_WEBHOOK_URL environment variable.',
     [SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid]: () => 'Invalid UNKNOWN_EXCEPTION_WEBHOOK_URL value.',
+    [SeedcordErrorCode.ConfigHandledExceptionWebhookMissing]: () =>
+        'Missing HANDLED_EXCEPTION_WEBHOOK_URL environment variable.',
+    [SeedcordErrorCode.ConfigHandledExceptionWebhookInvalid]: () => 'Invalid HANDLED_EXCEPTION_WEBHOOK_URL value.',
 
     [SeedcordErrorCode.LifecycleAddAfterCompletion]: () =>
         'Cannot add tasks after startup sequence has already completed.',

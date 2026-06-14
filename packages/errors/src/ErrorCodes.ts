@@ -12,6 +12,10 @@ export enum SeedcordErrorCode {
     ConfigUnknownExceptionWebhookMissing = 1002,
     /** UNKNOWN_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
     ConfigUnknownExceptionWebhookInvalid = 1003,
+    /** HANDLED_EXCEPTION_WEBHOOK_URL is missing when configuring the reporter. */
+    ConfigHandledExceptionWebhookMissing = 1005,
+    /** HANDLED_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
+    ConfigHandledExceptionWebhookInvalid = 1006,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
