@@ -12,7 +12,7 @@ export class HmrManager {
     constructor() {}
 
     public init(): void {
-        if (import.meta.hot && Envapter.isDevelopment) {
+        if (import.meta.hot && (Envapter.isDevelopment || Envapter.isTest)) {
             this.logger.info('Enabled');
 
             import.meta.hot.on('seedcord:hmr', (payload) => {

@@ -47,7 +47,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
         super(core);
 
         if (this.core.config.subscribers.path) {
-            if (!Envapter.isDevelopment) return; // HMR only in development
+            if (!Envapter.isDevelopment && !Envapter.isTest) return;
             this.hmrHandler = new HmrModuleHandler({
                 handlersDir: this.core.config.subscribers.path,
                 isHandler: this.isSubscriber.bind(this),
@@ -140,8 +140,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
     /**
      * Publishes an event to its subscribers and native listeners.
      *
-     * Fire-and-forget: subscriber handlers run asynchronously and this returns before they
-     * complete, so callers must not assume side effects have landed. Errors thrown by a subscriber
+     * Fire-and-forget, so subscriber handlers run asynchronously and this returns before they
+     * complete, and callers must not assume side effects have landed. Errors thrown by a subscriber
      * are caught and logged, never surfaced here. A `'once'` subscriber is marked as executed when
      * it starts (even if it throws), so it never runs twice.
      *

@@ -87,7 +87,7 @@ export class Seedcord extends Pluggable implements Core {
      * Resets the singleton state.
      * @internal
      */
-    // @ts-expect-error: Used only for testing purposes
+    // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
         Seedcord.isInstantiated = false;
     }
@@ -97,7 +97,7 @@ export class Seedcord extends Pluggable implements Core {
      * @internal
      */
     private registerStartupTasks(): void {
-        if (Envapter.isDevelopment) this.registerHmrAwareModules();
+        if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
             this.bus.logger.utils.initialization('Subscribers', 'start');

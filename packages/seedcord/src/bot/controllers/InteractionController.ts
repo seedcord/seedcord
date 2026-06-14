@@ -110,14 +110,14 @@ export class InteractionController implements Initializeable, HmrAware {
 
         const interactionsDir = this.core.config.bot.interactions.path;
         if (!interactionsDir) {
-            // unreachable, InteractionController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping handler loading.
+            // unreachable today, guards against a path regression
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
                 'InteractionController',
                 'interactions'
             ]);
         }
 
-        if (!Envapter.isDevelopment) return; // HMR only in development
+        if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: interactionsDir,
             ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&

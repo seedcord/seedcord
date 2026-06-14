@@ -63,11 +63,11 @@ export class EventController implements Initializeable, HmrAware {
     public constructor(protected core: Core) {
         const eventsDir = this.core.config.bot.events.path;
         if (!eventsDir) {
-            // Unreachable: EventController is only constructed when path is set. Throw rather than no-op so a regression in the caller surfaces instead of silently skipping event loading.
+            // unreachable today, guards against a path regression
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['EventController', 'events']);
         }
 
-        if (!Envapter.isDevelopment) return; // HMR only in development
+        if (!Envapter.isDevelopment && !Envapter.isTest) return;
 
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: eventsDir,

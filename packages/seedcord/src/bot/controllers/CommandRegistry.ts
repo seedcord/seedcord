@@ -54,7 +54,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['CommandRegistry', 'commands']);
         }
 
-        if (!Envapter.isDevelopment) return; // HMR only in development
+        if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
             handlersDir: commandsDir,
             isHandler: this.isCommandClass.bind(this),
