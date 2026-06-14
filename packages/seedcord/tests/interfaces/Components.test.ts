@@ -1,8 +1,31 @@
-import { Colors } from 'discord.js';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { Colors, EmbedBuilder } from 'discord.js';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BuilderComponent } from '../../src/interfaces/Components';
+import { BuilderComponent, Denial } from '../../src/interfaces/Components';
 import { setBotColor } from '../../src/miscellaneous/botColorHolder';
+
+import type { RenderContext, ReplyResponse } from '@seedcord/types';
+
+const ctx: RenderContext = { uuid: '00000000-0000-0000-0000-000000000000' };
+
+class TestDenial extends Denial {
+    constructor(cause?: unknown) {
+        super('test denial', cause === undefined ? undefined : { cause });
+    }
+    render(c: RenderContext): ReplyResponse {
+        return { kind: 'embed', embeds: [new EmbedBuilder().setDescription(c.uuid)] };
+    }
+}
+
+class ReportingDenial extends Denial {
+    constructor() {
+        super('reported fault');
+        this.report = true;
+    }
+    render(): ReplyResponse {
+        return { kind: 'embed', embeds: [] };
+    }
+}
 
 class TestEmbed extends BuilderComponent<'embed'> {
     constructor() {
@@ -50,5 +73,39 @@ describe('BuilderComponent bot color', () => {
     it('does not overwrite a color the subclass set in its own constructor', () => {
         setBotColor(0xfe565a);
         expect(new PresetContainer().component.data.accent_color).toBe(0xef4860);
+    });
+});
+
+describe('Denial', () => {
+    it('is an Error', () => {
+        expect(new TestDenial()).toBeInstanceOf(Error);
+    });
+
+    it('defaults report to false', () => {
+        expect(new TestDenial().report).toBe(false);
+    });
+
+    it('lets a subclass opt into reporting', () => {
+        expect(new ReportingDenial().report).toBe(true);
+    });
+
+    it('stores an ES2022 cause', () => {
+        const cause = new Error('driver blew up');
+        expect(new TestDenial(cause).cause).toBe(cause);
+    });
+
+    it('names itself after the concrete subclass, not Error', () => {
+        expect(new TestDenial().name).toBe('TestDenial');
+        expect(new ReportingDenial().name).toBe('ReportingDenial');
+    });
+
+    it('builds a fresh response on each render', () => {
+        const denial = new TestDenial();
+        const first = denial.render(ctx);
+        const second = denial.render(ctx);
+        expect(first).not.toBe(second);
+        if (first.kind === 'embed' && second.kind === 'embed') {
+            expect(first.embeds[0]).not.toBe(second.embeds[0]);
+        }
     });
 });

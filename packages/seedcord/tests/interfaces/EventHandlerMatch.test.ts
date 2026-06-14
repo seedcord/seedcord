@@ -5,9 +5,10 @@ import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 import { EventCatchable } from '@bDecorators/EventCatchable';
 import { RegisterEvent } from '@bDecorators/Events';
 import { EventHandler } from '@handlers/event';
-import { CustomError } from '@interfaces/Components';
+import { Denial } from '@interfaces/Components';
 
 import type { Core } from '@interfaces/Core';
+import type { ReplyResponse } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;
@@ -138,9 +139,12 @@ class GenericSuperset extends EventHandler<Events.MessageCreate | Events.Message
     }
 }
 
-class BoomError extends CustomError {
+class BoomError extends Denial {
     constructor() {
         super('boom');
+    }
+    render(): ReplyResponse {
+        return { kind: 'embed', embeds: [] };
     }
 }
 
