@@ -1,5 +1,5 @@
 export * from './CooldownManager';
-export * from './Errors';
+export * from '@seedcord/errors';
 export * from './HealthCheck';
 export * from './Lifecycle';
 export * from './Logger';

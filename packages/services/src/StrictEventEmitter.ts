@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 
-import { SeedcordErrorCode } from './Errors';
-import { SeedcordError } from './Errors/SeedcordError';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 /** Tuple type used for all event payloads. */
 export type SEArgsTuple = readonly unknown[];

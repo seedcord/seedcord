@@ -1,1 +1,1 @@
-export * from './Errors/internal.index';
+export * from '@seedcord/errors/internal';

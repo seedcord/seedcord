@@ -1,12 +1,12 @@
 {
-    "name": "@seedcord/services",
+    "name": "@seedcord/errors",
     "type": "module",
-    "version": "0.7.1",
-    "description": "Services for Seedcord packages",
+    "version": "0.0.0",
+    "description": "Framework error classes for Seedcord packages",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/services"
+        "directory": "packages/errors"
     },
     "types": "./dist/index.d.mts",
     "exports": {
@@ -53,20 +53,12 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/errors": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
-        "chalk": "catalog:deps",
-        "envapt": "catalog:deps",
-        "strip-ansi": "^7.2.0",
-        "winston": "^3.19.0",
-        "winston-transport": "^4.9.0"
+        "chalk": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "type-fest": "catalog:deps"
+        "@seedcord/tsdown-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",
