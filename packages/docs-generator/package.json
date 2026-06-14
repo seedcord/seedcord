@@ -50,7 +50,7 @@
         "LICENSE"
     ],
     "dependencies": {
-        "@microsoft/api-extractor": "7.58.7",
+        "@microsoft/api-extractor": "7.58.8",
         "typescript": "catalog:peer"
     },
     "devDependencies": {

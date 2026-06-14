@@ -33,8 +33,8 @@
         "seedcord": "workspace:*"
     },
     "devDependencies": {
+        "@seedcord/cli": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/cli": "workspace:*"
+        "@seedcord/tsconfig": "workspace:*"
     }
 }
