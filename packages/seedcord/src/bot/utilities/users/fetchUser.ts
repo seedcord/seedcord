@@ -1,9 +1,27 @@
+import { Denial, DenialEmbed } from '@seedcord/kit';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 
-import { UserNotFound } from '@bot/defaults/errors/User';
-
-import type { Denial } from '@interfaces/Components';
+import type { ReplyResponse } from '@seedcord/types';
 import type { Client, User } from 'discord.js';
+
+/**
+ * Error thrown when a requested user cannot be found.
+ */
+class UserNotFound extends Denial {
+    constructor(public readonly userArg: string) {
+        super(`User not found: ${userArg}`);
+    }
+
+    render(): ReplyResponse {
+        const embed = new DenialEmbed(
+            `User probably doesn't exist or was deleted.\n` +
+                `**User Argument:** \`${this.userArg}\`\n` +
+                `Please check the user ID and try again. Only pass valid user IDs as the argument.`,
+            'User Not Found'
+        );
+        return { kind: 'embed', embeds: [embed.component] };
+    }
+}
 
 /**
  * Options for {@link fetchUser}.

@@ -24,9 +24,6 @@ export * from '@handlers/index';
 // Inputs exports
 export type * from '@inputs/index';
 
-// CustomId codec exports
-export * from '@customId/index';
-
 // Pub/Sub exports
 export * from '@subscribers/index';
 
@@ -38,6 +35,7 @@ export * from './Seedcord';
 
 // Export other packages
 export * from '@seedcord/errors';
+export * from '@seedcord/kit';
 export * from '@seedcord/services';
 export type * from '@seedcord/types';
 export * from '@seedcord/utils';

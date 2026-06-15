@@ -1,11 +1,11 @@
 import * as crypto from 'node:crypto';
 
+import { Denial, DenialEmbed } from '@seedcord/kit';
+import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
 
 import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';
-import { prefixOf } from '@customId/CustomId';
-import { Denial, DenialEmbed } from '@interfaces/Components';
 import { FaultThrottle } from '@miscellaneous/FaultThrottle';
 
 import type { Repliables } from '@handlers/BaseHandler';
@@ -224,7 +224,7 @@ function interactionKind(interaction: Repliables): InteractionFaultSource['inter
  *
  * @internal
  */
-export class GenericError extends Denial {
+class GenericError extends Denial {
     constructor(
         private readonly uuid: UUID,
         private readonly developerUsername = 'the developer'

@@ -1,9 +1,9 @@
 import { prettify } from '@seedcord/utils';
 import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 
-import { HasDangerousPermissions, MissingPermissions } from '@bot/defaults/errors/Roles';
+import { HasDangerousPermissions, MissingPermissions } from './denials';
 
-import type { Denial } from '@interfaces/Components';
+import type { Denial } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
 import type { PermissionsBitField, TextChannel } from 'discord.js';
 

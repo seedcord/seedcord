@@ -1,10 +1,10 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Denial } from '@seedcord/kit';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import { RegisterEvent } from '@bDecorators/Events';
 import { EventHandler } from '@handlers/event';
-import { Denial } from '@interfaces/Components';
 
 import type { Core } from '@interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';

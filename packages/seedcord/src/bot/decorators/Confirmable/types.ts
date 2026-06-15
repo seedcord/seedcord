@@ -1,6 +1,6 @@
 import type { Repliables } from '@handlers/BaseHandler';
 import type { RepliableInteractionHandler } from '@handlers/repliable';
-import type { BuilderComponent, RowComponent } from '@interfaces/Components';
+import type { BuilderComponent, RowComponent } from '@seedcord/kit';
 import type {
     ButtonInteraction,
     ChannelSelectMenuInteraction,

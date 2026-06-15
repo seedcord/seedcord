@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -12,7 +13,6 @@ import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares'
 import { UnhandledEvent } from '@bot/defaults';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { prefixOf } from '@customId/CustomId';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';

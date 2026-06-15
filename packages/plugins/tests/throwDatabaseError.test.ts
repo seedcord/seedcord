@@ -1,4 +1,4 @@
-import { DatabaseError } from 'seedcord/internal';
+import { DatabaseError } from '@seedcord/kit/internal';
 import { describe, it, expect } from 'vitest';
 
 import { throwDatabaseError } from '../src/shared/throwDatabaseError';

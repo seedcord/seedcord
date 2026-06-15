@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { BuilderComponent } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -12,7 +13,6 @@ import { CommandMetadataKey } from '@bDecorators/Command';
 import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { BuilderComponent } from '@interfaces/Components';
 
 import type { CommandMeta } from '@bDecorators/Command';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';

@@ -2,10 +2,12 @@ import 'reflect-metadata';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { Logger, ShutdownPhase } from '@seedcord/services';
+import { keepDefined, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
-import { HmrModuleHandler, keepDefined, Logger, Plugin, ShutdownPhase, traverseDirectory } from 'seedcord';
+import { HmrModuleHandler, Plugin } from 'seedcord';
 
 import { ModelMetadataKey } from './decorators/RegisterMongoModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';

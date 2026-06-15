@@ -1,8 +1,8 @@
 import path from 'node:path';
 
+import { CustomId } from '@seedcord/kit';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { CustomId } from '@customId/index';
 import { Seedcord } from '@src/Seedcord';
 
 import { TestEnvironment } from '../utils/test-env';

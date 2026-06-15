@@ -1,8 +1,22 @@
+import { Denial, DenialEmbed } from '@seedcord/kit';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 
-import { UserNotInGuild } from '@bot/defaults/errors/User';
-
+import type { ReplyResponse } from '@seedcord/types';
 import type { Guild, GuildMember } from 'discord.js';
+
+/**
+ * Error thrown when attempting to perform actions on a user not in the guild.
+ */
+class UserNotInGuild extends Denial {
+    constructor(message = 'User is not in the guild.') {
+        super(message);
+    }
+
+    render(): ReplyResponse {
+        const embed = new DenialEmbed(this.message);
+        return { kind: 'embed', embeds: [embed.component] };
+    }
+}
 
 /**
  * Fetches a guild member by user ID with error handling.

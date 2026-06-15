@@ -1,8 +1,8 @@
 import '../utils/mock-env';
 
+import { Denial } from '@seedcord/kit';
 import { describe, expect, it } from 'vitest';
 
-import { Denial } from '@interfaces/Components';
 import { causeStack, faultSummary } from '@subscribers/default/HandledException';
 
 import type { ReplyResponse } from '@seedcord/types';

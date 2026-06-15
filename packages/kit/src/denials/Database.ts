@@ -1,4 +1,5 @@
-import { Denial, DenialEmbed } from '@interfaces/Components';
+import { Denial } from './Denial';
+import { DenialEmbed } from './DenialEmbed';
 
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
@@ -11,11 +12,6 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  * @internal
  */
 export class DatabaseError extends Denial {
-    /**
-     * Creates a new DatabaseError.
-     *
-     * @param message - The error message describing what went wrong
-     */
     constructor(message: string) {
         super(message);
         this.report = true;

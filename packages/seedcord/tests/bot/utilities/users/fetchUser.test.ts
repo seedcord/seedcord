@@ -1,11 +1,10 @@
+import { Denial } from '@seedcord/kit';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import { UserNotFound } from '@bErrors/User';
 import { fetchUser } from '@bUtilities/users/fetchUser';
-import { Denial } from '@interfaces/Components';
 
-import type { ReplyResponse } from '@seedcord/types';
+import type { ReplyResponse, RenderContext } from '@seedcord/types';
 import type { Client } from 'discord.js';
 
 class CustomNotFound extends Denial {
@@ -33,8 +32,19 @@ function clientThatRejects(): Client {
 }
 
 describe('fetchUser throwAs', () => {
-    it('throws UserNotFound by default when the user is unknown', async () => {
-        await expect(fetchUser(clientThatRejects(), '123')).rejects.toBeInstanceOf(UserNotFound);
+    const ctx: RenderContext = { uuid: '11111111-2222-3333-4444-555555555555' };
+
+    it('throws the default user-not-found denial, rendering the live userArg without reporting', async () => {
+        const denial = await fetchUser(clientThatRejects(), '999').catch((e: unknown) => e);
+        expect(denial).toBeInstanceOf(Denial);
+        expect((denial as Denial).name).toBe('UserNotFound');
+        expect((denial as Denial).report).toBe(false);
+
+        const response = (denial as Denial).render(ctx);
+        if (response.kind !== 'embed') throw new Error('expected embed arm');
+        const [embed] = response.embeds;
+        expect(embed?.data.title).toBe('User Not Found');
+        expect(embed?.data.description).toContain('999');
     });
 
     it('throws the provided throwAs class instead of the default', async () => {

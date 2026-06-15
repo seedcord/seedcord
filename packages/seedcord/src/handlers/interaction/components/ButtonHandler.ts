@@ -1,6 +1,6 @@
 import { ComponentHandler } from './ComponentHandler';
 
-import type { AnyCustomId } from '@customId/CustomId';
+import type { AnyCustomId } from '@seedcord/kit/internal';
 import type { ButtonInteraction, CacheType } from 'discord.js';
 
 /**

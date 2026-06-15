@@ -1,8 +1,7 @@
+import { Denial, Halt } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError, GuildMember, Message, User } from 'discord.js';
 
-import { Denial } from '@interfaces/Components';
-import { Halt } from '@interfaces/Halt';
 import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import type { Core } from '@interfaces/Core';

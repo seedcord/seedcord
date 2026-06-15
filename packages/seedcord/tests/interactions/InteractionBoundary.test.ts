@@ -1,11 +1,12 @@
+import { Halt } from '@seedcord/kit';
+import { DatabaseError } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DatabaseError } from '@bErrors/Database';
-import { UserNotFound } from '@bErrors/User';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
-import { Halt } from '@interfaces/Halt';
 import { faultThrottle } from '@miscellaneous/extractErrorResponse';
+
+import { TestDenial } from '../utils/TestDenial';
 
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
@@ -138,7 +139,7 @@ describe('handleInteractionFault', () => {
     it('follows up and publishes nothing for a non-reporting denial on a replied interaction', async () => {
         mock.replied = true;
 
-        await handleInteractionFault(new UserNotFound('999'), asInteraction(mock), mockCore(publish));
+        await handleInteractionFault(new TestDenial(), asInteraction(mock), mockCore(publish));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
         expect(publish).not.toHaveBeenCalled();

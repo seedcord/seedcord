@@ -1,9 +1,7 @@
+import { Denial } from '@seedcord/kit';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { CouldNotFindChannel } from '@bErrors/Channels';
-import { RoleDoesNotExist } from '@bErrors/Roles';
-import { UserNotInGuild } from '@bErrors/User';
 import { fetchText } from '@bUtilities/channels/fetchText';
 import { fetchRole } from '@bUtilities/roles/fetchRole';
 import { fetchGuildMember } from '@bUtilities/users/fetchGuildMember';
@@ -25,7 +23,9 @@ describe('fetch* error discrimination', () => {
 
         it('rebrands UnknownMember as UserNotInGuild', async () => {
             const g = guild(() => Promise.reject(discordError(RESTJSONErrorCodes.UnknownMember)));
-            await expect(fetchGuildMember(g, '123')).rejects.toBeInstanceOf(UserNotInGuild);
+            const err = await fetchGuildMember(g, '123').catch((e: unknown) => e);
+            expect(err).toBeInstanceOf(Denial);
+            expect((err as Denial).name).toBe('UserNotInGuild');
         });
 
         it('rethrows non-404 errors unchanged', async () => {
@@ -45,7 +45,9 @@ describe('fetch* error discrimination', () => {
 
         it('rebrands UnknownRole as RoleDoesNotExist', async () => {
             const g = guild(() => Promise.reject(discordError(RESTJSONErrorCodes.UnknownRole)));
-            await expect(fetchRole(g, '123')).rejects.toBeInstanceOf(RoleDoesNotExist);
+            const err = await fetchRole(g, '123').catch((e: unknown) => e);
+            expect(err).toBeInstanceOf(Denial);
+            expect((err as Denial).name).toBe('RoleDoesNotExist');
         });
 
         it('rethrows non-404 errors unchanged', async () => {
@@ -61,7 +63,9 @@ describe('fetch* error discrimination', () => {
 
         it('rebrands UnknownChannel as CouldNotFindChannel', async () => {
             const c = client(() => Promise.reject(discordError(RESTJSONErrorCodes.UnknownChannel)));
-            await expect(fetchText(c, '123')).rejects.toBeInstanceOf(CouldNotFindChannel);
+            const err = await fetchText(c, '123').catch((e: unknown) => e);
+            expect(err).toBeInstanceOf(Denial);
+            expect((err as Denial).name).toBe('CouldNotFindChannel');
         });
 
         it('rethrows non-404 errors unchanged', async () => {

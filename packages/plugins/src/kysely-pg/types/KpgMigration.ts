@@ -1,7 +1,7 @@
 import type { KpgMigrationsOptions } from './KpgOptions';
+import type { Logger } from '@seedcord/services';
 import type { Kysely } from 'kysely';
 import type { Migration, NoMigrations } from 'kysely/migration';
-import type { Logger } from 'seedcord';
 
 /**
  * Type representing a migration function (either `up` or `down`).

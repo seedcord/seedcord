@@ -1,9 +1,9 @@
+import { Halt } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { Halt } from '@interfaces/Halt';
 import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';

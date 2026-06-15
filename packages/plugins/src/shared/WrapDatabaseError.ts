@@ -1,14 +1,14 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Denial } from 'seedcord';
+import { Denial } from '@seedcord/kit';
 
 import { throwDatabaseError } from './throwDatabaseError';
 
 /**
  * Catches and wraps database operation errors.
  *
- * Wraps non-Denial exceptions in DatabaseError instances
- * with UUID tracking. Should be applied to database service methods.
+ * Wraps non-Denial exceptions in DatabaseError instances.
+ * Should be applied to database service methods.
  *
  * @typeParam TypeReturn - The return type of the decorated method
  * @param errorMessage - Message to include when wrapping errors

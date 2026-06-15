@@ -1,0 +1,31 @@
+import type { RenderContext, ReplyResponse } from '@seedcord/types';
+
+/**
+ * Base class for a user-facing refusal or a reported fault.
+ *
+ * Throw a `Denial` to stop a handler and reply to the user. The framework catches it at the controller
+ * boundary and renders {@link Denial.render}, which always decides what the user sees. With `report`
+ * false (the default) that render is all that happens. With `report` true the framework also logs the
+ * fault and publishes it to the `handledException` bus. A raw, non-Denial throw shows the generic message.
+ */
+export abstract class Denial extends Error {
+    /**
+     * Whether this denial is a reported fault. True also logs it and publishes it to the `handledException`
+     * bus. The user always sees {@link Denial.render} either way.
+     */
+    public report = false;
+
+    protected constructor(message: string, options?: ErrorOptions) {
+        super(message, options);
+
+        // Error sets name to 'Error', so stamp the concrete subclass name for logs and the fault report
+        this.name = new.target.name;
+        Error.captureStackTrace(this, this.constructor);
+    }
+
+    /**
+     * Builds what the user sees. Called fresh each time the denial is shown, so the builders are new
+     * and the bot color resolves at render time rather than at construction time.
+     */
+    public abstract render(ctx: RenderContext): ReplyResponse;
+}

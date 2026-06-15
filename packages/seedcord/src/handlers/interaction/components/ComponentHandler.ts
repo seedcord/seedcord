@@ -2,14 +2,11 @@ import 'reflect-metadata';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { decodeFor, ComponentDefsKey } from '@seedcord/kit/internal';
 
-import { decodeFor } from '@customId/CustomId';
-import { ComponentDefsKey } from '@customId/routing';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
-import type { AnyCustomId } from '@customId/CustomId';
-import type { DecodedParams } from '@customId/Field';
-import type { HasComponentDefs } from '@customId/routing';
+import type { AnyCustomId, DecodedParams, HasComponentDefs } from '@seedcord/kit/internal';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

@@ -12,11 +12,9 @@
             "@interfaces/*": ["./src/interfaces/*"],
             "@handlers/*": ["./src/handlers/*"],
             "@inputs/*": ["./src/inputs/*"],
-            "@customId/*": ["./src/customId/*"],
             "@miscellaneous/*": ["./src/miscellaneous/*"],
 
             // Paths inside src/bot
-            "@bErrors/*": ["./src/bot/defaults/errors/*"],
             "@bUtilities/*": ["./src/bot/utilities/*"],
             "@bControllers/*": ["./src/bot/controllers/*"],
             "@bDecorators/*": ["./src/bot/decorators/*"]

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '@customId/index';
+import { CustomId } from '@customId/CustomId';
 
 import type { Config, CustomIdMatcher } from '@seedcord/types';
 
@@ -38,6 +38,6 @@ describe('CustomIdMatcher', () => {
             },
             subscribers: { path: null }
         } satisfies Config;
-        expect(bad.bot.interactions).toBeDefined();
+        void bad;
     });
 });

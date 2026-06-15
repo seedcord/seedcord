@@ -1,9 +1,25 @@
+import { Denial, DenialEmbed } from '@seedcord/kit';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
-import { RoleDoesNotExist } from '@bot/defaults/errors/Roles';
-
-import type { Nullable } from '@seedcord/types';
+import type { Nullable, ReplyResponse } from '@seedcord/types';
 import type { Client, Role } from 'discord.js';
+
+/**
+ * Error thrown when a requested role does not exist.
+ */
+class RoleDoesNotExist extends Denial {
+    constructor(
+        message: string,
+        public roleId: string
+    ) {
+        super(message);
+    }
+
+    render(): ReplyResponse {
+        const embed = new DenialEmbed(`The role with ID \`${this.roleId}\` does not exist.`);
+        return { kind: 'embed', embeds: [embed.component] };
+    }
+}
 
 function isUnknownRole(err: unknown): boolean {
     return err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownRole;

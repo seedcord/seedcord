@@ -1,11 +1,10 @@
 import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
 
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/defaults/errors/Roles';
-
 import { checkBotPermissions } from './checkBotPermissions';
+import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from './denials';
 import { getBotRole } from '../roles/getBotRole';
 
-import type { Denial } from '@interfaces/Components';
+import type { Denial } from '@seedcord/kit';
 
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.

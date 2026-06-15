@@ -1,11 +1,12 @@
+import { Halt } from '@seedcord/kit';
+import { DatabaseError } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DatabaseError } from '@bErrors/Database';
-import { UserNotFound } from '@bErrors/User';
 import { handleEventFault } from '@bot/handleEventFault';
-import { Halt } from '@interfaces/Halt';
 import { faultThrottle } from '@miscellaneous/extractErrorResponse';
+
+import { TestDenial } from '../utils/TestDenial';
 
 import type { Core } from '@interfaces/Core';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
@@ -60,7 +61,7 @@ describe('handleEventFault', () => {
     });
 
     it('stays quiet for a non-reporting denial', () => {
-        handleEventFault(new UserNotFound('999'), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
+        handleEventFault(new TestDenial(), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
     });

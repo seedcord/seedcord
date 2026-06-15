@@ -1,16 +1,15 @@
+import { ComponentDefsKey } from '@seedcord/kit/internal';
 import { ApplicationCommandType } from 'discord.js';
 
-import { ComponentDefsKey } from '@customId/routing';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
-import type { AnyCustomId } from '@customId/CustomId';
-import type { HasComponentDefs } from '@customId/routing';
 import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
 import type { HandlerConstructor } from '@handlers/constructors';
 import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { SlashHandler } from '@handlers/interaction/SlashHandler';
+import type { HasComponentDefs, AnyCustomId } from '@seedcord/kit/internal';
 import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/types';
 import type {
     AutocompleteInteraction,

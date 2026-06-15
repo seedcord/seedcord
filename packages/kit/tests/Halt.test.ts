@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Denial } from '@interfaces/Components';
-import { Halt } from '@interfaces/Halt';
+import { Denial } from '@denials/Denial';
+import { Halt } from '@src/Halt';
 
 import type { ReplyResponse } from '@seedcord/types';
 

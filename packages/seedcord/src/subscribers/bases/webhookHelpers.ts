@@ -1,7 +1,6 @@
+import { BuilderComponent } from '@seedcord/kit';
 import { filterCirculars } from '@seedcord/utils';
 import { AttachmentBuilder, SeparatorSpacingSize } from 'discord.js';
-
-import { BuilderComponent } from '@interfaces/Components';
 
 const DISCORD_WEBHOOK_REGEX = new RegExp(
     String.raw`^https?:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w$-]+$`

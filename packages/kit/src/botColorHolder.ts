@@ -1,6 +1,6 @@
 import type { ColorResolvable } from 'discord.js';
 
-// 'Default' is Discord.js's own sentinel for "no explicit color".
+// 'Default' is the value discord.js reads as "no explicit color".
 const DEFAULT_COLOR: ColorResolvable = 'Default';
 
 let current: ColorResolvable = DEFAULT_COLOR;

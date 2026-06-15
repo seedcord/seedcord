@@ -10,6 +10,8 @@
         "packages/utils": {},
         "packages/types": {},
         "packages/plugins": {},
+        "packages/errors": {},
+        "packages/kit": {},
         "packages/cli": {
             "entry": ["bin/seedcord.mjs"]
         },

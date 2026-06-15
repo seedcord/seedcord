@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { BuilderComponent, Denial } from '@seedcord/kit';
 import { WebhookClient } from 'discord.js';
 import { Envapt } from 'envapt';
 
-import { BuilderComponent, Denial } from '@interfaces/Components';
 import { flagsFor } from '@miscellaneous/flagsFor';
 
 import { isDiscordWebhookUrl, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';

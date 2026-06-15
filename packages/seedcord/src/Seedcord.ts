@@ -1,5 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { setBotColor } from '@seedcord/kit/internal';
 import { HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
@@ -7,7 +8,6 @@ import { Envapter } from 'envapt';
 import { Bot } from './bot/Bot';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
-import { setBotColor } from './miscellaneous/botColorHolder';
 import { Bus } from './subscribers/Bus';
 
 import type { Core } from './interfaces/Core';

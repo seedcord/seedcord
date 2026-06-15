@@ -1,0 +1,17 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "@seedcord/tsconfig/node",
+    "compilerOptions": {
+        "rootDir": "./",
+        "outDir": "./dist",
+        "paths": {
+            "@src/*": ["./src/*"],
+            "@components/*": ["./src/components/*"],
+            "@customId/*": ["./src/customId/*"],
+            "@denials/*": ["./src/denials/*"]
+        },
+        "types": ["vite/client"]
+    },
+    "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],
+    "exclude": ["node_modules", "dist"]
+}

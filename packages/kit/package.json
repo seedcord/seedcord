@@ -1,0 +1,72 @@
+{
+    "name": "@seedcord/kit",
+    "type": "module",
+    "version": "0.0.0",
+    "description": "Reusable Seedcord building blocks: component builders, the Denial error tree, and the typed customId codec",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "packages/kit"
+    },
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        },
+        "./internal": {
+            "import": {
+                "types": "./dist/internal.index.d.mts",
+                "default": "./dist/internal.index.mjs"
+            },
+            "require": {
+                "types": "./dist/internal.index.d.cts",
+                "default": "./dist/internal.index.cjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "discord.js": "catalog:peer",
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@seedcord/errors": "workspace:*",
+        "@seedcord/types": "workspace:*"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsdown-config": "workspace:*",
+        "discord.js": "catalog:peer",
+        "type-fest": "catalog:deps",
+        "vite": "catalog:deps"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}

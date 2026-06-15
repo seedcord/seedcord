@@ -1,9 +1,10 @@
+import { CustomId } from '@seedcord/kit';
+import { DatabaseError } from '@seedcord/kit/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DatabaseError } from '@bErrors/Database';
-import { UserNotFound } from '@bErrors/User';
-import { CustomId } from '@customId/index';
 import { extractErrorResponse, faultThrottle } from '@miscellaneous/extractErrorResponse';
+
+import { TestDenial } from '../utils/TestDenial';
 
 import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
@@ -82,7 +83,7 @@ describe('extractErrorResponse', () => {
 
     it('publishes nothing for a non-reporting denial', () => {
         const publish = vi.fn();
-        extractErrorResponse(new UserNotFound('999'), mockCore(publish), {
+        extractErrorResponse(new TestDenial(), mockCore(publish), {
             interaction: slashInteraction(),
             guild: null,
             user: null

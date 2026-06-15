@@ -1,4 +1,4 @@
-import type { Denial } from '@interfaces/Components';
+import type { Denial } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
 import type { UUID } from 'crypto';
 import type { Guild, User } from 'discord.js';

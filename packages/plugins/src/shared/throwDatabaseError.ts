@@ -1,5 +1,5 @@
+import { DatabaseError } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
-import { DatabaseError } from 'seedcord/internal';
 
 const logger = new Logger('DatabaseError');
 

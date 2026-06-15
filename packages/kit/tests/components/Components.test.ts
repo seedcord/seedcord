@@ -1,8 +1,9 @@
 import { Colors, EmbedBuilder } from 'discord.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BuilderComponent, Denial } from '../../src/interfaces/Components';
-import { setBotColor } from '../../src/miscellaneous/botColorHolder';
+import { BuilderComponent } from '@components/Component';
+import { Denial } from '@denials/Denial';
+import { setBotColor } from '@src/botColorHolder';
 
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
