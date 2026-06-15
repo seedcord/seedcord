@@ -63,7 +63,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      *
      * Reading this decodes `this.event.customId` once (cached after the first read) and throws
      * `StaleCustomId` or `InvalidCustomId` when the wire no longer matches the current shape, which the
-     * Catchable decorator turns into a reply. On a handler registered for several routes this is
+     * controller boundary turns into a reply. On a handler registered for several routes this is
      * `never`, so use {@link match} instead.
      */
     protected get params(): SingleParams<Defs> {

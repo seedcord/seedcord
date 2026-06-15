@@ -1,3 +1,4 @@
+import type { CustomIdMatcher } from './CustomId';
 import type { EmojiMap } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
 import type { ClientOptions, ColorResolvable } from 'discord.js';
@@ -15,9 +16,10 @@ export type InteractionsConfig =
            */
           path: string;
           /**
-           * Optional array of custom IDs or regex patterns to ignore in interaction handling
+           * Component customIds the controller skips instead of routing. A real `CustomId` (from
+           * `@seedcord/kit`) satisfies {@link CustomIdMatcher}, matched against the raw customId wire.
            */
-          ignoreCustomIds?: (string | RegExp)[];
+          ignoreCustomIds?: CustomIdMatcher[];
           /**
            * Optional path to interaction middleware directory
            */

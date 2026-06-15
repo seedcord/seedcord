@@ -8,6 +8,7 @@ import { Envapter } from 'envapt';
 
 import { EventMetadataKey } from '@bDecorators/Events';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { handleEventFault } from '@bot/handleEventFault';
 import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
@@ -214,14 +215,10 @@ export class EventController implements Initializeable, HmrAware {
             try {
                 const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
                 if (middleware.hasChecks()) await middleware.runChecks();
-
-                if (middleware.shouldBreak() || middleware.hasErrors()) return false;
-
                 await middleware.execute();
-
-                if (middleware.shouldBreak() || middleware.hasErrors()) return false;
-            } catch (err) {
-                this.logger.error(`Error in event middleware ${ctor.name} for event ${String(eventName)}:`, err);
+            } catch (caught) {
+                // return false so a throw in middleware stops the event for downstream handlers
+                handleEventFault(caught, String(eventName), ctor.name, args, this.core);
                 return false;
             }
         }
@@ -319,9 +316,10 @@ export class EventController implements Initializeable, HmrAware {
         if (!shouldContinue) return;
 
         for (const entry of handlersToExecute) {
-            await this.processHandler(eventName, entry.ctor, args);
-
+            // mark a 'once' handler spent before running it, so an abnormal rethrow cannot re-fire it
             if (entry.frequency === 'once') this.executedOnceHandlers.add(entry.ctor);
+
+            await this.processHandler(eventName, entry.ctor, args);
         }
     }
 
@@ -334,12 +332,9 @@ export class EventController implements Initializeable, HmrAware {
             this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.name)}`);
             const handler = new ctor(args, this.core, eventName); // event name so match can route by it
             if (handler.hasChecks()) await handler.runChecks();
-
-            if (handler.shouldBreak()) return;
-
-            if (!handler.hasErrors()) await handler.execute();
-        } catch (err) {
-            this.logger.error(`Error in event ${String(eventName)} handler ${ctor.name}:`, err);
+            await handler.execute();
+        } catch (caught) {
+            handleEventFault(caught, String(eventName), ctor.name, args, this.core);
         }
     }
 }

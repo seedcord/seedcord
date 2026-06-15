@@ -2,7 +2,6 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { EventCatchable } from '@bDecorators/EventCatchable';
 import { RegisterEvent } from '@bDecorators/Events';
 import { EventHandler } from '@handlers/event';
 import { Denial } from '@interfaces/Components';
@@ -148,9 +147,7 @@ class BoomError extends Denial {
     }
 }
 
-// match runs inside execute, so @EventCatchable still catches a throw from an arm
 class ThrowingMulti extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
-    @EventCatchable()
     async execute(): Promise<void> {
         await this.match({
             [Events.MessageCreate]: () => {
@@ -164,10 +161,9 @@ class ThrowingMulti extends EventHandler<Events.MessageCreate | Events.MessageUp
 }
 
 describe('EventHandler.match', () => {
-    it('routes a throw from a match arm through @EventCatchable', async () => {
+    it('propagates a throw from a match arm out of execute, where the controller boundary catches it', async () => {
         const handler = new ThrowingMulti(createPayload(fakeMessage()), core, Events.MessageCreate);
-        await handler.execute();
-        expect(handler.hasErrors()).toBe(true);
+        await expect(handler.execute()).rejects.toBeInstanceOf(BoomError);
     });
 
     it('cross-checks @RegisterEvent against the handler generic in both directions', () => {

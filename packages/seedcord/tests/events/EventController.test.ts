@@ -119,6 +119,84 @@ describe('EventController Integration', () => {
         expect(edited.reply).toHaveBeenCalledWith('updated');
     });
 
+    it('reports a thrown error from a handler through the boundary', async () => {
+        const eventsDir = 'events';
+        await testEnv.createFile(
+            `${eventsDir}/Boom.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['guildMemberAdd'])
+            export class BoomHandler extends EventHandler<Events.GuildMemberAdd> {
+                public async execute() {
+                    await Promise.resolve();
+                    throw new Error('event exploded');
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                events: { path: testEnv.resolvePath(eventsDir) },
+                interactions: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        const publish = vi.spyOn(seedcord.bus, 'publish');
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        await testBot.events.processEvent('guildMemberAdd', [{}]);
+
+        expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
+    });
+
+    it('marks a once handler spent even when it rethrows a non-Error, so it does not re-fire', async () => {
+        const eventsDir = 'events';
+        await testEnv.createFile(
+            `${eventsDir}/OnceBoom.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['guildMemberAdd', { frequency: 'once' }])
+            export class OnceBoom extends EventHandler<Events.GuildMemberAdd> {
+                public async execute() {
+                    await Promise.resolve();
+                    throw 'raw string';
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                events: { path: testEnv.resolvePath(eventsDir) },
+                interactions: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        // the non-Error rethrows to the root, but the once handler is now spent
+        await expect(testBot.events.processEvent('guildMemberAdd', [{}])).rejects.toBe('raw string');
+        // a second fire must not re-run it, so it resolves with no throw
+        await expect(testBot.events.processEvent('guildMemberAdd', [{}])).resolves.toBeUndefined();
+    });
+
     it('should handle HMR updates for event handlers', async () => {
         const eventsDir = 'events';
         const filePath = await testEnv.createFile(

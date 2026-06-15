@@ -5,9 +5,9 @@ import type { Guild, User } from 'discord.js';
 
 /**
  * Where a reported fault came from. A union over `kind`. Add a new source as a new arm, never widen an
- * existing one, or you break consumers narrowing on `kind`. Only the interaction arm exists today.
+ * existing one, or you break consumers narrowing on `kind`.
  */
-export type FaultSource = InteractionFaultSource;
+export type FaultSource = InteractionFaultSource | EventFaultSource;
 
 /**
  * A fault that came from a discord interaction, JSON-safe for a webhook payload.
@@ -29,6 +29,24 @@ export interface InteractionFaultSource {
     /** The interaction's own id. */
     interactionId: string;
     /** The raw interaction, made JSON-safe at serialization with filterCirculars. */
+    raw: unknown;
+}
+
+/**
+ * A fault that came from a client event, JSON-safe for a webhook payload. The actor, guild, and channel
+ * are best-effort, derived from the event args, so each is nullable. The raw args carry the full detail.
+ */
+export interface EventFaultSource {
+    kind: 'event';
+    eventName: string;
+    handler: string;
+    /** Actor derived from the event args, null when none is present. */
+    userId: string | null;
+    /** Guild derived from the event args, null outside a guild. */
+    guildId: string | null;
+    /** Channel derived from the event args, null when none is present. */
+    channelId: string | null;
+    /** The raw event args, made JSON-safe at serialization with filterCirculars. */
     raw: unknown;
 }
 

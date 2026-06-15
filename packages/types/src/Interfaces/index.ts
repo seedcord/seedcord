@@ -1,5 +1,6 @@
 export type * from './Config';
 export type * from './ContextMenuRegistry';
+export type * from './CustomId';
 export type * from './EmojiMap';
 export type * from './Errors';
 export type * from './ILogger';

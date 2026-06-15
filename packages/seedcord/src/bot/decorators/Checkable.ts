@@ -15,12 +15,10 @@ import type { Constructor } from 'type-fest';
  * \@Checkable
  * \@SlashRoute('ban')
  * class BanHandler extends SlashHandler<'ban'> implements WithChecks {
- *   \@Catchable()
  *   async runChecks() {
  *     if (!this.event.memberPermissions?.has('BanMembers')) throw new Error('Missing permission');
  *   }
  *
- *   \@Catchable()
  *   async execute() {
  *     await this.event.reply('banned');
  *   }

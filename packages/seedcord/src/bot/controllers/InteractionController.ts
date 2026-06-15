@@ -10,6 +10,7 @@ import { Envapter } from 'envapt';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { UnhandledEvent } from '@bot/defaults';
+import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { prefixOf } from '@customId/CustomId';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
@@ -19,10 +20,11 @@ import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
-import type { Repliables } from '@handlers/BaseHandler';
+import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
+import type { CustomIdMatcher } from '@seedcord/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type {
     AutocompleteInteraction,
@@ -77,7 +79,7 @@ export class InteractionController implements Initializeable, HmrAware {
     private readonly userContextMenuMap = new Collection<string, HandlerConstructor>();
     private readonly autocompleteMap = new Collection<string, HandlerConstructor>();
 
-    private readonly keysToIgnore = new Set<string | RegExp>();
+    private readonly keysToIgnore = new Set<CustomIdMatcher>();
 
     private readonly middlewares: RegisteredMiddleware[] = [];
 
@@ -346,8 +348,10 @@ export class InteractionController implements Initializeable, HmrAware {
         getMap: () => Collection<string, HandlerConstructor>,
         interactionType: string
     ): Promise<void> {
+        if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
+
         // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
-        // reaches its handler, where reading this.params throws StaleCustomId and @Catchable replies.
+        // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies.
         const prefix = prefixOf(interaction.customId);
         if (!prefix) return this.logger.warn(`${interactionType} has invalid customId: ${interaction.customId}`);
 
@@ -364,38 +368,31 @@ export class InteractionController implements Initializeable, HmrAware {
         getHandler: (key: string) => HandlerConstructor | undefined
     ): Promise<void> {
         const key = extractKey(interaction);
-        if (
-            [...this.keysToIgnore].some((pattern) =>
-                typeof pattern === 'string' ? pattern === key : pattern.test(key)
-            )
-        ) {
-            return;
-        }
 
-        // Autocomplete interactions skip middlewares.
-        if (!interaction.isAutocomplete()) {
-            for (const { ctor } of this.middlewares) {
-                const middleware = new ctor(interaction as Repliables, this.core);
-                if (middleware.hasChecks()) await middleware.runChecks();
-                if (middleware.shouldBreak() || middleware.hasErrors()) return;
-
-                await middleware.execute();
-                if (middleware.shouldBreak() || middleware.hasErrors()) return;
+        try {
+            // Autocomplete interactions skip middlewares.
+            if (!interaction.isAutocomplete()) {
+                for (const { ctor } of this.middlewares) {
+                    const middleware = new ctor(interaction as Repliables, this.core);
+                    if (middleware.hasChecks()) await middleware.runChecks();
+                    await middleware.execute();
+                }
             }
-        }
 
-        let HandlerCtor = getHandler(key);
-        if (!HandlerCtor) {
-            this.logger.warn(`No handler found for key ${chalk.bold.cyan(key)}. Falling back to UnhandledEvent.`);
-            HandlerCtor = UnhandledEvent;
-        }
+            let HandlerCtor = getHandler(key);
+            if (!HandlerCtor) {
+                this.logger.warn(`No handler found for key ${chalk.bold.cyan(key)}. Falling back to UnhandledEvent.`);
+                HandlerCtor = UnhandledEvent;
+            }
 
-        this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
-        // @ts-expect-error TS can't infer the type of interaction here
-        const handler = new HandlerCtor(interaction as Repliables, this.core);
-        if (handler.hasChecks()) await handler.runChecks();
-        if (handler.shouldBreak()) return;
-        if (!handler.hasErrors()) await handler.execute();
+            this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
+            // @ts-expect-error TS can't infer the type of interaction here
+            const handler = new HandlerCtor(interaction as Repliables, this.core);
+            if (handler.hasChecks()) await handler.runChecks();
+            await handler.execute();
+        } catch (caught) {
+            await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core);
+        }
     }
 
     private async handleInteraction(interaction: Interaction): Promise<void> {

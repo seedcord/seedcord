@@ -28,7 +28,6 @@ type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends Cache
  * ```ts
  * \@SlashRoute('ban')
  * class BanHandler extends SlashHandler<'ban'> {
- *     \@Catchable()
  *     async execute() {
  *         const target = this.options.getUser('target'); // User
  *         const reason = this.options.getString('reason'); // string | null

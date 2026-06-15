@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { CustomId } from '@customId/index';
 import { Seedcord } from '@src/Seedcord';
 
 import { TestEnvironment } from '../utils/test-env';
@@ -19,6 +20,36 @@ interface PrivateInteractionController {
     modalMap: Map<string, unknown>;
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
+    processInteraction(
+        interaction: unknown,
+        extractKey: (i: unknown) => string,
+        getHandler: (key: string) => unknown
+    ): Promise<void>;
+    handleButton(interaction: unknown): Promise<void>;
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
+function fakeSlash(commandName: string) {
+    return {
+        reply: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue(undefined),
+        followUp: vi.fn().mockResolvedValue(undefined),
+        isAutocomplete: () => false,
+        isChatInputCommand: () => true,
+        isContextMenuCommand: () => false,
+        isButton: () => false,
+        isAnySelectMenu: () => false,
+        isModalSubmit: () => false,
+        commandName,
+        options: { getSubcommand: () => null, getSubcommandGroup: () => null },
+        user: { id: 'u1' },
+        guild: null,
+        guildId: 'g1',
+        channelId: 'c1',
+        id: 'i1',
+        deferred: false,
+        replied: false
+    };
 }
 
 interface TestBot {
@@ -74,6 +105,72 @@ describe('InteractionController Integration', () => {
 
         const controller = testBot.interactions;
         expect(controller.slashMap.has('ping')).toBe(true);
+    });
+
+    it('routes a thrown error from a handler through the boundary to a reply', async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/Boom.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('boom')
+            export class BoomHandler extends SlashHandler<'boom'> {
+                public async execute() {
+                    await Promise.resolve();
+                    throw new Error('handler exploded');
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                interactions: { path: testEnv.resolvePath(interactionsDir) },
+                events: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private interactions controller for assertion
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+
+        const interaction = fakeSlash('boom');
+        await controller.processInteraction(
+            interaction,
+            () => 'boom',
+            () => controller.slashMap.get('boom')
+        );
+
+        expect(interaction.reply).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {
+        const ClickId = new CustomId('clickme');
+        const config: Config = {
+            bot: {
+                interactions: { path: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] },
+                events: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        // justified: spy on the private routing entry to assert the ignore gate runs before it
+        const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
+
+        await controller.handleButton({ customId: ClickId.encode({}) });
+        expect(processSpy).not.toHaveBeenCalled();
+
+        await controller.handleButton({ customId: new CustomId('other').encode({}) });
+        expect(processSpy).toHaveBeenCalledTimes(1);
     });
 
     it('should handle HMR updates for interaction handlers', async () => {

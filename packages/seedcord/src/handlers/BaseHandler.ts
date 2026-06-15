@@ -32,19 +32,17 @@ export interface Handler {
 }
 
 /**
- * Interface for handlers that can run pre-execution checks
- *
- * Should always accompany the `@Catchable` decorator. Will require the class to implement the `runChecks` method.
+ * Interface for handlers that run pre-execution checks. Pair it with the `@Checkable` decorator, which
+ * requires the class to implement `runChecks`.
  *
  * @see {@link Checkable}
- * @see {@link Catchable}
- * @see {@link EventCatchable}
  */
 export interface WithChecks {
     /**
-     * Runs pre-execution checks for the handler.
+     * Runs pre-execution checks for the handler. A throw stops the lifecycle, the controller boundary
+     * catches a `Denial` or a `Halt` thrown here before `execute` runs.
      *
-     * @remarks It'll be called automatically if a class is decorated with {@link Checkable} before the execute method.
+     * @remarks Called automatically when the class is decorated with {@link Checkable}.
      *
      * @virtual Override this method in your handler classes
      */
@@ -63,9 +61,6 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     /** @internal */
     protected checkable = false;
 
-    private break = false;
-    private errored = false;
-
     protected readonly event: ValidEvent;
     protected readonly logger: Logger;
 
@@ -80,7 +75,9 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     }
 
     /**
-     * Called automatically after all pre conditions are met. This should contain the main logic of your handler. If your handler class implements `WithChecks` and is decorated with `@Checkable`, `runChecks()` will be called before this, and if it throws or calls `setBreak()`, `execute()` will not run.
+     * Called automatically after all pre conditions are met. Holds the main logic of your handler. If
+     * the class implements `WithChecks` and is decorated with `@Checkable`, `runChecks()` runs first,
+     * and if it throws, `execute()` never runs.
      */
     abstract execute(): Promise<void>;
 
@@ -92,26 +89,6 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     /** @internal */
     public hasChecks(): this is HandlerWithChecks {
         return this.checkable;
-    }
-
-    /** @internal */
-    public hasErrors(): boolean {
-        return this.errored;
-    }
-
-    /** @internal */
-    public setErrored(): void {
-        this.errored = true;
-    }
-
-    /** Stops handler execution after `runChecks()` without throwing. Does not require `HandlerWithChecks`. */
-    public setBreak(): void {
-        this.break = true;
-    }
-
-    /** @internal */
-    public shouldBreak(): boolean {
-        return this.break;
     }
 
     /** @internal */

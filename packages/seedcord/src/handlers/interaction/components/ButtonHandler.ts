@@ -17,7 +17,6 @@ import type { ButtonInteraction, CacheType } from 'discord.js';
  * ```ts
  * \@ButtonRoute(ApproveId)
  * class ApproveButton extends ButtonHandler<[typeof ApproveId]> {
- *     \@Catchable()
  *     async execute() {
  *         const { userId } = this.params;
  *         await this.event.reply(`approved <@${userId}>`);

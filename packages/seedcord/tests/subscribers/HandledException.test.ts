@@ -2,12 +2,11 @@ import '../utils/mock-env';
 
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '@customId/index';
 import { Denial } from '@interfaces/Components';
-import { causeStack, faultRouteKey } from '@subscribers/default/HandledException';
+import { causeStack, faultSummary } from '@subscribers/default/HandledException';
 
 import type { ReplyResponse } from '@seedcord/types';
-import type { FaultSource } from '@subscribers/types/Subscriptions';
+import type { EventFaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 
 class TestFault extends Denial {
     constructor(message = 'boom', cause?: unknown) {
@@ -18,23 +17,45 @@ class TestFault extends Denial {
     }
 }
 
-function componentSource(customId: string): FaultSource {
-    return {
-        kind: 'interaction',
-        interactionKind: 'button',
-        command: null,
-        customId,
-        userId: 'u',
-        guildId: null,
-        channelId: null,
-        interactionId: 'i',
-        raw: {}
-    };
-}
+const interactionSource: InteractionFaultSource = {
+    kind: 'interaction',
+    interactionKind: 'slash',
+    command: 'ban',
+    customId: null,
+    userId: 'u1',
+    guildId: 'g1',
+    channelId: 'c1',
+    interactionId: 'i1',
+    raw: {}
+};
 
-function slashSource(command: string): FaultSource {
-    return { ...componentSource(''), interactionKind: 'slash', command, customId: null };
-}
+const eventSource: EventFaultSource = {
+    kind: 'event',
+    eventName: 'messageCreate',
+    handler: 'Starboard',
+    userId: null,
+    guildId: 'g1',
+    channelId: null,
+    raw: []
+};
+
+describe('faultSummary', () => {
+    it('renders the command and customId for an interaction source', () => {
+        const summary = faultSummary(new TestFault(), interactionSource);
+        expect(summary).toContain('**Command:** ban');
+        expect(summary).toContain('**Interaction ID:** `i1`');
+        expect(summary).not.toContain('**Event:**');
+    });
+
+    it('renders the event name and handler for an event source, with nullable fallbacks', () => {
+        const summary = faultSummary(new TestFault(), eventSource);
+        expect(summary).toContain('**Event:** messageCreate');
+        expect(summary).toContain('**Handler:** Starboard');
+        expect(summary).toContain('**User ID:** `n/a`');
+        expect(summary).toContain('**Channel ID:** `n/a`');
+        expect(summary).not.toContain('**Interaction ID:**');
+    });
+});
 
 describe('causeStack', () => {
     it('uses an Error cause stack', () => {
@@ -54,22 +75,5 @@ describe('causeStack', () => {
         const circular: Record<string, unknown> = {};
         circular.self = circular;
         expect(() => causeStack(new TestFault('x', circular))).not.toThrow();
-    });
-});
-
-describe('faultRouteKey', () => {
-    it('keys a slash fault on its full route plus the denial name', () => {
-        expect(faultRouteKey(slashSource('config set'), new TestFault())).toBe('config set:TestFault');
-    });
-
-    it('collapses parameterized component customIds to one key via the stable prefix', () => {
-        const Pager = new CustomId('pager').int('page');
-        const denial = new TestFault();
-
-        const page1 = faultRouteKey(componentSource(Pager.encode({ page: 1 })), denial);
-        const page2 = faultRouteKey(componentSource(Pager.encode({ page: 2 })), denial);
-
-        expect(page1).toBe(page2);
-        expect(page1).toContain('pager');
     });
 });

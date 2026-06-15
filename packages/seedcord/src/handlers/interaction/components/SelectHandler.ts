@@ -19,7 +19,6 @@ import type { CacheType } from 'discord.js';
  * ```ts
  * \@SelectMenuRoute(SelectMenuType.User, AssignId)
  * class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof AssignId]> {
- *     \@Catchable()
  *     async execute() {
  *         const { roleId } = this.params;
  *         await this.event.reply(`assigning ${this.event.values.length} member(s) to <@&${roleId}>`);

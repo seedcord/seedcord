@@ -1,6 +1,7 @@
 import { Logger } from '@seedcord/services';
-import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
+import { DiscordAPIError } from 'discord.js';
 
+import { HARMLESS_API_CODES } from '@bot/harmlessApiCodes';
 import { flagsFor } from '@miscellaneous/flagsFor';
 
 import type { Repliables } from '@handlers/BaseHandler';
@@ -8,13 +9,6 @@ import type { ReplyResponse } from '@seedcord/types';
 import type { EmbedBuilder, InteractionReplyOptions } from 'discord.js';
 
 type EmbedArm = Extract<ReplyResponse, { kind: 'embed' }>;
-
-// A dead token, a double ack, or a gone message means there is nothing to show and no bug to report.
-const HARMLESS_CODES = new Set<number | string>([
-    RESTJSONErrorCodes.UnknownInteraction,
-    RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged,
-    RESTJSONErrorCodes.UnknownMessage
-]);
 
 /**
  * Sends a {@link ReplyResponse} to an interaction, picking reply, editReply, or followUp from the live
@@ -92,7 +86,7 @@ export class ReplySender {
     }
 
     private logSwallowed(action: string, error: unknown): void {
-        if (error instanceof DiscordAPIError && HARMLESS_CODES.has(error.code)) {
+        if (error instanceof DiscordAPIError && HARMLESS_API_CODES.has(error.code)) {
             this.logger.debug(`reply ${action} hit harmless code ${error.code}`);
             return;
         }

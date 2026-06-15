@@ -1,8 +1,6 @@
-export { Catchable, type CatchableOptions } from './Catchable';
 export { Checkable } from './Checkable';
 export { RegisterCommand } from './Command';
 export * from './Confirmable';
-export { EventCatchable, type EventCatchableOptions } from './EventCatchable';
 export { RegisterEvent, type EventSpec, type RegisterEventOptions } from './Events';
 export {
     AutocompleteRoute,

@@ -1,11 +1,10 @@
 import { MessageFlags, TextChannel } from 'discord.js';
-import { Catchable, SlashRoute, SlashHandler } from 'seedcord';
+import { SlashRoute, SlashHandler } from 'seedcord';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 
 @SlashRoute('maintenance')
 export class Maintenance extends SlashHandler<'maintenance'> {
-    @Catchable()
     public async execute(): Promise<void> {
         await this.event.deferReply({ flags: MessageFlags.Ephemeral });
 
