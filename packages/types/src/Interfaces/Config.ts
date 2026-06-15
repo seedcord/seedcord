@@ -194,4 +194,9 @@ export interface Config {
      * Settings for framework-sent error notifications.
      */
     notifications?: NotificationsConfig;
+
+    /**
+     * User ids the `OwnerOnly` gate treats as bot owners.
+     */
+    ownerIds?: string[];
 }

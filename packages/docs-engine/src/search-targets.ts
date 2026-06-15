@@ -17,7 +17,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'Mongo' },
     { query: 'Bot' },
     { query: 'BaseComponent' },
-    { query: 'CooldownManager' },
+    { query: 'RateLimiter' },
     { query: 'WebhookLog' },
 
     // Properties
@@ -43,7 +43,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'HandlerWithChecks' },
     { query: 'Handler' },
     { query: 'BaseCore' },
-    { query: 'CooldownOptions' },
+    { query: 'RateLimitWindow' },
 
     // Types
     { query: 'RequireAtLeastOne' },

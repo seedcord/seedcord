@@ -1,4 +1,4 @@
-export * from './CooldownManager';
+export * from './RateLimiter';
 export * from './HealthCheck';
 export * from './Lifecycle';
 export * from './Logger';

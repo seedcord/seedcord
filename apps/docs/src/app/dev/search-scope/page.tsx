@@ -81,11 +81,11 @@ const MOCK: MockResult[] = [
         'SeedcordErrorCode.PluginKpgServiceDecoratorMissing'
     ),
     entry('services', 'Logger', 'class'),
-    entry('services', 'CooldownManager', 'class'),
+    entry('services', 'RateLimiter', 'class'),
     entry('services', 'HealthCheck', 'class'),
     entry('services', 'StrictEventEmitter', 'class'),
     entry('services', 'LogLevel', 'enum'),
-    entry('services', 'consume', 'method', 'CooldownManager#consume'),
+    entry('services', 'hit', 'method', 'RateLimiter#hit'),
     entry('plugins', 'Mongo', 'class'),
     entry('plugins', 'KpgService', 'class'),
     entry('plugins', 'PluginConfig', 'interface'),
