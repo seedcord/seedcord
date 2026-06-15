@@ -4,3 +4,6 @@ export { Notice } from '@stops/Notice';
 export { Fault } from '@stops/Fault';
 export { Silence } from '@stops/Silence';
 export { CustomId } from '@customId/CustomId';
+
+/** Package version */
+export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
