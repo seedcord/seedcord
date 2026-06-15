@@ -20,28 +20,13 @@ export class Logger implements ILogger {
 
     public readonly utils: LoggerUtilities;
 
-    private static readonly instances = new Map<string, Logger>();
-
-    private static instance(prefix: string, channel?: string): Logger {
-        const key = channel ? `${channel}::${prefix}` : prefix;
-        let instance = this.instances.get(key);
-        if (!instance) {
-            instance = new Logger(prefix, channel ? { channel } : undefined);
-            this.instances.set(key, instance);
-        }
-        return instance;
-    }
-
     /**
-     * Configures global logger settings.
-     *
-     * Applies configuration to all channels and clears instance cache.
+     * Configures global logger settings, applied to all channels.
      *
      * @param config - Partial configuration to merge with defaults
      */
     public static configure(config: Partial<LoggerConfiguration>): void {
         LoggerChannelRegistry.instance.configure(config);
-        this.instances.clear();
     }
 
     /**
@@ -69,12 +54,12 @@ export class Logger implements ILogger {
     }
 
     /**
-     * Returns a new Logger instance configured for the specified channel. Loggers are cached per (label, channel) pair.
+     * Returns a new Logger for this label on the specified channel.
      *
      * @param channel - Channel name to use
      */
     public inChannel(channel: string): Logger {
-        return Logger.instance(this.label, channel);
+        return new Logger(this.label, { channel });
     }
 
     /**
