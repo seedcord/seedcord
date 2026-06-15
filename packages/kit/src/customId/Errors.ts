@@ -1,5 +1,5 @@
-import { Denial } from '@denials/Denial';
-import { DenialEmbed } from '@denials/DenialEmbed';
+import { Denial } from '@stops/Denial';
+import { DenialEmbed } from '@stops/DenialEmbed';
 
 import type { ReplyResponse } from '@seedcord/types';
 

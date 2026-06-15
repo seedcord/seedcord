@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Denial } from '@denials/Denial';
-import { Halt } from '@src/Halt';
+import { Denial } from '@stops/Denial';
+import { Silence } from '@stops/Silence';
 
 import type { ReplyResponse } from '@seedcord/types';
 
@@ -14,21 +14,21 @@ class NoopDenial extends Denial {
     }
 }
 
-describe('Halt', () => {
+describe('Silence', () => {
     it('is an Error', () => {
-        expect(new Halt()).toBeInstanceOf(Error);
+        expect(new Silence()).toBeInstanceOf(Error);
     });
 
     it('is not a Denial, so the Denial branch never renders it', () => {
-        expect(new Halt()).not.toBeInstanceOf(Denial);
+        expect(new Silence()).not.toBeInstanceOf(Denial);
         expect(new NoopDenial()).toBeInstanceOf(Denial);
     });
 
     it('carries no reason by default', () => {
-        expect(new Halt().reason).toBeUndefined();
+        expect(new Silence().reason).toBeUndefined();
     });
 
     it('round-trips an optional reason', () => {
-        expect(new Halt('blacklisted user').reason).toBe('blacklisted user');
+        expect(new Silence('blacklisted user').reason).toBe('blacklisted user');
     });
 });

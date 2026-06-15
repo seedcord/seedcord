@@ -22,4 +22,6 @@ export type ReplyResponse =
 export interface RenderContext {
     /** Tracking id for the render. For a reported fault it matches the bus payload's uuid. */
     uuid: UUID;
+    /** Contact name a generic fault reply points the user to, from `notifications.developerUsername`. */
+    developerUsername?: string;
 }

@@ -11,7 +11,7 @@ import type { ClientEvents } from 'discord.js';
 /**
  * Base class for Discord event middleware.
  *
- * Middleware runs before event handlers and can stop the event by throwing a `Halt`. Unlike `EventHandler`, it
+ * Middleware runs before event handlers and can stop the event by throwing a `Silence`. Unlike `EventHandler`, it
  * runs the SAME for every event it is registered for, so it has no `match`. Specify a single event in the
  * generic and `{ events }` to read `this.event` fully typed. Span several events (or omit `{ events }` for a
  * catchall) and `this.event` narrows to `never`, read `this.eventName` and do work that does not depend on the

@@ -1,4 +1,4 @@
-import { Denial, Halt } from '@seedcord/kit';
+import { Denial, Silence } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError, GuildMember, Message, User } from 'discord.js';
 
@@ -18,7 +18,7 @@ interface EventActor {
 
 /**
  * The event controller boundary. Reports a throw from an event handler and never replies, since a
- * generic event has no reply target. A {@link Halt} or a non-reporting {@link Denial} stops quietly, a
+ * generic event has no reply target. A {@link Silence} or a non-reporting {@link Denial} stops quietly, a
  * reporting denial or a raw error publishes a fault with a best-effort actor derived from the args.
  *
  * @internal
@@ -30,8 +30,8 @@ export function handleEventFault(
     args: unknown,
     core: Core
 ): void {
-    if (caught instanceof Halt) {
-        if (caught.reason !== undefined) logger.debug(`Halt: ${caught.reason}`);
+    if (caught instanceof Silence) {
+        if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
         return;
     }
     if (!(caught instanceof Error)) throw caught;

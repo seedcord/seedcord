@@ -14,7 +14,7 @@ export default mergeConfig(
                 '@src': path.resolve(__dirname, './src'),
                 '@components': path.resolve(__dirname, './src/components'),
                 '@customId': path.resolve(__dirname, './src/customId'),
-                '@denials': path.resolve(__dirname, './src/denials')
+                '@stops': path.resolve(__dirname, './src/stops')
             }
         },
         test: {

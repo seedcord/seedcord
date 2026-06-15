@@ -40,7 +40,7 @@ export interface Handler {
 export interface WithChecks {
     /**
      * Runs pre-execution checks for the handler. A throw stops the lifecycle, the controller boundary
-     * catches a `Denial` or a `Halt` thrown here before `execute` runs.
+     * catches a `Denial` or a `Silence` thrown here before `execute` runs.
      *
      * @remarks Called automatically when the class is decorated with {@link Checkable}.
      *

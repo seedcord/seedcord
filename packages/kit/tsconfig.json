@@ -8,7 +8,7 @@
             "@src/*": ["./src/*"],
             "@components/*": ["./src/components/*"],
             "@customId/*": ["./src/customId/*"],
-            "@denials/*": ["./src/denials/*"]
+            "@stops/*": ["./src/stops/*"]
         },
         "types": ["vite/client"]
     },

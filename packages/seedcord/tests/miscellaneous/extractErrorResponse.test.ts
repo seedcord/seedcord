@@ -1,5 +1,4 @@
-import { CustomId } from '@seedcord/kit';
-import { DatabaseError } from '@seedcord/kit/internal';
+import { CustomId, Fault } from '@seedcord/kit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse, faultThrottle } from '@miscellaneous/extractErrorResponse';
@@ -55,7 +54,7 @@ describe('extractErrorResponse', () => {
 
     it('publishes handledException for a reporting denial with the uuid the reply shows', () => {
         const publish = vi.fn();
-        const denial = new DatabaseError('write failed');
+        const denial = new Fault({ cause: new Error('write failed') });
         const result = extractErrorResponse(denial, mockCore(publish), {
             interaction: slashInteraction(),
             guild: null,
@@ -94,7 +93,7 @@ describe('extractErrorResponse', () => {
 
     it('publishes handledException with an event source for a reporting denial on the event path', () => {
         const publish = vi.fn();
-        const denial = new DatabaseError('write failed');
+        const denial = new Fault({ cause: new Error('write failed') });
         extractErrorResponse(denial, mockCore(publish), {
             event: { name: 'messageCreate', handler: 'Starboard', args: [{}], channelId: 'ch1' },
             guild: null,
@@ -115,8 +114,8 @@ describe('extractErrorResponse', () => {
         const core = mockCore(publish);
         const origin = { interaction: slashInteraction('throttle-probe'), guild: null, user: null };
 
-        extractErrorResponse(new DatabaseError('first'), core, origin);
-        extractErrorResponse(new DatabaseError('second'), core, origin);
+        extractErrorResponse(new Fault({ cause: new Error('first') }), core, origin);
+        extractErrorResponse(new Fault({ cause: new Error('second') }), core, origin);
 
         expect(publish).toHaveBeenCalledTimes(1);
     });
@@ -127,11 +126,11 @@ describe('extractErrorResponse', () => {
         const origin = { interaction: slashInteraction('stamp-probe'), guild: null, user: null };
 
         const firstPublish = vi.fn();
-        extractErrorResponse(new DatabaseError('x'), mockCore(firstPublish), origin);
+        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(firstPublish), origin);
         expect(firstPublish).toHaveBeenCalledTimes(1);
 
         const retryPublish = vi.fn();
-        extractErrorResponse(new DatabaseError('x'), mockCore(retryPublish), origin);
+        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(retryPublish), origin);
         expect(retryPublish).not.toHaveBeenCalled();
     });
 
@@ -146,8 +145,8 @@ describe('extractErrorResponse', () => {
             user: null
         });
 
-        extractErrorResponse(new DatabaseError('p1'), core, origin(1));
-        extractErrorResponse(new DatabaseError('p2'), core, origin(2));
+        extractErrorResponse(new Fault({ cause: new Error('p1') }), core, origin(1));
+        extractErrorResponse(new Fault({ cause: new Error('p2') }), core, origin(2));
 
         expect(publish).toHaveBeenCalledTimes(1);
     });

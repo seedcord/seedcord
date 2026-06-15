@@ -1,5 +1,4 @@
-import { Halt } from '@seedcord/kit';
-import { DatabaseError } from '@seedcord/kit/internal';
+import { Silence, Fault } from '@seedcord/kit';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -87,8 +86,8 @@ describe('handleInteractionFault', () => {
         expect(payload.metadata).toBe(interaction);
     });
 
-    it('makes no reply and no report for a Halt', async () => {
-        await handleInteractionFault(new Halt('blacklisted'), asInteraction(mock), mockCore(publish));
+    it('makes no reply and no report for a Silence', async () => {
+        await handleInteractionFault(new Silence('blacklisted'), asInteraction(mock), mockCore(publish));
 
         expect(mock.reply).not.toHaveBeenCalled();
         expect(mock.editReply).not.toHaveBeenCalled();
@@ -127,13 +126,17 @@ describe('handleInteractionFault', () => {
     it('edits the reply and publishes handledException for a reporting denial on a deferred interaction', async () => {
         mock.deferred = true;
 
-        await handleInteractionFault(new DatabaseError('write failed'), asInteraction(mock), mockCore(publish));
+        await handleInteractionFault(
+            new Fault({ cause: new Error('write failed') }),
+            asInteraction(mock),
+            mockCore(publish)
+        );
 
         expect(mock.editReply).toHaveBeenCalledTimes(1);
         expect(mock.reply).not.toHaveBeenCalled();
         const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['handledException']];
         expect(event).toBe('handledException');
-        expect(payload.denial).toBeInstanceOf(DatabaseError);
+        expect(payload.denial).toBeInstanceOf(Fault);
     });
 
     it('follows up and publishes nothing for a non-reporting denial on a replied interaction', async () => {
@@ -166,12 +169,12 @@ describe('handleInteractionFault', () => {
         it('reports a reporting denial through unknownException, keeping its metadata', async () => {
             const interaction = asInteraction(mock);
 
-            await handleInteractionFault(new DatabaseError('x'), interaction, mockCore(publish));
+            await handleInteractionFault(new Fault({ cause: new Error('x') }), interaction, mockCore(publish));
 
             expect(mock.reply).not.toHaveBeenCalled();
             const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
             expect(event).toBe('unknownException');
-            expect(payload.error).toBeInstanceOf(DatabaseError);
+            expect(payload.error).toBeInstanceOf(Fault);
             expect(payload.metadata).toBe(interaction);
         });
 
@@ -184,8 +187,8 @@ describe('handleInteractionFault', () => {
             lookup.isAutocomplete.mockReturnValue(true);
             lookup.commandName = 'lookup';
 
-            await handleInteractionFault(new DatabaseError('x'), asInteraction(search), core);
-            await handleInteractionFault(new DatabaseError('x'), asInteraction(lookup), core);
+            await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(search), core);
+            await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(lookup), core);
 
             expect(publish).toHaveBeenCalledTimes(2);
         });

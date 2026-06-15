@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
 
-import { Denial, DenialEmbed } from '@seedcord/kit';
+import { Denial, Fault } from '@seedcord/kit';
 import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
@@ -70,14 +70,15 @@ export interface ExtractedErrorResponse {
  *
  * A {@link Denial} always renders its own reply. A reporting denial (`report: true`) additionally
  * publishes `handledException` on the interaction path. A raw, non-denial throw publishes
- * `unknownException` and renders the configured `defaultError` (or {@link GenericError}). One uuid is
+ * `unknownException` and renders the configured `defaultError` (or a generic {@link Fault}). One uuid is
  * threaded into both the reply and the bus payload.
  *
  * @internal
  */
 export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrigin): ExtractedErrorResponse {
     const uuid = crypto.randomUUID();
-    const ctx: RenderContext = { uuid };
+    const developerUsername = core.config.notifications?.developerUsername;
+    const ctx: RenderContext = developerUsername === undefined ? { uuid } : { uuid, developerUsername };
 
     if (error instanceof Denial) {
         if (error.report) reportFault(error, core, origin, uuid);
@@ -87,9 +88,7 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
     reportRawFault(error, core, origin, uuid);
 
     const override = core.config.errors?.defaultError;
-    const response = override
-        ? new override(uuid).render(ctx)
-        : new GenericError(uuid, core.config.notifications?.developerUsername).render();
+    const response = override ? new override(uuid).render(ctx) : new Fault().render(ctx);
 
     return { uuid, response };
 }
@@ -215,29 +214,4 @@ function interactionKind(interaction: Repliables): InteractionFaultSource['inter
     if (interaction.isButton()) return 'button';
     if (interaction.isAnySelectMenu()) return 'select';
     return 'modal';
-}
-
-/**
- * Generic error shown to users when an unknown error occurs.
- *
- * Set `notifications.developerUsername` in your Seedcord config to customize the contact name.
- *
- * @internal
- */
-class GenericError extends Denial {
-    constructor(
-        private readonly uuid: UUID,
-        private readonly developerUsername = 'the developer'
-    ) {
-        super('An unknown error occurred');
-    }
-
-    render(): ReplyResponse {
-        const embed = new DenialEmbed(
-            `An unknown error occurred. Please reach out to ${this.developerUsername} with a way to reproduce the error and the following:\n` +
-                `### UUID: \`${this.uuid}\``,
-            'Error'
-        );
-        return { kind: 'embed', embeds: [embed.component] };
-    }
 }

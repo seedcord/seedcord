@@ -1,5 +1,4 @@
-import { Halt } from '@seedcord/kit';
-import { DatabaseError } from '@seedcord/kit/internal';
+import { Silence, Fault } from '@seedcord/kit';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -36,7 +35,13 @@ describe('handleEventFault', () => {
     });
 
     it('publishes handledException with an event source for a reporting denial', () => {
-        handleEventFault(new DatabaseError('write failed'), 'messageCreate', 'Starboard', [{}], mockCore(publish));
+        handleEventFault(
+            new Fault({ cause: new Error('write failed') }),
+            'messageCreate',
+            'Starboard',
+            [{}],
+            mockCore(publish)
+        );
 
         const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['handledException']];
         expect(event).toBe('handledException');
@@ -54,8 +59,8 @@ describe('handleEventFault', () => {
         expect(payload.metadata).toMatchObject({ eventName: 'guildMemberRemove', handler: 'Farewell' });
     });
 
-    it('stays quiet for a Halt', () => {
-        handleEventFault(new Halt('filtered'), 'guildMemberAdd', 'Welcome', [{}], mockCore(publish));
+    it('stays quiet for a Silence', () => {
+        handleEventFault(new Silence('filtered'), 'guildMemberAdd', 'Welcome', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
     });
@@ -92,8 +97,8 @@ describe('handleEventFault', () => {
     it('throttles duplicate event faults from the same handler within the window to one report', () => {
         const core = mockCore(publish);
 
-        handleEventFault(new DatabaseError('first'), 'messageCreate', 'Starboard', [{}], core);
-        handleEventFault(new DatabaseError('second'), 'messageCreate', 'Starboard', [{}], core);
+        handleEventFault(new Fault({ cause: new Error('first') }), 'messageCreate', 'Starboard', [{}], core);
+        handleEventFault(new Fault({ cause: new Error('second') }), 'messageCreate', 'Starboard', [{}], core);
 
         expect(publish).toHaveBeenCalledTimes(1);
     });

@@ -574,9 +574,6 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
-      '@seedcord/kit':
-        specifier: workspace:*
-        version: link:../kit
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services

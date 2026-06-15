@@ -1,4 +1,4 @@
-import { Halt } from '@seedcord/kit';
+import { Silence } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
 
@@ -23,8 +23,8 @@ export async function handleInteractionFault(
     interaction: ValidInteractionTypes,
     core: Core
 ): Promise<void> {
-    if (caught instanceof Halt) {
-        if (caught.reason !== undefined) logger.debug(`Halt: ${caught.reason}`);
+    if (caught instanceof Silence) {
+        if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
         return;
     }
     if (!(caught instanceof Error)) throw caught;
