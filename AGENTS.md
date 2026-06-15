@@ -134,25 +134,27 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 
 ## Repo Surface (where things live)
 
-- `packages/seedcord` — the core framework (`Seedcord` orchestrator, bot, effects, interfaces, hmr, miscellaneous).
-- `packages/services` — `CooldownManager`, `Errors`, `HealthCheck`, `Lifecycle`, `Logger`, `StrictEventEmitter`.
-- `packages/utils` — `misc`, `numbers`, `objects`, `strings`, `brand`.
-- `packages/types` — shared `Types` and `Interfaces`. Use `import type` from here before redefining locally.
-- `packages/cli` — the `seedcord` CLI built on Commander + Ink (React-based terminal UI).
-- `packages/plugins` — plugin contract and first-party plugins.
-- `packages/docs-engine`, `packages/docs-generator` — the docs extraction + rendering pipeline used by `apps/docs`.
-- `packages/eslint-config`, `packages/tsconfig`, `packages/tsup-config` — workspace-internal config packages (not published).
-- `apps/docs`, `apps/guide`, `apps/home` — Next.js 16 + React 19 documentation surfaces. `docs` is the most populated today; `guide` and `home` are placeholders.
-- `mock/` — a mock Discord bot consumed by tests and end-to-end exercises of the framework.
-- `debugging/` — scratch outputs from doc-extraction smoke runs (gitignored).
-- `generated/` — output of `pnpm docs:extract` (gitignored).
-- `.github/agents/`, `.github/prompts/`, `.github/skills/` — the agent prompts, slash prompts, and skill libraries used by Claude Code and the GitHub Copilot agents. `.claude/skills` symlinks to `.github/skills`, and `CLAUDE.md` symlinks to this file.
+A monorepo of focused leaf packages under `packages/`, Next.js docs apps under `apps/`, and a mock bot. Read a package's own barrel and `package.json` for its current surface, not a list here.
+
+- `packages/seedcord` — the core framework orchestrator and bot host.
+- `packages/services` — shared runtime services (logging, lifecycle, health, rate limiting, events).
+- `packages/utils` — small stateless helpers.
+- `packages/types` — shared types and interfaces. Import from here before redefining locally.
+- `packages/kit` — component builders, the error/`Notice` tree, and the typed customId codec.
+- `packages/errors` — the chalk-only `SeedcordError` tree.
+- `packages/cli` — the `seedcord` CLI.
+- `packages/plugins` — the plugin contract and first-party plugins.
+- `packages/docs-engine`, `packages/docs-generator` — the docs extraction and rendering pipeline.
+- the `*-config` packages — workspace-internal config (not published).
+- `apps/*` — the Next.js documentation surfaces.
+- `mock/` — a mock Discord bot consumed by tests.
+- `.github/agents`, `.github/prompts`, `.github/skills` — agent prompts, slash prompts, and skill libraries. `.claude/skills` symlinks to `.github/skills`, and `CLAUDE.md` symlinks to this file.
 
 ---
 
 ## UI Primitives (apps)
 
-The Next.js apps each own their primitives under `apps/<name>/src/components/ui/`. For `apps/docs` today: `Button`, `CodeBlock`, `CodePanel`, `CopyAnchorButton`, `CopyButton`, `GithubIcon`, `Icon`, `ScrollToTopButton`, `Tooltip`. Raw `<button>` / `<input>` / `<select>` markup is banned when the primitive exists in the app — read the `components/ui/` index first, every time. Use `cn(...)` (from each app's `@lib/utils`) for class composition and the `tw\`…\``template tag for multi-line class strings. Icon-only actions:`<Button variant="ghost" size="icon">`.
+The Next.js apps each own their primitives under `apps/<name>/src/components/ui/`. Raw `<button>` / `<input>` / `<select>` markup is banned when the primitive exists in the app, so read the `components/ui/` index first, every time. Use `cn(...)` (from each app's `@lib/utils`) for class composition and the `tw\`…\``template tag for multi-line class strings. Icon-only actions:`<Button variant="ghost" size="icon">`.
 
 A "one-off style" is a missing variant in the primitive's `VARIANTS` map, not an excuse to inline styles. If a primitive doesn't exist yet, that's a signal to either lift the pattern (when used in 2+ apps) or build the primitive in the app where it belongs.
 
