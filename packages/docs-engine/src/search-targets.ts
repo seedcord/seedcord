@@ -10,7 +10,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'AutocompleteHandler' },
     { query: 'HealthCheck' },
     { query: 'BaseHandler' },
-    { query: 'DenialEmbed' },
+    { query: 'Fault' },
     { query: 'BuilderComponent' },
     { query: 'CoordinatedShutdown' },
     { query: 'UnknownException' },
@@ -36,7 +36,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
 
     // Accessors
     { query: 'isRunning' },
-    { query: 'Denial report' },
+    { query: 'Notice report' },
     { query: 'client' },
 
     // Interfaces

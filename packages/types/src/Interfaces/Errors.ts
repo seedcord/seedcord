@@ -2,10 +2,10 @@ import type { RenderContext, ReplyResponse } from './ReplyResponse';
 import type { UUID } from 'node:crypto';
 
 /**
- * Structural shape of a renderable denial. A framework `Denial` subclass satisfies it. Used to type
+ * Structural shape of a renderable denial. A framework `Notice` subclass satisfies it. Used to type
  * {@link ErrorsConfig.defaultError} without importing the concrete class (defined in `@seedcord/kit`).
  */
-export interface RenderableDenial {
+export interface RenderableNotice {
     /** Whether the denial is a reported fault. */
     readonly report: boolean;
     /** Builds the user-facing reply. */
@@ -28,7 +28,7 @@ export interface ErrorsConfig {
      *
      * Defaults to the framework's generic error.
      */
-    defaultError?: new (uuid: UUID) => RenderableDenial;
+    defaultError?: new (uuid: UUID) => RenderableNotice;
     /**
      * discord.js API error codes the interaction error path swallows quietly instead of reporting a
      * fault, for a code thrown by the handler's own work. Empty by default, so every such code reports

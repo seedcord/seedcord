@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BuilderComponent } from '@components/Component';
 import { setBotColor } from '@src/botColorHolder';
-import { Denial } from '@stops/Denial';
+import { Notice } from '@stops/Notice';
 
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
 const ctx: RenderContext = { uuid: '00000000-0000-0000-0000-000000000000' };
 
-class TestDenial extends Denial {
+class TestNotice extends Notice {
     constructor(cause?: unknown) {
         super('test denial', cause === undefined ? undefined : { cause });
     }
@@ -18,7 +18,7 @@ class TestDenial extends Denial {
     }
 }
 
-class ReportingDenial extends Denial {
+class ReportingNotice extends Notice {
     constructor() {
         super('reported fault');
         this.report = true;
@@ -77,31 +77,31 @@ describe('BuilderComponent bot color', () => {
     });
 });
 
-describe('Denial', () => {
+describe('Notice', () => {
     it('is an Error', () => {
-        expect(new TestDenial()).toBeInstanceOf(Error);
+        expect(new TestNotice()).toBeInstanceOf(Error);
     });
 
     it('defaults report to false', () => {
-        expect(new TestDenial().report).toBe(false);
+        expect(new TestNotice().report).toBe(false);
     });
 
     it('lets a subclass opt into reporting', () => {
-        expect(new ReportingDenial().report).toBe(true);
+        expect(new ReportingNotice().report).toBe(true);
     });
 
     it('stores an ES2022 cause', () => {
         const cause = new Error('driver blew up');
-        expect(new TestDenial(cause).cause).toBe(cause);
+        expect(new TestNotice(cause).cause).toBe(cause);
     });
 
     it('names itself after the concrete subclass, not Error', () => {
-        expect(new TestDenial().name).toBe('TestDenial');
-        expect(new ReportingDenial().name).toBe('ReportingDenial');
+        expect(new TestNotice().name).toBe('TestNotice');
+        expect(new ReportingNotice().name).toBe('ReportingNotice');
     });
 
     it('builds a fresh response on each render', () => {
-        const denial = new TestDenial();
+        const denial = new TestNotice();
         const first = denial.render(ctx);
         const second = denial.render(ctx);
         expect(first).not.toBe(second);

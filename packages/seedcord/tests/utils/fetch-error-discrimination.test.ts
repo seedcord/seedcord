@@ -1,4 +1,4 @@
-import { Denial } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
@@ -24,8 +24,8 @@ describe('fetch* error discrimination', () => {
         it('rebrands UnknownMember as UserNotInGuild', async () => {
             const g = guild(() => Promise.reject(discordError(RESTJSONErrorCodes.UnknownMember)));
             const err = await fetchGuildMember(g, '123').catch((e: unknown) => e);
-            expect(err).toBeInstanceOf(Denial);
-            expect((err as Denial).name).toBe('UserNotInGuild');
+            expect(err).toBeInstanceOf(Notice);
+            expect((err as Notice).name).toBe('UserNotInGuild');
         });
 
         it('rethrows non-404 errors unchanged', async () => {
@@ -46,8 +46,8 @@ describe('fetch* error discrimination', () => {
         it('rebrands UnknownRole as RoleDoesNotExist', async () => {
             const g = guild(() => Promise.reject(discordError(RESTJSONErrorCodes.UnknownRole)));
             const err = await fetchRole(g, '123').catch((e: unknown) => e);
-            expect(err).toBeInstanceOf(Denial);
-            expect((err as Denial).name).toBe('RoleDoesNotExist');
+            expect(err).toBeInstanceOf(Notice);
+            expect((err as Notice).name).toBe('RoleDoesNotExist');
         });
 
         it('rethrows non-404 errors unchanged', async () => {
@@ -64,8 +64,8 @@ describe('fetch* error discrimination', () => {
         it('rebrands UnknownChannel as CouldNotFindChannel', async () => {
             const c = client(() => Promise.reject(discordError(RESTJSONErrorCodes.UnknownChannel)));
             const err = await fetchText(c, '123').catch((e: unknown) => e);
-            expect(err).toBeInstanceOf(Denial);
-            expect((err as Denial).name).toBe('CouldNotFindChannel');
+            expect(err).toBeInstanceOf(Notice);
+            expect((err as Notice).name).toBe('CouldNotFindChannel');
         });
 
         it('rethrows non-404 errors unchanged', async () => {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { Denial } from '@stops/Denial';
+import { Notice } from '@stops/Notice';
 import { Silence } from '@stops/Silence';
 
 import type { ReplyResponse } from '@seedcord/types';
 
-class NoopDenial extends Denial {
+class NoopDenial extends Notice {
     constructor() {
         super('noop');
     }
@@ -19,9 +19,9 @@ describe('Silence', () => {
         expect(new Silence()).toBeInstanceOf(Error);
     });
 
-    it('is not a Denial, so the Denial branch never renders it', () => {
-        expect(new Silence()).not.toBeInstanceOf(Denial);
-        expect(new NoopDenial()).toBeInstanceOf(Denial);
+    it('is not a Notice, so the Notice branch never renders it', () => {
+        expect(new Silence()).not.toBeInstanceOf(Notice);
+        expect(new NoopDenial()).toBeInstanceOf(Notice);
     });
 
     it('carries no reason by default', () => {

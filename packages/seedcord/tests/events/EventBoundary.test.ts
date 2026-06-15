@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleEventFault } from '@bot/handleEventFault';
 import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
-import { TestDenial } from '../utils/TestDenial';
+import { TestNotice } from '../utils/TestNotice';
 
 import type { Core } from '@interfaces/Core';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
@@ -66,7 +66,7 @@ describe('handleEventFault', () => {
     });
 
     it('stays quiet for a non-reporting denial', () => {
-        handleEventFault(new TestDenial(), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
+        handleEventFault(new TestNotice(), 'voiceStateUpdate', 'Tracker', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
     });

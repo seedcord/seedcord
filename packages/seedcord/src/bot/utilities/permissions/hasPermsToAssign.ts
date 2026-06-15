@@ -4,18 +4,18 @@ import { checkBotPermissions } from './checkBotPermissions';
 import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from './denials';
 import { getBotRole } from '../roles/getBotRole';
 
-import type { Denial } from '@seedcord/kit';
+import type { Notice } from '@seedcord/kit';
 
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.
  */
 export interface AssignRoleErrorCtors {
     /** Custom error for role higher than bot */
-    higher?: new (message: string, role: Role, botRole: Role) => Denial;
+    higher?: new (message: string, role: Role, botRole: Role) => Notice;
     /** Custom error for managed role assignment */
-    managed?: new (message: string) => Denial;
+    managed?: new (message: string) => Notice;
     /** Custom error for missing Manage Roles permission */
-    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Denial;
+    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Notice;
 }
 
 /**

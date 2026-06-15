@@ -1,8 +1,8 @@
-import { Denial } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
 
 import type { ReplyResponse } from '@seedcord/types';
 
-export class TestDenial extends Denial {
+export class TestNotice extends Notice {
     constructor(message = 'test denial') {
         super(message);
     }

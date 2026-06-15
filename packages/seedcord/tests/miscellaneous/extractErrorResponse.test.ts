@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse, faultThrottle } from '@miscellaneous/extractErrorResponse';
 
-import { TestDenial } from '../utils/TestDenial';
+import { TestNotice } from '../utils/TestNotice';
 
 import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
@@ -82,7 +82,7 @@ describe('extractErrorResponse', () => {
 
     it('publishes nothing for a non-reporting denial', () => {
         const publish = vi.fn();
-        extractErrorResponse(new TestDenial(), mockCore(publish), {
+        extractErrorResponse(new TestNotice(), mockCore(publish), {
             interaction: slashInteraction(),
             guild: null,
             user: null

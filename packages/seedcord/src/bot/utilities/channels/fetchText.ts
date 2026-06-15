@@ -1,4 +1,5 @@
-import { Denial, DenialEmbed } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
+import { NoticeEmbed } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
 
 import type { Nullable, ReplyResponse } from '@seedcord/types';
@@ -7,7 +8,7 @@ import type { Channel, Client, TextChannelResolvable } from 'discord.js';
 /**
  * Error thrown when a channel could not be found or accessed.
  */
-class CouldNotFindChannel extends Denial {
+class CouldNotFindChannel extends Notice {
     constructor(
         message: string,
         public readonly channelId: string
@@ -16,7 +17,7 @@ class CouldNotFindChannel extends Denial {
     }
 
     render(): ReplyResponse {
-        const embed = new DenialEmbed(
+        const embed = new NoticeEmbed(
             `Could not find channel with ID \`${this.channelId}\`. It could also be that the channel is not a text channel.`
         );
         return { kind: 'embed', embeds: [embed.component] };

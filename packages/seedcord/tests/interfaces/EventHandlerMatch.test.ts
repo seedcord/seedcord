@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Denial } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -138,7 +138,7 @@ class GenericSuperset extends EventHandler<Events.MessageCreate | Events.Message
     }
 }
 
-class BoomError extends Denial {
+class BoomError extends Notice {
     constructor() {
         super('boom');
     }

@@ -1,4 +1,5 @@
-import { Denial, DenialEmbed } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
+import { NoticeEmbed } from '@seedcord/kit/internal';
 import { GuildMember, Role, TextChannel } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/types';
@@ -23,7 +24,7 @@ function labelFor(subject: PermSubject): string {
 /**
  * Error thrown when attempting to modify a role higher than the bot's highest role.
  */
-export class RoleHigherThanMe extends Denial {
+export class RoleHigherThanMe extends Notice {
     constructor(
         message: string,
         public role: Role,
@@ -33,7 +34,7 @@ export class RoleHigherThanMe extends Denial {
     }
 
     render(): ReplyResponse {
-        const embed = new DenialEmbed(
+        const embed = new NoticeEmbed(
             `I cannot assign a role that is higher than me.\n\n` +
                 `The role <@&${this.role.id}> is higher than my role <@&${this.botRole.id}> in the hierarchy.`
         );
@@ -44,13 +45,13 @@ export class RoleHigherThanMe extends Denial {
 /**
  * Error thrown when attempting to assign a managed/bot role.
  */
-export class CannotAssignBotRole extends Denial {
+export class CannotAssignBotRole extends Notice {
     constructor(message = 'I cannot assign a managed role.') {
         super(message);
     }
 
     render(): ReplyResponse {
-        const embed = new DenialEmbed('I cannot assign a managed role.');
+        const embed = new NoticeEmbed('I cannot assign a managed role.');
         return { kind: 'embed', embeds: [embed.component] };
     }
 }
@@ -58,7 +59,7 @@ export class CannotAssignBotRole extends Denial {
 /**
  * Error thrown when required permissions are missing.
  */
-export class MissingPermissions extends Denial {
+export class MissingPermissions extends Notice {
     constructor(
         message: string,
         public where: PermSubject,
@@ -69,7 +70,7 @@ export class MissingPermissions extends Denial {
 
     render(): ReplyResponse {
         const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
-        const embed = new DenialEmbed(
+        const embed = new NoticeEmbed(
             `The ${labelFor(this.where)} ${mentionFor(this.where)} is missing the following permission entries:\n\n${bullets}`
         );
         return { kind: 'embed', embeds: [embed.component] };
@@ -79,7 +80,7 @@ export class MissingPermissions extends Denial {
 /**
  * Error thrown when a target has permissions that must not be present.
  */
-export class HasDangerousPermissions extends Denial {
+export class HasDangerousPermissions extends Notice {
     constructor(
         message: string,
         public target: PermSubject,
@@ -90,7 +91,7 @@ export class HasDangerousPermissions extends Denial {
 
     render(): ReplyResponse {
         const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-        const embed = new DenialEmbed(
+        const embed = new NoticeEmbed(
             `The ${labelFor(this.target)} ${mentionFor(this.target)} has the following permission entries that must not be enabled:\n\n${bullets}`
         );
         return { kind: 'embed', embeds: [embed.component] };

@@ -1,4 +1,4 @@
-import type { Denial } from '@seedcord/kit';
+import type { Notice } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
 import type { UUID } from 'crypto';
 import type { Guild, User } from 'discord.js';
@@ -54,7 +54,7 @@ export interface EventFaultSource {
  * Default subscribers that are always available in the framework.
  */
 export interface DefaultSubscriptions {
-    /** Triggered when an unhandled exception (a raw non-Denial throw) occurs */
+    /** Triggered when an unhandled exception (a raw non-Notice throw) occurs */
     unknownException: {
         uuid: UUID;
         error: Error;
@@ -62,10 +62,10 @@ export interface DefaultSubscriptions {
         user: Nullable<User>;
         metadata?: unknown;
     };
-    /** Triggered when a reported Denial (`report: true`) is caught */
+    /** Triggered when a reported Notice (`report: true`) is caught */
     handledException: {
         /** The live denial, typed so a subscriber reads subclass fields with no cast. */
-        denial: Denial;
+        denial: Notice;
         /** The same uuid the user-facing render shows. */
         uuid: UUID;
         /** Where the fault came from, narrow on `source.kind`. */

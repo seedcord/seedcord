@@ -3,15 +3,15 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
 /**
  * Base class for a user-facing refusal or a reported fault.
  *
- * Throw a `Denial` to stop a handler and reply to the user. The framework catches it at the controller
- * boundary and renders {@link Denial.render}, which always decides what the user sees. With `report`
+ * Throw a `Notice` to stop a handler and reply to the user. The framework catches it at the controller
+ * boundary and renders {@link Notice.render}, which always decides what the user sees. With `report`
  * false (the default) that render is all that happens. With `report` true the framework also logs the
- * fault and publishes it to the `handledException` bus. A raw, non-Denial throw shows the generic message.
+ * fault and publishes it to the `handledException` bus. A raw, non-Notice throw shows the generic message.
  */
-export abstract class Denial extends Error {
+export abstract class Notice extends Error {
     /**
      * Whether this denial is a reported fault. True also logs it and publishes it to the `handledException`
-     * bus. The user always sees {@link Denial.render} either way.
+     * bus. The user always sees {@link Notice.render} either way.
      */
     public report = false;
 

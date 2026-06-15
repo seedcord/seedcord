@@ -1,4 +1,5 @@
-import { Denial, DenialEmbed } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
+import { NoticeEmbed } from '@seedcord/kit/internal';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
 import type { Nullable, ReplyResponse } from '@seedcord/types';
@@ -7,7 +8,7 @@ import type { Client, Role } from 'discord.js';
 /**
  * Error thrown when a requested role does not exist.
  */
-class RoleDoesNotExist extends Denial {
+class RoleDoesNotExist extends Notice {
     constructor(
         message: string,
         public roleId: string
@@ -16,7 +17,7 @@ class RoleDoesNotExist extends Denial {
     }
 
     render(): ReplyResponse {
-        const embed = new DenialEmbed(`The role with ID \`${this.roleId}\` does not exist.`);
+        const embed = new NoticeEmbed(`The role with ID \`${this.roleId}\` does not exist.`);
         return { kind: 'embed', embeds: [embed.component] };
     }
 }

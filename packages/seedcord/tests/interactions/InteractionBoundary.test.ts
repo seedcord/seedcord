@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
-import { TestDenial } from '../utils/TestDenial';
+import { TestNotice } from '../utils/TestNotice';
 
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
@@ -142,7 +142,7 @@ describe('handleInteractionFault', () => {
     it('follows up and publishes nothing for a non-reporting denial on a replied interaction', async () => {
         mock.replied = true;
 
-        await handleInteractionFault(new TestDenial(), asInteraction(mock), mockCore(publish));
+        await handleInteractionFault(new TestNotice(), asInteraction(mock), mockCore(publish));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
         expect(publish).not.toHaveBeenCalled();

@@ -1,4 +1,4 @@
-import { CustomId, Denial } from '@seedcord/kit';
+import { CustomId, Notice } from '@seedcord/kit';
 import { describe, expect, it } from 'vitest';
 
 import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
@@ -14,15 +14,15 @@ const MSG = '1284567890123456789';
 
 const core = {} as unknown as Core;
 
-// runs fn, asserts it threw a Denial, and returns the concrete denial's stamped name
+// runs fn, asserts it threw a Notice, and returns the concrete denial's stamped name
 function denialNameFrom(fn: () => unknown): string {
     try {
         fn();
     } catch (e) {
-        expect(e).toBeInstanceOf(Denial);
-        return (e as Denial).name;
+        expect(e).toBeInstanceOf(Notice);
+        return (e as Notice).name;
     }
-    throw new Error('expected a Denial to be thrown');
+    throw new Error('expected a Notice to be thrown');
 }
 
 // the bases read only a couple fields off the event, so a minimal fake per kind is enough.

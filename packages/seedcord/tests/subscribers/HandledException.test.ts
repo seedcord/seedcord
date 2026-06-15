@@ -1,6 +1,6 @@
 import '../utils/mock-env';
 
-import { Denial } from '@seedcord/kit';
+import { Notice } from '@seedcord/kit';
 import { describe, expect, it } from 'vitest';
 
 import { causeStack, faultSummary } from '@subscribers/default/HandledException';
@@ -8,7 +8,7 @@ import { causeStack, faultSummary } from '@subscribers/default/HandledException'
 import type { ReplyResponse } from '@seedcord/types';
 import type { EventFaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 
-class TestFault extends Denial {
+class TestFault extends Notice {
     constructor(message = 'boom', cause?: unknown) {
         super(message, cause === undefined ? undefined : { cause });
     }

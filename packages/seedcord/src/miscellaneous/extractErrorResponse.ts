@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
 
-import { Denial, Fault } from '@seedcord/kit';
+import { Notice, Fault } from '@seedcord/kit';
 import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
@@ -68,7 +68,7 @@ export interface ExtractedErrorResponse {
 /**
  * Processes an error into a user-facing reply and routes its report.
  *
- * A {@link Denial} always renders its own reply. A reporting denial (`report: true`) additionally
+ * A {@link Notice} always renders its own reply. A reporting denial (`report: true`) additionally
  * publishes `handledException` on the interaction path. A raw, non-denial throw publishes
  * `unknownException` and renders the configured `defaultError` (or a generic {@link Fault}). One uuid is
  * threaded into both the reply and the bus payload.
@@ -80,7 +80,7 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
     const developerUsername = core.config.notifications?.developerUsername;
     const ctx: RenderContext = developerUsername === undefined ? { uuid } : { uuid, developerUsername };
 
-    if (error instanceof Denial) {
+    if (error instanceof Notice) {
         if (error.report) reportFault(error, core, origin, uuid);
         return { uuid, response: error.render(ctx) };
     }
@@ -104,7 +104,7 @@ function withThrottle(origin: ErrorOrigin, error: Error, publish: () => void): v
     faultThrottle.markReported(key);
 }
 
-function reportFault(denial: Denial, core: Core, origin: ErrorOrigin, uuid: UUID): void {
+function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID): void {
     withThrottle(origin, denial, () => {
         logger.error(`${denial.name}: ${uuid}`, denial);
 
@@ -161,7 +161,7 @@ function buildEventSource(event: EventOrigin, origin: ErrorOrigin): EventFaultSo
 // the stable route plus the error name, so a parameterized component or a flooding event collapses to one key
 function faultKey(origin: ErrorOrigin, error: Error): string {
     const name =
-        error instanceof Denial
+        error instanceof Notice
             ? error.name
             : error instanceof DiscordAPIError
               ? String(error.code)

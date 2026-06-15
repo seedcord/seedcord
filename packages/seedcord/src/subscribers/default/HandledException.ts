@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { BuilderComponent, Denial } from '@seedcord/kit';
+import { BuilderComponent, Notice } from '@seedcord/kit';
 import { WebhookClient } from 'discord.js';
 import { Envapt } from 'envapt';
 
@@ -30,7 +30,7 @@ function webhookUrlValidator(raw: unknown): string {
 }
 
 /**
- * Default subscriber that delivers a reported `Denial` (`report: true`) to a webhook with the denial,
+ * Default subscriber that delivers a reported `Notice` (`report: true`) to a webhook with the denial,
  * the fault source, the threaded uuid, the cause stack, and the raw source as a JSON attachment. The
  * controller boundary throttles identical faults before they reach the bus.
  *
@@ -90,7 +90,7 @@ class HandledExceptionContainer extends BuilderComponent<'container'> {
  *
  * @internal
  */
-export function faultSummary(denial: Denial, source: FaultSource): string {
+export function faultSummary(denial: Notice, source: FaultSource): string {
     const head = `### A handled fault was reported: \`${denial.name}\`\n**Message:** ${denial.message}\n`;
     if (source.kind === 'event') {
         return (
@@ -118,7 +118,7 @@ export function faultSummary(denial: Denial, source: FaultSource): string {
  *
  * @internal
  */
-export function causeStack(denial: Denial): string {
+export function causeStack(denial: Notice): string {
     const { cause } = denial;
     if (cause instanceof Error) return cause.stack ?? cause.message;
     if (typeof cause === 'string') return cause;

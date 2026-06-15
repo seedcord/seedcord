@@ -1,7 +1,7 @@
 /**
  * Throw to stop a handler with no reply and no report.
  *
- * The framework boundary catches `Silence` before {@link Denial}, makes zero Discord calls, and stops.
+ * The framework boundary catches `Silence` before {@link Notice}, makes zero Discord calls, and stops.
  * Use it for a blacklist drop or a quiet filter where replying would leak information. Throw it before
  * any reply or defer, because throwing after a defer leaves the user with a hanging spinner.
  */
