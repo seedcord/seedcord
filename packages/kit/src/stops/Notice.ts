@@ -15,6 +15,12 @@ export abstract class Notice extends Error {
      */
     public report = false;
 
+    /**
+     * A short one-line reason. When every arm of an `or` gate refuses and each refusal sets this, `or`
+     * lists them instead of showing a neutral message.
+     */
+    public summary?: string;
+
     protected constructor(message: string, options?: ErrorOptions) {
         super(message, options);
 
