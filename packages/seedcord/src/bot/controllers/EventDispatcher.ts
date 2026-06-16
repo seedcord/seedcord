@@ -7,7 +7,9 @@ import { Collection, type ClientEvents } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { EventMetadataKey } from '@bDecorators/Events';
+import { runHandlerGates } from '@bDecorators/Gated';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { eventGateContext } from '@bot/gates';
 import { handleEventFault } from '@bot/handleEventFault';
 import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
@@ -45,7 +47,7 @@ type EventArtifact = string;
  *
  * @internal
  */
-export class EventController implements Initializeable, HmrAware {
+export class EventDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Events');
     private isInitialized = false;
 
@@ -66,7 +68,7 @@ export class EventController implements Initializeable, HmrAware {
         const eventsDir = this.core.config.bot.events.path;
         if (!eventsDir) {
             // unreachable today, guards against a path regression
-            throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['EventController', 'events']);
+            throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['EventDispatcher', 'events']);
         }
 
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
@@ -214,7 +216,6 @@ export class EventController implements Initializeable, HmrAware {
 
             try {
                 const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
-                if (middleware.hasChecks()) await middleware.runChecks();
                 await middleware.execute();
             } catch (caught) {
                 // return false so a throw in middleware stops the event for downstream handlers
@@ -331,7 +332,8 @@ export class EventController implements Initializeable, HmrAware {
         try {
             this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.name)}`);
             const handler = new ctor(args, this.core, eventName); // event name so match can route by it
-            if (handler.hasChecks()) await handler.runChecks();
+            const eventCtx = eventGateContext(eventName, args, this.core);
+            await runHandlerGates(ctor, eventCtx);
             await handler.execute();
         } catch (caught) {
             handleEventFault(caught, String(eventName), ctor.name, args, this.core);

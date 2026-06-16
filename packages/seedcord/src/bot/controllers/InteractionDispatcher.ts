@@ -8,9 +8,11 @@ import chalk from 'chalk';
 import { Collection, Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
+import { runHandlerGates } from '@bDecorators/Gated';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { UnhandledEvent } from '@bot/defaults';
+import { interactionGateContext } from '@bot/gates';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
@@ -61,7 +63,7 @@ interface RegisteredMiddleware {
  *
  * @internal
  */
-export class InteractionController implements Initializeable, HmrAware {
+export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions');
     private isInitialized = false;
 
@@ -115,7 +117,7 @@ export class InteractionController implements Initializeable, HmrAware {
         if (!interactionsDir) {
             // unreachable today, guards against a path regression
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
-                'InteractionController',
+                'InteractionDispatcher',
                 'interactions'
             ]);
         }
@@ -374,7 +376,6 @@ export class InteractionController implements Initializeable, HmrAware {
             if (!interaction.isAutocomplete()) {
                 for (const { ctor } of this.middlewares) {
                     const middleware = new ctor(interaction as Repliables, this.core);
-                    if (middleware.hasChecks()) await middleware.runChecks();
                     await middleware.execute();
                 }
             }
@@ -388,7 +389,9 @@ export class InteractionController implements Initializeable, HmrAware {
             this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
             // @ts-expect-error TS can't infer the type of interaction here
             const handler = new HandlerCtor(interaction as Repliables, this.core);
-            if (handler.hasChecks()) await handler.runChecks();
+            if (!interaction.isAutocomplete()) {
+                await runHandlerGates(HandlerCtor, interactionGateContext(interaction as Repliables, this.core));
+            }
             await handler.execute();
         } catch (caught) {
             await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core);

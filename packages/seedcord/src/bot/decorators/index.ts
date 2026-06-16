@@ -1,7 +1,7 @@
-export { Checkable } from './Checkable';
 export { RegisterCommand } from './Command';
 export * from './Confirmable';
 export { RegisterEvent, type EventSpec, type RegisterEventOptions } from './Events';
+export { Gated } from './Gated';
 export {
     AutocompleteRoute,
     ButtonRoute,

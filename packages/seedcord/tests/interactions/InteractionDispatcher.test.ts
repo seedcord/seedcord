@@ -14,7 +14,7 @@ import type { Config } from '@seedcord/types';
 
 const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
 
-interface PrivateInteractionController {
+interface PrivateInteractionDispatcher {
     slashMap: Map<string, unknown>;
     buttonMap: Map<string, unknown>;
     modalMap: Map<string, unknown>;
@@ -53,10 +53,10 @@ function fakeSlash(commandName: string) {
 }
 
 interface TestBot {
-    interactions: PrivateInteractionController;
+    interactions: PrivateInteractionDispatcher;
 }
 
-describe('InteractionController Integration', () => {
+describe('InteractionDispatcher Integration', () => {
     let testEnv: TestEnvironment;
     let seedcord: Seedcord;
 

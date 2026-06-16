@@ -32,35 +32,11 @@ export interface Handler {
 }
 
 /**
- * Interface for handlers that run pre-execution checks. Pair it with the `@Checkable` decorator, which
- * requires the class to implement `runChecks`.
- *
- * @see {@link Checkable}
- */
-export interface WithChecks {
-    /**
-     * Runs pre-execution checks for the handler. A throw stops the lifecycle, the controller boundary
-     * catches a `Notice` or a `Silence` thrown here before `execute` runs.
-     *
-     * @remarks Called automatically when the class is decorated with {@link Checkable}.
-     *
-     * @virtual Override this method in your handler classes
-     */
-    runChecks(): Promise<void>;
-}
-
-/** @internal */
-export interface HandlerWithChecks extends WithChecks, Handler {}
-
-/**
  * Not meant to be used directly.
  *
  * @internal
  */
 export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
-    /** @internal */
-    protected checkable = false;
-
     protected readonly event: ValidEvent;
     protected readonly logger: Logger;
 
@@ -75,9 +51,8 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     }
 
     /**
-     * Called automatically after all pre conditions are met. Holds the main logic of your handler. If
-     * the class implements `WithChecks` and is decorated with `@Checkable`, `runChecks()` runs first,
-     * and if it throws, `execute()` never runs.
+     * Holds the main logic of your handler. The dispatcher calls it after the handler's gates pass, so a
+     * gate that refuses stops `execute()` from running.
      */
     abstract execute(): Promise<void>;
 
@@ -85,11 +60,6 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
      * Override this in your handler classes to customize population logic. It runs at the end of the constructor before any async work.
      */
     protected populate(): void {}
-
-    /** @internal */
-    public hasChecks(): this is HandlerWithChecks {
-        return this.checkable;
-    }
 
     /** @internal */
     public getEvent(): ValidEvent {

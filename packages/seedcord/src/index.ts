@@ -6,6 +6,9 @@ export type { BotEvents } from '@bot/Bot';
 // Bot decorators exports
 export * from '@bDecorators/index';
 
+export { and, defineGate, or } from '@bot/gates';
+export type { EventGateContext, Gate, GateContext, GateContextBase, InteractionGateContext } from '@bot/gates';
+
 // Bot Injectors exports
 export * from '@bot/injectors/index';
 

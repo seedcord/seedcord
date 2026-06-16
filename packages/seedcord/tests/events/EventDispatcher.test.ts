@@ -11,7 +11,7 @@ import '../utils/mock-env';
 
 const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
 
-interface PrivateEventController {
+interface PrivateEventDispatcher {
     eventMap: Map<string, unknown[]>;
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
@@ -19,10 +19,10 @@ interface PrivateEventController {
 }
 
 interface TestBot {
-    events: PrivateEventController;
+    events: PrivateEventDispatcher;
 }
 
-describe('EventController Integration', () => {
+describe('EventDispatcher Integration', () => {
     let testEnv: TestEnvironment;
     let seedcord: Seedcord;
 

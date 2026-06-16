@@ -1,8 +1,13 @@
 import { MessageFlags, TextChannel } from 'discord.js';
-import { SlashRoute, SlashHandler } from 'seedcord';
+import { defineGate, Gated, Silence, SlashHandler, SlashRoute } from 'seedcord';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 
+const InGuild = defineGate('InGuild', (ctx) => {
+    if (!ctx.guild) throw new Silence('maintenance is guild-only');
+});
+
+@Gated(InGuild)
 @SlashRoute('maintenance')
 export class Maintenance extends SlashHandler<'maintenance'> {
     public async execute(): Promise<void> {

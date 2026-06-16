@@ -40,7 +40,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'client' },
 
     // Interfaces
-    { query: 'HandlerWithChecks' },
+    { query: 'Gate' },
     { query: 'Handler' },
     { query: 'BaseCore' },
     { query: 'RateLimitWindow' },

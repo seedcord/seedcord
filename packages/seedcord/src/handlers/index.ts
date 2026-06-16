@@ -8,10 +8,4 @@ export {
     SlashHandler
 } from './interaction';
 export { EventHandler, EventMiddleware } from './event';
-export type {
-    Repliables,
-    ValidEventTypes,
-    ValidInteractionTypes,
-    ValidNonInteractionKeys,
-    WithChecks
-} from './BaseHandler';
+export type { Repliables, ValidEventTypes, ValidInteractionTypes, ValidNonInteractionKeys } from './BaseHandler';
