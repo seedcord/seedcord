@@ -1,6 +1,7 @@
 import { Notice } from '@seedcord/kit';
 import { NoticeEmbed } from '@seedcord/kit/internal';
 
+import { markCommits, rollbackCommits, runCheck } from './effects';
 import { defineGate } from './Gate';
 
 import type { Gate, GateContextBase, RequiredOf } from './Gate';
@@ -37,7 +38,7 @@ export function and<Gates extends TwoOrMore<Gate<GateContextBase>>>(
 export function and(...gates: readonly Gate<GateContextBase>[]): Gate<GateContextBase> {
     return defineGate('and', async (ctx) => {
         for (const gate of gates) {
-            await gate.check(ctx);
+            await runCheck(gate, ctx);
         }
     });
 }
@@ -68,12 +69,15 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
         const summaries: string[] = [];
         let everyArmHasSummary = true;
         for (const gate of gates) {
+            const mark = markCommits(ctx);
             try {
-                await gate.check(ctx);
+                await runCheck(gate, ctx);
                 return;
             } catch (error) {
                 // only a refusal is an arm declining, a Fault, a Silence, or a raw error stops everything
                 if (error instanceof Notice && !error.report) {
+                    // the arm may have queued an effect's commit before refusing, drop it so the winner does not carry it
+                    rollbackCommits(ctx, mark);
                     if (error.summary === undefined) everyArmHasSummary = false;
                     else summaries.push(error.summary);
                     continue;

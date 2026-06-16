@@ -1,12 +1,13 @@
 import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
-import type { ClientEvents, Guild, User } from 'discord.js';
+import type { ClientEvents, Guild, GuildMember, ModalSubmitInteraction, User } from 'discord.js';
 
 /** Fields present on both arms, so a gate reading only these needs no `kind` narrowing. */
 export interface GateContextBase {
     readonly core: Core;
     readonly user: User | null;
     readonly guild: Guild | null;
+    readonly member: GuildMember | null;
     readonly guildId: string | null;
     readonly channelId: string | null;
 }
@@ -37,6 +38,9 @@ export interface EventGateContext<
 
 /** What a gate's check receives. */
 export type GateContext = InteractionGateContext | EventGateContext;
+
+/** Every repliable interaction except ModalSubmit, the kinds with a reliable caller member and channel. */
+export type NonModalInteraction = Exclude<Repliables, ModalSubmitInteraction>;
 
 // phantom brand, so a bare check function or a plain object is rejected where a Gate is expected
 declare const GateBrand: unique symbol;
@@ -77,6 +81,23 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
     fn: (ctx: Ctx) => void | Promise<void>
 ): Gate<Ctx, Name> {
     return { name, check: async (ctx) => fn(ctx) } as Gate<Ctx, Name>;
+}
+
+/**
+ * Builds an {@link EffectGate} from a `check` and a `commit`. `check` peeks and refuses by throwing, and
+ * `commit` applies the side effect, running only once the whole gate set passes so a later refusal never
+ * commits.
+ */
+export function defineEffectGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
+    name: Name,
+    check: (ctx: Ctx) => void | Promise<void>,
+    commit: (ctx: Ctx) => void | Promise<void>
+): EffectGate<Ctx, Name> {
+    return {
+        name,
+        check: async (ctx) => check(ctx),
+        commit: async (ctx) => commit(ctx)
+    } as EffectGate<Ctx, Name>;
 }
 
 /** The context a {@link Gate} requires. */

@@ -15,6 +15,9 @@ export {
 } from './permissions/checkPermissions';
 export * from './permissions/hasPermsToAssign';
 
+// the perm gates and utils refuse with these, a bot author matches them from the public surface
+export * from './permissions/notices';
+
 // Bot Utilities Roles exports
 export * from './roles/fetchRole';
 export * from './roles/getBotRole';

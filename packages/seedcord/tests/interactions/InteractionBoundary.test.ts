@@ -1,5 +1,5 @@
 import { Silence, Fault } from '@seedcord/kit';
-import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
+import { DiscordAPIError, MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleInteractionFault } from '@bot/handleInteractionFault';
@@ -146,6 +146,23 @@ describe('handleInteractionFault', () => {
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
         expect(publish).not.toHaveBeenCalled();
+    });
+
+    it('replies ephemerally for a refusal by default', async () => {
+        await handleInteractionFault(new TestNotice(), asInteraction(mock), mockCore(publish));
+
+        const options = mock.reply.mock.calls[0]?.[0] as { flags: number };
+        expect(options.flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
+    });
+
+    it('replies publicly when the refusal Notice sets ephemeral false', async () => {
+        const notice = new TestNotice();
+        notice.ephemeral = false;
+
+        await handleInteractionFault(notice, asInteraction(mock), mockCore(publish));
+
+        const options = mock.reply.mock.calls[0]?.[0] as { flags: number };
+        expect(options.flags & MessageFlags.Ephemeral).toBe(0);
     });
 
     describe('autocomplete arm', () => {

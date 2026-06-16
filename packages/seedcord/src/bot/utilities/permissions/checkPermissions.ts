@@ -222,6 +222,7 @@ export function checkPermissions(
 
     const missingBits = scope.filter((bit) => !perms.has(bit, true));
     if (missingBits.length > 0) {
-        throw new Missing('Missing Any/All/No Permissions', pIn, names(missingBits));
+        // name the entity that lacks the permission, matching the inverse branch, not the guild it was checked in
+        throw new Missing('Missing Any/All/No Permissions', pFor, names(missingBits));
     }
 }

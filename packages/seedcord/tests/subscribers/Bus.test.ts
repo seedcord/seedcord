@@ -3,9 +3,9 @@ import path from 'node:path';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '../../src/Seedcord';
+import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
-import type { Config } from '@seedcord/types';
 import '../utils/mock-client';
 import '../utils/mock-env';
 
@@ -52,15 +52,7 @@ describe('Bus Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: null },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: testEnv.resolvePath(subscribersDir) }
-        };
+        const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
         await seedcord.bus.init();
@@ -87,15 +79,7 @@ describe('Bus Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: null },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: testEnv.resolvePath(subscribersDir) }
-        };
+        const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
         await seedcord.bus.init();

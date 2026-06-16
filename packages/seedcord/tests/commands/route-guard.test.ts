@@ -4,12 +4,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
 
+import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-client';
 import '../utils/mock-env';
-
-import type { Config } from '@seedcord/types';
 
 const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
 
@@ -72,15 +71,10 @@ describe('Boot-time slash route exhaustiveness guard', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                commands: { path: testEnv.resolvePath('commands') },
-                interactions: { path: testEnv.resolvePath('interactions') },
-                events: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({
+            commands: testEnv.resolvePath('commands'),
+            interactions: testEnv.resolvePath('interactions')
+        });
 
         seedcord = new Seedcord(config);
         // justified: the guard and the controllers it reads are private; drive them directly without a login.
@@ -126,15 +120,10 @@ describe('Boot-time slash route exhaustiveness guard', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                commands: { path: testEnv.resolvePath('commands') },
-                interactions: { path: testEnv.resolvePath('interactions') },
-                events: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({
+            commands: testEnv.resolvePath('commands'),
+            interactions: testEnv.resolvePath('interactions')
+        });
 
         seedcord = new Seedcord(config);
         // justified: the guard and the controllers it reads are private; drive them directly without a login.

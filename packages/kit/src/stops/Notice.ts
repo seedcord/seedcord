@@ -16,6 +16,12 @@ export abstract class Notice extends Error {
     public report = false;
 
     /**
+     * Whether the reply is ephemeral, so only the invoking user sees it. Defaults to true. Set it false for
+     * a refusal the whole channel should see.
+     */
+    public ephemeral = true;
+
+    /**
      * A short one-line reason. When every arm of an `or` gate refuses and each refusal sets this, `or`
      * lists them instead of showing a neutral message.
      */

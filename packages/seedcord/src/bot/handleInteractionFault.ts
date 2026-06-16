@@ -1,4 +1,4 @@
-import { Silence } from '@seedcord/kit';
+import { Notice, Silence } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
 
@@ -54,5 +54,5 @@ export async function handleInteractionFault(
         user: interaction.user,
         metadata: interaction
     });
-    await new ReplySender(interaction).send(response);
+    await new ReplySender(interaction).send(response, caught instanceof Notice ? caught.ephemeral : true);
 }

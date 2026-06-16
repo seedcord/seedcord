@@ -3,9 +3,9 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '../../src/Seedcord';
+import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
-import type { Config } from '@seedcord/types';
 import '../utils/mock-client';
 import '../utils/mock-env';
 
@@ -55,15 +55,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath(eventsDir) },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private events controller for assertion
@@ -95,15 +87,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath(eventsDir) },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private events controller for assertion
@@ -137,15 +121,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath(eventsDir) },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
         const publish = vi.spyOn(seedcord.bus, 'publish');
@@ -176,15 +152,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath(eventsDir) },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private events controller for assertion
@@ -214,15 +182,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath(eventsDir) },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private events controller for assertion
@@ -279,15 +239,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath('events') },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath('events') });
 
         seedcord = new Seedcord(config);
         const testBot = seedcord.bot as unknown as TestBot;
@@ -320,15 +272,7 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                events: { path: testEnv.resolvePath('events') },
-                interactions: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ events: testEnv.resolvePath('events') });
 
         seedcord = new Seedcord(config);
         const testBot = seedcord.bot as unknown as TestBot;

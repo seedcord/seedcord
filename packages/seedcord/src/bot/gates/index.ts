@@ -1,4 +1,13 @@
-export { defineGate } from './Gate';
+export { defineEffectGate, defineGate } from './Gate';
 export { and, or } from './combinators';
+export * from './catalog';
 
-export type { EventGateContext, Gate, GateContext, GateContextBase, InteractionGateContext } from './Gate';
+export type {
+    EffectGate,
+    EventGateContext,
+    Gate,
+    GateContext,
+    GateContextBase,
+    InteractionGateContext,
+    NonModalInteraction
+} from './Gate';

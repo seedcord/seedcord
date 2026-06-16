@@ -5,12 +5,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
 
+import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-client';
 import '../utils/mock-env';
-
-import type { Config } from '@seedcord/types';
 
 const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
 
@@ -88,15 +87,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                interactions: { path: testEnv.resolvePath(interactionsDir) },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private interactions controller for assertion
@@ -124,15 +115,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                interactions: { path: testEnv.resolvePath(interactionsDir) },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private interactions controller for assertion
@@ -151,15 +134,7 @@ describe('InteractionDispatcher Integration', () => {
 
     it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {
         const ClickId = new CustomId('clickme');
-        const config: Config = {
-            bot: {
-                interactions: { path: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] });
 
         seedcord = new Seedcord(config);
         const controller = (seedcord.bot as unknown as TestBot).interactions;
@@ -191,15 +166,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                interactions: { path: testEnv.resolvePath(interactionsDir) },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
         // justified: TestBot exposes the private interactions controller for assertion
@@ -253,15 +220,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                interactions: { path: testEnv.resolvePath('interactions') },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
         const controller = (seedcord.bot as unknown as TestBot).interactions;
@@ -297,15 +256,7 @@ describe('InteractionDispatcher Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                interactions: { path: testEnv.resolvePath('interactions') },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
         const controller = (seedcord.bot as unknown as TestBot).interactions;
@@ -320,5 +271,71 @@ describe('InteractionDispatcher Integration', () => {
 
         // the gate threw a Silence, so execute never ran and nothing was replied
         expect(interaction.reply).not.toHaveBeenCalled();
+    });
+
+    it('a real OwnerOnly catalog gate refuses a non-owner through the dispatcher', async () => {
+        await testEnv.createFile(
+            'interactions/Owner.ts',
+            `
+            import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @Gated(OwnerOnly())
+            @SlashRoute('owner')
+            export class OwnerHandler extends SlashHandler<'owner'> {
+                public async execute() {
+                    await this.event.reply('executed');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['someone-else'] });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+
+        const interaction = fakeSlash('owner');
+        await controller.processInteraction(
+            interaction,
+            () => 'owner',
+            () => controller.slashMap.get('owner')
+        );
+
+        // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner instead
+        expect(interaction.reply).not.toHaveBeenCalledWith('executed');
+        expect(interaction.reply).toHaveBeenCalledTimes(1);
+    });
+
+    it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async () => {
+        await testEnv.createFile(
+            'interactions/Owner.ts',
+            `
+            import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @Gated(OwnerOnly())
+            @SlashRoute('owner')
+            export class OwnerHandler extends SlashHandler<'owner'> {
+                public async execute() {
+                    await this.event.reply('executed');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['u1'] });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+
+        const interaction = fakeSlash('owner');
+        await controller.processInteraction(
+            interaction,
+            () => 'owner',
+            () => controller.slashMap.get('owner')
+        );
+
+        expect(interaction.reply).toHaveBeenCalledWith('executed');
     });
 });
