@@ -1,7 +1,8 @@
 import { Notice } from '@seedcord/kit';
 import { describe, it, expect } from 'vitest';
 
-import { defineGate, eventGateContext, interactionGateContext, runGates } from '@bot/gates';
+import { defineGate } from '@bot/gates';
+import { eventGateContext, interactionGateContext, runGates } from '@bot/gates/runGates';
 
 import { TestNotice } from '../../utils/TestNotice';
 

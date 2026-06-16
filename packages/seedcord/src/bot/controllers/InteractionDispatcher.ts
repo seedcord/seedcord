@@ -12,7 +12,7 @@ import { runHandlerGates } from '@bDecorators/Gated';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
 import { UnhandledEvent } from '@bot/defaults';
-import { interactionGateContext } from '@bot/gates';
+import { interactionGateContext } from '@bot/gates/runGates';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';

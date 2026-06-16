@@ -2,10 +2,7 @@ import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler'
 import type { Core } from '@interfaces/Core';
 import type { ClientEvents, Guild, User } from 'discord.js';
 
-/**
- * Identity facts a gate reads on either side. A gate that only reads these runs on both an
- * interaction and an event with no `kind` check.
- */
+/** Fields present on both arms, so a gate reading only these needs no `kind` narrowing. */
 export interface GateContextBase {
     readonly core: Core;
     readonly user: User | null;
@@ -38,7 +35,7 @@ export interface EventGateContext<
     readonly payload: ClientEvents[Names];
 }
 
-/** What a gate's check receives. Narrow on `kind` to reach the interaction or the event payload. */
+/** What a gate's check receives. */
 export type GateContext = InteractionGateContext | EventGateContext;
 
 // phantom brand, so a bare check function or a plain object is rejected where a Gate is expected
@@ -72,17 +69,15 @@ export interface EffectGate<Ctx extends GateContextBase = GateContext, Name exte
 }
 
 /**
- * Builds a {@link Gate} from a check. The check refuses by throwing and passes by returning, and may
- * be async. The required context is inferred from the `ctx` parameter, so annotate it as narrowly as
- * the fields the check reads. The brand means a bare function is not a gate.
+ * Builds a {@link Gate} from a check. The check refuses by throwing and passes by returning. The
+ * required context is inferred from `ctx`, so annotate it as narrowly as the fields the check reads.
  */
 export function defineGate<const Name extends string, Ctx extends GateContextBase = GateContextBase>(
     name: Name,
     fn: (ctx: Ctx) => void | Promise<void>
 ): Gate<Ctx, Name> {
-    // the brand is phantom (type-only), so this is the one cast that mints a Gate
     return { name, check: async (ctx) => fn(ctx) } as Gate<Ctx, Name>;
 }
 
-/** The context a {@link Gate} requires, recovered from its type for the `@Gated` and combinator checks. */
+/** The context a {@link Gate} requires. */
 export type RequiredOf<TGate> = TGate extends Gate<infer Ctx> ? Ctx : never;

@@ -5,15 +5,8 @@ import { and, defineGate, or } from '@bot/gates';
 
 import { TestNotice } from '../../utils/TestNotice';
 
-import type {
-    EffectGate,
-    EventGateContext,
-    Gate,
-    GateContext,
-    GateContextBase,
-    InteractionGateContext,
-    RequiredOf
-} from '@bot/gates';
+import type { EventGateContext, Gate, GateContext, GateContextBase, InteractionGateContext } from '@bot/gates';
+import type { EffectGate, RequiredOf } from '@bot/gates/Gate';
 import type { RenderContext } from '@seedcord/types';
 import type { ButtonInteraction, ChatInputCommandInteraction, Events } from 'discord.js';
 
@@ -36,7 +29,7 @@ const MemberGate = defineGate('mem', (c: EventGateContext<Events.GuildMemberAdd>
 // fixture: defineGate makes a plain Gate, so cast to add the EffectGate shape (only the type is read here)
 const EffectButtonGate = defineGate('eff', (c: InteractionGateContext<ButtonInteraction>) => {
     void c.interaction;
-}) as unknown as EffectGate<InteractionGateContext<ButtonInteraction>>;
+}) as unknown as EffectGate<InteractionGateContext<ButtonInteraction>, 'eff'>;
 
 describe('and', () => {
     it('runs every arm in order and passes when all pass', async () => {
@@ -235,7 +228,10 @@ describe('or', () => {
 
     it('unions the required contexts of its arms', () => {
         expectTypeOf(or(ButtonGate, SlashGate)).toEqualTypeOf<
-            Gate<InteractionGateContext<ButtonInteraction> | InteractionGateContext<ChatInputCommandInteraction>>
+            Gate<
+                InteractionGateContext<ButtonInteraction> | InteractionGateContext<ChatInputCommandInteraction>,
+                'btn | slash'
+            >
         >();
     });
 });
@@ -243,19 +239,22 @@ describe('or', () => {
 describe('combinator result types', () => {
     it('or unions an interaction arm and an event arm', () => {
         expectTypeOf(or(ButtonGate, MessageGate)).toEqualTypeOf<
-            Gate<InteractionGateContext<ButtonInteraction> | EventGateContext<Events.MessageCreate>>
+            Gate<InteractionGateContext<ButtonInteraction> | EventGateContext<Events.MessageCreate>, 'btn | msg'>
         >();
     });
 
     it('or unions two distinct event arms', () => {
         expectTypeOf(or(MessageGate, MemberGate)).toEqualTypeOf<
-            Gate<EventGateContext<Events.MessageCreate> | EventGateContext<Events.GuildMemberAdd>>
+            Gate<EventGateContext<Events.MessageCreate> | EventGateContext<Events.GuildMemberAdd>, 'msg | mem'>
         >();
     });
 
     it('and of an interaction and an event arm is uninhabitable', () => {
         expectTypeOf(and(ButtonGate, MessageGate)).toEqualTypeOf<
-            Gate<InteractionGateContext<ButtonInteraction> & EventGateContext<Events.MessageCreate> & GateContextBase>
+            Gate<
+                InteractionGateContext<ButtonInteraction> & EventGateContext<Events.MessageCreate> & GateContextBase,
+                'btn & msg'
+            >
         >();
     });
 
@@ -264,36 +263,40 @@ describe('combinator result types', () => {
             Gate<
                 InteractionGateContext<ButtonInteraction> &
                     InteractionGateContext<ChatInputCommandInteraction> &
-                    GateContextBase
+                    GateContextBase,
+                'btn & slash'
             >
         >();
     });
 
     it('and narrows to the interaction arm, an agnostic arm adds nothing', () => {
         expectTypeOf(and(ButtonGate, AgnosticGate)).toEqualTypeOf<
-            Gate<InteractionGateContext<ButtonInteraction> & GateContextBase>
+            Gate<InteractionGateContext<ButtonInteraction> & GateContextBase, 'btn & any'>
         >();
     });
 
     it('and keeps the event requirement past an agnostic arm', () => {
         expectTypeOf(and(MessageGate, AgnosticGate)).toEqualTypeOf<
-            Gate<EventGateContext<Events.MessageCreate> & GateContextBase>
+            Gate<EventGateContext<Events.MessageCreate> & GateContextBase, 'msg & any'>
         >();
     });
 
     it('and of two agnostic gates stays the identity base', () => {
-        expectTypeOf(and(AgnosticGate, AgnosticGate)).toEqualTypeOf<Gate<GateContextBase>>();
+        expectTypeOf(and(AgnosticGate, AgnosticGate)).toEqualTypeOf<Gate<GateContextBase, 'any & any'>>();
     });
 
     it('or dedupes identical arms', () => {
-        expectTypeOf(or(ButtonGate, ButtonGate)).toEqualTypeOf<Gate<InteractionGateContext<ButtonInteraction>>>();
+        expectTypeOf(or(ButtonGate, ButtonGate)).toEqualTypeOf<
+            Gate<InteractionGateContext<ButtonInteraction>, 'btn | btn'>
+        >();
     });
 
     it('a union arm survives and-intersection (not UnionToIntersection)', () => {
         expectTypeOf(and(or(ButtonGate, SlashGate), AgnosticGate)).toEqualTypeOf<
             Gate<
                 (InteractionGateContext<ButtonInteraction> | InteractionGateContext<ChatInputCommandInteraction>) &
-                    GateContextBase
+                    GateContextBase,
+                'btn | slash & any'
             >
         >();
     });
@@ -302,7 +305,8 @@ describe('combinator result types', () => {
         expectTypeOf(or(and(ButtonGate, AgnosticGate), SlashGate)).toEqualTypeOf<
             Gate<
                 | (InteractionGateContext<ButtonInteraction> & GateContextBase)
-                | InteractionGateContext<ChatInputCommandInteraction>
+                | InteractionGateContext<ChatInputCommandInteraction>,
+                'btn & any | slash'
             >
         >();
     });
@@ -321,7 +325,7 @@ describe('combinator result types', () => {
 
     it('a combinator erases the effect, leaving a plain Gate', () => {
         expectTypeOf(and(EffectButtonGate, AgnosticGate)).toEqualTypeOf<
-            Gate<InteractionGateContext<ButtonInteraction> & GateContextBase>
+            Gate<InteractionGateContext<ButtonInteraction> & GateContextBase, 'eff & any'>
         >();
     });
 

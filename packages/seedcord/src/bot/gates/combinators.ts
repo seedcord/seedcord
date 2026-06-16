@@ -4,6 +4,7 @@ import { NoticeEmbed } from '@seedcord/kit/internal';
 import { defineGate } from './Gate';
 
 import type { Gate, GateContextBase, RequiredOf } from './Gate';
+import type { IntersectRequired, JoinNames, TwoOrMore } from './matching';
 import type { ReplyResponse } from '@seedcord/types';
 
 class NotAllowed extends Notice {
@@ -29,22 +30,10 @@ class NeedsAny extends Notice {
     }
 }
 
-// intersects each arm's required context atomically. type-fest UnionToIntersection would split a gate whose
-// context is itself a union (the full GateContext) into never, this keeps each arm whole.
-type IntersectRequired<Gates extends readonly Gate<GateContextBase>[]> = Gates extends readonly [
-    infer First extends Gate<GateContextBase>,
-    ...infer Rest extends readonly Gate<GateContextBase>[]
-]
-    ? RequiredOf<First> & IntersectRequired<Rest>
-    : unknown;
-
-// a combinator of one gate is just that gate, so and/or take two or more
-type TwoOrMore<Item> = readonly [Item, Item, ...Item[]];
-
 /** Runs each gate in order and refuses on the first refusal. The required context is the intersection of the arms. */
 export function and<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...gates: Gates
-): Gate<IntersectRequired<Gates> & GateContextBase>;
+): Gate<IntersectRequired<Gates> & GateContextBase, JoinNames<Gates, ' & '>>;
 export function and(...gates: readonly Gate<GateContextBase>[]): Gate<GateContextBase> {
     return defineGate('and', async (ctx) => {
         for (const gate of gates) {
@@ -58,20 +47,21 @@ interface OrOptions {
     fail: Notice | ((ctx: GateContextBase) => Notice);
 }
 
-// the trailing arg is the options object when it is not a gate, because a gate has a check method
+// a gate has a check method, the options object does not
 function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
     return !('check' in arg);
 }
 
 /** Runs each gate in order and passes on the first arm that passes. The required context is the union of the arms. */
-export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(...gates: Gates): Gate<RequiredOf<Gates[number]>>;
+export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
+    ...gates: Gates
+): Gate<RequiredOf<Gates[number]>, JoinNames<Gates, ' | '>>;
 export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...args: [...Gates, OrOptions]
-): Gate<RequiredOf<Gates[number]>>;
+): Gate<RequiredOf<Gates[number]>, JoinNames<Gates, ' | '>>;
 export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gate<GateContextBase> {
     const last = args.at(-1);
     const options = last !== undefined && isOrOptions(last) ? last : undefined;
-    // the options is split off the end, so the rest are gates
     const gates = (options ? args.slice(0, -1) : args) as readonly Gate<GateContextBase>[];
 
     return defineGate('or', async (ctx) => {

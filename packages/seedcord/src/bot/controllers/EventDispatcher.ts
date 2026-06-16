@@ -9,7 +9,7 @@ import { Envapter } from 'envapt';
 import { EventMetadataKey } from '@bDecorators/Events';
 import { runHandlerGates } from '@bDecorators/Gated';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
-import { eventGateContext } from '@bot/gates';
+import { eventGateContext } from '@bot/gates/runGates';
 import { handleEventFault } from '@bot/handleEventFault';
 import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';

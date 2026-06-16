@@ -5,10 +5,7 @@ import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler'
 import type { Core } from '@interfaces/Core';
 import type { ClientEvents } from 'discord.js';
 
-/**
- * Runs each gate's check in order, so the first refusal propagates to the controller boundary, which
- * renders a thrown `Notice`, drops a `Silence`, or reports a `Fault`.
- */
+/** Runs each gate's check in order, so the first refusal propagates to the dispatcher boundary. */
 export async function runGates(gates: readonly Gate<GateContextBase>[], ctx: GateContext): Promise<void> {
     for (const gate of gates) {
         await gate.check(ctx);

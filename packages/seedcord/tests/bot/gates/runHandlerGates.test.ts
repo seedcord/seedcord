@@ -3,7 +3,8 @@ import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
 import { Gated, runHandlerGates } from '@bDecorators/Gated';
-import { defineGate, eventGateContext, interactionGateContext } from '@bot/gates';
+import { defineGate } from '@bot/gates';
+import { eventGateContext, interactionGateContext } from '@bot/gates/runGates';
 import { EventHandler } from '@handlers/event';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
