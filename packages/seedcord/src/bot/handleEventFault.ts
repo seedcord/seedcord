@@ -1,20 +1,13 @@
 import { Notice, Silence } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
-import { DiscordAPIError, GuildMember, Message, User } from 'discord.js';
+import { DiscordAPIError } from 'discord.js';
 
+import { deriveEventActor } from '@miscellaneous/deriveEventActor';
 import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import type { Core } from '@interfaces/Core';
-import type { Nullable } from '@seedcord/types';
-import type { Guild } from 'discord.js';
 
 const logger = new Logger('EventBoundary');
-
-interface EventActor {
-    guild: Nullable<Guild>;
-    user: Nullable<User>;
-    channelId: string | null;
-}
 
 /**
  * The event controller boundary. Reports a throw from an event handler and never replies, since a
@@ -53,15 +46,4 @@ export function handleEventFault(
         guild: actor.guild,
         user: actor.user
     });
-}
-
-// the actor sits in a different arg per event, so scan the tuple for the common carriers, best-effort
-function deriveEventActor(args: unknown): EventActor {
-    const tuple = Array.isArray(args) ? (args as unknown[]) : [args];
-    for (const arg of tuple) {
-        if (arg instanceof Message) return { guild: arg.guild, user: arg.author, channelId: arg.channelId };
-        if (arg instanceof GuildMember) return { guild: arg.guild, user: arg.user, channelId: null };
-        if (arg instanceof User) return { guild: null, user: arg, channelId: null };
-    }
-    return { guild: null, user: null, channelId: null };
 }
