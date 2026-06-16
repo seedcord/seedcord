@@ -259,4 +259,85 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.has('messageCreate')).toBe(false);
         expect(controller.eventMap.has('messageUpdate')).toBe(true);
     });
+
+    it('runs a passing gate, then the handler executes', async () => {
+        await testEnv.createFile(
+            'events/Allowed.ts',
+            `
+            import { defineGate, Gated, EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            const Allow = defineGate('Allow', () => {});
+
+            @Gated(Allow)
+            @RegisterEvent(['messageCreate'])
+            export class AllowedEvent extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('ran') });
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                events: { path: testEnv.resolvePath('events') },
+                interactions: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        const message = { reply: vi.fn() };
+        await testBot.events.processEvent('messageCreate', [message]);
+
+        expect(message.reply).toHaveBeenCalledWith('ran');
+    });
+
+    it('a refusing gate stops the handler before execute', async () => {
+        await testEnv.createFile(
+            'events/Refused.ts',
+            `
+            import { defineGate, Gated, Silence, EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            const Block = defineGate('Block', () => {
+                throw new Silence('blocked');
+            });
+
+            @Gated(Block)
+            @RegisterEvent(['messageCreate'])
+            export class RefusedEvent extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('ran') });
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                events: { path: testEnv.resolvePath('events') },
+                interactions: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        const message = { reply: vi.fn() };
+        await testBot.events.processEvent('messageCreate', [message]);
+
+        // the gate threw a Silence, so execute never ran and the message was not replied to
+        expect(message.reply).not.toHaveBeenCalled();
+    });
 });

@@ -234,4 +234,91 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.buttonMap.has('click-me')).toBe(false);
         expect(controller.buttonMap.has('dont-click-me')).toBe(true);
     });
+
+    it('runs a passing gate, then the handler executes', async () => {
+        await testEnv.createFile(
+            'interactions/Allowed.ts',
+            `
+            import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            const Allow = defineGate('Allow', () => {});
+
+            @Gated(Allow)
+            @SlashRoute('allowed')
+            export class AllowedHandler extends SlashHandler<'allowed'> {
+                public async execute() {
+                    await this.event.reply('executed');
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                interactions: { path: testEnv.resolvePath('interactions') },
+                events: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+
+        const interaction = fakeSlash('allowed');
+        await controller.processInteraction(
+            interaction,
+            () => 'allowed',
+            () => controller.slashMap.get('allowed')
+        );
+
+        expect(interaction.reply).toHaveBeenCalledWith('executed');
+    });
+
+    it('a refusing gate stops the handler before execute', async () => {
+        await testEnv.createFile(
+            'interactions/Refused.ts',
+            `
+            import { defineGate, Gated, Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            const Block = defineGate('Block', () => {
+                throw new Silence('blocked');
+            });
+
+            @Gated(Block)
+            @SlashRoute('refused')
+            export class RefusedHandler extends SlashHandler<'refused'> {
+                public async execute() {
+                    await this.event.reply('executed');
+                }
+            }
+            `
+        );
+
+        const config: Config = {
+            bot: {
+                interactions: { path: testEnv.resolvePath('interactions') },
+                events: { path: null },
+                commands: { path: null },
+                clientOptions: { intents: [] }
+            },
+            subscribers: { path: null }
+        };
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+
+        const interaction = fakeSlash('refused');
+        await controller.processInteraction(
+            interaction,
+            () => 'refused',
+            () => controller.slashMap.get('refused')
+        );
+
+        // the gate threw a Silence, so execute never ran and nothing was replied
+        expect(interaction.reply).not.toHaveBeenCalled();
+    });
 });
