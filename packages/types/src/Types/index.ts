@@ -1,3 +1,4 @@
+export type * from './Epoch';
 export type * from './Filters';
 export type * from './ObjectManipulation';
 export type * from './Misc';

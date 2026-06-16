@@ -5,3 +5,4 @@ export * from './parseDuration';
 export * from './percentage';
 export * from './round';
 export * from './roundToDenomination';
+export * from './toEpochSeconds';

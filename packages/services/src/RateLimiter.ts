@@ -1,3 +1,5 @@
+import type { EpochMs } from '@seedcord/types';
+
 const SWEEP_INTERVAL_MS = 60_000;
 
 /**
@@ -16,11 +18,8 @@ export interface RateLimitWindow {
 export interface RateLimitResult {
     /** Whether the key is at or over its limit for the current window. */
     limited: boolean;
-    /**
-     * Absolute epoch milliseconds when the key next frees up. Discord timestamp markup
-     * (`<t:...:R>`) takes seconds, so divide by 1000 before rendering it.
-     */
-    expires: number;
+    /** Absolute epoch milliseconds when the key next frees up. Convert to seconds for Discord timestamp markup. */
+    expires: EpochMs;
 }
 
 /**
@@ -56,19 +55,39 @@ export class RateLimiter {
         // a window must allow at least one hit, so 0 or a negative never means "block everything"
         const limit = Math.max(1, window.limit ?? 1);
 
-        const live = (this.map.get(key) ?? []).filter((exp) => exp > now);
+        const live = this.live(key, now);
 
         if (live.length >= limit) {
             this.map.set(key, live);
             // soonest a slot frees is the earliest expiry
-            return { limited: true, expires: Math.min(...live) };
+            return { limited: true, expires: Math.min(...live) as EpochMs };
         }
 
-        const expires = now + window.delay;
+        const expires: EpochMs = (now + window.delay) as EpochMs;
         live.push(expires);
         this.map.set(key, live);
 
         return { limited: false, expires };
+    }
+
+    /**
+     * Reports whether `key` is limited right now without recording a hit.
+     *
+     * The read half of a peek-then-commit. A gate calls `peek` to decide whether to refuse, and
+     * `hit` to charge the slot only once it is the gate that let the request through.
+     */
+    peek(key: string, window: RateLimitWindow): RateLimitResult {
+        const now = Date.now();
+        const limit = Math.max(1, window.limit ?? 1);
+        // a read, so it never writes the filtered hits back, hit owns the only mutation
+        const live = this.live(key, now);
+
+        if (live.length >= limit) return { limited: true, expires: Math.min(...live) as EpochMs };
+        return { limited: false, expires: (now + window.delay) as EpochMs };
+    }
+
+    private live(key: string, now: number): number[] {
+        return (this.map.get(key) ?? []).filter((exp) => exp > now);
     }
 
     private sweep(): void {

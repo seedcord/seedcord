@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, expectTypeOf, vi, beforeEach, afterEach } from 'vitest';
 
 import { RateLimiter } from '../src/RateLimiter';
+
+import type { EpochMs } from '@seedcord/types';
 
 describe('RateLimiter', () => {
     beforeEach(() => vi.useFakeTimers());
@@ -75,5 +77,41 @@ describe('RateLimiter', () => {
         vi.advanceTimersByTime(60_000);
 
         expect(limiter.size).toBe(1);
+    });
+
+    it('peek reports the limited state without recording a hit', () => {
+        const limiter = new RateLimiter();
+
+        expect(limiter.peek('user', { delay: 1000 }).limited).toBe(false);
+        expect(limiter.size).toBe(0);
+
+        // peek consumed nothing, so a real hit still sees a fresh key
+        expect(limiter.hit('user', { delay: 1000 }).limited).toBe(false);
+    });
+
+    it('peek reports limited with the soonest expiry but still records nothing', () => {
+        const limiter = new RateLimiter();
+        const recorded = limiter.hit('user', { delay: 1000 });
+
+        const peeked = limiter.peek('user', { delay: 1000 });
+
+        expect(peeked.limited).toBe(true);
+        expect(peeked.expires).toBe(recorded.expires);
+        // peeking a limited key adds no hit, so it never compounds the window
+        expect(limiter.peek('user', { delay: 1000 }).limited).toBe(true);
+        expect(limiter.size).toBe(1);
+    });
+
+    it('brands expires as epoch ms, distinct from a plain number', () => {
+        const result = new RateLimiter().hit('user', { delay: 1000 });
+
+        expectTypeOf(result.expires).toEqualTypeOf<EpochMs>();
+
+        // @ts-expect-error a plain number is not branded epoch ms
+        const ms: EpochMs = 5;
+        expect(ms).toBe(5);
+
+        // EpochMs stays usable as a number for arithmetic
+        expect(typeof Math.round(result.expires / 1000)).toBe('number');
     });
 });
