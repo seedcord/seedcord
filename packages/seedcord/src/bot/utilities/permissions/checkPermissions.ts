@@ -1,7 +1,7 @@
 import { prettify } from '@seedcord/utils';
 import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 
-import { HasDangerousPermissions, MissingPermissions } from './denials';
+import { HasDangerousPermissions, MissingPermissions } from './notices';
 
 import type { Notice } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';

@@ -2,7 +2,7 @@ import { Logger } from '@seedcord/services';
 import { Guild } from 'discord.js';
 
 import { checkPermissions, PermissionNames } from './checkPermissions';
-import { MissingPermissions } from './denials';
+import { MissingPermissions } from './notices';
 
 import type { BotPermissionScope, PermissionErrorCtors } from './checkPermissions';
 import type { TextChannel } from 'discord.js';

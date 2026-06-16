@@ -1,7 +1,7 @@
 import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
 
 import { checkBotPermissions } from './checkBotPermissions';
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from './denials';
+import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from './notices';
 import { getBotRole } from '../roles/getBotRole';
 
 import type { Notice } from '@seedcord/kit';
