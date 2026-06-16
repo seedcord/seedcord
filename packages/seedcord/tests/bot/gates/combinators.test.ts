@@ -209,9 +209,12 @@ describe('or', () => {
         const A = defineGate('a', () => {
             throw new TestNotice('a');
         });
+        const B = defineGate('b', () => {
+            throw new TestNotice('b');
+        });
         const fail = new TestNotice('custom');
 
-        await expect(or(A, { fail: () => fail }).check(ctx)).rejects.toBe(fail);
+        await expect(or(A, B, { fail: () => fail }).check(ctx)).rejects.toBe(fail);
     });
 
     it('the author fail beats the auto-list default', async () => {
@@ -220,9 +223,14 @@ describe('or', () => {
             notice.summary = 'Manage Server';
             throw notice;
         });
+        const B = defineGate('b', () => {
+            const notice = new TestNotice('b');
+            notice.summary = 'be a bot owner';
+            throw notice;
+        });
         const fail = new TestNotice('custom');
 
-        await expect(or(A, { fail }).check(ctx)).rejects.toBe(fail);
+        await expect(or(A, B, { fail }).check(ctx)).rejects.toBe(fail);
     });
 
     it('unions the required contexts of its arms', () => {
@@ -275,16 +283,6 @@ describe('combinator result types', () => {
 
     it('and of two agnostic gates stays the identity base', () => {
         expectTypeOf(and(AgnosticGate, AgnosticGate)).toEqualTypeOf<Gate<GateContextBase>>();
-    });
-
-    it('single-arg and keeps the base tail', () => {
-        expectTypeOf(and(ButtonGate)).toEqualTypeOf<
-            Gate<InteractionGateContext<ButtonInteraction> & GateContextBase>
-        >();
-    });
-
-    it('single-arg or is the identity', () => {
-        expectTypeOf(or(ButtonGate)).toEqualTypeOf<Gate<InteractionGateContext<ButtonInteraction>>>();
     });
 
     it('or dedupes identical arms', () => {
@@ -345,13 +343,25 @@ describe('combinator result types', () => {
 
 describe('empty combinator input', () => {
     it('rejects or() with no arms at compile time', () => {
-        // @ts-expect-error or needs at least one arm
+        // @ts-expect-error or needs at least two arms
         or();
     });
 
     it('rejects and() with no arms at compile time', () => {
-        // @ts-expect-error and needs at least one arm
+        // @ts-expect-error and needs at least two arms
         and();
+    });
+});
+
+describe('single-arg combinator input', () => {
+    it('rejects or() with one arm at compile time', () => {
+        // @ts-expect-error or of one gate is just that gate, so it needs at least two
+        or(ButtonGate);
+    });
+
+    it('rejects and() with one arm at compile time', () => {
+        // @ts-expect-error and of one gate is just that gate, so it needs at least two
+        and(ButtonGate);
     });
 });
 
@@ -360,16 +370,16 @@ describe('or fail-option typing', () => {
 
     it('rejects a second options object', () => {
         // @ts-expect-error only one trailing options object, the second is not a gate
-        or(AgnosticGate, { fail }, { fail });
+        or(AgnosticGate, AgnosticGate, { fail }, { fail });
     });
 
     it('rejects an options object with no gates', () => {
-        // @ts-expect-error or needs at least one gate before the options
+        // @ts-expect-error or needs at least two gates before the options
         or({ fail });
     });
 
     it('rejects an options object that is not last', () => {
         // @ts-expect-error the options object only matches as the final argument
-        or({ fail }, AgnosticGate);
+        or({ fail }, AgnosticGate, AgnosticGate);
     });
 });

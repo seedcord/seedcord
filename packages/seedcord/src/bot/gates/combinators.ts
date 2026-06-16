@@ -5,7 +5,6 @@ import { defineGate } from './Gate';
 
 import type { Gate, GateContextBase, RequiredOf } from './Gate';
 import type { ReplyResponse } from '@seedcord/types';
-import type { NonEmptyTuple } from 'type-fest';
 
 class NotAllowed extends Notice {
     public constructor() {
@@ -39,8 +38,11 @@ type IntersectRequired<Gates extends readonly Gate<GateContextBase>[]> = Gates e
     ? RequiredOf<First> & IntersectRequired<Rest>
     : unknown;
 
+// a combinator of one gate is just that gate, so and/or take two or more
+type TwoOrMore<Item> = readonly [Item, Item, ...Item[]];
+
 /** Runs each gate in order and refuses on the first refusal. The required context is the intersection of the arms. */
-export function and<Gates extends NonEmptyTuple<Gate<GateContextBase>>>(
+export function and<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...gates: Gates
 ): Gate<IntersectRequired<Gates> & GateContextBase>;
 export function and(...gates: readonly Gate<GateContextBase>[]): Gate<GateContextBase> {
@@ -62,10 +64,8 @@ function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
 }
 
 /** Runs each gate in order and passes on the first arm that passes. The required context is the union of the arms. */
-export function or<Gates extends NonEmptyTuple<Gate<GateContextBase>>>(
-    ...gates: Gates
-): Gate<RequiredOf<Gates[number]>>;
-export function or<Gates extends NonEmptyTuple<Gate<GateContextBase>>>(
+export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(...gates: Gates): Gate<RequiredOf<Gates[number]>>;
+export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...args: [...Gates, OrOptions]
 ): Gate<RequiredOf<Gates[number]>>;
 export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gate<GateContextBase> {
