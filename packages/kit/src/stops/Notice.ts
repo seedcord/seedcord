@@ -7,6 +7,32 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  * boundary and renders {@link Notice.render}, which always decides what the user sees. With `report`
  * false (the default) that render is all that happens. With `report` true the framework also logs the
  * fault and publishes it to the `handledException` bus. A raw, non-Notice throw shows the generic message.
+ *
+ * @example
+ * ```ts
+ * import { Notice, BuilderComponent, type RenderContext, type ReplyResponse } from 'seedcord';
+ *
+ * // reading `.component` applies the configured bot color, a raw EmbedBuilder would ship uncolored
+ * class TooPoorEmbed extends BuilderComponent<'embed'> {
+ *     constructor(balance: number) {
+ *         super('embed');
+ *         this.instance.setTitle('Insufficient balance').setDescription(`You need more than ${balance} coins.`);
+ *     }
+ * }
+ *
+ * class TooPoor extends Notice {
+ *     constructor(private readonly balance: number) {
+ *         super(`balance ${balance} is below the cost`);
+ *     }
+ *
+ *     render(_ctx: RenderContext): ReplyResponse {
+ *         return { kind: 'embed', embeds: [new TooPoorEmbed(this.balance).component] };
+ *     }
+ * }
+ *
+ * // in a handler, throwing stops the handler and replies with render(ctx)
+ * if (wallet.balance < cost) throw new TooPoor(wallet.balance);
+ * ```
  */
 export abstract class Notice extends Error {
     /**

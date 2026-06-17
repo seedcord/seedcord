@@ -64,6 +64,12 @@ describe('resolveExternalPackageUrl', () => {
         );
     });
 
+    it('resolves the ErrorOptions lib type to the MDN Error constructor page', () => {
+        expect(resolveExternalPackageUrl('ErrorOptions')).toBe(
+            'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error/Error'
+        );
+    });
+
     it('strips generics, array brackets, and union tails before lookup', () => {
         expect(resolveExternalPackageUrl('Promise<void>')).toBe(
             'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise'

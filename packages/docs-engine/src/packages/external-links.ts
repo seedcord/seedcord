@@ -17,6 +17,7 @@ export const rawExternalLinks = {
     AsyncIterableIterator: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Iteration_protocols',
     Date: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date',
     Error: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error',
+    ErrorOptions: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error/Error',
     Function: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Function',
     Generator: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Generator',
     Iterable: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Iteration_protocols',

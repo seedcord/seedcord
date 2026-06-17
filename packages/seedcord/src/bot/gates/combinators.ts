@@ -31,7 +31,29 @@ class NeedsAny extends Notice {
     }
 }
 
-/** Runs each gate in order and refuses on the first refusal. The required context is the intersection of the arms. */
+/**
+ * Runs each gate in order and refuses on the first refusal. Takes two or more arms. The required
+ * context is the intersection of the arms, so an event-only and an interaction-only gate cannot be
+ * combined.
+ *
+ * @typeParam Gates - The tuple of two or more gate arms, run left to right.
+ * @param gates - The gate arms to run in order, all refused on the first refusal.
+ *
+ * @see {@link or}
+ *
+ * @example
+ * ```ts
+ * import { PermissionFlagsBits } from 'discord.js';
+ *
+ * \@Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
+ * \@SlashRoute('ban')
+ * class BanHandler extends SlashHandler<'ban'> {
+ *     async execute() {
+ *         // ...
+ *     }
+ * }
+ * ```
+ */
 export function and<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...gates: Gates
 ): Gate<IntersectRequired<Gates> & GateContextBase, JoinNames<Gates, ' & '>>;
@@ -53,7 +75,35 @@ function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
     return !('check' in arg);
 }
 
-/** Runs each gate in order and passes on the first arm that passes. The required context is the union of the arms. */
+/**
+ * Runs each gate in order and passes on the first arm that passes. Takes two or more arms. The
+ * required context is the union of the arms, so a handler that matches any one arm fits. When every
+ * arm refuses it throws the trailing {@link OrOptions} `fail` if given, else an auto list of the
+ * arms derived from the summary field, else {@link NotAllowed}.
+ * The trailing options object does not count as an arm.
+ *
+ * @typeParam Gates - The tuple of two or more gate arms, tried left to right.
+ * @param gates - The gate arms to try in order, with an optional trailing {@link OrOptions} object.
+ *
+ * @see {@link and}
+ *
+ * @example
+ * ```ts
+ * \@Gated(or(OwnerOnly(), RequireRole('123456789012345678')))
+ * \@SlashRoute('admin')
+ * class AdminHandler extends SlashHandler<'admin'> {
+ *     async execute() {
+ *         // ...
+ *     }
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * // custom refusal when every arm refuses
+ * or(OwnerOnly(), RequireRole('123456789012345678'), { fail: new NotAllowedNotice() });
+ * ```
+ */
 export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...gates: Gates
 ): Gate<RequiredOf<Gates[number]>, JoinNames<Gates, ' | '>>;

@@ -1,4 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { RateLimiter } from '@seedcord/services';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Cooldown, OnCooldown } from '@bot/gates/catalog';
@@ -49,6 +50,20 @@ describe('Cooldown', () => {
         await Cooldown(5).check(ctx);
         await Cooldown(5).check(ctx);
         expect(peek.mock.calls[0]?.[0]).not.toBe(peek.mock.calls[1]?.[0]);
+    });
+
+    it('allows `limit` uses within one window, then refuses', async () => {
+        const rl = new RateLimiter();
+        const gate = Cooldown(60, { limit: 3 });
+        const ctx = cdCtx(rl);
+
+        // three uses pass, each peeked then charged on commit
+        for (let i = 0; i < 3; i++) {
+            await expect(gate.check(ctx)).resolves.toBeUndefined();
+            await gate.commit(ctx);
+        }
+
+        await expect(gate.check(ctx)).rejects.toBeInstanceOf(OnCooldown);
     });
 
     it('carries the rate-limiter retry-after on the refusal', async () => {

@@ -14,6 +14,21 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  *
  * The framework also renders this for an unhandled throw, where it points the user at
  * `ctx.developerUsername`.
+ *
+ * @example
+ * ```ts
+ * import { Fault } from '@seedcord/kit';
+ *
+ * try {
+ *     await db.write(record);
+ * } catch (cause) {
+ *     // user sees the generic reply with the uuid, the real error rides along as cause for the webhook
+ *     throw new Fault({ cause });
+ *
+ *     // pass report: false to show the same reply without publishing to the handledException bus
+ *     // throw new Fault({ cause, report: false });
+ * }
+ * ```
  */
 export class Fault extends Notice {
     public constructor(options?: { cause?: unknown; report?: boolean }) {
