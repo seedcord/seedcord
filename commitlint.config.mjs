@@ -12,7 +12,6 @@ export default {
                 'refactor',
                 'perf',
                 'tests',
-                'test',
                 'build',
                 'ci',
                 'chore',

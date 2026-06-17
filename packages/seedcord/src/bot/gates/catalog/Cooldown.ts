@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { parseDuration, type ValidDuration } from '@seedcord/utils';
+import { parseDuration, toEpochSeconds, type ValidDuration } from '@seedcord/utils';
 
 import { defineEffectGate } from '../Gate';
 import { GateNotice } from './GateNotice';
@@ -8,6 +8,7 @@ import { pickNotice } from './options';
 
 import type { GateNoticeOptions } from './options';
 import type { EffectGate, GateContextBase } from '../Gate';
+import type { EpochMs } from '@seedcord/types';
 
 /**
  * Refusal shown while a Cooldown is still cooling down. Carries the epoch ms the key frees up, which the default
@@ -20,16 +21,16 @@ import type { EffectGate, GateContextBase } from '../Gate';
  * ```ts
  * // refuse from a custom check, freeing up one minute from now
  * defineGate('SlowDown', (ctx) => {
- *     if (tooFast(ctx.user)) throw new OnCooldown(Date.now() + 60_000);
+ *     if (tooFast(ctx.user)) throw new OnCooldown((Date.now() + 60_000) as EpochMs);
  * });
  * ```
  */
 export class OnCooldown extends GateNotice {
     public constructor(
-        public readonly expires: number,
+        public readonly expires: EpochMs,
         message?: string
     ) {
-        super(message ?? `You are doing that too fast. Try again <t:${Math.floor(expires / 1000)}:R>.`);
+        super(message ?? `You are doing that too fast. Try again <t:${toEpochSeconds(expires)}:R>.`);
     }
 }
 

@@ -38,7 +38,7 @@ export interface ErrorsConfig {
      * The reply sender always swallows the harmless reply-token codes on its own send for safety,
      * independent of this list, so the error path never crashes.
      */
-    ignoreApiCodes?: readonly number[];
+    ignoreApiCodes?: readonly (number | string)[];
     /**
      * discord.js API error codes the event error path swallows quietly instead of reporting a fault.
      * Discord delivers dead resources on events (a reaction on a deleted message, a member that just
@@ -48,5 +48,5 @@ export interface ErrorsConfig {
      * confirm it is an expected dead end and add the code here, for example Unknown Message (10008),
      * Unknown Member (10007), Unknown User (10013). A swallowed code still debug-logs.
      */
-    ignoreEventApiCodes?: readonly number[];
+    ignoreEventApiCodes?: readonly (number | string)[];
 }

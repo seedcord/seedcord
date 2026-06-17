@@ -84,8 +84,6 @@ export interface BaseSeedcordError {
 
 /**
  * Base class for Seedcord errors.
- *
- * @internal
  */
 export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends Error
@@ -111,8 +109,6 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
 
 /**
  * TypeError class for Seedcord errors.
- *
- * @internal
  */
 export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends TypeError
@@ -138,8 +134,6 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
 
 /**
  * RangeError class for Seedcord errors.
- *
- * @internal
  */
 export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends RangeError

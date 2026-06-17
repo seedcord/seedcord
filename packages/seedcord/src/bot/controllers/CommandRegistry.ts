@@ -33,9 +33,7 @@ interface CommandArtifact {
  * Manages Discord application command registration and deployment.
  *
  * Scans command directories, builds command structures, and registers both global and guild-scoped commands
- * to Discord's API.
- *
- * @internal
+ * to Discord's API. Accessed via `core.bot.commands`, not constructed directly.
  */
 export class CommandRegistry implements Initializeable, HmrAware {
     public readonly name = 'Commands';
@@ -71,6 +69,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return this.ctorToCommand.get(ctor);
     }
 
+    /** @internal */
     public async init(): Promise<void> {
         if (this.isInitialised) return;
         this.isInitialised = true;

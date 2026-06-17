@@ -21,6 +21,19 @@ function deadResourceError(): DiscordAPIError {
     );
 }
 
+function stringCodedError(): DiscordAPIError {
+    // the boundary reads `.code`, which is the second constructor argument, the rawError body's numeric
+    // code is unrelated. djs returns string codes for some errors, this models that.
+    return new DiscordAPIError(
+        { code: 0, message: 'Unknown command' },
+        'SLASH_COMMAND_UNKNOWN',
+        400,
+        'POST',
+        'https://discord.com/api/x',
+        { body: undefined, files: [] }
+    );
+}
+
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface the event boundary reads.
     return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
@@ -85,6 +98,18 @@ describe('handleEventFault', () => {
         } as unknown as Core;
 
         handleEventFault(deadResourceError(), 'messageDelete', 'Cleanup', [{}], core);
+
+        expect(publish).not.toHaveBeenCalled();
+    });
+
+    it('swallows a string-coded api error listed in ignoreEventApiCodes', () => {
+        // justified: the fixture implements only the Core surface the event boundary reads.
+        const core = {
+            bus: { publish },
+            config: { errors: { ignoreEventApiCodes: ['SLASH_COMMAND_UNKNOWN'] }, notifications: {} }
+        } as unknown as Core;
+
+        handleEventFault(stringCodedError(), 'messageCreate', 'Cleanup', [{}], core);
 
         expect(publish).not.toHaveBeenCalled();
     });

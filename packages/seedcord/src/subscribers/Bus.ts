@@ -33,9 +33,8 @@ type SubscriberArtifact = SubscriptionKey[];
  *
  * Provides a centralized system for registering and executing custom subscribers
  * throughout the application lifecycle. Bus subscribers are loaded from configured directories
- * and can be triggered programmatically or by framework events.
- *
- * @internal Accessed via core.bus, not directly instantiated
+ * and can be triggered programmatically or by framework events. Accessed via `core.bus`, not
+ * constructed directly.
  */
 export class Bus extends Plugin<SubscriptionTuples> {
     public readonly logger = new Logger('Subscribers');
@@ -67,6 +66,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
         return [meta.subscriber];
     }
 
+    /** @internal */
     public async init(): Promise<void> {
         if (this.isInitialized) return;
 
@@ -75,6 +75,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
         this.registerSubscriber(UnknownException);
         this.registerSubscriber(HandledException);
 
+        // both webhook urls are required at startup, the bot refuses to boot without them rather than
+        // silently dropping fault reports when the first exception fires.
         Envapter.require('UNKNOWN_EXCEPTION_WEBHOOK_URL', 'HANDLED_EXCEPTION_WEBHOOK_URL');
 
         const subscribersDir = this.core.config.subscribers.path;

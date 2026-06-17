@@ -1,6 +1,8 @@
-import type { EpochSec } from '@seedcord/types';
+import { toEpochSeconds } from './toEpochSeconds';
 
-/** Current time in epoch seconds. */
+import type { EpochMs, EpochSec } from '@seedcord/types';
+
+/** Current time in epoch seconds. Shares the one ms→s rounding rule with {@link toEpochSeconds}. */
 export function currentTime(): EpochSec {
-    return Math.floor(Date.now() / 1000) as EpochSec;
+    return toEpochSeconds(Date.now() as EpochMs);
 }
