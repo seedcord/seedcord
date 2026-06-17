@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SEARCH_DEBOUNCE_MS } from '@components/search/command-palette/constants';
+import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from '@components/search/command-palette/constants';
 import { useCommandPaletteSearch } from '@components/search/command-palette/useCommandPaletteSearch';
 
 import type { CommandAction } from '@components/search/command-palette/types';
@@ -10,6 +10,7 @@ const router = vi.hoisted(() => ({ pathname: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => router.pathname }));
 
 const DEBOUNCE_MS = SEARCH_DEBOUNCE_MS;
+const BELOW_MIN = 'a'.repeat(MIN_SEARCH_QUERY_LENGTH - 1);
 
 interface DeferredFetch {
     promise: Promise<Response>;
@@ -84,7 +85,7 @@ describe('useCommandPaletteSearch', () => {
     });
 
     it('returns DEFAULT_STATE without fetching when query is shorter than the minimum', () => {
-        const { result } = render('ab');
+        const { result } = render(BELOW_MIN);
 
         act(() => {
             vi.advanceTimersByTime(DEBOUNCE_MS * 5);
@@ -263,7 +264,7 @@ describe('useCommandPaletteSearch', () => {
         });
         expect(result.current.status).toBe('success');
 
-        rerender({ query: 'fo' });
+        rerender({ query: BELOW_MIN });
 
         expect(result.current.status).toBe('success');
 

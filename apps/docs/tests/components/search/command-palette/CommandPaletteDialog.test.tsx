@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MotionProvider } from '@components/providers/MotionProvider';
 import { CommandPaletteDialog } from '@components/search/command-palette/CommandPaletteDialog';
-import { COMMAND_LISTBOX_ID } from '@components/search/command-palette/constants';
+import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
 
 import type { CommandAction } from '@components/search/command-palette/types';
 import type { CommandPaletteController } from '@components/search/command-palette/useCommandPaletteController';
@@ -133,7 +133,7 @@ describe('CommandPaletteDialog', () => {
     });
 
     it('renders no options when the query is below the minimum length', () => {
-        renderDialog(makeController({ searchValue: 'ab' }));
+        renderDialog(makeController({ searchValue: 'a'.repeat(MIN_SEARCH_QUERY_LENGTH - 1) }));
         expect(screen.queryByRole('option')).toBeNull();
         expect(screen.queryByRole('listbox')).toBeNull();
     });

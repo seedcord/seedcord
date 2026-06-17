@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from '@/app/(docs)/search/route';
 
+import { MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
+
 import type { DocNode, DocSearchEntry } from '@seedcord/docs-engine';
 import type { NextRequest } from 'next/server';
 
@@ -105,8 +107,8 @@ describe('GET /search: query validation', () => {
         expect(engineStub.search).not.toHaveBeenCalled();
     });
 
-    it('returns no results for a query shorter than 3 chars after trim', async () => {
-        const res = await GET(makeRequest('https://example.com/search?q=ab'));
+    it('returns no results for a query shorter than the minimum length after trim', async () => {
+        const res = await GET(makeRequest(`https://example.com/search?q=${'a'.repeat(MIN_SEARCH_QUERY_LENGTH - 1)}`));
         await expect(res.json()).resolves.toEqual({ results: [] });
         expect(engineStub.search).not.toHaveBeenCalled();
     });
