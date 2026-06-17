@@ -100,6 +100,15 @@ describe('resolveExternalPackageUrl', () => {
         expect(resolveExternalPackageUrl('@types/pg')).toBe('https://node-postgres.com');
     });
 
+    it('maps discord-api-types to the discord.js docs (enums like ButtonStyle are re-exported there)', () => {
+        // AE reports ButtonStyle as discord-api-types!ButtonStyle:enum, discord.js re-exports and documents it.
+        expect(resolveExternalPackageUrl('discord-api-types')).toBe('https://discord.js.org/docs');
+    });
+
+    it('maps the @discordjs scoped helper packages to the discord.js docs (JSONEncodable lives in util)', () => {
+        expect(resolveExternalPackageUrl('@discordjs/util')).toBe('https://discord.js.org/docs');
+    });
+
     it('does not lowercase-match Map (mixed case lookup keys are preserved)', () => {
         expect(resolveExternalPackageUrl('MAP')).toBeNull();
     });

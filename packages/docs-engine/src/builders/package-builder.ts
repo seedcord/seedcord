@@ -26,7 +26,7 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     const byKind = new Map<number, DocNode[]>();
     const search: DocSearchEntry[] = [];
 
-    const visit = (node: DocNode): void => {
+    const visit = (node: DocNode, ancestorsExported: boolean): void => {
         byId.set(node.id, node);
         bySlug.set(node.slug, node);
         if (node.qualifiedName.length > 0) {
@@ -35,8 +35,11 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
 
         // Forgotten (referenced-only) declarations stay resolvable as link targets via the maps
         // above, but are kept out of the sidebar (byKind) and search so both show only the package's
-        // real exports (the two-tier model).
-        if (node.isExported) {
+        // real exports (the two-tier model). A forgotten parent's children inherit that exclusion
+        // even though the adapter marks each child isExported, so an internal interface's properties
+        // never leak into search.
+        const searchable = node.isExported && ancestorsExported;
+        if (searchable) {
             const bucket = byKind.get(node.kind) ?? [];
             bucket.push(node);
             byKind.set(node.kind, bucket);
@@ -45,11 +48,11 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
         }
 
         for (const child of node.children) {
-            visit(child);
+            visit(child, searchable);
         }
     };
 
-    visit(root);
+    visit(root, true);
 
     return { byId, bySlug, byQName, byKind, search };
 }

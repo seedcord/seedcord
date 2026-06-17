@@ -74,6 +74,10 @@ export type WithThrows<IsRequired = false> = IsRequired extends true
     ? Record<'throws', readonly CommentParagraph[]>
     : Partial<Record<'throws', readonly CommentParagraph[] | undefined>>;
 
+export type WithDefaultValue<IsRequired = false> = IsRequired extends true
+    ? Record<'defaultValue', readonly CommentParagraph[]>
+    : Partial<Record<'defaultValue', readonly CommentParagraph[] | undefined>>;
+
 export type WithSeeAlso<IsRequired = false, HasTarget = false> = IsRequired extends true
     ? Record<'seeAlso', HasTarget extends true ? readonly SeeAlsoEntry[] : readonly SeeAlsoEntryWithoutTarget[]>
     : Partial<
@@ -83,7 +87,7 @@ export type WithSeeAlso<IsRequired = false, HasTarget = false> = IsRequired exte
           >
       >;
 
-export interface FormattedComment extends WithThrows, WithSeeAlso {
+export interface FormattedComment extends WithThrows, WithSeeAlso, WithDefaultValue {
     paragraphs: readonly CommentParagraph[];
     examples: readonly CommentExample[];
 }
@@ -229,7 +233,8 @@ export interface MemberSignatureDetail
     description?: CommentParagraph[];
 }
 
-export interface EntityMemberSummary extends WithSourceUrl, WithThrows, WithSeeAlso, WithDeprecationStatus {
+export interface EntityMemberSummary
+    extends WithSourceUrl, WithThrows, WithSeeAlso, WithDefaultValue, WithDeprecationStatus {
     id: string;
     label: string;
     description?: CommentParagraph | null;

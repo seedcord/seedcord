@@ -61,7 +61,6 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'prettify' },
     { query: 'fyShuffle' },
     { query: 'RegisterCommand' },
-    { query: 'attemptSendDM' },
     { query: 'SelectMenuRoute' },
     { query: 'AutocompleteRoute' },
     { query: 'checkPermissions' },
