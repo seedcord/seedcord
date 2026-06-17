@@ -102,7 +102,7 @@ interface CreateConfigOptions {
     tailwindTaggedTemplates?: string[];
 
     /**
-     * File globs to enable MDX linting on (typically `['**\/*.mdx']`).
+     * File globs to enable MDX linting on (typically every `.mdx` file).
      *
      * When provided, registers the `eslint-mdx` parser + `mdx` plugin and applies the core
      * `no-unused-expressions` rule to embedded JS/JSX. Omit to disable entirely (no parser,
