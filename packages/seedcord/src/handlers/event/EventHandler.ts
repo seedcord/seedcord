@@ -54,13 +54,29 @@ export abstract class EventHandler<Names extends ValidNonInteractionKeys>
     declare protected readonly event: SingleEventPayload<Names>;
 
     /**
-     * Run the arm for whichever event fired, when this handler is registered for several events.
+     * Run the arm for whichever event fired. Use this only when the handler is registered for several
+     * events. A single-event handler reads `this.event` directly. On a multi-event handler `this.event` is
+     * `never`, so match is the only way to read the payload.
      *
-     * Provide one arm per registered event, keyed by its name, and each arm receives that event's payload
-     * tuple. A missing arm is a compile error. A single-event handler reads `this.event` directly instead.
+     * Provide one arm per registered event, keyed by its name, and each arm receives that event's own
+     * payload tuple. The arms must cover every event in the generic, a missing event or an unknown key is a
+     * compile error.
      *
      * @param arms - One handler per registered event, keyed by event name.
      * @returns The result of the arm that ran.
+     *
+     * @example
+     * ```ts
+     * \@RegisterEvent([Events.MessageCreate], [Events.MessageUpdate])
+     * class MessageWatcher extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+     *     async execute() {
+     *         await this.match({
+     *             [Events.MessageCreate]: (message) => this.scan(message),
+     *             [Events.MessageUpdate]: (_old, updated) => this.scan(updated)
+     *         });
+     *     }
+     * }
+     * ```
      */
     protected async match<Ret>(arms: EventMatchArms<Names, Ret>): Promise<Ret> {
         const name = this.firedEvent;

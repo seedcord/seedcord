@@ -1,4 +1,4 @@
-import type { APIMessageTopLevelComponent, EmbedBuilder, JSONEncodable } from 'discord.js';
+import type { APIMessageTopLevelComponent, JSONEncodable } from 'discord.js';
 import type { UUID } from 'node:crypto';
 
 /**
@@ -8,12 +8,12 @@ import type { UUID } from 'node:crypto';
 export type V2Component = JSONEncodable<APIMessageTopLevelComponent>;
 
 /**
- * What a denial renders into. Either a classic embed reply or a ComponentsV2 reply. The two arms are
- * mutually exclusive because Discord rejects mixing embeds/content with ComponentsV2.
+ * What a reply renders into. A ComponentsV2 message built entirely from `components`. The framework never
+ * emits classic content or embeds, a bot author who wants those sends them through discord.js directly.
  */
-export type ReplyResponse =
-    | { kind: 'embed'; embeds: EmbedBuilder[]; content?: string }
-    | { kind: 'v2'; components: V2Component[] };
+export interface ReplyResponse {
+    components: V2Component[];
+}
 
 /**
  * Context threaded into a denial's render. Built fresh per render so a reported fault shows the same

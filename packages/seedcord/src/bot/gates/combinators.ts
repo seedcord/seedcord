@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 
 import { markCommits, rollbackCommits, runCheck } from './effects';
 import { defineGate } from './Gate';
@@ -14,8 +14,8 @@ class NotAllowed extends Notice {
     }
 
     public render(): ReplyResponse {
-        const embed = new NoticeEmbed('You are not allowed to use this command.');
-        return { kind: 'embed', embeds: [embed.component] };
+        const card = new NoticeCard('You are not allowed to use this command.');
+        return { components: [card.component] };
     }
 }
 
@@ -26,8 +26,8 @@ class NeedsAny extends Notice {
 
     public render(): ReplyResponse {
         const bullets = this.summaries.map((summary) => `• ${summary}`).join('\n');
-        const embed = new NoticeEmbed(`You need any of:\n${bullets}`);
-        return { kind: 'embed', embeds: [embed.component] };
+        const card = new NoticeCard(`You need any of:\n${bullets}`);
+        return { components: [card.component] };
     }
 }
 

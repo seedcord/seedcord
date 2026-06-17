@@ -3,6 +3,7 @@ import path from 'node:path';
 import { CustomId } from '@seedcord/kit';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+import { CONFIRM_DEF } from '@bot/confirm/reserved';
 import { Seedcord } from '@src/Seedcord';
 
 import { testConfig } from '../utils/test-config';
@@ -60,7 +61,7 @@ describe('InteractionDispatcher Integration', () => {
     let seedcord: Seedcord;
 
     beforeEach(async () => {
-        // @ts-expect-error: Accessing private method for testing
+        // @ts-expect-error Accessing private method for testing
         Seedcord.reset();
         testEnv = new TestEnvironment('interactions-test-');
         await testEnv.setup();
@@ -145,6 +146,20 @@ describe('InteractionDispatcher Integration', () => {
         expect(processSpy).not.toHaveBeenCalled();
 
         await controller.handleButton({ customId: new CustomId('other').encode({}) });
+        expect(processSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores the reserved confirm prefix so a confirm click never reaches the global router', async () => {
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
+
+        await controller.handleButton({ customId: CONFIRM_DEF.encode({ choice: 'confirm' }) });
+        expect(processSpy).not.toHaveBeenCalled();
+
+        await controller.handleButton({ customId: new CustomId('not-ignored').encode({}) });
         expect(processSpy).toHaveBeenCalledTimes(1);
     });
 

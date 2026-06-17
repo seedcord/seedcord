@@ -4,19 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { flagsFor } from '@miscellaneous/flagsFor';
 
 describe('flagsFor', () => {
-    it('returns the Ephemeral flag for a classic ephemeral reply', () => {
-        expect(flagsFor(false, true)).toBe(MessageFlags.Ephemeral);
+    it('always sets IsComponentsV2 and adds Ephemeral for an ephemeral reply', () => {
+        expect(flagsFor(true)).toBe(MessageFlags.IsComponentsV2 | MessageFlags.Ephemeral);
     });
 
-    it('returns no flags for a classic public reply', () => {
-        expect(flagsFor(false, false)).toBe(0);
-    });
-
-    it('returns the IsComponentsV2 flag for a public v2 reply', () => {
-        expect(flagsFor(true, false)).toBe(MessageFlags.IsComponentsV2);
-    });
-
-    it('ORs both flags for an ephemeral v2 reply', () => {
-        expect(flagsFor(true, true)).toBe(MessageFlags.Ephemeral | MessageFlags.IsComponentsV2);
+    it('sets only IsComponentsV2 for a public reply', () => {
+        expect(flagsFor(false)).toBe(MessageFlags.IsComponentsV2);
     });
 });

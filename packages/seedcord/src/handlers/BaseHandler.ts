@@ -32,9 +32,7 @@ export interface Handler {
 }
 
 /**
- * Not meant to be used directly.
- *
- * @internal
+ * Base class for a Discord event or interaction handler. Don't register handlers directly, use the more specific handler subclasses.
  */
 export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
     protected readonly event: ValidEvent;

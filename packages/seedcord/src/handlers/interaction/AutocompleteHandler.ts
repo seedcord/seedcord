@@ -103,14 +103,29 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     }
 
     /**
-     * Run the arm for the focused field.
+     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused, so
+     * match is how you read it. There is no single-field shortcut the way slash/component handlers have one.
      *
-     * Provide one arm per autocompletable field across the registered commands. Each arm receives the
-     * focused partial value and a `respond` pinned to that field's choice value type. A missing arm is a
-     * compile error. A focused field with no arm, only reachable from a stale-deployed command, throws.
+     * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
+     * arm receives the focused partial value and a `respond` pinned to that field's choice value type. The
+     * arms must cover every autocompletable field, a missing field or an unknown key is a compile error. A
+     * focused field with no arm, only reachable from a stale-deployed command, throws at runtime.
      *
      * @param arms - One handler per autocompletable field, keyed by field name.
      * @returns The result of the arm that ran.
+     *
+     * @example
+     * ```ts
+     * \@AutocompleteRoute('search')
+     * class SearchAutocomplete extends AutocompleteHandler<'search'> {
+     *     async execute() {
+     *         await this.match({
+     *             query: (value, respond) => respond(titles(value).map((s) => ({ name: s, value: s }))),
+     *             tag: (value, respond) => respond(tags(value).map((s) => ({ name: s, value: s })))
+     *         });
+     *     }
+     * }
+     * ```
      */
     protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;

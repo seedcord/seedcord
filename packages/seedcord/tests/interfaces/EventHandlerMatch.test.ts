@@ -143,7 +143,7 @@ class BoomError extends Notice {
         super('boom');
     }
     render(): ReplyResponse {
-        return { kind: 'embed', embeds: [] };
+        return { components: [] };
     }
 }
 

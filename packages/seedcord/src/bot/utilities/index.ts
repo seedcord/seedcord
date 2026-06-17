@@ -1,9 +1,5 @@
 // Bot Utilities Channels exports
 export * from './channels/fetchText';
-export * from './channels/sendInText';
-
-// Bot Utilities Messages exports
-export * from './messages/attemptSendDM';
 
 // Bot Utilities Permissions exports
 export * from './permissions/checkBotPermissions';

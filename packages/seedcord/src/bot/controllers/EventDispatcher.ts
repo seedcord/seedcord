@@ -38,11 +38,8 @@ interface RegisteredEventHandlerEntry {
 type EventArtifact = string;
 
 /**
- * Manages Discord event handler registration and execution.
- *
  * Scans event handler directories, registers handlers with Discord client events,
  * and coordinates event execution through the handler system. Does not handle interactions.
- *
  * Multiple handlers can point to one event.
  *
  * @internal

@@ -3,6 +3,7 @@ import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { and, defineGate, or } from '@bot/gates';
 
+import { cardJson } from '../../utils/cardText';
 import { TestNotice } from '../../utils/TestNotice';
 
 import type { EventGateContext, Gate, GateContext, GateContextBase, InteractionGateContext } from '@bot/gates';
@@ -156,7 +157,7 @@ describe('or', () => {
         expect(thrown).toBeInstanceOf(Notice);
         // the list render ignores ctx, so a minimal cast stands in
         const reply = (thrown as Notice).render({} as RenderContext);
-        const description = reply.kind === 'embed' ? (reply.embeds[0]?.data.description ?? '') : '';
+        const description = cardJson(reply);
         expect(description).toContain('Manage Server');
         expect(description).toContain('be a bot owner');
     });
@@ -181,7 +182,7 @@ describe('or', () => {
                 (error: Notice) => error.render({} as RenderContext)
             );
 
-        const description = reply.kind === 'embed' ? (reply.embeds[0]?.data.description ?? '') : '';
+        const description = cardJson(reply);
         expect(description).not.toContain('Manage Server');
         expect(description).toContain('not allowed');
     });

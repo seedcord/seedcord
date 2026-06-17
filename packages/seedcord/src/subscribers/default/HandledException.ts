@@ -54,7 +54,7 @@ export class HandledException extends WebhookLog<'handledException'> {
 
         try {
             await this.webhook.send({
-                flags: flagsFor(true, false),
+                flags: flagsFor(false),
                 withComponents: true,
                 username: 'Handled Exception',
                 components: [new HandledExceptionContainer(this.data).component],

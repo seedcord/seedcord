@@ -8,6 +8,6 @@ export class TestNotice extends Notice {
     }
 
     render(): ReplyResponse {
-        return { kind: 'embed', embeds: [] };
+        return { components: [] };
     }
 }

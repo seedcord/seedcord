@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
 import type { Nullable, ReplyResponse } from '@seedcord/types';
@@ -17,8 +17,8 @@ class RoleDoesNotExist extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed(`The role with ID \`${this.roleId}\` does not exist.`);
-        return { kind: 'embed', embeds: [embed.component] };
+        const card = new NoticeCard(`The role with ID \`${this.roleId}\` does not exist.`);
+        return { components: [card.component] };
     }
 }
 

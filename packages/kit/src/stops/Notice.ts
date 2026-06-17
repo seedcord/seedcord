@@ -11,12 +11,15 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  * @example
  * ```ts
  * import { Notice, BuilderComponent, type RenderContext, type ReplyResponse } from 'seedcord';
+ * import { TextDisplayBuilder } from 'discord.js';
  *
- * // reading `.component` applies the configured bot color, a raw EmbedBuilder would ship uncolored
- * class TooPoorEmbed extends BuilderComponent<'embed'> {
+ * // reading `.component` applies the configured bot color to the container accent
+ * class TooPoorCard extends BuilderComponent<'container'> {
  *     constructor(balance: number) {
- *         super('embed');
- *         this.instance.setTitle('Insufficient balance').setDescription(`You need more than ${balance} coins.`);
+ *         super('container');
+ *         this.instance.addTextDisplayComponents(
+ *             new TextDisplayBuilder().setContent(`### Insufficient balance\nYou need more than ${balance} coins.`)
+ *         );
  *     }
  * }
  *
@@ -26,7 +29,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  *     }
  *
  *     render(_ctx: RenderContext): ReplyResponse {
- *         return { kind: 'embed', embeds: [new TooPoorEmbed(this.balance).component] };
+ *         return { components: [new TooPoorCard(this.balance).component] };
  *     }
  * }
  *

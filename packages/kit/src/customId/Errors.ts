@@ -1,5 +1,5 @@
 import { Notice } from '@stops/Notice';
-import { NoticeEmbed } from '@stops/NoticeEmbed';
+import { NoticeCard } from '@stops/NoticeCard';
 
 import type { ReplyResponse } from '@seedcord/types';
 
@@ -14,11 +14,11 @@ export class StaleCustomId extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             'This button or menu is from an older version. Please run the command again.',
             'Outdated'
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }
 
@@ -34,7 +34,7 @@ export class InvalidCustomId extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed('Something went wrong. Please try again.');
-        return { kind: 'embed', embeds: [embed.component] };
+        const card = new NoticeCard('Something went wrong. Please try again.');
+        return { components: [card.component] };
     }
 }

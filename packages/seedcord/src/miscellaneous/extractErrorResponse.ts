@@ -53,15 +53,9 @@ export interface ErrorOrigin {
     metadata?: unknown;
 }
 
-/**
- * Structure representing the extracted error response.
- *
- * @internal
- */
+/** @internal */
 export interface ExtractedErrorResponse {
-    /** The unique identifier for the error instance */
     uuid: UUID;
-    /** The rendered reply to send to the user */
     response: ReplyResponse;
 }
 

@@ -1,10 +1,10 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 
 import type { ReplyResponse } from '@seedcord/types';
 
 /**
- * Base for the catalog refusals. Renders the message as the bot's standard notice embed, so matching this
+ * Base for the catalog refusals. Renders the message as the bot's standard notice card, so matching this
  * one type in the boundary restyles or translates every built-in gate refusal in one place. A refusal reply,
  * distinct from a {@link Silence} quiet drop.
  *
@@ -18,7 +18,7 @@ import type { ReplyResponse } from '@seedcord/types';
  *     }
  * }
  *
- * // thrown from a custom gate's check, rendered as the standard notice embed
+ * // thrown from a custom gate's check, rendered as the standard notice card
  * defineGate('Premium', (ctx) => {
  *     if (!isPremium(ctx.user)) throw new NotPremium();
  * });
@@ -26,6 +26,6 @@ import type { ReplyResponse } from '@seedcord/types';
  */
 export abstract class GateNotice extends Notice {
     public render(): ReplyResponse {
-        return { kind: 'embed', embeds: [new NoticeEmbed(this.message).component] };
+        return { components: [new NoticeCard(this.message).component] };
     }
 }

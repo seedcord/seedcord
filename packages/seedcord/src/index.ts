@@ -18,6 +18,10 @@ export * from '@bUtilities/index';
 // Reply delivery
 export { ReplySender } from '@bot/ReplySender';
 
+// Confirmation prompts
+export { getConfirmation } from '@bot/confirm';
+export type { ConfirmOptions, DefaultConfirmOptions } from '@bot/confirm';
+
 // Interfaces exports
 export * from '@interfaces/index';
 

@@ -11,6 +11,7 @@ import { Envapter } from 'envapt';
 import { runHandlerGates } from '@bDecorators/Gated';
 import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
 import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { CONFIRM_DEF } from '@bot/confirm/reserved';
 import { UnhandledEvent } from '@bot/defaults';
 import { interactionGateContext } from '@bot/gates/runGates';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
@@ -54,12 +55,8 @@ interface RegisteredMiddleware {
 }
 
 /**
- * Manages Discord interaction handling and routing.
- *
- * Scans handler directories, registers handlers with Discord client events,
- * and coordinates event execution through the handler system. Only handles interactions.
- *
- * Enforces that there is only one handler per interaction.
+ * Scans handler directories, routes each interaction to its registered handler, and runs the handler.
+ * One handler per interaction.
  *
  * @internal
  */
@@ -82,7 +79,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly autocompleteMap = new Collection<string, HandlerConstructor>();
 
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
-
     private readonly middlewares: RegisteredMiddleware[] = [];
 
     private readonly hmrHandler?: HmrModuleHandler<
@@ -112,6 +108,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (ignoredKeysFromConfig) {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
+
+        // the in-process getConfirmation() collector handles these clicks, so ignore them here or the global
+        // router double-acks them.
+        this.keysToIgnore.add(CONFIRM_DEF);
 
         const interactionsDir = this.core.config.bot.interactions.path;
         if (!interactionsDir) {
@@ -372,7 +372,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const key = extractKey(interaction);
 
         try {
-            // Autocomplete interactions skip middlewares.
             if (!interaction.isAutocomplete()) {
                 for (const { ctor } of this.middlewares) {
                     const middleware = new ctor(interaction as Repliables, this.core);

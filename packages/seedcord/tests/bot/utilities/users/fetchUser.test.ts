@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { fetchUser } from '@bUtilities/users/fetchUser';
 
+import { cardJson } from '../../../utils/cardText';
+
 import type { ReplyResponse, RenderContext } from '@seedcord/types';
 import type { Client } from 'discord.js';
 
@@ -12,7 +14,7 @@ class CustomNotFound extends Notice {
         super(`custom: ${arg}`);
     }
     render(): ReplyResponse {
-        return { kind: 'embed', embeds: [] };
+        return { components: [] };
     }
 }
 
@@ -40,11 +42,9 @@ describe('fetchUser throwAs', () => {
         expect((denial as Notice).name).toBe('UserNotFound');
         expect((denial as Notice).report).toBe(false);
 
-        const response = (denial as Notice).render(ctx);
-        if (response.kind !== 'embed') throw new Error('expected embed arm');
-        const [embed] = response.embeds;
-        expect(embed?.data.title).toBe('User Not Found');
-        expect(embed?.data.description).toContain('999');
+        const json = cardJson((denial as Notice).render(ctx));
+        expect(json).toContain('User Not Found');
+        expect(json).toContain('999');
     });
 
     it('throws the provided throwAs class instead of the default', async () => {

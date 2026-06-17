@@ -1,5 +1,5 @@
 import { Notice } from './Notice';
-import { NoticeEmbed } from './NoticeEmbed';
+import { NoticeCard } from './NoticeCard';
 
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 
@@ -38,10 +38,10 @@ export class Fault extends Notice {
 
     public render(ctx: RenderContext): ReplyResponse {
         const contact = ctx.developerUsername ?? 'the developer';
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             `Something went wrong. Please reach out to ${contact} with a way to reproduce the error and the following:\n### UUID: \`${ctx.uuid}\``,
             'Error'
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }

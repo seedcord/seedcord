@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse, faultThrottle } from '@miscellaneous/extractErrorResponse';
 
+import { cardJson } from '../utils/cardText';
 import { TestNotice } from '../utils/TestNotice';
 
 import type { Repliables } from '@handlers/BaseHandler';
@@ -69,8 +70,7 @@ describe('extractErrorResponse', () => {
         if (payload.source.kind !== 'interaction') throw new Error('expected interaction source');
         expect(payload.source.command).toBe('ban');
 
-        if (result.response.kind !== 'embed') throw new Error('expected embed arm');
-        expect(result.response.embeds[0]?.data.description).toContain(result.uuid);
+        expect(cardJson(result.response)).toContain(result.uuid);
     });
 
     it('publishes unknownException for a raw, non-denial throw', () => {

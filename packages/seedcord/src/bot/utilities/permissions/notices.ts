@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { GuildMember, Role, TextChannel } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/types';
@@ -34,11 +34,11 @@ export class RoleHigherThanMe extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             `I cannot assign a role that is higher than me.\n\n` +
                 `The role <@&${this.role.id}> is higher than my role <@&${this.botRole.id}> in the hierarchy.`
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }
 
@@ -51,8 +51,8 @@ export class CannotAssignBotRole extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed('I cannot assign a managed role.');
-        return { kind: 'embed', embeds: [embed.component] };
+        const card = new NoticeCard('I cannot assign a managed role.');
+        return { components: [card.component] };
     }
 }
 
@@ -70,10 +70,10 @@ export class MissingPermissions extends Notice {
 
     render(): ReplyResponse {
         const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             `The ${labelFor(this.where)} ${mentionFor(this.where)} is missing the following permission entries:\n\n${bullets}`
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }
 
@@ -91,9 +91,9 @@ export class HasDangerousPermissions extends Notice {
 
     render(): ReplyResponse {
         const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             `The ${labelFor(this.target)} ${mentionFor(this.target)} has the following permission entries that must not be enabled:\n\n${bullets}`
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }

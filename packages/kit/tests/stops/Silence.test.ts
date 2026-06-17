@@ -10,7 +10,7 @@ class NoopDenial extends Notice {
         super('noop');
     }
     render(): ReplyResponse {
-        return { kind: 'embed', embeds: [] };
+        return { components: [] };
     }
 }
 

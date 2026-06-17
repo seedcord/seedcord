@@ -27,7 +27,16 @@ type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
 // useDefineForClassFields.
 const decodeCache = new WeakMap<object, { prefix: string; params: Record<string, unknown> }>();
 
-/** @internal */
+/**
+ * Shared base the customId-routed component handlers extend.
+ *
+ * Not a public entry point. You should be using {@link ButtonHandler}, {@link SelectHandler}, or
+ * {@link ModalHandler} instead. This class only carries the customId decode and route-matching plumbing
+ * those bases share, so DO NOT use it directly.
+ *
+ * @typeParam Event - The component interaction type this handler processes
+ * @typeParam Defs - The customId route definitions registered on the concrete handler
+ */
 export abstract class ComponentHandler<Event extends ComponentInteraction, Defs extends readonly AnyCustomId[]>
     extends InteractionHandler<Event>
     implements HasComponentDefs<Defs>
@@ -68,14 +77,29 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     }
 
     /**
-     * Run the arm for whichever route the component was minted from.
+     * Run the arm for whichever route the component was minted from. Use this only when the handler is
+     * registered for several routes. A single-route handler reads `this.params` directly. On a multi-route
+     * handler `this.params` is `never`, so match is the only way to read the decoded params.
      *
-     * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's
-     * decoded params. A missing arm is a compile error. Decoding runs before any arm, so a stale or
-     * corrupt wire throws before an arm body executes.
+     * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
+     * decoded params. The arms must cover every registered def, a missing prefix or an unknown key is a
+     * compile error. Decoding runs before any arm, so a stale or corrupt wire throws before an arm body executes.
      *
      * @param arms - One handler per registered route, keyed by prefix.
      * @returns The result of the arm that ran.
+     *
+     * @example
+     * ```ts
+     * \@ButtonRoute(Approve, Reject)
+     * class ReviewButtons extends ButtonHandler<[typeof Approve, typeof Reject]> {
+     *     async execute() {
+     *         await this.match({
+     *             approve: ({ userId }) => this.event.reply(`approved <@${userId}>`),
+     *             reject: ({ userId }) => this.event.reply(`rejected <@${userId}>`)
+     *         });
+     *     }
+     * }
+     * ```
      */
     protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.route;

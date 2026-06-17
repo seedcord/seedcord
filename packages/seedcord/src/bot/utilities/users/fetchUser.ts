@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/types';
@@ -14,13 +14,13 @@ class UserNotFound extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             `User probably doesn't exist or was deleted.\n` +
                 `**User Argument:** \`${this.userArg}\`\n` +
                 `Please check the user ID and try again. Only pass valid user IDs as the argument.`,
             'User Not Found'
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }
 

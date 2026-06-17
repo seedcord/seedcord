@@ -61,7 +61,7 @@ export class UnknownException extends WebhookLog<'unknownException'> {
 
         try {
             await this.webhook.send({
-                flags: flagsFor(true, false),
+                flags: flagsFor(false),
                 withComponents: true,
                 username: 'Unknown Exception',
                 components: [new UnhandledErrorContainer(this.data).component],

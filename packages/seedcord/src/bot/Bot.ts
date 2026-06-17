@@ -19,9 +19,13 @@ import type { HmrUpdateEvent } from '@seedcord/types/internal';
  * Types of events emitted by the {@link Core.bot} instance.
  */
 export interface BotEvents {
+    /** Emitted when an unhandled interaction error occurs */
     'error:unhandled:interaction': [error: Error];
+    /** Emitted when an unhandled event error occurs */
     'error:unhandled:event': [error: Error];
+    /** Emitted for any event */
     'any:event': { [K in keyof ClientEvents]: [K, ...ClientEvents[K]] }[keyof ClientEvents];
+    /** Emitted for any interaction */
     'any:interaction': [interaction: Interaction];
 }
 

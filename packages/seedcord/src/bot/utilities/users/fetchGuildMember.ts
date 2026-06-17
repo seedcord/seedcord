@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/types';
@@ -14,8 +14,8 @@ class UserNotInGuild extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed(this.message);
-        return { kind: 'embed', embeds: [embed.component] };
+        const card = new NoticeCard(this.message);
+        return { components: [card.component] };
     }
 }
 

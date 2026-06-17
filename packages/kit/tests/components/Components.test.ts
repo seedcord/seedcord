@@ -1,4 +1,4 @@
-import { Colors, EmbedBuilder } from 'discord.js';
+import { Colors, TextDisplayBuilder } from 'discord.js';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BuilderComponent } from '@components/Component';
@@ -14,7 +14,7 @@ class TestNotice extends Notice {
         super('test denial', cause === undefined ? undefined : { cause });
     }
     render(c: RenderContext): ReplyResponse {
-        return { kind: 'embed', embeds: [new EmbedBuilder().setDescription(c.uuid)] };
+        return { components: [new TextDisplayBuilder().setContent(c.uuid)] };
     }
 }
 
@@ -24,7 +24,7 @@ class ReportingNotice extends Notice {
         this.report = true;
     }
     render(): ReplyResponse {
-        return { kind: 'embed', embeds: [] };
+        return { components: [] };
     }
 }
 
@@ -105,8 +105,6 @@ describe('Notice', () => {
         const first = denial.render(ctx);
         const second = denial.render(ctx);
         expect(first).not.toBe(second);
-        if (first.kind === 'embed' && second.kind === 'embed') {
-            expect(first.embeds[0]).not.toBe(second.embeds[0]);
-        }
+        expect(first.components[0]).not.toBe(second.components[0]);
     });
 });

@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { Fault } from '@stops/Fault';
 
+import { cardJson } from '../utils/cardText';
+
 import type { RenderContext } from '@seedcord/types';
 
 const ctx: RenderContext = { uuid: '11111111-2222-3333-4444-555555555555' };
@@ -12,8 +14,7 @@ describe('Fault', () => {
         expect(fault.report).toBe(true);
 
         const response = fault.render(ctx);
-        if (response.kind !== 'embed') throw new Error('expected embed arm');
-        expect(response.embeds[0]?.data.description).toContain(ctx.uuid);
+        expect(cardJson(response)).toContain(ctx.uuid);
     });
 
     it('stores the original error as the standard cause', () => {
@@ -27,19 +28,16 @@ describe('Fault', () => {
 
     it('never puts the cause message in the user reply', () => {
         const response = new Fault({ cause: new Error('secret-driver-detail') }).render(ctx);
-        if (response.kind !== 'embed') throw new Error('expected embed arm');
-        expect(response.embeds[0]?.data.description).not.toContain('secret-driver-detail');
+        expect(cardJson(response)).not.toContain('secret-driver-detail');
     });
 
     it('names the configured developer as the contact', () => {
         const response = new Fault().render({ uuid: ctx.uuid, developerUsername: 'maintainer#1' });
-        if (response.kind !== 'embed') throw new Error('expected embed arm');
-        expect(response.embeds[0]?.data.description).toContain('maintainer#1');
+        expect(cardJson(response)).toContain('maintainer#1');
     });
 
     it('falls back to a generic contact when no developer is configured', () => {
         const response = new Fault().render(ctx);
-        if (response.kind !== 'embed') throw new Error('expected embed arm');
-        expect(response.embeds[0]?.data.description).toContain('the developer');
+        expect(cardJson(response)).toContain('the developer');
     });
 });

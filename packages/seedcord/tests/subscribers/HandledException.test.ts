@@ -13,7 +13,7 @@ class TestFault extends Notice {
         super(message, cause === undefined ? undefined : { cause });
     }
     render(): ReplyResponse {
-        return { kind: 'embed', embeds: [] };
+        return { components: [] };
     }
 }
 

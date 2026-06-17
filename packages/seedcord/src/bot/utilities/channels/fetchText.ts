@@ -1,5 +1,5 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeEmbed } from '@seedcord/kit/internal';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
 
 import type { Nullable, ReplyResponse } from '@seedcord/types';
@@ -17,10 +17,10 @@ class CouldNotFindChannel extends Notice {
     }
 
     render(): ReplyResponse {
-        const embed = new NoticeEmbed(
+        const card = new NoticeCard(
             `Could not find channel with ID \`${this.channelId}\`. It could also be that the channel is not a text channel.`
         );
-        return { kind: 'embed', embeds: [embed.component] };
+        return { components: [card.component] };
     }
 }
 
