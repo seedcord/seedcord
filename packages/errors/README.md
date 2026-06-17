@@ -4,4 +4,10 @@
 
 ---
 
-`@seedcord/errors` holds the Seedcord framework fault classes (`SeedcordError`, `SeedcordTypeError`, `SeedcordRangeError`), their error codes, the message table, and the `isSeedcordError` type guard. Its only runtime dependency is chalk, so any package can depend on it without pulling in the logger stack.
+_This repository is a work in progress._
+
+- There are no stable releases yet but changes are being made actively.
+- Till a major v1.0.0 release for seedcord, expect breaking changes in minor versions.
+- Documentation will come soon as well!
+
+If you'd like to try it out, you can check out the code in `mock`

@@ -37,6 +37,14 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/cli': {
         displayName: 'cli',
         aliases: ['cli', '@seedcord/cli']
+    },
+    '@seedcord/kit': {
+        displayName: 'kit',
+        aliases: ['kit', '@seedcord/kit']
+    },
+    '@seedcord/errors': {
+        displayName: 'errors',
+        aliases: ['errors', '@seedcord/errors']
     }
 };
 
