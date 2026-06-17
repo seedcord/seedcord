@@ -1,3 +1,7 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordTypeError } from '@seedcord/errors/internal';
+import { parseDuration, type ValidDuration } from '@seedcord/utils';
+
 import { defineEffectGate } from '../Gate';
 import { GateNotice } from './GateNotice';
 import { pickNotice } from './options';
@@ -30,11 +34,26 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
     return ctx.user?.id ?? 'global';
 }
 
-/** Allows one use per `seconds`, scoped by `per`. The slot is charged in commit, only after the set passes. */
-export function Cooldown(seconds: number, options?: CooldownOptions): EffectGate<GateContextBase, 'Cooldown'> {
+/**
+ * Allows one use per window, scoped by `per`. `duration` is a number of **seconds** or a duration string like
+ * `30m` or `24h`. The slot is charged in commit, only after the set passes.
+ */
+export function Cooldown(
+    duration: number | ValidDuration,
+    options?: CooldownOptions
+): EffectGate<GateContextBase, 'Cooldown'> {
+    let delay: number;
+    if (typeof duration === 'number') {
+        delay = duration * 1000;
+    } else {
+        const parsed = parseDuration(duration);
+        if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [duration]);
+        delay = parsed;
+    }
+
     const bucket = `cooldown:${bucketSeq++}`;
     const per = options?.per ?? 'user';
-    const window = { delay: seconds * 1000 };
+    const window = { delay };
     const keyOf = (ctx: GateContextBase): string => `${bucket}:${scopeValue(ctx, per)}`;
 
     return defineEffectGate(

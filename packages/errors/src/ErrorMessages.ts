@@ -75,6 +75,9 @@ const messages = {
     [SeedcordErrorCode.EventMiddlewareNameUnavailable]: () =>
         `this.eventName is only available on middleware the controller constructed with a fired event name.`,
 
+    [SeedcordErrorCode.GateInvalidCooldownDuration]: (input: string) =>
+        `Cooldown duration ${JSON.stringify(input)} is not valid. Pass a number of seconds or a duration string like '30m', '24h', or '500ms'.`,
+
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
     [SeedcordErrorCode.PluginMongoModelDecoratorMissing]: (className: string) =>

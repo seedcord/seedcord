@@ -8,6 +8,9 @@ const UNIT_MS = {
 
 type DurationUnit = keyof typeof UNIT_MS;
 
+/** A duration literal like `30m`, `24h`, or `500ms`, a number followed by a unit (`ms`, `s`, `m`, `h`, `d`). */
+export type ValidDuration = `${number}${DurationUnit}`;
+
 const DURATION_PATTERN = new RegExp(`^(\\d+)(${Object.keys(UNIT_MS).join('|')})$`);
 
 /**

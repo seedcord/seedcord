@@ -1,3 +1,4 @@
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Cooldown, OnCooldown } from '@bot/gates/catalog';
@@ -70,5 +71,28 @@ describe('Cooldown', () => {
                 caught = error;
             });
         expect((caught as OnCooldown).message).toBe('Slow down there.');
+    });
+
+    it('accepts a duration string and converts it to the window delay', async () => {
+        const peek = vi.fn().mockReturnValue({ limited: false });
+        await Cooldown('30m').check(cdCtx({ peek, hit: vi.fn() }));
+        // 30 minutes in ms is the window the limiter sees
+        expect(peek.mock.calls[0]?.[1]).toEqual({ delay: 1_800_000 });
+    });
+
+    it('rejects a malformed duration literal at compile time', () => {
+        // @ts-expect-error 'soon' is not a number-plus-unit duration literal
+        expect(() => Cooldown('soon')).toThrow();
+    });
+
+    it('throws a SeedcordError for a duration that types but parses to nothing', () => {
+        let caught: unknown;
+        try {
+            // '0s' is a valid duration literal by type but parses to 0, not a positive window
+            Cooldown('0s');
+        } catch (error) {
+            caught = error;
+        }
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
     });
 });

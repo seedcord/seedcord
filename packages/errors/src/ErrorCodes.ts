@@ -86,6 +86,9 @@ export enum SeedcordErrorCode {
     /** Event middleware read `this.eventName` but was constructed without a fired event name. */
     EventMiddlewareNameUnavailable = 1613,
 
+    /** A Cooldown gate was given a duration string that is not a well-formed positive duration. */
+    GateInvalidCooldownDuration = 1701,
+
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
     /** Mongo model class is missing the `@RegisterMongoModel` decorator. */
