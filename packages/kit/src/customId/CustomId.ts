@@ -100,15 +100,22 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Add an integer field. Pass min and max to pack it tightly, or omit both for an unbounded value up to 2^53.
+     * Add an integer field with no bounds, for a value up to 2^53.
      *
      * @example
      * ```ts
-     * new CustomId('paginate').int('page', 1, 50); // bounded
-     * new CustomId('shop').int('amount'); // unbounded
+     * new CustomId('shop').int('amount');
      * ```
      */
     int<Name extends string>(name: Name): CustomId<Prefix, Shape & Record<Name, CustomIdField<number>>>;
+    /**
+     * Add an integer field bounded by min and max, so it packs into fewer characters on the wire.
+     *
+     * @example
+     * ```ts
+     * new CustomId('paginate').int('page', 1, 50);
+     * ```
+     */
     int<Name extends string>(
         name: Name,
         min: number,

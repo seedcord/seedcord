@@ -97,16 +97,17 @@ function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
  *     }
  * }
  * ```
- *
+ */
+export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
+    ...gates: Gates
+): Gate<RequiredOf<Gates[number]>, JoinNames<Gates, ' | '>>;
+/**
  * @example
  * ```ts
  * // custom refusal when every arm refuses
  * or(OwnerOnly(), RequireRole('123456789012345678'), { fail: new NotAllowedNotice() });
  * ```
  */
-export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
-    ...gates: Gates
-): Gate<RequiredOf<Gates[number]>, JoinNames<Gates, ' | '>>;
 export function or<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...args: [...Gates, OrOptions]
 ): Gate<RequiredOf<Gates[number]>, JoinNames<Gates, ' | '>>;
