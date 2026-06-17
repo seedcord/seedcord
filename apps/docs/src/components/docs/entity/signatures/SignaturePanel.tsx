@@ -19,6 +19,7 @@ export function SignaturePanel({ signature, isActive, parentDeprecationStatus }:
             className={cn('space-y-3', isActive ? 'block' : 'hidden')}
             aria-hidden={!isActive}
         >
+            {signature.description?.length ? <CommentParagraphs paragraphs={signature.description} /> : null}
             <CodeBlock representation={signature.code} copyValue={null} />
             {signature.documentation.length ? <CommentParagraphs paragraphs={signature.documentation} /> : null}
             {signature.examples.length ? <CommentExamples examples={signature.examples} /> : null}

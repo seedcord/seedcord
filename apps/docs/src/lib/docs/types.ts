@@ -226,6 +226,7 @@ export interface MemberSignatureDetail
     extends WithCode, WithDocs<'documentation', 'examples'>, WithSourceUrl, WithThrows, WithDeprecationStatus {
     id: string;
     anchor: string;
+    description?: CommentParagraph[];
 }
 
 export interface EntityMemberSummary extends WithSourceUrl, WithThrows, WithSeeAlso, WithDeprecationStatus {

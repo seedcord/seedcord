@@ -93,12 +93,14 @@ export async function buildSignatureDetails({
                 : await highlightCode(signature.name);
 
             const comment = signatureComments[index];
-            let documentation = cloneCommentParagraphs(comment?.paragraphs);
+            let signatureDescription = cloneCommentParagraphs(comment?.paragraphs);
             if (descriptionSignatureIndex === index) {
-                documentation = stripDuplicateDescription(documentation, description);
+                signatureDescription = stripDuplicateDescription(signatureDescription, description);
             }
 
             const sig = signature;
+            // the lead description renders above the code block, the @param/@typeParam/@throws prose below it
+            const documentation: CommentParagraph[] = [];
             await appendParameterComments(sig, context, documentation);
             await appendTypeParameterComments(sig, context, documentation);
             await appendThrowsComments(sig, node, context, documentation);
@@ -110,6 +112,7 @@ export async function buildSignatureDetails({
                 id: fragment,
                 anchor: total > 1 ? fragment : '',
                 code,
+                description: signatureDescription,
                 documentation,
                 examples
             };
