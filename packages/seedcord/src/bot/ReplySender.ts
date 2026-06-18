@@ -60,7 +60,7 @@ export class ReplySender {
             // a component/modal deferUpdate left @original as the live source message, leave it untouched.
             // a slash deferReply left a throwaway "thinking" placeholder, clear it so the user sees one
             // message. editReply cannot turn a classic "thinking" defer into ComponentsV2 (Discord rejects
-            // it with 50035), which is why this path follows up and deletes rather than editing.
+            // it with 50035), so this follows up and deletes instead.
             if (!this.interaction.isMessageComponent() && !this.interaction.isModalSubmit()) {
                 await this.clearStaleDefer();
             }
@@ -73,11 +73,21 @@ export class ReplySender {
     }
 
     private replyOptions(response: ReplyResponse, ephemeral: boolean): InteractionReplyOptions {
-        return { components: response.components, flags: flagsFor(ephemeral) };
+        return {
+            components: response.components,
+            flags: flagsFor(ephemeral),
+            ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
+            ...(response.files && { files: response.files })
+        };
     }
 
     private editBody(response: ReplyResponse): WebhookMessageEditOptions {
-        return { components: response.components, flags: MessageFlags.IsComponentsV2 };
+        return {
+            components: response.components,
+            flags: MessageFlags.IsComponentsV2,
+            ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
+            ...(response.files && { files: response.files })
+        };
     }
 
     private async clearStaleDefer(): Promise<void> {

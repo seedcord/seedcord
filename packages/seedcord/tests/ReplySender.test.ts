@@ -59,8 +59,8 @@ describe('ReplySender', () => {
     });
 
     it('follows up and clears the stale thinking defer on a deferred slash interaction', async () => {
-        // a slash deferReply leaves a throwaway "thinking" placeholder. editReply cannot turn it into a
-        // ComponentsV2 message (50035), so the sender follows up fresh and deletes the placeholder.
+        // editReply cannot turn a slash deferReply's "thinking" placeholder into a ComponentsV2 message
+        // (50035), so the sender must follow up fresh and delete the placeholder instead of editing.
         mock.deferred = true;
         await senderFor(mock).send(reply);
         expect(mock.followUp).toHaveBeenCalledWith(expect.objectContaining({ flags: V2_EPHEMERAL }));
@@ -78,7 +78,7 @@ describe('ReplySender', () => {
 
     it('follows up without touching the source message of a deferred component interaction', async () => {
         // a button/select deferUpdate() leaves @original pointing at the live source message, so editReply
-        // would overwrite it and deleteReply would destroy it. The reply must go to a fresh followUp.
+        // would overwrite it and deleteReply would destroy it.
         mock.deferred = true;
         mock.isMessageComponent.mockReturnValue(true);
 
@@ -107,5 +107,31 @@ describe('ReplySender', () => {
     it('swallows an unexpected send failure instead of letting it escape', async () => {
         mock.reply.mockRejectedValueOnce(new Error('network down'));
         await expect(senderFor(mock).send(reply)).resolves.toBeUndefined();
+    });
+
+    it('forwards allowedMentions and files into the reply options', async () => {
+        const allowedMentions = { parse: [] };
+        const files = [{ attachment: Buffer.from('x'), name: 'a.txt' }];
+        await senderFor(mock).send({ components: reply.components, allowedMentions, files });
+        expect(mock.reply).toHaveBeenCalledWith(expect.objectContaining({ allowedMentions, files }));
+    });
+
+    it('omits allowedMentions and files from the reply options when unset', async () => {
+        await senderFor(mock).send(reply);
+        const sent = mock.reply.mock.calls[0]?.[0] as Record<string, unknown>;
+        expect(sent).not.toHaveProperty('allowedMentions');
+        expect(sent).not.toHaveProperty('files');
+    });
+
+    it('forwards allowedMentions and files into the edit body', async () => {
+        const allowedMentions = { parse: [] };
+        const files = [{ attachment: Buffer.from('x'), name: 'a.txt' }];
+        const editMessage = vi.fn().mockResolvedValue(sentMessage);
+        const editMock = { ...mock, webhook: { editMessage } };
+        await senderFor(editMock).edit(sentMessage as never, { components: reply.components, allowedMentions, files });
+        expect(editMessage).toHaveBeenCalledWith(
+            sentMessage,
+            expect.objectContaining({ allowedMentions, files, flags: MessageFlags.IsComponentsV2 })
+        );
     });
 });
