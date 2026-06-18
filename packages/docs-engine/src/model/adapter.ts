@@ -25,10 +25,11 @@ import {
     synthGroups,
     type AeShapes
 } from '@model/adapter-helpers';
-import { canonicalKey, referenceFromCanonical } from '@model/canonical-ref';
+import { canonicalKey } from '@model/canonical-ref';
 import { excerptToInlineType } from '@model/excerpt-renderer';
 import { buildFlags, type DerivedFlagBits } from '@model/flags';
 import { apiKindToDocKind, DocKind, frozenKindLabel } from '@model/kinds';
+import { createLinkResolver } from '@model/link-resolver';
 import {
     buildComment,
     buildParamComment,
@@ -65,11 +66,15 @@ const TOP_LEVEL: MemberContext = { inheritedFrom: null, ownClassMember: false };
 export class ApiAdapter {
     private readonly slugger = new Slugger();
     private idCounter = 1;
+    private readonly makeResolveLink: (fromItem: ApiItem) => LinkResolver;
 
     constructor(
         private readonly manifest: DocManifestPackage,
-        private readonly model: ApiModel
-    ) {}
+        model: ApiModel
+    ) {
+        const reexportOwners = new Map((manifest.reexports ?? []).map((entry) => [entry.name, entry.owner] as const));
+        this.makeResolveLink = createLinkResolver(model, reexportOwners);
+    }
 
     transform(pkg: ApiPackage): DocNode {
         const root = this.baseNode(pkg, [], pkg.displayName, true);
@@ -89,22 +94,6 @@ export class ApiAdapter {
             qualifiedName: entry.name,
             packageName: entry.owner
         }));
-    }
-
-    private resolveLink(): LinkResolver {
-        return (codeDestination, fallbackText) => {
-            // justified: codeDestination is the opaque TSDoc DeclarationReference forwarded to AE;
-            // resolveDeclarationReference returns an error result (never throws) for an unresolved link.
-            const resolved = this.model.resolveDeclarationReference(
-                codeDestination as Parameters<ApiModel['resolveDeclarationReference']>[0],
-                undefined
-            );
-            const target = resolved.resolvedApiItem;
-            if (target?.canonicalReference) {
-                return referenceFromCanonical(target.canonicalReference, fallbackText);
-            }
-            return undefined;
-        };
     }
 
     private baseNode(
@@ -134,7 +123,8 @@ export class ApiAdapter {
             kindLabel: frozenKindLabel(kind),
             isExported: ApiExportedMixin.isBaseClassOf(item) ? item.isExported : true,
             flags,
-            comment: item instanceof ApiDocumentedItem ? buildComment(item.tsdocComment, this.resolveLink()) : null,
+            comment:
+                item instanceof ApiDocumentedItem ? buildComment(item.tsdocComment, this.makeResolveLink(item)) : null,
             typeParameters: this.typeParamsFor(item),
             signatures: [],
             children: [],
@@ -189,7 +179,7 @@ export class ApiAdapter {
     private typeParamsFor(item: ApiItem): DocTypeParameter[] {
         if (!ApiTypeParameterListMixin.isBaseClassOf(item)) return [];
         const tsdoc = item instanceof ApiDocumentedItem ? item.tsdocComment : undefined;
-        const resolveLink = this.resolveLink();
+        const resolveLink = this.makeResolveLink(item);
         return item.typeParameters.map((tp, index) => {
             const docTp: DocTypeParameter = { id: index, name: tp.name, flags: { isOptional: tp.isOptional } };
             const comment = buildTypeParamComment(tsdoc, tp.name, resolveLink);
@@ -273,7 +263,7 @@ export class ApiAdapter {
         // property, while a get-only OR get+set pair both surface as a `get `-prefixed property
         // (the pair distinguished only by not being readonly).
         const signatures: DocSignature[] = [];
-        const deps = { nextId: (): number => this.idCounter++, resolveLink: this.resolveLink() };
+        const deps = { nextId: (): number => this.idCounter++, resolveLink: this.makeResolveLink(primary) };
         if (accessorRole(primary) === 'setter') {
             node.flags.accessor = 'setter';
             signatures.push(buildAccessorSignature(primary, node, 'setter', 0, deps));
@@ -307,7 +297,7 @@ export class ApiAdapter {
                 kind: DocKind.Parameter,
                 flags: paramFlags(param.isOptional)
             };
-            const { comment, defaultValue } = buildParamComment(paramDoc, param.name, this.resolveLink());
+            const { comment, defaultValue } = buildParamComment(paramDoc, param.name, this.makeResolveLink(item));
             if (comment) docParam.comment = comment;
             if (defaultValue !== undefined) docParam.defaultValue = defaultValue;
             return docParam;
@@ -358,9 +348,12 @@ export class ApiAdapter {
         const typeParameters = this.typeParamsFor(item);
         const render = this.buildSignatureRender(item, signatureName, renderParameters, typeParameters);
 
-        const comment = item instanceof ApiDocumentedItem ? buildComment(item.tsdocComment, this.resolveLink()) : null;
+        const comment =
+            item instanceof ApiDocumentedItem ? buildComment(item.tsdocComment, this.makeResolveLink(item)) : null;
         const returnsComment =
-            item instanceof ApiDocumentedItem ? buildReturnsComment(item.tsdocComment, this.resolveLink()) : null;
+            item instanceof ApiDocumentedItem
+                ? buildReturnsComment(item.tsdocComment, this.makeResolveLink(item))
+                : null;
 
         const signature: DocSignature = {
             id: this.idCounter++,

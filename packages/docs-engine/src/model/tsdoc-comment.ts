@@ -28,7 +28,7 @@ export type LinkResolver = (linkTagCodeDestination: unknown, fallbackText: strin
 
 // The displayed symbol name for a `{@link ...}` code destination with no explicit text: the last
 // member identifier (`Foo.bar` → "bar"), else the package name (`@scope/pkg` → "@scope/pkg").
-function codeDestinationName(codeDestination: unknown): string {
+export function codeDestinationName(codeDestination: unknown): string {
     if (!codeDestination || typeof codeDestination !== 'object') return '';
     const dest = codeDestination as {
         memberReferences?: { memberIdentifier?: { identifier?: string } }[];

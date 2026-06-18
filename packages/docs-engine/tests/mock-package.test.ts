@@ -233,6 +233,20 @@ describe('DocsEngine mock package integration', () => {
         expect(signatureSee.length).toBeGreaterThan(0);
     });
 
+    it('resolves a bare same-package {@link} in @see to a target reference at extraction time', async () => {
+        // a bare {@link MockEnum} only resolves when the adapter passes the owning ApiItem as context;
+        // without it the link carries no target and the see-also renderer falls back to plain text
+        const mockClass = await getNodeBySlug('mock-class');
+        const enumLink = (mockClass.comment?.blockTags ?? [])
+            .filter((tag) => tag.tag === '@see')
+            .flatMap((tag) => tag.content)
+            .find((part) => part.kind === 'inline-tag' && part.tag === '@link' && part.text === 'MockEnum');
+        expect(enumLink).toBeDefined();
+        const target = enumLink?.kind === 'inline-tag' ? enumLink.target : undefined;
+        const targetKey = typeof target === 'object' ? target.targetKey : undefined;
+        expect(targetKey).toContain('MockEnum');
+    });
+
     it('maps type aliases and enum members correctly', async () => {
         const unionType = await getNodeBySlug('mock-union');
         expect(unionType.kind).toBe(DocKind.TypeAlias);
