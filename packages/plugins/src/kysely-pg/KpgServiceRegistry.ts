@@ -1,5 +1,5 @@
+import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { traverseDirectory } from 'seedcord';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgService } from './KpgService';
@@ -7,7 +7,8 @@ import { KpgService } from './KpgService';
 import type { KyselyServiceConstructor } from './KpgService';
 import type { KyselyArtifact, KyselyPg } from './KyselyPg';
 import type { KpgServices } from './types/KpgServices';
-import type { Core, Logger } from 'seedcord';
+import type { Logger } from '@seedcord/services';
+import type { Core } from 'seedcord';
 
 /**
  * Discovers and registers Postgres services for the plugin.

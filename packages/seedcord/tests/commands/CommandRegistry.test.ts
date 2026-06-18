@@ -4,12 +4,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
 
+import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-client';
 import '../utils/mock-env';
-
-import type { Config } from '@seedcord/types';
 
 const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
 
@@ -47,15 +46,7 @@ describe('CommandRegistry Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                commands: { path: testEnv.resolvePath(commandsDir) },
-                interactions: { path: null },
-                events: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
         if (!seedcord.bot.commands) throw new Error('Commands not initialized');
@@ -84,15 +75,7 @@ describe('CommandRegistry Integration', () => {
             `
         );
 
-        const config: Config = {
-            bot: {
-                commands: { path: testEnv.resolvePath(commandsDir) },
-                interactions: { path: null },
-                events: { path: null },
-                clientOptions: { intents: [] }
-            },
-            subscribers: { path: null }
-        };
+        const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
         if (!seedcord.bot.commands) throw new Error('Commands not initialized');

@@ -1,9 +1,28 @@
+import { Notice } from '@seedcord/kit';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
 
-import { CouldNotFindChannel } from '@bot/defaults/errors/Channels';
-
-import type { Nullable } from '@seedcord/types';
+import type { Nullable, ReplyResponse } from '@seedcord/types';
 import type { Channel, Client, TextChannelResolvable } from 'discord.js';
+
+/**
+ * Error thrown when a channel could not be found or accessed.
+ */
+class CouldNotFindChannel extends Notice {
+    constructor(
+        message: string,
+        public readonly channelId: string
+    ) {
+        super(message);
+    }
+
+    render(): ReplyResponse {
+        const card = new NoticeCard(
+            `Could not find channel with ID \`${this.channelId}\`. It could also be that the channel is not a text channel.`
+        );
+        return { components: [card.component] };
+    }
+}
 
 /**
  * Fetches and validates a text channel.

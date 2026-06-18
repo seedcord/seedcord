@@ -1,4 +1,6 @@
+import type { CustomIdMatcher } from './CustomId';
 import type { EmojiMap } from './EmojiMap';
+import type { ErrorsConfig } from './Errors';
 import type { ClientOptions, ColorResolvable } from 'discord.js';
 
 // interactions, events, commands, services, bus subscribers
@@ -14,9 +16,10 @@ export type InteractionsConfig =
            */
           path: string;
           /**
-           * Optional array of custom IDs or regex patterns to ignore in interaction handling
+           * Component customIds the controller skips instead of routing. A real `CustomId` (from
+           * `@seedcord/kit`) satisfies {@link CustomIdMatcher}, matched against the raw customId wire.
            */
-          ignoreCustomIds?: (string | RegExp)[];
+          ignoreCustomIds?: CustomIdMatcher[];
           /**
            * Optional path to interaction middleware directory
            */
@@ -131,13 +134,13 @@ export interface HealthCheckConfig {
     /**
      * Port the health-check server listens on.
      *
-     * `6967` by default
+     * @defaultValue `6967`
      */
     port?: number;
     /**
      * Path the health-check server responds on.
      *
-     * `/healthcheck` by default
+     * @defaultValue `'/healthcheck'`
      */
     path?: string;
     /**
@@ -153,7 +156,7 @@ export interface NotificationsConfig {
     /**
      * Contact name shown in the generic unknown-error message.
      *
-     * `the developer` by default
+     * @defaultValue `'the developer'`
      */
     developerUsername?: string;
 }
@@ -164,11 +167,9 @@ export interface Config {
     subscribers: SubscribersConfig;
 
     /**
-     * Whether to show the error stack trace in the terminal in errors caught by the `@Catchable` decorator
-     *
-     * `false` by default
+     * Settings for how the framework renders errors and reports faults.
      */
-    errorStack?: boolean;
+    errors?: ErrorsConfig;
 
     /**
      * Accent and embed color applied to every `BuilderComponent` (embeds, containers).
@@ -180,7 +181,7 @@ export interface Config {
     /**
      * Whether coordinated shutdown registers OS signal handlers and runs teardown tasks.
      *
-     * `true` by default
+     * @defaultValue `true`
      */
     shutdownEnabled?: boolean;
 
@@ -193,4 +194,9 @@ export interface Config {
      * Settings for framework-sent error notifications.
      */
     notifications?: NotificationsConfig;
+
+    /**
+     * User ids the `OwnerOnly` gate treats as bot owners.
+     */
+    ownerIds?: string[];
 }

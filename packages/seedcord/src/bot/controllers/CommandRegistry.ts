@@ -1,7 +1,9 @@
 import { resolve } from 'node:path';
 
-import { Logger, SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { BuilderComponent } from '@seedcord/kit';
+import { Logger } from '@seedcord/services';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
@@ -11,7 +13,6 @@ import { CommandMetadataKey } from '@bDecorators/Command';
 import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { BuilderComponent } from '@interfaces/Components';
 
 import type { CommandMeta } from '@bDecorators/Command';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
@@ -32,9 +33,7 @@ interface CommandArtifact {
  * Manages Discord application command registration and deployment.
  *
  * Scans command directories, builds command structures, and registers both global and guild-scoped commands
- * to Discord's API.
- *
- * @internal
+ * to Discord's API. Accessed via `core.bot.commands`, not constructed directly.
  */
 export class CommandRegistry implements Initializeable, HmrAware {
     public readonly name = 'Commands';
@@ -70,6 +69,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return this.ctorToCommand.get(ctor);
     }
 
+    /** @internal */
     public async init(): Promise<void> {
         if (this.isInitialised) return;
         this.isInitialised = true;

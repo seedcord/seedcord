@@ -1,18 +1,13 @@
-import {
-    HealthCheck,
-    CoordinatedShutdown,
-    CoordinatedStartup,
-    SeedcordErrorCode,
-    StartupPhase
-} from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { setBotColor } from '@seedcord/kit/internal';
+import { RateLimiter, HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
-import { setBotColor } from './miscellaneous/botColorHolder';
 import { Bus } from './subscribers/Bus';
 
 import type { Core } from './interfaces/Core';
@@ -44,6 +39,9 @@ export class Seedcord extends Pluggable implements Core {
 
     /** @see {@link Bot} */
     public readonly bot: Bot;
+
+    /** @see {@link RateLimiter} */
+    public readonly rateLimiter: RateLimiter;
 
     /** @see {@link HealthCheck} */
     private readonly healthCheck: HealthCheck;
@@ -78,6 +76,7 @@ export class Seedcord extends Pluggable implements Core {
         this.hmrManager.init();
         this.bus = new Bus(this);
         this.bot = new Bot(this);
+        this.rateLimiter = new RateLimiter();
         this.healthCheck = new HealthCheck(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();

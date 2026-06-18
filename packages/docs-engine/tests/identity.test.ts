@@ -64,6 +64,12 @@ describe('resolveExternalPackageUrl', () => {
         );
     });
 
+    it('resolves the ErrorOptions lib type to the MDN Error constructor page', () => {
+        expect(resolveExternalPackageUrl('ErrorOptions')).toBe(
+            'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error/Error'
+        );
+    });
+
     it('strips generics, array brackets, and union tails before lookup', () => {
         expect(resolveExternalPackageUrl('Promise<void>')).toBe(
             'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise'
@@ -92,6 +98,15 @@ describe('resolveExternalPackageUrl', () => {
     it('maps a DefinitelyTyped package to its runtime entry (@types/pg -> pg)', () => {
         // AE reports Pool/PoolConfig as belonging to @types/pg; the table keys the runtime name.
         expect(resolveExternalPackageUrl('@types/pg')).toBe('https://node-postgres.com');
+    });
+
+    it('maps discord-api-types to the discord.js docs (enums like ButtonStyle are re-exported there)', () => {
+        // AE reports ButtonStyle as discord-api-types!ButtonStyle:enum, discord.js re-exports and documents it.
+        expect(resolveExternalPackageUrl('discord-api-types')).toBe('https://discord.js.org/docs');
+    });
+
+    it('maps the @discordjs scoped helper packages to the discord.js docs (JSONEncodable lives in util)', () => {
+        expect(resolveExternalPackageUrl('@discordjs/util')).toBe('https://discord.js.org/docs');
     });
 
     it('does not lowercase-match Map (mixed case lookup keys are preserved)', () => {

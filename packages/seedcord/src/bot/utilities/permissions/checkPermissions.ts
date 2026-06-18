@@ -1,9 +1,9 @@
 import { prettify } from '@seedcord/utils';
 import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 
-import { HasDangerousPermissions, MissingPermissions } from '@bot/defaults/errors/Roles';
+import { HasDangerousPermissions, MissingPermissions } from './notices';
 
-import type { CustomError } from '@interfaces/Components';
+import type { Notice } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
 import type { PermissionsBitField, TextChannel } from 'discord.js';
 
@@ -25,17 +25,13 @@ export type BotPermissionScope = readonly bigint[];
  */
 export interface PermissionErrorCtors {
     /* Error thrown when required permissions are missing */
-    missing?: new (
-        message: string,
-        where: Role | TextChannel | Guild | GuildMember,
-        missingPerms: string[]
-    ) => CustomError;
+    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Notice;
     /* Error thrown when dangerous permissions are present */
     dangerous?: new (
         message: string,
         target: Role | TextChannel | Guild | GuildMember,
         dangerousPerms: string[]
-    ) => CustomError;
+    ) => Notice;
 }
 
 /**
@@ -226,6 +222,7 @@ export function checkPermissions(
 
     const missingBits = scope.filter((bit) => !perms.has(bit, true));
     if (missingBits.length > 0) {
-        throw new Missing('Missing Any/All/No Permissions', pIn, names(missingBits));
+        // name the entity that lacks the permission, matching the inverse branch, not the guild it was checked in
+        throw new Missing('Missing Any/All/No Permissions', pFor, names(missingBits));
     }
 }

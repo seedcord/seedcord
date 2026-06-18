@@ -9,10 +9,10 @@ import {
 } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
 import { getDocsEngine } from '@lib/docs/engine';
 
 const MAX_RESULTS = 24;
-const MIN_QUERY_LENGTH = 3;
 
 type SearchResultKind =
     | 'class'
@@ -304,7 +304,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<SearchPayl
 
     const query = (url.searchParams.get('q') ?? '').trim();
     const current = resolvePackageIdentity(packages, url.searchParams.get('pkg'));
-    if (query.length < MIN_QUERY_LENGTH || !current) {
+    if (query.length < MIN_SEARCH_QUERY_LENGTH || !current) {
         return NextResponse.json({ results: [] });
     }
 

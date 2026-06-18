@@ -1,9 +1,5 @@
 // Bot Utilities Channels exports
 export * from './channels/fetchText';
-export * from './channels/sendInText';
-
-// Bot Utilities Messages exports
-export * from './messages/attemptSendDM';
 
 // Bot Utilities Permissions exports
 export * from './permissions/checkBotPermissions';
@@ -14,6 +10,9 @@ export {
     checkPermissions
 } from './permissions/checkPermissions';
 export * from './permissions/hasPermsToAssign';
+
+// the perm gates and utils refuse with these, a bot author matches them from the public surface
+export * from './permissions/notices';
 
 // Bot Utilities Roles exports
 export * from './roles/fetchRole';

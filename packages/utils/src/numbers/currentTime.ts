@@ -1,6 +1,8 @@
-/**
- * Return current time in seconds
- */
-export function currentTime(): number {
-    return Math.floor(Date.now() / 1000);
+import { toEpochSeconds } from './toEpochSeconds';
+
+import type { EpochMs, EpochSec } from '@seedcord/types';
+
+/** Current time in epoch seconds. Shares the one ms→s rounding rule with {@link toEpochSeconds}. */
+export function currentTime(): EpochSec {
+    return toEpochSeconds(Date.now() as EpochMs);
 }

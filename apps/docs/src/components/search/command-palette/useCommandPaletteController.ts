@@ -107,7 +107,7 @@ export function useCommandPaletteController(): CommandPaletteController {
         if (open) {
             // justified: animation-coupled, input lives behind a Radix <Dialog> mount and only receives focus after the surface paints in.
             const focusTimeout = window.setTimeout(() => {
-                inputRef.current?.focus();
+                inputRef.current?.select();
             }, FOCUS_DELAY_MS);
             log('Command palette opened', { fromPath: pathname });
             return () => {

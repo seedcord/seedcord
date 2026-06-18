@@ -18,11 +18,9 @@ export default mergeConfig(
                 '@interfaces': path.resolve(__dirname, './src/interfaces'),
                 '@handlers': path.resolve(__dirname, './src/handlers'),
                 '@inputs': path.resolve(__dirname, './src/inputs'),
-                '@customId': path.resolve(__dirname, './src/customId'),
                 '@miscellaneous': path.resolve(__dirname, './src/miscellaneous'),
 
                 // Paths inside bot
-                '@bErrors': path.resolve(__dirname, './src/bot/defaults/errors'),
                 '@bUtilities': path.resolve(__dirname, './src/bot/utilities'),
                 '@bControllers': path.resolve(__dirname, './src/bot/controllers'),
                 '@bDecorators': path.resolve(__dirname, './src/bot/decorators')

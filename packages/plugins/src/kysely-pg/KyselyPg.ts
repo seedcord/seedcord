@@ -1,11 +1,14 @@
 import 'reflect-metadata';
 
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { Logger, ShutdownPhase } from '@seedcord/services';
+import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
-import { HmrModuleHandler, keepDefined, Logger, Plugin, SeedcordErrorCode, ShutdownPhase } from 'seedcord';
+import { HmrModuleHandler, Plugin } from 'seedcord';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
@@ -176,7 +179,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     }
 
     /**
-     * Runs migrations using the supplied options or defaults to `latest`.
+     * Runs migrations using the supplied options.
      *
      * @param options - Target migration or direction overrides
      */

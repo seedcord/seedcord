@@ -1,9 +1,26 @@
+import { Notice } from '@seedcord/kit';
+import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
-import { RoleDoesNotExist } from '@bot/defaults/errors/Roles';
-
-import type { Nullable } from '@seedcord/types';
+import type { Nullable, ReplyResponse } from '@seedcord/types';
 import type { Client, Role } from 'discord.js';
+
+/**
+ * Error thrown when a requested role does not exist.
+ */
+class RoleDoesNotExist extends Notice {
+    constructor(
+        message: string,
+        public roleId: string
+    ) {
+        super(message);
+    }
+
+    render(): ReplyResponse {
+        const card = new NoticeCard(`The role with ID \`${this.roleId}\` does not exist.`);
+        return { components: [card.component] };
+    }
+}
 
 function isUnknownRole(err: unknown): boolean {
     return err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownRole;

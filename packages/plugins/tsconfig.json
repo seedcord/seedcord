@@ -5,8 +5,7 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@src/*": ["./src/*"],
-            "@shared/*": ["./src/shared*"]
+            "@src/*": ["./src/*"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts", "vitest.config.ts"],

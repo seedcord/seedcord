@@ -1,9 +1,8 @@
 import { Logger } from '@seedcord/services';
 import { Guild } from 'discord.js';
 
-import { MissingPermissions } from '@bot/defaults/errors/Roles';
-
 import { checkPermissions, PermissionNames } from './checkPermissions';
+import { MissingPermissions } from './notices';
 
 import type { BotPermissionScope, PermissionErrorCtors } from './checkPermissions';
 import type { TextChannel } from 'discord.js';

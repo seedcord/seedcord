@@ -31,7 +31,11 @@ export interface TailwindPrettierOptions {
     /** Attribute names (or `/regex/`) whose values get class-sorted. No default. */
     attributes?: string[];
 
-    /** Keep duplicate classes instead of collapsing them {@default false} */
+    /**
+     * Keep duplicate classes instead of collapsing them
+     *
+     * @defaultValue `false`
+     */
     preserveDuplicates?: boolean;
 }
 

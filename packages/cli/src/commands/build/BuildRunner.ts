@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';

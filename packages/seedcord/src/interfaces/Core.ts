@@ -1,5 +1,5 @@
 import type { Bot } from '@bot/Bot';
-import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
+import type { RateLimiter, CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
 import type { Config, SeedcordInstance } from '@seedcord/types';
 import type { Bus } from '@subscribers/Bus';
 
@@ -27,6 +27,7 @@ export interface Core extends SeedcordInstance {
     readonly bot: Bot;
     readonly bus: Bus;
     readonly config: Config;
+    readonly rateLimiter: RateLimiter;
 
     start(): Promise<this>;
 }

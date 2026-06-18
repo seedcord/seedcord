@@ -2,4 +2,4 @@
 'seedcord': patch
 ---
 
-HMR now runs in the test environment, not only in development.
+HMR now explicitly also runs in the test environment, not only in development.

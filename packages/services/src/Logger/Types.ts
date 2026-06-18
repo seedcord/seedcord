@@ -117,7 +117,11 @@ export interface LoggerConfiguration {
  * Options for creating a Logger instance.
  */
 export interface LoggerOptions {
-    /** Channel to log to (defaults to configured default channel) */
+    /**
+     * Channel to log to.
+     *
+     * @defaultValue the configured default channel
+     */
     channel?: string;
     /** Format mode for output */
     format?: LoggerFormatMode;

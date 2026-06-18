@@ -2,10 +2,16 @@ import type { TupleOf } from 'type-fest';
 
 export interface RoundToDenomOptions {
     /**
-     * Suffixes to use for each denomination level. Defaults to `['K', 'M', 'B', 'T', 'Q']`.
+     * Suffixes to use for each denomination level.
+     *
+     * @defaultValue `['K', 'M', 'B', 'T', 'Q']`
      */
     suffixes?: TupleOf<5, string>;
-    /** Number of decimal places to include in the rounded result. Defaults to `1`. */
+    /**
+     * Number of decimal places to include in the rounded result.
+     *
+     * @defaultValue `1`
+     */
     precision?: number;
 }
 

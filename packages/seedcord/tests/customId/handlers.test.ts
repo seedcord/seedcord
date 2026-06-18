@@ -1,7 +1,7 @@
+import { CustomId, Notice } from '@seedcord/kit';
 import { describe, expect, it } from 'vitest';
 
 import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
-import { CustomId, InvalidCustomId, StaleCustomId } from '@customId/index';
 import { ButtonHandler, ModalHandler, SelectHandler } from '@handlers/interaction/components';
 
 import type { Core } from '@interfaces/Core';
@@ -13,6 +13,17 @@ const ROLE = '912345678901234567';
 const MSG = '1284567890123456789';
 
 const core = {} as unknown as Core;
+
+// runs fn, asserts it threw a Notice, and returns the concrete denial's stamped name
+function denialNameFrom(fn: () => unknown): string {
+    try {
+        fn();
+    } catch (e) {
+        expect(e).toBeInstanceOf(Notice);
+        return (e as Notice).name;
+    }
+    throw new Error('expected a Notice to be thrown');
+}
 
 // the bases read only a couple fields off the event, so a minimal fake per kind is enough.
 function button(customId: string): ButtonInteraction<'cached'> {
@@ -121,14 +132,14 @@ describe('this.params on a single-route handler', () => {
     it('throws StaleCustomId when the shape changed since the wire was minted', () => {
         const older = new CustomId('approve').snowflake('userId');
         const handler = new ApproveButton(button(older.encode({ userId: USER })), core);
-        expect(() => handler.read()).toThrow(StaleCustomId);
+        expect(denialNameFrom(() => handler.read())).toBe('StaleCustomId');
     });
 
     it('throws InvalidCustomId on a corrupt wire', () => {
         // appending a delimited piece pushes the field count past what the shape expects
         const wire = Approve.encode({ userId: USER, caseId: 1, urgent: false, action: 'approve', note: '' });
         const handler = new ApproveButton(button(`${wire}\x1fJUNK`), core);
-        expect(() => handler.read()).toThrow(InvalidCustomId);
+        expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
     });
 
     it('throws when the handler has no route decorator', () => {
@@ -139,7 +150,7 @@ describe('this.params on a single-route handler', () => {
     it('throws InvalidCustomId when no registered route owns the wire', () => {
         const stranger = new CustomId('stranger').snowflake('x');
         const handler = new ApproveButton(button(stranger.encode({ x: USER })), core);
-        expect(() => handler.read()).toThrow(InvalidCustomId);
+        expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
     });
 });
 

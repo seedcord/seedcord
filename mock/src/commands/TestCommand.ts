@@ -28,19 +28,8 @@ class ConfirmableTestsGroup extends BuilderComponent<'group'> {
 
         this.instance
             .setName('confirmable')
-            .setDescription('Tests for Confirmable decorator')
-            .addSubcommand(this.classicMode().component)
+            .setDescription('Tests for getConfirmation')
             .addSubcommand(this.v2Mode().component);
-    }
-
-    private classicMode(): BuilderComponent<'subcommand'> {
-        return new (class extends BuilderComponent<'subcommand'> {
-            constructor() {
-                super('subcommand');
-
-                this.instance.setName('classic').setDescription('Classic confirmable mode test');
-            }
-        })();
     }
 
     private v2Mode(): BuilderComponent<'subcommand'> {

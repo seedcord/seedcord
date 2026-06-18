@@ -5,10 +5,10 @@
 
 import { EventEmitter } from 'node:events';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 
-import { SeedcordErrorCode } from '../Errors';
-import { SeedcordError } from '../Errors/SeedcordError';
 import { Logger } from '../Logger';
 import { StrictEventEmitter } from '../StrictEventEmitter';
 

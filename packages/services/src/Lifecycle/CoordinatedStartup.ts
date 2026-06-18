@@ -1,8 +1,8 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 
-import { SeedcordErrorCode } from '../Errors';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
-import { SeedcordError } from '../Errors/SeedcordError';
 
 import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';
@@ -65,7 +65,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
      * @param phase - The startup phase from {@link StartupPhase}
      * @param taskName - Unique identifier for the task
      * @param task - Async function to execute
-     * @param timeoutMs - Task timeout in milliseconds {@default 10000}
+     * @param timeoutMs - Task timeout in milliseconds. {@default `10000`}
      */
     public override addTask(phase: StartupPhase, taskName: string, task: () => Promise<void>, timeoutMs = 10000): void {
         super.addTask(phase, taskName, task, timeoutMs);

@@ -1,21 +1,18 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
-import { filterCirculars } from '@seedcord/utils';
-import { WebhookClient, AttachmentBuilder, SeparatorSpacingSize, DiscordAPIError, SnowflakeUtil } from 'discord.js';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { BuilderComponent } from '@seedcord/kit';
+import { WebhookClient, DiscordAPIError, SnowflakeUtil } from 'discord.js';
 import { Envapt } from 'envapt';
 
-import { BuilderComponent } from '@interfaces/Components';
+import { flagsFor } from '@miscellaneous/flagsFor';
 
+import { isDiscordWebhookUrl, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
 
 import type { AllSubscriptions } from '../types/Subscriptions';
 
-const DISCORD_WEBHOOK_REGEX = new RegExp(
-    String.raw`^https?:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w$-]+$`
-);
-
-function webhookUrlValidator(raw: unknown, _fallback: unknown): string {
+function webhookUrlValidator(raw: unknown): string {
     if (raw !== null && typeof raw !== 'string') {
         throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid);
     }
@@ -25,7 +22,7 @@ function webhookUrlValidator(raw: unknown, _fallback: unknown): string {
         throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing);
     }
 
-    if (!URL.canParse(value) || !DISCORD_WEBHOOK_REGEX.test(value)) {
+    if (!isDiscordWebhookUrl(value)) {
         throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid);
     }
 
@@ -48,7 +45,7 @@ function webhookUrlValidator(raw: unknown, _fallback: unknown): string {
 @Subscribe('unknownException')
 export class UnknownException extends WebhookLog<'unknownException'> {
     @Envapt('UNKNOWN_EXCEPTION_WEBHOOK_URL', {
-        converter: (raw, fallback) => webhookUrlValidator(raw, fallback)
+        converter: (raw) => webhookUrlValidator(raw)
     })
     declare static readonly unknownExceptionWebhookUrl: string;
 
@@ -57,11 +54,14 @@ export class UnknownException extends WebhookLog<'unknownException'> {
     });
 
     async execute(): Promise<void> {
-        const metadataFile = this.prepareMetadataFile();
+        const { metadata } = this.data;
+        const metadataFile = metadata
+            ? jsonAttachment('metadata.json', 'Metadata associated with the error', metadata)
+            : null;
 
         try {
             await this.webhook.send({
-                flags: 'IsComponentsV2',
+                flags: flagsFor(false),
                 withComponents: true,
                 username: 'Unknown Exception',
                 components: [new UnhandledErrorContainer(this.data).component],
@@ -71,26 +71,8 @@ export class UnknownException extends WebhookLog<'unknownException'> {
             this.logger.error('Failed to send unknown exception webhook', error);
         }
     }
-
-    private prepareMetadataFile(): AttachmentBuilder | null {
-        const { metadata } = this.data;
-        if (!metadata) return null;
-
-        const content = filterCirculars(metadata);
-        return new AttachmentBuilder(Buffer.from(JSON.stringify(content, undefined, 2), 'utf-8'), {
-            name: 'metadata.json',
-            description: 'Metadata associated with the error'
-        });
-    }
 }
 
-class DefaultSeparator extends BuilderComponent<'separator'> {
-    constructor() {
-        super('separator');
-
-        this.instance.setSpacing(SeparatorSpacingSize.Small).setDivider(true);
-    }
-}
 class UnhandledErrorContainer extends BuilderComponent<'container'> {
     constructor(data: AllSubscriptions['unknownException']) {
         super('container');
@@ -107,7 +89,7 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
                         `**Username:** ${user?.username ?? 'Missing user info'}\n`
                 )
             )
-            .addSeparatorComponents(new DefaultSeparator().component)
+            .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) => text.setContent(`### UUID \`${uuid}\`\n\`\`\`${error.stack}\`\`\``));
 
         this.addTimestampsIfAvailable(error);
@@ -130,7 +112,7 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
         const millis = diff % 1000;
 
         this.instance
-            .addSeparatorComponents(new DefaultSeparator().component)
+            .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) =>
                 text.setContent(
                     `### Timestamps\n` +
@@ -145,7 +127,7 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
         if (!metadata) return;
 
         this.instance
-            .addSeparatorComponents(new DefaultSeparator().component)
+            .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) => text.setContent('### Metadata'))
             .addFileComponents((file) => file.setURL('attachment://metadata.json'));
     }

@@ -1,6 +1,6 @@
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, it, expect } from 'vitest';
 
-import { SeedcordErrorCode, isSeedcordError } from '../src/Errors';
 import { StrictEventEmitter } from '../src/StrictEventEmitter';
 
 interface PingEvents {

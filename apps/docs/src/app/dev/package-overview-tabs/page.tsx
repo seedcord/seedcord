@@ -61,7 +61,7 @@ function DevSection({ title, children }: { title: string; children: ReactNode })
 }
 
 function MockReference(): ReactElement {
-    const entities = ['Bot', 'Seedcord', 'Lifecycle', 'CooldownManager', 'Logger', 'round', 'ordinal', 'prettify'];
+    const entities = ['Bot', 'Seedcord', 'Lifecycle', 'RateLimiter', 'Logger', 'round', 'ordinal', 'prettify'];
     return (
         <div className={cn('flex flex-wrap gap-2')}>
             {entities.map((entity) => (

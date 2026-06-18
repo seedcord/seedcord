@@ -1,5 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '@handlers/BaseHandler';
@@ -52,10 +52,6 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
     ) => Promisable<Ret>;
 };
 
-// decode the focused option once per instance, cached in a module WeakMap. a subclass field would initialize
-// after BaseHandler.populate() runs inside super(), so the cache cannot live on the instance.
-const focusedCache = new WeakMap<object, { name: string; value: string }>();
-
 /**
  * Base class for a Discord autocomplete handler.
  *
@@ -92,25 +88,41 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
      * The focused option for this interaction. `value` is always the raw partial string the user is typing,
      * even for an integer or number option, so coerce it yourself when you need a number.
      */
+    private decodedFocused?: { name: string; value: string };
+
     protected get focused(): FocusedField<Route> {
-        const cached = focusedCache.get(this);
-        if (cached) return cached as FocusedField<Route>;
+        if (this.decodedFocused) return this.decodedFocused as FocusedField<Route>;
         const raw = this.event.options.getFocused(true);
         const focused = { name: raw.name, value: raw.value };
-        focusedCache.set(this, focused);
+        this.decodedFocused = focused;
         // the registry fixes the autocompletable names, a focused field outside that set fails the match lookup.
         return focused as FocusedField<Route>;
     }
 
     /**
-     * Run the arm for the focused field.
+     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused, so
+     * match is how you read it. There is no single-field shortcut the way slash/component handlers have one.
      *
-     * Provide one arm per autocompletable field across the registered commands. Each arm receives the
-     * focused partial value and a `respond` pinned to that field's choice value type. A missing arm is a
-     * compile error. A focused field with no arm, only reachable from a stale-deployed command, throws.
+     * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
+     * arm receives the focused partial value and a `respond` pinned to that field's choice value type. The
+     * arms must cover every autocompletable field, a missing field or an unknown key is a compile error. A
+     * focused field with no arm, only reachable from a stale-deployed command, throws at runtime.
      *
      * @param arms - One handler per autocompletable field, keyed by field name.
      * @returns The result of the arm that ran.
+     *
+     * @example
+     * ```ts
+     * \@AutocompleteRoute('search')
+     * class SearchAutocomplete extends AutocompleteHandler<'search'> {
+     *     async execute() {
+     *         await this.match({
+     *             query: (value, respond) => respond(titles(value).map((s) => ({ name: s, value: s }))),
+     *             tag: (value, respond) => respond(tags(value).map((s) => ({ name: s, value: s })))
+     *         });
+     *     }
+     * }
+     * ```
      */
     protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;

@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, relative } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';

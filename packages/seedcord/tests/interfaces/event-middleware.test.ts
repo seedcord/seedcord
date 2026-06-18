@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 

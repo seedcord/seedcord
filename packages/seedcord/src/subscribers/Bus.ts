@@ -8,6 +8,7 @@ import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { Plugin } from '@interfaces/Plugin';
 
 import { SubscribeMetadataKey } from './decorators/Subscribe';
+import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { Subscriber } from './Subscriber';
 
@@ -15,10 +16,11 @@ import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
 import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { TypedConstructor } from '@seedcord/types';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
-type SubscriberConstructor = TypedConstructor<typeof Subscriber>;
+// `data: never` so a concrete subscriber (which takes one subscription's payload) is assignable here
+// for storage. The per-key map restores the precise payload type at dispatch.
+type SubscriberConstructor = new (data: never, core: Core) => Subscriber<SubscriptionKey>;
 interface RegisteredSubscriberHandlerEntry {
     ctor: SubscriberConstructor;
     frequency: EventFrequency;
@@ -31,9 +33,8 @@ type SubscriberArtifact = SubscriptionKey[];
  *
  * Provides a centralized system for registering and executing custom subscribers
  * throughout the application lifecycle. Bus subscribers are loaded from configured directories
- * and can be triggered programmatically or by framework events.
- *
- * @internal Accessed via core.bus, not directly instantiated
+ * and can be triggered programmatically or by framework events. Accessed via `core.bus`, not
+ * constructed directly.
  */
 export class Bus extends Plugin<SubscriptionTuples> {
     public readonly logger = new Logger('Subscribers');
@@ -65,12 +66,18 @@ export class Bus extends Plugin<SubscriptionTuples> {
         return [meta.subscriber];
     }
 
+    /** @internal */
     public async init(): Promise<void> {
         if (this.isInitialized) return;
 
         this.isInitialized = true;
 
         this.registerSubscriber(UnknownException);
+        this.registerSubscriber(HandledException);
+
+        // both webhook urls are required at startup, the bot refuses to boot without them rather than
+        // silently dropping fault reports when the first exception fires.
+        Envapter.require('UNKNOWN_EXCEPTION_WEBHOOK_URL', 'HANDLED_EXCEPTION_WEBHOOK_URL');
 
         const subscribersDir = this.core.config.subscribers.path;
         if (subscribersDir) {
@@ -154,7 +161,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
         void this.processSubscriber(event, data);
-        return super.emit(event, data);
+        // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
+        return super.emit(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
     }
 
     private async processSubscriber<KeyOfSubscribers extends SubscriptionKey>(
@@ -176,7 +184,12 @@ export class Bus extends Plugin<SubscriptionTuples> {
                     this.executedOnceHandlers.add(entry.ctor);
                 }
 
-                const instance = new entry.ctor(data, this.core);
+                // the map keys each subscriber to one subscription, so data matches this ctor's payload arm
+                const Ctor = entry.ctor as new (
+                    data: AllSubscriptions[KeyOfSubscribers],
+                    core: Core
+                ) => Subscriber<KeyOfSubscribers>;
+                const instance = new Ctor(data, this.core);
                 await instance.execute();
             } catch (err) {
                 this.logger.error(`Error in subscriber ${String(subscriberName)} handler ${entry.ctor.name}:`, err);

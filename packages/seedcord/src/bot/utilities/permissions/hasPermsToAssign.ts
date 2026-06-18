@@ -1,26 +1,21 @@
 import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
 
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/defaults/errors/Roles';
-
 import { checkBotPermissions } from './checkBotPermissions';
+import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from './notices';
 import { getBotRole } from '../roles/getBotRole';
 
-import type { CustomError } from '@interfaces/Components';
+import type { Notice } from '@seedcord/kit';
 
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.
  */
 export interface AssignRoleErrorCtors {
     /** Custom error for role higher than bot */
-    higher?: new (message: string, role: Role, botRole: Role) => CustomError;
+    higher?: new (message: string, role: Role, botRole: Role) => Notice;
     /** Custom error for managed role assignment */
-    managed?: new (message: string) => CustomError;
+    managed?: new (message: string) => Notice;
     /** Custom error for missing Manage Roles permission */
-    missing?: new (
-        message: string,
-        where: Role | TextChannel | Guild | GuildMember,
-        missingPerms: string[]
-    ) => CustomError;
+    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Notice;
 }
 
 /**

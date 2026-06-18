@@ -1,11 +1,11 @@
-import { MessageFlags, TextChannel } from 'discord.js';
-import { Catchable, SlashRoute, SlashHandler } from 'seedcord';
+import { MessageFlags, PermissionFlagsBits, TextChannel } from 'discord.js';
+import { Gated, GuildOnly, RequirePermissions, SlashHandler, SlashRoute } from 'seedcord';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 
+@Gated(GuildOnly(), RequirePermissions([PermissionFlagsBits.Administrator]))
 @SlashRoute('maintenance')
 export class Maintenance extends SlashHandler<'maintenance'> {
-    @Catchable()
     public async execute(): Promise<void> {
         await this.event.deferReply({ flags: MessageFlags.Ephemeral });
 

@@ -10,14 +10,14 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'AutocompleteHandler' },
     { query: 'HealthCheck' },
     { query: 'BaseHandler' },
-    { query: 'BaseErrorEmbed' },
+    { query: 'Fault' },
     { query: 'BuilderComponent' },
     { query: 'CoordinatedShutdown' },
     { query: 'UnknownException' },
     { query: 'Mongo' },
     { query: 'Bot' },
     { query: 'BaseComponent' },
-    { query: 'CooldownManager' },
+    { query: 'RateLimiter' },
     { query: 'WebhookLog' },
 
     // Properties
@@ -36,14 +36,14 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
 
     // Accessors
     { query: 'isRunning' },
-    { query: 'custom error emit' },
+    { query: 'Notice report' },
     { query: 'client' },
 
     // Interfaces
-    { query: 'HandlerWithChecks' },
+    { query: 'Gate' },
     { query: 'Handler' },
     { query: 'BaseCore' },
-    { query: 'CooldownOptions' },
+    { query: 'RateLimitWindow' },
 
     // Types
     { query: 'RequireAtLeastOne' },
@@ -61,7 +61,6 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'prettify' },
     { query: 'fyShuffle' },
     { query: 'RegisterCommand' },
-    { query: 'attemptSendDM' },
     { query: 'SelectMenuRoute' },
     { query: 'AutocompleteRoute' },
     { query: 'checkPermissions' },

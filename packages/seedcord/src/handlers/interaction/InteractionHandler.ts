@@ -6,11 +6,11 @@ import type { Core } from '@interfaces/Core';
 /**
  * Shared base the typed interaction handlers extend.
  *
- * Not a public entry point, reach for {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
- * or {@link SelectHandler} instead. This class only carries the repliable-event plumbing those bases share.
+ * Not a public entry point. You should be using {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
+ * or {@link SelectHandler} instead. This class only carries the repliable-event plumbing those bases share,
+ * so DO NOT use it directly.
  *
  * @typeParam Repliable - The interaction type this handler processes
- * @internal
  */
 export abstract class InteractionHandler<Repliable extends Repliables>
     extends BaseHandler<Repliable>

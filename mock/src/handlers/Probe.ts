@@ -1,9 +1,8 @@
 import { MessageFlags } from 'discord.js';
-import { Catchable, SlashRoute, SlashHandler } from 'seedcord';
+import { SlashRoute, SlashHandler } from 'seedcord';
 
 @SlashRoute('probe')
 export class Probe extends SlashHandler<'probe'> {
-    @Catchable()
     public async execute(): Promise<void> {
         const query = this.options.getString('query'); // string, required so never null
         const count = this.options.getInteger('count'); // number | null
