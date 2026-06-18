@@ -143,6 +143,8 @@ declare const GateBrand: unique symbol;
  *     });
  * }
  * ```
+ *
+ * @see {@link defineGate}
  */
 export interface Gate<Ctx extends GateContextBase = GateContext, Name extends string = string> {
     /** The gate's name, surfaced in a mismatch error and joined by the combinators. */
@@ -164,9 +166,21 @@ export interface Gate<Ctx extends GateContextBase = GateContext, Name extends st
  *
  * @example
  * ```ts
- * // the Cooldown catalog gate returns one
- * const limit: EffectGate<GateContextBase, 'Cooldown'> = Cooldown(5);
+ * // a factory returning a typed effect gate
+ * function MyEffectGate(): EffectGate<GateContextBase, 'MyEffectGate'> {
+ *     return defineEffectGate(
+ *         'MyEffectGate',
+ *         (ctx) => {
+ *             if (shouldRefuse(ctx)) throw new MyNotice();
+ *         },
+ *         (ctx) => {
+ *             applyMyEffect(ctx);
+ *         }
+ *     );
+ * }
  * ```
+ *
+ * @see {@link defineEffectGate}
  */
 export interface EffectGate<Ctx extends GateContextBase = GateContext, Name extends string = string> extends Gate<
     Ctx,
