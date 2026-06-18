@@ -1,5 +1,28 @@
 # @seedcord/services
 
+## 0.8.0-next.0
+
+### Minor Changes
+
+- 6e39348: Rename the cooldown store and land the gate leaf prep.
+
+    - In `@seedcord/services`, `CooldownManager` is renamed to `RateLimiter` (`CooldownWindow` and `CooldownResult` become `RateLimitWindow` and `RateLimitResult`), and the `@seedcord/services/internal` subpath is removed. The throw-based `check()` API becomes `hit(key, { delay, limit? })`.
+    - In `seedcord`, the store is reached at `core.rateLimiter`.
+    - In `@seedcord/utils`, add `parseDuration`, the `ValidDuration` template type, and `toEpochSeconds`.
+    - In `@seedcord/types`, add `Config.ownerIds` and the `Epoch` types (`EpochMs` and `EpochSec`).
+
+### Patch Changes
+
+- 6e39348: remove vestigial caching in Logger. forgot to remove them after removing static methods.
+- 180b5a9: Upgrade the envapt runtime dependency to 6.0.0.
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+    - @seedcord/types@0.6.0-next.0
+    - @seedcord/errors@0.1.0-next.0
+    - @seedcord/utils@0.6.0-next.0
+
 ## 0.7.1
 
 ### Patch Changes

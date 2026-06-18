@@ -1,5 +1,35 @@
 # @seedcord/plugins
 
+## 0.7.0-next.0
+
+### Minor Changes
+
+- 6e39348: Replace the database error path with a general `Fault`.
+
+    - `DatabaseError` is removed. `Fault` replaces it, a public `Notice` in `@seedcord/kit` whose `report` defaults true and whose constructor takes `{ cause }`. A service catch rethrows `new Fault({ cause: e })`.
+    - `@WrapDatabaseError` and `throwDatabaseError` are removed.
+
+    To migrate, replace `@WrapDatabaseError` and `throwDatabaseError` with a `try`/`catch` in the service method that rethrows `new Fault({ cause: e })` or write a decorator that does the same.
+
+### Patch Changes
+
+- 180b5a9: Upgrade the envapt runtime dependency to 6.0.0.
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [180b5a9]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [74ea604]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+    - @seedcord/services@0.8.0-next.0
+    - seedcord@0.13.0-next.0
+    - @seedcord/types@0.6.0-next.0
+    - @seedcord/errors@0.1.0-next.0
+    - @seedcord/utils@0.6.0-next.0
+
 ## 0.6.1
 
 ### Patch Changes
