@@ -35,6 +35,7 @@ export const GatedMetadataKey = Symbol('gated:metadata');
  * @param ctor - The handler class being decorated, rejected at compile time when a gate needs a context it lacks.
  *
  * @see {@link defineGate}
+ * @see {@link defineEffectGate}
  */
 export function Gated<const Gates extends NonEmptyTuple<Gate<GateContextBase>>>(...gates: Gates) {
     // mismatch resolves to the error tuple instead of TCtor, so the class fails to assign and TS names the gate
