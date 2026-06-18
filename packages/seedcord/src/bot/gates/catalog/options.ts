@@ -25,12 +25,7 @@ export interface GateNoticeOptions {
     notice?: Notice;
 }
 
-/**
- * Picks the refusal a catalog gate throws, the author override when given, else the gate's default.
- *
- * @param options - The override a catalog gate received, or undefined when the author passed none.
- * @param makeDefault - Builds the gate's default refusal, given the optional reworded message.
- */
+// the author's notice override when given, else the gate's default
 export function pickNotice(options: GateNoticeOptions | undefined, makeDefault: (message?: string) => Notice): Notice {
     return options?.notice ?? makeDefault(options?.message);
 }

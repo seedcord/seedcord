@@ -1,36 +1,16 @@
-import { Notice } from '@seedcord/kit';
-import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
 
-import type { Nullable, ReplyResponse } from '@seedcord/types';
+import { CouldNotFindChannel } from '@bot/notices';
+
+import type { Nullable } from '@seedcord/types';
 import type { Channel, Client, TextChannelResolvable } from 'discord.js';
 
 /**
- * Error thrown when a channel could not be found or accessed.
- */
-class CouldNotFindChannel extends Notice {
-    constructor(
-        message: string,
-        public readonly channelId: string
-    ) {
-        super(message);
-    }
-
-    render(): ReplyResponse {
-        const card = new NoticeCard(
-            `Could not find channel with ID \`${this.channelId}\`. It could also be that the channel is not a text channel.`
-        );
-        return { components: [card.component] };
-    }
-}
-
-/**
- * Fetches and validates a text channel.
+ * Fetches and validates a text channel. Refuses when the channel doesn't exist or isn't a text channel.
  *
  * @param client - The Discord client instance
  * @param channelId - Channel ID or TextChannel instance
  * @returns Promise resolving to the text channel
- * @throws A {@link CouldNotFindChannel} When the channel doesn't exist or isn't text-based
  */
 export async function fetchText(client: Client, channelId: TextChannelResolvable): Promise<TextChannel> {
     if (channelId instanceof TextChannel) {

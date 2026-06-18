@@ -1,7 +1,8 @@
 import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
 
+import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/notices';
+
 import { checkBotPermissions } from './checkBotPermissions';
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from './notices';
 import { getBotRole } from '../roles/getBotRole';
 
 import type { Notice } from '@seedcord/kit';
@@ -29,12 +30,9 @@ export interface HasPermsToAssignOptions {
 }
 
 /**
- * Validates if the bot can assign a target role. Checks for role hierarchy, managed status, and Manage Roles permission.
+ * Validates if the bot can assign a target role. Refuses when the target role is above the bot's, is managed, or the bot lacks Manage Roles.
  *
  * @param roleOrOptions - Target role or complete options for the check
- * @throws A {@link RoleHigherThanMe} When the target role is higher than the bot role
- * @throws A {@link CannotAssignBotRole} When the target role is managed
- * @throws A {@link MissingPermissions} When the bot lacks Manage Roles permission
  *
  * @example
  * ```ts

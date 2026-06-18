@@ -3,7 +3,8 @@ import { Notice } from '@seedcord/kit';
 import { RateLimiter } from '@seedcord/services';
 import { describe, it, expect, vi } from 'vitest';
 
-import { Cooldown, OnCooldown } from '@bot/gates/catalog';
+import { Cooldown } from '@bot/gates/catalog';
+import { OnCooldown } from '@bot/notices';
 
 import type { GateContextBase } from '@bot/gates';
 import type { Core } from '@interfaces/Core';

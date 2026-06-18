@@ -9,8 +9,6 @@ import type { EventGateContext } from '../Gate';
  * Silence on an interaction would leave Discord's failed-interaction state. It rejects an interaction handler at
  * the decorator line. Takes no options, so attach it directly without calling it.
  *
- * @throws {@link Silence} when the event actor is a bot.
- *
  * @see {@link Gated}
  *
  * @example

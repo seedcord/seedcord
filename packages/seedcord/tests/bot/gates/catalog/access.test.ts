@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-import { DmOnly, GuildOnly, NotInDm, NotInGuild, NotOwner, OwnerOnly } from '@bot/gates/catalog';
+import { DmOnly, GuildOnly, OwnerOnly } from '@bot/gates/catalog';
+import { NotInDm, NotInGuild, NotOwner } from '@bot/notices';
 
 import type { GateContextBase } from '@bot/gates';
 import type { Core } from '@interfaces/Core';
