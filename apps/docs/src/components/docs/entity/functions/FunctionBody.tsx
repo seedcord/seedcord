@@ -54,14 +54,10 @@ function buildParamMember(
     const id = withOverload(paramFragment(p.name), overloadIndex, totalSignatures);
     const label = p.name + (p.optional ? '?' : '');
 
-    const defaultTextParts: string[] = [];
-    if (p.type) defaultTextParts.push(`${label}: ${p.type}`);
-    else defaultTextParts.push(label);
-    if (p.defaultValue !== undefined) defaultTextParts.push(`= ${p.defaultValue}`);
+    const codeText = p.type ? `${label}: ${p.type}` : label;
+    const codeRep: CodeRepresentation = p.display ?? { text: codeText, html: null };
 
-    const codeRep: CodeRepresentation = p.display ?? { text: defaultTextParts.join(' '), html: null };
-
-    return {
+    const member: EntityMemberSummary = {
         id,
         label,
         description: { plain: '', html: '' },
@@ -77,6 +73,8 @@ function buildParamMember(
             }
         ]
     };
+    if (p.defaultValue?.length) member.defaultValue = p.defaultValue;
+    return member;
 }
 
 export function FunctionBody({ model }: { model: FunctionEntityModel }): ReactElement | null {

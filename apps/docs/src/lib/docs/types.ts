@@ -181,7 +181,7 @@ export interface FunctionSignatureParameterModel {
     name: DocSignatureParameter['name'];
     optional: boolean;
     type?: string;
-    defaultValue?: DocSignatureParameter['defaultValue'];
+    defaultValue?: readonly CommentParagraph[];
     documentation: readonly CommentParagraph[];
     display?: CodeRepresentation;
 }

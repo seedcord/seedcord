@@ -16,6 +16,10 @@ vi.mock('../../../../src/lib/docs/formatting', () => {
 vi.mock('../../../../src/lib/docs/comments/formatter', () => ({
     formatCommentRich: vi.fn(() => Promise.resolve({ paragraphs: [], examples: [] }))
 }));
+// renderInlineValue pulls in sanitizeHtml (unresolvable here), stub it to echo the markdown.
+vi.mock('../../../../src/lib/docs/comments/renderers/renderInlineValue', () => ({
+    renderInlineValue: vi.fn((markdown: string) => Promise.resolve([{ plain: markdown, html: markdown }]))
+}));
 
 const { buildSignatureDetails } = await import('@lib/docs/builders/buildSignatureDetails');
 
@@ -60,5 +64,33 @@ describe('buildSignatureDetails', () => {
         // the lead must not leak into documentation, which is reserved for the @param/@throws prose below the signature
         expect(result[0]?.documentation).toEqual([]);
         expect(result[1]?.documentation).toEqual([]);
+    });
+
+    it('renders a param {@default} value inline in the Parameter header', async () => {
+        const sig = makeSig('fn(retries)');
+        (sig as unknown as { parameters: unknown[] }).parameters = [
+            { id: 0, name: 'retries', kind: 0, defaultValue: '`5`', comment: { summary: 'retry count' }, flags: {} }
+        ];
+        const node = {
+            name: 'fn',
+            slug: 'fn',
+            id: 2,
+            signatures: [sig],
+            flags: {},
+            comment: undefined
+        } as unknown as DocNode;
+
+        const result = await buildSignatureDetails({
+            node,
+            context,
+            signatureComments: [comment([])],
+            description: null,
+            descriptionSignatureIndex: null,
+            headerSignature: { text: 'fn', html: null }
+        });
+
+        const header = result[0]?.documentation.find((p) => p.plain.startsWith('Parameter: retries'));
+        expect(header?.plain).toBe('Parameter: retries (Default: `5`)');
+        expect(header?.html).toContain('(Default: `5`)');
     });
 });

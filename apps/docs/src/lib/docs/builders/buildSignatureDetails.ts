@@ -2,6 +2,7 @@ import { memberFragment, withOverload } from '@seedcord/docs-engine';
 
 import { cloneCommentParagraphs } from '@lib/docs/comments/creators';
 import { formatCommentRich } from '@lib/docs/comments/formatter';
+import { renderInlineValue } from '@lib/docs/comments/renderers/renderInlineValue';
 import { formatSignature, highlightCode } from '@lib/docs/formatting';
 
 import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
@@ -137,16 +138,16 @@ async function appendParameterComments(
 ): Promise<void> {
     if (!sig.parameters.length) return;
     for (const param of sig.parameters) {
-        if (param.comment) {
-            const formatted = await formatCommentRich(param.comment, context);
-            if (formatted.paragraphs.length) {
-                documentation.push({
-                    plain: `Parameter: ${param.name}`,
-                    html: `<strong>Parameter:</strong> <code>${param.name}</code>`
-                });
-                documentation.push(...formatted.paragraphs);
-            }
-        }
+        const formatted = param.comment ? await formatCommentRich(param.comment, context) : undefined;
+        const defaultParts = param.defaultValue ? await renderInlineValue(param.defaultValue, context) : undefined;
+        if (!formatted?.paragraphs.length && !defaultParts?.length) continue;
+
+        const defaultHtml = defaultParts?.[0]?.html;
+        documentation.push({
+            plain: `Parameter: ${param.name}${param.defaultValue ? ` (Default: ${param.defaultValue})` : ''}`,
+            html: `<strong>Parameter:</strong> <code>${param.name}</code>${defaultHtml ? ` (Default: ${defaultHtml})` : ''}`
+        });
+        if (formatted?.paragraphs.length) documentation.push(...formatted.paragraphs);
     }
 }
 
