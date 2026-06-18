@@ -146,7 +146,7 @@ function ThrowsSection({
             <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
                 <span className={cn('font-semibold text-(--text)')}>Throws:</span>
             </p>
-            <CommentParagraphs paragraphs={headerThrows} />
+            <CommentParagraphs paragraphs={headerThrows} isList />
         </div>
     );
 }
