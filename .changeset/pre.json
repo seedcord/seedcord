@@ -3,6 +3,8 @@
   "tag": "next",
   "initialVersions": {
     "@seedcord/docs": "0.1.2",
+    "@seedcord/errors": "0.0.1",
+    "@seedcord/kit": "0.0.1",
     "@seedcord/mock": "0.2.19",
     "@seedcord/cli": "0.2.0",
     "@seedcord/docs-engine": "0.3.0",
