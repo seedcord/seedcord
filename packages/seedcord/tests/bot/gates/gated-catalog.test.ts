@@ -123,7 +123,7 @@ describe('@Gated catalog gates', () => {
     });
 
     it('attaches IgnoreBots to an event handler', () => {
-        @Gated(IgnoreBots())
+        @Gated(IgnoreBots)
         class Handler extends EventHandler<Events.MessageCreate> {
             async execute(): Promise<void> {
                 await Promise.resolve();
@@ -135,7 +135,7 @@ describe('@Gated catalog gates', () => {
 
     it('rejects IgnoreBots on a slash handler', () => {
         // @ts-expect-error IgnoreBots is event-only, a Silence on an interaction leaves "interaction failed"
-        @Gated(IgnoreBots())
+        @Gated(IgnoreBots)
         class Handler extends SlashHandler<'catalogprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();
@@ -191,7 +191,7 @@ describe('@Gated catalog gate combinators', () => {
 
     it('rejects and(event-only, interaction-only) as uninhabitable', () => {
         // @ts-expect-error IgnoreBots is event-only and RequirePermissions interaction-only, the and fits nothing
-        @Gated(and(IgnoreBots(), RequirePermissions([PermissionFlagsBits.BanMembers])))
+        @Gated(and(IgnoreBots, RequirePermissions([PermissionFlagsBits.BanMembers])))
         class Handler extends SlashHandler<'catalogprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();

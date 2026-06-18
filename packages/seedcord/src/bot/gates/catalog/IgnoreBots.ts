@@ -2,12 +2,14 @@ import { Silence } from '@seedcord/kit';
 
 import { defineGate } from '../Gate';
 
-import type { EventGateContext, Gate } from '../Gate';
+import type { EventGateContext } from '../Gate';
 
 /**
  * Drops a client event whose actor is a bot, with a {@link Silence} so nothing is replied. Event-only, because a
  * Silence on an interaction would leave Discord's failed-interaction state. It rejects an interaction handler at
- * the decorator line.
+ * the decorator line. Takes no options, so attach it directly without calling it.
+ *
+ * @throws {@link Silence} when the event actor is a bot.
  *
  * @see {@link Gated}
  *
@@ -15,7 +17,7 @@ import type { EventGateContext, Gate } from '../Gate';
  * ```ts
  * import { Events } from 'discord.js';
  *
- * \@Gated(IgnoreBots())
+ * \@Gated(IgnoreBots)
  * class OnMessage extends EventHandler<Events.MessageCreate> {
  *     async execute() {
  *         // ...
@@ -23,8 +25,6 @@ import type { EventGateContext, Gate } from '../Gate';
  * }
  * ```
  */
-export function IgnoreBots(): Gate<EventGateContext, 'IgnoreBots'> {
-    return defineGate('IgnoreBots', (ctx: EventGateContext) => {
-        if (ctx.user?.bot) throw new Silence('actor is a bot');
-    });
-}
+export const IgnoreBots = defineGate('IgnoreBots', (ctx: EventGateContext) => {
+    if (ctx.user?.bot) throw new Silence('actor is a bot');
+});
