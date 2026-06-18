@@ -216,6 +216,11 @@ describe('AutocompleteHandler', () => {
         expect(handler.read()).toEqual({ name: 'query', value: 'sp' });
     });
 
+    it('decodes the focused option once and reuses the cached result', () => {
+        const handler = new SearchFocused(autocomplete('query', 'sp'), core);
+        expect(handler.read()).toBe(handler.read()); // same cached object across reads
+    });
+
     it('exposes the focused type spec', () => {
         expect(FocusedTypes).toBeTypeOf('function');
     });

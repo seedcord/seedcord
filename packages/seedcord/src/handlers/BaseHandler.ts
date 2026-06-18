@@ -44,8 +44,6 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
     ) {
         this.event = event;
         this.logger = new Logger(this.constructor.name);
-
-        this.populate();
     }
 
     /**
@@ -53,11 +51,6 @@ export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements
      * gate that refuses stops `execute()` from running.
      */
     abstract execute(): Promise<void>;
-
-    /**
-     * Override this in your handler classes to customize population logic. It runs at the end of the constructor before any async work.
-     */
-    protected populate(): void {}
 
     /** @internal */
     public getEvent(): ValidEvent {

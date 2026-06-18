@@ -22,11 +22,6 @@ type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
     [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => Promisable<Ret>;
 };
 
-// decode once per instance, cached here. a module WeakMap, not an instance field, because
-// BaseHandler.populate() runs inside super() before a subclass field would initialize under
-// useDefineForClassFields.
-const decodeCache = new WeakMap<object, { prefix: string; params: Record<string, unknown> }>();
-
 /**
  * Shared base the customId-routed component handlers extend.
  *
@@ -52,15 +47,16 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         return defs;
     }
 
+    private decoded?: { prefix: string; params: Record<string, unknown> };
+
     private get route(): { prefix: string; params: Record<string, unknown> } {
-        const cached = decodeCache.get(this);
-        if (cached) return cached;
+        if (this.decoded) return this.decoded;
         // justified, decodeFor returns runtime values and the generic Defs fixes their decoded types.
         const decoded = decodeFor(this.registeredDefs, this.event.customId) as {
             prefix: string;
             params: Record<string, unknown>;
         };
-        decodeCache.set(this, decoded);
+        this.decoded = decoded;
         return decoded;
     }
 

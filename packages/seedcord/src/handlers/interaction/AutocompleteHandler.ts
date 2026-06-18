@@ -52,10 +52,6 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
     ) => Promisable<Ret>;
 };
 
-// decode the focused option once per instance, cached in a module WeakMap. a subclass field would initialize
-// after BaseHandler.populate() runs inside super(), so the cache cannot live on the instance.
-const focusedCache = new WeakMap<object, { name: string; value: string }>();
-
 /**
  * Base class for a Discord autocomplete handler.
  *
@@ -92,12 +88,13 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
      * The focused option for this interaction. `value` is always the raw partial string the user is typing,
      * even for an integer or number option, so coerce it yourself when you need a number.
      */
+    private decodedFocused?: { name: string; value: string };
+
     protected get focused(): FocusedField<Route> {
-        const cached = focusedCache.get(this);
-        if (cached) return cached as FocusedField<Route>;
+        if (this.decodedFocused) return this.decodedFocused as FocusedField<Route>;
         const raw = this.event.options.getFocused(true);
         const focused = { name: raw.name, value: raw.value };
-        focusedCache.set(this, focused);
+        this.decodedFocused = focused;
         // the registry fixes the autocompletable names, a focused field outside that set fails the match lookup.
         return focused as FocusedField<Route>;
     }
