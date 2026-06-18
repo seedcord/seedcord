@@ -19,5 +19,18 @@
     "@seedcord/ui": "0.1.0",
     "@seedcord/utils": "0.5.0"
   },
-  "changesets": []
+  "changesets": [
+    "chilly-sloths-sit",
+    "cli-errors-dep",
+    "controller-error-boundary",
+    "envapt-v6",
+    "errors-kit-leaves",
+    "fault-db-path",
+    "gates",
+    "hmr-test-env",
+    "notice-error-model",
+    "ratelimiter-leaf-prep",
+    "seedcord-api-cleanup",
+    "stale-garlics-kiss"
+  ]
 }

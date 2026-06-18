@@ -1,5 +1,69 @@
 # seedcord
 
+## 0.13.0-next.0
+
+### Minor Changes
+
+- 6e39348: Move error handling from the per-method `@Catchable`/`@EventCatchable` decorators to one controller boundary that catches every throw across the interaction and event lifecycle (middleware, construct, gate phase, execute).
+
+    - A `Notice` renders through `ReplySender`, a reporting `Notice` and a raw error publish to `handledException`/`unknownException`, and a `Silence` stops silently. Events are report-only and never auto-reply.
+    - Removes `@Catchable`, `@EventCatchable`, and the `setBreak`/`setErrored`/`shouldBreak`/`hasErrors` handler flags. Throw a `Silence` to stop a handler without a reply.
+    - The default handled-exception subscriber requires the `HANDLED_EXCEPTION_WEBHOOK_URL` env var at boot.
+    - `FaultSource` gains an `event` arm. Duplicate faults are throttled to one report per minute per route.
+    - `ignoreCustomIds` is now `CustomIdMatcher[]`, matched against the raw customId. Adds `errors.ignoreApiCodes` and `errors.ignoreEventApiCodes` (both empty by default, so a handler's own discord.js api error reports).
+
+- 6e39348: Replace the database error path with a general `Fault`.
+
+    - `DatabaseError` is removed. `Fault` replaces it, a public `Notice` in `@seedcord/kit` whose `report` defaults true and whose constructor takes `{ cause }`. A service catch rethrows `new Fault({ cause: e })`.
+    - `@WrapDatabaseError` and `throwDatabaseError` are removed.
+
+    To migrate, replace `@WrapDatabaseError` and `throwDatabaseError` with a `try`/`catch` in the service method that rethrows `new Fault({ cause: e })` or write a decorator that does the same.
+
+- 6e39348: Add declarative preconditions and remove the manual check API.
+
+    - `@Gated(...)` runs gate values before a handler. Build gates with `defineGate` and `defineEffectGate`, compose them with `and` and `or`, and use the built-in catalog (`Cooldown`, `OwnerOnly`, `GuildOnly`, `DmOnly`, `Nsfw`, `RequirePermissions`, `RequireBotPermissions`, `RequireRole`, `IgnoreBots`, and their inverses). A gate refuses by throwing a `Notice`.
+    - `@Checkable`, `WithChecks`, and the user-written `runChecks` are removed.
+
+    To migrate, move a reusable check into a `@Gated(...)` gate, or inline a one-off as `throw new SomeNotice()` in `execute()`.
+
+- 6e39348: Rework the error model around one base class and one reply shape.
+
+    - `CustomError` is renamed to `Notice`, the abstract base you extend and throw. The `emit` field is renamed to `report`. The `response` field (a `readonly EmbedBuilder`) is replaced by a `render(ctx)` method that returns a `ReplyResponse`.
+    - `ReplyResponse` is a new public type in `@seedcord/types`, a v2 reply shape of `components` plus optional `allowedMentions` and `files`. Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`. `RenderContext` is the new render argument.
+
+    To migrate, rename `CustomError` to `Notice`, rename `emit` to `report`, and replace the `response` field with a `render(ctx)` method returning a `ReplyResponse`.
+
+- 6e39348: Rename the cooldown store and land the gate leaf prep.
+
+    - In `@seedcord/services`, `CooldownManager` is renamed to `RateLimiter` (`CooldownWindow` and `CooldownResult` become `RateLimitWindow` and `RateLimitResult`), and the `@seedcord/services/internal` subpath is removed. The throw-based `check()` API becomes `hit(key, { delay, limit? })`.
+    - In `seedcord`, the store is reached at `core.rateLimiter`.
+    - In `@seedcord/utils`, add `parseDuration`, the `ValidDuration` template type, and `toEpochSeconds`.
+    - In `@seedcord/types`, add `Config.ownerIds` and the `Epoch` types (`EpochMs` and `EpochSec`).
+
+- 6e39348: Clean up the handler API surface.
+
+    - `getConfirmation(interaction, prompt, options?)` replaces the Confirmable decorator and its types. Gate an action with `if (!(await getConfirmation(...))) return`.
+    - `populate()` is removed. The handler lifecycle runs construct, then gates, then `execute()`.
+    - `attemptSendDM` and `sendInText` are removed. Resolve a channel with `fetchText`.
+
+    To migrate, replace the Confirmable decorator with `getConfirmation`, move `populate()` setup to the top of `execute()`, and drop `attemptSendDM` and `sendInText`.
+
+### Patch Changes
+
+- 180b5a9: Upgrade the envapt runtime dependency to 6.0.0.
+- 74ea604: HMR now explicitly also runs in the test environment, not only in development.
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [180b5a9]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+    - @seedcord/services@0.8.0-next.0
+    - @seedcord/types@0.6.0-next.0
+    - @seedcord/errors@0.1.0-next.0
+    - @seedcord/kit@0.1.0-next.0
+    - @seedcord/utils@0.6.0-next.0
+
 ## 0.12.0
 
 ### Minor Changes
