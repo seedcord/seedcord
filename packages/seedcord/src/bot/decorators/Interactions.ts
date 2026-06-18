@@ -42,7 +42,7 @@ export enum InteractionRoutes {
 /**
  * Types of select menus supported for routing
  */
-export enum SelectMenuType {
+export enum SelectMenuKind {
     String = 'string',
     User = 'user',
     Role = 'role',
@@ -301,17 +301,17 @@ export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>
 
 /** @internal */
 export type SelectMenuInteractionFor<
-    SelectMenu extends SelectMenuType,
+    SelectMenu extends SelectMenuKind,
     Cache extends CacheType = CacheType
-> = SelectMenu extends SelectMenuType.String
+> = SelectMenu extends SelectMenuKind.String
     ? StringSelectMenuInteraction<Cache>
-    : SelectMenu extends SelectMenuType.User
+    : SelectMenu extends SelectMenuKind.User
       ? UserSelectMenuInteraction<Cache>
-      : SelectMenu extends SelectMenuType.Role
+      : SelectMenu extends SelectMenuKind.Role
         ? RoleSelectMenuInteraction<Cache>
-        : SelectMenu extends SelectMenuType.Channel
+        : SelectMenu extends SelectMenuKind.Channel
           ? ChannelSelectMenuInteraction<Cache>
-          : SelectMenu extends SelectMenuType.Mentionable
+          : SelectMenu extends SelectMenuKind.Mentionable
             ? MentionableSelectMenuInteraction<Cache>
             : never;
 
@@ -322,7 +322,7 @@ export type SelectMenuInteractionFor<
  * generic must list the same definitions, and its second generic argument must be the matching select
  * interaction type, or it is a compile error.
  *
- * @param type - Select menu kind from {@link SelectMenuType}.
+ * @param type - Select menu kind from {@link SelectMenuKind}.
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
  *
@@ -334,7 +334,7 @@ export type SelectMenuInteractionFor<
  * }
  * ```
  */
-export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs extends readonly AnyCustomId[]>(
+export function SelectMenuRoute<SelectMenu extends SelectMenuKind, const Defs extends readonly AnyCustomId[]>(
     type: SelectMenu,
     ...defs: Defs
 ) {
@@ -342,11 +342,11 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs ex
         constructor: AssertHandles<SelectMenuInteractionFor<SelectMenu>, TCtor>
     ): void {
         const routeMap = {
-            [SelectMenuType.String]: InteractionRoutes.StringMenu,
-            [SelectMenuType.User]: InteractionRoutes.UserMenu,
-            [SelectMenuType.Role]: InteractionRoutes.RoleMenu,
-            [SelectMenuType.Channel]: InteractionRoutes.ChannelMenu,
-            [SelectMenuType.Mentionable]: InteractionRoutes.MentionableMenu
+            [SelectMenuKind.String]: InteractionRoutes.StringMenu,
+            [SelectMenuKind.User]: InteractionRoutes.UserMenu,
+            [SelectMenuKind.Role]: InteractionRoutes.RoleMenu,
+            [SelectMenuKind.Channel]: InteractionRoutes.ChannelMenu,
+            [SelectMenuKind.Mentionable]: InteractionRoutes.MentionableMenu
         };
 
         // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.

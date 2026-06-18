@@ -1,7 +1,7 @@
 import { CustomId, Notice } from '@seedcord/kit';
 import { describe, expect, it } from 'vitest';
 
-import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
+import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';
 import { ButtonHandler, ModalHandler, SelectHandler } from '@handlers/interaction/components';
 
 import type { Core } from '@interfaces/Core';
@@ -100,8 +100,8 @@ class ConfigModal extends ModalHandler<[typeof Config]> {
 
 const Assign = new CustomId('assign').snowflake('roleId');
 
-@SelectMenuRoute(SelectMenuType.User, Assign)
-class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof Assign]> {
+@SelectMenuRoute(SelectMenuKind.User, Assign)
+class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof Assign]> {
     public summary = '';
     execute(): Promise<void> {
         const { roleId } = this.params;
