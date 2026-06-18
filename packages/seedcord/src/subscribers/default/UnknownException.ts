@@ -40,7 +40,7 @@ function webhookUrlValidator(raw: unknown): string {
  *
  * Developers need to set the UNKNOWN_EXCEPTION_WEBHOOK_URL environment variable in their .env file otherwise this subscriber will throw an error during initialization.
  *
- * @throws A {@link SeedcordError} if UNKNOWN_EXCEPTION_WEBHOOK_URL is not set or is invalid
+ * @throws A **SeedcordError** if UNKNOWN_EXCEPTION_WEBHOOK_URL is not set or is invalid
  */
 @Subscribe('unknownException')
 export class UnknownException extends WebhookLog<'unknownException'> {

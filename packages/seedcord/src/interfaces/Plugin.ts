@@ -145,7 +145,7 @@ export class Pluggable<
      * @param startupPhase - When during startup to initialize this plugin ({@link StartupPhase})
      * @param args - Additional arguments to pass to the plugin constructor
      * @returns This instance with the plugin attached as a typed property
-     * @throws A {@link SeedcordError} When called after initialization or if key already exists
+     * @throws A **SeedcordError** When called after initialization or if key already exists
      * @example
      * ```typescript
      * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', name: 'seedcord', dir: ... })

@@ -73,8 +73,8 @@ export interface MiddlewareMetadata {
  * \@Middleware(MiddlewareType.Event, 10, { events: [Events.MessageCreate, Events.MessageUpdate] })
  * class MyEventMiddleware extends EventMiddleware {}
  * ```
- * @throws A {@link SeedcordTypeError} If priority is not a finite number
- * @throws A {@link SeedcordError} If interaction middleware specifies event filters
+ * @throws A **SeedcordTypeError** If priority is not a finite number
+ * @throws A **SeedcordError** If interaction middleware specifies event filters
  */
 export function Middleware<MType extends MiddlewareType, const Events extends readonly ValidNonInteractionKeys[] = []>(
     type: MType,

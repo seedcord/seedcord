@@ -42,7 +42,7 @@ export class Mongo extends Plugin {
     /**
      * Map of all loaded services. Keys come from `@RegisterMongoService('key')`.
      *
-     * @throws A {@link SeedcordError} if accessed before the plugin finishes initializing (e.g. from
+     * @throws A **SeedcordError** if accessed before the plugin finishes initializing (e.g. from
      * a plugin that starts in an earlier phase).
      */
     public get services(): MongoServices {

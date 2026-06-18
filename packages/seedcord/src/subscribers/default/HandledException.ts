@@ -36,7 +36,7 @@ function webhookUrlValidator(raw: unknown): string {
  *
  * Requires the HANDLED_EXCEPTION_WEBHOOK_URL environment variable, the same rule UNKNOWN_EXCEPTION_WEBHOOK_URL enforces.
  *
- * @throws A {@link SeedcordError} if HANDLED_EXCEPTION_WEBHOOK_URL is not set or is invalid
+ * @throws A **SeedcordError** if HANDLED_EXCEPTION_WEBHOOK_URL is not set or is invalid
  */
 @Subscribe('handledException')
 export class HandledException extends WebhookLog<'handledException'> {
