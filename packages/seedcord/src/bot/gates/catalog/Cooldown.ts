@@ -4,10 +4,9 @@ import { parseDuration, toEpochSeconds, type ValidDuration } from '@seedcord/uti
 
 import { defineEffectGate } from '../Gate';
 import { GateNotice } from './GateNotice';
-import { pickNotice } from './options';
 
-import type { GateNoticeOptions } from './options';
 import type { EffectGate, GateContextBase } from '../Gate';
+import type { Notice } from '@seedcord/kit';
 import type { EpochMs } from '@seedcord/types';
 
 /**
@@ -35,14 +34,17 @@ export class OnCooldown extends GateNotice {
 }
 
 /**
- * Options for {@link Cooldown}. Adds `per` (the bucket the window applies to) and `limit` (uses allowed per
- * window), on top of the shared {@link GateNoticeOptions} (`message` to reword the refusal, `notice` to
- * replace it).
+ * Options for {@link Cooldown}. `per` sets the bucket the window applies to and `limit` the uses allowed per
+ * window. `message` rewords the refusal and `notice` replaces it, both receiving the epoch ms the key frees
+ * up so the refusal can show the retry time.
  *
  * @example
  * ```ts
- * // one use per channel, with a reworded refusal
- * Cooldown('10s', { per: 'channel', message: 'Slow down in this channel.' });
+ * // one use per channel, rewording the refusal with the retry time
+ * Cooldown('10s', {
+ *     per: 'channel',
+ *     message: (expires) => `Slow down. Try again <t:${Math.round(expires / 1000)}:R>.`
+ * });
  * ```
  *
  * @example
@@ -51,11 +53,29 @@ export class OnCooldown extends GateNotice {
  * Cooldown('1m', { limit: 5 });
  * ```
  */
-export interface CooldownOptions extends GateNoticeOptions {
-    /** Defaults to per user. */
+export interface CooldownOptions {
+    /**
+     * The bucket the cooldown window applies to. 'user' scopes by user ID, 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel). If your handler can run in DMs and you want a per-user cooldown, use 'user' and it won't charge a shared global bucket for users without IDs.
+     *
+     * @defaultValue `'user'`
+     */
     per?: 'user' | 'guild' | 'channel';
-    /** Uses allowed inside one window before the gate refuses. Defaults to 1. */
+    /**
+     * Uses allowed inside one window before the gate refuses.
+     *
+     * @defaultValue `1`
+     */
     limit?: number;
+    /**
+     * Reword the refusal, keeping the standard notice card. Receives the epoch ms the key frees up, so the
+     * text can include the retry time with `<t:${Math.round(expires / 1000)}:R>`.
+     */
+    message?: (expires: EpochMs) => string;
+    /**
+     * Replace the refusal Notice entirely, for full control or a translated copy. Receives the epoch ms the
+     * key frees up.
+     */
+    notice?: (expires: EpochMs) => Notice;
 }
 
 // each Cooldown() gets its own bucket, so two handlers that both use a cooldown do not share one window
@@ -68,7 +88,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 }
 
 /**
- * Allows `limit` uses per window (default 1), scoped by `per`. A number `duration` is **seconds**, a string is
+ * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, a string is
  * a duration like `30m` or `24h`. An unparseable string throws a {@link SeedcordTypeError} at construction. The
  * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
  * Each call gets its own bucket, so two handlers never share a window. Refuses with {@link OnCooldown}.
@@ -94,7 +114,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  *
  * @example
  * ```ts
- * // a string is a duration, here scoped per guild instead of the default per user
+ * // a string is a duration, here scoped per guild instead of per user
  * Cooldown('30m', { per: 'guild' });
  * ```
  *
@@ -133,7 +153,9 @@ export function Cooldown(
         'Cooldown',
         (ctx) => {
             const result = ctx.core.rateLimiter.peek(keyOf(ctx), window);
-            if (result.limited) throw pickNotice(options, (message) => new OnCooldown(result.expires, message));
+            if (!result.limited) return;
+            if (options?.notice) throw options.notice(result.expires);
+            throw new OnCooldown(result.expires, options?.message?.(result.expires));
         },
         (ctx) => {
             ctx.core.rateLimiter.hit(keyOf(ctx), window);
