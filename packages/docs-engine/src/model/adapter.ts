@@ -307,8 +307,9 @@ export class ApiAdapter {
                 kind: DocKind.Parameter,
                 flags: paramFlags(param.isOptional)
             };
-            const paramComment = buildParamComment(paramDoc, param.name, this.resolveLink());
-            if (paramComment) docParam.comment = paramComment;
+            const { comment, defaultValue } = buildParamComment(paramDoc, param.name, this.resolveLink());
+            if (comment) docParam.comment = comment;
+            if (defaultValue !== undefined) docParam.defaultValue = defaultValue;
             return docParam;
         });
         const renderParams = item.parameters.map((param) => {

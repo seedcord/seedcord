@@ -63,7 +63,7 @@ export interface MiddlewareMetadata {
  * Interaction middleware cannot specify event filters.
  *
  * @param type - Middleware kind from {@link MiddlewareType}
- * @param priority - Ordering value where lower runs earlier. Default is 0
+ * @param priority - Ordering value where lower runs earlier. {@default `0`}
  * @param options - Additional registration options
  *
  * @decorator

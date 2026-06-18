@@ -28,7 +28,11 @@ class UserNotFound extends Notice {
  * Options for {@link fetchUser}.
  */
 export interface FetchUserOptions {
-    /** Notice to throw when the user does not exist. Defaults to {@link UserNotFound}. */
+    /**
+     * Notice to throw when the user does not exist.
+     *
+     * @defaultValue {@link UserNotFound}
+     */
     throwAs?: new (userArg: string) => Notice;
 }
 
@@ -39,7 +43,7 @@ export interface FetchUserOptions {
  * @param userId - The Discord user ID
  * @param options - Optional overrides, including the {@link FetchUserOptions.throwAs} denial
  * @returns Promise resolving to the user
- * @throws The {@link FetchUserOptions.throwAs} denial (default {@link UserNotFound}) when the user doesn't exist
+ * @throws The {@link FetchUserOptions.throwAs} denial when the user doesn't exist
  */
 export async function fetchUser(client: Client, userId: string, options?: FetchUserOptions): Promise<User> {
     const Throw = options?.throwAs ?? UserNotFound;

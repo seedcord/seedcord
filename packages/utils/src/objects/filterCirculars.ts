@@ -57,9 +57,17 @@ export interface UnserializableValue {
 export interface FilterCircularsOptions<Marker extends string = '[Circular]'> {
     /** Optional {@link ILogger} used to log stringify or parse errors. */
     logger?: ILogger;
-    /** Override the circular placeholder. Default is `[Circular]`. */
+    /**
+     * Override the circular placeholder.
+     *
+     * @defaultValue `'[Circular]'`
+     */
     marker?: Marker;
-    /** Processing mode. `json` uses stringify and parse (might end up using a `toJSON()` if found). `decycle` builds a safe clone first. Default is `decycle`. */
+    /**
+     * Processing mode. `json` uses stringify and parse (might end up using a `toJSON()` if found). `decycle` builds a safe clone first.
+     *
+     * @defaultValue `'decycle'`
+     */
     mode?: 'json' | 'decycle';
 }
 

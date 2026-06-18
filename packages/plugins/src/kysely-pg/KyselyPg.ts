@@ -179,7 +179,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     }
 
     /**
-     * Runs migrations using the supplied options or defaults to `latest`.
+     * Runs migrations using the supplied options.
      *
      * @param options - Target migration or direction overrides
      */

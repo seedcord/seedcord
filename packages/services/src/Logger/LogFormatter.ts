@@ -10,9 +10,17 @@ type FormattedError = Error & { __formattedName?: string; __plainName?: string }
  * Options for pretty log formatting.
  */
 export interface PrettyFormatOptions {
-    /** Number of spaces to pad the log level to. {@default `7`} */
+    /**
+     * Number of spaces to pad the log level to.
+     *
+     * @defaultValue `7`
+     */
     padding?: number;
-    /** Whether to strip ANSI codes from extra log data. {@default false} */
+    /**
+     * Whether to strip ANSI codes from extra log data.
+     *
+     * @defaultValue `false`
+     */
     stripExtras?: boolean;
 }
 
@@ -21,9 +29,17 @@ export interface PrettyFormatOptions {
  * @internal
  */
 export interface JsonFormatOptions {
-    /** Whether to strip ANSI codes from log messages and extra data. {@default false} */
+    /**
+     * Whether to strip ANSI codes from log messages and extra data.
+     *
+     * @defaultValue `false`
+     */
     stripAnsi?: boolean;
-    /** Whether to produce minimal JSON output without extra fields. {@default false} */
+    /**
+     * Whether to produce minimal JSON output without extra fields.
+     *
+     * @defaultValue `false`
+     */
     minimal?: boolean;
 }
 

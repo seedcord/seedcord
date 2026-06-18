@@ -195,6 +195,17 @@ describe('DocsEngine mock package integration', () => {
         expect(asyncSignature.returnsComment?.text).toContain('promise resolving');
     });
 
+    it('extracts a {@default} param tag into the parameter defaultValue and strips it from the comment', async () => {
+        const fn = await getNodeBySlug('mock-function-with-rest');
+        const signature = fn.signatures[0];
+        if (!signature) {
+            throw new Error('Expected mockFunctionWithRest signature');
+        }
+        const optional = signature.parameters.find((p) => p.name === 'optional');
+        expect(optional?.defaultValue).toBe("'fallback'");
+        expect(optional?.comment?.summary).toBe('The optional parameter.');
+    });
+
     it('gives each overload its own type parameters', async () => {
         // mockFunction has a generic overload `<TypeT>(param: TypeT)` and concrete `string`/`number`
         // overloads that declare no type parameters; each signature must carry only its own.

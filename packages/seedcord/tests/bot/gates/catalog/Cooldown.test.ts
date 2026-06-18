@@ -1,4 +1,5 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { Notice } from '@seedcord/kit';
 import { RateLimiter } from '@seedcord/services';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -6,6 +7,17 @@ import { Cooldown, OnCooldown } from '@bot/gates/catalog';
 
 import type { GateContextBase } from '@bot/gates';
 import type { Core } from '@interfaces/Core';
+import type { ReplyResponse } from '@seedcord/types';
+
+// a full-replacement refusal proving the notice factory receives the runtime retry-after
+class CustomRefusal extends Notice {
+    constructor(public readonly at: number) {
+        super(`wait ${at}`);
+    }
+    render(): ReplyResponse {
+        return { components: [] };
+    }
+}
 
 function cdCtx(
     rateLimiter: object,
@@ -77,15 +89,33 @@ describe('Cooldown', () => {
         expect((caught as OnCooldown).expires).toBe(1_700_000_000_000);
     });
 
-    it('rewords the refusal with the message override', async () => {
-        const rl = { peek: () => ({ limited: true, expires: 1_000 }), hit: vi.fn() };
+    it('rewords the refusal with the message factory, receiving the retry-after', async () => {
+        const rl = { peek: () => ({ limited: true, expires: 1_700_000_000_000 }), hit: vi.fn() };
         let caught: unknown;
-        await Cooldown(5, { message: 'Slow down there.' })
+        await Cooldown(5, { message: (expires) => `back at ${expires}` })
             .check(cdCtx(rl))
             .catch((error: unknown) => {
                 caught = error;
             });
-        expect((caught as OnCooldown).message).toBe('Slow down there.');
+        expect((caught as OnCooldown).message).toBe('back at 1700000000000');
+    });
+
+    it('replaces the refusal entirely with the notice factory, receiving the retry-after', async () => {
+        const rl = { peek: () => ({ limited: true, expires: 1_700_000_000_000 }), hit: vi.fn() };
+        let received: number | undefined;
+        let caught: unknown;
+        await Cooldown(5, {
+            notice: (expires) => {
+                received = expires;
+                return new CustomRefusal(expires);
+            }
+        })
+            .check(cdCtx(rl))
+            .catch((error: unknown) => {
+                caught = error;
+            });
+        expect(received).toBe(1_700_000_000_000);
+        expect(caught).toBeInstanceOf(CustomRefusal);
     });
 
     it('accepts a duration string and converts it to the window delay', async () => {

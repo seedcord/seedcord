@@ -134,13 +134,13 @@ export interface HealthCheckConfig {
     /**
      * Port the health-check server listens on.
      *
-     * `6967` by default
+     * @defaultValue `6967`
      */
     port?: number;
     /**
      * Path the health-check server responds on.
      *
-     * `/healthcheck` by default
+     * @defaultValue `'/healthcheck'`
      */
     path?: string;
     /**
@@ -156,7 +156,7 @@ export interface NotificationsConfig {
     /**
      * Contact name shown in the generic unknown-error message.
      *
-     * `the developer` by default
+     * @defaultValue `'the developer'`
      */
     developerUsername?: string;
 }
@@ -181,7 +181,7 @@ export interface Config {
     /**
      * Whether coordinated shutdown registers OS signal handlers and runs teardown tasks.
      *
-     * `true` by default
+     * @defaultValue `true`
      */
     shutdownEnabled?: boolean;
 

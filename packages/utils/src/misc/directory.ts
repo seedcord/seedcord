@@ -58,11 +58,15 @@ export async function traverseDirectory(
  */
 export interface FormatFileOptions {
     /**
-     * Whether to return only the directory part of the path. {@default false}
+     * Whether to return only the directory part of the path.
+     *
+     * @defaultValue `false`
      */
     onlyDir?: boolean;
     /**
-     * A prefix to prepend to the formatted path. {@default ./}
+     * A prefix to prepend to the formatted path.
+     *
+     * @defaultValue `'./'`
      */
     prefix?: string;
 }

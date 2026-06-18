@@ -5,8 +5,8 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  *
  * Throw a `Notice` to stop a handler and reply to the user. The framework catches it at the controller
  * boundary and renders {@link Notice.render}, which always decides what the user sees. With `report`
- * false (the default) that render is all that happens. With `report` true the framework also logs the
- * fault and publishes it to the `handledException` bus. A raw, non-Notice throw shows the generic message.
+ * false that render is all that happens. With `report` true the framework also logs the fault and
+ * publishes it to the `handledException` bus. A raw, non-Notice throw shows the generic message.
  *
  * @example
  * ```ts
@@ -41,12 +41,16 @@ export abstract class Notice extends Error {
     /**
      * Whether this denial is a reported fault. True also logs it and publishes it to the `handledException`
      * bus. The user always sees {@link Notice.render} either way.
+     *
+     * @defaultValue `false`
      */
     public report = false;
 
     /**
-     * Whether the reply is ephemeral, so only the invoking user sees it. Defaults to true. Set it false for
-     * a refusal the whole channel should see.
+     * Whether the reply is ephemeral, so only the invoking user sees it. Set it false for a refusal the
+     * whole channel should see.
+     *
+     * @defaultValue `true`
      */
     public ephemeral = true;
 

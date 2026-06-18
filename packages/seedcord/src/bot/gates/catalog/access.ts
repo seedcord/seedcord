@@ -41,7 +41,7 @@ export class NotInDm extends GateNotice {
 /**
  * Passes only for a user id listed in `config.ownerIds`, else refuses with an ephemeral {@link NotOwner}.
  *
- * Agnostic, so it attaches to interaction and event handlers alike. `ownerIds` defaults to an empty list, which refuses every caller. Pass {@link GateNoticeOptions} to reword or replace the refusal.
+ * Agnostic, so it attaches to interaction and event handlers alike. With no `ownerIds` configured it refuses every caller. Pass {@link GateNoticeOptions} to reword or replace the refusal.
  *
  * @param options - Reword or replace the refusal. Omit to throw the default {@link NotOwner}.
  *

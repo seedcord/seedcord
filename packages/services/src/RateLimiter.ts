@@ -8,7 +8,11 @@ const SWEEP_INTERVAL_MS = 60_000;
 export interface RateLimitWindow {
     /** Window length in milliseconds. */
     delay: number;
-    /** Hits allowed inside the window before the key is limited. Defaults to `1`. */
+    /**
+     * Hits allowed inside the window before the key is limited.
+     *
+     * @defaultValue `1`
+     */
     limit?: number;
 }
 

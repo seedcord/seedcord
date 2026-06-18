@@ -4,6 +4,7 @@ import type {
     DocComment,
     DocEscapedText,
     DocFencedCode,
+    DocInlineTag,
     DocLinkTag,
     DocNode,
     DocParamBlock,
@@ -83,6 +84,14 @@ function walk(node: DocNode, parts: CommentDisplayPart[], resolveLink: LinkResol
         case 'LinkTag':
             walkLinkTag(node as DocLinkTag, parts, resolveLink);
             return;
+        case 'InlineTag': {
+            const inline = node as DocInlineTag;
+            // only `{@default}` is surfaced (a param-default tag), other custom inline tags drop as before
+            if (inline.tagName === '@default') {
+                parts.push({ kind: 'inline-tag', tag: '@default', text: inline.tagContent.trim() });
+            }
+            return;
+        }
         case 'Paragraph':
             for (const child of node.getChildNodes()) walk(child, parts, resolveLink);
             pushText(parts, '\n\n');
@@ -153,18 +162,36 @@ export function buildComment(tsdoc: DocComment | undefined, resolveLink: LinkRes
     };
 }
 
-function commentFromParamBlock(block: DocParamBlock | undefined, resolveLink: LinkResolver): EngineComment | null {
-    if (!block) return null;
-    const summaryParts = partsFromSection(block.content, resolveLink);
-    if (summaryParts.length === 0) return null;
-    return { summary: plainText(summaryParts), summaryParts, blockTags: [], modifierTags: [], examples: [] };
+export interface ParamComment {
+    comment: EngineComment | null;
+    defaultValue?: string;
+}
+
+// pulls the `{@default X}` tag out of a param's parts, returning the value and the parts without it
+function splitParamDefault(parts: CommentDisplayPart[]): { parts: CommentDisplayPart[]; defaultValue?: string } {
+    const index = parts.findIndex((p) => p.kind === 'inline-tag' && p.tag === '@default');
+    if (index === -1) return { parts };
+    const value = parts[index]?.text;
+    const cleaned = parts.filter((_, i) => i !== index);
+    const last = cleaned[cleaned.length - 1];
+    if (last?.kind === 'text') last.text = last.text.replace(/\s+$/, '');
+    return value ? { parts: cleaned, defaultValue: value } : { parts: cleaned };
+}
+
+function commentFromParamBlock(block: DocParamBlock | undefined, resolveLink: LinkResolver): ParamComment {
+    if (!block) return { comment: null };
+    const { parts, defaultValue } = splitParamDefault(partsFromSection(block.content, resolveLink));
+    const base = defaultValue !== undefined ? { defaultValue } : {};
+    if (parts.length === 0) return { comment: null, ...base };
+    const comment = { summary: plainText(parts), summaryParts: parts, blockTags: [], modifierTags: [], examples: [] };
+    return { comment, ...base };
 }
 
 export function buildParamComment(
     tsdoc: DocComment | undefined,
     parameterName: string,
     resolveLink: LinkResolver
-): EngineComment | null {
+): ParamComment {
     return commentFromParamBlock(tsdoc?.params.tryGetBlockByName(parameterName), resolveLink);
 }
 
@@ -173,7 +200,7 @@ export function buildTypeParamComment(
     typeParameterName: string,
     resolveLink: LinkResolver
 ): EngineComment | null {
-    return commentFromParamBlock(tsdoc?.typeParams.tryGetBlockByName(typeParameterName), resolveLink);
+    return commentFromParamBlock(tsdoc?.typeParams.tryGetBlockByName(typeParameterName), resolveLink).comment;
 }
 
 export function buildReturnsComment(

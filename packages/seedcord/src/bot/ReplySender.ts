@@ -23,7 +23,7 @@ export class ReplySender {
      * a failed send is logged and dropped and resolves to `undefined`.
      *
      * @param response - The ComponentsV2 reply to show.
-     * @param ephemeral - Whether the reply is ephemeral. Defaults to `true`.
+     * @param ephemeral - Whether the reply is ephemeral. {@default `true`}
      * @returns The sent {@link Message}, or `undefined` when the send was swallowed.
      */
     public async send(response: ReplyResponse, ephemeral = true): Promise<Message | undefined> {

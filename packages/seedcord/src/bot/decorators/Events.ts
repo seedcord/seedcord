@@ -13,7 +13,11 @@ export const EventMetadataKey = Symbol('event:metadata');
 
 /** Options accepted by the event registration decorator. */
 export interface RegisterEventOptions {
-    /** Frequency: 'once' or 'on'. Defaults to 'on'. */
+    /**
+     * Frequency: 'once' or 'on'.
+     *
+     * @defaultValue `'on'`
+     */
     readonly frequency?: EventFrequency | undefined;
 }
 
