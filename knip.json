@@ -1,8 +1,13 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
+    "ignoreBinaries": ["seedcord", "continue"],
+    "ignoreWorkspaces": ["mock"],
+    "rules": {
+        "optionalPeerDependencies": "off"
+    },
     "workspaces": {
         ".": {
-            "entry": ["scripts/extract-docs.ts", "scripts/**/*.ts"],
+            "entry": ["scripts/**/*.ts"],
             "project": ["scripts/**/*.ts"]
         },
         "packages/seedcord": {},
@@ -13,21 +18,20 @@
         "packages/errors": {},
         "packages/kit": {},
         "packages/cli": {
-            "entry": ["bin/seedcord.mjs"]
+            "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
         },
-        "packages/docs-engine": {
-            "entry": ["src/smoke.ts"]
+        "packages/docs-engine": {},
+        "packages/docs-generator": {
+            "ignore": ["tests/mock/**"]
         },
-        "packages/docs-generator": {},
-        "packages/eslint-config": {},
+        "packages/eslint-config": {
+            "ignoreDependencies": ["@typescript-eslint/eslint-plugin", "@typescript-eslint/parser"]
+        },
         "packages/tsdown-config": {},
         "packages/tsconfig": {},
         "apps/docs": {
             "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx}"]
-        },
-        "mock": {
-            "entry": ["src/index.ts"]
         }
     }
 }
