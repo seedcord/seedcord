@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Pool, type PoolConfig } from 'pg';
 
-import type { Logger } from 'seedcord';
+import type { Logger } from '@seedcord/services';
 
 /**
  * Ensures the target Postgres database exists, creating it if missing.

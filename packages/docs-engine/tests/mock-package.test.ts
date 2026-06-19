@@ -195,6 +195,17 @@ describe('DocsEngine mock package integration', () => {
         expect(asyncSignature.returnsComment?.text).toContain('promise resolving');
     });
 
+    it('extracts a {@default} param tag into the parameter defaultValue and strips it from the comment', async () => {
+        const fn = await getNodeBySlug('mock-function-with-rest');
+        const signature = fn.signatures[0];
+        if (!signature) {
+            throw new Error('Expected mockFunctionWithRest signature');
+        }
+        const optional = signature.parameters.find((p) => p.name === 'optional');
+        expect(optional?.defaultValue).toBe("'fallback'");
+        expect(optional?.comment?.summary).toBe('The optional parameter.');
+    });
+
     it('gives each overload its own type parameters', async () => {
         // mockFunction has a generic overload `<TypeT>(param: TypeT)` and concrete `string`/`number`
         // overloads that declare no type parameters; each signature must carry only its own.
@@ -220,6 +231,20 @@ describe('DocsEngine mock package integration', () => {
             (sig) => sig.comment?.blockTags.filter((tag) => tag.tag === '@see') ?? []
         );
         expect(signatureSee.length).toBeGreaterThan(0);
+    });
+
+    it('resolves a bare same-package {@link} in @see to a target reference at extraction time', async () => {
+        // a bare {@link MockEnum} only resolves when the adapter passes the owning ApiItem as context;
+        // without it the link carries no target and the see-also renderer falls back to plain text
+        const mockClass = await getNodeBySlug('mock-class');
+        const enumLink = (mockClass.comment?.blockTags ?? [])
+            .filter((tag) => tag.tag === '@see')
+            .flatMap((tag) => tag.content)
+            .find((part) => part.kind === 'inline-tag' && part.tag === '@link' && part.text === 'MockEnum');
+        expect(enumLink).toBeDefined();
+        const target = enumLink?.kind === 'inline-tag' ? enumLink.target : undefined;
+        const targetKey = typeof target === 'object' ? target.targetKey : undefined;
+        expect(targetKey).toContain('MockEnum');
     });
 
     it('maps type aliases and enum members correctly', async () => {

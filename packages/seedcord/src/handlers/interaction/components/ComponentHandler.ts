@@ -1,15 +1,12 @@
 import 'reflect-metadata';
 
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { decodeFor, ComponentDefsKey } from '@seedcord/kit/internal';
 
-import { decodeFor } from '@customId/CustomId';
-import { ComponentDefsKey } from '@customId/routing';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
-import type { AnyCustomId } from '@customId/CustomId';
-import type { DecodedParams } from '@customId/Field';
-import type { HasComponentDefs } from '@customId/routing';
+import type { AnyCustomId, DecodedParams, HasComponentDefs } from '@seedcord/kit/internal';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
@@ -25,12 +22,16 @@ type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
     [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => Promisable<Ret>;
 };
 
-// decode once per instance, cached here. a module WeakMap, not an instance field, because
-// BaseHandler.populate() runs inside super() before a subclass field would initialize under
-// useDefineForClassFields.
-const decodeCache = new WeakMap<object, { prefix: string; params: Record<string, unknown> }>();
-
-/** @internal */
+/**
+ * Shared base the customId-routed component handlers extend.
+ *
+ * Not a public entry point. You should be using {@link ButtonHandler}, {@link SelectHandler}, or
+ * {@link ModalHandler} instead. This class only carries the customId decode and route-matching plumbing
+ * those bases share, so DO NOT use it directly.
+ *
+ * @typeParam Event - The component interaction type this handler processes
+ * @typeParam Defs - The customId route definitions registered on the concrete handler
+ */
 export abstract class ComponentHandler<Event extends ComponentInteraction, Defs extends readonly AnyCustomId[]>
     extends InteractionHandler<Event>
     implements HasComponentDefs<Defs>
@@ -46,15 +47,16 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         return defs;
     }
 
+    private decoded?: { prefix: string; params: Record<string, unknown> };
+
     private get route(): { prefix: string; params: Record<string, unknown> } {
-        const cached = decodeCache.get(this);
-        if (cached) return cached;
+        if (this.decoded) return this.decoded;
         // justified, decodeFor returns runtime values and the generic Defs fixes their decoded types.
         const decoded = decodeFor(this.registeredDefs, this.event.customId) as {
             prefix: string;
             params: Record<string, unknown>;
         };
-        decodeCache.set(this, decoded);
+        this.decoded = decoded;
         return decoded;
     }
 
@@ -63,7 +65,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      *
      * Reading this decodes `this.event.customId` once (cached after the first read) and throws
      * `StaleCustomId` or `InvalidCustomId` when the wire no longer matches the current shape, which the
-     * Catchable decorator turns into a reply. On a handler registered for several routes this is
+     * controller boundary turns into a reply. On a handler registered for several routes this is
      * `never`, so use {@link match} instead.
      */
     protected get params(): SingleParams<Defs> {
@@ -71,14 +73,29 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     }
 
     /**
-     * Run the arm for whichever route the component was minted from.
+     * Run the arm for whichever route the component was minted from. Use this only when the handler is
+     * registered for several routes. A single-route handler reads `this.params` directly. On a multi-route
+     * handler `this.params` is `never`, so match is the only way to read the decoded params.
      *
-     * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's
-     * decoded params. A missing arm is a compile error. Decoding runs before any arm, so a stale or
-     * corrupt wire throws before an arm body executes.
+     * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
+     * decoded params. The arms must cover every registered def, a missing prefix or an unknown key is a
+     * compile error. Decoding runs before any arm, so a stale or corrupt wire throws before an arm body executes.
      *
      * @param arms - One handler per registered route, keyed by prefix.
      * @returns The result of the arm that ran.
+     *
+     * @example
+     * ```ts
+     * \@ButtonRoute(Approve, Reject)
+     * class ReviewButtons extends ButtonHandler<[typeof Approve, typeof Reject]> {
+     *     async execute() {
+     *         await this.match({
+     *             approve: ({ userId }) => this.event.reply(`approved <@${userId}>`),
+     *             reject: ({ userId }) => this.event.reply(`rejected <@${userId}>`)
+     *         });
+     *     }
+     * }
+     * ```
      */
     protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.route;

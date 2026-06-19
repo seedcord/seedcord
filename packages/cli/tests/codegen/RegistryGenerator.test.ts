@@ -1,4 +1,4 @@
-import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 

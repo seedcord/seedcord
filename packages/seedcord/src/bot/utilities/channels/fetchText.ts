@@ -1,17 +1,16 @@
 import { DiscordAPIError, RESTJSONErrorCodes, TextChannel } from 'discord.js';
 
-import { CouldNotFindChannel } from '@bot/defaults/errors/Channels';
+import { CouldNotFindChannel } from '@bot/notices';
 
 import type { Nullable } from '@seedcord/types';
 import type { Channel, Client, TextChannelResolvable } from 'discord.js';
 
 /**
- * Fetches and validates a text channel.
+ * Fetches and validates a text channel. Refuses when the channel doesn't exist or isn't a text channel.
  *
  * @param client - The Discord client instance
  * @param channelId - Channel ID or TextChannel instance
  * @returns Promise resolving to the text channel
- * @throws A {@link CouldNotFindChannel} When the channel doesn't exist or isn't text-based
  */
 export async function fetchText(client: Client, channelId: TextChannelResolvable): Promise<TextChannel> {
     if (channelId instanceof TextChannel) {

@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable } from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils';
 import { ApplicationCommandType } from 'discord-api-types/v10';

@@ -24,7 +24,7 @@ export function canonicalKey(ref: CanonicalReferenceLike): CanonicalKey {
 }
 
 /** Package the referenced symbol belongs to, or undefined for TS-lib / global (`!Foo`). */
-export function packageNameOf(ref: CanonicalReferenceLike): string | undefined {
+function packageNameOf(ref: CanonicalReferenceLike): string | undefined {
     const key = ref.toString();
     const bang = key.indexOf('!');
     if (bang > 0) return key.slice(0, bang);
@@ -36,7 +36,7 @@ export function packageNameOf(ref: CanonicalReferenceLike): string | undefined {
 }
 
 /** Dotted/hashed symbol path with the `~`-not-exported marker stripped, e.g. `Logger.configure`. */
-export function qualifiedNameOf(ref: CanonicalReferenceLike): string | undefined {
+function qualifiedNameOf(ref: CanonicalReferenceLike): string | undefined {
     const key = ref.toString();
     const bang = key.indexOf('!');
     const afterPackage = bang >= 0 ? key.slice(bang + 1) : key;

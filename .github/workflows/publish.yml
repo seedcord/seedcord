@@ -125,7 +125,7 @@ jobs:
                   R2_BUCKET: ${{ vars.R2_BUCKET }}
 
             - name: Purge CDN cache
-              run: pnpm docs:purge
+              run: pnpm docs:purge --prefixes docs.seedcord.org
               env:
                   CLOUDFLARE_CACHE_PURGE_TOKEN: ${{ secrets.CLOUDFLARE_CACHE_PURGE_TOKEN }}
                   CLOUDFLARE_ZONE_ID: ${{ vars.CLOUDFLARE_ZONE_ID }}

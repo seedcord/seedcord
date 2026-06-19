@@ -1,6 +1,6 @@
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
-import { RoleDoesNotExist } from '@bot/defaults/errors/Roles';
+import { RoleDoesNotExist } from '@bot/notices';
 
 import type { Nullable } from '@seedcord/types';
 import type { Client, Role } from 'discord.js';
@@ -45,12 +45,11 @@ async function scanGuildsForRole(client: Client, roleId: string): Promise<Nullab
 }
 
 /**
- * Fetches a role by ID from a client or guild.
+ * Fetches a role by ID from a client or guild. Refuses when the role doesn't exist.
  *
  * @param clientOrGuild - Discord client or guild instance
  * @param roleId - The role ID to fetch
  * @returns Promise resolving to the role
- * @throws A {@link RoleDoesNotExist} When the role doesn't exist
  */
 export async function fetchRole(clientOrGuild: Client | Guild, roleId: string): Promise<Role> {
     if (!roleId) {

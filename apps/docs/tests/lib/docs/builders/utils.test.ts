@@ -128,6 +128,30 @@ describe('selectDescription', () => {
 
         expect(result).toEqual({ description: null, signatureIndex: null });
     });
+
+    it('promotes nothing when two or more overloads each document themselves', () => {
+        const signatureComments = [
+            makeFormattedComment([makeParagraph('unbounded form')]),
+            makeFormattedComment([makeParagraph('bounded form')])
+        ];
+
+        const result = selectDescription(signatureComments, makeFormattedComment([]));
+
+        // each overload keeps its own description in its panel, so neither is pinned to the static header
+        expect(result).toEqual({ description: null, signatureIndex: null });
+    });
+
+    it('uses the shared node-level lead for the header when two or more overloads document themselves', () => {
+        const nodeLead = makeParagraph('shared lead');
+        const signatureComments = [
+            makeFormattedComment([makeParagraph('overload one')]),
+            makeFormattedComment([makeParagraph('overload two')])
+        ];
+
+        const result = selectDescription(signatureComments, makeFormattedComment([nodeLead]));
+
+        expect(result).toEqual({ description: nodeLead, signatureIndex: null });
+    });
 });
 
 describe('stripDuplicateDescription', () => {

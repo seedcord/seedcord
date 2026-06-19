@@ -13,7 +13,3 @@ export async function pathExists(filePath: string): Promise<boolean> {
 export function normalizeRelativePath(segment: string): string {
     return segment.replace(/^[.][/\\]+/, '').replace(/\\/g, '/');
 }
-
-export function stripAnsi(input: string): string {
-    return input.replace(/\u001B\[[0-9;]*m/g, '');
-}

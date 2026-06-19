@@ -9,7 +9,7 @@ import type { Linter } from 'eslint';
  * markdown *prose* via remark-lint, which overlaps with markdownlint and needs a separate
  * remark config to do anything. Prose linting stays out of scope here.
  *
- * @param files - File globs the block applies to (typically `['**\/*.mdx']`).
+ * @param files - File globs the block applies to (typically every `.mdx` file).
  */
 export function mdxBlock(files: string[]): Linter.Config {
     const { languageOptions, plugins } = mdx.flat;

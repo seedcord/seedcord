@@ -1,18 +1,13 @@
-import {
-    HealthCheck,
-    CoordinatedShutdown,
-    CoordinatedStartup,
-    SeedcordErrorCode,
-    StartupPhase
-} from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { setBotColor } from '@seedcord/kit/internal';
+import { RateLimiter, HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
-import { setBotColor } from './miscellaneous/botColorHolder';
 import { Bus } from './subscribers/Bus';
 
 import type { Core } from './interfaces/Core';
@@ -45,6 +40,9 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link Bot} */
     public readonly bot: Bot;
 
+    /** @see {@link RateLimiter} */
+    public readonly rateLimiter: RateLimiter;
+
     /** @see {@link HealthCheck} */
     private readonly healthCheck: HealthCheck;
 
@@ -55,7 +53,7 @@ export class Seedcord extends Pluggable implements Core {
      * Creates a new Seedcord instance
      *
      * @param config - Bot configuration including paths and Discord client options
-     * @throws A {@link SeedcordError} When attempting to create multiple instances (singleton)
+     * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
      */
     constructor(public readonly config: Config) {
         if (Seedcord.isInstantiated) {
@@ -78,6 +76,7 @@ export class Seedcord extends Pluggable implements Core {
         this.hmrManager.init();
         this.bus = new Bus(this);
         this.bot = new Bot(this);
+        this.rateLimiter = new RateLimiter();
         this.healthCheck = new HealthCheck(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();
@@ -87,7 +86,7 @@ export class Seedcord extends Pluggable implements Core {
      * Resets the singleton state.
      * @internal
      */
-    // @ts-expect-error: Used only for testing purposes
+    // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
         Seedcord.isInstantiated = false;
     }
@@ -97,7 +96,7 @@ export class Seedcord extends Pluggable implements Core {
      * @internal
      */
     private registerStartupTasks(): void {
-        if (Envapter.isDevelopment) this.registerHmrAwareModules();
+        if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
             this.bus.logger.utils.initialization('Subscribers', 'start');

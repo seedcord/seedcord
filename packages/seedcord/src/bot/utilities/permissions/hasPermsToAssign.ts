@@ -1,26 +1,22 @@
 import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
 
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/defaults/errors/Roles';
+import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/notices';
 
 import { checkBotPermissions } from './checkBotPermissions';
 import { getBotRole } from '../roles/getBotRole';
 
-import type { CustomError } from '@interfaces/Components';
+import type { Notice } from '@seedcord/kit';
 
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.
  */
 export interface AssignRoleErrorCtors {
     /** Custom error for role higher than bot */
-    higher?: new (message: string, role: Role, botRole: Role) => CustomError;
+    higher?: new (message: string, role: Role, botRole: Role) => Notice;
     /** Custom error for managed role assignment */
-    managed?: new (message: string) => CustomError;
+    managed?: new (message: string) => Notice;
     /** Custom error for missing Manage Roles permission */
-    missing?: new (
-        message: string,
-        where: Role | TextChannel | Guild | GuildMember,
-        missingPerms: string[]
-    ) => CustomError;
+    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Notice;
 }
 
 /**
@@ -34,12 +30,9 @@ export interface HasPermsToAssignOptions {
 }
 
 /**
- * Validates if the bot can assign a target role. Checks for role hierarchy, managed status, and Manage Roles permission.
+ * Validates if the bot can assign a target role. Refuses when the target role is above the bot's, is managed, or the bot lacks Manage Roles.
  *
  * @param roleOrOptions - Target role or complete options for the check
- * @throws A {@link RoleHigherThanMe} When the target role is higher than the bot role
- * @throws A {@link CannotAssignBotRole} When the target role is managed
- * @throws A {@link MissingPermissions} When the bot lacks Manage Roles permission
  *
  * @example
  * ```ts

@@ -22,13 +22,8 @@ export interface CommandAction {
     href: string;
     kind: SearchResultKind;
     description?: string;
+    value?: string;
     isExternal?: boolean;
-}
-
-export interface SearchGroup {
-    label: string;
-    current: boolean;
-    results: CommandAction[];
 }
 
 export interface DocsPackageOption {

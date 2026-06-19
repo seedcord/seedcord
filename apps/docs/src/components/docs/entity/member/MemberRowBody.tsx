@@ -59,12 +59,18 @@ export function MemberRowBody({ member, parentDeprecationStatus }: MemberRowBody
                     )}
                 </p>
             ) : null}
+            {member.defaultValue?.length ? (
+                <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
+                    <span className={cn('font-semibold text-(--text)')}>Default:</span>
+                    <span dangerouslySetInnerHTML={{ __html: member.defaultValue[0]?.html ?? '' }} />
+                </p>
+            ) : null}
             {member.throws?.length ? (
                 <div>
                     <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
                         <span className={cn('font-semibold text-(--text)')}>Throws:</span>
                     </p>
-                    <CommentParagraphs paragraphs={member.throws} />
+                    <CommentParagraphs paragraphs={member.throws} isList />
                 </div>
             ) : null}
             <SeeAlso entries={member.seeAlso} />

@@ -1,7 +1,7 @@
 {
     "name": "seedcord",
     "type": "module",
-    "version": "0.12.0",
+    "version": "0.13.0",
     "description": "A Discord bot framework built on top of Discord.js",
     "repository": {
         "type": "git",
@@ -18,16 +18,6 @@
             "require": {
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
-            }
-        },
-        "./internal": {
-            "import": {
-                "types": "./dist/internal.index.d.mts",
-                "default": "./dist/internal.index.mjs"
-            },
-            "require": {
-                "types": "./dist/internal.index.d.cts",
-                "default": "./dist/internal.index.cjs"
             }
         }
     },
@@ -55,9 +45,11 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/errors": "workspace:*",
+        "@seedcord/kit": "workspace:*",
+        "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
-        "@seedcord/services": "workspace:*",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps"
     },

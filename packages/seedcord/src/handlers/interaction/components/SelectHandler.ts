@@ -1,7 +1,7 @@
 import { ComponentHandler } from './ComponentHandler';
 
-import type { SelectMenuInteractionFor, SelectMenuType } from '@bDecorators/Interactions';
-import type { AnyCustomId } from '@customId/CustomId';
+import type { SelectMenuInteractionFor, SelectMenuKind } from '@bDecorators/Interactions';
+import type { AnyCustomId } from '@seedcord/kit/internal';
 import type { CacheType } from 'discord.js';
 
 /**
@@ -11,15 +11,14 @@ import type { CacheType } from 'discord.js';
  * so `this.event` and `this.event.values` are narrowed to that kind. Read `this.params` for a single
  * route or `this.match` for several.
  *
- * @typeParam Kind - The select kind from {@link SelectMenuType}, e.g. `SelectMenuType.User`.
+ * @typeParam Kind - The select kind from {@link SelectMenuKind}, e.g. `SelectMenuKind.User`.
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof AssignId]`.
  * @typeParam Cache - The interaction cache state, `'cached'` by default.
  *
  * @example
  * ```ts
- * \@SelectMenuRoute(SelectMenuType.User, AssignId)
- * class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof AssignId]> {
- *     \@Catchable()
+ * \@SelectMenuRoute(SelectMenuKind.User, AssignId)
+ * class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof AssignId]> {
  *     async execute() {
  *         const { roleId } = this.params;
  *         await this.event.reply(`assigning ${this.event.values.length} member(s) to <@&${roleId}>`);
@@ -28,7 +27,7 @@ import type { CacheType } from 'discord.js';
  * ```
  */
 export abstract class SelectHandler<
-    Kind extends SelectMenuType,
+    Kind extends SelectMenuKind,
     Defs extends readonly AnyCustomId[],
     Cache extends CacheType = 'cached'
 > extends ComponentHandler<SelectMenuInteractionFor<Kind, Cache>, Defs> {}

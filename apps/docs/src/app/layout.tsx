@@ -1,6 +1,7 @@
 import { TooltipProvider, cn } from '@seedcord/ui';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Script from 'next/script';
+import { preconnect } from 'react-dom';
 
 import './globals.css';
 
@@ -36,6 +37,9 @@ interface RootLayoutProps {
 }
 
 function RootLayout({ children }: RootLayoutProps): ReactNode {
+    // the R2-backed CDN serves the README banner (the page's LCP image), so connect to it early.
+    preconnect('https://cdn.seedcord.org');
+
     return (
         <html lang="en" suppressHydrationWarning>
             <body

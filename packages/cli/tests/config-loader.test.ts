@@ -1,6 +1,6 @@
 import { join, dirname, resolve } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { describe, it, expect, vi } from 'vitest';
 

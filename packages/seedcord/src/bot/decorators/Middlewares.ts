@@ -1,5 +1,7 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError, SeedcordTypeError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
+
+import { MiddlewareMetadataKey } from '@src/metadataKeys';
 
 import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventMiddleware } from '@handlers/event';
@@ -10,16 +12,9 @@ import type { Constructor } from 'type-fest';
  * Middleware types supported by Seedcord
  */
 export enum MiddlewareType {
-    Interaction = 'middleware:interaction',
-    Event = 'middleware:event'
+    Interaction = 'interaction',
+    Event = 'event'
 }
-
-/**
- * Metadata key for middleware configuration
- *
- * @internal
- */
-export const MiddlewareMetadataKey = Symbol('middleware:metadata');
 
 /**
  * Additional middleware registration options
@@ -63,7 +58,7 @@ export interface MiddlewareMetadata {
  * Interaction middleware cannot specify event filters.
  *
  * @param type - Middleware kind from {@link MiddlewareType}
- * @param priority - Ordering value where lower runs earlier. Default is 0
+ * @param priority - Ordering value where lower runs earlier. {@default `0`}
  * @param options - Additional registration options
  *
  * @decorator
@@ -73,8 +68,8 @@ export interface MiddlewareMetadata {
  * \@Middleware(MiddlewareType.Event, 10, { events: [Events.MessageCreate, Events.MessageUpdate] })
  * class MyEventMiddleware extends EventMiddleware {}
  * ```
- * @throws A {@link SeedcordTypeError} If priority is not a finite number
- * @throws A {@link SeedcordError} If interaction middleware specifies event filters
+ * @throws A **SeedcordTypeError** If priority is not a finite number
+ * @throws A **SeedcordError** If interaction middleware specifies event filters
  */
 export function Middleware<MType extends MiddlewareType, const Events extends readonly ValidNonInteractionKeys[] = []>(
     type: MType,

@@ -1,4 +1,5 @@
 import { formatCommentRich } from '@lib/docs/comments/formatter';
+import { renderInlineValue } from '@lib/docs/comments/renderers/renderInlineValue';
 import { formatParameter, inlineTypeText, type ParameterFormatInput } from '@lib/docs/formatting';
 
 import type { FunctionSignatureParameterModel, FormatContext } from '@lib/docs/types';
@@ -15,17 +16,18 @@ export async function buildFunctionParameters(
     const tasks = signature.parameters.map(async (param, index) => {
         const r = rendered?.parameters[index];
         const type = isInlineType(r?.type) ? r.type : undefined;
-        const defaultValue = r?.defaultValue ?? param.defaultValue;
+        // the {@default} value renders as a separate "Default:" row
+        const defaultValue = param.defaultValue;
         const optional = param.flags.isOptional;
 
         const paramInput: ParameterFormatInput = { name: param.name, optional };
         if (type) paramInput.type = type;
-        if (defaultValue !== undefined) paramInput.defaultValue = String(defaultValue);
 
-        const [formatted, display, typeStr] = await Promise.all([
+        const [formatted, display, typeStr, defaultParts] = await Promise.all([
             formatCommentRich(param.comment, context),
             formatParameter(paramInput, context),
-            type ? inlineTypeText(type, context) : Promise.resolve(undefined)
+            type ? inlineTypeText(type, context) : Promise.resolve(undefined),
+            defaultValue !== undefined ? renderInlineValue(defaultValue, context) : Promise.resolve(undefined)
         ]);
 
         const model: FunctionSignatureParameterModel = {
@@ -36,7 +38,7 @@ export async function buildFunctionParameters(
         };
 
         if (typeStr) model.type = typeStr;
-        if (defaultValue !== undefined) model.defaultValue = String(defaultValue);
+        if (defaultParts?.length) model.defaultValue = defaultParts;
 
         return model;
     });

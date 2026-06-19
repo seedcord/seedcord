@@ -1,5 +1,17 @@
 # @seedcord/eslint-config
 
+## 1.4.1
+
+### Patch Changes
+
+- 6e39348: tiny fix in tsdocs
+
+## 1.4.1-next.0
+
+### Patch Changes
+
+- 6e39348: tiny fix in tsdocs
+
 ## 1.4.0
 
 ### Minor Changes

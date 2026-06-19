@@ -1,5 +1,5 @@
 // every docs-owned localStorage key must start with this so clearDocsHistory finds it
-export const DOCS_STORAGE_PREFIX = 'docs.';
+const DOCS_STORAGE_PREFIX = 'docs.';
 
 export function clearDocsHistory(): void {
     try {

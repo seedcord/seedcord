@@ -1,6 +1,6 @@
 import { ComponentHandler } from './ComponentHandler';
 
-import type { AnyCustomId } from '@customId/CustomId';
+import type { AnyCustomId } from '@seedcord/kit/internal';
 import type { CacheType, ModalSubmitInteraction } from 'discord.js';
 
 /**
@@ -17,7 +17,6 @@ import type { CacheType, ModalSubmitInteraction } from 'discord.js';
  * ```ts
  * \@ModalRoute(ConfigId)
  * class ConfigModal extends ModalHandler<[typeof ConfigId]> {
- *     \@Catchable()
  *     async execute() {
  *         const { guildId } = this.params;
  *         const name = this.event.fields.getTextInputValue('name');

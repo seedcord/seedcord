@@ -11,8 +11,7 @@ export default mergeConfig(
     defineConfig({
         resolve: {
             alias: {
-                '@src': path.resolve(__dirname, './src'),
-                '@shared': path.resolve(__dirname, './src/shared')
+                '@src': path.resolve(__dirname, './src')
             }
         },
         test: {

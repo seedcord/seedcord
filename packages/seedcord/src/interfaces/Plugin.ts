@@ -1,5 +1,6 @@
-import { SeedcordErrorCode, StrictEventEmitter } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { StrictEventEmitter } from '@seedcord/services';
 
 import type { Core } from './Core';
 import type {
@@ -98,12 +99,10 @@ export type PluginCtor<TPlugin extends Plugin = Plugin> = new (core: Core, ...ar
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
 
 /**
- * Base class for objects that can have plugins attached
+ * Base class for objects that can have plugins attached.
  *
- * Provides plugin attachment capabilities and lifecycle management.
- * Plugins are attached during configuration and initialized during startup.
- *
- * @internal
+ * Provides plugin attachment capabilities and lifecycle management. Plugins are attached during
+ * configuration and initialized during startup. Not constructed directly, the host is a {@link Seedcord}.
  */
 export class Pluggable<
     TPluggableEvents extends SEEventMapLike<TPluggableEvents> = SENoEvents
@@ -121,6 +120,7 @@ export class Pluggable<
         this.startup = startup;
     }
 
+    /** @internal */
     protected async init(): Promise<this> {
         if (this.isInitialized) return this;
 
@@ -145,7 +145,7 @@ export class Pluggable<
      * @param startupPhase - When during startup to initialize this plugin ({@link StartupPhase})
      * @param args - Additional arguments to pass to the plugin constructor
      * @returns This instance with the plugin attached as a typed property
-     * @throws A {@link SeedcordError} When called after initialization or if key already exists
+     * @throws A **SeedcordError** When called after initialization or if key already exists
      * @example
      * ```typescript
      * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', name: 'seedcord', dir: ... })

@@ -1,3 +1,4 @@
+import { renderDefaultValue } from './renderers/renderDefaultValue';
 import { renderExamples } from './renderers/renderExamples';
 import { renderParagraphs } from './renderers/renderParagraphs';
 import { renderSeeAlso } from './renderers/renderSeeAlso';
@@ -14,17 +15,19 @@ export async function formatCommentRich(
         return { paragraphs: [], examples: [] } satisfies FormattedComment;
     }
 
-    const [paragraphs, examples, seeAlso, throws] = await Promise.all([
+    const [paragraphs, examples, seeAlso, throws, defaultValue] = await Promise.all([
         renderParagraphs(comment, context),
         renderExamples(comment),
         Promise.resolve(renderSeeAlso(comment, context)),
-        renderThrows(comment, context)
+        renderThrows(comment, context),
+        renderDefaultValue(comment, context)
     ]);
 
     return {
         paragraphs,
         examples,
         seeAlso: seeAlso ?? [],
-        throws: throws ?? []
+        throws: throws ?? [],
+        defaultValue: defaultValue ?? []
     } satisfies FormattedComment;
 }

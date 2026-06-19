@@ -3,11 +3,15 @@
  */
 export interface SeedcordBuildConfig {
     /**
-     * Directory where build artifacts should be emitted. Defaults to ./dist relative to the config directory.
+     * Directory where build artifacts should be emitted.
+     *
+     * @defaultValue `./dist` relative to the config directory
      */
     outDir?: string;
     /**
-     * Optional tsconfig path to use for builds. Defaults to the nearest tsconfig.build.json or tsconfig.json.
+     * Optional tsconfig path to use for builds.
+     *
+     * @defaultValue the nearest `tsconfig.build.json` or `tsconfig.json`
      */
     tsconfig?: string;
     /**
@@ -26,7 +30,9 @@ export interface SeedcordHmrConfig {
     restart?: string[];
 
     /**
-     * Optional tsconfig path to use for type checking in dev mode. Defaults to the nearest tsconfig.json.
+     * Optional tsconfig path to use for type checking in dev mode.
+     *
+     * @defaultValue the nearest `tsconfig.json`
      */
     tsconfig?: string;
 }
@@ -36,7 +42,9 @@ export interface SeedcordHmrConfig {
  */
 export interface SeedcordDevConfig {
     /**
-     * Root directory used for resolving relative paths. Defaults to the config directory.
+     * Root directory used for resolving relative paths.
+     *
+     * @defaultValue the config directory
      */
     root?: string;
     /**

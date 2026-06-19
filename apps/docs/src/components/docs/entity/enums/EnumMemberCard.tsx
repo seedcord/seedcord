@@ -91,9 +91,9 @@ export function EnumMemberCard({ member }: { member: EnumMemberModel }): ReactEl
     const deprecationStatus: DeprecationStatus | undefined = member.deprecationStatus;
 
     return (
-        <article id={anchorId} className={cn('group/name relative min-w-0')}>
+        <article id={anchorId} className={cn('group/name relative h-full min-w-0')}>
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <Card size="md" className={cn('group/name relative min-w-0 sm:p-5')}>
+                <Card size="md" className={cn('group/name relative h-full min-w-0 sm:p-5')}>
                     <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between')}>
                         <div className={cn('min-w-0 flex-1 space-y-3')}>
                             <div className={cn('group/name relative flex min-w-0 items-center')}>

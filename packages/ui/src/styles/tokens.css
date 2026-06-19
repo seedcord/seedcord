@@ -11,6 +11,8 @@
     --accent-b: #6fab49;
     /* resource accent */
     --accent-r: #8b90a7;
+    /* switch thumb, kept constant in both themes so it stays light on the gray off-track and green on-track */
+    --switch-thumb: #f8f6e8;
 
     --overlay: rgba(0, 0, 0, 0.6);
     --deprecated-dark: #cf3234;

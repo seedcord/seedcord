@@ -9,7 +9,6 @@ declare module 'seedcord' {
     interface SlashOptionRegistry {
         maintenance: { notify: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
         probe: { query: { kind: 'string'; required: true; autocomplete: true }; count: { kind: 'integer'; required: false; autocomplete: true }; ratio: { kind: 'number'; required: false; autocomplete: true }; category: { kind: 'string'; required: false; choices: ['books', 'films'] }; exact: { kind: 'boolean'; required: false } };
-        'test/confirmable/classic': {};
         'test/confirmable/v2': {};
         throw: {};
     }

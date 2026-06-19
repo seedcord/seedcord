@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/services",
     "type": "module",
-    "version": "0.7.1",
+    "version": "0.8.0",
     "description": "Services for Seedcord packages",
     "repository": {
         "type": "git",
@@ -19,16 +19,6 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
-        },
-        "./internal": {
-            "import": {
-                "types": "./dist/internal.index.d.mts",
-                "default": "./dist/internal.index.mjs"
-            },
-            "require": {
-                "types": "./dist/internal.index.d.cts",
-                "default": "./dist/internal.index.cjs"
-            }
         }
     },
     "files": [
@@ -45,16 +35,15 @@
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "tc": "tsc --noEmit",
-        "test": "pnpm run test:unit && pnpm run test:types",
-        "test:unit": "vitest run",
+        "test": "vitest run",
         "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage",
-        "test:types": "tsd --files \"tests/**/*.test-d.ts\""
+        "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/errors": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",

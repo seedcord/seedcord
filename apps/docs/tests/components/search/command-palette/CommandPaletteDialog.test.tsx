@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { MotionProvider } from '@components/providers/MotionProvider';
 import { CommandPaletteDialog } from '@components/search/command-palette/CommandPaletteDialog';
-import { COMMAND_LISTBOX_ID } from '@components/search/command-palette/constants';
+import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
 
-import type { CommandAction, SearchGroup } from '@components/search/command-palette/types';
+import type { CommandAction } from '@components/search/command-palette/types';
 import type { CommandPaletteController } from '@components/search/command-palette/useCommandPaletteController';
 import type { ReactElement } from 'react';
 
@@ -22,7 +22,6 @@ const RESULTS: CommandAction[] = [
 ];
 
 const optionId = (id: string): string => `command-option-${id}`;
-const groupOf = (results: CommandAction[]): SearchGroup[] => [{ label: 'seedcord', current: true, results }];
 
 function makeController(overrides: Partial<CommandPaletteController> = {}): CommandPaletteController {
     return {
@@ -31,12 +30,14 @@ function makeController(overrides: Partial<CommandPaletteController> = {}): Comm
         searchValue: 'alpha',
         scope: 'all',
         kind: 'all',
+        prerelease: false,
         packages: [],
         inputRef: { current: null },
         handleOpenChange: vi.fn(),
         handleValueChange: vi.fn(),
         handleScopeChange: vi.fn(),
         handleKindChange: vi.fn(),
+        handlePrereleaseChange: vi.fn(),
         handleClose: vi.fn(),
         handleSelect: vi.fn(),
         ...overrides
@@ -67,7 +68,7 @@ class StubResizeObserver {
 
 describe('CommandPaletteDialog', () => {
     beforeEach(() => {
-        searchHook.mockReturnValue({ groups: groupOf(RESULTS), status: 'success' });
+        searchHook.mockReturnValue({ results: RESULTS, status: 'success' });
         vi.stubGlobal('ResizeObserver', StubResizeObserver);
         window.HTMLElement.prototype.scrollIntoView = vi.fn();
         window.HTMLElement.prototype.scrollTo = vi.fn();
@@ -132,7 +133,7 @@ describe('CommandPaletteDialog', () => {
     });
 
     it('renders no options when the query is below the minimum length', () => {
-        renderDialog(makeController({ searchValue: 'ab' }));
+        renderDialog(makeController({ searchValue: 'a'.repeat(MIN_SEARCH_QUERY_LENGTH - 1) }));
         expect(screen.queryByRole('option')).toBeNull();
         expect(screen.queryByRole('listbox')).toBeNull();
     });
@@ -143,10 +144,10 @@ describe('CommandPaletteDialog', () => {
         expect(combobox()).toHaveAttribute('aria-activedescendant', optionId('b'));
 
         searchHook.mockReturnValue({
-            groups: groupOf([
+            results: [
                 { id: 'x', label: 'Xi', path: '/x', href: '/x', kind: 'page' },
                 { id: 'y', label: 'Psi', path: '/y', href: '/y', kind: 'class' }
-            ]),
+            ],
             status: 'success'
         });
         rerender(makeController());

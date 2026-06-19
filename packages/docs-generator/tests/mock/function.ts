@@ -53,7 +53,7 @@ export function mockFunction<TypeT>(param: TypeT): TypeT {
  * A function with rest parameters and optional parameters.
  *
  * @param required - The required parameter.
- * @param optional - The optional parameter.
+ * @param optional - The optional parameter. {@default 'fallback'}
  * @param rest - The rest parameters.
  * @returns The concatenated result.
  * @example

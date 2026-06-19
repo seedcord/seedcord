@@ -8,5 +8,7 @@ const readmeMarked = new Marked({ async: true, gfm: true });
 
 export async function renderReadme(markdown: string): Promise<string> {
     const html = await readmeMarked.parse(markdown);
-    return sanitizeHtml(html);
+    // the first README image is the hero banner and the page's LCP element, so fetch it at high priority.
+    const prioritized = html.replace(/<img\b/, '<img fetchpriority="high"');
+    return sanitizeHtml(prioritized);
 }

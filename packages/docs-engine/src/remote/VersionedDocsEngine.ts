@@ -16,6 +16,10 @@ import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEnt
 
 const defaultFetcher: Fetcher = (url) => globalThis.fetch(url);
 
+// shared across the per-request engines so the deserialize and token-index build runs once per
+// (folder, version) for the process, not per request. a built model is immutable, so sharing is safe.
+const sharedModelCache = new Map<string, DocPackageModel>();
+
 /**
  * Version-aware engine for the remote (R2) docs. Holds one loaded model per package, keyed by
  * full name; `setVersion(folder, selector)` fetches and swaps a single package's active version.
@@ -30,10 +34,12 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     private docSearch: DocSearch | null = null;
     private index: IndexJson | null = null;
     private resolverInstance: ReferenceResolver | null = null;
+    private dirty = false;
 
     constructor(
         private readonly indexLoader: IndexLoader = new IndexLoader(),
-        private readonly fetcher: Fetcher = defaultFetcher
+        private readonly fetcher: Fetcher = defaultFetcher,
+        private readonly modelCache: Map<string, DocPackageModel> = sharedModelCache
     ) {}
 
     async ready(force = false): Promise<IndexJson> {
@@ -64,11 +70,19 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
         }
 
         const url = this.indexLoader.buildProjectUrl(index, folder, resolved.version, resolved.channel);
-        const model = deserializeProject(await new ProjectLoader(url, this.fetcher).load());
+        const model = await this.loadModel(url);
 
         this.models.set(model.manifest.name, model);
         this.active.set(model.manifest.name, resolved.version);
-        this.rebuild();
+        this.dirty = true;
+    }
+
+    private async loadModel(url: string): Promise<DocPackageModel> {
+        const cached = this.modelCache.get(url);
+        if (cached) return cached;
+        const model = deserializeProject(await new ProjectLoader(url, this.fetcher).load());
+        this.modelCache.set(url, model);
+        return model;
     }
 
     activeVersion(packageName: string): string | null {
@@ -106,10 +120,12 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     }
 
     getNodeByKey(key: GlobalId): DocNode | null {
+        this.ensureBuilt();
         return this.byKey.get(key) ?? null;
     }
 
     search(query: string, packageName?: string): DocSearchEntry[] {
+        this.ensureBuilt();
         return this.docSearch ? this.docSearch.search(query, packageName) : [];
     }
 
@@ -137,6 +153,14 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
             if (entry.fullName === fullName) return entry;
         }
         return null;
+    }
+
+    // deferred so loading several packages then searching rebuilds once instead of once per setVersion,
+    // and a page render that only reads nodes by slug never builds the search index.
+    private ensureBuilt(): void {
+        if (!this.dirty) return;
+        this.rebuild();
+        this.dirty = false;
     }
 
     private rebuild(): void {

@@ -5,8 +5,8 @@ import { Client, ClientEvents, Interaction } from 'discord.js';
 import { Envapt } from 'envapt';
 
 import { CommandRegistry } from '@bControllers/CommandRegistry';
-import { EventController } from '@bControllers/EventController';
-import { InteractionController } from '@bControllers/InteractionController';
+import { EventDispatcher } from '@bControllers/EventDispatcher';
+import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
 import { Plugin } from '@interfaces/Plugin';
 import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 
@@ -19,9 +19,13 @@ import type { HmrUpdateEvent } from '@seedcord/types/internal';
  * Types of events emitted by the {@link Core.bot} instance.
  */
 export interface BotEvents {
+    /** Emitted when an unhandled interaction error occurs */
     'error:unhandled:interaction': [error: Error];
+    /** Emitted when an unhandled event error occurs */
     'error:unhandled:event': [error: Error];
+    /** Emitted for any event */
     'any:event': { [K in keyof ClientEvents]: [K, ...ClientEvents[K]] }[keyof ClientEvents];
+    /** Emitted for any interaction */
     'any:interaction': [interaction: Interaction];
 }
 
@@ -41,8 +45,8 @@ export class Bot extends Plugin<BotEvents> {
     private isInitialized = false;
 
     private readonly _client: Client;
-    private readonly interactions?: InteractionController;
-    private readonly events?: EventController;
+    private readonly interactions?: InteractionDispatcher;
+    private readonly events?: EventDispatcher;
     public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
     public readonly emojis: EmojiMap = Emojis;
@@ -61,10 +65,10 @@ export class Bot extends Plugin<BotEvents> {
         this._client = new Client(core.config.bot.clientOptions);
 
         if (core.config.bot.interactions.path) {
-            this.interactions = new InteractionController(core);
+            this.interactions = new InteractionDispatcher(core);
         }
         if (core.config.bot.events.path) {
-            this.events = new EventController(core);
+            this.events = new EventDispatcher(core);
         }
 
         if (core.config.bot.commands.path) {

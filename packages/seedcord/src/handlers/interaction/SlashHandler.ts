@@ -1,5 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
@@ -28,7 +28,6 @@ type SlashMatchArms<Route extends keyof SlashOptionRegistry, Cache extends Cache
  * ```ts
  * \@SlashRoute('ban')
  * class BanHandler extends SlashHandler<'ban'> {
- *     \@Catchable()
  *     async execute() {
  *         const target = this.options.getUser('target'); // User
  *         const reason = this.options.getString('reason'); // string | null
@@ -51,13 +50,28 @@ export abstract class SlashHandler<
     }
 
     /**
-     * Run the arm for whichever command fired, when this handler is registered for several routes.
+     * Run the arm for whichever command fired. Use this only when the handler is registered for several
+     * routes. A single-route handler reads `this.options` directly instead, match buys nothing there.
      *
-     * Provide one arm per route, keyed by its route string, and each arm receives that route's typed
-     * options. A missing arm is a compile error.
+     * Provide one arm per registered route, keyed by its route string, and each arm receives that route's
+     * own narrowed options. The arms must cover every route in the generic, a missing route or an unknown
+     * key is a compile error.
      *
      * @param arms - One handler per registered route, keyed by route string.
      * @returns The result of the arm that ran.
+     *
+     * @example
+     * ```ts
+     * \@SlashRoute('ban', 'kick')
+     * class ModHandler extends SlashHandler<'ban' | 'kick'> {
+     *     async execute() {
+     *         await this.match({
+     *             ban: (options) => this.event.guild?.members.ban(options.getUser('target', true).id),
+     *             kick: (options) => this.event.guild?.members.kick(options.getUser('member', true).id)
+     *         });
+     *     }
+     * }
+     * ```
      */
     protected async match<Ret>(arms: SlashMatchArms<Route, Cache, Ret>): Promise<Ret> {
         const route = slashRouteOf(this.event);

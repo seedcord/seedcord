@@ -75,6 +75,7 @@ function HeaderTop({
     tags,
     symbolName,
     summaryNodes,
+    overloadSelector,
     sourceUrl
 }: {
     toneStyles: EntityToneStyle;
@@ -85,6 +86,7 @@ function HeaderTop({
     tags: readonly string[];
     symbolName: string;
     summaryNodes: React.ReactNode;
+    overloadSelector: React.ReactNode;
     sourceUrl?: string | null | undefined;
 }): ReactElement {
     return (
@@ -102,6 +104,7 @@ function HeaderTop({
             <div className={cn('flex items-start gap-3 sm:gap-4')}>
                 <div className={cn('min-w-0 flex-1 space-y-2.5')}>
                     <h1 className={cn('text-2xl font-semibold text-(--text) sm:text-3xl lg:text-4xl')}>{symbolName}</h1>
+                    {overloadSelector}
                     <div className={cn('text-subtle space-y-2 text-sm/relaxed')}>{summaryNodes}</div>
                 </div>
                 {sourceUrl ? <SourceButton href={sourceUrl} /> : null}
@@ -112,24 +115,16 @@ function HeaderTop({
 
 function SignatureArea({
     active,
-    fn,
     signature,
     headerExamples
 }: {
     active?: FunctionSignatureModel | undefined;
-    fn: readonly FunctionSignatureModel[];
     signature: CodeRepresentation;
     headerExamples: readonly CommentExample[];
 }): ReactElement {
     return (
         <>
             <SignatureBlock signature={active ? active.code : signature} />
-
-            {fn.length ? (
-                <div className={cn('mt-3')}>
-                    <FunctionSignaturesInline signatures={fn} />
-                </div>
-            ) : null}
 
             {headerExamples.length ? (
                 <div className={cn('mt-3')}>
@@ -151,7 +146,7 @@ function ThrowsSection({
             <p className={cn('text-subtle flex flex-wrap items-baseline gap-2')}>
                 <span className={cn('font-semibold text-(--text)')}>Throws:</span>
             </p>
-            <CommentParagraphs paragraphs={headerThrows} />
+            <CommentParagraphs paragraphs={headerThrows} isList />
         </div>
     );
 }
@@ -159,17 +154,14 @@ function ThrowsSection({
 interface HeaderBodyProps {
     deprecationStatus: EntityHeaderProps['deprecationStatus'];
     active: FunctionSignatureModel | undefined;
-    fn: readonly FunctionSignatureModel[];
     signature: CodeRepresentation;
     headerExamples: readonly CommentExample[];
 }
 
-function HeaderBody({ deprecationStatus, active, fn, signature, headerExamples }: HeaderBodyProps): ReactElement {
+function HeaderBody({ deprecationStatus, active, signature, headerExamples }: HeaderBodyProps): ReactElement {
     const parentIsDeprecated = Boolean(deprecationStatus?.isDeprecated);
     const activeIsDeprecated = Boolean(active?.deprecationStatus?.isDeprecated);
-    const signatureArea = (
-        <SignatureArea active={active} fn={fn} signature={signature} headerExamples={headerExamples} />
-    );
+    const signatureArea = <SignatureArea active={active} signature={signature} headerExamples={headerExamples} />;
 
     if (parentIsDeprecated || !activeIsDeprecated) return signatureArea;
 
@@ -226,6 +218,7 @@ export function EntityHeader({
                         tags={tags}
                         symbolName={symbolName}
                         summaryNodes={summaryNodes}
+                        overloadSelector={fn.length > 1 ? <FunctionSignaturesInline signatures={fn} /> : null}
                         sourceUrl={sourceUrl}
                     />
                     <ThrowsSection headerThrows={headerThrows} />
@@ -233,7 +226,6 @@ export function EntityHeader({
                     <HeaderBody
                         deprecationStatus={deprecationStatus}
                         active={active}
-                        fn={fn}
                         signature={signature}
                         headerExamples={headerExamples}
                     />

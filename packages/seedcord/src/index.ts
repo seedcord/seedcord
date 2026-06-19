@@ -6,11 +6,21 @@ export type { BotEvents } from '@bot/Bot';
 // Bot decorators exports
 export * from '@bDecorators/index';
 
+// Bot gates exports
+export * from '@bot/gates';
+
 // Bot Injectors exports
 export * from '@bot/injectors/index';
 
 // Bot Utilities exports
 export * from '@bUtilities/index';
+
+// Reply delivery
+export { ReplySender } from '@bot/ReplySender';
+
+// Confirmation prompts
+export { getConfirmation } from '@bot/confirm';
+export type { ConfirmOptions, DefaultConfirmOptions } from '@bot/confirm';
 
 // Interfaces exports
 export * from '@interfaces/index';
@@ -20,9 +30,6 @@ export * from '@handlers/index';
 
 // Inputs exports
 export type * from '@inputs/index';
-
-// CustomId codec exports
-export * from '@customId/index';
 
 // Pub/Sub exports
 export * from '@subscribers/index';
@@ -34,6 +41,8 @@ export * from '@hmr/index';
 export * from './Seedcord';
 
 // Export other packages
+export * from '@seedcord/errors';
+export * from '@seedcord/kit';
 export * from '@seedcord/services';
 export type * from '@seedcord/types';
 export * from '@seedcord/utils';

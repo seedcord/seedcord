@@ -26,12 +26,8 @@ marked.use({
     }
 });
 
-export async function renderParagraphs(comment: DocComment, context: FormatContext): Promise<CommentParagraph[]> {
-    const parts = collectSummaryParts(comment);
-    if (!parts.length) {
-        return [];
-    }
-
+/** Assembles the markdown for a run of comment parts, resolving `{@link}` parts to a markdown link. */
+export function partsToMarkdown(parts: readonly CommentDisplayPart[], context: FormatContext): string {
     let markdown = '';
 
     for (const part of parts) {
@@ -61,6 +57,16 @@ export async function renderParagraphs(comment: DocComment, context: FormatConte
         }
     }
 
+    return markdown;
+}
+
+export async function renderParagraphs(comment: DocComment, context: FormatContext): Promise<CommentParagraph[]> {
+    const parts = collectSummaryParts(comment);
+    if (!parts.length) {
+        return [];
+    }
+
+    const markdown = partsToMarkdown(parts, context);
     const parsed = await marked.parse(markdown, { async: true });
     const html = sanitizeHtml(decorateProseLinks(parsed, context.manifestPackage));
 

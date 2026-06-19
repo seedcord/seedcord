@@ -18,33 +18,33 @@ describe('buildSourceIndex', () => {
         const [source] = scan().sources.MockClass ?? [];
         expect(source).toEqual({
             file: MOCK_CLASS,
-            line: 30,
+            line: 31,
             column: 14,
-            url: `https://github.com/seedcord/seedcord/blob/next/${MOCK_CLASS}#L30C14`
+            url: `https://github.com/seedcord/seedcord/blob/next/${MOCK_CLASS}#L31C14`
         });
     });
 
     it('records a position per member, not the parent location', () => {
         const [computed] = scan().sources['MockClass.computedProp'] ?? [];
         expect(computed?.file).toBe(MOCK_CLASS);
-        expect(computed?.line).toBe(116);
+        expect(computed?.line).toBe(117);
     });
 
     it('records the constructor under the `.constructor` key', () => {
         const [ctor] = scan().sources['MockClass.constructor'] ?? [];
         expect(ctor?.file).toBe(MOCK_CLASS);
-        expect(ctor?.line).toBe(59);
+        expect(ctor?.line).toBe(60);
     });
 
     it('records one entry per documented overload, excluding the implementation signature', () => {
         const overloads = scan().sources['MockClass.publicMethod'] ?? [];
-        expect(overloads.map((entry) => entry.line)).toEqual([71, 76]);
+        expect(overloads.map((entry) => entry.line)).toEqual([72, 77]);
     });
 
     it('omits the URL when no GitHub base is supplied but keeps line and column', () => {
         const [source] = scan('').sources.MockClass ?? [];
         expect(source?.url).toBeUndefined();
-        expect(source?.line).toBe(30);
+        expect(source?.line).toBe(31);
     });
 
     it('reports no re-exports for a standalone package', () => {

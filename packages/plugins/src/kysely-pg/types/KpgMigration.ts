@@ -1,7 +1,7 @@
 import type { KpgMigrationsOptions } from './KpgOptions';
+import type { Logger } from '@seedcord/services';
 import type { Kysely } from 'kysely';
 import type { Migration, NoMigrations } from 'kysely/migration';
-import type { Logger } from 'seedcord';
 
 /**
  * Type representing a migration function (either `up` or `down`).
@@ -30,9 +30,17 @@ export type MigrationTarget = string | NoMigrations;
  * database connection is established.
  */
 export interface MigrationOptions {
-    /** Optional target migration to reach. Defaults to latest if omitted. */
+    /**
+     * Optional target migration to reach.
+     *
+     * @defaultValue the latest migration
+     */
     readonly target?: MigrationTarget;
-    /** Direction to move along the migration timeline. Defaults to `latest`. */
+    /**
+     * Direction to move along the migration timeline.
+     *
+     * @defaultValue `'latest'`
+     */
     readonly direction?: 'latest' | 'up' | 'down';
     /** Number of steps to apply when direction is `up` or `down`. */
     readonly steps?: number;

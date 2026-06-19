@@ -1,9 +1,10 @@
 import { prettify } from '@seedcord/utils';
 import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 
-import { HasDangerousPermissions, MissingPermissions } from '@bot/defaults/errors/Roles';
+import { HasDangerousPermissions, MissingPermissions } from '@bot/notices';
 
-import type { CustomError } from '@interfaces/Components';
+import type { PermSubject } from '@bot/notices/utils';
+import type { Notice } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
 import type { PermissionsBitField, TextChannel } from 'discord.js';
 
@@ -25,17 +26,9 @@ export type BotPermissionScope = readonly bigint[];
  */
 export interface PermissionErrorCtors {
     /* Error thrown when required permissions are missing */
-    missing?: new (
-        message: string,
-        where: Role | TextChannel | Guild | GuildMember,
-        missingPerms: string[]
-    ) => CustomError;
+    missing?: new (message: string, where: PermSubject, missingPerms: string[]) => Notice;
     /* Error thrown when dangerous permissions are present */
-    dangerous?: new (
-        message: string,
-        target: Role | TextChannel | Guild | GuildMember,
-        dangerousPerms: string[]
-    ) => CustomError;
+    dangerous?: new (message: string, target: PermSubject, dangerousPerms: string[]) => Notice;
 }
 
 /**
@@ -55,13 +48,15 @@ export interface CheckPermissionOptions extends PermissionErrorCtors {
 }
 
 /**
- * Checks permissions for a {@link Role} or a {@link GuildMember} in a {@link Guild}.
+ * Checks permissions for a {@link Role} or a {@link GuildMember} in a {@link Guild}. Refuses when a
+ * permission in `scope` is missing, or with `inverse` when one is present.
  *
  * @param target - Role or member to check
  * @param ctx - Guild context
  * @param scope - Permission bits to validate
  * @param inverse - Whether to ensure absence of the given permissions
  * @param errors - Optional custom error constructors
+ *
  *
  * @example
  * ```ts
@@ -98,13 +93,15 @@ export function checkPermissions(
 ): void;
 
 /**
- * Checks permissions for a {@link Role} or a {@link GuildMember} in a {@link TextChannel}.
+ * Checks permissions for a {@link Role} or a {@link GuildMember} in a {@link TextChannel}. Refuses when a
+ * permission in `scope` is missing, or with `inverse` when one is present.
  *
  * @param target - Role or member to check
  * @param ctx - Channel context
  * @param scope - Permission bits to validate
  * @param inverse - Whether to ensure absence of the given permissions
  * @param errors - Optional custom error constructors
+ *
  *
  * @example
  * ```ts
@@ -142,9 +139,11 @@ export function checkPermissions(
 ): void;
 
 /**
- * Checks permissions using an options object.
+ * Checks permissions using an options object. Refuses when a permission in {@link CheckPermissionOptions.scope} is missing,
+ * or with `options.inverse` when one is present.
  *
  * @param options - Complete options for the check
+ *
  *
  * @example
  * ```ts
@@ -226,6 +225,7 @@ export function checkPermissions(
 
     const missingBits = scope.filter((bit) => !perms.has(bit, true));
     if (missingBits.length > 0) {
-        throw new Missing('Missing Any/All/No Permissions', pIn, names(missingBits));
+        // name the entity that lacks the permission, matching the inverse branch, not the guild it was checked in
+        throw new Missing('Missing Any/All/No Permissions', pFor, names(missingBits));
     }
 }

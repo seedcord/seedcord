@@ -2,7 +2,7 @@ import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { SeedcordErrorCode } from '@seedcord/services';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, ContextMenuCommandBuilder, SlashCommandBuilder } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';

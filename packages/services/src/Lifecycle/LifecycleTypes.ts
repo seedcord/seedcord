@@ -9,7 +9,7 @@ type LifecycleAction = 'start' | 'complete' | 'error';
  * @typeParam Prefix - The prefix string for lifecycle events
  * @typeParam Phases - Array of phase numbers to generate events for
  */
-export type PhaseEvents<Prefix extends string, Phases extends number[]> =
+type PhaseEvents<Prefix extends string, Phases extends number[]> =
     | `phase:${IntClosedRange<1, Phases['length']>}:${TypedExclude<LifecycleAction, 'error'>}`
     | `${Prefix}:${LifecycleAction}`;
 

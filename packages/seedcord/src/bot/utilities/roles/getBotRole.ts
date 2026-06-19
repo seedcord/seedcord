@@ -1,5 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/services';
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { Guild, Role } from 'discord.js';
 
@@ -8,7 +8,7 @@ import type { Guild, Role } from 'discord.js';
  *
  * @param guild - The guild to get the bot role from
  * @returns The bot's managed role in the guild
- * @throws A {@link SeedcordError} if the client user is unavailable or if the bot role is missing
+ * @throws A **SeedcordError** if the client user is unavailable or if the bot role is missing
  */
 export function getBotRole(guild: Guild): Role {
     const botRole = guild.roles.botRoleFor(guild.client.user);

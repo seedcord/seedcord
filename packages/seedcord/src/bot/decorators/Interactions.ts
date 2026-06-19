@@ -1,16 +1,16 @@
+import { ComponentDefsKey } from '@seedcord/kit/internal';
 import { ApplicationCommandType } from 'discord.js';
 
-import { ComponentDefsKey } from '@customId/routing';
 import { areRoutes } from '@miscellaneous/areRoutes';
+import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
 
-import type { AnyCustomId } from '@customId/CustomId';
-import type { HasComponentDefs } from '@customId/routing';
 import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
 import type { HandlerConstructor } from '@handlers/constructors';
 import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { SlashHandler } from '@handlers/interaction/SlashHandler';
+import type { HasComponentDefs, AnyCustomId } from '@seedcord/kit/internal';
 import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/types';
 import type {
     AutocompleteInteraction,
@@ -25,34 +25,16 @@ import type {
 } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
-/** @internal */
-export enum InteractionRoutes {
-    Slash = 'interaction:slash',
-    Button = 'interaction:button',
-    Modal = 'interaction:modal',
-    StringMenu = 'interaction:stringMenu',
-    UserMenu = 'interaction:userMenu',
-    RoleMenu = 'interaction:roleMenu',
-    ChannelMenu = 'interaction:channelMenu',
-    MentionableMenu = 'interaction:mentionableMenu',
-    MessageContextMenu = 'interaction:messageContextMenu',
-    UserContextMenu = 'interaction:userContextMenu',
-    Autocomplete = 'interaction:autocomplete'
-}
-
 /**
  * Types of select menus supported for routing
  */
-export enum SelectMenuType {
+export enum SelectMenuKind {
     String = 'string',
     User = 'user',
     Role = 'role',
     Channel = 'channel',
     Mentionable = 'mentionable'
 }
-
-/** @internal */
-export const InteractionMetadataKey = Symbol('interaction:metadata');
 
 /** @internal */
 type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
@@ -133,7 +115,7 @@ export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...rou
  * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
  * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
  * matches the stable prefix, so a wire minted from an older shape still reaches the handler, where
- * reading this.params throws StaleCustomId and the Catchable decorator turns it into a reply.
+ * reading this.params throws StaleCustomId and the controller boundary turns it into a reply.
  *
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
@@ -302,17 +284,17 @@ export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>
 
 /** @internal */
 export type SelectMenuInteractionFor<
-    SelectMenu extends SelectMenuType,
+    SelectMenu extends SelectMenuKind,
     Cache extends CacheType = CacheType
-> = SelectMenu extends SelectMenuType.String
+> = SelectMenu extends SelectMenuKind.String
     ? StringSelectMenuInteraction<Cache>
-    : SelectMenu extends SelectMenuType.User
+    : SelectMenu extends SelectMenuKind.User
       ? UserSelectMenuInteraction<Cache>
-      : SelectMenu extends SelectMenuType.Role
+      : SelectMenu extends SelectMenuKind.Role
         ? RoleSelectMenuInteraction<Cache>
-        : SelectMenu extends SelectMenuType.Channel
+        : SelectMenu extends SelectMenuKind.Channel
           ? ChannelSelectMenuInteraction<Cache>
-          : SelectMenu extends SelectMenuType.Mentionable
+          : SelectMenu extends SelectMenuKind.Mentionable
             ? MentionableSelectMenuInteraction<Cache>
             : never;
 
@@ -323,19 +305,19 @@ export type SelectMenuInteractionFor<
  * generic must list the same definitions, and its second generic argument must be the matching select
  * interaction type, or it is a compile error.
  *
- * @param type - Select menu kind from {@link SelectMenuType}.
+ * @param type - Select menu kind from {@link SelectMenuKind}.
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator
  *
  * @example
  * ```typescript
- * \@SelectMenuRoute(SelectMenuType.User, AssignId)
- * class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof AssignId]> {
+ * \@SelectMenuRoute(SelectMenuKind.User, AssignId)
+ * class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof AssignId]> {
  *   // handles user select menus minted from AssignId
  * }
  * ```
  */
-export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs extends readonly AnyCustomId[]>(
+export function SelectMenuRoute<SelectMenu extends SelectMenuKind, const Defs extends readonly AnyCustomId[]>(
     type: SelectMenu,
     ...defs: Defs
 ) {
@@ -343,11 +325,11 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs ex
         constructor: AssertHandles<SelectMenuInteractionFor<SelectMenu>, TCtor>
     ): void {
         const routeMap = {
-            [SelectMenuType.String]: InteractionRoutes.StringMenu,
-            [SelectMenuType.User]: InteractionRoutes.UserMenu,
-            [SelectMenuType.Role]: InteractionRoutes.RoleMenu,
-            [SelectMenuType.Channel]: InteractionRoutes.ChannelMenu,
-            [SelectMenuType.Mentionable]: InteractionRoutes.MentionableMenu
+            [SelectMenuKind.String]: InteractionRoutes.StringMenu,
+            [SelectMenuKind.User]: InteractionRoutes.UserMenu,
+            [SelectMenuKind.Role]: InteractionRoutes.RoleMenu,
+            [SelectMenuKind.Channel]: InteractionRoutes.ChannelMenu,
+            [SelectMenuKind.Mentionable]: InteractionRoutes.MentionableMenu
         };
 
         // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
@@ -358,12 +340,12 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuType, const Defs ex
 // store each definition's stable prefix as a routing key for the controller, and the full defs array on
 // the constructor so the handler base can decode against them.
 function storeComponentRoute(
-    symbol: InteractionRoutes,
+    route: InteractionRoutes,
     defs: readonly AnyCustomId[],
     constructor: HandlerConstructor
 ): void {
     storeMetadata(
-        symbol,
+        route,
         defs.map((def) => def.prefix),
         constructor
     );
@@ -371,14 +353,15 @@ function storeComponentRoute(
 }
 
 function storeMetadata(
-    symbol: InteractionRoutes,
+    route: InteractionRoutes,
     routes: string | string[],
     constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler<keyof SlashOptionRegistry, CacheType>>
 ): void {
-    const savedRoutes: unknown = Reflect.getMetadata(symbol, constructor);
+    const key = InteractionRouteKeys[route];
+    const savedRoutes: unknown = Reflect.getMetadata(key, constructor);
     const existing: string[] = areRoutes(savedRoutes) ? savedRoutes : [];
 
     const toStore = Array.isArray(routes) ? routes : [routes];
-    Reflect.defineMetadata(symbol, [...existing, ...toStore], constructor);
+    Reflect.defineMetadata(key, [...existing, ...toStore], constructor);
     Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }

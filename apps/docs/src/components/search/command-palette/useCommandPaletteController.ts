@@ -45,18 +45,42 @@ function usePackageList(open: boolean): DocsPackageOption[] {
     return packages;
 }
 
+interface SearchFilters {
+    scope: string;
+    kind: string;
+    prerelease: boolean;
+    handleScopeChange: (scope: string) => void;
+    handleKindChange: (kind: string) => void;
+    handlePrereleaseChange: (prerelease: boolean) => void;
+    resetFilters: () => void;
+}
+
+function useSearchFilters(): SearchFilters {
+    const [filters, setFilters] = useState({ scope: 'all', kind: 'all', prerelease: false });
+    const handleScopeChange = useCallback((scope: string) => setFilters((prev) => ({ ...prev, scope })), []);
+    const handleKindChange = useCallback((kind: string) => setFilters((prev) => ({ ...prev, kind })), []);
+    const handlePrereleaseChange = useCallback(
+        (prerelease: boolean) => setFilters((prev) => ({ ...prev, prerelease })),
+        []
+    );
+    const resetFilters = useCallback(() => setFilters({ scope: 'all', kind: 'all', prerelease: false }), []);
+    return { ...filters, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters };
+}
+
 export interface CommandPaletteController {
     open: boolean;
     mounted: boolean;
     searchValue: string;
     scope: string;
     kind: string;
+    prerelease: boolean;
     packages: DocsPackageOption[];
     inputRef: RefObject<HTMLInputElement | null>;
     handleOpenChange: (open: boolean) => void;
     handleValueChange: (value: string) => void;
     handleScopeChange: (scope: string) => void;
     handleKindChange: (kind: string) => void;
+    handlePrereleaseChange: (prerelease: boolean) => void;
     handleClose: () => void;
     handleSelect: (action: CommandAction) => void;
 }
@@ -72,7 +96,8 @@ export function useCommandPaletteController(): CommandPaletteController {
     const pathname = usePathname();
     const inputRef = useRef<HTMLInputElement>(null);
     const [searchValue, setSearchValue] = useState('');
-    const [filters, setFilters] = useState<{ scope: string; kind: string }>({ scope: 'all', kind: 'all' });
+    const { scope, kind, prerelease, handleScopeChange, handleKindChange, handlePrereleaseChange, resetFilters } =
+        useSearchFilters();
     const [mounted] = useState(() => typeof window !== 'undefined');
     const packages = usePackageList(open);
 
@@ -82,7 +107,7 @@ export function useCommandPaletteController(): CommandPaletteController {
         if (open) {
             // justified: animation-coupled, input lives behind a Radix <Dialog> mount and only receives focus after the surface paints in.
             const focusTimeout = window.setTimeout(() => {
-                inputRef.current?.focus();
+                inputRef.current?.select();
             }, FOCUS_DELAY_MS);
             log('Command palette opened', { fromPath: pathname });
             return () => {
@@ -98,15 +123,12 @@ export function useCommandPaletteController(): CommandPaletteController {
         (next: boolean): void => {
             if (next) {
                 setSearchValue('');
-                setFilters({ scope: 'all', kind: 'all' });
+                resetFilters();
             }
             setCommandPaletteOpen(next);
         },
-        [setCommandPaletteOpen]
+        [setCommandPaletteOpen, resetFilters]
     );
-
-    const handleScopeChange = useCallback((scope: string) => setFilters((prev) => ({ ...prev, scope })), []);
-    const handleKindChange = useCallback((kind: string) => setFilters((prev) => ({ ...prev, kind })), []);
 
     const handleClose = useCallback(() => setCommandPaletteOpen(false), [setCommandPaletteOpen]);
 
@@ -135,14 +157,16 @@ export function useCommandPaletteController(): CommandPaletteController {
         open,
         mounted,
         searchValue,
-        scope: filters.scope,
-        kind: filters.kind,
+        scope,
+        kind,
+        prerelease,
         packages,
         inputRef,
         handleOpenChange,
         handleValueChange: setSearchValue,
         handleScopeChange,
         handleKindChange,
+        handlePrereleaseChange,
         handleClose,
         handleSelect
     };

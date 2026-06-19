@@ -1,5 +1,37 @@
 # @seedcord/cli
 
+## 0.2.1
+
+### Patch Changes
+
+- 6e39348: Depend on `@seedcord/errors` directly for the CLI's own throws, and correct the config-schema default-value tsdoc tags.
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [180b5a9]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+    - @seedcord/services@0.8.0
+    - @seedcord/types@0.6.0
+    - @seedcord/errors@0.1.0
+    - @seedcord/utils@0.6.0
+
+## 0.2.1-next.0
+
+### Patch Changes
+
+- 6e39348: Depend on `@seedcord/errors` directly for the CLI's own throws, and correct the config-schema default-value tsdoc tags.
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [180b5a9]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+- Updated dependencies [6e39348]
+    - @seedcord/services@0.8.0-next.0
+    - @seedcord/types@0.6.0-next.0
+    - @seedcord/errors@0.1.0-next.0
+    - @seedcord/utils@0.6.0-next.0
+
 ## 0.2.0
 
 ### Minor Changes

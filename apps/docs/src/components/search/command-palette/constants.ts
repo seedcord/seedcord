@@ -18,7 +18,7 @@ import type { SearchResultKind } from './types';
 import type { LucideIcon } from 'lucide-react';
 
 export const FOCUS_DELAY_MS = 10;
-export const MIN_SEARCH_QUERY_LENGTH = 3;
+export const MIN_SEARCH_QUERY_LENGTH = 2;
 export const SEARCH_DEBOUNCE_MS = 380;
 export const COMMAND_LISTBOX_ID = 'command-listbox';
 

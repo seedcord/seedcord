@@ -45,7 +45,6 @@ type TargetMemberFor<Kind extends ContextMenuKind, Cache extends CacheType> = Ki
  * ```ts
  * \@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
  * class ReportMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
- *     \@Catchable()
  *     async execute() {
  *         const message = this.target;
  *     }

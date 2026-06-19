@@ -1,18 +1,13 @@
 import 'reflect-metadata';
 
-import { SeedcordError } from '@seedcord/services/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { Logger, ShutdownPhase } from '@seedcord/services';
+import { keepDefined, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
-import {
-    HmrModuleHandler,
-    keepDefined,
-    Logger,
-    Plugin,
-    SeedcordErrorCode,
-    ShutdownPhase,
-    traverseDirectory
-} from 'seedcord';
+import { HmrModuleHandler, Plugin } from 'seedcord';
 
 import { ModelMetadataKey } from './decorators/RegisterMongoModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';
@@ -47,7 +42,7 @@ export class Mongo extends Plugin {
     /**
      * Map of all loaded services. Keys come from `@RegisterMongoService('key')`.
      *
-     * @throws A {@link SeedcordError} if accessed before the plugin finishes initializing (e.g. from
+     * @throws A **SeedcordError** if accessed before the plugin finishes initializing (e.g. from
      * a plugin that starts in an earlier phase).
      */
     public get services(): MongoServices {
