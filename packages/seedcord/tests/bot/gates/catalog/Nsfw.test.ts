@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-import { Nsfw, NotNsfw } from '@bot/gates/catalog';
+import { Nsfw } from '@bot/gates/catalog';
+import { NotNsfw } from '@bot/notices';
 
 import type { InteractionGateContext, NonModalInteraction } from '@bot/gates';
 

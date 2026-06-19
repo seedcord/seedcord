@@ -9,8 +9,7 @@ import { Collection, Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { runHandlerGates } from '@bDecorators/Gated';
-import { InteractionMetadataKey, InteractionRoutes } from '@bDecorators/Interactions';
-import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { MiddlewareType } from '@bDecorators/Middlewares';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
 import { UnhandledEvent } from '@bot/defaults';
 import { interactionGateContext } from '@bot/gates/runGates';
@@ -20,6 +19,12 @@ import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interactio
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
+import {
+    InteractionMetadataKey,
+    InteractionRouteKeys,
+    InteractionRoutes,
+    MiddlewareMetadataKey
+} from '@src/metadataKeys';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
@@ -183,7 +188,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private getArtifacts(handlerClass: HandlerConstructor): InteractionArtifact[] {
         const artifacts: InteractionArtifact[] = [];
         for (const [routeType] of this.routeTypes) {
-            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[routeType], handlerClass);
             if (areRoutes(meta)) artifacts.push({ routeType, routes: meta });
         }
         return artifacts;
@@ -293,7 +298,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
         for (const [routeType, map] of this.routeTypes) {
-            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[routeType], handlerClass);
             if (!areRoutes(meta)) continue;
 
             const routes = meta;
@@ -320,7 +325,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
 
         for (const [routeType, map] of this.routeTypes) {
-            const meta: unknown = Reflect.getMetadata(routeType, handlerClass);
+            const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[routeType], handlerClass);
             if (!areRoutes(meta)) continue;
 
             const routes = meta;

@@ -1,9 +1,8 @@
 import { Guild, GuildMember, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { MissingRole, NotInGuild, RequireBotPermissions, RequirePermissions, RequireRole } from '@bot/gates/catalog';
-// reach MissingPermissions through the public barrel, so a refusal a bot author catches from `seedcord` stays matchable
-import { MissingPermissions } from '@src/index';
+import { RequireBotPermissions, RequirePermissions, RequireRole } from '@bot/gates/catalog';
+import { MissingPermissions, MissingRole, NotInGuild } from '@bot/notices';
 
 import type { InteractionGateContext, NonModalInteraction } from '@bot/gates';
 
@@ -115,7 +114,7 @@ describe('RequireRole', () => {
     it('rewords the refusal with the message override', async () => {
         const ctx = ctxOf(memberWith([], []), guildFake({ roles: { cache: new Map([['r1', { name: 'Mods' }]]) } }));
         let caught: unknown;
-        await RequireRole('r1', { message: 'Mods only.' })
+        await RequireRole('r1', { missingRole: { message: 'Mods only.' } })
             .check(ctx)
             .catch((error: unknown) => {
                 caught = error;

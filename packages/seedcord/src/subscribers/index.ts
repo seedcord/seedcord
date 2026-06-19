@@ -13,6 +13,5 @@ export type {
     SubscriptionData,
     SubscriptionKey,
     AllSubscriptions,
-    FaultSource,
-    InteractionFaultSource
+    FaultSource
 } from './types/Subscriptions';

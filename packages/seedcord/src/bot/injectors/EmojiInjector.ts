@@ -17,7 +17,7 @@ const emojiStorage: Record<string, SavedEmojiType> = {};
  *
  * @internal
  */
-export type EmojiConfigValue = string | readonly [string, string];
+type EmojiConfigValue = string | readonly [string, string];
 
 function isEmojiTuple(v: unknown): v is readonly [string, string] {
     return Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string';

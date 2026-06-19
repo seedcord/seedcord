@@ -1,37 +1,14 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
-import { parseDuration, toEpochSeconds, type ValidDuration } from '@seedcord/utils';
+import { parseDuration, type ValidDuration } from '@seedcord/utils';
+
+import { OnCooldown } from '@bot/notices';
 
 import { defineEffectGate } from '../Gate';
-import { GateNotice } from './GateNotice';
 
 import type { EffectGate, GateContextBase } from '../Gate';
 import type { Notice } from '@seedcord/kit';
 import type { EpochMs } from '@seedcord/types';
-
-/**
- * Refusal shown while a Cooldown is still cooling down. Carries the epoch ms the key frees up, which the default
- * message renders as a relative timestamp.
- *
- * @param expires - Epoch ms at which the key frees up, rendered as a relative timestamp by the default message.
- * @param message - Optional text that replaces the default refusal.
- *
- * @example
- * ```ts
- * // refuse from a custom check, freeing up one minute from now
- * defineGate('SlowDown', (ctx) => {
- *     if (tooFast(ctx.user)) throw new OnCooldown((Date.now() + 60_000) as EpochMs);
- * });
- * ```
- */
-export class OnCooldown extends GateNotice {
-    public constructor(
-        public readonly expires: EpochMs,
-        message?: string
-    ) {
-        super(message ?? `You are doing that too fast. Try again <t:${toEpochSeconds(expires)}:R>.`);
-    }
-}
 
 /**
  * Options for {@link Cooldown}. `per` sets the bucket the window applies to and `limit` the uses allowed per
@@ -89,16 +66,16 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 
 /**
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, a string is
- * a duration like `30m` or `24h`. An unparseable string throws a {@link SeedcordTypeError} at construction. The
+ * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction. The
  * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
- * Each call gets its own bucket, so two handlers never share a window. Refuses with {@link OnCooldown}.
+ * Each call gets its own bucket, so two handlers never share a window. Reword the refusal with {@link CooldownOptions.message}
+ * or replace it with {@link CooldownOptions.notice}.
  *
- * @param duration - A number is seconds, a string is a duration like `30m` or `24h`. An unparseable string throws a {@link SeedcordTypeError}.
+ * @param duration - A number is seconds, a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
  *
  * @see {@link Gated}
  * @see {@link RateLimiter}
- * @see {@link OnCooldown}
  *
  * @example
  * ```ts

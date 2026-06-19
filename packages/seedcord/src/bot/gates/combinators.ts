@@ -1,35 +1,12 @@
 import { Notice } from '@seedcord/kit';
-import { NoticeCard } from '@seedcord/kit/internal';
+
+import { NeedsAny, NotAllowed } from '@bot/notices';
 
 import { markCommits, rollbackCommits, runCheck } from './effects';
 import { defineGate } from './Gate';
 
 import type { Gate, GateContextBase, RequiredOf } from './Gate';
 import type { IntersectRequired, JoinNames, TwoOrMore } from './matching';
-import type { ReplyResponse } from '@seedcord/types';
-
-class NotAllowed extends Notice {
-    public constructor() {
-        super('not allowed');
-    }
-
-    public render(): ReplyResponse {
-        const card = new NoticeCard('You are not allowed to use this command.');
-        return { components: [card.component] };
-    }
-}
-
-class NeedsAny extends Notice {
-    public constructor(private readonly summaries: readonly string[]) {
-        super('not allowed');
-    }
-
-    public render(): ReplyResponse {
-        const bullets = this.summaries.map((summary) => `• ${summary}`).join('\n');
-        const card = new NoticeCard(`You need any of:\n${bullets}`);
-        return { components: [card.component] };
-    }
-}
 
 /**
  * Runs each gate in order and refuses on the first refusal. Takes two or more arms. The required
@@ -79,8 +56,8 @@ function isOrOptions(arg: Gate<GateContextBase> | OrOptions): arg is OrOptions {
  * Runs each gate in order and passes on the first arm that passes. Takes two or more arms. The
  * required context is the union of the arms, so a handler that matches any one arm fits. When every
  * arm refuses it throws the trailing {@link OrOptions} `fail` if given, else an auto list of the
- * arms derived from the summary field, else {@link NotAllowed}.
- * The trailing options object does not count as an arm.
+ * arms derived from the summary field, else a default refusal. The trailing options object does not
+ * count as an arm.
  *
  * @typeParam Gates - The tuple of two or more gate arms, tried left to right.
  * @param gates - The gate arms to try in order, with an optional trailing {@link OrOptions} object.

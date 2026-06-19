@@ -12,10 +12,10 @@ function actorCtx(isBot: boolean): EventGateContext {
 
 describe('IgnoreBots', () => {
     it('passes for a human actor', async () => {
-        await expect(IgnoreBots().check(actorCtx(false))).resolves.toBeUndefined();
+        await expect(IgnoreBots.check(actorCtx(false))).resolves.toBeUndefined();
     });
 
     it('drops a bot actor with a Silence', async () => {
-        await expect(IgnoreBots().check(actorCtx(true))).rejects.toBeInstanceOf(Silence);
+        await expect(IgnoreBots.check(actorCtx(true))).rejects.toBeInstanceOf(Silence);
     });
 });

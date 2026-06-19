@@ -74,7 +74,7 @@ export type WithThrows<IsRequired = false> = IsRequired extends true
     ? Record<'throws', readonly CommentParagraph[]>
     : Partial<Record<'throws', readonly CommentParagraph[] | undefined>>;
 
-export type WithDefaultValue<IsRequired = false> = IsRequired extends true
+type WithDefaultValue<IsRequired = false> = IsRequired extends true
     ? Record<'defaultValue', readonly CommentParagraph[]>
     : Partial<Record<'defaultValue', readonly CommentParagraph[] | undefined>>;
 

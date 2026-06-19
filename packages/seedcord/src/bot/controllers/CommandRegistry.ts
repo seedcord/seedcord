@@ -9,10 +9,10 @@ import chalk from 'chalk';
 import { Collection, SlashCommandBuilder } from 'discord.js';
 import { Envapter } from 'envapt';
 
-import { CommandMetadataKey } from '@bDecorators/Command';
 import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
+import { CommandMetadataKey } from '@src/metadataKeys';
 
 import type { CommandMeta } from '@bDecorators/Command';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';

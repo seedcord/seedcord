@@ -1,26 +1,9 @@
-import { Notice } from '@seedcord/kit';
-import { NoticeCard } from '@seedcord/kit/internal';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 
-import type { Nullable, ReplyResponse } from '@seedcord/types';
+import { RoleDoesNotExist } from '@bot/notices';
+
+import type { Nullable } from '@seedcord/types';
 import type { Client, Role } from 'discord.js';
-
-/**
- * Error thrown when a requested role does not exist.
- */
-class RoleDoesNotExist extends Notice {
-    constructor(
-        message: string,
-        public roleId: string
-    ) {
-        super(message);
-    }
-
-    render(): ReplyResponse {
-        const card = new NoticeCard(`The role with ID \`${this.roleId}\` does not exist.`);
-        return { components: [card.component] };
-    }
-}
 
 function isUnknownRole(err: unknown): boolean {
     return err instanceof DiscordAPIError && err.code === RESTJSONErrorCodes.UnknownRole;
@@ -62,12 +45,11 @@ async function scanGuildsForRole(client: Client, roleId: string): Promise<Nullab
 }
 
 /**
- * Fetches a role by ID from a client or guild.
+ * Fetches a role by ID from a client or guild. Refuses when the role doesn't exist.
  *
  * @param clientOrGuild - Discord client or guild instance
  * @param roleId - The role ID to fetch
  * @returns Promise resolving to the role
- * @throws A {@link RoleDoesNotExist} When the role doesn't exist
  */
 export async function fetchRole(clientOrGuild: Client | Guild, roleId: string): Promise<Role> {
     if (!roleId) {

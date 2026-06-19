@@ -7,7 +7,7 @@ export {
     ContextMenuRoute,
     ModalRoute,
     SelectMenuRoute,
-    SelectMenuType,
+    SelectMenuKind,
     SlashRoute
 } from './Interactions';
 export { Middleware, MiddlewareType, type MiddlewareOptions } from './Middlewares';

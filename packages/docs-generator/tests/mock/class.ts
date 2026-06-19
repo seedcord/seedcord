@@ -26,6 +26,7 @@ export class BaseClass {
  * @see {@link MockEnum} for related enum.
  * @see {@link MockInterface} for interface examples.
  * @see {@link MockType} for type definitions.
+ * @see {@link ReexportedForeign} for a symbol re-exported from another package.
  */
 export class MockClass<TypeT, TypeU extends number> extends BaseClass {
     /**

@@ -6,7 +6,7 @@ import type {
 } from '@lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
-export type SidebarVariant = 'desktop' | 'mobile';
+type SidebarVariant = 'desktop' | 'mobile';
 
 export interface SidebarProps {
     catalog: readonly PackageCatalogEntry[];

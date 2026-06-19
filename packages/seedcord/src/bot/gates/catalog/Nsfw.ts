@@ -1,28 +1,10 @@
+import { NotNsfw } from '@bot/notices';
+
 import { defineGate } from '../Gate';
-import { GateNotice } from './GateNotice';
 import { pickNotice } from './options';
 
 import type { GateNoticeOptions } from './options';
 import type { Gate, InteractionGateContext, NonModalInteraction } from '../Gate';
-
-/**
- * Refusal shown when a command marked NSFW runs in a channel that is not age-restricted.
- *
- * @example
- * ```ts
- * // refuse from a custom check with a reworded message
- * defineGate('AdultOnly', (ctx: InteractionGateContext<NonModalInteraction>) => {
- *     if (!isAgeRestricted(ctx.interaction.channel)) throw new NotNsfw('Adults only here.');
- * });
- * ```
- *
- * @param message - The text rendered in the refusal embed, defaulting to the age-restricted notice.
- */
-export class NotNsfw extends GateNotice {
-    public constructor(message = 'This can only be used in an age-restricted channel.') {
-        super(message);
-    }
-}
 
 // a thread carries no nsfw flag of its own, so it inherits the parent channel's
 function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']): boolean {
@@ -32,9 +14,13 @@ function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']
 }
 
 /**
- * Requires an age-restricted channel, else refuses with {@link NotNsfw}. A thread inherits its parent channel's
- * nsfw flag. ModalSubmit has no reliable channel, so it is excluded. Pass {@link GateNoticeOptions} to reword or
- * replace the refusal.
+ * Requires an age-restricted channel, else refuses. Pass {@link GateNoticeOptions} to reword or replace the refusal.
+ *
+ * A thread inherits its parent channel's nsfw flag. ModalSubmit has no reliable channel, so it is excluded.
+ *
+ * @param options - Reword the default refusal with `message`, or replace it with `notice`.
+ *
+ * @see {@link Gated}
  *
  * @example
  * ```ts
@@ -46,10 +32,6 @@ function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']
  *     }
  * }
  * ```
- *
- * @param options - Reword or replace the refusal. Omit to throw the default {@link NotNsfw}.
- *
- * @see {@link Gated}
  */
 export function Nsfw(options?: GateNoticeOptions): Gate<InteractionGateContext<NonModalInteraction>, 'Nsfw'> {
     return defineGate('Nsfw', (ctx: InteractionGateContext<NonModalInteraction>) => {

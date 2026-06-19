@@ -3,14 +3,15 @@ import { ApplicationCommandType } from 'discord.js';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
-import { Gated, GatedMetadataKey } from '@bDecorators/Gated';
-import { ButtonRoute, ContextMenuRoute, ModalRoute, SelectMenuRoute, SelectMenuType } from '@bDecorators/Interactions';
+import { Gated } from '@bDecorators/Gated';
+import { ButtonRoute, ContextMenuRoute, ModalRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';
 import { and, defineGate, or } from '@bot/gates';
 import { EventHandler } from '@handlers/event';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { ButtonHandler, ModalHandler, SelectHandler } from '@handlers/interaction/components';
 import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { GatedMetadataKey } from '@src/metadataKeys';
 
 import type { EventGateContext, InteractionGateContext } from '@bot/gates';
 import type {
@@ -387,8 +388,8 @@ describe('@Gated kind coverage', () => {
 
     it('accepts a user-select gate on a user-select handler', () => {
         @Gated(UserSelectGate)
-        @SelectMenuRoute(SelectMenuType.User, SelectProbeId)
-        class Handler extends SelectHandler<SelectMenuType.User, [typeof SelectProbeId]> {
+        @SelectMenuRoute(SelectMenuKind.User, SelectProbeId)
+        class Handler extends SelectHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -450,8 +451,8 @@ describe('@Gated kind coverage', () => {
     it('rejects a user-select gate on a string-select handler', () => {
         // @ts-expect-error the two select kinds do not interchange
         @Gated(UserSelectGate)
-        @SelectMenuRoute(SelectMenuType.String, SelectProbeId)
-        class Handler extends SelectHandler<SelectMenuType.String, [typeof SelectProbeId]> {
+        @SelectMenuRoute(SelectMenuKind.String, SelectProbeId)
+        class Handler extends SelectHandler<SelectMenuKind.String, [typeof SelectProbeId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }

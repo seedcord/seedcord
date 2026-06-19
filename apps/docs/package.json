@@ -45,7 +45,6 @@
         "@seedcord/tsconfig": "workspace:*",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",
-        "@testing-library/user-event": "catalog:test",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "@vitest/coverage-v8": "catalog:test",

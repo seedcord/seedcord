@@ -6,14 +6,14 @@ import chalk from 'chalk';
 import { Collection, type ClientEvents } from 'discord.js';
 import { Envapter } from 'envapt';
 
-import { EventMetadataKey } from '@bDecorators/Events';
 import { runHandlerGates } from '@bDecorators/Gated';
-import { MiddlewareMetadataKey, MiddlewareType } from '@bDecorators/Middlewares';
+import { MiddlewareType } from '@bDecorators/Middlewares';
 import { eventGateContext } from '@bot/gates/runGates';
 import { handleEventFault } from '@bot/handleEventFault';
 import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
+import { EventMetadataKey, MiddlewareMetadataKey } from '@src/metadataKeys';
 
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';

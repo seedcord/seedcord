@@ -10,6 +10,15 @@
 - name: pkg:plugins
   color: 02796b
   description: Changes related to plugins
+- name: pkg:errors
+  color: e74c3c
+  description: Changes related to the errors package
+- name: pkg:kit
+  color: 16a085
+  description: Changes related to the kit package
+- name: pkg:ui
+  color: f39c12
+  description: Changes related to the UI package
 - name: pkg:types
   color: ffeaa7
   description: Changes related to shared types
@@ -22,16 +31,16 @@
 - name: pkg:tsconfig
   color: 196699
   description: Changes related to TSConfig package
-- name: pkg:tsup-config
+- name: pkg:tsdown-config
   color: 196699
-  description: Changes related to TSUP config package
+  description: Changes related to tsdown config package
 - name: pkg:cli
   color: 4a90e2
   description: Changes related to the Seedcord CLI package
 - name: pkg:docs-generator
   color: 85c1e9
   description: Changes related to API docs tooling
-- name: pkg:doc-engine
+- name: pkg:docs-engine
   color: 9b59b6
   description: Changes related to the documentation engine package
 - name: area:docs

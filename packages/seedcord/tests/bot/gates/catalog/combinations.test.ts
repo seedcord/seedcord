@@ -1,8 +1,9 @@
 import { Notice } from '@seedcord/kit';
 import { describe, it, expect, vi } from 'vitest';
 
-import { and, Cooldown, GuildOnly, NotInGuild, NotOwner, or, OwnerOnly } from '@bot/gates';
+import { and, Cooldown, GuildOnly, or, OwnerOnly } from '@bot/gates';
 import { runGates } from '@bot/gates/runGates';
+import { NotInGuild, NotOwner } from '@bot/notices';
 
 import type { GateContext, GateContextBase } from '@bot/gates';
 import type { Core } from '@interfaces/Core';
