@@ -8,8 +8,6 @@ import type { Notice } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
 import type { PermissionsBitField, TextChannel } from 'discord.js';
 
-export type { PermSubject };
-
 /**
  * Map of permission bits to their prettified human readable names.
  */

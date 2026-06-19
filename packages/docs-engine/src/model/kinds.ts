@@ -26,7 +26,7 @@ export const DocKind = {
     Reference: 4194304
 } as const;
 
-export const KIND_LABEL: Readonly<Record<number, string>> = {
+const KIND_LABEL: Readonly<Record<number, string>> = {
     1: 'kind_project',
     2: 'kind_module',
     4: 'kind_namespace',

@@ -10,4 +10,3 @@ export const HTML_ESCAPE_MAP: Record<string, string> = {
 };
 export const FENCE_PREFIX_LENGTH = 3;
 export const FENCE_SUFFIX = '\n```';
-export const SPACE = ' ';

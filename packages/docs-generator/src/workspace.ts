@@ -8,7 +8,7 @@ import type { ApiDocsPaths } from './paths';
 import type { PackageManifest } from './types';
 
 // Fallback entry when package.json has no seedcordDocs.entryPoints override.
-export const DEFAULT_ENTRY_POINTS = ['src/index.ts'];
+const DEFAULT_ENTRY_POINTS = ['src/index.ts'];
 
 export async function discoverWorkspacePackages(paths: ApiDocsPaths = defaultPaths): Promise<string[]> {
     const entries = await readdir(paths.packagesDir, { withFileTypes: true });

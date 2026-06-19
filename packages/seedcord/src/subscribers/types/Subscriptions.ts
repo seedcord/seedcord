@@ -4,8 +4,7 @@ import type { UUID } from 'crypto';
 import type { Guild, User } from 'discord.js';
 
 /**
- * Where a reported fault came from. A union over `kind`. Add a new source as a new arm, never widen an
- * existing one, or you break consumers narrowing on `kind`.
+ * Where a reported fault came from. A union over `kind`.
  */
 export type FaultSource = InteractionFaultSource | EventFaultSource;
 
@@ -53,7 +52,7 @@ export interface EventFaultSource {
 /**
  * Default subscribers that are always available in the framework.
  */
-export interface DefaultSubscriptions {
+interface DefaultSubscriptions {
     /** Triggered when an unhandled exception (a raw non-Notice throw) occurs */
     unknownException: {
         uuid: UUID;
@@ -64,11 +63,8 @@ export interface DefaultSubscriptions {
     };
     /** Triggered when a reported Notice (`report: true`) is caught */
     handledException: {
-        /** The live denial, typed so a subscriber reads subclass fields with no cast. */
         denial: Notice;
-        /** The same uuid the user-facing render shows. */
         uuid: UUID;
-        /** Where the fault came from, narrow on `source.kind`. */
         source: FaultSource;
     };
 }

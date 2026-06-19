@@ -8,11 +8,8 @@ import type { PermSubject } from './utils';
 import type { EpochMs, ReplyResponse } from '@seedcord/types';
 import type { Role } from 'discord.js';
 
-// Every framework-thrown refusal lives here, internal to the package (never re-exported by a barrel).
-// Gates and utilities import them and tests assert against them, but bot authors never see them.
-
-/** Base for the catalog gate refusals, rendered as the bot's standard notice card. */
-export abstract class GateNotice extends Notice {
+// base for the catalog gate refusals, rendered as the bot's standard notice card
+abstract class GateNotice extends Notice {
     public render(): ReplyResponse {
         return { components: [new NoticeCard(this.message).component] };
     }

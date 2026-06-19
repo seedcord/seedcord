@@ -30,7 +30,7 @@ export const faultThrottle = new FaultThrottle();
  *
  * @internal
  */
-export interface EventOrigin {
+interface EventOrigin {
     name: string;
     handler: string;
     args: unknown;

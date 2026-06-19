@@ -311,8 +311,8 @@ export type SelectMenuInteractionFor<
  *
  * @example
  * ```typescript
- * \@SelectMenuRoute(SelectMenuType.User, AssignId)
- * class AssignSelect extends SelectHandler<SelectMenuType.User, [typeof AssignId]> {
+ * \@SelectMenuRoute(SelectMenuKind.User, AssignId)
+ * class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof AssignId]> {
  *   // handles user select menus minted from AssignId
  * }
  * ```

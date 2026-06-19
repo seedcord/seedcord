@@ -6,45 +6,25 @@ import { CommandMetadataKey } from '@src/metadataKeys';
 import type { BuilderComponent } from '@seedcord/kit';
 import type { Constructor } from 'type-fest';
 
-/**
- * Constructor type for command classes.
- *
- * @internal
- */
-export type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;
+/** @internal */
+type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;
 
-/**
- * Metadata for global command registration.
- *
- * @internal
- */
-export interface GlobalMeta {
+/** @internal */
+interface GlobalMeta {
     scope: 'global';
 }
 
-/**
- * Metadata for guild-specific command registration.
- *
- * @internal
- */
-export interface GuildMeta {
+/** @internal */
+interface GuildMeta {
     scope: 'guild';
     guilds: string[];
 }
 
-/**
- * Union type for command registration metadata.
- *
- * @internal
- */
+/** @internal */
 export type CommandMeta = GlobalMeta | GuildMeta;
 
-/**
- * Type representing command registration scope.
- *
- * @internal
- */
-export type CommandScope = CommandMeta['scope'];
+/** @internal */
+type CommandScope = CommandMeta['scope'];
 
 /**
  * Registers a command for global deployment.
