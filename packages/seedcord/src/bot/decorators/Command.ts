@@ -1,15 +1,10 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { CommandMetadataKey } from '@src/metadataKeys';
+
 import type { BuilderComponent } from '@seedcord/kit';
 import type { Constructor } from 'type-fest';
-
-/**
- * Metadata key for command registration information.
- *
- * @internal
- */
-export const CommandMetadataKey = Symbol('command:metadata');
 
 /**
  * Constructor type for command classes.

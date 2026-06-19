@@ -2,6 +2,7 @@ import { ComponentDefsKey } from '@seedcord/kit/internal';
 import { ApplicationCommandType } from 'discord.js';
 
 import { areRoutes } from '@miscellaneous/areRoutes';
+import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
 
 import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
 import type { HandlerConstructor } from '@handlers/constructors';
@@ -24,21 +25,6 @@ import type {
 } from 'discord.js';
 import type { Constructor } from 'type-fest';
 
-/** @internal */
-export enum InteractionRoutes {
-    Slash = 'interaction:slash',
-    Button = 'interaction:button',
-    Modal = 'interaction:modal',
-    StringMenu = 'interaction:stringMenu',
-    UserMenu = 'interaction:userMenu',
-    RoleMenu = 'interaction:roleMenu',
-    ChannelMenu = 'interaction:channelMenu',
-    MentionableMenu = 'interaction:mentionableMenu',
-    MessageContextMenu = 'interaction:messageContextMenu',
-    UserContextMenu = 'interaction:userContextMenu',
-    Autocomplete = 'interaction:autocomplete'
-}
-
 /**
  * Types of select menus supported for routing
  */
@@ -49,9 +35,6 @@ export enum SelectMenuKind {
     Channel = 'channel',
     Mentionable = 'mentionable'
 }
-
-/** @internal */
-export const InteractionMetadataKey = Symbol('interaction:metadata');
 
 /** @internal */
 type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
@@ -357,12 +340,12 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuKind, const Defs ex
 // store each definition's stable prefix as a routing key for the controller, and the full defs array on
 // the constructor so the handler base can decode against them.
 function storeComponentRoute(
-    symbol: InteractionRoutes,
+    route: InteractionRoutes,
     defs: readonly AnyCustomId[],
     constructor: HandlerConstructor
 ): void {
     storeMetadata(
-        symbol,
+        route,
         defs.map((def) => def.prefix),
         constructor
     );
@@ -370,14 +353,15 @@ function storeComponentRoute(
 }
 
 function storeMetadata(
-    symbol: InteractionRoutes,
+    route: InteractionRoutes,
     routes: string | string[],
     constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler<keyof SlashOptionRegistry, CacheType>>
 ): void {
-    const savedRoutes: unknown = Reflect.getMetadata(symbol, constructor);
+    const key = InteractionRouteKeys[route];
+    const savedRoutes: unknown = Reflect.getMetadata(key, constructor);
     const existing: string[] = areRoutes(savedRoutes) ? savedRoutes : [];
 
     const toStore = Array.isArray(routes) ? routes : [routes];
-    Reflect.defineMetadata(symbol, [...existing, ...toStore], constructor);
+    Reflect.defineMetadata(key, [...existing, ...toStore], constructor);
     Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }

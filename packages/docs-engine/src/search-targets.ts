@@ -55,7 +55,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     // Enums
     { query: 'StartupPhase' },
     { query: 'ShutdownPhase' },
-    { query: 'SelectMenuType' },
+    { query: 'SelectMenuKind' },
 
     // Functions
     { query: 'prettify' },

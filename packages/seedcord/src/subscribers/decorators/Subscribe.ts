@@ -1,14 +1,9 @@
+import { SubscribeMetadataKey } from '@src/metadataKeys';
+
 import type { Subscriber } from '../Subscriber';
 import type { SubscriptionKey } from '../types/Subscriptions';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { Constructor } from 'type-fest';
-
-/**
- * Metadata key used to store subscriber handler information
- *
- * @internal
- */
-export const SubscribeMetadataKey = Symbol('subscribe:metadata');
 
 /**
  * Options accepted by the `@Subscribe` decorator.

@@ -1,15 +1,10 @@
+import { EventMetadataKey } from '@src/metadataKeys';
+
 import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventHandler } from '@handlers/event';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { ClientEvents } from 'discord.js';
 import type { Constructor } from 'type-fest';
-
-/**
- * Metadata key used to store event handler information
- *
- * @internal
- */
-export const EventMetadataKey = Symbol('event:metadata');
 
 /** Options accepted by the event registration decorator. */
 export interface RegisterEventOptions {

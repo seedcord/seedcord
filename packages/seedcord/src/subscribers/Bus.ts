@@ -6,8 +6,8 @@ import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { Plugin } from '@interfaces/Plugin';
+import { SubscribeMetadataKey } from '@src/metadataKeys';
 
-import { SubscribeMetadataKey } from './decorators/Subscribe';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { Subscriber } from './Subscriber';
