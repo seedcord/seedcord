@@ -18,15 +18,15 @@
         "coverage": "vitest run --coverage"
     },
     "dependencies": {
-        "@radix-ui/react-dialog": "^1.1.16",
+        "@radix-ui/react-dialog": "^1.1.17",
         "@seedcord/docs-engine": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/ui": "workspace:*",
         "@shikijs/langs": "^4.2.0",
         "@shikijs/themes": "^4.2.0",
-        "@tailwindcss/postcss": "^4.3.0",
-        "isomorphic-dompurify": "^3.16.0",
+        "@tailwindcss/postcss": "^4.3.1",
+        "isomorphic-dompurify": "^3.17.0",
         "lucide-react": "catalog:deps",
         "marked": "^18.0.5",
         "motion": "catalog:deps",

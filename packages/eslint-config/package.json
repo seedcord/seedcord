@@ -64,8 +64,8 @@
     },
     "dependencies": {
         "@types/eslint-plugin-security": "^3.0.1",
-        "@typescript-eslint/eslint-plugin": "^8.61.0",
-        "@typescript-eslint/parser": "^8.61.0",
+        "@typescript-eslint/eslint-plugin": "^8.61.1",
+        "@typescript-eslint/parser": "^8.61.1",
         "eslint": "catalog:deps",
         "eslint-config-prettier": "^10.1.8",
         "eslint-import-resolver-typescript": "^4.4.5",
@@ -78,7 +78,7 @@
         "eslint-plugin-tsdoc": "^0.5.2",
         "lodash.merge": "^4.6.2",
         "prettier": "catalog:deps",
-        "typescript-eslint": "^8.61.0"
+        "typescript-eslint": "^8.61.1"
     },
     "devDependencies": {
         "@types/lodash.merge": "^4.6.9"
