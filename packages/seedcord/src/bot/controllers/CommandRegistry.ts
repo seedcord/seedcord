@@ -19,9 +19,15 @@ import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLea
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
-import type { ContextMenuCommandBuilder } from 'discord.js';
+import type { ApplicationCommand, ContextMenuCommandBuilder, Snowflake } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
+
+/** The command collections Discord returns from each scope's deploy, keyed by command id. */
+export interface DeployResult {
+    global: Collection<Snowflake, ApplicationCommand>;
+    guilds: Collection<Snowflake, Collection<Snowflake, ApplicationCommand>>;
+}
 
 interface CommandArtifact {
     name: string;
@@ -47,7 +53,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
 
-    public constructor(private readonly core: Core) {
+    public constructor(
+        private readonly core: Core,
+        private readonly onDeployed?: (result: DeployResult) => void
+    ) {
         const commandsDir = this.core.config.bot.commands.path;
         if (!commandsDir) {
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['CommandRegistry', 'commands']);
@@ -194,9 +203,12 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.ctorToCommand.delete(ctor);
     }
 
-    public async setCommands(): Promise<void> {
+    public async setCommands(): Promise<DeployResult> {
+        const result: DeployResult = { global: new Collection(), guilds: new Collection() };
+
         if (this.globalCommands.length > 0) {
-            await this.core.bot.client.application?.commands.set(this.globalCommands);
+            const deployed = await this.core.bot.client.application?.commands.set(this.globalCommands);
+            if (deployed) result.global = deployed;
             const tag = this.globalCommands.length === 1 ? 'command' : 'commands';
             this.logger.utils.summary('Configured global', {
                 [tag]: this.globalCommands.length
@@ -211,13 +223,17 @@ export class CommandRegistry implements Initializeable, HmrAware {
                 continue;
             }
 
-            await guild.commands.set(commands);
+            const deployed = await guild.commands.set(commands);
+            result.guilds.set(guildId, deployed);
             const tag = commands.length === 1 ? 'command' : 'commands';
             this.logger.utils.summary(`Configured commands for ${chalk.bold.yellow(guild.name)}`, {
                 [tag]: commands.length
             });
             this.logger.utils.item(`${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
         }
+
+        this.onDeployed?.(result);
+        return result;
     }
 
     /** The deduplicated slash route keys across every global and guild command. @internal */
