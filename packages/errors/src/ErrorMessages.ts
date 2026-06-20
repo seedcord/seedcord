@@ -148,7 +148,13 @@ const messages = {
         firstFile: string,
         secondFile: string
     ) =>
-        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`
+        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
+    [SeedcordErrorCode.CliCleanTokenMissing]: () =>
+        'DISCORD_BOT_TOKEN is not set. Set it so `seedcord commands --clean` can authenticate with Discord.',
+    [SeedcordErrorCode.CliCleanAppFetchFailed]: (reason: string) =>
+        `Could not resolve the application from the bot token. ${reason}.`,
+    [SeedcordErrorCode.CliCleanNoGuilds]: () =>
+        'No guilds given. Pass --guild <ids...> or --all-guilds. Global commands are never touched.'
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

@@ -168,5 +168,11 @@ export enum SeedcordErrorCode {
     /** The commands directory could not be read during codegen. */
     CliCodegenCommandsDirUnreadable = 3123,
     /** Two context-menu commands of the same kind share a name during codegen. */
-    CliCodegenDuplicateContextMenu = 3124
+    CliCodegenDuplicateContextMenu = 3124,
+    /** DISCORD_BOT_TOKEN is not set, so `commands --clean` cannot authenticate with Discord. */
+    CliCleanTokenMissing = 3125,
+    /** Could not resolve the application from the bot token during `commands --clean`. */
+    CliCleanAppFetchFailed = 3126,
+    /** `commands --clean` ran with neither --guild nor --all-guilds, so there is nothing to scan. */
+    CliCleanNoGuilds = 3127
 }

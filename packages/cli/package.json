@@ -50,6 +50,7 @@
     },
     "dependencies": {
         "@commander-js/extra-typings": "^15.0.0",
+        "@discordjs/rest": "^2.6.1",
         "@seedcord/errors": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
@@ -57,6 +58,7 @@
         "chalk": "catalog:deps",
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
+        "envapt": "catalog:deps",
         "fix-esm-import-path": "^1.10.3",
         "ink": "^7.1.0",
         "ink-spinner": "^5.0.0",
