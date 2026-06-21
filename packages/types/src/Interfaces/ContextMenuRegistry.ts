@@ -9,7 +9,7 @@
  *
  * @example
  * ```ts
- * // command-registry.gen.ts (emitted, committed)
+ * // seedcord-gen.d.ts (emitted, committed)
  * declare module 'seedcord' {
  *   interface UserContextMenuRegistry {
  *     'View Profile': true;

@@ -10,6 +10,8 @@ const messages = {
     [SeedcordErrorCode.ConfigHandledExceptionWebhookMissing]: () =>
         'Missing HANDLED_EXCEPTION_WEBHOOK_URL environment variable.',
     [SeedcordErrorCode.ConfigHandledExceptionWebhookInvalid]: () => 'Invalid HANDLED_EXCEPTION_WEBHOOK_URL value.',
+    [SeedcordErrorCode.ConfigEmojiUnresolved]: (count: number, failures: string) =>
+        `Could not resolve ${count} configured emoji${count === 1 ? '' : 's'} at startup.\n${failures}`,
 
     [SeedcordErrorCode.LifecycleAddAfterCompletion]: () =>
         'Cannot add tasks after startup sequence has already completed.',
@@ -148,7 +150,18 @@ const messages = {
         firstFile: string,
         secondFile: string
     ) =>
-        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`
+        `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
+    [SeedcordErrorCode.CliCleanAppFetchFailed]: (reason: string) =>
+        `Could not resolve the application from the bot token. ${reason}.`,
+    [SeedcordErrorCode.CliCleanNoGuilds]: () =>
+        'No guilds given. Pass --guild <ids...> or --all-guilds. Global commands are never touched.',
+    [SeedcordErrorCode.CliCleanPurgeAllGuilds]: () =>
+        '--purge cannot be combined with --all-guilds. Use --guild <ids> to purge specific guilds.',
+    [SeedcordErrorCode.CliCancelled]: () => 'Cancelled.',
+    [SeedcordErrorCode.CliCleanLargeBotUnconfirmed]: (count: number) =>
+        `Refusing to scan ${count} guilds without confirmation. Re-run with --yes, or name specific guilds with --guild <ids>.`,
+    [SeedcordErrorCode.CliCleanApplyNeedsYes]: () =>
+        'Refusing to delete without confirmation in a non-interactive environment. Re-run with --yes.'
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

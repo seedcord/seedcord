@@ -1,34 +1,27 @@
 /**
- * Emoji mapping interface. Augment this to add your project's emoji keys. Make sure to provide the same keys when configuring emojis in your bot config.
- *
- * If you have an emoji that exists in multiple guilds, use the tuple form `[emojiName, guildId]` to specify which guild to fetch it from.
+ * The configured emoji keys, written by `seedcord codegen` from `config.bot.emojis`. Each key maps to a tag,
+ * `'application'` for a plain name and `'guild'` for a `[name, guildId]` tuple, and `Emojis.X` reads that tag
+ * to type each emoji as the precise `ApplicationEmoji` or `GuildEmoji`. Do not augment it by hand, run
+ * `seedcord codegen` after changing `config.bot.emojis`.
  *
  * @example
  * ```ts
- * declare module 'seedcord' {
- *   interface EmojiMap {
- *     ThumbsUp: string;
- *     ThumbsDown: string;
- *     Lol: [string, string];
- *     Kek: [string, string];
- *   }
- * }
+ * // configure once in your bot config (a name, or a [name, guildId] tuple for a specific guild)
+ * emojis: { ThumbsUp: 'thumbs_up', Lol: ['lol', '000000000000000000'] }
  * ```
  *
  * @example
  * ```ts
- * // Or extend it directly
- * declare module 'seedcord' {
- *  export interface EmojiMap extends MyEmojiMap {}
- * }
- * ```
- *
- * @example
- * ```ts
- * // Then, import and use it anywhere in your app
+ * // after `seedcord codegen`, use it anywhere
  * import { Emojis } from 'seedcord';
- *
- * console.log(Emojis.ThumbsUp); // <SOME_EMOJI_OBJECT_OR_STRING>
+ * Emojis.ThumbsUp; // ApplicationEmoji
+ * Emojis.Lol; // GuildEmoji
  * ```
  */
 export interface EmojiMap {}
+
+/**
+ * The shape of `config.bot.emojis`, a plain map you write yourself. Each value is an emoji name, or a
+ * `[name, guildId]` tuple to pin a guild emoji. `seedcord codegen` reads this to generate {@link EmojiMap}.
+ */
+export type EmojiConfig = Record<string, string | readonly [string, string]>;
