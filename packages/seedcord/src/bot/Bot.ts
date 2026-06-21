@@ -1,3 +1,4 @@
+import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, ShutdownPhase } from '@seedcord/services';
 import { EmojiMap } from '@seedcord/types';
 import chalk from 'chalk';
@@ -8,7 +9,6 @@ import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventDispatcher } from '@bControllers/EventDispatcher';
 import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
 import { Plugin } from '@interfaces/Plugin';
-import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 
 import { CommandMentionInjector, CommandMentions } from './injectors/CommandMentionInjector';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
