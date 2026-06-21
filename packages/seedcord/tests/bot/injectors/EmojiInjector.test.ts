@@ -135,4 +135,28 @@ describe('EmojiInjector', () => {
         expect(guild.emojis.fetch).toHaveBeenCalled();
         expect(stored.Wave).toBe(wave);
     });
+
+    it('fetches a guild only once when several emojis come from it', async () => {
+        const wave: EmojiStub = { id: '1', name: 'wave' };
+        const smile: EmojiStub = { id: '2', name: 'smile' };
+        const fetch = vi.fn().mockResolvedValue(undefined);
+        const guild = { emojis: { fetch, cache: cacheOf([wave, smile]) } };
+        const guilds = new Collection<string, unknown>();
+        guilds.set('g1', guild);
+        const core = {
+            config: { bot: { emojis: { Wave: ['wave', 'g1'], Smile: ['smile', 'g1'] } } },
+            bot: {
+                client: {
+                    application: { emojis: { fetch: vi.fn().mockResolvedValue(undefined), cache: cacheOf([]) } },
+                    guilds: { cache: guilds }
+                }
+            }
+        } as unknown as Core;
+
+        await new EmojiInjector(core).init();
+
+        expect(fetch).toHaveBeenCalledTimes(1);
+        expect(stored.Wave).toBe(wave);
+        expect(stored.Smile).toBe(smile);
+    });
 });

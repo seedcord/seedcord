@@ -54,9 +54,10 @@ export class EmojiInjector {
         await this.core.bot.client.application?.emojis.fetch();
 
         const failures: string[] = [];
+        const fetchedGuilds = new Set<string>();
         for (const [key, value] of Object.entries(configEmojis)) {
             if (isEmojiTuple(value)) {
-                await this.resolveTuple(key, value, failures);
+                await this.resolveTuple(key, value, failures, fetchedGuilds);
             } else if (typeof value === 'string') {
                 this.resolveString(key, value, failures);
             } else {
@@ -72,7 +73,12 @@ export class EmojiInjector {
         this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
     }
 
-    private async resolveTuple(key: string, value: readonly [string, string], failures: string[]): Promise<void> {
+    private async resolveTuple(
+        key: string,
+        value: readonly [string, string],
+        failures: string[],
+        fetchedGuilds: Set<string>
+    ): Promise<void> {
         const [emojiName, guildId] = value;
 
         const guild = this.core.bot.client.guilds.cache.get(guildId);
@@ -83,8 +89,10 @@ export class EmojiInjector {
             return;
         }
 
-        // fetch first so a cold cache is not mistaken for an absent emoji
-        await guild.emojis.fetch();
+        if (!fetchedGuilds.has(guildId)) {
+            await guild.emojis.fetch();
+            fetchedGuilds.add(guildId);
+        }
         const guildEmoji = guild.emojis.cache.find((e) => e.name === emojiName);
         if (!guildEmoji) {
             failures.push(`  - "${emojiName}" for "${key}" was not found in guild ${guildId}`);
