@@ -32,6 +32,7 @@ describe('CommandRegistry.setCommands', () => {
 
     it('fires the onDeployed callback with the deploy result', async () => {
         const deployed = new Collection<string, ApplicationCommand>();
+        // fixture: only the id (key) and name flow downstream into mentions
         deployed.set('123', { id: '123', name: 'ping' } as unknown as ApplicationCommand);
         const set = vi.fn().mockResolvedValue(deployed);
         const onDeployed = vi.fn();

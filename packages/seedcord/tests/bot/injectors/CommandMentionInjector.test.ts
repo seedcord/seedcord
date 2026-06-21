@@ -10,6 +10,7 @@ import type { ApplicationCommand } from 'discord.js';
 const mentions = CommandMentions as Record<string, string>;
 
 function stubCore(global: SlashCommandBuilder[], guilds = new Collection<string, SlashCommandBuilder[]>()): Core {
+    // fixture: the injector reads only bot.commands.globalCommands and guildCommands
     return { bot: { commands: { globalCommands: global, guildCommands: guilds } } } as unknown as Core;
 }
 

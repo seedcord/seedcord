@@ -9,7 +9,7 @@ import type { ApplicationCommand, Collection, Snowflake } from 'discord.js';
 
 const mentionStorage: Record<string, string> = {};
 
-/** Each registered slash route mapped to a ready-to-send mention string (clickable, or plain text when no id resolves). */
+/** Each registered slash route mapped to its mention string. */
 export type InjectedMentionMap = {
     [K in keyof SlashOptionRegistry]: string;
 };
