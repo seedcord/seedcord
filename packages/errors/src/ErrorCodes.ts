@@ -16,6 +16,8 @@ export enum SeedcordErrorCode {
     ConfigHandledExceptionWebhookMissing = 1005,
     /** HANDLED_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
     ConfigHandledExceptionWebhookInvalid = 1006,
+    /** One or more configured emojis could not be resolved at startup. */
+    ConfigEmojiUnresolved = 1007,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,

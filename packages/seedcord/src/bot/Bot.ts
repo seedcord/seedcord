@@ -1,6 +1,5 @@
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, ShutdownPhase } from '@seedcord/services';
-import { EmojiMap } from '@seedcord/types';
 import chalk from 'chalk';
 import { Client, ClientEvents, Interaction } from 'discord.js';
 import { Envapt } from 'envapt';
@@ -14,6 +13,7 @@ import { CommandMentionInjector, CommandMentions } from './injectors/CommandMent
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
 import type { InjectedMentionMap } from './injectors/CommandMentionInjector';
+import type { InjectedEmojiMap } from './injectors/EmojiInjector';
 import type { Core } from '@interfaces/Core';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
@@ -51,7 +51,7 @@ export class Bot extends Plugin<BotEvents> {
     private readonly events?: EventDispatcher;
     public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
-    public readonly emojis: EmojiMap = Emojis;
+    public readonly emojis: InjectedEmojiMap = Emojis;
     public readonly mentions: InjectedMentionMap = CommandMentions;
 
     /** @internal For use in dev mode */

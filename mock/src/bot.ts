@@ -61,11 +61,6 @@ declare module 'seedcord' {
     interface Core {
         db: Mongo;
     }
-
-    interface EmojiMap {
-        Confirm: string;
-        Cancel: string;
-    }
 }
 
 export default seedcord;

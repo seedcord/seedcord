@@ -12,7 +12,7 @@ export class CodegenCommand extends BaseCommand {
     constructor() {
         super(
             'codegen',
-            'Generate the typed command registry (slash options and context menus) from your commands',
+            'Generate typed augmentations (slash options, context menus, emojis) from your commands and config',
             'CLI:Codegen'
         );
         this.runner = CodegenRunner.create(this.logger);
@@ -22,7 +22,7 @@ export class CodegenCommand extends BaseCommand {
         program
             .command(this.name)
             .description(this.description)
-            .option('--check', 'Verify the committed registry is up to date instead of writing it')
+            .option('--check', 'Verify the committed augmentations are up to date instead of writing them')
             .action(async (options) => {
                 try {
                     await this.runner.run(options.check ?? false);

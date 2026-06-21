@@ -2,9 +2,9 @@ import { buildSlashRoute } from '@seedcord/utils/internal';
 import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { RegistryGenerator } from '@commands/codegen/RegistryGenerator';
+import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
 
-import type { SlashTables } from '@commands/codegen/RegistryGenerator';
+import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 
@@ -42,7 +42,7 @@ function expectedRoutesFromJson(json: RESTPostAPIChatInputApplicationCommandsJSO
     return routes;
 }
 
-describe('route-key parity between RegistryGenerator and buildSlashRoute', () => {
+describe('route-key parity between AugmentationBuilder and buildSlashRoute', () => {
     it('flat command route key equals buildSlashRoute(cmd)', () => {
         const builder = new SlashCommandBuilder()
             .setName('ban')
@@ -50,9 +50,10 @@ describe('route-key parity between RegistryGenerator and buildSlashRoute', () =>
             .addUserOption((o) => o.setName('target').setDescription('Who').setRequired(true));
         const json = builder.toJSON();
 
-        const tables: SlashTables = new RegistryGenerator(silentLogger).generate([
-            { sourceFile: 'ban.ts', json }
-        ]).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
+            [{ sourceFile: 'ban.ts', json }],
+            {}
+        ).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
         expect(Object.keys(tables)).toEqual([buildSlashRoute('ban')]);
@@ -81,9 +82,10 @@ describe('route-key parity between RegistryGenerator and buildSlashRoute', () =>
             );
         const json = builder.toJSON();
 
-        const tables: SlashTables = new RegistryGenerator(silentLogger).generate([
-            { sourceFile: 'demo.ts', json }
-        ]).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
+            [{ sourceFile: 'demo.ts', json }],
+            {}
+        ).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
     });
@@ -96,9 +98,10 @@ describe('route-key parity between RegistryGenerator and buildSlashRoute', () =>
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'));
         const json = builder.toJSON();
 
-        const tables: SlashTables = new RegistryGenerator(silentLogger).generate([
-            { sourceFile: 'admin.ts', json }
-        ]).slash;
+        const tables: SlashTables = new AugmentationBuilder(silentLogger).generate(
+            [{ sourceFile: 'admin.ts', json }],
+            {}
+        ).slash;
 
         expect(new Set(Object.keys(tables))).toEqual(new Set(expectedRoutesFromJson(json)));
         expect(Object.keys(tables)).toEqual([buildSlashRoute('admin', 'ping')]);

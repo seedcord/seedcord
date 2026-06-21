@@ -7,15 +7,15 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, ContextMenuCommandBuilder, SlashCommandBuilder } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';
-import { RegistryGenerator } from '@commands/codegen/RegistryGenerator';
 
 import type { ConfigLoader } from '@core/config/ConfigLoader';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
-const OUTPUT = 'command-registry.gen.ts';
+const OUTPUT = 'seedcord-gen.d.ts';
 
 function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
     return {
@@ -41,7 +41,7 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
             Promise.resolve({ default: { [SeedcordBrand]: true, config: { bot: { commands: { path: null } } } } })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new RegistryGenerator(logger), logger);
+    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
 
 // importModule returns the branded instance for instancePath and the command module for every other path.
@@ -65,7 +65,7 @@ function scanRunner(
                 : Promise.resolve(moduleByPath(entryPath))
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new RegistryGenerator(logger), logger);
+    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
 
 // instance double whose default export carries no SeedcordBrand, to exercise the isSeedcordInstance guard.
@@ -78,7 +78,7 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
         importModule: () => Promise.resolve({ default: { not: 'branded' } })
     } as unknown as ModuleLoader;
 
-    return new CodegenRunner(locator, configLoader, moduleLoader, new RegistryGenerator(logger), logger);
+    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
 
 describe('CodegenRunner', () => {

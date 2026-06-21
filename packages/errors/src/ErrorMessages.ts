@@ -10,6 +10,8 @@ const messages = {
     [SeedcordErrorCode.ConfigHandledExceptionWebhookMissing]: () =>
         'Missing HANDLED_EXCEPTION_WEBHOOK_URL environment variable.',
     [SeedcordErrorCode.ConfigHandledExceptionWebhookInvalid]: () => 'Invalid HANDLED_EXCEPTION_WEBHOOK_URL value.',
+    [SeedcordErrorCode.ConfigEmojiUnresolved]: (count: number, failures: string) =>
+        `Could not resolve ${count} configured emoji${count === 1 ? '' : 's'} at startup.\n${failures}`,
 
     [SeedcordErrorCode.LifecycleAddAfterCompletion]: () =>
         'Cannot add tasks after startup sequence has already completed.',
