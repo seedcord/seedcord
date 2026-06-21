@@ -71,12 +71,7 @@ function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, cod
  */
 export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError'}`;
 
-/**
- * Base interface for Seedcord error instances.
- *
- * @internal
- */
-export interface BaseSeedcordError {
+interface BaseSeedcordError {
     readonly code: SeedcordErrorCode;
     readonly identifier: SeedcordErrorIdentifier;
     readonly type: SeedcordErrorTypeString;
