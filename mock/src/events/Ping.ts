@@ -13,6 +13,5 @@ export class PingPong extends EventHandler<Events.MessageCreate | Events.Message
 
     private async pong(message: Message | PartialMessage): Promise<void> {
         if (message.content === 'ping') await message.reply('pong');
-        await message.reply('bruh');
     }
 }
