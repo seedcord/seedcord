@@ -66,7 +66,7 @@ export function HotkeyBar({ phase, interactive, mode, following }: HotkeyBarProp
                 <>
                     <Hotkey keyLabel="↑↓" action="move" />
                     <Hotkey keyLabel="space" action="toggle" />
-                    <Hotkey keyLabel="esc" action="done" />
+                    <Hotkey keyLabel="↵/esc" action="done" />
                 </>
             )}
             {mode === 'default' && <DefaultKeys phase={phase} interactive={interactive} following={following} />}
