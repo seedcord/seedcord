@@ -142,6 +142,10 @@ export class FlagPresenter implements CleanPresenter {
     // confirmCount is the headless typed-count gate, clack confirm (InteractivePresenter) needs a TTY
     public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
         if (this.yes) return Promise.resolve(true);
+        // readline cannot prompt without a terminal, so fail fast
+        if (!process.stdin.isTTY || !process.stdout.isTTY) {
+            return Promise.reject(new SeedcordError(SeedcordErrorCode.CliCleanApplyNeedsYes));
+        }
         if (skippedCount > 0)
             this.logger.warn(`${plural(skippedCount, 'guild')} could not be read and were not scanned.`);
         return confirmCount(count, this.logger);

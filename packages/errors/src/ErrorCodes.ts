@@ -178,5 +178,7 @@ export enum SeedcordErrorCode {
     /** An interactive prompt was cancelled (Ctrl-C), so the command aborts without changes. */
     CliCancelled = 3129,
     /** `commands --clean --all-guilds` matched more guilds than the safety threshold without `--yes`. */
-    CliCleanLargeBotUnconfirmed = 3130
+    CliCleanLargeBotUnconfirmed = 3130,
+    /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
+    CliCleanApplyNeedsYes = 3131
 }

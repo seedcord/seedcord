@@ -45,7 +45,13 @@ async function buildScope(runner: CleanRunner, token: string): Promise<ScopePlan
 
     const status = spinner();
     status.start('Fetching the guilds the bot is in...');
-    const guilds = await runner.listBotGuilds(token);
+    let guilds: GuildSummary[];
+    try {
+        guilds = await runner.listBotGuilds(token);
+    } catch (error) {
+        status.stop('Could not fetch the guild list.');
+        throw error;
+    }
     status.stop(`Found ${plural(guilds.length, 'guild')}.`);
 
     if (guilds.length === 0) {
