@@ -46,7 +46,7 @@ export interface ScanResult {
     globalCommandCount: number;
 }
 
-export interface DeleteFailure {
+interface DeleteFailure {
     command: Flagged;
     reason: string;
 }

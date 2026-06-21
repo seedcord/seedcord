@@ -4,7 +4,7 @@ import { includesIgnoreCase } from '@core/format';
 
 import { requireValue } from './requireValue';
 
-export interface PickItem {
+interface PickItem {
     id: string;
     name: string;
 }

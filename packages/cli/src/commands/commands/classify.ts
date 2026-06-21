@@ -1,6 +1,6 @@
-export type CleanReason = 'overlap' | 'purge';
+type CleanReason = 'overlap' | 'purge';
 
-export interface DeployedCommand {
+interface DeployedCommand {
     id: string;
     name: string;
 }
