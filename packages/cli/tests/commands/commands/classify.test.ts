@@ -9,6 +9,7 @@ describe('classifyGuildCommands', () => {
             [
                 {
                     guildId: 'g1',
+                    guildName: 'Alpha',
                     commands: [
                         { id: '1', name: 'ban' },
                         { id: '2', name: 'setup' }
@@ -18,7 +19,7 @@ describe('classifyGuildCommands', () => {
             false
         );
 
-        expect(result).toEqual([{ guildId: 'g1', id: '1', name: 'ban', reason: 'overlap' }]);
+        expect(result).toEqual([{ guildId: 'g1', guildName: 'Alpha', id: '1', name: 'ban', reason: 'overlap' }]);
     });
 
     it('flags every guild command as purge regardless of global overlap', () => {
@@ -27,6 +28,7 @@ describe('classifyGuildCommands', () => {
             [
                 {
                     guildId: 'g1',
+                    guildName: 'Alpha',
                     commands: [
                         { id: '1', name: 'ban' },
                         { id: '2', name: 'setup' }
@@ -38,5 +40,6 @@ describe('classifyGuildCommands', () => {
 
         expect(result).toHaveLength(2);
         expect(result.map((flagged) => flagged.reason)).toEqual(['purge', 'purge']);
+        expect(result.every((flagged) => flagged.guildName === 'Alpha')).toBe(true);
     });
 });

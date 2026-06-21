@@ -15,7 +15,7 @@ async function readlineAsk(question: string): Promise<string> {
 
 /**
  * Gates a destructive delete behind typing the exact count, so a mistyped, empty, or non-numeric answer
- * aborts with nothing deleted. `ask` is injectable for tests.
+ * aborts with nothing deleted.
  */
 export async function confirmCount(count: number, logger: ILogger, ask: Ask = readlineAsk): Promise<boolean> {
     logger.warn(`About to delete ${count} guild command(s). This cannot be undone.`);

@@ -1,14 +1,11 @@
 import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import chalk from 'chalk';
 import { Routes } from 'discord-api-types/v10';
 
 import { classifyGuildCommands } from './classify';
-import { confirmCount } from './confirm';
 
 import type { Flagged, GuildCommands } from './classify';
-import type { ILogger } from '@seedcord/types';
 import type {
     RESTGetAPIApplicationCommandsResult,
     RESTGetAPIApplicationGuildCommandsResult,
@@ -17,86 +14,137 @@ import type {
     Snowflake
 } from 'discord-api-types/v10';
 
-// narrowed so tests can inject a fake
 type RestClient = Pick<REST, 'get' | 'delete'>;
 
-export interface CleanOptions {
+export interface CleanScope {
     guildIds: string[];
     allGuilds: boolean;
-    apply: boolean;
     purge: boolean;
+}
+
+export interface GuildSummary {
+    id: string;
+    name: string;
+}
+
+export interface ResolvedTargets {
+    appId: Snowflake;
+    guilds: GuildSummary[];
+}
+
+export interface SkippedGuild {
+    guildId: string;
+    guildName: string;
+    reason: string;
+}
+
+export interface ScanResult {
+    flagged: Flagged[];
+    skipped: SkippedGuild[];
+    scannedGuildCount: number;
+    scannedCommandCount: number;
+    globalCommandCount: number;
+}
+
+export interface DeleteFailure {
+    command: Flagged;
+    reason: string;
+}
+
+export interface DeleteResult {
+    deleted: number;
+    failed: DeleteFailure[];
+}
+
+export interface CleanOps {
+    resolveTargets(scope: CleanScope, token: string): Promise<ResolvedTargets>;
+    scanGuilds(token: string, appId: Snowflake, guilds: GuildSummary[], purge: boolean): Promise<ScanResult>;
+    applyDeletions(token: string, appId: Snowflake, flagged: Flagged[]): Promise<DeleteResult>;
 }
 
 const GUILD_PAGE = 200;
 
-/**
- * Reports, and on `--apply` deletes, stale or overlapping GUILD application commands. It reads the live
- * deployed state through a bare REST client (no gateway login) and never touches global commands.
- */
-export class CleanRunner {
-    constructor(
-        private readonly logger: ILogger,
-        private readonly makeRest: (token: string) => RestClient,
-        private readonly confirm: (count: number, logger: ILogger) => Promise<boolean>
-    ) {}
+export class CleanRunner implements CleanOps {
+    constructor(private readonly makeRest: (token: string) => RestClient) {}
 
-    public static create(logger: ILogger): CleanRunner {
-        return new CleanRunner(logger, (token) => new REST({ version: '10' }).setToken(token), confirmCount);
+    public static create(): CleanRunner {
+        return new CleanRunner((token) => new REST({ version: '10' }).setToken(token));
     }
 
-    public async run(options: CleanOptions, token: string | undefined): Promise<void> {
-        if (!token) throw new SeedcordError(SeedcordErrorCode.CliCleanTokenMissing);
+    public async resolveTargets(scope: CleanScope, token: string): Promise<ResolvedTargets> {
+        // purge across all guilds would wipe every command
+        if (scope.purge && scope.allGuilds) throw new SeedcordError(SeedcordErrorCode.CliCleanPurgeAllGuilds);
 
-        // a full purge across every guild would wipe them all, so purge stays per-named-guild
-        if (options.purge && options.allGuilds) {
-            this.logger.warn(
-                '--purge cannot be combined with --all-guilds. Use --guild <ids> to purge specific guilds.'
-            );
-            return;
-        }
-
-        // warn-and-return here would exit 0 and hide the misuse from CI
-        if (!options.allGuilds && options.guildIds.length === 0) {
+        if (!scope.allGuilds && scope.guildIds.length === 0) {
             throw new SeedcordError(SeedcordErrorCode.CliCleanNoGuilds);
         }
 
         const rest = this.makeRest(token);
         const appId = await this.resolveAppId(rest);
+        const guilds = scope.allGuilds
+            ? await this.fetchBotGuilds(rest)
+            : scope.guildIds.map((id) => ({ id, name: id }));
 
-        const guildIds = options.allGuilds ? await this.fetchBotGuildIds(rest) : options.guildIds;
-        if (guildIds.length === 0) {
-            this.logger.warn('The bot is in no guilds, nothing to scan.');
-            return;
-        }
-
-        const globalNames = await this.fetchGlobalNames(rest, appId);
-        const guilds = await this.fetchGuildCommands(rest, appId, guildIds);
-
-        const flagged = classifyGuildCommands(globalNames, guilds, options.purge);
-        this.report(flagged);
-        if (flagged.length === 0) return;
-
-        await this.confirmAndDelete(rest, appId, flagged, options.apply);
+        return { appId, guilds };
     }
 
-    private async confirmAndDelete(
-        rest: RestClient,
+    public async listBotGuilds(token: string): Promise<GuildSummary[]> {
+        return this.fetchBotGuilds(this.makeRest(token));
+    }
+
+    public async scanGuilds(
+        token: string,
         appId: Snowflake,
-        flagged: Flagged[],
-        apply: boolean
-    ): Promise<void> {
-        if (!apply) {
-            this.logger.info(chalk.italic('Dry run. Re-run with --apply to delete the above.'));
-            return;
+        guilds: GuildSummary[],
+        purge: boolean
+    ): Promise<ScanResult> {
+        const rest = this.makeRest(token);
+        const globalNames = await this.fetchGlobalNames(rest, appId);
+
+        const buckets: GuildCommands[] = [];
+        const skipped: SkippedGuild[] = [];
+        let scannedCommandCount = 0;
+        for (const guild of guilds) {
+            try {
+                const deployed = (await rest.get(
+                    Routes.applicationGuildCommands(appId, guild.id)
+                )) as RESTGetAPIApplicationGuildCommandsResult;
+                const commands = deployed.map((command) => ({ id: command.id, name: command.name }));
+                scannedCommandCount += commands.length;
+                buckets.push({ guildId: guild.id, guildName: guild.name, commands });
+            } catch (error: unknown) {
+                skipped.push({
+                    guildId: guild.id,
+                    guildName: guild.name,
+                    reason: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
         }
 
-        const confirmed = await this.confirm(flagged.length, this.logger);
-        if (!confirmed) {
-            this.logger.info('Count did not match. Nothing deleted.');
-            return;
+        return {
+            flagged: classifyGuildCommands(globalNames, buckets, purge),
+            skipped,
+            scannedGuildCount: buckets.length,
+            scannedCommandCount,
+            globalCommandCount: globalNames.size
+        };
+    }
+
+    public async applyDeletions(token: string, appId: Snowflake, flagged: Flagged[]): Promise<DeleteResult> {
+        const rest = this.makeRest(token);
+        let deleted = 0;
+        const failed: DeleteFailure[] = [];
+
+        for (const command of flagged) {
+            try {
+                await rest.delete(Routes.applicationGuildCommand(appId, command.guildId, command.id));
+                deleted++;
+            } catch (error: unknown) {
+                failed.push({ command, reason: error instanceof Error ? error.message : 'Unknown error' });
+            }
         }
 
-        await this.deleteFlagged(rest, appId, flagged);
+        return { deleted, failed };
     }
 
     private async resolveAppId(rest: RestClient): Promise<Snowflake> {
@@ -109,8 +157,8 @@ export class CleanRunner {
         }
     }
 
-    private async fetchBotGuildIds(rest: RestClient): Promise<string[]> {
-        const ids: string[] = [];
+    private async fetchBotGuilds(rest: RestClient): Promise<GuildSummary[]> {
+        const guilds: GuildSummary[] = [];
         let after: string | undefined;
 
         for (;;) {
@@ -118,69 +166,17 @@ export class CleanRunner {
             if (after) query.set('after', after);
 
             const page = (await rest.get(Routes.userGuilds(), { query })) as RESTGetAPICurrentUserGuildsResult;
-            for (const guild of page) ids.push(guild.id);
+            for (const guild of page) guilds.push({ id: guild.id, name: guild.name });
 
             after = page.at(-1)?.id;
             if (page.length < GUILD_PAGE || !after) break;
         }
 
-        this.logger.info(`Scanning ${ids.length} guild(s) the bot is in.`);
-        return ids;
+        return guilds;
     }
 
     private async fetchGlobalNames(rest: RestClient, appId: Snowflake): Promise<Set<string>> {
         const global = (await rest.get(Routes.applicationCommands(appId))) as RESTGetAPIApplicationCommandsResult;
         return new Set(global.map((command) => command.name));
-    }
-
-    private async fetchGuildCommands(rest: RestClient, appId: Snowflake, guildIds: string[]): Promise<GuildCommands[]> {
-        const buckets: GuildCommands[] = [];
-        for (const guildId of guildIds) {
-            try {
-                const deployed = (await rest.get(
-                    Routes.applicationGuildCommands(appId, guildId)
-                )) as RESTGetAPIApplicationGuildCommandsResult;
-                buckets.push({
-                    guildId,
-                    commands: deployed.map((command) => ({ id: command.id, name: command.name }))
-                });
-            } catch (error: unknown) {
-                const reason = error instanceof Error ? error.message : 'Unknown error';
-                this.logger.warn(`Skipping guild ${guildId}. ${reason}.`);
-            }
-        }
-        return buckets;
-    }
-
-    private report(flagged: Flagged[]): void {
-        if (flagged.length === 0) {
-            this.logger.info(chalk.green('No commands to clean in the scanned guilds.'));
-            return;
-        }
-
-        this.logger.info(chalk.bold(`${flagged.length} guild command(s) selected for deletion`));
-        for (const command of flagged) {
-            this.logger.info(
-                `  ${chalk.yellow(command.reason)} ${chalk.cyan(command.name)} (${command.id}) in guild ${command.guildId}`
-            );
-        }
-    }
-
-    private async deleteFlagged(rest: RestClient, appId: Snowflake, flagged: Flagged[]): Promise<void> {
-        let deleted = 0;
-        for (const command of flagged) {
-            try {
-                await rest.delete(Routes.applicationGuildCommand(appId, command.guildId, command.id));
-                deleted++;
-            } catch (error: unknown) {
-                const reason = error instanceof Error ? error.message : 'Unknown error';
-                this.logger.warn(
-                    `Failed to delete ${command.name} (${command.id}) in guild ${command.guildId}. ${reason}.`
-                );
-            }
-        }
-        this.logger.info(
-            chalk.green(`Deleted ${deleted} of ${flagged.length} guild command(s). Global commands untouched.`)
-        );
     }
 }
