@@ -80,6 +80,7 @@ export class Bot extends Plugin<BotEvents> {
                 mentionInjector.inject(result);
             });
         }
+
         this.emojiInjector = new EmojiInjector(core);
 
         const BOT_SHUTDOWN_TIMEOUT = 2000;
@@ -108,14 +109,14 @@ export class Bot extends Plugin<BotEvents> {
 
         await this.login(token);
 
+        await this.emojiInjector.init();
+
         if (this.commands) {
             await this.commands.init();
             await this.commands.setCommands();
             this.interactions?.warnUnhandledRoutes(this.commands.routeLeaves());
             this.interactions?.warnUnhandledContextMenuRoutes(this.commands.contextMenuLeaves());
         }
-
-        await this.emojiInjector.init();
     }
 
     /**
