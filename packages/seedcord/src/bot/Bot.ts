@@ -52,7 +52,6 @@ export class Bot extends Plugin<BotEvents> {
     public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
     public readonly emojis: EmojiMap = Emojis;
-    private readonly mentionInjector: CommandMentionInjector;
     public readonly mentions: InjectedMentionMap = CommandMentions;
 
     /** @internal For use in dev mode */
@@ -75,10 +74,10 @@ export class Bot extends Plugin<BotEvents> {
             this.events = new EventDispatcher(core);
         }
 
-        this.mentionInjector = new CommandMentionInjector(core);
         if (core.config.bot.commands.path) {
+            const mentionInjector = new CommandMentionInjector(core);
             this.commands = new CommandRegistry(core, (result) => {
-                this.mentionInjector.inject(result);
+                mentionInjector.inject(result);
             });
         }
         this.emojiInjector = new EmojiInjector(core);
