@@ -1,5 +1,19 @@
 # @seedcord/services
 
+## 0.8.1
+
+### Patch Changes
+
+- 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
+- Updated dependencies [043e2a1]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+    - @seedcord/utils@0.6.1
+    - @seedcord/errors@0.2.0
+    - @seedcord/types@0.7.0
+
 ## 0.8.1-next.0
 
 ### Patch Changes

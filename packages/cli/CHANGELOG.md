@@ -1,5 +1,25 @@
 # @seedcord/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- 7121c18: Add `seedcord commands` to find and delete guild application commands that duplicate a global command (or, with `--purge`, every command in a guild). Run it with no flags for a guided wizard, or headlessly with `--clean --guild <ids>` or `--all-guilds` plus `--apply`, `--purge`, and `--yes`. It reads deployed state over REST, dry-runs by default, and never touches global commands.
+- 7121c18: Type configured emojis precisely. `seedcord codegen` now writes an `EmojiMap` block that tags each key `'application'` or `'guild'`, and `Emojis.X` (and `bot.emojis.X`) resolves to the exact `ApplicationEmoji` or `GuildEmoji` rather than the union. Configure `config.bot.emojis` with the new `EmojiConfig` type and run `seedcord codegen`, you no longer hand-write the `EmojiMap` augmentation. The generated file is renamed from `command-registry.gen.ts` to `seedcord-gen.d.ts`, so delete the old file and re-run `seedcord codegen`.
+
+### Patch Changes
+
+- 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
+- Updated dependencies [043e2a1]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+    - @seedcord/services@0.8.1
+    - @seedcord/utils@0.6.1
+    - @seedcord/errors@0.2.0
+    - @seedcord/types@0.7.0
+
 ## 0.3.0-next.0
 
 ### Minor Changes
