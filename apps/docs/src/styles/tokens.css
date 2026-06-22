@@ -1,20 +1,20 @@
 /* Entity kind accents */
 :root {
-    --entity-class: #3956ff;
-    --entity-interface: #b12bcf;
-    --entity-type: #d97a20;
-    --entity-function: #0a9961;
-    --entity-enum: #d93c62;
-    --entity-variable: #1770ac;
+    --entity-class: #cf4329;
+    --entity-interface: #cb7016;
+    --entity-type: #a8841a;
+    --entity-function: #3f7d2e;
+    --entity-enum: #c23a55;
+    --entity-variable: #6f8a2e;
 }
 
 [data-theme='dark'] {
-    --entity-class: #94b6ff;
-    --entity-interface: #e2b1ff;
-    --entity-type: #f6bb7d;
-    --entity-function: #76e4b3;
-    --entity-enum: #ffa0b6;
-    --entity-variable: #79c4f4;
+    --entity-class: #f0573a;
+    --entity-interface: #f0913f;
+    --entity-type: #e6c24f;
+    --entity-function: #5fb05a;
+    --entity-enum: #e34d6a;
+    --entity-variable: #9fc24a;
 }
 
 :root {
