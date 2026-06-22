@@ -3,9 +3,13 @@ import Link from 'next/link';
 
 import type { ReactNode } from 'react';
 
+// the Dark variants use a cream rule + green shadow so the press still reads on dark-ground sections
+const press = 'motion-safe:hover:translate-x-[3px] motion-safe:hover:translate-y-[3px] motion-safe:hover:shadow-none';
 const VARIANTS = {
-    solid: 'rule blk bg-(--flesh) text-(--cream) motion-safe:hover:translate-x-[3px] motion-safe:hover:translate-y-[3px] motion-safe:hover:shadow-none',
-    outline: 'rule bg-(--cream) text-(--seed-dark) hover:bg-(--seed-dark) hover:text-(--cream)',
+    solid: `rule blk ${press} bg-(--flesh) text-(--cream)`,
+    outline: `rule blk ${press} bg-(--cream) text-(--seed-dark)`,
+    solidDark: `rule-cream blk-rind ${press} bg-(--flesh) text-(--cream)`,
+    outlineDark: `rule-cream blk-rind ${press} bg-(--cream) text-(--seed-dark)`,
     ink: 'bg-(--seed-dark) text-(--cream) hover:bg-(--flesh)'
 } as const;
 
@@ -18,7 +22,7 @@ interface PosterButtonProps {
     children: ReactNode;
 }
 
-// homepage button: the poster's sharp 3px rule + hard offset shadow, not the rounded soft-shadow @seedcord/ui Button shared with docs
+// poster's sharp rule + hard shadow, not the rounded @seedcord/ui Button
 export function PosterButton({ href, variant = 'solid', className, children }: PosterButtonProps): ReactNode {
     const external = href.startsWith('http');
     return (

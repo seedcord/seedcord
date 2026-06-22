@@ -41,10 +41,40 @@
     .rule {
         border: 3px solid var(--seed-dark);
     }
+    .rule-cream {
+        border: 3px solid var(--cream);
+    }
+    .blk-cream {
+        box-shadow: 10px 10px 0 0 var(--cream);
+    }
+    .blk-rind {
+        box-shadow: 10px 10px 0 0 var(--rind);
+    }
 }
 
 @keyframes marquee-x {
     to {
         transform: translateX(-50%);
     }
+}
+
+/* shiki writes its own <pre>, give it the poster code-card padding + size (the bg comes from the brand theme) */
+.code-card .shiki {
+    margin: 0;
+    overflow-x: auto;
+    padding: 1.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    scrollbar-width: thin;
+    scrollbar-color: var(--husk) transparent;
+}
+.code-card .shiki::-webkit-scrollbar {
+    height: 8px;
+}
+.code-card .shiki::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: var(--husk);
+}
+.code-card .shiki:hover::-webkit-scrollbar-thumb {
+    background-color: var(--rind);
 }
