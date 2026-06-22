@@ -77,21 +77,47 @@ export class SearchHandler extends SlashHandler<'library/search'> {
 // the subcommand route, registration and guards are handled.
 // edit, save, hot reload runs and the gateway stays up.`;
 
-export const codecSample = `import { ButtonBuilder } from 'discord.js';
-import { CustomId } from 'seedcord';
+export const codecComponent = `import { BuilderComponent, CustomId } from 'seedcord';
 
-// packed into the customId, so more state fits the 100 char cap
-const Approve = new CustomId('approve')
-    .snowflake('userId')
-    .oneOf('action', ['approve', 'deny']);
+export const Roles = new CustomId('roles')
+    .snowflake('memberId')
+    .oneOf('mode', ['add', 'remove']);
 
-// encode straight into the button's setCustomId
-const button = new ButtonBuilder()
-    .setCustomId(Approve.encode({ userId: '123', action: 'approve' }));
+export class RolePicker extends
+    BuilderComponent<'menu_role'> {
+    constructor(memberId: string) {
+        super('menu_role');
+        const id = Roles.encode({
+            memberId,
+            mode: 'add'
+        });
+        this.instance
+            .setPlaceholder('Roles to add')
+            .setCustomId(id);
+    }
+}`;
 
-// in the button handler, params arrive decoded and typed
-const { userId, action } = this.params;
-//      userId -> string, action -> 'approve' | 'deny'`;
+export const codecHandler = `import {
+    SelectMenuHandler,
+    SelectMenuKind,
+    SelectMenuRoute
+} from 'seedcord';
+import { Roles } from '@components/role-picker';
+
+@SelectMenuRoute(SelectMenuKind.Role, Roles)
+export class RolePickerHandler extends SelectMenuHandler<
+    SelectMenuKind.Role,
+    [typeof Roles]
+> {
+    public async execute(): Promise<void> {
+        const { memberId, mode } = this.params;
+        // memberId: string, mode: 'add' | 'remove'
+        const picked = this.event.values;
+        await this.event.reply(
+            \`\${mode} \${picked.length} <@\${memberId}>\`
+        );
+    }
+}`;
 
 export const codegenOutput = `// seedcord-gen.d.ts  (generated)
 declare module 'seedcord' {

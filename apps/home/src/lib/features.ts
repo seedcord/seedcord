@@ -9,7 +9,7 @@ export const FEATURES = [
     'typed emojis',
     'typed customId codec',
     'ComponentsV2 first',
-    'button & select handlers',
+    'button & selectmenu handlers',
     'modal handlers',
     'confirmation prompts',
     'permission & role gates',
