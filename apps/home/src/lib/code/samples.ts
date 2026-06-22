@@ -43,7 +43,7 @@ const wrong: 'audio' = category; // Error 2322`;
 export const beforeRawDjs = `// build it, route to the subcommand, validate, all by hand
 const data = new SlashCommandBuilder()
     .setName('library')
-    .addSubcommand((s) => s.setName('search').addStringOption(/* ... */));
+    .addSubcommand((s) => s.setName('search').addStringOption(...));
 
 client.on(Events.InteractionCreate, async (i) => {
     if (!i.isChatInputCommand()) return;
@@ -113,17 +113,11 @@ $ seedcord dev # tui | hot reload, the gateway stays alive
 # bot online, every slash option fully typed`;
 
 export const gatesSample = `import {
-    Gated,
-    and,
-    or,
-    GuildOnly,
-    OwnerOnly,
-    RequireRole,
-    SlashRoute,
-    SlashHandler
+    Gated, and, or,
+    GuildOnly, OwnerOnly, RequireRole,
+    SlashRoute, SlashHandler
 } from 'seedcord';
 
-// and() passes when every arm does, or() when any one does
 @Gated(or(OwnerOnly(), and(GuildOnly(), RequireRole(modRoleId))))
 @SlashRoute('ban')
 export class BanHandler extends SlashHandler<'ban'> {

@@ -19,7 +19,6 @@ export function Hero(): ReactNode {
                             'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-3 py-1.5 text-xs font-semibold text-(--cream)'
                         )}
                     >
-                        <span className={cn('size-2 rounded-full bg-(--rind)')} />
                         discord.js 14 · class + decorator framework
                     </div>
                     <h1
