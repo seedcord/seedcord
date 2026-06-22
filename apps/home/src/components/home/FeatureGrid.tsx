@@ -2,16 +2,23 @@ import { cn, Icon } from '@seedcord/ui';
 import {
     AtSign,
     FolderTree,
+    GitMerge,
     HeartPulse,
     MessageSquareWarning,
     MousePointerClick,
     Plug,
+    Radio,
+    RadioTower,
     RefreshCw,
+    Rss,
+    ScrollText,
     ShieldAlert,
     Smile,
     Sparkles,
     SquareTerminal,
-    WandSparkles
+    Timer,
+    WandSparkles,
+    Wrench
 } from 'lucide-react';
 
 import { Section } from '@components/home/Section';
@@ -23,7 +30,7 @@ interface Card {
     title: string;
     icon: LucideIcon;
     dark: boolean;
-    square: string;
+    wide: boolean;
     body: ReactNode;
 }
 
@@ -31,31 +38,31 @@ const CARDS: Card[] = [
     {
         title: 'Hot reload, live gateway',
         icon: RefreshCw,
-        dark: false,
-        square: 'bg-(--rind)',
-        body: 'Edit a command, save, and the new code is live. The gateway connection stays open the whole time, no reconnect and no rate-limit penalty.'
+        dark: true,
+        wide: true,
+        body: 'Edit a command, save, and the new code is live with the gateway still connected. No reconnect and no rate-limit penalty.'
     },
     {
         title: 'Filesystem routing',
         icon: FolderTree,
-        dark: true,
-        square: 'bg-(--flesh)',
+        dark: false,
+        wide: false,
         body: (
             <>
-                A file under <code className={cn('font-mono-code text-(--rind)')}>commands/</code> is a command and a
-                decorator names it. Registration happens on boot, no deploy script to babysit.
+                A file under <code className={cn('font-mono-code text-(--flesh)')}>commands/</code> is a command,
+                registered on boot.
             </>
         )
     },
     {
         title: 'Typed command mentions',
         icon: AtSign,
-        dark: false,
-        square: 'bg-(--rind)',
+        dark: true,
+        wide: true,
         body: (
             <>
-                A typed <code className={cn('font-mono-code text-(--flesh)')}>CommandMentions</code> map turns any route
-                into a clickable mention. A wrong name is a compile error.
+                A typed <code className={cn('font-mono-code text-(--rind)')}>CommandMentions</code> map turns any
+                deployed route into a clickable mention. A wrong name is a compile error.
             </>
         )
     },
@@ -63,77 +70,126 @@ const CARDS: Card[] = [
         title: 'Typed emojis',
         icon: Smile,
         dark: true,
-        square: 'bg-(--flesh)',
-        body: (
-            <>
-                <code className={cn('font-mono-code text-(--rind)')}>Emojis</code> resolves your app emojis at startup,
-                typed by name, and any unresolved name fails the boot with the full list.
-            </>
-        )
+        wide: false,
+        body: 'App emojis resolve at startup, typed by name, missing ones fail the boot.'
+    },
+    {
+        title: 'First-class plugins',
+        icon: Plug,
+        dark: true,
+        wide: true,
+        body: 'Attach a plugin and reach it, fully typed, from any handler. Postgres (Kysely) and Mongo are built in, or write your own.'
     },
     {
         title: 'Autocomplete handlers',
         icon: Sparkles,
         dark: false,
-        square: 'bg-(--rind)',
-        body: 'Wire an autocomplete handler to an option and return suggestions as the user types, fully typed.'
+        wide: false,
+        body: 'Typed autocomplete, return suggestions as the user types.'
     },
     {
         title: 'Context menu commands',
         icon: MousePointerClick,
         dark: true,
-        square: 'bg-(--flesh)',
-        body: 'Right-click a user or a message to run a command. User and message context menus, typed and routed like your slash commands.'
+        wide: false,
+        body: 'User and message context menus, typed and routed like slash commands.'
     },
     {
         title: 'Confirmation prompts',
         icon: MessageSquareWarning,
         dark: false,
-        square: 'bg-(--rind)',
+        wide: false,
         body: (
             <>
                 <code className={cn('font-mono-code text-(--flesh)')}>getConfirmation</code> sends an ephemeral confirm
-                prompt, waits for the caller, and resolves to a boolean.
+                prompt and resolves to a boolean.
             </>
         )
+    },
+    {
+        title: 'Typed event handlers',
+        icon: Radio,
+        dark: true,
+        wide: false,
+        body: (
+            <>
+                <code className={cn('font-mono-code text-(--rind)')}>@RegisterEvent</code> binds a handler whose body is
+                typed to that exact event.
+            </>
+        )
+    },
+    {
+        title: 'Strict event emitter',
+        icon: RadioTower,
+        dark: false,
+        wide: false,
+        body: 'A fully typed EventEmitter, every emit and listener checked against the event map.'
+    },
+    {
+        title: 'Typed pub/sub bus',
+        icon: Rss,
+        dark: true,
+        wide: false,
+        body: 'An application event bus, add your own events by augmenting one interface.'
+    },
+    {
+        title: 'Interaction and event middleware',
+        icon: GitMerge,
+        dark: false,
+        wide: false,
+        body: 'Typed middleware runs before your handlers, the payload typed per registration.'
     },
     {
         title: 'Notice, Fault, Silence',
         icon: ShieldAlert,
         dark: true,
-        square: 'bg-(--flesh)',
-        body: 'Throw a Notice to refuse and tell the user why, a Fault to log and trace an unexpected error, or Silence to stop with no reply.'
+        wide: false,
+        body: 'Refuse with a Notice, log and trace a Fault, or Silence with no reply.'
+    },
+    {
+        title: 'Sliding-window rate limiter',
+        icon: Timer,
+        dark: false,
+        wide: false,
+        body: 'Per-key sliding-window limiting, separate from per-command cooldowns.'
     },
     {
         title: 'Coordinated lifecycle',
         icon: HeartPulse,
+        dark: true,
+        wide: false,
+        body: 'Phased startup and shutdown with SIGTERM handling and an HTTP health check.'
+    },
+    {
+        title: 'Scoped logger',
+        icon: ScrollText,
         dark: false,
-        square: 'bg-(--rind)',
-        body: 'A phased startup and shutdown with SIGTERM handling and an HTTP health check, built for real hosting.'
+        wide: false,
+        body: 'A Winston wrapper with named channels, rotation, and an installable sink.'
     },
     {
         title: 'seedcord commands',
         icon: WandSparkles,
         dark: true,
-        square: 'bg-(--flesh)',
-        body: 'Inspect your deployed application commands and prune stale or duplicate registrations from the CLI, with a guided wizard or flags.'
+        wide: false,
+        body: 'Inspect and prune your deployed guild commands from the CLI.'
     },
     {
-        title: 'Plugins',
-        icon: Plug,
+        title: 'Utility functions',
+        icon: Wrench,
         dark: false,
-        square: 'bg-(--rind)',
-        body: 'A plugin contract with first-party Postgres (Kysely) and Mongo plugins, or write your own.'
+        wide: false,
+        body: 'Typed helpers, duration parsing, ascii tables and more.'
     },
     {
         title: 'Live dev terminal',
         icon: SquareTerminal,
         dark: true,
-        square: 'bg-(--flesh)',
+        wide: false,
         body: (
             <>
                 <code className={cn('font-mono-code text-(--rind)')}>seedcord dev</code> runs a full-screen terminal UI
-                with logs, reload status and the gateway state in one view.
+                with logs, reload and gateway state.
             </>
         )
     }
@@ -142,16 +198,23 @@ const CARDS: Card[] = [
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="cream">
-            <div className={cn('grid gap-6 md:grid-cols-2 lg:grid-cols-3')}>
+            <div className={cn('grid grid-flow-dense gap-4 md:grid-cols-2 lg:grid-cols-3')}>
                 {CARDS.map((card) => (
                     <div
                         key={card.title}
                         className={cn(
                             'rule blk-sm rounded-sm p-6',
-                            card.dark ? 'bg-(--seed-dark) text-(--cream)' : 'bg-(--cream)'
+                            card.dark ? 'bg-(--seed-dark) text-(--cream)' : 'bg-(--cream)',
+                            card.wide && 'lg:col-span-2'
                         )}
                     >
-                        <div className={cn('flex size-10 items-center justify-center rounded-sm', card.square)}>
+                        <div
+                            className={cn(
+                                'flex items-center justify-center rounded-sm',
+                                card.wide ? 'size-12' : 'size-10',
+                                card.dark ? 'bg-(--flesh)' : 'bg-(--rind)'
+                            )}
+                        >
                             <Icon icon={card.icon} size={20} className={cn('text-(--cream)')} />
                         </div>
                         <h3 className={cn('mt-4 mb-2 text-xl font-semibold')}>{card.title}</h3>
