@@ -1,8 +1,9 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 export default defineConfig({
     test: {
         testTimeout: 5000,
+        exclude: [...configDefaults.exclude, '**/.claude/**'],
         coverage: {
             enabled: true,
             provider: 'v8',
