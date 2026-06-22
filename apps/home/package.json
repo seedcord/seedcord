@@ -15,7 +15,6 @@
     "dependencies": {
         "@seedcord/ui": "workspace:*",
         "lucide-react": "catalog:deps",
-        "motion": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",

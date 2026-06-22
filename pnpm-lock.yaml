@@ -315,9 +315,6 @@ importers:
       lucide-react:
         specifier: catalog:deps
         version: 1.21.0(react@19.2.7)
-      motion:
-        specifier: catalog:deps
-        version: 12.40.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       next:
         specifier: catalog:deps
         version: 16.2.9(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
