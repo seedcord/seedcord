@@ -1,0 +1,23 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "@seedcord/docs": "0.1.4",
+    "@seedcord/mock": "0.2.21",
+    "@seedcord/cli": "0.3.0",
+    "@seedcord/docs-engine": "0.3.0",
+    "@seedcord/docs-generator": "0.2.3",
+    "@seedcord/errors": "0.2.0",
+    "@seedcord/eslint-config": "1.4.2",
+    "@seedcord/kit": "0.1.1",
+    "@seedcord/plugins": "0.7.1",
+    "seedcord": "0.14.0",
+    "@seedcord/services": "0.8.1",
+    "@seedcord/tsconfig": "2.0.0",
+    "@seedcord/tsdown-config": "2.0.0",
+    "@seedcord/types": "0.7.0",
+    "@seedcord/ui": "0.1.0",
+    "@seedcord/utils": "0.6.1"
+  },
+  "changesets": []
+}
