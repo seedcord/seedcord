@@ -8,8 +8,8 @@ import { codecSample } from '@lib/code/samples';
 import type { ReactNode } from 'react';
 
 const CHIPS = [
-    { icon: ArrowRightFromLine, label: 'encode(state) to string' },
-    { icon: ArrowLeftFromLine, label: 'decode(id) to typed state' }
+    { icon: ArrowRightFromLine, label: 'encode(values) to string' },
+    { icon: ArrowLeftFromLine, label: 'decode(id) to typed values' }
 ] as const;
 
 export function Codec(): ReactNode {

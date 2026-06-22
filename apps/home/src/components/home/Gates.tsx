@@ -28,8 +28,8 @@ export function Gates(): ReactNode {
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--cream)/90')}>
                         Stack <code className={cn('font-mono-code')}>@Gated</code> guards on a handler and combine them
-                        with and() and or(). Guild, owner, role, permission and cooldown, each one checked against the
-                        interaction it runs on, at build time.
+                        with and() and or(). Guild, owner, role, permission and cooldown each run at runtime, before
+                        your handler does. Attaching one to the wrong handler kind is a compile error.
                     </p>
                     <div className={cn('mt-7 flex flex-wrap gap-2')}>
                         {CHIPS.map((chip) => (

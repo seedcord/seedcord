@@ -1,7 +1,6 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 import {
     AtSign,
-    FolderTree,
     GitMerge,
     HeartPulse,
     MessageSquareWarning,
@@ -15,9 +14,11 @@ import {
     ShieldAlert,
     Smile,
     Sparkles,
+    Split,
     SquareTerminal,
     Timer,
     WandSparkles,
+    Waypoints,
     Wrench
 } from 'lucide-react';
 
@@ -38,18 +39,31 @@ interface Group {
 const GROUPS: Group[] = [
     {
         area: 'Commands & interactions',
-        count: 6,
+        count: 7,
         accent: 'flesh',
         rows: [
-            { icon: FolderTree, label: 'filesystem routing', gloss: 'a file is a command, registered on boot' },
+            {
+                icon: Waypoints,
+                label: 'decorator routing',
+                gloss: '@SlashRoute, @RegisterEvent and friends wire handlers at boot'
+            },
             { icon: AtSign, label: 'command mentions', gloss: 'typed, clickable, compile-checked' },
             { icon: Smile, label: 'emojis', gloss: 'resolved at startup, typed by name' },
-            { icon: Sparkles, label: 'autocomplete', gloss: 'typed suggestions as the user types' },
+            {
+                icon: Sparkles,
+                label: 'typed autocomplete',
+                gloss: 'a typed handler per option, missing one is a compile error'
+            },
             { icon: MousePointerClick, label: 'context menus', gloss: 'user and message, typed and routed' },
             {
                 icon: MessageSquareWarning,
                 label: 'getConfirmation',
                 gloss: 'an ephemeral confirm, resolves to a boolean'
+            },
+            {
+                icon: Split,
+                label: 'multi-route handlers',
+                gloss: 'one class serves several routes, each typed via this.match'
             }
         ]
     },
@@ -69,7 +83,7 @@ const GROUPS: Group[] = [
         count: 4,
         accent: 'flesh',
         rows: [
-            { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to trace, Silence to drop' },
+            { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to report, Silence to drop' },
             { icon: Timer, label: 'rate limiter', gloss: 'per-key sliding window' },
             { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup, shutdown and health' },
             { icon: ScrollText, label: 'logger', gloss: 'scoped channels, rotation, sinks' }
@@ -80,8 +94,12 @@ const GROUPS: Group[] = [
         count: 3,
         accent: 'rind',
         rows: [
-            { icon: RefreshCw, label: 'hot reload', gloss: 'live code, the gateway stays up' },
-            { icon: WandSparkles, label: 'seedcord commands', gloss: 'inspect and prune deployed guild commands' },
+            { icon: RefreshCw, label: 'hot reload', gloss: 'Vite HMR swaps your code live, the gateway stays up' },
+            {
+                icon: WandSparkles,
+                label: 'seedcord commands',
+                gloss: 'inspect and clean deployed application commands'
+            },
             { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' }
         ]
     },
