@@ -7,7 +7,7 @@ import { useState } from 'react';
 
 import type { ReactElement } from 'react';
 
-const noticeClassName = tw`shadow-soft inline-flex max-w-full items-center gap-2.5 rounded-xl py-2 pr-2 pl-3`;
+const noticeClassName = tw`shadow-soft inline-flex max-w-full items-center gap-2.5 py-2 pr-2 pl-3`;
 
 // The entity route redirects a dead cross-package link here with `?moved=<symbol>` (see
 // app/(docs)/entity/route.ts). The package index page is force-static, so the symbol is read
@@ -35,7 +35,7 @@ export function MovedEntityNotice({ packageLabel }: { packageLabel: string }): R
                     onClick={() => {
                         setDismissed(true);
                     }}
-                    className={cn('size-7 shrink-0 rounded-lg')}
+                    className={cn('size-7 shrink-0')}
                 >
                     <Icon icon={X} size={15} />
                 </Button>

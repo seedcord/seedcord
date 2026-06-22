@@ -39,7 +39,7 @@ const NON_ENTITY_BADGES: Record<NonEntityResultKind, string> = {
     resource: tw`border-(--badge-resource-border) bg-(--badge-resource-bg) text-(--badge-resource-text)`
 };
 
-const BASE_ICON_CLASSES = tw`flex size-8 shrink-0 items-center justify-center rounded-xl border transition duration-150`;
+const BASE_ICON_CLASSES = tw`flex size-8 shrink-0 items-center justify-center rounded-md border transition duration-150`;
 
 interface CommandListItemProps {
     action: CommandAction;
@@ -81,7 +81,7 @@ export function CommandListItem({
             onClick={() => onSelect(action)}
             onMouseMove={() => onActivate(index)}
             className={cn(
-                'group/item mt-1 flex cursor-pointer items-start gap-3 rounded-xl border border-transparent bg-transparent p-3 text-sm text-(--text) outline-hidden transition first:mt-0',
+                'group/item mt-1 flex cursor-pointer items-start gap-3 rounded-md border border-transparent bg-transparent p-3 text-sm text-(--text) outline-hidden transition first:mt-0',
                 activeHighlight
             )}
         >

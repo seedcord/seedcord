@@ -133,6 +133,10 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
                 'punctuation.terminator'
             ],
             settings: { foreground: p.punctuation }
+        },
+        {
+            scope: ['meta.type.tuple meta.brace.square'],
+            settings: { foreground: p.type, fontStyle: 'italic' }
         }
     ];
 }

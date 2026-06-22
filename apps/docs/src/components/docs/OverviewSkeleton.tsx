@@ -8,7 +8,7 @@ export function OverviewSkeleton(): ReactElement {
             <div className={cn('space-y-4')}>
                 <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between')}>
                     <div className={cn('mx-auto h-8 w-48 rounded-md bg-(--surface-moderate) lg:mx-0')} />
-                    <div className={cn('h-9 w-full rounded-lg bg-(--surface-subtle) lg:w-56')} />
+                    <div className={cn('h-9 w-full rounded-md bg-(--surface-subtle) lg:w-56')} />
                 </div>
                 <div className={cn('h-px w-full bg-(--border)')} />
             </div>

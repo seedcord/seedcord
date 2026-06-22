@@ -6,8 +6,8 @@ import type { ComponentPropsWithoutRef, ElementType, HTMLAttributes, ReactElemen
 const cardBaseClassName = tw`relative border border-(--border)`;
 
 const cardVariantClasses = {
-    default: tw`rounded-lg bg-(--surface-subtle) shadow-(--shadow-card)`,
-    flat: tw`rounded-lg bg-(--surface-subtle)`
+    default: tw`rounded-md bg-(--surface-subtle) shadow-(--shadow-card)`,
+    flat: tw`rounded-md bg-(--surface-subtle)`
 } as const;
 
 export type CardVariant = keyof typeof cardVariantClasses;

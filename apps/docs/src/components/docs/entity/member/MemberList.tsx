@@ -38,7 +38,7 @@ export function MemberList({ items, prefix, onNavigate }: MemberListProps): Reac
                                 onNavigate(item.id);
                             }}
                             className={cn(
-                                'group bg-surface-subtle flex w-full min-w-0 items-center justify-between rounded-lg border border-(--border)/70 px-3.5 py-2 text-sm text-(--text)',
+                                'group bg-surface-subtle flex w-full min-w-0 items-center justify-between rounded-md border border-(--border)/70 px-3.5 py-2 text-sm text-(--text)',
                                 'hover:border-(--border-accent-b-subtle)',
                                 'hover:bg-(--surface-accent-b-moderate)'
                             )}

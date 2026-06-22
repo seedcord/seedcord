@@ -10,7 +10,7 @@ import type { ComponentPropsWithoutRef, ReactElement } from 'react';
 const popoverContentBaseClassName = [
     // z-70 so popovers render above the MobilePanelDialog
     tw`z-70`,
-    tw`rounded-lg`,
+    tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`p-4 shadow-(--shadow-card)`,
     // scale from the radix-injected trigger anchor, not the panel center

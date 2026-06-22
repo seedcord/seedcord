@@ -10,7 +10,7 @@ import type { ButtonHTMLAttributes, ReactElement, Ref } from 'react';
 const buttonBaseClassName = [
     tw`inline-flex items-center justify-center gap-2`,
     tw`border border-transparent font-medium`,
-    tw`rounded-lg`,
+    tw`rounded-md`,
     // GPU-promote so the first :active scale doesn't paint-stall on press.
     tw`transform-[translateZ(0)] will-change-transform backface-hidden`,
     tw`active:transform-[translateZ(0)_scale(0.97)] disabled:active:transform-[translateZ(0)]`,

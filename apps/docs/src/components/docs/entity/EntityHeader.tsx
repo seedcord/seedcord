@@ -57,7 +57,7 @@ const SourceButton = ({ href }: { href: string }): ReactElement => (
         asChild
         variant="ghost"
         size="icon"
-        className={cn('border-border/80 text-subtle size-10 shrink-0 rounded-xl border transition hover:text-(--text)')}
+        className={cn('border-border/80 text-subtle size-10 shrink-0 border transition hover:text-(--text)')}
         aria-label="Open source in a new tab"
     >
         <a href={href} target="_blank" rel="noreferrer noopener">

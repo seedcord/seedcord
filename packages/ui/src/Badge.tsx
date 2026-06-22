@@ -3,7 +3,7 @@ import { tw } from './lib/tw';
 
 import type { HTMLAttributes, ReactElement, Ref } from 'react';
 
-const badgeBaseClassName = tw`inline-flex items-center gap-1 rounded-full border whitespace-nowrap`;
+const badgeBaseClassName = tw`inline-flex items-center gap-1 rounded-sm border whitespace-nowrap`;
 
 const badgeVariantClasses = {
     status: tw`px-2 py-0.5 text-[0.625rem] font-semibold tracking-wider uppercase`,
@@ -27,7 +27,7 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
     ref?: Ref<HTMLSpanElement>;
 }
 
-// Use for short status/category tags. Don't roll `border rounded-full…` spans.
+// Use for short status/category tags. Don't roll `border rounded-sm…` spans.
 export function Badge({ variant = 'status', tone = 'neutral', className, ...props }: BadgeProps): ReactElement {
     return (
         <span

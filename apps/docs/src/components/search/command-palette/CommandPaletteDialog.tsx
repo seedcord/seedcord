@@ -57,7 +57,7 @@ function CommandListContent({
         emptyContent = (
             <div
                 className={cn(
-                    'mx-2 rounded-xl border border-(--border-accent-b-subtle) bg-(--surface-accent-b-subtle) px-3 py-2 text-sm text-(--text-accent-b-subtle)'
+                    'mx-2 rounded-md border border-(--border-accent-b-subtle) bg-(--surface-accent-b-subtle) px-3 py-2 text-sm text-(--text-accent-b-subtle)'
                 )}
             >
                 {errorMessage}

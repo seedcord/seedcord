@@ -21,7 +21,7 @@ export function DesktopSearchButton(): ReactElement {
         <Button
             variant="ghost"
             className={cn(
-                'group shadow-soft w-full max-w-70 items-center justify-between rounded-xl border border-(--border) bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle)'
+                'group shadow-soft w-full max-w-70 items-center justify-between border border-(--border) bg-(--surface-moderate) px-3 py-2 text-sm text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-accent-a-subtle)'
             )}
             onClick={toggleCommandPalette}
             aria-label="Search documentation"
