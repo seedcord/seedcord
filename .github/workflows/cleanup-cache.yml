@@ -75,7 +75,8 @@ jobs:
                   echo "Cleaning caches for refs: $REFS"
                   for branchRef in $REFS; do
                     echo "Fetching cache entries for $branchRef"
-                    cacheKeys=$(gh actions-cache list -R "$REPO" -B "$branchRef" --limit 200 | cut -f 1)
+                    # delete only the per-commit turbo caches, not the pnpm store cache the next run reuses
+                    cacheKeys=$(gh actions-cache list -R "$REPO" -B "$branchRef" --limit 100 | cut -f 1 | grep '^Linux-turbo-' || true)
 
                     if [ -z "$cacheKeys" ]; then
                       echo "No caches found for $branchRef"

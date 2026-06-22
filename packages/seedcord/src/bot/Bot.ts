@@ -1,5 +1,5 @@
+import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, ShutdownPhase } from '@seedcord/services';
-import { EmojiMap } from '@seedcord/types';
 import chalk from 'chalk';
 import { Client, ClientEvents, Interaction } from 'discord.js';
 import { Envapt } from 'envapt';
@@ -8,10 +8,12 @@ import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventDispatcher } from '@bControllers/EventDispatcher';
 import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
 import { Plugin } from '@interfaces/Plugin';
-import { validateDiscordToken } from '@miscellaneous/validateDiscordToken';
 
+import { CommandMentionInjector, CommandMentions } from './injectors/CommandMentionInjector';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
+import type { InjectedMentionMap } from './injectors/CommandMentionInjector';
+import type { InjectedEmojiMap } from './injectors/EmojiInjector';
 import type { Core } from '@interfaces/Core';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
@@ -49,7 +51,8 @@ export class Bot extends Plugin<BotEvents> {
     private readonly events?: EventDispatcher;
     public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
-    public readonly emojis: EmojiMap = Emojis;
+    public readonly emojis: InjectedEmojiMap = Emojis;
+    public readonly mentions: InjectedMentionMap = CommandMentions;
 
     /** @internal For use in dev mode */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
@@ -72,8 +75,12 @@ export class Bot extends Plugin<BotEvents> {
         }
 
         if (core.config.bot.commands.path) {
-            this.commands = new CommandRegistry(core);
+            const mentionInjector = new CommandMentionInjector(core);
+            this.commands = new CommandRegistry(core, (result) => {
+                mentionInjector.inject(result);
+            });
         }
+
         this.emojiInjector = new EmojiInjector(core);
 
         const BOT_SHUTDOWN_TIMEOUT = 2000;
@@ -102,14 +109,14 @@ export class Bot extends Plugin<BotEvents> {
 
         await this.login(token);
 
+        await this.emojiInjector.init();
+
         if (this.commands) {
             await this.commands.init();
             await this.commands.setCommands();
             this.interactions?.warnUnhandledRoutes(this.commands.routeLeaves());
             this.interactions?.warnUnhandledContextMenuRoutes(this.commands.contextMenuLeaves());
         }
-
-        await this.emojiInjector.init();
     }
 
     /**

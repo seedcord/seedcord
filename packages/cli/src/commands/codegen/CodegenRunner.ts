@@ -13,16 +13,16 @@ import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
-import { RegistryGenerator } from './RegistryGenerator';
-import { renderRegistry } from './renderRegistry';
+import { AugmentationBuilder } from './AugmentationBuilder';
+import { renderAugmentation } from './renderAugmentation';
 
-import type { ScannedCommand } from './RegistryGenerator';
+import type { ScannedCommand } from './AugmentationBuilder';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
-import type { ILogger, SeedcordInstance } from '@seedcord/types';
+import type { EmojiConfig, ILogger, SeedcordInstance } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
-const OUTPUT_FILENAME = 'command-registry.gen.ts';
+const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
 
 interface BuilderLike {
     component: { toJSON: () => unknown };
@@ -30,15 +30,15 @@ interface BuilderLike {
 
 /**
  * Orchestrates `seedcord codegen`. Locates and loads the CLI config, imports the user's Seedcord instance to
- * read its commands directory, scans and instantiates each command for its `toJSON()`, then renders the
- * registry and either writes it or, under `--check`, diffs it against the committed file.
+ * read its commands directory and emoji config, scans and instantiates each command for its `toJSON()`, then
+ * renders the augmentations and either writes them or, under `--check`, diffs against the committed file.
  */
 export class CodegenRunner {
     constructor(
         private readonly locator: ConfigLocator,
         private readonly configLoader: ConfigLoader,
         private readonly moduleLoader: ModuleLoader,
-        private readonly generator: RegistryGenerator,
+        private readonly generator: AugmentationBuilder,
         private readonly logger: ILogger
     ) {}
 
@@ -46,14 +46,15 @@ export class CodegenRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
-        const generator = new RegistryGenerator(logger);
+        const generator = new AugmentationBuilder(logger);
 
         return new CodegenRunner(locator, configLoader, moduleLoader, generator, logger);
     }
 
     public async run(check: boolean): Promise<void> {
         const config = await this.loadConfig();
-        const rendered = renderRegistry(this.generator.generate(await this.scan(config)));
+        const { commands, emojis } = await this.scan(config);
+        const rendered = renderAugmentation(this.generator.generate(commands, emojis));
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
 
         if (check) {
@@ -68,13 +69,14 @@ export class CodegenRunner {
         return this.configLoader.load(this.locator.locate());
     }
 
-    private async scan(config: ResolvedSeedcordDevConfig): Promise<ScannedCommand[]> {
-        const commandsDir = await this.resolveCommandsDir(config);
-        if (!commandsDir) return [];
+    private async scan(
+        config: ResolvedSeedcordDevConfig
+    ): Promise<{ commands: ScannedCommand[]; emojis: EmojiConfig }> {
+        const { commandsDir, emojis } = await this.resolveInstance(config);
 
         const commands: ScannedCommand[] = [];
-        await this.walk(commandsDir, commands, new Set(), true);
-        return commands;
+        if (commandsDir) await this.walk(commandsDir, commands, new Set(), true);
+        return { commands, emojis };
     }
 
     // the bot's own scan runs under tsx/vite, so its import() handles .ts. codegen runs under plain node, so
@@ -108,9 +110,11 @@ export class CodegenRunner {
         }
     }
 
-    private async resolveCommandsDir(config: ResolvedSeedcordDevConfig): Promise<string | undefined> {
-        // loading the instance constructs the bot to read commands.path, so its lifecycle and plugin setup logs
-        // follow this line. codegen never starts the bot, nothing logs in or connects.
+    private async resolveInstance(
+        config: ResolvedSeedcordDevConfig
+    ): Promise<{ commandsDir: string | undefined; emojis: EmojiConfig }> {
+        // loading the instance constructs the bot to read commands.path and emojis, so its lifecycle and plugin
+        // setup logs follow this line. codegen never starts the bot, nothing logs in or connects.
         this.logger.info('Loading instance to resolve the commands directory');
         const module = await this.moduleLoader.importModule(config.instance);
         const instance = resolveDefaultExport(module);
@@ -120,7 +124,10 @@ export class CodegenRunner {
 
         // the bot resolves commands.path relative to cwd, so codegen must too or it scans the wrong dir.
         const commandsPath = instance.config.bot.commands.path;
-        return commandsPath ? resolve(process.cwd(), commandsPath) : undefined;
+        return {
+            commandsDir: commandsPath ? resolve(process.cwd(), commandsPath) : undefined,
+            emojis: instance.config.bot.emojis ?? {}
+        };
     }
 
     private commandJsonOf(exported: unknown): RESTPostAPIApplicationCommandsJSONBody | undefined {
@@ -171,14 +178,14 @@ export class CodegenRunner {
     private async write(rendered: string, outputPath: string): Promise<void> {
         await mkdir(dirname(outputPath), { recursive: true });
         await writeFile(outputPath, rendered, 'utf8');
-        this.logger.info(`Command registry written to ${outputPath}`);
+        this.logger.info(`Augmentations written to ${outputPath}`);
     }
 
     private async check(rendered: string, outputPath: string): Promise<void> {
         const onDisk = existsSync(outputPath) ? await readFile(outputPath, 'utf8') : '';
         if (onDisk === rendered) return;
 
-        this.logger.error(`Command registry is out of date. Run \`seedcord codegen\` and commit ${outputPath}.`);
+        this.logger.error(`Augmentations are out of date. Run \`seedcord codegen\` and commit ${outputPath}.`);
         process.exitCode = 1;
     }
 }

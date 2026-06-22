@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { PACKAGES_DIR } from './utils/constants';
 import { buildSourceIndex } from '../src/source-index';
@@ -14,8 +14,16 @@ function scan(githubBase = 'https://github.com/seedcord/seedcord'): ReturnType<t
 }
 
 describe('buildSourceIndex', () => {
+    let withBase: ReturnType<typeof buildSourceIndex>;
+    let withoutBase: ReturnType<typeof buildSourceIndex>;
+
+    beforeAll(() => {
+        withBase = scan();
+        withoutBase = scan('');
+    }, 60000);
+
     it('records the exact src line and column of a top-level export', () => {
-        const [source] = scan().sources.MockClass ?? [];
+        const [source] = withBase.sources.MockClass ?? [];
         expect(source).toEqual({
             file: MOCK_CLASS,
             line: 31,
@@ -25,29 +33,29 @@ describe('buildSourceIndex', () => {
     });
 
     it('records a position per member, not the parent location', () => {
-        const [computed] = scan().sources['MockClass.computedProp'] ?? [];
+        const [computed] = withBase.sources['MockClass.computedProp'] ?? [];
         expect(computed?.file).toBe(MOCK_CLASS);
         expect(computed?.line).toBe(117);
     });
 
     it('records the constructor under the `.constructor` key', () => {
-        const [ctor] = scan().sources['MockClass.constructor'] ?? [];
+        const [ctor] = withBase.sources['MockClass.constructor'] ?? [];
         expect(ctor?.file).toBe(MOCK_CLASS);
         expect(ctor?.line).toBe(60);
     });
 
     it('records one entry per documented overload, excluding the implementation signature', () => {
-        const overloads = scan().sources['MockClass.publicMethod'] ?? [];
+        const overloads = withBase.sources['MockClass.publicMethod'] ?? [];
         expect(overloads.map((entry) => entry.line)).toEqual([72, 77]);
     });
 
     it('omits the URL when no GitHub base is supplied but keeps line and column', () => {
-        const [source] = scan('').sources.MockClass ?? [];
+        const [source] = withoutBase.sources.MockClass ?? [];
         expect(source?.url).toBeUndefined();
         expect(source?.line).toBe(31);
     });
 
     it('reports no re-exports for a standalone package', () => {
-        expect(scan().reexports).toEqual([]);
+        expect(withBase.reexports).toEqual([]);
     });
 });

@@ -1,11 +1,7 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from './ErrorCodes';
+import { SeedcordError } from './SeedcordError';
 
-/**
- * Checks if the token is present, is a string, and matches the general format of a Discord token.
- *
- * @internal
- */
+/** @internal */
 export function validateDiscordToken(raw: unknown): string {
     if (raw === null || raw === undefined) {
         throw new SeedcordError(SeedcordErrorCode.ConfigMissingDiscordToken);

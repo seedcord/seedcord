@@ -2,9 +2,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { RegistryGenerator } from '@commands/codegen/RegistryGenerator';
+import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
 
-import type { SlashTables } from '@commands/codegen/RegistryGenerator';
+import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
 
@@ -19,12 +19,13 @@ const silentLogger: ILogger = {
 };
 
 function tablesFor(...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]): SlashTables {
-    return new RegistryGenerator(silentLogger).generate(
-        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() }))
+    return new AugmentationBuilder(silentLogger).generate(
+        commands.map((command, index) => ({ sourceFile: `command-${index}.ts`, json: command.toJSON() })),
+        {}
     ).slash;
 }
 
-describe('RegistryGenerator', () => {
+describe('AugmentationBuilder', () => {
     it('builds a flat command into one route with its option table', () => {
         const tables = tablesFor(
             new SlashCommandBuilder()
@@ -123,7 +124,7 @@ describe('RegistryGenerator', () => {
     });
 
     it('throws naming both source files when two commands resolve to the same route', () => {
-        const generator = new RegistryGenerator(silentLogger);
+        const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
                 sourceFile: 'commands/ban.ts',
@@ -137,7 +138,7 @@ describe('RegistryGenerator', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands);
+            generator.generate(commands, {});
         } catch (error: unknown) {
             caught = error;
         }
@@ -159,7 +160,7 @@ describe('RegistryGenerator', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const { slash } = new RegistryGenerator(logger).generate([{ sourceFile: 'admin.ts', json }]);
+        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
 
         expect(slash).toEqual({ 'admin/ping': {} });
         expect(warnings.some((warning) => warning.includes('admin/empty'))).toBe(true);
@@ -385,7 +386,7 @@ describe('RegistryGenerator', () => {
             .addSubcommand((sc) => sc.setName('ping').setDescription('pd'))
             .toJSON();
 
-        const { slash } = new RegistryGenerator(logger).generate([{ sourceFile: 'admin.ts', json }]);
+        const { slash } = new AugmentationBuilder(logger).generate([{ sourceFile: 'admin.ts', json }], {});
 
         expect(slash).toEqual({ 'admin/ping': {} });
         expect(slash).not.toHaveProperty('admin/empty');
@@ -393,7 +394,7 @@ describe('RegistryGenerator', () => {
     });
 
     it('throws CliCodegenDuplicateRoute naming both files when a flat command and a group leaf collide', () => {
-        const generator = new RegistryGenerator(silentLogger);
+        const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
                 sourceFile: 'commands/role-add-user.ts',
@@ -425,7 +426,7 @@ describe('RegistryGenerator', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands);
+            generator.generate(commands, {});
         } catch (error: unknown) {
             caught = error;
         }
@@ -443,10 +444,13 @@ describe('RegistryGenerator', () => {
             .setName('Report Message')
             .setType(ApplicationCommandType.Message);
 
-        const registry = new RegistryGenerator(silentLogger).generate([
-            { sourceFile: 'view.ts', json: view.toJSON() },
-            { sourceFile: 'report.ts', json: report.toJSON() }
-        ]);
+        const registry = new AugmentationBuilder(silentLogger).generate(
+            [
+                { sourceFile: 'view.ts', json: view.toJSON() },
+                { sourceFile: 'report.ts', json: report.toJSON() }
+            ],
+            {}
+        );
 
         expect(registry.slash).toEqual({});
         expect(registry.userContextMenus).toEqual(['View Profile']);
@@ -457,17 +461,20 @@ describe('RegistryGenerator', () => {
         const userReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.User);
         const messageReport = new ContextMenuCommandBuilder().setName('Report').setType(ApplicationCommandType.Message);
 
-        const registry = new RegistryGenerator(silentLogger).generate([
-            { sourceFile: 'user-report.ts', json: userReport.toJSON() },
-            { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
-        ]);
+        const registry = new AugmentationBuilder(silentLogger).generate(
+            [
+                { sourceFile: 'user-report.ts', json: userReport.toJSON() },
+                { sourceFile: 'message-report.ts', json: messageReport.toJSON() }
+            ],
+            {}
+        );
 
         expect(registry.userContextMenus).toEqual(['Report']);
         expect(registry.messageContextMenus).toEqual(['Report']);
     });
 
     it('throws naming both files when two user context menus share a name', () => {
-        const generator = new RegistryGenerator(silentLogger);
+        const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
                 sourceFile: 'commands/view-a.ts',
@@ -487,7 +494,7 @@ describe('RegistryGenerator', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands);
+            generator.generate(commands, {});
         } catch (error: unknown) {
             caught = error;
         }
@@ -501,7 +508,7 @@ describe('RegistryGenerator', () => {
     });
 
     it('throws naming both files when two message context menus share a name', () => {
-        const generator = new RegistryGenerator(silentLogger);
+        const generator = new AugmentationBuilder(silentLogger);
         const commands = [
             {
                 sourceFile: 'commands/report-a.ts',
@@ -515,7 +522,7 @@ describe('RegistryGenerator', () => {
 
         let caught: unknown;
         try {
-            generator.generate(commands);
+            generator.generate(commands, {});
         } catch (error: unknown) {
             caught = error;
         }

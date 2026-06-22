@@ -27,7 +27,7 @@ export interface SlashOption {
  *
  * @example
  * ```ts
- * // command-registry.gen.ts (emitted, committed)
+ * // seedcord-gen.d.ts (emitted, committed)
  * declare module 'seedcord' {
  *   interface SlashOptionRegistry {
  *     ban: { target: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };

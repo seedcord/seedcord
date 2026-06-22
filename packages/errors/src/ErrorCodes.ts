@@ -16,6 +16,8 @@ export enum SeedcordErrorCode {
     ConfigHandledExceptionWebhookMissing = 1005,
     /** HANDLED_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
     ConfigHandledExceptionWebhookInvalid = 1006,
+    /** One or more configured emojis could not be resolved at startup. */
+    ConfigEmojiUnresolved = 1007,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
@@ -168,5 +170,17 @@ export enum SeedcordErrorCode {
     /** The commands directory could not be read during codegen. */
     CliCodegenCommandsDirUnreadable = 3123,
     /** Two context-menu commands of the same kind share a name during codegen. */
-    CliCodegenDuplicateContextMenu = 3124
+    CliCodegenDuplicateContextMenu = 3124,
+    /** Could not resolve the application from the bot token during `commands --clean`. */
+    CliCleanAppFetchFailed = 3126,
+    /** `commands --clean` ran with neither --guild nor --all-guilds, so there is nothing to scan. */
+    CliCleanNoGuilds = 3127,
+    /** `commands --clean` combined --purge with --all-guilds, which would wipe every guild. */
+    CliCleanPurgeAllGuilds = 3128,
+    /** An interactive prompt was cancelled (Ctrl-C), so the command aborts without changes. */
+    CliCancelled = 3129,
+    /** `commands --clean --all-guilds` matched more guilds than the safety threshold without `--yes`. */
+    CliCleanLargeBotUnconfirmed = 3130,
+    /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
+    CliCleanApplyNeedsYes = 3131
 }

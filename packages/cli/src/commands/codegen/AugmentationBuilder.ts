@@ -3,7 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-api-types/v10';
 
-import type { ILogger, OptionKind, SlashOption } from '@seedcord/types';
+import type { EmojiConfig, ILogger, OptionKind, SlashOption } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
     RESTPostAPIApplicationCommandsJSONBody,
@@ -17,11 +17,15 @@ export type RouteOptions = Record<string, SlashOption>;
 /** The slash tables, keyed by route string (`cmd`, `cmd/sub`, or `cmd/group/sub`). */
 export type SlashTables = Record<string, RouteOptions>;
 
-/** Everything codegen emits into the generated file, the slash option tables plus the two context-menu name sets. */
-export interface GeneratedRegistry {
+/** Each configured emoji key mapped to its config form, so the generated EmojiMap row types the right value. */
+export type EmojiKinds = Record<string, 'string' | 'tuple'>;
+
+/** Everything codegen emits into the generated file, the slash option tables, the context-menu name sets, and the emoji keys. */
+export interface Augmentation {
     slash: SlashTables;
     userContextMenus: string[];
     messageContextMenus: string[];
+    emojis: EmojiKinds;
 }
 
 /** A command discovered by the codegen scan, paired with its source path for diagnostics. */
@@ -46,15 +50,24 @@ const KIND_BY_TYPE = {
     [ApplicationCommandOptionType.Attachment]: 'attachment'
 } as const satisfies Record<APIApplicationCommandBasicOption['type'], OptionKind>;
 
+function mapEmojis(emojiConfig: EmojiConfig): EmojiKinds {
+    const emojis: EmojiKinds = {};
+    for (const [key, value] of Object.entries(emojiConfig)) {
+        emojis[key] = Array.isArray(value) ? 'tuple' : 'string';
+    }
+    return emojis;
+}
+
 /**
- * Builds the generated registry from each command's `toJSON()`. Chat-input commands become the slash-option
- * tables, context-menu commands contribute their name to the user or message set. Reads the builder back
- * because djs erases option names at the type level.
+ * Builds the generated augmentations from each command's `toJSON()` plus the emoji config. Chat-input
+ * commands become the slash-option tables, context-menu commands contribute their name to the user or
+ * message set, and each emoji key becomes a kind tag. Reads the builder back because djs erases option
+ * names at the type level.
  */
-export class RegistryGenerator {
+export class AugmentationBuilder {
     constructor(private readonly logger: ILogger) {}
 
-    public generate(commands: readonly ScannedCommand[]): GeneratedRegistry {
+    public generate(commands: readonly ScannedCommand[], emojiConfig: EmojiConfig): Augmentation {
         const slash: SlashTables = {};
         const sourceByRoute = new Map<string, string>();
         const sourceByUserName = new Map<string, string>();
@@ -73,10 +86,11 @@ export class RegistryGenerator {
 
         const userContextMenus = [...sourceByUserName.keys()];
         const messageContextMenus = [...sourceByMessageName.keys()];
+        const emojis = mapEmojis(emojiConfig);
         this.logger.debug(
-            `Generated ${Object.keys(slash).length} slash route(s), ${userContextMenus.length} user and ${messageContextMenus.length} message context-menu command(s)`
+            `Generated ${Object.keys(slash).length} slash route(s), ${userContextMenus.length} user and ${messageContextMenus.length} message context-menu command(s), ${Object.keys(emojis).length} emoji(s)`
         );
-        return { slash, userContextMenus, messageContextMenus };
+        return { slash, userContextMenus, messageContextMenus, emojis };
     }
 
     private collectSlash(

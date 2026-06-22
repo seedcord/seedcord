@@ -1,5 +1,5 @@
 import type { CustomIdMatcher } from './CustomId';
-import type { EmojiMap } from './EmojiMap';
+import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
 import type { ClientOptions, ColorResolvable } from 'discord.js';
 
@@ -93,38 +93,19 @@ export interface BotConfig {
     clientOptions: ClientOptions;
 
     /**
-     * Optional emoji mappings. Pass an object with emojis mappings (e.g. below). These emojis will be loaded from the Application Emojis that you've uploaded via the Dev-Dashboard
+     * Optional emoji map. Each value is an emoji name loaded from your application emojis, or a
+     * `[name, guildId]` tuple loaded from that guild (the guild needs the Guilds intent). Run
+     * `seedcord codegen` after changing this to type the `Emojis` accessor.
      *
-     * Key: the object key name used in your codebase
-     *
-     * Value: The emoji identifier used in Discord
-     *
-     * @see {@link EmojiMap}
+     * @see {@link EmojiConfig}
      * @see {@link Emojis}
      *
      * @example
      * ```ts
-     * // This map's values...
-     * const Emojis = {
-     *   ThumbsUp: 'thumbsup',
-     *   ThumbsDown: 'thumbsdown',
-     *   Lol: 'lol_1',
-     *   Kek: 'keklmao',
-     * };
-     * ```
-     *
-     * @example
-     * ```ts
-     * // ...turn into these Discord emojis
-     * const Emojis = {
-     *   ThumbsUp: '<:thumbsup:1872389747982323423>',
-     *   ThumbsDown: '<:thumbsdown:1872389747982323424>',
-     *   Lol: '<:lol_1:1872389747982323425>',
-     *   Kek: '<a:keklmao:1872389747982323426>',
-     * };
+     * emojis: { ThumbsUp: 'thumbsup', Lol: ['lol_1', '1872389747982323426'] }
      * ```
      */
-    emojis?: EmojiMap;
+    emojis?: EmojiConfig;
 }
 
 /**

@@ -191,10 +191,11 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     /**
      * Read a wire string back into values.
      *
+     * - This will refuse with a default Notice when the shape changed since the wire was minted.
+     * - Or refuse with a different default Notice on a corrupt or foreign wire.
+     *
      * @param wire - The customId string from the interaction.
      * @returns The decoded values, typed by the chain.
-     * @throws A {@link StaleCustomId} when the shape changed since the wire was minted.
-     * @throws An {@link InvalidCustomId} on a corrupt or foreign wire.
      */
     decode(wire: string): DecodedParams<Shape> {
         const key = routeKeyOf(wire);

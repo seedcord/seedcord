@@ -1,5 +1,29 @@
 # @seedcord/kit
 
+## 0.1.1
+
+### Patch Changes
+
+- bd3293c: tiny change in TSDoc to remove @throws for refusals
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+    - @seedcord/errors@0.2.0
+    - @seedcord/types@0.7.0
+
+## 0.1.1-next.0
+
+### Patch Changes
+
+- bd3293c: tiny change in TSDoc to remove @throws for refusals
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+- Updated dependencies [7121c18]
+    - @seedcord/errors@0.2.0-next.0
+    - @seedcord/types@0.7.0-next.0
+
 ## 0.1.0
 
 ### Minor Changes

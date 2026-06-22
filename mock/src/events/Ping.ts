@@ -1,6 +1,7 @@
 import { Events, type Message, type PartialMessage } from 'discord.js';
-import { EventHandler, RegisterEvent } from 'seedcord';
+import { EventHandler, Gated, IgnoreBots, RegisterEvent } from 'seedcord';
 
+@Gated(IgnoreBots)
 @RegisterEvent([Events.MessageCreate, { frequency: 'once' }], [Events.MessageUpdate])
 export class PingPong extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
     public async execute(): Promise<void> {
@@ -11,7 +12,6 @@ export class PingPong extends EventHandler<Events.MessageCreate | Events.Message
     }
 
     private async pong(message: Message | PartialMessage): Promise<void> {
-        if (!message.author || message.author.bot) return;
         if (message.content === 'ping') await message.reply('pong');
     }
 }

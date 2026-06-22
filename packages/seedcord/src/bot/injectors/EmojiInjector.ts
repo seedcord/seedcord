@@ -1,3 +1,5 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
 import chalk from 'chalk';
 
@@ -5,29 +7,20 @@ import type { Core } from '@interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
 import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 
-/**
- * Type representing a saved emoji, which can be a GuildEmoji, ApplicationEmoji, or a string identifier if emoji isn't resolved.
- */
-export type SavedEmojiType = GuildEmoji | ApplicationEmoji | string;
+type SavedEmojiType = GuildEmoji | ApplicationEmoji;
 
 const emojiStorage: Record<string, SavedEmojiType> = {};
-
-/**
- * Emoji config values can be either a plain name or a tuple [name, guildId]
- *
- * @internal
- */
-type EmojiConfigValue = string | readonly [string, string];
 
 function isEmojiTuple(v: unknown): v is readonly [string, string] {
     return Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string';
 }
 
 /**
- * Injected emoji mapping type, where each key from {@link EmojiMap} corresponds to a {@link SavedEmojiType}.
+ * The global {@link Emojis} accessor type. Each key resolves to its precise class, `GuildEmoji` for a `'guild'`
+ * tag and `ApplicationEmoji` for an `'application'` tag, the tags `seedcord codegen` writes into {@link EmojiMap}.
  */
 export type InjectedEmojiMap = {
-    [K in keyof EmojiMap]: SavedEmojiType;
+    [K in keyof EmojiMap]: EmojiMap[K] extends 'guild' ? GuildEmoji : ApplicationEmoji;
 };
 
 /**
@@ -53,90 +46,70 @@ export class EmojiInjector {
         this.clearEmojis();
 
         if (!this.core.config.bot.emojis || Object.keys(this.core.config.bot.emojis).length === 0) {
-            this.logger.info(chalk.bold.yellow('No emojis configured, skipping emoji injection.'));
+            this.logger.debug(chalk.bold.yellow('No emojis configured, skipping emoji injection.'));
             return;
         }
 
-        const configEmojis = this.core.config.bot.emojis as Record<keyof EmojiMap, EmojiConfigValue>;
+        const configEmojis = this.core.config.bot.emojis;
         await this.core.bot.client.application?.emojis.fetch();
 
-        let foundCount = 0;
-
-        const entries = Object.entries(configEmojis);
-        for (const [key, value] of entries) {
-            // tuple path [name, guildId]
+        const failures: string[] = [];
+        const fetchedGuilds = new Set<string>();
+        for (const [key, value] of Object.entries(configEmojis)) {
             if (isEmojiTuple(value)) {
-                foundCount += this.handleTuple(key, value);
-                continue;
+                await this.resolveTuple(key, value, failures, fetchedGuilds);
+            } else if (typeof value === 'string') {
+                this.resolveString(key, value, failures);
+            } else {
+                failures.push(`  - "${key}" has an invalid value (expected a name or [name, guildId])`);
             }
-
-            // string path, check application emojis only
-            if (typeof value === 'string') {
-                foundCount += this.handleString(key, value);
-                continue;
-            }
-
-            // invalid config value
-            this.logger.warn(
-                `${chalk.bold.yellow('Invalid')}: ${chalk.magenta.bold(String(key))} (expected string or [string, string])`
-            );
         }
 
-        this.logger.utils.summary('Loaded emojis', { emojis: foundCount });
+        // surface every unresolved emoji at once so the user fixes the whole config in one pass
+        if (failures.length > 0) {
+            throw new SeedcordError(SeedcordErrorCode.ConfigEmojiUnresolved, [failures.length, failures.join('\n')]);
+        }
+
+        this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
     }
 
-    /**
-     * Tuple `[emojiName, guildId]`: looks up the emoji in that guild. Returns 1 when found and stored as an emoji object, otherwise 0.
-     */
-    private handleTuple(key: string, value: readonly [string, string]): number {
+    private async resolveTuple(
+        key: string,
+        value: readonly [string, string],
+        failures: string[],
+        fetchedGuilds: Set<string>
+    ): Promise<void> {
         const [emojiName, guildId] = value;
 
         const guild = this.core.bot.client.guilds.cache.get(guildId);
         if (!guild) {
-            emojiStorage[key] = emojiName;
-            this.logger.warn(
-                `${chalk.bold.yellow('Missing')}: ${chalk.magenta.bold(emojiName)} in guild ${chalk.gray(
-                    guildId
-                )} (guild not in cache or not found, using provided string)`
+            failures.push(
+                `  - "${emojiName}" for "${key}" targets guild ${guildId}, which is not available (check the Guilds intent)`
             );
-            return 0;
+            return;
         }
 
+        if (!fetchedGuilds.has(guildId)) {
+            await guild.emojis.fetch();
+            fetchedGuilds.add(guildId);
+        }
         const guildEmoji = guild.emojis.cache.find((e) => e.name === emojiName);
-        if (guildEmoji) {
-            emojiStorage[key] = guildEmoji;
-            this.logger.debug(
-                `${chalk.bold.green('Found')}: ${chalk.magenta.bold(emojiName)} (${guildEmoji.id}) in guild ${chalk.gray(
-                    guildId
-                )}`
-            );
-            return 1;
+        if (!guildEmoji) {
+            failures.push(`  - "${emojiName}" for "${key}" was not found in guild ${guildId}`);
+            return;
         }
 
-        emojiStorage[key] = emojiName;
-        this.logger.warn(
-            `${chalk.bold.yellow('Missing')}: ${chalk.magenta.bold(emojiName)} in guild ${chalk.magenta.bold(guildId)} (using provided string)`
-        );
-
-        return 0;
+        emojiStorage[key] = guildEmoji;
     }
 
-    /**
-     * Handle emoji config values provided as a simple string (application emoji lookup).
-     * Returns 1 when the emoji was found and stored as an emoji object, otherwise 0.
-     */
-    private handleString(key: string, emojiName: string): number {
+    private resolveString(key: string, emojiName: string, failures: string[]): void {
         const appEmoji = this.core.bot.client.application?.emojis.cache.find((e) => e.name === emojiName);
-
-        if (appEmoji) {
-            emojiStorage[key] = appEmoji;
-            this.logger.debug(`${chalk.bold.green('Found')}: ${chalk.magenta.bold(emojiName)} (${appEmoji.id})`);
-            return 1;
+        if (!appEmoji) {
+            failures.push(`  - "${emojiName}" for "${key}" was not found among the application emojis`);
+            return;
         }
 
-        emojiStorage[key] = emojiName;
-        this.logger.warn(`${chalk.bold.yellow('Missing')}: ${chalk.magenta.bold(emojiName)} (using provided string)`);
-        return 0;
+        emojiStorage[key] = appEmoji;
     }
 
     private clearEmojis(): void {

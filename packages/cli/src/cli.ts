@@ -3,22 +3,24 @@ import { Logger } from '@seedcord/services';
 
 import { BuildCommand } from '@commands/build/BuildCommand';
 import { CodegenCommand } from '@commands/codegen/CodegenCommand';
+import { CommandsCommand } from '@commands/commands/CommandsCommand';
 import { DevCommand } from '@commands/dev/DevCommand';
 
 import { version } from '.';
 
-const LOGGER_LABEL = 'Seedcord CLI';
+const LOGGER_LABEL = 'seedcord CLI';
 
 async function main(): Promise<void> {
     if (!process.env.ENV && !process.env.ENVIRONMENT && !process.env.NODE_ENV) {
         process.env.NODE_ENV = 'development';
     }
 
-    const program = new Command().name('seedcord').description('Seedcord CLI').version(version);
+    const program = new Command().name('seedcord').description('seedcord CLI').version(version);
 
     new DevCommand().register(program);
     new BuildCommand().register(program);
     new CodegenCommand().register(program);
+    new CommandsCommand().register(program);
 
     await program.parseAsync(process.argv);
 }

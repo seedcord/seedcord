@@ -8,6 +8,11 @@
             "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
             "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
+        "//#docs:extract": {
+            "dependsOn": ["@seedcord/docs-generator#build"],
+            "inputs": ["scripts/docs/extract-docs.ts", "packages/*/dist/**/*.d.mts", "packages/*/package.json"],
+            "outputs": ["generated/**"]
+        },
         "dev": {
             "cache": false,
             "persistent": true
@@ -53,5 +58,5 @@
     },
     "globalDependencies": ["package.json", "pnpm-workspace.yaml", "turbo.json", ".env*"],
     "globalEnv": ["NODE_ENV", "ENVIRONMENT", "ENV"],
-    "cacheMaxAge": "12h"
+    "cacheMaxAge": "48h"
 }

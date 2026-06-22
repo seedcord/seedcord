@@ -64,13 +64,13 @@ function handleToggleMode(ctx: HotkeyContext): boolean {
     if (!ctx.showToggles) return false;
     const channels = LogStore.instance.getChannels();
 
-    if (ctx.key.escape || ctx.input === 'c') {
+    if (ctx.key.escape || ctx.key.return || ctx.input === 'c') {
         ctx.setShowToggles(false);
     } else if (ctx.key.upArrow && channels.length > 0) {
         ctx.setCursor((ctx.cursor + channels.length - 1) % channels.length);
     } else if (ctx.key.downArrow && channels.length > 0) {
         ctx.setCursor((ctx.cursor + 1) % channels.length);
-    } else if (ctx.input === ' ' || ctx.key.return) {
+    } else if (ctx.input === ' ') {
         const channel = channels[ctx.cursor];
         if (channel !== undefined) ctx.setEnabled(toggleChannel(ctx.enabled, channel, channels));
     }

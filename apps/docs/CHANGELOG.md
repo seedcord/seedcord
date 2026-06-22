@@ -1,5 +1,27 @@
 # @seedcord/docs
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies [043e2a1]
+- Updated dependencies [7121c18]
+    - @seedcord/eslint-config@1.4.2
+    - @seedcord/types@0.7.0
+    - @seedcord/docs-engine@0.3.0
+    - @seedcord/ui@0.1.0
+
+## 0.1.4-next.0
+
+### Patch Changes
+
+- Updated dependencies [043e2a1]
+- Updated dependencies [7121c18]
+    - @seedcord/eslint-config@1.4.2-next.0
+    - @seedcord/types@0.7.0-next.0
+    - @seedcord/docs-engine@0.3.0
+    - @seedcord/ui@0.1.0
+
 ## 0.1.3
 
 ### Patch Changes
