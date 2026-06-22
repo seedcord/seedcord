@@ -30,10 +30,6 @@
     .marquee-mask:hover .marquee-anim {
         animation-play-state: paused;
     }
-    .marquee-mask {
-        -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-        mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-    }
 
     /* the poster's playful hard offset block shadow + 3px rule (ink = --seed-dark #2d3328) */
     .blk {

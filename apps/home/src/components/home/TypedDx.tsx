@@ -17,7 +17,7 @@ export function TypedDx(): ReactNode {
     return (
         <Section ground="cream">
             <div className={cn('grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]')}>
-                <div>
+                <div className={cn('min-w-0')}>
                     <Eyebrow ground="cream">01 / TYPED DX</Eyebrow>
                     <h2
                         className={cn(
@@ -53,7 +53,7 @@ export function TypedDx(): ReactNode {
                         className={cn('rule blk-rind mt-8')}
                     />
                 </div>
-                <div className={cn('space-y-5')}>
+                <div className={cn('min-w-0 space-y-5')}>
                     <CodeCard code={typedDxCommand} filename="commands/search.ts" className={cn('rule blk-rind')} />
                     <CodeCard code={typedDxHandler} filename="handlers/search.ts" className={cn('rule blk-rind')} />
                 </div>
