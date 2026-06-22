@@ -10,7 +10,7 @@ import type { ReactNode } from 'react';
 
 const BULLETS = [
     { icon: Braces, label: 'Choices become a literal union', note: "'books' | 'films'" },
-    { icon: ShieldCheck, label: 'Required options are never null', note: 'no ?? throw dance' },
+    { icon: ShieldCheck, label: 'Required options are never null', note: 'use it directly' },
     { icon: RefreshCw, label: 'Getter signatures regenerate on change', note: '' }
 ] as const;
 
