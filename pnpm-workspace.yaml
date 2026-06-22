@@ -38,6 +38,7 @@ catalogs:
     next: ^16.2.9
     prettier: ^3.8.4
     prettier-plugin-tailwindcss: ^0.8.0
+    shiki: ^4.2.0
     tailwindcss: ^4.3.1
     tsdown: ^0.22.3
     tsx: ^4.22.4

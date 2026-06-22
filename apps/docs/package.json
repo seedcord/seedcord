@@ -36,7 +36,7 @@
         "prettier": "catalog:deps",
         "react": "catalog:react",
         "react-dom": "catalog:react",
-        "shiki": "^4.2.0",
+        "shiki": "catalog:deps",
         "tailwindcss": "catalog:deps",
         "type-fest": "catalog:deps",
         "zustand": "^5.0.14"
