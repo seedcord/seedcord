@@ -72,7 +72,7 @@ export function Hero(): ReactNode {
 
                 {/* desktop composition, hidden below lg so narrow widths stay text-first */}
                 <div className={cn('relative hidden items-center justify-center lg:flex lg:h-140')}>
-                    {/* deeper green so the lighter rind separates instead of blending */}
+                    {/* deeper green so the lighter rind stays distinct */}
                     <div className={cn('blk absolute top-6 right-0 size-[78%] rounded-sm bg-(--vine-deep)')} />
                     <Watermelon
                         className={cn('relative z-10 w-[92%] max-w-140 drop-shadow-[10px_10px_0_rgba(45,51,40,0.55)]')}

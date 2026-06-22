@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import type { ReactNode } from 'react';
 
-// traced from assets/logo.svg, fills use brand tokens so it stays single-sourced
+// traced from the seedcord logo
 export function Watermelon({ className }: { className?: string }): ReactNode {
     return (
         <svg viewBox="0 0 596.16 500.4" className={cn(className)} role="img" aria-label="seedcord">

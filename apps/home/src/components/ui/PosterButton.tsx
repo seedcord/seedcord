@@ -22,7 +22,7 @@ interface PosterButtonProps {
     children: ReactNode;
 }
 
-// poster's sharp rule + hard shadow, not the rounded @seedcord/ui Button
+// justified: bespoke poster CTA, a sharp rule + hard offset shadow outside the ui Button
 export function PosterButton({ href, variant = 'solid', className, children }: PosterButtonProps): ReactNode {
     const external = href.startsWith('http');
     return (
