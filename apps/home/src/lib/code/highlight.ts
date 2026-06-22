@@ -14,7 +14,7 @@ function getHighlighter(): Promise<Highlighter> {
     return highlighterPromise;
 }
 
-// build-time highlight for the homepage's always-dark code cards (docs selects seedcord-light per page mode)
+// build-time highlight, the homepage code cards are always dark
 export async function highlightCode(code: string, lang: CodeLang = 'ts'): Promise<string> {
     const highlighter = await getHighlighter();
     return highlighter.codeToHtml(code.trim(), { lang, theme: 'seedcord-dark' });

@@ -7,7 +7,6 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
 const sans = Hanken_Grotesk({ variable: '--font-sans', subsets: ['latin'], display: 'swap' });
-// bold grotesk display for the headlines
 const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], display: 'swap' });
 const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 

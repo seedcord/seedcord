@@ -1,4 +1,4 @@
-// Real seedcord feature inventory for the marquee, consolidated to feature areas (every area, not every minute sub-feature).
+// marquee feature inventory, areas not every sub-feature
 export const FEATURES = [
     'typed slash commands',
     'typed slash options',
