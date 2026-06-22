@@ -1,4 +1,4 @@
-import { cn, Icon } from '@seedcord/ui';
+import { cn, Icon, tw } from '@seedcord/ui';
 import {
     AtSign,
     FolderTree,
@@ -21,210 +21,143 @@ import {
     Wrench
 } from 'lucide-react';
 
-import { Section } from '@components/home/Section';
+import { Eyebrow, Section } from '@components/home/Section';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
-interface Card {
-    title: string;
-    icon: LucideIcon;
-    wide: boolean;
-    square: 'rind' | 'flesh';
-    body: ReactNode;
+type Accent = 'flesh' | 'rind';
+
+interface Group {
+    area: string;
+    count: number;
+    accent: Accent;
+    rows: { icon: LucideIcon; label: string; gloss: string }[];
 }
 
-// three featured cards (wide, dark) anchor the grid; the rest stay cream so the section never gets dark-heavy
-const CARDS: Card[] = [
+const GROUPS: Group[] = [
     {
-        title: 'Hot reload, live gateway',
-        icon: RefreshCw,
-        wide: true,
-        square: 'flesh',
-        body: 'Edit a command, save, and the new code is live with the gateway still connected. No reconnect and no rate-limit penalty.'
+        area: 'Commands & interactions',
+        count: 6,
+        accent: 'flesh',
+        rows: [
+            { icon: FolderTree, label: 'filesystem routing', gloss: 'a file is a command, registered on boot' },
+            { icon: AtSign, label: 'command mentions', gloss: 'typed, clickable, compile-checked' },
+            { icon: Smile, label: 'emojis', gloss: 'resolved at startup, typed by name' },
+            { icon: Sparkles, label: 'autocomplete', gloss: 'typed suggestions as the user types' },
+            { icon: MousePointerClick, label: 'context menus', gloss: 'user and message, typed and routed' },
+            {
+                icon: MessageSquareWarning,
+                label: 'getConfirmation',
+                gloss: 'an ephemeral confirm, resolves to a boolean'
+            }
+        ]
     },
     {
-        title: 'Filesystem routing',
-        icon: FolderTree,
-        wide: false,
-        square: 'rind',
-        body: (
-            <>
-                A file under <code className={cn('font-mono-code text-(--flesh)')}>commands/</code> is a command,
-                registered on boot.
-            </>
-        )
+        area: 'Events',
+        count: 4,
+        accent: 'rind',
+        rows: [
+            { icon: Radio, label: 'event handlers', gloss: 'body typed to the exact event' },
+            { icon: RadioTower, label: 'event emitter', gloss: 'a fully typed EventEmitter' },
+            { icon: Rss, label: 'pub/sub bus', gloss: 'an application event bus, add your own' },
+            { icon: GitMerge, label: 'middleware', gloss: 'typed, runs before your handlers' }
+        ]
     },
     {
-        title: 'Typed command mentions',
-        icon: AtSign,
-        wide: true,
-        square: 'flesh',
-        body: (
-            <>
-                A typed <code className={cn('font-mono-code text-(--rind)')}>CommandMentions</code> map turns any
-                deployed route into a clickable mention. A wrong name is a compile error.
-            </>
-        )
+        area: 'Runtime',
+        count: 4,
+        accent: 'flesh',
+        rows: [
+            { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to trace, Silence to drop' },
+            { icon: Timer, label: 'rate limiter', gloss: 'per-key sliding window' },
+            { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup, shutdown and health' },
+            { icon: ScrollText, label: 'logger', gloss: 'scoped channels, rotation, sinks' }
+        ]
     },
     {
-        title: 'Typed emojis',
-        icon: Smile,
-        wide: false,
-        square: 'flesh',
-        body: 'App emojis resolve at startup, typed by name, missing ones fail the boot.'
+        area: 'Dev experience',
+        count: 3,
+        accent: 'rind',
+        rows: [
+            { icon: RefreshCw, label: 'hot reload', gloss: 'live code, the gateway stays up' },
+            { icon: WandSparkles, label: 'seedcord commands', gloss: 'inspect and prune deployed guild commands' },
+            { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' }
+        ]
     },
     {
-        title: 'First-class plugins',
-        icon: Plug,
-        wide: true,
-        square: 'flesh',
-        body: 'Attach a plugin and reach it, fully typed, from any handler. Postgres (Kysely) and Mongo are built in, or write your own.'
-    },
-    {
-        title: 'Autocomplete handlers',
-        icon: Sparkles,
-        wide: false,
-        square: 'rind',
-        body: 'Typed autocomplete, return suggestions as the user types.'
-    },
-    {
-        title: 'Context menu commands',
-        icon: MousePointerClick,
-        wide: false,
-        square: 'flesh',
-        body: 'User and message context menus, typed and routed like slash commands.'
-    },
-    {
-        title: 'Confirmation prompts',
-        icon: MessageSquareWarning,
-        wide: false,
-        square: 'rind',
-        body: (
-            <>
-                <code className={cn('font-mono-code text-(--flesh)')}>getConfirmation</code> sends an ephemeral confirm
-                prompt and resolves to a boolean.
-            </>
-        )
-    },
-    {
-        title: 'Typed event handlers',
-        icon: Radio,
-        wide: false,
-        square: 'flesh',
-        body: (
-            <>
-                <code className={cn('font-mono-code text-(--rind)')}>@RegisterEvent</code> binds a handler whose body is
-                typed to that exact event.
-            </>
-        )
-    },
-    {
-        title: 'Strict event emitter',
-        icon: RadioTower,
-        wide: false,
-        square: 'rind',
-        body: 'A fully typed EventEmitter, every emit and listener checked against the event map.'
-    },
-    {
-        title: 'Typed pub/sub bus',
-        icon: Rss,
-        wide: false,
-        square: 'flesh',
-        body: 'An application event bus, add your own events by augmenting one interface.'
-    },
-    {
-        title: 'Interaction and event middleware',
-        icon: GitMerge,
-        wide: false,
-        square: 'rind',
-        body: 'Typed middleware runs before your handlers, the payload typed per registration.'
-    },
-    {
-        title: 'Notice, Fault, Silence',
-        icon: ShieldAlert,
-        wide: false,
-        square: 'flesh',
-        body: 'Refuse with a Notice, log and trace a Fault, or Silence with no reply.'
-    },
-    {
-        title: 'Sliding-window rate limiter',
-        icon: Timer,
-        wide: false,
-        square: 'rind',
-        body: 'Per-key sliding-window limiting, separate from per-command cooldowns.'
-    },
-    {
-        title: 'Coordinated lifecycle',
-        icon: HeartPulse,
-        wide: false,
-        square: 'flesh',
-        body: 'Phased startup and shutdown with SIGTERM handling and an HTTP health check.'
-    },
-    {
-        title: 'Scoped logger',
-        icon: ScrollText,
-        wide: false,
-        square: 'rind',
-        body: 'A Winston wrapper with named channels, rotation, and an installable sink.'
-    },
-    {
-        title: 'seedcord commands',
-        icon: WandSparkles,
-        wide: false,
-        square: 'flesh',
-        body: 'Inspect and prune your deployed guild commands from the CLI.'
-    },
-    {
-        title: 'Utility functions',
-        icon: Wrench,
-        wide: false,
-        square: 'rind',
-        body: 'Typed helpers, duration parsing, ascii tables and more.'
-    },
-    {
-        title: 'Live dev terminal',
-        icon: SquareTerminal,
-        wide: false,
-        square: 'flesh',
-        body: (
-            <>
-                <code className={cn('font-mono-code text-(--rind)')}>seedcord dev</code> runs a full-screen terminal UI
-                with logs, reload and gateway state.
-            </>
-        )
+        area: 'Extensibility',
+        count: 2,
+        accent: 'flesh',
+        rows: [
+            { icon: Plug, label: 'plugins', gloss: 'attach one, reach it typed in any handler' },
+            { icon: Wrench, label: 'utils', gloss: 'duration parsing, ascii tables and more' }
+        ]
     }
 ];
+
+const ACCENT_TEXT: Record<Accent, string> = {
+    flesh: tw`text-(--flesh)`,
+    rind: tw`text-(--rind)`
+};
+
+const ROW = tw`
+    flex items-start gap-3 py-2 transition-transform
+    motion-safe:hover:translate-x-0.5
+`;
+
+function pad(count: number): string {
+    return count.toString().padStart(2, '0');
+}
 
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="cream">
-            <div className={cn('grid grid-flow-dense gap-4 sm:grid-cols-2 lg:grid-cols-3')}>
-                {CARDS.map((card) => (
+            <Eyebrow ground="cream">05 / EVERYTHING ELSE</Eyebrow>
+            <h2
+                className={cn(
+                    'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
+                )}
+            >
+                Built in,
+                <br />
+                <span className={cn('text-(--flesh)')}>not bolted on.</span>
+            </h2>
+            <p className={cn('mt-6 max-w-md text-(--seed-dark)/85')}>
+                The full surface, one typed framework. Nineteen pieces, no glue between them.
+            </p>
+
+            <div className={cn('rule blk mt-10 rounded-sm bg-(--cream)')}>
+                {GROUPS.map((group, groupIndex) => (
                     <div
-                        key={card.title}
-                        className={cn(
-                            'rounded-sm',
-                            card.wide
-                                ? 'rule-cream blk-rind bg-(--seed-dark) p-6 text-(--cream) lg:col-span-2'
-                                : 'rule bg-(--cream) p-5'
-                        )}
+                        key={group.area}
+                        className={cn('p-5 sm:p-6', groupIndex > 0 && 'border-t border-(--seed-dark)/10')}
                     >
-                        <div
+                        <p
                             className={cn(
-                                'flex items-center justify-center rounded-sm text-(--cream)',
-                                card.wide ? 'size-11' : 'size-9',
-                                card.square === 'flesh' ? 'bg-(--flesh)' : 'bg-(--rind)'
+                                'font-mono-code mb-3 text-xs font-semibold tracking-wide uppercase',
+                                ACCENT_TEXT[group.accent]
                             )}
                         >
-                            <Icon icon={card.icon} size={20} />
-                        </div>
-                        <h3 className={cn('mt-4 mb-1.5 font-semibold', card.wide ? 'text-xl' : 'text-lg')}>
-                            {card.title}
-                        </h3>
-                        <p className={cn('text-sm/relaxed', card.wide ? 'text-(--cream)/80' : 'text-(--seed-dark)/75')}>
-                            {card.body}
+                            {group.area} · {pad(group.count)}
                         </p>
+                        <div className={cn('grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3')}>
+                            {group.rows.map((row) => (
+                                <div key={row.label} className={cn(ROW)}>
+                                    <Icon
+                                        icon={row.icon}
+                                        size={20}
+                                        className={cn('mt-0.5 shrink-0', ACCENT_TEXT[group.accent])}
+                                    />
+                                    <div className={cn('min-w-0')}>
+                                        <p className={cn('font-mono-code font-semibold text-(--seed-dark)')}>
+                                            {row.label}
+                                        </p>
+                                        <p className={cn('text-sm text-(--seed-dark)/60')}>{row.gloss}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 ))}
             </div>
