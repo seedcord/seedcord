@@ -9,9 +9,10 @@ function Track({ items }: { items: readonly string[] }): ReactNode {
             {items.map((feature, i) => (
                 <li key={feature} className={cn('flex items-center')}>
                     <span className={cn('px-6 whitespace-nowrap')}>{feature}</span>
-                    <span aria-hidden className={cn(i % 2 === 0 ? 'text-(--flesh)' : 'text-(--rind)', 'px-2')}>
-                        ✦
-                    </span>
+                    <span
+                        aria-hidden
+                        className={cn('size-1.5 shrink-0 rounded-full', i % 2 === 0 ? 'bg-(--rind)' : 'bg-(--flesh)')}
+                    />
                 </li>
             ))}
         </ul>
