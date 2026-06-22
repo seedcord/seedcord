@@ -75,7 +75,7 @@ jobs:
                   echo "Cleaning caches for refs: $REFS"
                   for branchRef in $REFS; do
                     echo "Fetching cache entries for $branchRef"
-                    cacheKeys=$(gh actions-cache list -R "$REPO" -B "$branchRef" --limit 200 | cut -f 1)
+                    cacheKeys=$(gh actions-cache list -R "$REPO" -B "$branchRef" --limit 100 | cut -f 1)
 
                     if [ -z "$cacheKeys" ]; then
                       echo "No caches found for $branchRef"
