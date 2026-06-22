@@ -1,14 +1,17 @@
 import { cn, Icon } from '@seedcord/ui';
 import {
+    AtSign,
     FolderTree,
     HeartPulse,
-    WandSparkles,
+    MessageSquareWarning,
     MousePointerClick,
     Plug,
     RefreshCw,
     ShieldAlert,
+    Smile,
     Sparkles,
-    SquareTerminal
+    SquareTerminal,
+    WandSparkles
 } from 'lucide-react';
 
 import { Section } from '@components/home/Section';
@@ -45,18 +48,28 @@ const CARDS: Card[] = [
         )
     },
     {
-        title: 'seedcord commands',
-        icon: WandSparkles,
+        title: 'Typed command mentions',
+        icon: AtSign,
         dark: false,
         square: 'bg-(--rind)',
-        body: 'Inspect your deployed application commands and prune stale or duplicate registrations from the CLI, with a guided wizard or flags.'
+        body: (
+            <>
+                A typed <code className={cn('font-mono-code text-(--flesh)')}>CommandMentions</code> map turns any route
+                into a clickable mention. A wrong name is a compile error.
+            </>
+        )
     },
     {
-        title: 'Context menu commands',
-        icon: MousePointerClick,
+        title: 'Typed emojis',
+        icon: Smile,
         dark: true,
         square: 'bg-(--flesh)',
-        body: 'Right-click a user or a message to run a command. User and message context menus, typed like your slash commands.'
+        body: (
+            <>
+                <code className={cn('font-mono-code text-(--rind)')}>Emojis</code> resolves your app emojis at startup,
+                typed by name, and any unresolved name fails the boot with the full list.
+            </>
+        )
     },
     {
         title: 'Autocomplete handlers',
@@ -64,6 +77,25 @@ const CARDS: Card[] = [
         dark: false,
         square: 'bg-(--rind)',
         body: 'Wire an autocomplete handler to an option and return suggestions as the user types, fully typed.'
+    },
+    {
+        title: 'Context menu commands',
+        icon: MousePointerClick,
+        dark: true,
+        square: 'bg-(--flesh)',
+        body: 'Right-click a user or a message to run a command. User and message context menus, typed and routed like your slash commands.'
+    },
+    {
+        title: 'Confirmation prompts',
+        icon: MessageSquareWarning,
+        dark: false,
+        square: 'bg-(--rind)',
+        body: (
+            <>
+                <code className={cn('font-mono-code text-(--flesh)')}>getConfirmation</code> sends an ephemeral confirm
+                prompt, waits for the caller, and resolves to a boolean.
+            </>
+        )
     },
     {
         title: 'Notice, Fault, Silence',
@@ -80,20 +112,27 @@ const CARDS: Card[] = [
         body: 'A phased startup and shutdown with SIGTERM handling and an HTTP health check, built for real hosting.'
     },
     {
-        title: 'Plugins',
-        icon: Plug,
+        title: 'seedcord commands',
+        icon: WandSparkles,
         dark: true,
         square: 'bg-(--flesh)',
+        body: 'Inspect your deployed application commands and prune stale or duplicate registrations from the CLI, with a guided wizard or flags.'
+    },
+    {
+        title: 'Plugins',
+        icon: Plug,
+        dark: false,
+        square: 'bg-(--rind)',
         body: 'A plugin contract with first-party Postgres (Kysely) and Mongo plugins, or write your own.'
     },
     {
         title: 'Live dev terminal',
         icon: SquareTerminal,
-        dark: false,
-        square: 'bg-(--rind)',
+        dark: true,
+        square: 'bg-(--flesh)',
         body: (
             <>
-                <code className={cn('font-mono-code text-(--flesh)')}>seedcord dev</code> runs a full-screen terminal UI
+                <code className={cn('font-mono-code text-(--rind)')}>seedcord dev</code> runs a full-screen terminal UI
                 with logs, reload status and the gateway state in one view.
             </>
         )
