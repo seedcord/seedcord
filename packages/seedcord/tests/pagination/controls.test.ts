@@ -1,6 +1,5 @@
 import { SeedcordRangeError } from '@seedcord/errors/internal';
-import { pageCursor } from '@seedcord/kit';
-import { PAGE_MAX } from '@seedcord/kit/internal';
+import { PAGE_MAX, pageCursor } from '@seedcord/kit/internal';
 import { ButtonStyle, ComponentType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 

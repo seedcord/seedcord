@@ -1,4 +1,5 @@
-import { BuilderComponent, pageCursor } from '@seedcord/kit';
+import { BuilderComponent } from '@seedcord/kit';
+import { pageCursor } from '@seedcord/kit/internal';
 import { ButtonBuilder, ButtonStyle, ComponentType, TextDisplayBuilder } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
