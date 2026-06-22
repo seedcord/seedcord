@@ -1,8 +1,11 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 import {
     AtSign,
+    Component,
     GitMerge,
     HeartPulse,
+    Hourglass,
+    ListTree,
     MessageSquareWarning,
     MousePointerClick,
     Plug,
@@ -39,7 +42,7 @@ interface Group {
 const GROUPS: Group[] = [
     {
         area: 'Commands & interactions',
-        count: 7,
+        count: 9,
         accent: 'flesh',
         rows: [
             {
@@ -47,6 +50,7 @@ const GROUPS: Group[] = [
                 label: 'decorator routing',
                 gloss: '@SlashRoute, @RegisterEvent and friends wire handlers at boot'
             },
+            { icon: ListTree, label: 'subcommand routing', gloss: 'subcommands and groups, routed by name' },
             { icon: AtSign, label: 'command mentions', gloss: 'typed, clickable, compile-checked' },
             { icon: Smile, label: 'emojis', gloss: 'resolved at startup, typed by name' },
             {
@@ -55,6 +59,11 @@ const GROUPS: Group[] = [
                 gloss: 'a typed handler per option, missing one is a compile error'
             },
             { icon: MousePointerClick, label: 'context menus', gloss: 'user and message, typed and routed' },
+            {
+                icon: Component,
+                label: 'component handlers',
+                gloss: 'buttons, selects and modals, each routed to a typed handler'
+            },
             {
                 icon: MessageSquareWarning,
                 label: 'getConfirmation',
@@ -69,11 +78,12 @@ const GROUPS: Group[] = [
     },
     {
         area: 'Events',
-        count: 4,
+        count: 5,
         accent: 'rind',
         rows: [
             { icon: Radio, label: 'event handlers', gloss: 'body typed to the exact event' },
             { icon: RadioTower, label: 'event emitter', gloss: 'a fully typed EventEmitter' },
+            { icon: Hourglass, label: 'typed waitFor', gloss: 'await a single typed event inline' },
             { icon: Rss, label: 'pub/sub bus', gloss: 'an application event bus, add your own' },
             { icon: GitMerge, label: 'middleware', gloss: 'typed, runs before your handlers' }
         ]
