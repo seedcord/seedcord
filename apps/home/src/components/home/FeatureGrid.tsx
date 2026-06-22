@@ -129,7 +129,7 @@ const ACCENT_TEXT: Record<Accent, string> = {
     rind: tw`text-(--rind)`
 };
 
-const ROW = tw`flex items-start gap-3 py-2`;
+const ROW = tw`group flex items-start gap-3 py-2`;
 
 function pad(count: number): string {
     return count.toString().padStart(2, '0');
@@ -169,7 +169,10 @@ export function FeatureGrid(): ReactNode {
                                     <Icon
                                         icon={row.icon}
                                         size={20}
-                                        className={cn('mt-0.5 shrink-0', ACCENT_TEXT[group.accent])}
+                                        className={cn(
+                                            'mt-0.5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:scale-[1.18]',
+                                            ACCENT_TEXT[group.accent]
+                                        )}
                                     />
                                     <div className={cn('min-w-0')}>
                                         <p className={cn('font-mono-code font-semibold text-(--seed-dark)')}>
