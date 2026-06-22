@@ -84,6 +84,9 @@ const messages = {
         `perPage must be a positive integer, got ${perPage}.`,
     [SeedcordErrorCode.PaginationTooManyControls]: (count: number) =>
         `A control row holds at most 5 buttons, got ${count}.`,
+    [SeedcordErrorCode.PaginationEmptyControls]: () => `A control row must hold at least one control.`,
+    [SeedcordErrorCode.PaginationDuplicateControls]: (key: string) =>
+        `A control row cannot repeat the '${key}' control.`,
 
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,

@@ -1,3 +1,5 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordRangeError } from '@seedcord/errors/internal';
 import { paginate } from '@seedcord/kit';
 
 import type { PageContext } from './PageContext';
@@ -57,6 +59,9 @@ export class CursorSource<Item> implements PageSource<Item> {
         opts?: { perPage?: number }
     ) {
         this.perPage = opts?.perPage ?? DEFAULT_PER_PAGE;
+        if (!Number.isInteger(this.perPage) || this.perPage <= 0) {
+            throw new SeedcordRangeError(SeedcordErrorCode.PaginationInvalidPerPage, [this.perPage]);
+        }
     }
 
     async page(ctx: PageContext, n: number): Promise<PageView<Item>> {

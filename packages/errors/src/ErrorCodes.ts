@@ -95,6 +95,10 @@ export enum SeedcordErrorCode {
     PaginationInvalidPerPage = 1801,
     /** A control row was assembled with more than the five buttons Discord allows. */
     PaginationTooManyControls = 1802,
+    /** A control row was assembled with no controls. */
+    PaginationEmptyControls = 1803,
+    /** A control row repeats the same control, which would collide the custom_ids. */
+    PaginationDuplicateControls = 1804,
 
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,

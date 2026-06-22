@@ -1,4 +1,4 @@
-import { SeedcordRangeError } from '@seedcord/errors/internal';
+import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { PAGE_MAX, pageCursor } from '@seedcord/kit/internal';
 import { ButtonStyle, ComponentType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
@@ -72,6 +72,12 @@ describe('controls.button', () => {
         expect(() => controls.button('next')).not.toThrow();
     });
 
+    it('disables next and last when the target page would exceed the cursor bound', () => {
+        const controls = new Controls(cursor, arrayView(PAGE_MAX, PAGE_MAX + 2));
+        expect(controls.button('next').data.disabled).toBe(true);
+        expect(controls.button('last').data.disabled).toBe(true);
+    });
+
     it('drops the default label for an icon-only button (emoji, no label)', () => {
         const button = new Controls(cursor, arrayView(1, 3)).button('prev', { emoji: '⬅️' });
         expect(labelOf(button)).toBeUndefined();
@@ -115,6 +121,14 @@ describe('controls.row', () => {
     it('rejects more than five buttons in a row', () => {
         const controls = new Controls(cursor, arrayView(1, 3));
         expect(() => controls.row('first', 'prev', 'indicator', 'next', 'last', 'first')).toThrow(SeedcordRangeError);
+    });
+
+    it('rejects an empty row', () => {
+        expect(() => new Controls(cursor, arrayView(1, 3)).row()).toThrow(SeedcordRangeError);
+    });
+
+    it('rejects a row with a duplicate control', () => {
+        expect(() => new Controls(cursor, arrayView(1, 3)).row('prev', 'prev')).toThrow(SeedcordTypeError);
     });
 });
 

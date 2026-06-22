@@ -1,3 +1,4 @@
+import { SeedcordRangeError } from '@seedcord/errors/internal';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { ArraySource, CursorSource } from '@pagination/sources';
@@ -85,5 +86,12 @@ describe('CursorSource', () => {
         const view = await source.page(ctx, -3);
         expect(view.page).toBe(0);
         expect(view.hasPrev).toBe(false);
+    });
+
+    it('rejects a non-positive or non-integer perPage at construction', () => {
+        const fetch = (): { items: number[]; hasNext: boolean } => ({ items: [], hasNext: false });
+        expect(() => new CursorSource(fetch, { perPage: 0 })).toThrow(SeedcordRangeError);
+        expect(() => new CursorSource(fetch, { perPage: -1 })).toThrow(SeedcordRangeError);
+        expect(() => new CursorSource(fetch, { perPage: 2.5 })).toThrow(SeedcordRangeError);
     });
 });

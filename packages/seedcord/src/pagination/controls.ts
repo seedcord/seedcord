@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordRangeError } from '@seedcord/errors/internal';
+import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { PAGE_MAX, type PageCursor } from '@seedcord/kit/internal';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
@@ -26,7 +26,10 @@ export interface PaginatorControls {
      * state. Call only cosmetic setters on it, a `setCustomId` or `setStyle(Link)` un-routes it.
      */
     button(key: ControlKey, cosmetics?: ControlCosmetics): ButtonBuilder;
-    /** Assemble an action row of the chosen controls, in order. Rejects more than five. */
+    /**
+     * Assemble an action row of the chosen controls, in order. Throws on an empty set, more than five
+     * controls, or a duplicate.
+     */
     row(...keys: ControlKey[]): ActionRowBuilder<ButtonBuilder>;
 }
 
@@ -57,22 +60,7 @@ export class Controls implements PaginatorControls {
     ) {}
 
     button(key: ControlKey, cosmetics?: ControlCosmetics): ButtonBuilder {
-        const { page, totalPages, hasPrev, hasNext } = this.view;
-        const knownTotal = totalPages !== undefined;
-        const target = {
-            first: 0,
-            prev: page - 1,
-            indicator: page,
-            next: page + 1,
-            last: knownTotal ? totalPages - 1 : page
-        }[key];
-        const disabled = {
-            first: !hasPrev,
-            prev: !hasPrev,
-            indicator: true,
-            next: !hasNext,
-            last: !hasNext || !knownTotal
-        }[key];
+        const { target, disabled } = this.navState(key);
 
         // an emoji with no explicit label makes an icon-only button. the indicator always shows its page text.
         const defaultLabel = key === 'indicator' ? this.indicatorText() : DEFAULT_LABEL[key];
@@ -88,9 +76,39 @@ export class Controls implements PaginatorControls {
         return button;
     }
 
+    private navState(key: ControlKey): { target: number; disabled: boolean } {
+        const { page, totalPages, hasPrev, hasNext } = this.view;
+        const knownTotal = totalPages !== undefined;
+        const target = {
+            first: 0,
+            prev: page - 1,
+            indicator: page,
+            next: page + 1,
+            last: knownTotal ? totalPages - 1 : page
+        }[key];
+        // past PAGE_MAX the encoded page would clamp to a wrong one, so next and last are disabled.
+        const disabled = {
+            first: !hasPrev,
+            prev: !hasPrev,
+            indicator: true,
+            next: !hasNext || page + 1 > PAGE_MAX,
+            last: !hasNext || !knownTotal || totalPages - 1 > PAGE_MAX
+        }[key];
+        return { target, disabled };
+    }
+
     row(...keys: ControlKey[]): ActionRowBuilder<ButtonBuilder> {
+        if (keys.length < 1) {
+            throw new SeedcordRangeError(SeedcordErrorCode.PaginationEmptyControls);
+        }
         if (keys.length > MAX_BUTTONS_PER_ROW) {
             throw new SeedcordRangeError(SeedcordErrorCode.PaginationTooManyControls, [keys.length]);
+        }
+        // repeating a control reuses its slot and page, so the custom_ids collide and Discord rejects the message.
+        const seen = new Set<ControlKey>();
+        for (const key of keys) {
+            if (seen.has(key)) throw new SeedcordTypeError(SeedcordErrorCode.PaginationDuplicateControls, [key]);
+            seen.add(key);
         }
         return new ActionRowBuilder<ButtonBuilder>().addComponents(keys.map((key) => this.button(key)));
     }
