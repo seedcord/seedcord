@@ -5,7 +5,7 @@ export {
     InteractionHandler,
     InteractionMiddleware,
     ModalHandler,
-    SelectHandler,
+    SelectMenuHandler,
     SlashHandler
 } from './interaction';
 export { EventHandler, EventMiddleware } from './event';

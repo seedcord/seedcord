@@ -25,7 +25,7 @@ type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
 /**
  * Shared base the customId-routed component handlers extend.
  *
- * Not a public entry point. You should be using {@link ButtonHandler}, {@link SelectHandler}, or
+ * Not a public entry point. You should be using {@link ButtonHandler}, {@link SelectMenuHandler}, or
  * {@link ModalHandler} instead. This class only carries the customId decode and route-matching plumbing
  * those bases share, so DO NOT use it directly.
  *

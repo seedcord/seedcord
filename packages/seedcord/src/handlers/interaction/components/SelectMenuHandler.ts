@@ -18,7 +18,7 @@ import type { CacheType } from 'discord.js';
  * @example
  * ```ts
  * \@SelectMenuRoute(SelectMenuKind.User, AssignId)
- * class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof AssignId]> {
+ * class AssignSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
  *     async execute() {
  *         const { roleId } = this.params;
  *         await this.event.reply(`assigning ${this.event.values.length} member(s) to <@&${roleId}>`);
@@ -26,7 +26,7 @@ import type { CacheType } from 'discord.js';
  * }
  * ```
  */
-export abstract class SelectHandler<
+export abstract class SelectMenuHandler<
     Kind extends SelectMenuKind,
     Defs extends readonly AnyCustomId[],
     Cache extends CacheType = 'cached'
