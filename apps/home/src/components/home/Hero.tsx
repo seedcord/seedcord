@@ -26,8 +26,8 @@ export function Hero(): ReactNode {
                             'font-display text-[clamp(3.1rem,8.5vw,7rem)] leading-[0.92] font-semibold tracking-tight text-(--seed-dark)'
                         )}
                     >
-                        The whole <span className={cn('text-(--rind)')}>bot</span>,
-                        <br />
+                        The whole bot,
+                        <span className={cn('text-(--rind)')}> wired</span> and{' '}
                         <span className={cn('text-(--flesh)')}>typed</span>.
                     </h1>
                     <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>

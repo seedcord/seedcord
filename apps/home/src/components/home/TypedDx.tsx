@@ -50,7 +50,7 @@ export function TypedDx(): ReactNode {
                     <CodeCard
                         code={codegenOutput}
                         filename="seedcord-gen.d.ts"
-                        note="generated"
+                        note="automatically generated"
                         className={cn('rule blk-rind mt-8')}
                     />
                 </div>
