@@ -1,0 +1,40 @@
+import path from 'node:path';
+
+import createConfig from '@seedcord/eslint-config';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import reactCompiler from 'eslint-plugin-react-compiler';
+
+export default createConfig({
+    tsconfigRootDir: import.meta.dirname,
+    registerImportPlugin: false,
+    registerTypescriptConfigs: false,
+    tailwindEntryPoint: path.resolve(import.meta.dirname, 'src/app/globals.css'),
+    userConfigs: [
+        ...nextVitals,
+
+        reactCompiler.configs.recommended,
+
+        {
+            rules: {
+                ...jsxA11y.flatConfigs.strict.rules,
+                'jsx-a11y/alt-text': ['error', { elements: ['img'], img: ['Image'] }],
+                'react/jsx-no-target-blank': 'error',
+                'react-hooks/exhaustive-deps': 'error',
+                'import/no-anonymous-default-export': 'error',
+                'import/no-default-export': 'error'
+            }
+        },
+
+        {
+            files: [
+                'src/app/**/{page,layout,loading,error,global-error,not-found,template,default,route,sitemap,robots,manifest}.{ts,tsx}',
+                'src/app/**/{icon,apple-icon,opengraph-image,twitter-image}.{ts,tsx}',
+                'src/{middleware,instrumentation}.{ts,tsx}'
+            ],
+            rules: { 'import/no-default-export': 'off' }
+        },
+
+        { ignores: ['.next/**', 'out/**', 'build/**', 'next-env.d.ts'] }
+    ]
+});

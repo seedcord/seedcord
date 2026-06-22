@@ -1,9 +1,12 @@
 :root {
     --color-bg: #f8f6e8;
     --color-text: #070917;
-    --color-base-dark: #070917;
+    --color-base-dark: #0e120c;
     --color-base-slate: #0f172a;
     --color-surface: rgba(0, 0, 0, 0.02);
+
+    /* canonical brand cream, stays cream in both themes unlike --color-bg which flips dark */
+    --cream: #f8f6e8;
 
     /* mater red */
     --accent-a: #f04e36;
@@ -32,7 +35,7 @@
 }
 
 [data-theme='dark'] {
-    --color-bg: #070917;
+    --color-bg: #0e120c;
     --color-text: #f8f6e8;
     --color-surface: rgba(255, 255, 255, 0.04);
     --border: rgba(255, 255, 255, 0.16);

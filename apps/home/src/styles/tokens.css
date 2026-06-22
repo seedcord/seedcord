@@ -1,0 +1,24 @@
+/* Homepage design tokens. Brand accents alias @seedcord/ui tokens (single-sourced). The warm light/dark
+   pair (cream daylight + warm near-black soil) is the picked palette, used as the dark->cream scroll grounds. */
+:root {
+    /* warm near-black grounds (dark sections / Seedbed soil) */
+    --soil: #0e120c;
+    --soil-deep: #080a06;
+    --ink: #0e120c;
+    --clay: #191e14;
+    --seed-dark: #2d3328;
+
+    /* lifted cream for code frames on cream sections, derived from the brand --cream */
+    --husk-cream: color-mix(in oklab, var(--cream) 92%, white);
+
+    /* brand accents + growth shades */
+    --flesh: var(--accent-a);
+    --rind: var(--accent-b);
+    --vine-deep: #4d7d33;
+    --leaf-bright: #8fc96a;
+
+    /* text on the warm-dark grounds */
+    --husk: #9aa089;
+    --cream-dim: #ecebd9;
+    --seed-punct: #3a4233;
+}

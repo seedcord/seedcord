@@ -1,0 +1,36 @@
+{
+    "name": "@seedcord/home",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache",
+        "tc": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@seedcord/ui": "workspace:*",
+        "motion": "catalog:deps",
+        "next": "catalog:deps",
+        "react": "catalog:react",
+        "react-dom": "catalog:react"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@tailwindcss/postcss": "catalog:deps",
+        "@types/react": "catalog:react",
+        "@types/react-dom": "catalog:react",
+        "eslint-config-next": "catalog:deps",
+        "eslint-plugin-jsx-a11y": "catalog:deps",
+        "eslint-plugin-react-compiler": "catalog:deps",
+        "prettier": "catalog:deps",
+        "prettier-plugin-tailwindcss": "catalog:deps",
+        "tailwindcss": "catalog:deps",
+        "typescript": "catalog:peer"
+    }
+}
