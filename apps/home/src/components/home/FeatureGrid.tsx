@@ -144,9 +144,7 @@ export function FeatureGrid(): ReactNode {
                     'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
                 )}
             >
-                It all comes
-                <br />
-                <span className={cn('text-(--flesh)')}>built in.</span>
+                It all comes <span className={cn('text-(--flesh)')}>built in.</span>
             </h2>
 
             <div className={cn('rule blk mt-10 rounded-sm bg-(--cream)')}>

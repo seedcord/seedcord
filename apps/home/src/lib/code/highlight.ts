@@ -1,6 +1,5 @@
+import { seedcordBrandDark, seedcordBrandLight } from '@seedcord/ui';
 import { createHighlighter, type Highlighter } from 'shiki';
-
-import { seedcordBrandDark, seedcordBrandLight } from './brandTheme';
 
 export type CodeLang = 'ts' | 'tsx' | 'bash';
 

@@ -23,7 +23,12 @@ interface RootLayoutProps {
 function RootLayout({ children }: RootLayoutProps): ReactNode {
     return (
         <html lang="en">
-            <body className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}>{children}</body>
+            <body
+                suppressHydrationWarning
+                className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}
+            >
+                {children}
+            </body>
         </html>
     );
 }

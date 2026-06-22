@@ -1,8 +1,8 @@
 :root {
     --color-bg: #f8f6e8;
-    --color-text: #070917;
+    --color-text: #2d3328;
     --color-base-dark: #0e120c;
-    --color-base-slate: #0f172a;
+    --color-base-slate: #2d3328;
     --color-surface: rgba(0, 0, 0, 0.02);
 
     /* canonical brand cream, stays cream in both themes unlike --color-bg which flips dark */

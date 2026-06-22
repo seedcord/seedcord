@@ -100,6 +100,16 @@ const DOCS_BEHAVIORS = [
         href: '/dev/search-scope',
         label: 'Search scope',
         description: 'three candidate behaviors for cross-package discoverability in the command palette'
+    },
+    {
+        href: '/dev/code-theme',
+        label: 'Code theme comparison',
+        description: 'catppuccin (before) vs seedcord brand theme, side by side across TS signatures, light + dark'
+    },
+    {
+        href: '/dev/code-palette',
+        label: 'Proposed code palette',
+        description: 'named warm palette swatches (dark + light) + applied to sample snippets, for theme approval'
     }
 ] as const;
 

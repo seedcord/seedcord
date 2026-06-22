@@ -18,7 +18,7 @@
     }
 
     .shadow-soft {
-        box-shadow: 0 10px 30px rgba(7, 9, 23, 0.08);
+        box-shadow: 0 10px 30px rgba(45, 51, 40, 0.08);
     }
 
     .shiki {
@@ -37,6 +37,12 @@
 
     .shiki-inline {
         display: inline;
+        border-radius: 0.35em;
+        background-color: color-mix(in oklab, var(--bg) 94%, var(--text) 6%);
+        padding: 0.1em 0.36em;
+    }
+    [data-theme='dark'] .shiki-inline {
+        background-color: color-mix(in oklab, var(--bg) 89%, var(--text) 11%);
     }
 
     .shiki a,
