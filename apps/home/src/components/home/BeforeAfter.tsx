@@ -25,7 +25,7 @@ export function BeforeAfter(): ReactNode {
                 </div>
                 <div className={cn('font-mono-code flex items-center gap-3 text-sm font-semibold')}>
                     <span className={cn('rounded-sm bg-(--seed-dark) px-3 py-2 text-(--cream)')}>
-                        raw discord.js · by hand
+                        discord.js · by hand
                     </span>
                     <Icon icon={ArrowRight} size={20} className={cn('text-(--seed-dark)')} />
                     <span className={cn('blk-sm rounded-sm bg-(--flesh) px-3 py-2 text-(--cream)')}>
@@ -34,11 +34,12 @@ export function BeforeAfter(): ReactNode {
                 </div>
             </div>
             <div className={cn('grid gap-6 lg:grid-cols-2')}>
-                <CodeCard code={beforeRawDjs} filename="raw discord.js" className={cn('rule blk-rind')} />
+                <CodeCard code={beforeRawDjs} filename="discord.js" className={cn('rule blk-rind')} />
                 <CodeCard code={afterSeedcord} filename="seedcord" className={cn('rule blk-rind')} />
             </div>
             <p className={cn('font-mono-code mt-5 text-xs text-(--seed-dark)/60')}>
-                The raw column still needs a registration script and the event wiring on top of what is shown.
+                Both columns are discord.js. seedcord keeps the builder and gateway, and wires the routing,
+                registration, types and reload you would otherwise do by hand.
             </p>
         </Section>
     );
