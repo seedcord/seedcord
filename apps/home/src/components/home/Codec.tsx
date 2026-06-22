@@ -49,7 +49,7 @@ export function Codec(): ReactNode {
                 </div>
                 <CodeCard
                     code={codecSample}
-                    filename="paginate.ts"
+                    filename="approve.ts"
                     note="customId codec"
                     className={cn('rule-cream blk-cream')}
                 />

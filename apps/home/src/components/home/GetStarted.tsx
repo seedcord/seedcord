@@ -18,13 +18,13 @@ export function GetStarted(): ReactNode {
                             'font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.95] font-semibold tracking-tight'
                         )}
                     >
-                        From install
+                        From zero
                         <br />
                         to <span className={cn('text-(--flesh)')}>hot reload</span>.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg font-medium text-(--cream)/80')}>
-                        Add the package, generate the option types from your builders, and start with hot reload on.
-                        There is no scaffold step to learn.
+                        Scaffold a typed bot, open it, and run it. Routing, registration and the option types are wired
+                        for you, and hot reload keeps the gateway alive.
                     </p>
                     <div className={cn('mt-8 flex flex-wrap gap-3')}>
                         <PosterButton

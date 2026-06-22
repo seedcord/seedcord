@@ -1,6 +1,5 @@
 import type { ThemeRegistrationRaw } from 'shiki';
 
-// brand-as-syntax roles. green keywords, leaf types/classes/decorators, red strings/numbers, cream identifiers, muted comments
 interface BrandPalette {
     bg: string;
     fg: string;
@@ -50,7 +49,7 @@ function buildTheme(name: string, type: 'dark' | 'light', p: BrandPalette): Them
                     'support.class',
                     'entity.other.inherited-class'
                 ],
-                settings: { foreground: p.type }
+                settings: { foreground: p.type, fontStyle: 'bold' }
             },
             {
                 scope: [
@@ -59,7 +58,7 @@ function buildTheme(name: string, type: 'dark' | 'light', p: BrandPalette): Them
                     'meta.decorator entity.name.function',
                     'entity.name.function.decorator'
                 ],
-                settings: { foreground: p.type }
+                settings: { foreground: p.type, fontStyle: 'bold' }
             },
             {
                 scope: [
@@ -100,20 +99,20 @@ export const seedcordBrandDark = buildTheme('seedcord-dark', 'dark', {
     comment: '#7d8675',
     string: '#f04e36',
     keyword: '#6fab49',
-    type: '#8fc96a',
+    type: '#f8f6e8',
     func: '#f8f6e8',
     variable: '#ecebd9',
     punctuation: '#9aa089'
 });
 
-// docs uses light + dark; deeper red/green read on the warm-light code surface
+// deeper red/green so it reads on the warm-light code surface
 export const seedcordBrandLight = buildTheme('seedcord-light', 'light', {
     bg: '#f4f1e3',
     fg: '#3a4233',
     comment: '#8a9079',
     string: '#c4452c',
     keyword: '#3f7d2e',
-    type: '#2f7d52',
+    type: '#2d3328',
     func: '#3a4233',
     variable: '#4a5142',
     punctuation: '#6b7363'

@@ -81,16 +81,17 @@ export const codecSample = `import { ButtonBuilder } from 'discord.js';
 import { CustomId } from 'seedcord';
 
 // packed into the customId, so more state fits the 100 char cap
-const Page = new CustomId('page')
-    .oneOf('view', ['grid', 'list'])
-    .int('page');
+const Approve = new CustomId('approve')
+    .snowflake('userId')
+    .oneOf('action', ['approve', 'deny']);
 
-// encode straight into setCustomId when you build the component
-new ButtonBuilder().setCustomId(Page.encode({ view: 'grid', page: 2 }));
+// encode straight into the button's setCustomId
+const button = new ButtonBuilder()
+    .setCustomId(Approve.encode({ userId: '123', action: 'approve' }));
 
 // in the button handler, params arrive decoded and typed
-const { view, page } = this.params;
-//      view -> 'grid' | 'list', page -> number`;
+const { userId, action } = this.params;
+//      userId -> string, action -> 'approve' | 'deny'`;
 
 export const codegenOutput = `// seedcord-gen.d.ts  (generated)
 declare module 'seedcord' {
@@ -105,8 +106,8 @@ declare module 'seedcord' {
     }
 }`;
 
-export const startTerminal = `$ pnpm add seedcord
-$ seedcord codegen # generate types from your builders
+export const startTerminal = `$ pnpm create seedcord my-bot # scaffold a typed bot
+$ cd my-bot
 $ seedcord dev # tui | hot reload, the gateway stays alive
 
 # bot online, every slash option fully typed`;

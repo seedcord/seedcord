@@ -1,5 +1,15 @@
 import { cn, Icon } from '@seedcord/ui';
-import { FolderTree, Layers, RefreshCw, ShieldAlert, ShieldCheck, SquareTerminal } from 'lucide-react';
+import {
+    FolderTree,
+    HeartPulse,
+    Layers,
+    MousePointerClick,
+    Plug,
+    RefreshCw,
+    ShieldAlert,
+    Sparkles,
+    SquareTerminal
+} from 'lucide-react';
 
 import { Section } from '@components/home/Section';
 
@@ -35,39 +45,55 @@ const CARDS: Card[] = [
         )
     },
     {
-        title: 'Composable gates',
-        icon: ShieldCheck,
-        dark: false,
-        square: 'bg-(--rind)',
-        body: (
-            <>
-                Stack <code className={cn('font-mono-code text-(--flesh)')}>@Gated</code> guards (guild, permission,
-                role, cooldown) on a handler. Each is compile-checked against the interaction it runs on.
-            </>
-        )
-    },
-    {
         title: 'ComponentsV2 replies',
         icon: Layers,
+        dark: false,
+        square: 'bg-(--rind)',
+        body: 'Build replies with the ComponentsV2 layout, attach files, and route reply, edit or follow-up through one typed response.'
+    },
+    {
+        title: 'Context menu commands',
+        icon: MousePointerClick,
         dark: true,
         square: 'bg-(--flesh)',
-        body: 'Build replies with the ComponentsV2 layout, attach files, and route reply, edit or follow-up through one typed response.'
+        body: 'Right-click a user or a message to run a command. User and message context menus, typed like your slash commands.'
+    },
+    {
+        title: 'Autocomplete handlers',
+        icon: Sparkles,
+        dark: false,
+        square: 'bg-(--rind)',
+        body: 'Wire an autocomplete handler to an option and return suggestions as the user types, fully typed.'
     },
     {
         title: 'Notice, Fault, Silence',
         icon: ShieldAlert,
+        dark: true,
+        square: 'bg-(--flesh)',
+        body: 'Throw a Notice to refuse and tell the user why, a Fault to log and trace an unexpected error, or Silence to stop with no reply.'
+    },
+    {
+        title: 'Coordinated lifecycle',
+        icon: HeartPulse,
         dark: false,
         square: 'bg-(--rind)',
-        body: 'Throw a Notice to answer the user, a Fault to report and trace an error, or Silence to drop it quietly. Each renders the right reply.'
+        body: 'A phased startup and shutdown with SIGTERM handling and an HTTP health check, built for real hosting.'
+    },
+    {
+        title: 'Plugins',
+        icon: Plug,
+        dark: true,
+        square: 'bg-(--flesh)',
+        body: 'A plugin contract with first-party Postgres (Kysely) and Mongo plugins, or write your own.'
     },
     {
         title: 'Live dev terminal',
         icon: SquareTerminal,
-        dark: true,
-        square: 'bg-(--flesh)',
+        dark: false,
+        square: 'bg-(--rind)',
         body: (
             <>
-                <code className={cn('font-mono-code text-(--rind)')}>seedcord dev</code> runs a full-screen terminal UI
+                <code className={cn('font-mono-code text-(--flesh)')}>seedcord dev</code> runs a full-screen terminal UI
                 with logs, reload status and the gateway state in one view.
             </>
         )
@@ -77,7 +103,7 @@ const CARDS: Card[] = [
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="cream">
-            <div className={cn('grid gap-6 md:grid-cols-3')}>
+            <div className={cn('grid gap-6 md:grid-cols-2 lg:grid-cols-3')}>
                 {CARDS.map((card) => (
                     <div
                         key={card.title}

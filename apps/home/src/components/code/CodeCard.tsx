@@ -16,7 +16,7 @@ interface CodeCardProps {
 export async function CodeCard({ code, filename, lang = 'ts', note, className }: CodeCardProps): Promise<ReactNode> {
     const html = await highlightCode(code, lang);
     return (
-        <figure className={cn('code-card overflow-hidden rounded-sm bg-(--seed-dark)', className)}>
+        <figure className={cn('code-card min-w-0 overflow-hidden rounded-sm bg-(--seed-dark)', className)}>
             <figcaption className={cn('flex items-center gap-3 border-b-[3px] border-(--cream)/20 px-4 py-2.5')}>
                 <span className={cn('flex items-center gap-2')} aria-hidden>
                     <span className={cn('size-3 rounded-full bg-(--flesh)')} />

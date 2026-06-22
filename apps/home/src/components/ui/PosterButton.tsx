@@ -32,6 +32,7 @@ export function PosterButton({ href, variant = 'solid', className, children }: P
             className={cn(
                 'inline-flex items-center justify-center gap-2 rounded-sm font-semibold',
                 'transition-[transform,box-shadow,background-color,color] duration-150 ease-out',
+                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
                 VARIANTS[variant],
                 className
             )}
