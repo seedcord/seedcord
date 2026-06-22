@@ -91,6 +91,11 @@ export enum SeedcordErrorCode {
     /** A Cooldown gate was given a duration string that is not a well-formed positive duration. */
     GateInvalidCooldownDuration = 1701,
 
+    /** A paginator source was given a perPage that is not a positive integer. */
+    PaginationInvalidPerPage = 1801,
+    /** A control row was assembled with more than the five buttons Discord allows. */
+    PaginationTooManyControls = 1802,
+
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
     /** Mongo model class is missing the `@RegisterMongoModel` decorator. */

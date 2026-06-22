@@ -80,6 +80,11 @@ const messages = {
     [SeedcordErrorCode.GateInvalidCooldownDuration]: (input: string) =>
         `Cooldown duration ${JSON.stringify(input)} is not valid. Pass a number of seconds or a duration string like '30m', '24h', or '500ms'.`,
 
+    [SeedcordErrorCode.PaginationInvalidPerPage]: (perPage: number) =>
+        `perPage must be a positive integer, got ${perPage}.`,
+    [SeedcordErrorCode.PaginationTooManyControls]: (count: number) =>
+        `A control row holds at most 5 buttons, got ${count}.`,
+
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
     [SeedcordErrorCode.PluginMongoModelDecoratorMissing]: (className: string) =>
