@@ -170,7 +170,7 @@ export function FeatureGrid(): ReactNode {
                                         icon={row.icon}
                                         size={20}
                                         className={cn(
-                                            'mt-0.5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:scale-[1.18]',
+                                            'mt-0.5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:rotate-12',
                                             ACCENT_TEXT[group.accent]
                                         )}
                                     />

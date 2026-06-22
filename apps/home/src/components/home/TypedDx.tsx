@@ -28,9 +28,9 @@ export function TypedDx(): ReactNode {
                         The builder is the <span className={cn('text-(--flesh)')}>source</span> of the types.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>
-                        You define options on the standard discord.js builder.{' '}
-                        <Code className={cn('text-[0.95em] text-(--flesh)')}>seedcord codegen</Code> reads it and writes
-                        the accessor types, so the builder stays the only schema you maintain.
+                        You define options on the standard discord.js builder for slash commands or context menu
+                        commands. <Code className={cn('text-[0.95em] text-(--flesh)')}>seedcord codegen</Code> reads it
+                        and writes the accessor types, so the builder stays the only schema you maintain.
                     </p>
                     <ul className={cn('mt-8 space-y-4')}>
                         {BULLETS.map((b) => (
