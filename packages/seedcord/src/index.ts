@@ -28,6 +28,9 @@ export * from '@interfaces/index';
 // Handlers exports
 export * from '@handlers/index';
 
+// Pagination exports
+export * from '@pagination/index';
+
 // Inputs exports
 export type * from '@inputs/index';
 

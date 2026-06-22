@@ -18,6 +18,7 @@ export default mergeConfig(
                 '@interfaces': path.resolve(__dirname, './src/interfaces'),
                 '@handlers': path.resolve(__dirname, './src/handlers'),
                 '@inputs': path.resolve(__dirname, './src/inputs'),
+                '@pagination': path.resolve(__dirname, './src/pagination'),
                 '@miscellaneous': path.resolve(__dirname, './src/miscellaneous'),
 
                 // Paths inside bot
