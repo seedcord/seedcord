@@ -101,10 +101,7 @@ const ACCENT_TEXT: Record<Accent, string> = {
     rind: tw`text-(--rind)`
 };
 
-const ROW = tw`
-    flex items-start gap-3 py-2 transition-transform
-    motion-safe:hover:translate-x-0.5
-`;
+const ROW = tw`flex items-start gap-3 py-2`;
 
 function pad(count: number): string {
     return count.toString().padStart(2, '0');
@@ -119,13 +116,10 @@ export function FeatureGrid(): ReactNode {
                     'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
                 )}
             >
-                Built in,
+                It all comes
                 <br />
-                <span className={cn('text-(--flesh)')}>not bolted on.</span>
+                <span className={cn('text-(--flesh)')}>built in.</span>
             </h2>
-            <p className={cn('mt-6 max-w-md text-(--seed-dark)/85')}>
-                The full surface, one typed framework. Nineteen pieces, no glue between them.
-            </p>
 
             <div className={cn('rule blk mt-10 rounded-sm bg-(--cream)')}>
                 {GROUPS.map((group, groupIndex) => (

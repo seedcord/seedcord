@@ -1,4 +1,4 @@
-import { cn } from '@seedcord/ui';
+import { cn, GithubIcon, Icon } from '@seedcord/ui';
 import Link from 'next/link';
 
 import { Watermelon } from '@components/brand/Watermelon';
@@ -28,28 +28,31 @@ export function Nav(): ReactNode {
                         v1.0
                     </span>
                 </Link>
-                <nav className={cn('hidden items-center gap-1 md:flex')}>
-                    {LINKS.map((l) => (
-                        <Link
-                            key={l.label}
-                            href={l.href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={cn(
-                                'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) transition-colors hover:bg-(--seed-dark) hover:text-(--cream)'
-                            )}
-                        >
-                            {l.label}
-                        </Link>
-                    ))}
+                <div className={cn('flex items-center gap-2')}>
+                    <nav className={cn('hidden items-center gap-1 md:flex')}>
+                        {LINKS.map((l) => (
+                            <Link
+                                key={l.label}
+                                href={l.href}
+                                target="_blank"
+                                rel="noreferrer"
+                                className={cn(
+                                    'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) transition-colors hover:bg-(--seed-dark) hover:text-(--cream)'
+                                )}
+                            >
+                                {l.label}
+                            </Link>
+                        ))}
+                    </nav>
                     <PosterButton
                         href="https://github.com/seedcord/seedcord"
                         variant="ink"
-                        className={cn('font-mono-code ml-2 px-4 py-1.5 text-sm')}
+                        className={cn('font-mono-code px-3 py-1.5 text-sm')}
                     >
-                        GitHub
+                        <Icon icon={GithubIcon} size={20} className={cn('md:hidden')} />
+                        <span className={cn('sr-only md:not-sr-only')}>GitHub</span>
                     </PosterButton>
-                </nav>
+                </div>
             </div>
         </header>
     );
