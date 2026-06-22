@@ -25,9 +25,9 @@ export function Codec(): ReactNode {
                     >
                         100 characters.
                         <br />
-                        A real schema,
+                        Packed by a
                         <br />
-                        not string slicing.
+                        typed schema.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--cream)/90')}>
                         Discord limits a customId to 100 characters. The codec packs your fields so more state fits than

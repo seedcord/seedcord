@@ -3,6 +3,7 @@ import { Braces, RefreshCw, ShieldCheck } from 'lucide-react';
 
 import { CodeCard } from '@components/code/CodeCard';
 import { Eyebrow, Section } from '@components/home/Section';
+import { Code } from '@components/ui/Code';
 import { codegenOutput, typedDxCommand, typedDxHandler } from '@lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -28,8 +29,8 @@ export function TypedDx(): ReactNode {
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>
                         You define options on the standard discord.js builder.{' '}
-                        <code className={cn('font-mono-code text-[0.95em] text-(--flesh)')}>seedcord codegen</code>{' '}
-                        reads it and writes the accessor types. No schema duplication, no manual generics.
+                        <Code className={cn('text-[0.95em] text-(--flesh)')}>seedcord codegen</Code> reads it and writes
+                        the accessor types, so the builder stays the only schema you maintain.
                     </p>
                     <ul className={cn('mt-8 space-y-4')}>
                         {BULLETS.map((b) => (

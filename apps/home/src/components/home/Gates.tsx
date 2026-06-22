@@ -2,6 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import { CodeCard } from '@components/code/CodeCard';
 import { Eyebrow, Section } from '@components/home/Section';
+import { Code } from '@components/ui/Code';
 import { gatesSample } from '@lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -27,9 +28,9 @@ export function Gates(): ReactNode {
                         The compiler checks.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--cream)/90')}>
-                        Stack <code className={cn('font-mono-code')}>@Gated</code> guards on a handler and combine them
-                        with and() and or(). Guild, owner, role, permission and cooldown each run at runtime, before
-                        your handler does. Attaching one to the wrong handler kind is a compile error.
+                        Stack <Code>@Gated</Code> guards on a handler and combine them with <Code>and()</Code> and{' '}
+                        <Code>or()</Code>. Guild, owner, role, permission and cooldown each run at runtime, before your
+                        handler does. Attaching one to the wrong handler kind is a compile error.
                     </p>
                     <div className={cn('mt-7 flex flex-wrap gap-2')}>
                         {CHIPS.map((chip) => (

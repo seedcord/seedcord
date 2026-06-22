@@ -27,23 +27,13 @@ export function Hero(): ReactNode {
                             'font-display text-[clamp(3.1rem,8.5vw,7rem)] leading-[0.92] font-semibold tracking-tight text-(--seed-dark)'
                         )}
                     >
-                        Bots that
+                        The whole <span className={cn('text-(--rind)')}>bot</span>,
                         <br />
-                        <span className={cn('text-(--flesh)')}>type</span>-
-                        <span className={cn('text-(--rind)')}>check</span>
-                        <br />
-                        themselves.
+                        <span className={cn('text-(--flesh)')}>typed</span>.
                     </h1>
-                    <p className={cn('mt-7 max-w-xl text-lg/snug  font-medium text-(--seed-dark)/85 md:text-xl')}>
-                        Write a discord.js command builder once.{' '}
-                        <span className={cn('rounded-sm bg-(--rind)/25 px-1')}>seedcord codegen</span> derives the
-                        option types, so{' '}
-                        <code className={cn('font-mono-code text-[0.95em] font-semibold text-(--flesh)')}>
-                            {"getString('category')"}
-                        </code>{' '}
-                        returns the exact union and required options are never{' '}
-                        <code className={cn('font-mono-code text-[0.95em]')}>null</code>. The type you read is one you
-                        never wrote.
+                    <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>
+                        Routing, interactions, events, gates, lifecycle and plugins, all typed, on top of discord.js. A
+                        wrong route or field is a compile error, caught before the bot connects.
                     </p>
                     <div className={cn('mt-8 flex flex-wrap items-center gap-3')}>
                         <PosterButton
