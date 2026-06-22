@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import {
     FolderTree,
     HeartPulse,
-    Layers,
+    WandSparkles,
     MousePointerClick,
     Plug,
     RefreshCw,
@@ -45,11 +45,11 @@ const CARDS: Card[] = [
         )
     },
     {
-        title: 'ComponentsV2 replies',
-        icon: Layers,
+        title: 'seedcord commands',
+        icon: WandSparkles,
         dark: false,
         square: 'bg-(--rind)',
-        body: 'Build replies with the ComponentsV2 layout, attach files, and route reply, edit or follow-up through one typed response.'
+        body: 'Inspect your deployed application commands and prune stale or duplicate registrations from the CLI, with a guided wizard or flags.'
     },
     {
         title: 'Context menu commands',
