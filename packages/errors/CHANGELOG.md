@@ -1,5 +1,16 @@
 # @seedcord/errors
 
+## 0.2.0-next.0
+
+### Minor Changes
+
+- 7121c18: remove `BaseSeedcordError` from public exports
+
+### Patch Changes
+
+- 7121c18: Add `seedcord commands` to find and delete guild application commands that duplicate a global command (or, with `--purge`, every command in a guild). Run it with no flags for a guided wizard, or headlessly with `--clean --guild <ids>` or `--all-guilds` plus `--apply`, `--purge`, and `--yes`. It reads deployed state over REST, dry-runs by default, and never touches global commands.
+- 7121c18: `EmojiInjector` now throws at startup when a configured emoji cannot be resolved, instead of silently storing the raw config name. It collects every unresolvable emoji and reports them in one error, so the whole config is fixable in one pass. `bot.emojis` is narrowed to resolved emoji objects (the `string` fallback is gone), so a saved emoji is always usable.
+
 ## 0.1.0
 
 ### Minor Changes

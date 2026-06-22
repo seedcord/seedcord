@@ -19,5 +19,13 @@
     "@seedcord/ui": "0.1.0",
     "@seedcord/utils": "0.6.0"
   },
-  "changesets": []
+  "changesets": [
+    "bump-runtime-deps",
+    "command-mentions",
+    "commands-clean",
+    "emoji-fail-fast",
+    "emoji-typing",
+    "five-cars-appear",
+    "forty-signs-brush"
+  ]
 }
