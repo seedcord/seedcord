@@ -3,6 +3,7 @@
 
 declare module 'seedcord' {
     interface SlashOptionRegistry {
+        defernotice: {};
         feed: {};
         leaderboard: {};
         maintenance: { notify: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
