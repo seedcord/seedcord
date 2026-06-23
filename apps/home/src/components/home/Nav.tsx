@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { Materwelon } from '@/components/brand/Materwelon';
 
 import { PosterButton } from '@components/ui/PosterButton';
+import { DOCS_URL, GUIDE_URL, REPO_URL } from '@lib/site';
 
 import type { ReactNode } from 'react';
 
 const LINKS = [
-    { label: 'Guide', href: 'https://guide.seedcord.org' },
-    { label: 'Docs', href: 'https://docs.seedcord.org' }
+    { label: 'Guide', href: GUIDE_URL },
+    { label: 'Docs', href: DOCS_URL }
 ] as const;
 
 export function Nav(): ReactNode {
@@ -17,7 +18,7 @@ export function Nav(): ReactNode {
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--cream)')}>
             <div className={cn('mx-auto flex h-16 max-w-7xl items-center justify-between px-5')}>
                 <Link href="/" className={cn('flex items-center gap-3')}>
-                    <Materwelon className={cn('size-9 drop-shadow-[2px_2px_0_rgba(45,51,40,0.85)]')} />
+                    <Materwelon className={cn('size-9 drop-shadow-mark')} />
                     <span className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}>
                         seedcord
                     </span>
@@ -45,11 +46,7 @@ export function Nav(): ReactNode {
                             </Link>
                         ))}
                     </nav>
-                    <PosterButton
-                        href="https://github.com/seedcord/seedcord"
-                        variant="ink"
-                        className={cn('font-mono-code px-3 py-1.5 text-sm')}
-                    >
+                    <PosterButton href={REPO_URL} variant="ink" className={cn('font-mono-code px-3 py-1.5 text-sm')}>
                         <Icon icon={GithubIcon} size={20} className={cn('md:hidden')} />
                         <span className={cn('sr-only md:not-sr-only')}>GitHub</span>
                     </PosterButton>

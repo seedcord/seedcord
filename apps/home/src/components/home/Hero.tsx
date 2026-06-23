@@ -3,6 +3,7 @@ import { cn } from '@seedcord/ui';
 import { Materwelon } from '@/components/brand/Materwelon';
 
 import { PosterButton } from '@components/ui/PosterButton';
+import { DOCS_URL, GUIDE_URL } from '@lib/site';
 
 import type { ReactNode } from 'react';
 
@@ -37,15 +38,11 @@ export function Hero(): ReactNode {
                         ever connects.
                     </p>
                     <div className={cn('mt-8 flex flex-wrap items-center gap-3')}>
-                        <PosterButton
-                            href="https://guide.seedcord.org"
-                            variant="solid"
-                            className={cn('font-display px-7 py-3 text-lg')}
-                        >
+                        <PosterButton href={GUIDE_URL} variant="solid" className={cn('font-display px-7 py-3 text-lg')}>
                             Get started
                         </PosterButton>
                         <PosterButton
-                            href="https://docs.seedcord.org"
+                            href={DOCS_URL}
                             variant="outline"
                             className={cn('font-display px-7 py-3 text-lg')}
                         >
@@ -64,9 +61,7 @@ export function Hero(): ReactNode {
                 <div className={cn('relative hidden items-center justify-center lg:flex lg:h-124')}>
                     {/* deeper green so the green in the materwelon doesn't blend with that square in the back */}
                     <div className={cn('blk absolute top-6 right-0 size-[78%] rounded-sm bg-(--vine-deep)')} />
-                    <Materwelon
-                        className={cn('relative z-10 w-[84%] max-w-124 drop-shadow-[10px_10px_0_rgba(45,51,40,0.55)]')}
-                    />
+                    <Materwelon className={cn('relative z-10 w-[84%] max-w-124 drop-shadow-mark-lg')} />
                 </div>
             </div>
         </section>

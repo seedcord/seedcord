@@ -4,6 +4,7 @@ import { CodeCard } from '@components/code/CodeCard';
 import { Eyebrow, Section } from '@components/home/Section';
 import { PosterButton } from '@components/ui/PosterButton';
 import { startTerminal } from '@lib/code/samples';
+import { GUIDE_URL, REPO_URL } from '@lib/site';
 
 import type { ReactNode } from 'react';
 
@@ -28,14 +29,14 @@ export function GetStarted(): ReactNode {
                     </p>
                     <div className={cn('mt-8 flex flex-wrap gap-3')}>
                         <PosterButton
-                            href="https://guide.seedcord.org"
+                            href={GUIDE_URL}
                             variant="solidDark"
                             className={cn('font-display px-7 py-3 text-lg')}
                         >
                             Read the guide
                         </PosterButton>
                         <PosterButton
-                            href="https://github.com/seedcord/seedcord"
+                            href={REPO_URL}
                             variant="outlineDark"
                             className={cn('font-display px-7 py-3 text-lg')}
                         >

@@ -3,7 +3,7 @@ import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 
 import './globals.css';
 
-import { REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
+import { DEFAULT_OG_IMAGE, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
@@ -26,12 +26,14 @@ export const metadata: Metadata = {
         url: SITE_URL,
         locale: 'en_US',
         title: TITLE,
-        description: SITE_DESCRIPTION
+        description: SITE_DESCRIPTION,
+        images: [DEFAULT_OG_IMAGE]
     },
     twitter: {
         card: 'summary_large_image',
         title: TITLE,
-        description: SITE_DESCRIPTION
+        description: SITE_DESCRIPTION,
+        images: [DEFAULT_OG_IMAGE]
     }
 };
 

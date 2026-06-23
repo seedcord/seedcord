@@ -3,49 +3,96 @@ import Link from 'next/link';
 
 import { Materwelon } from '@/components/brand/Materwelon';
 
+import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '@lib/site';
+
 import type { ReactNode } from 'react';
 
-const LINKS = [
-    { label: 'GitHub', href: 'https://github.com/seedcord/seedcord' },
-    { label: 'Docs', href: 'https://docs.seedcord.org' },
-    { label: 'Guide', href: 'https://guide.seedcord.org' }
+const COLUMNS = [
+    {
+        title: 'Documentation',
+        links: [
+            { label: 'Guide', href: GUIDE_URL },
+            { label: 'API reference', href: DOCS_URL }
+        ]
+    },
+    {
+        title: 'Community',
+        links: [
+            { label: 'Discord', href: DISCORD_URL },
+            { label: 'GitHub', href: REPO_URL },
+            { label: 'npm', href: NPM_URL }
+        ]
+    },
+    {
+        title: 'Project',
+        links: [
+            { label: 'Releases', href: `${REPO_URL}/releases` },
+            { label: 'Issues', href: `${REPO_URL}/issues` },
+            { label: 'License', href: `${REPO_URL}/blob/main/LICENSE` }
+        ]
+    }
 ] as const;
 
 export function Footer(): ReactNode {
     return (
         <footer className={cn('border-t-[3px] border-(--seed-dark) bg-(--cream)')}>
-            <div className={cn('mx-auto max-w-7xl px-5 py-10')}>
-                <div className={cn('flex flex-col items-center justify-between gap-6 sm:flex-row')}>
-                    <div className={cn('flex items-center gap-3')}>
-                        <Materwelon className={cn('size-8 drop-shadow-[2px_2px_0_rgba(45,51,40,0.85)]')} />
-                        <span className={cn('font-semibold text-(--seed-dark)')}>seedcord</span>
-                        <span className={cn('font-mono-code text-xs text-(--seed-dark)/70')}>v1.0 · Apache-2.0</span>
-                    </div>
-                    <nav className={cn('font-mono-code flex flex-wrap items-center gap-5 text-sm')}>
-                        {LINKS.map((l) => (
-                            <Link
-                                key={l.label}
-                                href={l.href}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={cn('text-(--seed-dark) transition-colors hover:text-(--flesh)')}
+            <div className={cn('mx-auto max-w-7xl px-5 py-14')}>
+                <div className={cn('grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]')}>
+                    <div className={cn('flex flex-col gap-4')}>
+                        <Link href="/" className={cn('flex items-center gap-3')}>
+                            <Materwelon className={cn('size-8 drop-shadow-mark')} />
+                            <span
+                                className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}
                             >
-                                {l.label}
-                            </Link>
+                                seedcord
+                            </span>
+                        </Link>
+                        <p className={cn('max-w-xs text-sm font-medium text-(--seed-dark)/70')}>
+                            A typed framework for Discord bots, wired on top of discord.js.
+                        </p>
+                    </div>
+                    <div className={cn('grid grid-cols-3 gap-6 lg:contents')}>
+                        {COLUMNS.map((col) => (
+                            <nav key={col.title} className={cn('flex flex-col gap-3')}>
+                                <span
+                                    className={cn(
+                                        'font-mono-code text-xs font-semibold tracking-wide text-(--seed-dark)/55 uppercase'
+                                    )}
+                                >
+                                    {col.title}
+                                </span>
+                                {col.links.map((l) => (
+                                    <Link
+                                        key={l.label}
+                                        href={l.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className={cn(
+                                            'text-sm font-medium text-(--seed-dark) transition-colors hover:text-(--flesh)'
+                                        )}
+                                    >
+                                        {l.label}
+                                    </Link>
+                                ))}
+                            </nav>
                         ))}
-                    </nav>
+                    </div>
                 </div>
-                <p className={cn('font-mono-code mt-8 text-center text-xs text-(--seed-dark)/70 sm:text-left')}>
-                    Built by{' '}
-                    <Link
-                        href="https://github.com/materwelonDhruv"
-                        target="_blank"
-                        rel="noreferrer"
-                        className={cn('font-semibold text-(--seed-dark) transition-colors hover:text-(--flesh)')}
-                    >
-                        materwelonDhruv
-                    </Link>
-                </p>
+            </div>
+            <div className={cn('border-t-[3px] border-(--seed-dark)')}>
+                <div className={cn('mx-auto max-w-7xl px-5 py-6')}>
+                    <p className={cn('font-mono-code text-xs text-(--seed-dark)/70')}>
+                        Built by{' '}
+                        <Link
+                            href="https://github.com/materwelonDhruv"
+                            target="_blank"
+                            rel="noreferrer"
+                            className={cn('font-semibold text-(--seed-dark) transition-colors hover:text-(--flesh)')}
+                        >
+                            materwelonDhruv
+                        </Link>
+                    </p>
+                </div>
             </div>
         </footer>
     );

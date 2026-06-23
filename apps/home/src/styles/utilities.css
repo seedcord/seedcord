@@ -33,6 +33,12 @@
     .blk-rind {
         box-shadow: 10px 10px 0 0 var(--rind);
     }
+    .drop-shadow-mark {
+        filter: drop-shadow(2px 2px 0 color-mix(in srgb, var(--seed-dark) 85%, transparent));
+    }
+    .drop-shadow-mark-lg {
+        filter: drop-shadow(10px 10px 0 color-mix(in srgb, var(--seed-dark) 55%, transparent));
+    }
 }
 
 @keyframes marquee-x {
