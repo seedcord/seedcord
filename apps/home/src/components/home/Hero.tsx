@@ -1,6 +1,7 @@
 import { cn } from '@seedcord/ui';
 
-import { Watermelon } from '@components/brand/Watermelon';
+import { Materwelon } from '@/components/brand/Materwelon';
+
 import { PosterButton } from '@components/ui/PosterButton';
 
 import type { ReactNode } from 'react';
@@ -16,7 +17,7 @@ export function Hero(): ReactNode {
                 <div className={cn('relative z-10')}>
                     <div
                         className={cn(
-                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-3 py-1.5 text-xs font-semibold text-(--cream)'
+                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-3 py-1.5 text-sm font-semibold text-(--cream)'
                         )}
                     >
                         discord.js 14 · class + decorator framework
@@ -26,13 +27,14 @@ export function Hero(): ReactNode {
                             'font-display text-[clamp(3.1rem,8.5vw,7rem)] leading-[0.92] font-semibold tracking-tight text-(--seed-dark)'
                         )}
                     >
-                        The whole bot,
-                        <span className={cn('text-(--rind)')}> wired</span> and{' '}
-                        <span className={cn('text-(--flesh)')}>typed</span>.
+                        The whole Discord bot,
+                        <span className={cn('text-(--vine-deep)')}> wired</span> and{' '}
+                        <span className={cn('text-(--flesh-deep)')}>typed</span>.
                     </h1>
                     <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>
-                        Routing, interactions, events, gates, lifecycle and plugins, all typed, on top of discord.js. A
-                        wrong route or field is a compile error, caught before the bot connects.
+                        Everything a Discord bot needs, commands, events, components, gates, lifecycle and plugins,
+                        wired and typed on top of discord.js. A wrong route or option is a compile error, before the bot
+                        ever connects.
                     </p>
                     <div className={cn('mt-8 flex flex-wrap items-center gap-3')}>
                         <PosterButton
@@ -63,7 +65,7 @@ export function Hero(): ReactNode {
                 <div className={cn('relative hidden items-center justify-center lg:flex lg:h-140')}>
                     {/* deeper green so the lighter rind stays distinct */}
                     <div className={cn('blk absolute top-6 right-0 size-[78%] rounded-sm bg-(--vine-deep)')} />
-                    <Watermelon
+                    <Materwelon
                         className={cn('relative z-10 w-[92%] max-w-140 drop-shadow-[10px_10px_0_rgba(45,51,40,0.55)]')}
                     />
                 </div>

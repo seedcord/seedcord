@@ -5,11 +5,11 @@ import type { ReactNode } from 'react';
 
 const press = 'motion-safe:hover:translate-x-[3px] motion-safe:hover:translate-y-[3px] motion-safe:hover:shadow-none';
 const VARIANTS = {
-    solid: `rule blk ${press} bg-(--flesh) text-(--cream)`,
+    solid: `rule blk ${press} bg-(--flesh-deep) text-(--cream)`,
     outline: `rule blk ${press} bg-(--cream) text-(--seed-dark)`,
-    solidDark: `rule-cream blk-rind ${press} bg-(--flesh) text-(--cream)`,
+    solidDark: `rule-cream blk-rind ${press} bg-(--flesh-deep) text-(--cream)`,
     outlineDark: `rule-cream blk-rind ${press} bg-(--cream) text-(--seed-dark)`,
-    ink: 'bg-(--seed-dark) text-(--cream) hover:bg-(--flesh)'
+    ink: 'bg-(--seed-dark) text-(--cream) hover:bg-(--flesh-deep)'
 } as const;
 
 export type PosterButtonVariant = keyof typeof VARIANTS;

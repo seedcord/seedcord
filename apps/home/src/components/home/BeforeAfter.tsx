@@ -20,13 +20,13 @@ export function BeforeAfter(): ReactNode {
                     >
                         Same command.
                         <br />
-                        <span className={cn('text-(--flesh)')}>Far less</span> to write.
+                        <span className={cn('text-(--flesh-deep)')}>Far less</span> to write.
                     </h2>
                 </div>
                 <div className={cn('font-mono-code flex items-center gap-3 text-sm font-semibold')}>
                     <span className={cn('rounded-sm bg-(--seed-dark) px-3 py-2 text-(--cream)')}>by hand</span>
                     <Icon icon={ArrowRight} size={20} className={cn('text-(--seed-dark)')} />
-                    <span className={cn('blk-sm rounded-sm bg-(--flesh) px-3 py-2 text-(--cream)')}>
+                    <span className={cn('blk-sm rounded-sm bg-(--flesh-deep) px-3 py-2 text-(--cream)')}>
                         seedcord · one handler
                     </span>
                 </div>
@@ -35,7 +35,7 @@ export function BeforeAfter(): ReactNode {
                 <CodeCard code={beforeRawDjs} filename="by hand" className={cn('rule blk-rind')} />
                 <CodeCard code={afterSeedcord} filename="seedcord" className={cn('rule blk-rind')} />
             </div>
-            <p className={cn('font-mono-code mt-5 text-xs text-(--seed-dark)/60')}>
+            <p className={cn('font-mono-code mt-5 text-xs text-(--seed-dark)/70')}>
                 The left wires the routing, registration and checks by hand. seedcord does that wiring from your
                 decorators.
             </p>

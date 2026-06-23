@@ -6,7 +6,12 @@
     body {
         background-color: var(--cream);
         color: var(--seed-dark);
-        font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family:
+            var(--font-sans),
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            sans-serif;
         min-height: 100vh;
         -webkit-font-smoothing: antialiased;
     }

@@ -1,7 +1,7 @@
 import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { Watermelon } from '@components/brand/Watermelon';
+import { Materwelon } from '@/components/brand/Materwelon';
 
 import type { ReactNode } from 'react';
 
@@ -17,9 +17,9 @@ export function Footer(): ReactNode {
             <div className={cn('mx-auto max-w-7xl px-5 py-10')}>
                 <div className={cn('flex flex-col items-center justify-between gap-6 sm:flex-row')}>
                     <div className={cn('flex items-center gap-3')}>
-                        <Watermelon className={cn('size-8')} />
+                        <Materwelon className={cn('size-8')} />
                         <span className={cn('font-semibold text-(--seed-dark)')}>seedcord</span>
-                        <span className={cn('font-mono-code text-xs text-(--seed-dark)/50')}>v1.0 · Apache-2.0</span>
+                        <span className={cn('font-mono-code text-xs text-(--seed-dark)/70')}>v1.0 · Apache-2.0</span>
                     </div>
                     <nav className={cn('font-mono-code flex flex-wrap items-center gap-5 text-sm')}>
                         {LINKS.map((l) => (
@@ -35,7 +35,7 @@ export function Footer(): ReactNode {
                         ))}
                     </nav>
                 </div>
-                <p className={cn('font-mono-code mt-8 text-center text-xs text-(--seed-dark)/50 sm:text-left')}>
+                <p className={cn('font-mono-code mt-8 text-center text-xs text-(--seed-dark)/70 sm:text-left')}>
                     Built by{' '}
                     <Link
                         href="https://github.com/materwelonDhruv"

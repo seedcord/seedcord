@@ -12,7 +12,7 @@ export function GetStarted(): ReactNode {
         <Section ground="ink">
             <div className={cn('grid items-center gap-10 lg:grid-cols-[1fr_0.8fr]')}>
                 <div>
-                    <Eyebrow ground="ink">05 / GET STARTED</Eyebrow>
+                    <Eyebrow ground="ink">06 / GET STARTED</Eyebrow>
                     <h2
                         className={cn(
                             'font-display text-[clamp(2.6rem,6vw,5rem)] leading-[0.95] font-semibold tracking-tight'

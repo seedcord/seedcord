@@ -17,7 +17,7 @@ function Home(): ReactNode {
     return (
         <>
             <Nav />
-            <main>
+            <main id="main-content">
                 <Hero />
                 <FeatureMarquee items={FEATURES} />
                 <TypedDx />

@@ -1,7 +1,8 @@
 import { cn, GithubIcon, Icon } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { Watermelon } from '@components/brand/Watermelon';
+import { Materwelon } from '@/components/brand/Materwelon';
+
 import { PosterButton } from '@components/ui/PosterButton';
 
 import type { ReactNode } from 'react';
@@ -16,20 +17,20 @@ export function Nav(): ReactNode {
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--cream)')}>
             <div className={cn('mx-auto flex h-16 max-w-7xl items-center justify-between px-5')}>
                 <Link href="/" className={cn('flex items-center gap-3')}>
-                    <Watermelon className={cn('size-9')} />
+                    <Materwelon className={cn('size-9')} />
                     <span className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}>
                         seedcord
                     </span>
                     <span
                         className={cn(
-                            'font-mono-code ml-1 rounded-sm bg-(--rind) px-1.5 py-0.5 text-[11px] font-semibold text-(--cream)'
+                            'font-mono-code ml-1 rounded-sm bg-(--vine-deep) px-1.5 py-0.5 text-[11px] font-semibold text-(--cream)'
                         )}
                     >
                         v1.0
                     </span>
                 </Link>
                 <div className={cn('flex items-center gap-2')}>
-                    <nav className={cn('hidden items-center gap-1 md:flex')}>
+                    <nav className={cn('flex items-center gap-1')}>
                         {LINKS.map((l) => (
                             <Link
                                 key={l.label}

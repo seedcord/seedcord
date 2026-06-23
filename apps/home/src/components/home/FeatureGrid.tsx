@@ -131,8 +131,8 @@ const GROUPS: Group[] = [
 ];
 
 const ACCENT_TEXT: Record<Accent, string> = {
-    flesh: tw`text-(--flesh)`,
-    rind: tw`text-(--rind)`
+    flesh: tw`text-(--flesh-deep)`,
+    rind: tw`text-(--vine-deep)`
 };
 
 const ROW = tw`group flex items-start gap-3 py-2`;
@@ -150,7 +150,7 @@ export function FeatureGrid(): ReactNode {
                     'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
                 )}
             >
-                It all comes <span className={cn('text-(--flesh)')}>built in.</span>
+                It all comes <span className={cn('text-(--flesh-deep)')}>built in.</span>
             </h2>
 
             <div className={cn('rule blk mt-10 rounded-sm bg-(--cream)')}>
@@ -182,7 +182,7 @@ export function FeatureGrid(): ReactNode {
                                         <p className={cn('font-mono-code font-semibold text-(--seed-dark)')}>
                                             {row.label}
                                         </p>
-                                        <p className={cn('text-sm text-(--seed-dark)/60')}>{row.gloss}</p>
+                                        <p className={cn('text-sm text-(--seed-dark)/70')}>{row.gloss}</p>
                                     </div>
                                 </div>
                             ))}

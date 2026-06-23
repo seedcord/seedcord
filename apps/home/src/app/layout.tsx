@@ -11,7 +11,7 @@ const display = Space_Grotesk({ variable: '--font-display', subsets: ['latin'], 
 const monoCode = JetBrains_Mono({ variable: '--font-mono', subsets: ['latin'], display: 'swap' });
 
 export const metadata: Metadata = {
-    title: 'seedcord — a typed framework for Discord bots',
+    title: 'seedcord, a typed framework for Discord bots',
     description:
         'A TypeScript framework for Discord bots. Generated slash-option types, a typed customId codec, composable gates, and hot reload.'
 };
@@ -27,6 +27,14 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 suppressHydrationWarning
                 className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}
             >
+                <a
+                    href="#main-content"
+                    className={cn(
+                        'sr-only rounded-sm bg-(--seed-dark) px-4 py-2 font-semibold text-(--cream) focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-100'
+                    )}
+                >
+                    Skip to content
+                </a>
                 {children}
             </body>
         </html>

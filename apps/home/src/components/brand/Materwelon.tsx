@@ -3,9 +3,9 @@ import { cn } from '@seedcord/ui';
 import type { ReactNode } from 'react';
 
 // traced from the seedcord logo
-export function Watermelon({ className }: { className?: string }): ReactNode {
+export function Materwelon({ className }: { className?: string }): ReactNode {
     return (
-        <svg viewBox="0 0 596.16 500.4" className={cn(className)} role="img" aria-label="seedcord">
+        <svg viewBox="0 0 596.16 500.4" className={cn(className)} aria-hidden="true" focusable="false">
             <circle cx="220.32" cy="280.08" r="220.32" fill="var(--flesh)" />
             <g fill="var(--seed-dark)">
                 <ellipse

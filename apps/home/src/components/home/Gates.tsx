@@ -27,7 +27,7 @@ export function Gates(): ReactNode {
                         <br />
                         The compiler checks.
                     </h2>
-                    <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--cream)/90')}>
+                    <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--cream)')}>
                         Stack <Code>@Gated</Code> guards on a handler and combine them with <Code>and()</Code> and{' '}
                         <Code>or()</Code>. Guild, owner, role, permission and cooldown each run at runtime, before your
                         handler does. Attaching one to the wrong handler kind is a compile error.

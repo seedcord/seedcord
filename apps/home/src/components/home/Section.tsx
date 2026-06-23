@@ -5,9 +5,9 @@ import type { ReactNode } from 'react';
 export type Ground = 'cream' | 'rind' | 'flesh' | 'ink';
 
 const GROUND: Record<Ground, { section: string; eyebrow: string }> = {
-    cream: { section: tw`bg-(--cream) text-(--seed-dark)`, eyebrow: tw`text-(--rind)` },
-    rind: { section: tw`bg-(--rind) text-(--cream)`, eyebrow: tw`text-(--cream)/80` },
-    flesh: { section: tw`bg-(--flesh) text-(--cream)`, eyebrow: tw`text-(--cream)/85` },
+    cream: { section: tw`bg-(--cream) text-(--seed-dark)`, eyebrow: tw`text-(--vine-deep)` },
+    rind: { section: tw`bg-(--vine-deep) text-(--cream)`, eyebrow: tw`text-(--cream)` },
+    flesh: { section: tw`bg-(--flesh-deep) text-(--cream)`, eyebrow: tw`text-(--cream)` },
     ink: { section: tw`bg-(--seed-dark) text-(--cream)`, eyebrow: tw`text-(--rind)` }
 };
 

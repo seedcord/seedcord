@@ -25,7 +25,7 @@ export function TypedDx(): ReactNode {
                             'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
                         )}
                     >
-                        The builder is the <span className={cn('text-(--flesh)')}>source</span> of the types.
+                        The builder is the <span className={cn('text-(--flesh-deep)')}>source</span> of the types.
                     </h2>
                     <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--seed-dark)/85')}>
                         You define options on the standard discord.js builder for slash commands or context menu
