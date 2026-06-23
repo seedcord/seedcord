@@ -44,10 +44,7 @@ export function renderSingle(data: readonly (readonly string[])[], options?: Tab
     const pad = ' '.repeat(padding);
 
     if (border === 'markdown') {
-        const columnWidths = Array.from({ length: columnCount }, (_, col) =>
-            grid.reduce((max, row) => Math.max(max, displayWidth(row[col] ?? '')), 0)
-        );
-        const md = renderMarkdown(grid, columnWidths, alignments, pad);
+        const md = renderMarkdown(grid, columnCount, alignments, pad);
         return fence ? wrapFence(md) : md;
     }
 

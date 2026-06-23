@@ -8,7 +8,7 @@ turbo gen package
 turbo gen package --args <name> "<one-line description>"
 ```
 
-It prompts for the unscoped name and a description, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.mjs`, `tsdoc.json`, `README.md`, `LICENSE`, and `src/index.ts` from the templates in `templates/`.
+It prompts for the unscoped name and a description, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.mjs`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, and `tests/basic.test.ts` from the templates in `templates/`.
 
 A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, only the three internal config devDeps plus the `typescript` peer (`catalog:peer`), a single `.` export with one tsdown entry, `publishConfig` access public with provenance, tsconfig extending `@seedcord/tsconfig/node`, tsdown via `createTsdownConfig`, and the `version` export line.
 

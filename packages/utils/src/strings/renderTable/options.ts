@@ -34,10 +34,10 @@ export interface TableOptions {
      * @defaultValue false
      */
     numericAlign?: boolean;
-    /** Per-column max content display width. Wider cells are wrapped or truncated. */
+    /** Max content display width applied to every column. Wider cells are wrapped or truncated. */
     maxWidth?: number;
     /**
-     * How an over-wide cell is handled once maxWidth is set. `wrap` word-wraps onto multiple lines, `truncate` cuts with a trailing ellipsis.
+     * How an over-wide cell is handled once maxWidth is set. `wrap` word-wraps onto multiple lines, `truncate` cuts with a trailing ellipsis. The markdown border applies `truncate` but not `wrap`.
      * @defaultValue 'wrap'
      */
     overflow?: Overflow;

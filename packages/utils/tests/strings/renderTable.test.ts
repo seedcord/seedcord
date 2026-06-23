@@ -168,6 +168,26 @@ describe('renderTable border styles', () => {
     });
 });
 
+describe('renderTable markdown alignment and escaping', () => {
+    it('encodes column alignment in the delimiter row', () => {
+        const table = renderTable(
+            [
+                ['a', 'b', 'c'],
+                ['1', '2', '3']
+            ],
+            { border: 'markdown', align: ['left', 'center', 'right'] }
+        );
+        expect(table.split('\n')[1]).toBe('| --- | :---: | ---: |');
+    });
+
+    it('escapes pipe and backslash in cell content so the row is not corrupted', () => {
+        const table = renderTable([['a|b', 'c\\d']], { border: 'markdown' });
+        const header = table.split('\n')[0];
+        expect(header).toContain('a\\|b');
+        expect(header).toContain('c\\\\d');
+    });
+});
+
 describe('renderTable header control', () => {
     it('draws a separator under row 0 by default', () => {
         const table = renderTable([['head'], ['body']]);
@@ -352,7 +372,7 @@ describe('renderTable pagination', () => {
         expect(pages[0]).toBe(renderTable(data));
     });
 
-    it('defaults the budget to 2000 when none is given', () => {
+    it('respects an explicit budget of 2000', () => {
         const data = [['ID', 'Value'], ...Array.from({ length: 200 }, (_, i) => [String(i), 'xxxxx'])];
         const pages = renderTable(data, { budget: 2000 });
         expect(pages.length).toBeGreaterThan(1);
@@ -386,5 +406,32 @@ describe('renderTable code-block fence', () => {
         const data = [['ID', 'Value'], ...Array.from({ length: 12 }, (_, i) => [String(i), 'xxxxx'])];
         const pages = renderTable(data, { budget: 200, fence: true });
         for (const page of pages) expect(page.length).toBeLessThanOrEqual(200);
+    });
+});
+
+describe('renderTable option validation', () => {
+    it('rejects a non-integer maxWidth', () => {
+        expect(() => renderTable([['a']], { maxWidth: 2.5 })).toThrow(/maxWidth/);
+    });
+
+    // guarded because a zero or negative maxWidth would loop forever in hardBreak
+    it('rejects a zero maxWidth', () => {
+        expect(() => renderTable([['a']], { maxWidth: 0 })).toThrow(/maxWidth/);
+    });
+
+    it('rejects a negative maxWidth', () => {
+        expect(() => renderTable([['a']], { maxWidth: -3 })).toThrow(/maxWidth/);
+    });
+
+    it('rejects a negative padding', () => {
+        expect(() => renderTable([['a']], { padding: -1 })).toThrow(/padding/);
+    });
+
+    it('rejects a non-integer padding', () => {
+        expect(() => renderTable([['a']], { padding: 1.5 })).toThrow(/padding/);
+    });
+
+    it('accepts zero padding and a positive integer maxWidth', () => {
+        expect(() => renderTable([['hello world']], { padding: 0, maxWidth: 5 })).not.toThrow();
     });
 });

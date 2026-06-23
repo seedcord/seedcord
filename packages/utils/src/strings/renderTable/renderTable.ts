@@ -55,6 +55,18 @@ export function renderTable(
     data: readonly (readonly string[])[],
     options?: TableOptions | PagedTableOptions
 ): string | string[] {
+    if (options) validateOptions(options);
     if (options && 'budget' in options) return paginate(data, options);
     return renderSingle(data, options);
+}
+
+// maxWidth 0 loops forever in hardBreak, negative padding throws in String.repeat
+function validateOptions(options: TableOptions): void {
+    const { maxWidth, padding } = options;
+    if (maxWidth !== undefined && (!Number.isInteger(maxWidth) || maxWidth < 1)) {
+        throw new RangeError(`renderTable maxWidth must be a positive integer, got ${maxWidth}`);
+    }
+    if (padding !== undefined && (!Number.isInteger(padding) || padding < 0)) {
+        throw new RangeError(`renderTable padding must be a non-negative integer, got ${padding}`);
+    }
 }
