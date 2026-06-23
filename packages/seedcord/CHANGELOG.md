@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.15.0-next.2
+
+### Patch Changes
+
+- 8d8445e: `@internal` now actually hides `__componentDefs` from the docs.
+
 ## 0.15.0-next.1
 
 ### Patch Changes
