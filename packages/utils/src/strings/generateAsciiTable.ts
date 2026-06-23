@@ -3,6 +3,22 @@
  *
  * @param data - The data to be displayed in the table.
  * @returns The generated ASCII table as a string.
+ *
+ * @example
+ * ```ts
+ * generateAsciiTable([
+ *   ['Name', 'Age'],
+ *   ['Alice', '30'],
+ *   ['Bob', '25']
+ * ]);
+ * // ╔═══════╦═════╗
+ * // ║ Name  ║ Age ║
+ * // ╠───────╬─────╣
+ * // ║ Alice ║ 30  ║
+ * // ╠───────╬─────╣
+ * // ║ Bob   ║ 25  ║
+ * // ╚═══════╩═════╝
+ * ```
  */
 export function generateAsciiTable(data: string[][]): string {
     if (data.length === 0) return '';

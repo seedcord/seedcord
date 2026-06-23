@@ -25,6 +25,17 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
  * @param dir - The directory path to traverse.
  * @param callback - A function that will be called for each imported module. It receives the full file path, the file's relative path, and the imported module as arguments.
  * @returns A Promise that resolves when the traversal is complete.
+ *
+ * @example
+ * ```ts
+ * await traverseDirectory(
+ *   './commands',
+ *   (fullPath, relativePath, imported) => {
+ *     for (const exported of Object.values(imported)) register(exported);
+ *   },
+ *   logger
+ * );
+ * ```
  */
 export async function traverseDirectory(
     dir: string,
@@ -76,6 +87,14 @@ export interface FormatFileOptions {
  * @param filePath - The file path to format.
  * @param options - Formatting options.
  * @returns The formatted file path.
+ *
+ * @example
+ * ```ts
+ * // cwd is /repo
+ * formatFilePath('/repo/src/Bot.ts'); // './src/Bot.ts'
+ * formatFilePath('/repo/src/Bot.ts', { onlyDir: true }); // './src'
+ * formatFilePath('/repo/src/Bot.ts', { prefix: '' }); // 'src/Bot.ts'
+ * ```
  */
 export function formatFilePath(filePath: string, options: FormatFileOptions = {}): string {
     const { onlyDir = false, prefix = './' } = options;
