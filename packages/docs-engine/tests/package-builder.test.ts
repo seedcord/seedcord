@@ -77,11 +77,20 @@ function buildTree(): DocNode {
         children: [secret]
     });
 
+    const internalProp = makeNode({ name: 'internalProp', kind: DocKind.Property, isExported: true });
+    const internalInterface = makeNode({
+        name: 'InternalInterface',
+        kind: DocKind.Interface,
+        isExported: true,
+        flags: { ...flags, isInternal: true },
+        children: [internalProp]
+    });
+
     return makeNode({
         name: 'root',
         kind: DocKind.Project,
         isExported: true,
-        children: [publicOptions, hiddenIds]
+        children: [publicOptions, hiddenIds, internalInterface]
     });
 }
 
@@ -110,5 +119,18 @@ describe('buildPackageFromModel search gate', () => {
         expect(indexes.bySlug.has('hiddenids')).toBe(true);
         expect(indexes.bySlug.has('secret')).toBe(true);
         expect(indexes.byQName.has('HiddenIds')).toBe(true);
+    });
+
+    it('drops an @internal node and its children from search and the sidebar but keeps them resolvable', () => {
+        const { indexes } = buildPackageFromModel(manifest, buildTree());
+        const searchNames = indexes.search.map((entry) => entry.name);
+        expect(searchNames).not.toContain('InternalInterface');
+        expect(searchNames).not.toContain('internalProp');
+
+        const interfaceSlugs = (indexes.byKind.get(DocKind.Interface) ?? []).map((node) => node.slug);
+        expect(interfaceSlugs).not.toContain('internalinterface');
+
+        expect(indexes.bySlug.has('internalinterface')).toBe(true);
+        expect(indexes.byQName.has('InternalInterface')).toBe(true);
     });
 });
