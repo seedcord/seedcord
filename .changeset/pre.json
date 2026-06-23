@@ -19,5 +19,8 @@
     "@seedcord/ui": "0.1.0",
     "@seedcord/utils": "0.6.1"
   },
-  "changesets": []
+  "changesets": [
+    "pagination",
+    "rename-select-menu-handler"
+  ]
 }
