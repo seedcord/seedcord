@@ -107,6 +107,7 @@ export class Mongo extends Plugin {
         this.servicesReady = true;
     }
 
+    /** @internal */
     public async stop(): Promise<void> {
         await this.disconnect();
     }

@@ -102,6 +102,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
     }
 
+    /** @internal */
     public async refresh(shouldRefresh = true): Promise<void> {
         if (!shouldRefresh) {
             this.logger.info(chalk.italic('Command refresh cancelled.'));
@@ -203,6 +204,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.ctorToCommand.delete(ctor);
     }
 
+    /** @internal */
     public async setCommands(): Promise<DeployResult> {
         const result: DeployResult = { global: new Collection(), guilds: new Collection() };
 

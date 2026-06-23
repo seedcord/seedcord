@@ -44,7 +44,9 @@ export function prefixOf(wire: string): string {
  * ```
  */
 export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
+    /** The stable route prefix, e.g. 'approve'. */
     readonly prefix: Prefix;
+    /** Like a zod shape */
     readonly shape: Shape;
     /** The prefix plus a short hash of the shape, the part of the wire before the colon. */
     readonly routeKey: string;

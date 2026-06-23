@@ -11,6 +11,7 @@ export class HmrManager {
 
     constructor() {}
 
+    /** @internal */
     public init(): void {
         if (import.meta.hot && (Envapter.isDevelopment || Envapter.isTest)) {
             this.logger.info('Enabled');
@@ -31,10 +32,12 @@ export class HmrManager {
         }
     }
 
+    /** @internal */
     public register(listener: HmrAware): void {
         this.listeners.add(listener);
     }
 
+    /** @internal */
     public unregister(listener: HmrAware): void {
         this.listeners.delete(listener);
     }

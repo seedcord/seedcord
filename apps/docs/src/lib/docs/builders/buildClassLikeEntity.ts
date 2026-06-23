@@ -13,20 +13,23 @@ export async function buildClassLikeEntity<Kind extends 'class' | 'interface'>(
     node: DocNode,
     context: FormatContext
 ): Promise<ClassLikeEntityModel & { kind: Kind }> {
+    // @internal members are hidden from the page but can still be accessed by direct link
+    const visibleChildren = node.children.filter((child) => !child.flags.isInternal);
+
     const properties = await Promise.all(
-        node.children
+        visibleChildren
             .filter((child) => PROPERTY_KINDS.has(child.kindLabel))
             .map((child) => buildMemberSummary(child, context))
     );
 
     const constructors = await Promise.all(
-        node.children
+        visibleChildren
             .filter((child) => child.kindLabel === CONSTRUCTOR_KIND)
             .map((child) => buildMemberSummary(child, context))
     );
 
     const methods = await Promise.all(
-        node.children
+        visibleChildren
             .filter((child) => METHOD_KINDS.has(child.kindLabel))
             .map((child) => buildMemberSummary(child, context))
     );

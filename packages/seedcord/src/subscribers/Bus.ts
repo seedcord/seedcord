@@ -38,6 +38,7 @@ type SubscriberArtifact = SubscriptionKey[];
  */
 export class Bus extends Plugin<SubscriptionTuples> {
     public readonly logger = new Logger('Subscribers');
+    /** @internal */
     public override readonly name = 'Subscribers';
     private isInitialized = false;
     private readonly subscribersMap = new Collection<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();

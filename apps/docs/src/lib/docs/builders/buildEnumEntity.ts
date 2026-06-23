@@ -12,7 +12,7 @@ export async function buildEnumEntity(
 ): Promise<EnumEntityModel> {
     const members = await Promise.all(
         node.children
-            .filter((child) => child.kindLabel === ENUM_MEMBER_KIND)
+            .filter((child) => child.kindLabel === ENUM_MEMBER_KIND && !child.flags.isInternal)
             .map((child) => buildEnumMember(child, context))
     );
 

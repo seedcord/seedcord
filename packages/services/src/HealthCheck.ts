@@ -22,6 +22,7 @@ const DEFAULT_HEALTH_CHECK_PATH = '/healthcheck';
  * information, useful for container orchestration and monitoring.
  */
 export class HealthCheck {
+    /** @internal */
     public readonly logger = new Logger('HealthCheck');
 
     public readonly port: number;
@@ -41,6 +42,7 @@ export class HealthCheck {
     /**
      * Starts the health check server.
      * @returns Promise that resolves when the server is listening
+     * @internal
      */
     public async init(): Promise<void> {
         return new Promise<void>((resolve, reject) => {
@@ -86,6 +88,7 @@ export class HealthCheck {
      * Stops the health check server.
      *
      * @returns Promise that resolves when the server is closed
+     * @internal
      */
     public stop(): Promise<void> {
         const server = this.server;

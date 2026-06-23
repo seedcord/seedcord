@@ -28,6 +28,7 @@ export class Seedcord extends Pluggable implements Core {
     public readonly [SeedcordBrand] = true;
 
     private static isInstantiated = false;
+
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;
 
