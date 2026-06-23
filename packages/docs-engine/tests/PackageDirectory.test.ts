@@ -22,8 +22,7 @@ describe('PackageDirectory', () => {
                 'indexable-interface',
                 'mock-interface',
                 'mock-object',
-                'mock-recursive',
-                'recursive-interface'
+                'mock-recursive'
             ],
             enums: ['mock-enum'],
             types: [
@@ -41,7 +40,7 @@ describe('PackageDirectory', () => {
                 'mock-tuple',
                 'mock-union'
             ],
-            functions: ['async-mock-function', 'log-decorator', 'mock-function', 'mock-function-with-rest'],
+            functions: ['log-decorator', 'mock-function', 'mock-function-with-rest'],
             variables: ['mock-variable']
         });
     });
@@ -75,12 +74,16 @@ describe('PackageDirectory', () => {
 
     it('returns sorted listings for each entity', () => {
         const functionNames = directory.listNames('functions');
-        expect(functionNames).toEqual([
-            'async-mock-function',
-            'log-decorator',
-            'mock-function',
-            'mock-function-with-rest'
-        ]);
+        expect(functionNames).toEqual(['log-decorator', 'mock-function', 'mock-function-with-rest']);
+    });
+
+    it('hides @internal entities from the directory but keeps them resolvable by slug', async () => {
+        const snapshot = directory.snapshot();
+        expect(snapshot.functions).not.toContain('async-mock-function');
+        expect(snapshot.interfaces).not.toContain('recursive-interface');
+
+        expect((await getNodeBySlug('async-mock-function')).slug).toBe('async-mock-function');
+        expect((await getNodeBySlug('recursive-interface')).slug).toBe('recursive-interface');
     });
 
     it('exposes iterable entries', async () => {

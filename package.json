@@ -72,6 +72,7 @@
         "@seedcord/docs-generator": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
+        "@turbo/gen": "^2.9.18",
         "@types/node": "catalog:deps",
         "@vitest/coverage-v8": "catalog:test",
         "envapt": "catalog:deps",

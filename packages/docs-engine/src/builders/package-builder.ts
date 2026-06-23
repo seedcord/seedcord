@@ -33,12 +33,11 @@ function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
             byQName.set(node.qualifiedName, node);
         }
 
-        // Forgotten (referenced-only) declarations stay resolvable as link targets via the maps
-        // above, but are kept out of the sidebar (byKind) and search so both show only the package's
-        // real exports (the two-tier model). A forgotten parent's children inherit that exclusion
-        // even though the adapter marks each child isExported, so an internal interface's properties
-        // never leak into search.
-        const searchable = node.isExported && ancestorsExported;
+        // Forgotten (referenced-only) declarations and @internal-tagged nodes stay resolvable as link
+        // targets via the maps above, but are kept out of the sidebar (byKind) and search so both show
+        // only the package's real public exports (the two-tier model). A non-searchable parent's
+        // children inherit the exclusion even though the adapter marks each child isExported.
+        const searchable = node.isExported && ancestorsExported && !node.flags.isInternal;
         if (searchable) {
             const bucket = byKind.get(node.kind) ?? [];
             bucket.push(node);

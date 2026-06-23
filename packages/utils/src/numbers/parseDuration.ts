@@ -23,6 +23,14 @@ const DURATION_PATTERN = new RegExp(`^(\\d+)(${Object.keys(UNIT_MS).join('|')})$
  *
  * @param input - The duration string to parse.
  * @returns The duration in milliseconds, or `null` if `input` is not a well-formed positive duration.
+ *
+ * @example
+ * ```ts
+ * parseDuration('24h'); // 86400000
+ * parseDuration('30m'); // 1800000
+ * parseDuration('1.5h'); // null
+ * parseDuration('foo'); // null
+ * ```
  */
 export function parseDuration(input: string): number | null {
     const match = DURATION_PATTERN.exec(input);

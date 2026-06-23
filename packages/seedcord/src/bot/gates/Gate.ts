@@ -151,7 +151,12 @@ export interface Gate<Ctx extends GateContextBase = GateContext, Name extends st
     readonly name: Name;
     /** Reads the context and refuses by throwing a Notice or a Silence, or passes by resolving. */
     check(ctx: Ctx): Promise<void>;
-    /** Phantom brand that marks a real gate, you never set or read it. */
+
+    /**
+     * Phantom brand that marks a real gate, you never set or read it.
+     *
+     * @internal
+     */
     readonly [GateBrand]: true;
 }
 

@@ -123,6 +123,7 @@ export class KyselyPg<Database extends object> extends Plugin {
 
     /**
      * Tears down the connection pool and clears the migration manager reference.
+     * @internal
      */
     public async stop(): Promise<void> {
         await this.disconnect();

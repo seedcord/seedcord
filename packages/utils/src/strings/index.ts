@@ -1,5 +1,5 @@
 export * from './capitalize';
 export * from './longestStringLength';
-export * from './generateAsciiTable';
+export * from './renderTable';
 export * from './prettify';
 export * from './prettyDifference';
