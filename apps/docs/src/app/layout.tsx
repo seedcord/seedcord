@@ -1,5 +1,5 @@
 import { TooltipProvider, cn } from '@seedcord/ui';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
 
@@ -24,6 +24,11 @@ const geistMono = Geist_Mono({
     subsets: ['latin']
 });
 
+const spaceGrotesk = Space_Grotesk({
+    variable: '--font-display',
+    subsets: ['latin']
+});
+
 export const metadata: Metadata = {
     title: 'seedcord',
     description: 'Api documentation for the Seedcord Bot Framework for Discord.js',
@@ -44,7 +49,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
         <html lang="en" suppressHydrationWarning>
             <body
                 suppressHydrationWarning
-                className={cn(`${geistSans.variable} ${geistMono.variable} antialiased`)}
+                className={cn(`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`)}
                 data-new-gr-c-s-check-loaded=""
                 data-gr-ext-installed=""
             >

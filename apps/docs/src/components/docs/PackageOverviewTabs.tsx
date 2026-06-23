@@ -99,7 +99,7 @@ export function PackageOverviewTabs({
                 <div className={cn('flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between')}>
                     <div className={cn('min-w-0 space-y-1 text-center lg:text-left')}>
                         <p className={cn('text-subtle text-xs font-semibold tracking-[0.35em] uppercase')}>Package</p>
-                        <h1 className={cn('text-2xl font-semibold wrap-break-word text-(--text)')}>
+                        <h1 className={cn('font-display text-2xl font-semibold wrap-break-word text-(--text)')}>
                             {title} <span className={cn('font-normal text-(--text-muted)')}>{version}</span>
                         </h1>
                     </div>

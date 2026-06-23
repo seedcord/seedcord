@@ -103,7 +103,9 @@ function HeaderTop({
 
             <div className={cn('flex items-start gap-3 sm:gap-4')}>
                 <div className={cn('min-w-0 flex-1 space-y-2.5')}>
-                    <h1 className={cn('text-2xl font-semibold text-(--text) sm:text-3xl lg:text-4xl')}>{symbolName}</h1>
+                    <h1 className={cn('font-display text-2xl font-semibold text-(--text) sm:text-3xl lg:text-4xl')}>
+                        {symbolName}
+                    </h1>
                     {overloadSelector}
                     <div className={cn('text-subtle space-y-2 text-sm/relaxed')}>{summaryNodes}</div>
                 </div>

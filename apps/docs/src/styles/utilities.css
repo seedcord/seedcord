@@ -21,6 +21,10 @@
         box-shadow: 0 10px 30px rgba(45, 51, 40, 0.08);
     }
 
+    .font-display {
+        font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    }
+
     .shiki {
         background-color: transparent !important;
         font-family: var(--font-geist-mono, 'JetBrains Mono', monospace);

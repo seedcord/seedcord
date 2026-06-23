@@ -17,7 +17,7 @@ export function EnumMembersSection({ members }: EnumMembersSectionProps): ReactE
     return (
         <section className={cn('space-y-4')}>
             <header className={cn('space-y-1')}>
-                <h2 className={cn('text-xl font-semibold text-(--text-enum-mix-72)')}>Members</h2>
+                <h2 className={cn('font-display text-xl font-semibold text-(--text-enum-mix-72)')}>Members</h2>
             </header>
             <div className={cn('grid gap-4', members.length > 1 ? 'lg:grid-cols-2' : undefined)}>
                 {members.map((member) => (
