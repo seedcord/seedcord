@@ -38,6 +38,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
 {
     // phantom only, never set at runtime. a route decorator types its argument against this so passing
     // different defs to the decorator and the generic fails to compile.
+    /* @internal */
     declare readonly __componentDefs?: Defs;
 
     // the definitions the route decorator stored, read off the concrete handler class.
