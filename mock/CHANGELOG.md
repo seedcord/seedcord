@@ -1,5 +1,16 @@
 # @seedcord/mock
 
+## 0.2.22-next.3
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - seedcord@0.15.0-next.3
+    - @seedcord/plugins@0.7.2-next.3
+
 ## 0.2.22-next.2
 
 ### Patch Changes
