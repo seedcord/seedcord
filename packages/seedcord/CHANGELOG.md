@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.15.0-next.1
+
+### Patch Changes
+
+- 51006e2: `__componentDefs` phantom field should be internal
+
 ## 0.15.0-next.0
 
 ### Minor Changes
