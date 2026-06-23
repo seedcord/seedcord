@@ -208,7 +208,7 @@ export function EntityHeader({
     return (
         <header className={cn('min-w-0')}>
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <Card size="md" className={cn('space-y-4 sm:p-5')}>
+                <Card variant="flat" size="md" className={cn('space-y-4 sm:p-5')}>
                     <HeaderTop
                         toneStyles={toneStyles}
                         toneIcon={ToneIcon}

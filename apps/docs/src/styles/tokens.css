@@ -18,10 +18,14 @@
 }
 
 :root {
-    --border: color-mix(in oklab, var(--color-base-slate) 68%, transparent);
+    --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
+    --text-muted: color-mix(in oklab, var(--color-text) 80%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 42%, transparent);
 }
 [data-theme='dark'] {
-    --border: color-mix(in oklab, var(--cream) 28%, transparent);
+    --border: color-mix(in oklab, var(--cream) 28%, var(--color-bg));
+    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
 }
 
 :root {
@@ -106,11 +110,11 @@
 
     /* Border Mixes */
     --border-70-transparent: color-mix(in oklab, var(--border) 70%, transparent);
-    --border-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, var(--border));
-    --border-accent-b-moderate: color-mix(in oklab, var(--accent-b) 45%, var(--border));
-    --border-accent-b-strong: color-mix(in oklab, var(--accent-b) 60%, var(--border));
-    --border-accent-a-subtle: color-mix(in oklab, var(--accent-a) 38%, var(--border));
-    --border-accent-a-moderate: color-mix(in oklab, var(--accent-a) 55%, var(--border));
+    --border-accent-b-subtle: color-mix(in oklab, var(--accent-b) 55%, var(--border));
+    --border-accent-b-moderate: color-mix(in oklab, var(--accent-b) 70%, var(--border));
+    --border-accent-b-strong: color-mix(in oklab, var(--accent-b) 85%, var(--border));
+    --border-accent-a-subtle: color-mix(in oklab, var(--accent-a) 55%, var(--border));
+    --border-accent-a-moderate: color-mix(in oklab, var(--accent-a) 70%, var(--border));
 
     /* Outline / Ring Mixes */
     --outline-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, transparent);

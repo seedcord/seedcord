@@ -22,7 +22,7 @@ const buttonBaseClassName = [
 const buttonVariantClasses = {
     primary: tw`shadow-soft bg-(--accent-a) text-white hover:bg-(--accent-a-hover)`,
     secondary: tw`shadow-soft bg-(--accent-b) text-black hover:bg-(--accent-b-hover)`,
-    outline: tw`border-(--border) bg-transparent text-(--text) hover:border-(--accent-a)/60 hover:bg-(--surface-subtle)`,
+    outline: tw`border-(--border) bg-transparent text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-subtle)`,
     ghost: tw`bg-transparent text-(--text) hover:bg-(--accent-a-transparent-subtle)`
 } as const;
 
