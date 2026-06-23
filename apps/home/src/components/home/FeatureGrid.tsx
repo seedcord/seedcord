@@ -2,6 +2,7 @@ import { cn, Icon, tw } from '@seedcord/ui';
 import {
     AtSign,
     Component,
+    GalleryHorizontalEnd,
     GitMerge,
     HeartPulse,
     Hourglass,
@@ -42,7 +43,7 @@ interface Group {
 const GROUPS: Group[] = [
     {
         area: 'Commands & interactions',
-        count: 9,
+        count: 10,
         accent: 'flesh',
         rows: [
             {
@@ -73,6 +74,11 @@ const GROUPS: Group[] = [
                 icon: Split,
                 label: 'multi-route handlers',
                 gloss: 'one class serves several routes, each typed via this.match'
+            },
+            {
+                icon: GalleryHorizontalEnd,
+                label: 'pagination',
+                gloss: 'restart-proof pages, each nav button carries its target'
             }
         ]
     },

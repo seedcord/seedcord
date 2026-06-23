@@ -12,6 +12,7 @@ export const FEATURES = [
     'button & selectmenu handlers',
     'modal handlers',
     'confirmation prompts',
+    'restart-proof pagination',
     'permission & role gates',
     'guild / DM / NSFW gates',
     'cooldown gate',
