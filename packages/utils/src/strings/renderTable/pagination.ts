@@ -1,10 +1,10 @@
 import { renderSingle } from './renderSingle';
 
-import type { TableOptions } from './options';
+import type { PagedTableOptions } from './options';
 
 const DEFAULT_BUDGET = 2000;
 
-export function paginate(data: readonly (readonly string[])[], options: TableOptions): string[] {
+export function paginate(data: readonly (readonly string[])[], options: PagedTableOptions): string[] {
     if (data.length === 0) return [];
 
     const { budget = DEFAULT_BUDGET, ...tableOptions } = options;
