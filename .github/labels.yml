@@ -43,6 +43,12 @@
 - name: pkg:docs-engine
   color: 9b59b6
   description: Changes related to the documentation engine package
+- name: app:home
+  color: e17055
+  description: Changes related to the home marketing site
+- name: app:guide
+  color: 6c5ce7
+  description: Changes related to the guide site
 - name: area:docs
   color: 28a745
   description: Documentation updates
