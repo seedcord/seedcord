@@ -70,11 +70,11 @@ export class Paginator<Item, const Prefix extends string> {
         this.config = config;
 
         // an arrow captures the paginator lexically so Nav.execute can reach it without aliasing `this`.
-        const renderPage = (ctx: PageContext, n: number): Promise<ReplyResponse> => this.page(ctx, n);
+        const loadPage = (ctx: PageContext, n: number): Promise<ReplyResponse> => this.page(ctx, n);
         this.Handler = class Nav extends ButtonHandler<[PageCursor<Prefix>]> {
             async execute(): Promise<void> {
                 await this.event.deferUpdate();
-                const response = await renderPage(contextOf(this.event, this.core), this.params.page);
+                const response = await loadPage(contextOf(this.event, this.core), this.params.page);
                 await new ReplySender(this.event).edit(this.event.message, response);
             }
         };

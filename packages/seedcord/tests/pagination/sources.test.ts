@@ -46,6 +46,13 @@ describe('ArraySource', () => {
         const view = await source.page(ctx, 0);
         expectTypeOf(view.items).toEqualTypeOf<string[]>();
     });
+
+    it('rejects a non-positive or non-integer perPage at construction', () => {
+        const load = (): number[] => [];
+        expect(() => new ArraySource(load, { perPage: 0 })).toThrow(SeedcordRangeError);
+        expect(() => new ArraySource(load, { perPage: -1 })).toThrow(SeedcordRangeError);
+        expect(() => new ArraySource(load, { perPage: 2.5 })).toThrow(SeedcordRangeError);
+    });
 });
 
 describe('CursorSource', () => {
