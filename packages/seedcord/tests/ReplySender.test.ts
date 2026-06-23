@@ -16,10 +16,9 @@ function mockInteraction() {
         editReply: vi.fn().mockResolvedValue(sentMessage),
         followUp: vi.fn().mockResolvedValue(sentMessage),
         deleteReply: vi.fn().mockResolvedValue(undefined),
-        isMessageComponent: vi.fn().mockReturnValue(false),
-        isModalSubmit: vi.fn().mockReturnValue(false),
         deferred: false,
-        replied: false
+        replied: false,
+        ephemeral: null as boolean | null
     };
 }
 
@@ -58,14 +57,27 @@ describe('ReplySender', () => {
         expect(mock.followUp).not.toHaveBeenCalled();
     });
 
-    it('follows up and clears the stale thinking defer on a deferred slash interaction', async () => {
-        // editReply cannot turn a slash deferReply's "thinking" placeholder into a ComponentsV2 message
-        // (50035), so the sender must follow up fresh and delete the placeholder instead of editing.
+    it('edits the deferReply placeholder into a components-v2 reply', async () => {
+        // deferReply leaves ephemeral a boolean (deferUpdate leaves it null), so editReply upgrades the
+        // throwaway placeholder in place with the V2 flag.
         mock.deferred = true;
+        mock.ephemeral = false;
         await senderFor(mock).send(reply);
-        expect(mock.followUp).toHaveBeenCalledWith(expect.objectContaining({ flags: V2_EPHEMERAL }));
-        expect(mock.deleteReply).toHaveBeenCalledTimes(1);
-        expect(mock.editReply).not.toHaveBeenCalled();
+        expect(mock.editReply).toHaveBeenCalledWith(
+            expect.objectContaining({ components: reply.components, flags: MessageFlags.IsComponentsV2 })
+        );
+        expect(mock.followUp).not.toHaveBeenCalled();
+        expect(mock.deleteReply).not.toHaveBeenCalled();
+    });
+
+    it('keeps the defer ephemerality on a deferReply edit, ignoring the ephemeral argument', async () => {
+        // editReply cannot change ephemerality (Discord fixes it at defer time), so the edit body carries
+        // only the V2 flag and the send() ephemeral argument has no effect on a deferred interaction.
+        mock.deferred = true;
+        mock.ephemeral = true;
+        await senderFor(mock).send(reply, true);
+        const body = mock.editReply.mock.calls[0]?.[0] as { flags: number };
+        expect(body.flags).toBe(MessageFlags.IsComponentsV2);
     });
 
     it('follows up on an already-replied interaction', async () => {
@@ -76,11 +88,11 @@ describe('ReplySender', () => {
         expect(mock.editReply).not.toHaveBeenCalled();
     });
 
-    it('follows up without touching the source message of a deferred component interaction', async () => {
-        // a button/select deferUpdate() leaves @original pointing at the live source message, so editReply
-        // would overwrite it and deleteReply would destroy it.
+    it('follows up on a deferUpdate, leaving the source message untouched', async () => {
+        // deferUpdate leaves ephemeral null and @original pointing at the live source message, so editing
+        // would overwrite it. a fresh follow-up is the non-destructive response.
         mock.deferred = true;
-        mock.isMessageComponent.mockReturnValue(true);
+        mock.ephemeral = null;
 
         await senderFor(mock).send(reply);
 

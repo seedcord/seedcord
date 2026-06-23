@@ -2,7 +2,7 @@ import { CustomId, Notice } from '@seedcord/kit';
 import { describe, expect, it } from 'vitest';
 
 import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';
-import { ButtonHandler, ModalHandler, SelectHandler } from '@handlers/interaction/components';
+import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
 
 import type { Core } from '@interfaces/Core';
 import type { ButtonInteraction, ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';
@@ -101,7 +101,7 @@ class ConfigModal extends ModalHandler<[typeof Config]> {
 const Assign = new CustomId('assign').snowflake('roleId');
 
 @SelectMenuRoute(SelectMenuKind.User, Assign)
-class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof Assign]> {
+class AssignSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof Assign]> {
     public summary = '';
     execute(): Promise<void> {
         const { roleId } = this.params;

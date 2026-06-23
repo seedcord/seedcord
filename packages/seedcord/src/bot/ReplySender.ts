@@ -56,15 +56,13 @@ export class ReplySender {
         }
 
         if (this.interaction.deferred) {
-            const message = await this.interaction.followUp(this.replyOptions(response, ephemeral));
-            // a component/modal deferUpdate left @original as the live source message, leave it untouched.
-            // a slash deferReply left a throwaway "thinking" placeholder, clear it so the user sees one
-            // message. editReply cannot turn a classic "thinking" defer into ComponentsV2 (Discord rejects
-            // it with 50035), so this follows up and deletes instead.
-            if (!this.interaction.isMessageComponent() && !this.interaction.isModalSubmit()) {
-                await this.clearStaleDefer();
+            // ephemeral is null only after deferUpdate, where @original is the live source message, so follow
+            // up to avoid overwriting it. deferReply set ephemeral to a boolean over a throwaway placeholder,
+            // so editReply upgrades it in place.
+            if (this.interaction.ephemeral === null) {
+                return await this.interaction.followUp(this.replyOptions(response, ephemeral));
             }
-            return message;
+            return await this.interaction.editReply(this.editBody(response));
         }
 
         await this.interaction.reply(this.replyOptions(response, ephemeral));
@@ -88,14 +86,6 @@ export class ReplySender {
             ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
             ...(response.files && { files: response.files })
         };
-    }
-
-    private async clearStaleDefer(): Promise<void> {
-        try {
-            await this.interaction.deleteReply();
-        } catch (error) {
-            this.logSwallowed('clear stale defer', error);
-        }
     }
 
     private logSwallowed(action: string, error: unknown): void {

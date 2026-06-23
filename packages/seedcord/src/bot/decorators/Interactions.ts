@@ -312,7 +312,7 @@ export type SelectMenuInteractionFor<
  * @example
  * ```typescript
  * \@SelectMenuRoute(SelectMenuKind.User, AssignId)
- * class AssignSelect extends SelectHandler<SelectMenuKind.User, [typeof AssignId]> {
+ * class AssignSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
  *   // handles user select menus minted from AssignId
  * }
  * ```

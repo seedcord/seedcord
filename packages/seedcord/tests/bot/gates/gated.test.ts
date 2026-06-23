@@ -8,7 +8,7 @@ import { ButtonRoute, ContextMenuRoute, ModalRoute, SelectMenuRoute, SelectMenuK
 import { and, defineGate, or } from '@bot/gates';
 import { EventHandler } from '@handlers/event';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { ButtonHandler, ModalHandler, SelectHandler } from '@handlers/interaction/components';
+import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
 import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 import { GatedMetadataKey } from '@src/metadataKeys';
@@ -389,7 +389,7 @@ describe('@Gated kind coverage', () => {
     it('accepts a user-select gate on a user-select handler', () => {
         @Gated(UserSelectGate)
         @SelectMenuRoute(SelectMenuKind.User, SelectProbeId)
-        class Handler extends SelectHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
+        class Handler extends SelectMenuHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -452,7 +452,7 @@ describe('@Gated kind coverage', () => {
         // @ts-expect-error the two select kinds do not interchange
         @Gated(UserSelectGate)
         @SelectMenuRoute(SelectMenuKind.String, SelectProbeId)
-        class Handler extends SelectHandler<SelectMenuKind.String, [typeof SelectProbeId]> {
+        class Handler extends SelectMenuHandler<SelectMenuKind.String, [typeof SelectProbeId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }

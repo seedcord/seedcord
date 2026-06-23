@@ -44,7 +44,8 @@ function mockInteraction() {
         channelId: 'c1',
         id: 'i1',
         deferred: false,
-        replied: false
+        replied: false,
+        ephemeral: null as boolean | null
     };
 }
 
@@ -123,8 +124,9 @@ describe('handleInteractionFault', () => {
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('follows up, clears the stale defer, and publishes handledException for a reporting denial on a deferred interaction', async () => {
+    it('edits the deferReply placeholder and publishes handledException for a reporting fault on a deferred interaction', async () => {
         mock.deferred = true;
+        mock.ephemeral = false;
 
         await handleInteractionFault(
             new Fault({ cause: new Error('write failed') }),
@@ -132,11 +134,10 @@ describe('handleInteractionFault', () => {
             mockCore(publish)
         );
 
-        // a deferred slash command cannot have its classic "thinking" placeholder turned into a
-        // ComponentsV2 message, so the boundary follows up fresh and deletes the placeholder.
-        expect(mock.followUp).toHaveBeenCalledTimes(1);
-        expect(mock.deleteReply).toHaveBeenCalledTimes(1);
-        expect(mock.editReply).not.toHaveBeenCalled();
+        // editReply upgrades the deferReply placeholder in place.
+        expect(mock.editReply).toHaveBeenCalledTimes(1);
+        expect(mock.followUp).not.toHaveBeenCalled();
+        expect(mock.deleteReply).not.toHaveBeenCalled();
         expect(mock.reply).not.toHaveBeenCalled();
         const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['handledException']];
         expect(event).toBe('handledException');
