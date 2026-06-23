@@ -1,5 +1,12 @@
 # @seedcord/services
 
+## 0.8.2-next.0
+
+### Patch Changes
+
+- Updated dependencies [c3613bd]
+    - @seedcord/errors@0.2.1-next.0
+
 ## 0.8.1
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @seedcord/plugins
 
+## 0.7.2-next.0
+
+### Patch Changes
+
+- Updated dependencies [c3613bd]
+- Updated dependencies [c3613bd]
+    - seedcord@0.15.0-next.0
+    - @seedcord/errors@0.2.1-next.0
+    - @seedcord/services@0.8.2-next.0
+
 ## 0.7.1
 
 ### Patch Changes

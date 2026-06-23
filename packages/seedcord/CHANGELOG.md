@@ -1,5 +1,19 @@
 # seedcord
 
+## 0.15.0-next.0
+
+### Minor Changes
+
+- c3613bd: Add pagination. `Paginator` renders paged Components V2 replies with first/prev/next/last controls, backed by `ArraySource` for an in-memory list or `CursorSource` for one-page-at-a-time fetches. Each control encodes its target page, so clicks keep working after a restart. The pure `paginate()` math and the `PageView` shape ship from `@seedcord/kit` for headless use.
+- c3613bd: Rename the `SelectHandler` base class to `SelectMenuHandler`, matching `SelectMenuRoute` and `SelectMenuKind`. Select-menu handlers should now extend `SelectMenuHandler`.
+
+### Patch Changes
+
+- Updated dependencies [c3613bd]
+    - @seedcord/kit@0.2.0-next.0
+    - @seedcord/errors@0.2.1-next.0
+    - @seedcord/services@0.8.2-next.0
+
 ## 0.14.0
 
 ### Minor Changes
