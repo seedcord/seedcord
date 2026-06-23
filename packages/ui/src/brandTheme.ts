@@ -137,6 +137,10 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
         {
             scope: ['meta.type.tuple meta.brace.square'],
             settings: { foreground: p.type, fontStyle: 'italic' }
+        },
+        {
+            scope: ['meta.type variable.other'],
+            settings: { foreground: p.type, fontStyle: 'italic' }
         }
     ];
 }
