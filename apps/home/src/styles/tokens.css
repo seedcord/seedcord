@@ -1,4 +1,3 @@
-/* Homepage design tokens. Brand accents alias @seedcord/ui tokens (single-sourced). */
 :root {
     /* warm near-black for dark sections, code cards, borders + shadows */
     --seed-dark: #2d3328;

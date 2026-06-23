@@ -1,4 +1,3 @@
-// marquee features, kept at the area level
 export const FEATURES = [
     'typed slash commands',
     'typed slash options',

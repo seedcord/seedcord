@@ -9,7 +9,6 @@ interface CodeCardProps {
     filename: string;
     lang?: CodeLang;
     note?: string;
-    // border + shadow vary by section background, so the section passes them (e.g. 'rule blk' or 'rule-cream blk-cream')
     className?: string;
 }
 

@@ -3,7 +3,6 @@ import Link from 'next/link';
 
 import type { ReactNode } from 'react';
 
-// the Dark variants use a cream rule + green shadow so the press still reads on dark-ground sections
 const press = 'motion-safe:hover:translate-x-[3px] motion-safe:hover:translate-y-[3px] motion-safe:hover:shadow-none';
 const VARIANTS = {
     solid: `rule blk ${press} bg-(--flesh) text-(--cream)`,
@@ -22,7 +21,6 @@ interface PosterButtonProps {
     children: ReactNode;
 }
 
-// justified: bespoke poster CTA, a sharp rule + hard offset shadow outside the ui Button
 export function PosterButton({ href, variant = 'solid', className, children }: PosterButtonProps): ReactNode {
     const external = href.startsWith('http');
     return (

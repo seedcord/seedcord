@@ -2,7 +2,6 @@ import { cn } from '@seedcord/ui';
 
 import type { ReactNode } from 'react';
 
-// two copies slide -50% so the loop has no seam
 function Track({ items }: { items: readonly string[] }): ReactNode {
     return (
         <ul className={cn('flex shrink-0 items-center')}>
