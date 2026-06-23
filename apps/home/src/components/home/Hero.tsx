@@ -24,7 +24,7 @@ export function Hero(): ReactNode {
                     </div>
                     <h1
                         className={cn(
-                            'font-display text-[clamp(3.1rem,8.5vw,7rem)] leading-[0.92] font-semibold tracking-tight text-(--seed-dark)'
+                            'font-display text-[clamp(2.9rem,7vw,5.75rem)] leading-[0.94] font-semibold tracking-tight text-(--seed-dark)'
                         )}
                     >
                         The whole Discord bot,
@@ -61,12 +61,11 @@ export function Hero(): ReactNode {
                     </div>
                 </div>
 
-                {/* desktop composition, hidden below lg so narrow widths stay text-first */}
-                <div className={cn('relative hidden items-center justify-center lg:flex lg:h-140')}>
-                    {/* deeper green so the lighter rind stays distinct */}
+                <div className={cn('relative hidden items-center justify-center lg:flex lg:h-124')}>
+                    {/* deeper green so the green in the materwelon doesn't blend with that square in the back */}
                     <div className={cn('blk absolute top-6 right-0 size-[78%] rounded-sm bg-(--vine-deep)')} />
                     <Materwelon
-                        className={cn('relative z-10 w-[92%] max-w-140 drop-shadow-[10px_10px_0_rgba(45,51,40,0.55)]')}
+                        className={cn('relative z-10 w-[84%] max-w-124 drop-shadow-[10px_10px_0_rgba(45,51,40,0.55)]')}
                     />
                 </div>
             </div>

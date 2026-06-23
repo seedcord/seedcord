@@ -17,7 +17,7 @@ export function Footer(): ReactNode {
             <div className={cn('mx-auto max-w-7xl px-5 py-10')}>
                 <div className={cn('flex flex-col items-center justify-between gap-6 sm:flex-row')}>
                     <div className={cn('flex items-center gap-3')}>
-                        <Materwelon className={cn('size-8')} />
+                        <Materwelon className={cn('size-8 drop-shadow-[2px_2px_0_rgba(45,51,40,0.85)]')} />
                         <span className={cn('font-semibold text-(--seed-dark)')}>seedcord</span>
                         <span className={cn('font-mono-code text-xs text-(--seed-dark)/70')}>v1.0 · Apache-2.0</span>
                     </div>
