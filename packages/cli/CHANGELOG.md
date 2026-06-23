@@ -1,5 +1,19 @@
 # @seedcord/cli
 
+## 0.3.1-next.1
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - @seedcord/utils@0.7.0-next.0
+    - @seedcord/services@0.8.2-next.1
+    - @seedcord/types@0.7.1-next.0
+    - @seedcord/errors@0.2.1-next.1
+
 ## 0.3.1-next.0
 
 ### Patch Changes

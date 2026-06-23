@@ -1,5 +1,22 @@
 # seedcord
 
+## 0.15.0-next.3
+
+### Patch Changes
+
+- 78377fa: mark some exports as internal so they don't show up in the docs
+- 78377fa: add examples to some utils that should have them
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - @seedcord/utils@0.7.0-next.0
+    - @seedcord/services@0.8.2-next.1
+    - @seedcord/types@0.7.1-next.0
+    - @seedcord/kit@0.2.0-next.1
+    - @seedcord/errors@0.2.1-next.1
+
 ## 0.15.0-next.2
 
 ### Patch Changes

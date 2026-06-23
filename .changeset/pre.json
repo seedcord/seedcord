@@ -20,9 +20,13 @@
     "@seedcord/utils": "0.6.1"
   },
   "changesets": [
+    "ascii-table-rebuild",
     "component-defs-internal-tsdoc",
     "pagination",
     "rename-select-menu-handler",
-    "tender-bobcats-cry"
+    "social-times-invent",
+    "spotty-banks-wait",
+    "tender-bobcats-cry",
+    "vast-grapes-search"
   ]
 }
