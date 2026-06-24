@@ -11,7 +11,7 @@ import { MotionProvider } from '@components/providers/MotionProvider';
 import { ThemeProvider } from '@components/providers/ThemeProvider';
 import { CommandPalette } from '@components/search/command-palette';
 import { FOREGROUND_HEX } from '@lib/entityColors';
-import { OG_IMAGE_H, OG_IMAGE_W, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
+import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     icons: { icon: '/icon.svg' },
     openGraph: {
         type: 'website',
-        siteName: SITE_NAME,
+        siteName: OG_SITE_NAME,
         url: SITE_URL,
         locale: 'en_US',
         title: 'seedcord docs',

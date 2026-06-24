@@ -4,6 +4,7 @@ const FALLBACK_URL = 'https://docs.seedcord.org';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? FALLBACK_URL;
 export const SITE_NAME = 'seedcord';
+export const OG_SITE_NAME = 'seedcord documentation'; // so it makes sense on docs embeds from links
 export const SITE_DESCRIPTION =
     'API documentation for seedcord, a TypeScript framework for Discord bots built on discord.js.';
 export const REPO_URL = 'https://github.com/seedcord/seedcord';
@@ -36,7 +37,8 @@ export function pageMetadata(opts: {
     markdownPath?: string;
 }): Metadata {
     const url = canonicalUrl(opts.path);
-    const description = truncate(opts.description, DESCRIPTION_MAX);
+    // social embeds render literal newlines, so flatten the TSDoc whitespace first
+    const description = truncate(opts.description.replace(/\s+/g, ' ').trim(), DESCRIPTION_MAX);
     const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
     const images = imageUrl ? [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: opts.title }] : undefined;
     const markdown = opts.markdownPath ? { 'text/markdown': canonicalUrl(opts.markdownPath) } : undefined;
@@ -46,7 +48,7 @@ export function pageMetadata(opts: {
         alternates: { canonical: url, ...(markdown ? { types: markdown } : {}) },
         openGraph: {
             type: opts.type ?? 'website',
-            siteName: SITE_NAME,
+            siteName: OG_SITE_NAME,
             url,
             title: opts.title,
             description,

@@ -4,7 +4,6 @@ import { GLYPH_SIZE, OG, OG_SIZE } from '@seedcord/ui/og';
 
 import type { CSSProperties, ReactElement } from 'react';
 
-const DESCRIPTION_MAX = 210;
 const PANEL_W = OG_SIZE.width - 96;
 const PANEL_H = OG_SIZE.height - 96;
 
@@ -14,11 +13,6 @@ export interface DocOgCardProps {
     meta: readonly string[];
     name: string;
     description: string;
-}
-
-function truncate(text: string, max: number): string {
-    if (text.length <= max) return text;
-    return `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
 // a seed-dark copy offset behind the glyph fakes the hard drop-shadow (Satori has no filter)
@@ -108,6 +102,8 @@ function Footer(): ReactElement {
 
 function CardBody({ pill, accent, meta, name, description }: DocOgCardProps): ReactElement {
     const nameSize = name.length > 24 ? 50 : name.length > 18 ? 60 : 72;
+    // a long name can wrap to a second line and eat vertical room, so leave the summary fewer lines
+    const descLines = name.length > 24 ? 4 : 5;
     return (
         <div
             style={{
@@ -141,15 +137,16 @@ function CardBody({ pill, accent, meta, name, description }: DocOgCardProps): Re
             </div>
             <div
                 style={{
-                    display: 'flex',
+                    display: 'block',
                     maxWidth: 980,
                     fontFamily: 'Hanken Grotesk',
                     fontSize: 32,
                     lineHeight: 1.4,
-                    color: OG.sub
+                    color: OG.sub,
+                    lineClamp: descLines
                 }}
             >
-                {truncate(description, DESCRIPTION_MAX)}
+                {description}
             </div>
         </div>
     );
