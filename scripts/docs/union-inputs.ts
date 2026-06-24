@@ -6,6 +6,7 @@ export interface EmittedEntry {
     version: string;
     channel: 'stable' | 'prerelease';
     entities: PackageVersionsInput['entities'];
+    description: string | undefined;
 }
 
 // The index stores only line heads (stable.latest, latestByMinor/Major, prerelease.latest). For the pre-1.0
@@ -14,7 +15,12 @@ export interface EmittedEntry {
 export function buildUnionInputs(remote: IndexJson | null, emitted: readonly EmittedEntry[]): PackageVersionsInput[] {
     const byFolder = new Map<
         string,
-        { fullName: string; versions: Set<string>; entities: PackageVersionsInput['entities'] }
+        {
+            fullName: string;
+            versions: Set<string>;
+            entities: PackageVersionsInput['entities'];
+            description: string | undefined;
+        }
     >();
 
     if (remote) {
@@ -26,7 +32,12 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
                 for (const v of Object.values(entry.stable.latestByMajor)) versions.add(v);
             }
             if (entry.prerelease) versions.add(entry.prerelease.latest);
-            byFolder.set(folder, { fullName: entry.fullName, versions, entities: entry.entities });
+            byFolder.set(folder, {
+                fullName: entry.fullName,
+                versions,
+                entities: entry.entities,
+                description: entry.description
+            });
         }
     }
 
@@ -34,11 +45,12 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
         const current = byFolder.get(e.folder) ?? {
             fullName: e.fullName,
             versions: new Set<string>(),
-            entities: undefined
+            entities: undefined,
+            description: undefined
         };
         current.versions.add(e.version);
-        // Republished package: its newest tone map wins. Un-republished packages keep the remote entities.
         current.entities = e.entities;
+        current.description = e.description;
         byFolder.set(e.folder, current);
     }
 
@@ -48,7 +60,8 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
             folder,
             fullName: value.fullName,
             versions: [...value.versions],
-            ...(value.entities ? { entities: value.entities } : {})
+            ...(value.entities ? { entities: value.entities } : {}),
+            ...(value.description ? { description: value.description } : {})
         });
     }
     return inputs;

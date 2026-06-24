@@ -64,7 +64,8 @@ function ActionsCell({
                 anchorId={anchorId}
                 label={label}
                 className={cn(
-                    'size-8 opacity-0 transition-opacity duration-150 group-hover/name:opacity-100 data-[copied=true]:opacity-100'
+                    'size-8 transition-opacity duration-150',
+                    'lg:opacity-0 lg:group-hover/name:opacity-100 lg:data-[copied=true]:opacity-100'
                 )}
             />
             {sourceUrl ? (

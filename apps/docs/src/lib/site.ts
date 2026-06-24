@@ -14,6 +14,8 @@ export function canonicalUrl(path: string): string {
 }
 
 const DESCRIPTION_MAX = 160;
+export const OG_IMAGE_W = 1200;
+export const OG_IMAGE_H = 630;
 
 function truncate(text: string, max: number): string {
     if (text.length <= max) return text;
@@ -23,14 +25,18 @@ function truncate(text: string, max: number): string {
 }
 
 // Next replaces openGraph and twitter per route instead of merging, so each page rebuilds the full block here.
+// Entity pages pass `image` (their /og route) because a catch-all segment cannot host an opengraph-image file.
 export function pageMetadata(opts: {
     title: string;
     description: string;
     path: string;
     type?: 'website' | 'article';
+    image?: string;
 }): Metadata {
     const url = canonicalUrl(opts.path);
     const description = truncate(opts.description, DESCRIPTION_MAX);
+    const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
+    const images = imageUrl ? [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: opts.title }] : undefined;
     return {
         title: opts.title,
         description,
@@ -40,8 +46,14 @@ export function pageMetadata(opts: {
             siteName: SITE_NAME,
             url,
             title: opts.title,
-            description
+            description,
+            ...(images ? { images } : {})
         },
-        twitter: { card: 'summary_large_image', title: opts.title, description }
+        twitter: {
+            card: 'summary_large_image',
+            title: opts.title,
+            description,
+            ...(imageUrl ? { images: [imageUrl] } : {})
+        }
     };
 }

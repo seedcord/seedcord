@@ -10,9 +10,10 @@ import { HotkeyProvider } from '@components/providers/HotkeyProvider';
 import { MotionProvider } from '@components/providers/MotionProvider';
 import { ThemeProvider } from '@components/providers/ThemeProvider';
 import { CommandPalette } from '@components/search/command-palette';
-import { REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
+import { FOREGROUND_HEX } from '@lib/entityColors';
+import { OG_IMAGE_H, OG_IMAGE_W, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 const geistSans = Geist({
@@ -42,13 +43,23 @@ export const metadata: Metadata = {
         url: SITE_URL,
         locale: 'en_US',
         title: 'seedcord docs',
-        description: SITE_DESCRIPTION
+        description: SITE_DESCRIPTION,
+        images: [{ url: '/og', width: OG_IMAGE_W, height: OG_IMAGE_H, alt: 'seedcord docs' }]
     },
     twitter: {
         card: 'summary_large_image',
         title: 'seedcord docs',
-        description: SITE_DESCRIPTION
+        description: SITE_DESCRIPTION,
+        images: ['/og']
     }
+};
+
+// default embed stripe for pages without their own tone (root, overview, 404)
+export const viewport: Viewport = {
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: FOREGROUND_HEX.light },
+        { media: '(prefers-color-scheme: dark)', color: FOREGROUND_HEX.dark }
+    ]
 };
 
 const jsonLd = {

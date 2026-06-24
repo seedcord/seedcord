@@ -1,56 +1,24 @@
-import { parseEntityPathSegments } from '@seedcord/docs-engine';
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '@components/docs/entity/EntityContent';
-import { loadActiveVersion } from '@lib/docs/catalog';
-import { getDocsEngine } from '@lib/docs/engine';
-import { loadEntityModel } from '@lib/docs/loadEntityModel';
-import { getCatalogContext } from '@lib/docs/pageContext';
+import { resolveEntity } from '@lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '@lib/entityColors';
 import { SITE_NAME, canonicalUrl, pageMetadata } from '@lib/site';
 
 import type { PageParams } from '@lib/docs/pageContext';
-import type { EntityModel, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
+import type { ResolvedEntity } from '@lib/docs/resolveEntity';
 import type { Metadata, Viewport } from 'next';
 import type { ReactElement } from 'react';
 
-// prerendered + cached on first request: entity pages are shiki-heavy, too slow to render per request.
+// force-static because entity pages are shiki-heavy, dropping it flips them to slow per-request rendering.
 export const dynamic = 'force-static';
-
-interface ResolvedEntity {
-    entry: PackageCatalogEntry;
-    version: PackageVersionCatalog;
-    entity: EntityModel;
-    segments: string[];
-}
-
-function normalizeSegments(raw: string | string[] | undefined): string[] {
-    if (Array.isArray(raw)) return raw;
-    if (typeof raw === 'string') return [raw];
-    return [];
-}
-
-// loadEntityModel reads loaded models only, so loadActiveVersion (setVersion) must run first.
-async function resolveEntity(params: PageParams): Promise<ResolvedEntity | null> {
-    const { entry, version } = await getCatalogContext(params);
-    await loadActiveVersion(entry.id, version.id);
-
-    const segments = normalizeSegments(params.entitySegments);
-    const parsed = parseEntityPathSegments(segments);
-    if (!parsed.slug) return null;
-
-    const engine = await getDocsEngine();
-    const entity = await loadEntityModel(engine, entry.manifestName, {
-        slug: parsed.slug,
-        ...(parsed.tone ? { kind: parsed.tone } : {})
-    });
-    if (!entity) return null;
-
-    return { entry, version, entity, segments };
-}
 
 function entityPath({ entry, version, segments }: ResolvedEntity): string {
     return `/packages/${entry.id}/${version.id}/${segments.join('/')}`;
+}
+
+function entityOgPath({ entry, version, segments }: ResolvedEntity): string {
+    return `/og/packages/${entry.id}/${version.id}/${segments.join('/')}`;
 }
 
 function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
@@ -98,7 +66,13 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
     const description =
         summary && summary.length > 0 ? summary : `${entity.name}, a ${entity.kind} in ${entity.displayPackage}.`;
 
-    return pageMetadata({ title: entity.name, description, path: entityPath(resolved), type: 'article' });
+    return pageMetadata({
+        title: entity.name,
+        description,
+        path: entityPath(resolved),
+        type: 'article',
+        image: entityOgPath(resolved)
+    });
 }
 
 export async function generateViewport({ params }: { params: Promise<PageParams> }): Promise<Viewport> {

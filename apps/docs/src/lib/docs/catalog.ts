@@ -124,7 +124,7 @@ function buildPackageEntry(fullName: string, entry: PackageIndexEntry): PackageC
         id: displayName,
         manifestName: fullName,
         label: displayName,
-        description: `Reference documentation for ${displayName}.`,
+        description: entry.description ?? `Reference documentation for ${displayName}.`,
         versions: buildVersions(fullName, entry)
     } satisfies PackageCatalogEntry;
 }

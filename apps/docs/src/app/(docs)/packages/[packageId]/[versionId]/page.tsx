@@ -21,7 +21,8 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
     return pageMetadata({
         title: `${entry.label} ${version.label}`,
         description: entry.description,
-        path: `/packages/${entry.id}/${version.id}`
+        path: `/packages/${entry.id}/${version.id}`,
+        image: `/og/packages/${entry.id}/${version.id}`
     });
 }
 

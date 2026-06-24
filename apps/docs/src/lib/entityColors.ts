@@ -9,3 +9,6 @@ export const ENTITY_TONE_HEX = {
     enum: { light: '#c23a55', dark: '#e34d6a' },
     variable: { light: '#6f8a2e', dark: '#9fc24a' }
 } as const satisfies Record<EntityTone, { light: string; dark: string }>;
+
+// the page foreground (--color-text), used as the theme-color on non-entity pages (root, overview, 404)
+export const FOREGROUND_HEX = { light: '#2d3328', dark: '#f8f6e8' } as const;
