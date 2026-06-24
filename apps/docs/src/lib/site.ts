@@ -1,3 +1,5 @@
+import { plainSummary } from '@lib/docs/plainSummary';
+
 import type { Metadata } from 'next';
 
 const FALLBACK_URL = 'https://docs.seedcord.org';
@@ -37,8 +39,8 @@ export function pageMetadata(opts: {
     markdownPath?: string;
 }): Metadata {
     const url = canonicalUrl(opts.path);
-    // social embeds render literal newlines, so flatten the TSDoc whitespace first
-    const description = truncate(opts.description.replace(/\s+/g, ' ').trim(), DESCRIPTION_MAX);
+    // social embeds render markdown and newlines literally, so reduce to plain text
+    const description = truncate(plainSummary(opts.description), DESCRIPTION_MAX);
     const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
     const images = imageUrl ? [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: opts.title }] : undefined;
     const markdown = opts.markdownPath ? { 'text/markdown': canonicalUrl(opts.markdownPath) } : undefined;

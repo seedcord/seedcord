@@ -2,6 +2,7 @@ import { OG, OG_SIZE } from '@seedcord/ui/og';
 import { ImageResponse } from 'next/og';
 
 import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
+import { plainSummary } from '@lib/docs/plainSummary';
 import { resolveEntity } from '@lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '@lib/entityColors';
 import { DocOgCard } from '@lib/og/card';
@@ -59,8 +60,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path?: 
     if (!resolved) return notFoundCard();
 
     const { entity, version } = resolved;
-    const summary = entity.summary[0]?.plain.trim();
-    const description = summary && summary.length > 0 ? summary : `A ${entity.kind} in ${entity.displayPackage}.`;
+    const summary = plainSummary(entity.summary[0]?.plain ?? '');
+    const description = summary.length > 0 ? summary : `A ${entity.kind} in ${entity.displayPackage}.`;
     return render({
         pill: entity.kind,
         accent: ENTITY_TONE_HEX[entity.kind].light,

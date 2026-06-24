@@ -34,4 +34,21 @@ describe('pageMetadata', () => {
         const meta = pageMetadata({ title: 'X', description: 'y', path: '/packages/seedcord/1.0.0' });
         expect(meta.openGraph?.siteName).toBe('seedcord documentation');
     });
+
+    it('strips markdown links and code spans from the meta description', () => {
+        const meta = pageMetadata({
+            title: 'ContextMenuRoute',
+            description:
+                'Routes commands to a [`ContextMenuHandler`](/packages/seedcord/0.14.0/classes/context-menu-handler). Pass `ApplicationCommandType.User`.',
+            path: '/packages/seedcord/1.0.0/decorators/context-menu-route'
+        });
+        expect(meta.description).not.toContain('`');
+        expect(meta.description).not.toContain('[');
+        expect(meta.description).not.toContain(']');
+        expect(meta.description).not.toContain('(');
+        expect(meta.description).not.toContain(')');
+        expect(meta.description).not.toContain('/packages/seedcord/0.14.0/classes/context-menu-handler');
+        expect(meta.description).toContain('ContextMenuHandler');
+        expect(meta.description).toContain('ApplicationCommandType.User');
+    });
 });

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { EntityContent } from '@components/docs/entity/EntityContent';
+import { plainSummary } from '@lib/docs/plainSummary';
 import { resolveEntity } from '@lib/docs/resolveEntity';
 import { ENTITY_TONE_HEX } from '@lib/entityColors';
 import { SITE_NAME, canonicalUrl, pageMetadata } from '@lib/site';
@@ -25,7 +26,7 @@ function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
     const { entry, version, entity } = resolved;
     const url = canonicalUrl(entityPath(resolved));
     const overviewUrl = canonicalUrl(`/packages/${entry.id}/${version.id}`);
-    const summary = entity.summary[0]?.plain.trim();
+    const summary = plainSummary(entity.summary[0]?.plain ?? '');
 
     return {
         '@context': 'https://schema.org',
