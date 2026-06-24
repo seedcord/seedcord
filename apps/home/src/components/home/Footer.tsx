@@ -39,7 +39,7 @@ export function Footer(): ReactNode {
                 <div className={cn('grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]')}>
                     <div className={cn('flex flex-col gap-4')}>
                         <Link href="/" className={cn('flex items-center gap-3')}>
-                            <Materwelon className={cn('size-8 drop-shadow-mark')} />
+                            <Materwelon className={cn('drop-shadow-mark size-8')} />
                             <span
                                 className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}
                             >

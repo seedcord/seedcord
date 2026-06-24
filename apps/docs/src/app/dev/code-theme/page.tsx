@@ -152,7 +152,7 @@ async function CodeThemePage(): Promise<ReactElement> {
                     <h2 className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>
                         {snippet.title}
                     </h2>
-                    <div className={cn('relative inset-x-1/2  mx-[-50vw] w-screen px-6')}>
+                    <div className={cn('relative inset-x-1/2 mx-[-50vw] w-screen px-6')}>
                         <div className={cn('mx-auto grid max-w-400 grid-cols-1 gap-6 lg:grid-cols-2')}>
                             <CodeBlock
                                 representation={{ text: snippet.text, html: snippet.catppuccin }}

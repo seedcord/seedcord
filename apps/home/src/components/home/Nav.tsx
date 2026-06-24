@@ -17,7 +17,7 @@ export function Nav(): ReactNode {
         <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--cream)')}>
             <div className={cn('mx-auto flex h-16 max-w-7xl items-center justify-between px-5')}>
                 <Link href="/" className={cn('flex items-center gap-3')}>
-                    <Materwelon className={cn('size-9 drop-shadow-mark')} />
+                    <Materwelon className={cn('drop-shadow-mark size-9')} />
                     <span className={cn('font-display text-xl font-semibold tracking-tight text-(--seed-dark)')}>
                         seedcord
                     </span>

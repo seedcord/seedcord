@@ -17,7 +17,7 @@ export default function NotFound(): ReactNode {
                     'flex min-h-[70vh] flex-col items-center justify-center gap-6 bg-(--cream) px-5 py-20 text-center'
                 )}
             >
-                <Materwelon className={cn('size-20 drop-shadow-mark')} />
+                <Materwelon className={cn('drop-shadow-mark size-20')} />
                 <p className={cn('font-mono-code text-sm font-semibold text-(--vine-deep)')}>error 404</p>
                 <h1
                     className={cn(

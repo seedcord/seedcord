@@ -12,7 +12,7 @@ interface SeedcordMarkProps {
 export function SeedcordMark({ className, textClassName, showWordmark = true }: SeedcordMarkProps): ReactElement {
     return (
         <span className={cn('flex items-center gap-2 select-none', className)}>
-            <Materwelon className={cn('size-9 drop-shadow-mark')} />
+            <Materwelon className={cn('drop-shadow-mark size-9')} />
             {showWordmark ? (
                 <span className={cn('text-lg font-semibold tracking-tight text-(--text)', textClassName)}>
                     seedcord
