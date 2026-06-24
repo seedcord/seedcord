@@ -97,7 +97,8 @@ async function main(): Promise<void> {
             folder,
             fullName,
             versions: versions.map((entry) => entry.version),
-            entities: pkg.directory.toneMap()
+            entities: pkg.directory.toneMap(),
+            ...(pkg.manifest.description ? { description: pkg.manifest.description } : {})
         });
         for (const { version, channel } of versions) {
             projects.push({ folder, version, channel, file, apiSource });

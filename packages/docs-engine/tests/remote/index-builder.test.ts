@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildIndex } from '@remote/index-builder';
+import { validateIndex } from '@remote/index-json';
 
 const UPDATED_AT = '2026-06-02T00:00:00.000Z';
 
@@ -66,5 +67,30 @@ describe('buildIndex', () => {
         });
 
         expect(index.packages.x?.entities).toBeUndefined();
+    });
+
+    it('carries the package description onto the entry', () => {
+        const index = buildIndex(
+            [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], description: 'Utility helpers for seedcord.' }],
+            { updatedAt: UPDATED_AT }
+        );
+
+        expect(index.packages.x?.description).toBe('Utility helpers for seedcord.');
+    });
+
+    it('omits the description when none is supplied', () => {
+        const index = buildIndex([{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'] }], { updatedAt: UPDATED_AT });
+
+        expect(index.packages.x).not.toHaveProperty('description');
+    });
+
+    it('preserves the description through a validateIndex round-trip', () => {
+        const built = buildIndex(
+            [{ folder: 'x', fullName: '@s/x', versions: ['1.0.0'], description: 'Survives serialize + re-read.' }],
+            { updatedAt: UPDATED_AT }
+        );
+
+        const reparsed = validateIndex(JSON.parse(JSON.stringify(built)));
+        expect(reparsed.packages.x?.description).toBe('Survives serialize + re-read.');
     });
 });

@@ -8,6 +8,7 @@ export interface PackageVersionsInput {
     fullName: string;
     versions: readonly string[];
     entities?: Record<string, EntityTone>;
+    description?: string;
 }
 
 export interface BuildIndexOptions {
@@ -28,7 +29,7 @@ const DEFAULT_PATH_TEMPLATES = {
 export function buildIndex(packages: readonly PackageVersionsInput[], options: BuildIndexOptions): IndexJson {
     const entries: Record<string, PackageIndexEntry> = {};
     for (const pkg of packages) {
-        entries[pkg.folder] = buildEntry(pkg.fullName, pkg.versions, pkg.entities);
+        entries[pkg.folder] = buildEntry(pkg);
     }
 
     return {
@@ -39,23 +40,23 @@ export function buildIndex(packages: readonly PackageVersionsInput[], options: B
     };
 }
 
-function buildEntry(
-    fullName: string,
-    versions: readonly string[],
-    entities?: Record<string, EntityTone>
-): PackageIndexEntry {
-    const valids = versions.filter((version) => valid(version) !== null);
+function buildEntry(pkg: PackageVersionsInput): PackageIndexEntry {
+    const valids = pkg.versions.filter((version) => valid(version) !== null);
     const stable = valids.filter((version) => prerelease(version) === null);
     const pre = valids.filter((version) => prerelease(version) !== null);
 
     const entry: PackageIndexEntry = {
-        fullName,
+        fullName: pkg.fullName,
         stable: buildStable(stable),
         prerelease: buildPrerelease(pre)
     };
 
-    if (entities && Object.keys(entities).length > 0) {
-        entry.entities = entities;
+    if (pkg.entities && Object.keys(pkg.entities).length > 0) {
+        entry.entities = pkg.entities;
+    }
+
+    if (pkg.description) {
+        entry.description = pkg.description;
     }
 
     return entry;

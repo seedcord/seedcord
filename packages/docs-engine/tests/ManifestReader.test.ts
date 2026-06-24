@@ -29,6 +29,7 @@ describe('ManifestReader', () => {
                     version: '1.2.3',
                     entryPoints: ['index.ts', ''],
                     output: './relative-output/mock-docs.json',
+                    description: 'Mock package for docs tests.',
                     warnings: ['warn'],
                     errors: ['err'],
                     warningCount: 0,
@@ -64,6 +65,7 @@ describe('ManifestReader', () => {
         expect(pkg!.warnings).toEqual(['warn']);
         expect(pkg!.errors).toEqual(['err']);
         expect(pkg!.succeeded).toBe(true);
+        expect(pkg!.description).toBe('Mock package for docs tests.');
     });
 
     it('handles missing optional repository details', async () => {

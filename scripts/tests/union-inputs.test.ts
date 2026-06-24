@@ -17,14 +17,15 @@ function remoteWith(...packages: PackageVersionsInput[]): IndexJson {
 function emit(
     folder: string,
     version: string,
-    opts: { fullName?: string; entities?: EmittedEntry['entities'] } = {}
+    opts: { fullName?: string; entities?: EmittedEntry['entities']; description?: string } = {}
 ): EmittedEntry {
     return {
         folder,
         fullName: opts.fullName ?? folder,
         version,
         channel: version.includes('-') ? 'prerelease' : 'stable',
-        entities: opts.entities
+        entities: opts.entities,
+        description: opts.description
     };
 }
 
@@ -134,5 +135,37 @@ describe('buildUnionInputs', () => {
         const inputs = buildUnionInputs(null, [emit('seedcord', '0.11.0-next.0')]);
 
         expect(inputs[0]).not.toHaveProperty('entities');
+    });
+
+    it('keeps the remote description for a package that was not republished', () => {
+        const remote = remoteWith(
+            { folder: 'seedcord', fullName: 'seedcord', versions: ['0.10.6'] },
+            { folder: 'utils', fullName: '@seedcord/utils', versions: ['1.0.0'], description: 'Utility helpers.' }
+        );
+
+        const inputs = buildUnionInputs(remote, [emit('seedcord', '0.10.7')]);
+
+        expect(inputs.find((input) => input.folder === 'utils')?.description).toBe('Utility helpers.');
+    });
+
+    it('overwrites the description for a republished package with the freshly emitted one', () => {
+        const remote = remoteWith({
+            folder: 'utils',
+            fullName: '@seedcord/utils',
+            versions: ['1.0.0'],
+            description: 'Stale blurb.'
+        });
+
+        const inputs = buildUnionInputs(remote, [
+            emit('utils', '1.0.1', { fullName: '@seedcord/utils', description: 'Fresh blurb.' })
+        ]);
+
+        expect(inputs.find((input) => input.folder === 'utils')?.description).toBe('Fresh blurb.');
+    });
+
+    it('omits the description key when neither remote nor emitted supply one', () => {
+        const inputs = buildUnionInputs(null, [emit('seedcord', '0.11.0-next.0')]);
+
+        expect(inputs[0]).not.toHaveProperty('description');
     });
 });
