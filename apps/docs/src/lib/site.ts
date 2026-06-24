@@ -32,15 +32,18 @@ export function pageMetadata(opts: {
     path: string;
     type?: 'website' | 'article';
     image?: string;
+    // emits <link rel="alternate" type="text/markdown">, the agent-discoverable Markdown mirror of this page
+    markdownPath?: string;
 }): Metadata {
     const url = canonicalUrl(opts.path);
     const description = truncate(opts.description, DESCRIPTION_MAX);
     const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
     const images = imageUrl ? [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: opts.title }] : undefined;
+    const markdown = opts.markdownPath ? { 'text/markdown': canonicalUrl(opts.markdownPath) } : undefined;
     return {
         title: opts.title,
         description,
-        alternates: { canonical: url },
+        alternates: { canonical: url, ...(markdown ? { types: markdown } : {}) },
         openGraph: {
             type: opts.type ?? 'website',
             siteName: SITE_NAME,

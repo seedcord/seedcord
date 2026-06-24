@@ -71,7 +71,8 @@ export async function generateMetadata({ params }: { params: Promise<PageParams>
         description,
         path: entityPath(resolved),
         type: 'article',
-        image: entityOgPath(resolved)
+        image: entityOgPath(resolved),
+        markdownPath: `/llms${entityPath(resolved)}`
     });
 }
 
