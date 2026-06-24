@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/cli",
     "type": "module",
-    "version": "0.3.1-next.1",
+    "version": "0.3.1-next.2",
     "description": "CLI for seedcord",
     "bin": {
         "seedcord": "./bin/seedcord.mjs"

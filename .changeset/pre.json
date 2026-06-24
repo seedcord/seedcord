@@ -17,16 +17,20 @@
     "@seedcord/tsdown-config": "2.0.0",
     "@seedcord/types": "0.7.0",
     "@seedcord/ui": "0.1.0",
-    "@seedcord/utils": "0.6.1"
+    "@seedcord/utils": "0.6.1",
+    "@seedcord/home": "0.0.0"
   },
   "changesets": [
     "ascii-table-rebuild",
     "component-defs-internal-tsdoc",
+    "long-files-dance",
     "pagination",
+    "remove-unused-exports",
     "rename-select-menu-handler",
     "social-times-invent",
     "spotty-banks-wait",
     "tender-bobcats-cry",
+    "ui-cream-token",
     "vast-grapes-search"
   ]
 }

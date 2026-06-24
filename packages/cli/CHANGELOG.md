@@ -1,5 +1,14 @@
 # @seedcord/cli
 
+## 0.3.1-next.2
+
+### Patch Changes
+
+- 0a19719: small fix in the command desc
+- Updated dependencies [0a19719]
+    - @seedcord/utils@0.7.0-next.1
+    - @seedcord/services@0.8.2-next.2
+
 ## 0.3.1-next.1
 
 ### Patch Changes

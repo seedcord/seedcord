@@ -1,5 +1,12 @@
 # @seedcord/docs
 
+## 0.1.5-next.1
+
+### Patch Changes
+
+- Updated dependencies [0a19719]
+    - @seedcord/ui@0.2.0-next.1
+
 ## 0.1.5-next.0
 
 ### Patch Changes

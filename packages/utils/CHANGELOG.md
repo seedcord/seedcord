@@ -1,5 +1,11 @@
 # @seedcord/utils
 
+## 0.7.0-next.1
+
+### Patch Changes
+
+- 0a19719: Remove unused exports.
+
 ## 0.7.0-next.0
 
 ### Minor Changes
