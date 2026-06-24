@@ -6,10 +6,6 @@ packages:
 embedReadme: true
 
 overrides:
-  # force the esbuild security patch (GHSA-gv7w-rqvm-qjhr) ahead of vite/vitest picking it up
-  esbuild: ^0.28.1
-  # jsdom's undici < 7.28 has a TLS cert validation bypass (GHSA-vmh5-mc38-953g)
-  jsdom>undici: ^7.28.0
   # discord.js/rest pin undici 6.24.1; < 6.27 has a WebSocket DoS (GHSA-vxpw-j846-p89q)
   discord.js>undici: ^6.27.0
   '@discordjs/rest>undici': ^6.27.0
