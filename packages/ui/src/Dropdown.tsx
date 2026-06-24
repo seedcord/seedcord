@@ -100,7 +100,7 @@ function DropdownListbox({ listboxId, groups, value, onSelect }: DropdownListbox
                         }
                         const isSelected = opt.value === value;
                         return (
-                            <li key={opt.value}>
+                            <li key={opt.value} role="presentation">
                                 <button
                                     type="button"
                                     role="option"

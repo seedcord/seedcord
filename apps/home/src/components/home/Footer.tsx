@@ -52,7 +52,7 @@ export function Footer(): ReactNode {
                     </div>
                     <div className={cn('grid grid-cols-3 gap-6 lg:contents')}>
                         {COLUMNS.map((col) => (
-                            <nav key={col.title} className={cn('flex flex-col gap-3')}>
+                            <nav key={col.title} aria-label={col.title} className={cn('flex flex-col gap-3')}>
                                 <span
                                     className={cn(
                                         'font-mono-code text-xs font-semibold tracking-wide text-(--seed-dark)/55 uppercase'

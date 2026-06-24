@@ -32,6 +32,7 @@ function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
         '@graph': [
             {
                 '@type': 'APIReference',
+                '@id': `${url}#api`,
                 name: entity.name,
                 ...(summary ? { description: summary } : {}),
                 url,
@@ -42,6 +43,7 @@ function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
             },
             {
                 '@type': 'BreadcrumbList',
+                '@id': `${url}#breadcrumb`,
                 itemListElement: [
                     { '@type': 'ListItem', position: 1, name: 'Docs', item: canonicalUrl('/') },
                     {
@@ -59,7 +61,8 @@ function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const resolved = await resolveEntity(await params);
-    if (!resolved) return {};
+    // an unresolved path renders a soft-404, keep it out of the index instead of inheriting the root OG/title
+    if (!resolved) return { robots: { index: false } };
     const { entity } = resolved;
 
     const summary = entity.summary[0]?.plain.trim();

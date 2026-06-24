@@ -1,3 +1,5 @@
+import { OG_SIZE } from '@seedcord/ui/og';
+
 const FALLBACK_URL = 'https://seedcord.org';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? FALLBACK_URL;
@@ -14,9 +16,11 @@ export function canonicalUrl(path: string): string {
     return new URL(path, SITE_URL).toString();
 }
 
+export const OG_SCALE = 3;
+
 export const DEFAULT_OG_IMAGE = {
     url: '/og/image.png',
-    width: 3600,
-    height: 1890,
+    width: OG_SIZE.width * OG_SCALE,
+    height: OG_SIZE.height * OG_SCALE,
     alt: 'seedcord, the whole Discord bot, wired and typed'
 };

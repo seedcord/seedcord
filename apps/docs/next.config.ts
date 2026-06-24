@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
         return [
             {
                 // RFC 8288 discovery hint pointing agents at the machine-readable index, skips assets + meta routes
-                source: '/((?!_next/|og/|llms.txt|sitemap.xml|robots.txt).*)',
+                source: '/((?!_next/|og/|llms/|llms.txt|sitemap.xml|robots.txt).*)',
                 headers: [{ key: 'Link', value: '</llms.txt>; rel="alternate"; type="text/plain"' }]
             }
         ];

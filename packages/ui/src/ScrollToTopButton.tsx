@@ -76,7 +76,6 @@ export function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactE
             )}
         >
             <ArrowUp className={cn('size-5')} aria-hidden />
-            <span className={cn('sr-only')}>Jump to top</span>
         </Button>
     );
 }

@@ -30,7 +30,7 @@ export function Nav(): ReactNode {
                     </span>
                 </Link>
                 <div className={cn('flex items-center gap-2')}>
-                    <nav className={cn('flex items-center gap-1')}>
+                    <nav aria-label="Primary" className={cn('flex items-center gap-1')}>
                         {LINKS.map((l) => (
                             <Link
                                 key={l.label}

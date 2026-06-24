@@ -35,7 +35,6 @@ type Accent = 'flesh' | 'rind';
 
 interface Group {
     area: string;
-    count: number;
     accent: Accent;
     rows: { icon: LucideIcon; label: string; gloss: string }[];
 }
@@ -43,7 +42,6 @@ interface Group {
 const GROUPS: Group[] = [
     {
         area: 'Commands & interactions',
-        count: 10,
         accent: 'flesh',
         rows: [
             {
@@ -84,7 +82,6 @@ const GROUPS: Group[] = [
     },
     {
         area: 'Events',
-        count: 5,
         accent: 'rind',
         rows: [
             { icon: Radio, label: 'event handlers', gloss: 'body typed to the exact event' },
@@ -96,7 +93,6 @@ const GROUPS: Group[] = [
     },
     {
         area: 'Runtime',
-        count: 4,
         accent: 'flesh',
         rows: [
             { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to report, Silence to drop' },
@@ -107,7 +103,6 @@ const GROUPS: Group[] = [
     },
     {
         area: 'Dev experience',
-        count: 3,
         accent: 'rind',
         rows: [
             { icon: RefreshCw, label: 'hot reload', gloss: 'Vite HMR swaps your code live, the gateway stays up' },
@@ -121,7 +116,6 @@ const GROUPS: Group[] = [
     },
     {
         area: 'Extensibility',
-        count: 2,
         accent: 'flesh',
         rows: [
             { icon: Plug, label: 'plugins', gloss: 'attach one, reach it typed in any handler' },
@@ -165,7 +159,7 @@ export function FeatureGrid(): ReactNode {
                                 ACCENT_TEXT[group.accent]
                             )}
                         >
-                            {group.area} · {pad(group.count)}
+                            {group.area} · {pad(group.rows.length)}
                         </p>
                         <div className={cn('grid gap-x-6 sm:grid-cols-2 lg:grid-cols-3')}>
                             {group.rows.map((row) => (

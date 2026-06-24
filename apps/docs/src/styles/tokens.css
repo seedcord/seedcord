@@ -29,19 +29,6 @@
 }
 
 :root {
-    /* Badges */
-    --badge-package-border: color-mix(in oklab, var(--accent-b) 38%, var(--border));
-    --badge-package-bg: color-mix(in oklab, var(--accent-b) 16%, var(--surface));
-    --badge-package-text: color-mix(in oklab, var(--text) 88%, var(--accent-b) 12%);
-
-    --badge-page-border: color-mix(in oklab, var(--accent-a) 34%, var(--border));
-    --badge-page-bg: color-mix(in oklab, var(--accent-a) 14%, var(--surface));
-    --badge-page-text: color-mix(in oklab, var(--text) 90%, var(--accent-a) 10%);
-
-    --badge-resource-border: color-mix(in oklab, var(--accent-r) 46%, var(--border));
-    --badge-resource-bg: color-mix(in oklab, var(--accent-r) 18%, var(--surface));
-    --badge-resource-text: color-mix(in oklab, var(--text) 88%, var(--accent-r) 12%);
-
     --command-overlay: color-mix(in oklab, var(--bg) 55%, #2d3328 45%);
 
     /* Per-tone Presentation Tokens */
@@ -89,7 +76,6 @@
 
     /* Text Mixes */
     --text-accent-b-subtle: color-mix(in oklab, var(--color-text) 85%, var(--accent-b) 15%);
-    --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
     --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--accent-b) 35%);
     --text-accent-b-intense: color-mix(in oklab, var(--accent-b) 80%, var(--color-text) 20%);
     --text-enum-mix-72: color-mix(in oklab, var(--entity-enum) 72%, var(--color-text));
@@ -104,7 +90,6 @@
 
     /* Surface Mixes */
     --surface-accent-b-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-b) 8%);
-    --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--accent-b) 15%);
     --surface-accent-a-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-a) 8%);
     --surface-accent-a-moderate: color-mix(in oklab, var(--surface) 86%, var(--accent-a) 14%);
 
