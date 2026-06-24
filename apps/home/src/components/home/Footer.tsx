@@ -1,7 +1,6 @@
 import { cn } from '@seedcord/ui';
+import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
-
-import { Materwelon } from '@/components/brand/Materwelon';
 
 import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '@lib/site';
 

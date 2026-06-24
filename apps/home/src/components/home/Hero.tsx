@@ -1,6 +1,5 @@
 import { cn } from '@seedcord/ui';
-
-import { Materwelon } from '@/components/brand/Materwelon';
+import { Materwelon } from '@seedcord/ui/Materwelon';
 
 import { PosterButton } from '@components/ui/PosterButton';
 import { DOCS_URL, GUIDE_URL } from '@lib/site';

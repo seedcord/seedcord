@@ -1,5 +1,5 @@
 import { cn } from '@seedcord/ui';
-import Image from 'next/image';
+import { Materwelon } from '@seedcord/ui/Materwelon';
 
 import type { ReactElement } from 'react';
 
@@ -12,7 +12,7 @@ interface SeedcordMarkProps {
 export function SeedcordMark({ className, textClassName, showWordmark = true }: SeedcordMarkProps): ReactElement {
     return (
         <span className={cn('flex items-center gap-2 select-none', className)}>
-            <Image src="/logo.svg" alt="Seedcord logo" width={36} height={36} priority className={cn('size-9')} />
+            <Materwelon className={cn('size-9 drop-shadow-mark')} />
             {showWordmark ? (
                 <span className={cn('text-lg font-semibold tracking-tight text-(--text)', textClassName)}>
                     seedcord

@@ -1,7 +1,6 @@
 import { cn, GithubIcon, Icon } from '@seedcord/ui';
+import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
-
-import { Materwelon } from '@/components/brand/Materwelon';
 
 import { PosterButton } from '@components/ui/PosterButton';
 import { DOCS_URL, GUIDE_URL, REPO_URL } from '@lib/site';

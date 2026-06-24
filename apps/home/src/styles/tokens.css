@@ -1,7 +1,4 @@
 :root {
-    /* warm near-black for dark sections, code cards, borders + shadows */
-    --seed-dark: #2d3328;
-
     /* brand accents */
     --flesh: var(--accent-a);
     --rind: var(--accent-b);

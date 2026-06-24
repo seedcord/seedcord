@@ -29,6 +29,12 @@
                 "default": "./dist/MaterwelonGlyph.mjs"
             }
         },
+        "./Materwelon": {
+            "import": {
+                "types": "./dist/Materwelon.d.mts",
+                "default": "./dist/Materwelon.mjs"
+            }
+        },
         "./styles/globals.css": "./src/styles/globals.css",
         "./styles/tokens.css": "./src/styles/tokens.css"
     },

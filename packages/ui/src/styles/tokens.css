@@ -7,6 +7,8 @@
 
     /* canonical brand cream, stays cream in both themes unlike --color-bg which flips dark */
     --cream: #f8f6e8;
+    /* canonical brand ink (watermelon seeds + the offset mark shadow), fixed in both themes */
+    --seed-dark: #2d3328;
 
     /* mater red */
     --accent-a: #f04e36;

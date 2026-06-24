@@ -1,7 +1,7 @@
 import { createTsdownConfig } from '@seedcord/tsdown-config';
 
 export default createTsdownConfig({
-    entry: ['src/index.ts', 'src/og.ts', 'src/MaterwelonGlyph.tsx'],
+    entry: ['src/index.ts', 'src/og.ts', 'src/MaterwelonGlyph.tsx', 'src/Materwelon.tsx'],
     format: ['esm'],
     platform: 'neutral',
     shims: false,
