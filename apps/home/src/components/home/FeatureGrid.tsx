@@ -114,7 +114,7 @@ const GROUPS: Group[] = [
             {
                 icon: WandSparkles,
                 label: 'seedcord commands',
-                gloss: 'inspect and clean deployed application commands'
+                gloss: 'inspect and clean deployed guild commands'
             },
             { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' }
         ]
