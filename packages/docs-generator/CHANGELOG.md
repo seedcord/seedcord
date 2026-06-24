@@ -1,5 +1,11 @@
 # @seedcord/docs-generator
 
+## 0.2.4
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+
 ## 0.2.4-next.0
 
 ### Patch Changes

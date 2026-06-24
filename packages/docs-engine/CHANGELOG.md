@@ -1,5 +1,11 @@
 # @seedcord/docs-engine
 
+## 0.3.1
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+
 ## 0.3.1-next.0
 
 ### Patch Changes

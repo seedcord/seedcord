@@ -1,5 +1,22 @@
 # @seedcord/kit
 
+## 0.2.0
+
+### Minor Changes
+
+- c3613bd: Add pagination. `Paginator` renders paged Components V2 replies with first/prev/next/last controls, backed by `ArraySource` for an in-memory list or `CursorSource` for one-page-at-a-time fetches. Each control encodes its target page, so clicks keep working after a restart. The pure `paginate()` math and the `PageView` shape ship from `@seedcord/kit` for headless use.
+
+### Patch Changes
+
+- 0a19719: Remove unused exports.
+- 78377fa: mark some exports as internal so they don't show up in the docs
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [c3613bd]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - @seedcord/errors@0.2.1
+    - @seedcord/types@0.7.1
+
 ## 0.2.0-next.2
 
 ### Patch Changes

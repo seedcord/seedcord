@@ -1,7 +1,7 @@
 {
     "name": "seedcord",
     "type": "module",
-    "version": "0.15.0-next.4",
+    "version": "0.15.0",
     "description": "A Discord bot framework built on top of Discord.js",
     "repository": {
         "type": "git",

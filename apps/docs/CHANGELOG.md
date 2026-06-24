@@ -1,5 +1,18 @@
 # @seedcord/docs
 
+## 0.1.5
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [0a19719]
+- Updated dependencies [78377fa]
+    - @seedcord/types@0.7.1
+    - @seedcord/ui@0.2.0
+    - @seedcord/eslint-config@1.4.3
+    - @seedcord/docs-engine@0.3.1
+
 ## 0.1.5-next.1
 
 ### Patch Changes

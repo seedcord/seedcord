@@ -1,5 +1,11 @@
 # @seedcord/tsup-config
 
+## 2.0.1
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+
 ## 2.0.1-next.0
 
 ### Patch Changes

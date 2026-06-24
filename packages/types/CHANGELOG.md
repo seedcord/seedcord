@@ -1,5 +1,12 @@
 # @seedcord/types
 
+## 0.7.1
+
+### Patch Changes
+
+- 78377fa: mark some exports as internal so they don't show up in the docs
+- 78377fa: update LICENSE copyright year
+
 ## 0.7.1-next.0
 
 ### Patch Changes

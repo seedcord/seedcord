@@ -1,5 +1,22 @@
 # @seedcord/cli
 
+## 0.3.1
+
+### Patch Changes
+
+- 0a19719: small fix in the command desc
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [c3613bd]
+- Updated dependencies [0a19719]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - @seedcord/utils@0.7.0
+    - @seedcord/errors@0.2.1
+    - @seedcord/services@0.8.2
+    - @seedcord/types@0.7.1
+
 ## 0.3.1-next.2
 
 ### Patch Changes

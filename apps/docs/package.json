@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/docs",
-    "version": "0.1.5-next.1",
+    "version": "0.1.5",
     "private": true,
     "scripts": {
         "dev": "next dev",

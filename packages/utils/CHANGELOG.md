@@ -1,5 +1,20 @@
 # @seedcord/utils
 
+## 0.7.0
+
+### Minor Changes
+
+- 78377fa: Rename `generateAsciiTable` to `renderTable` and fold pagination into it. Passing a `budget` returns one `string` per page (header repeated on each, default 2000) instead of a single string, so the separate `paginateAsciiTable` is gone. Fix `numericAlign` to judge a column by its body rows so a numeric column under a text header now right-aligns. Add `fence` to wrap the output in a triple-backtick block for monospace rendering in Discord messages and embeds, counted against `budget`. Default is now a rounded table. And a lot more customization options!
+
+### Patch Changes
+
+- 0a19719: Remove unused exports.
+- 78377fa: add examples to some utils that should have them
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - @seedcord/types@0.7.1
+
 ## 0.7.0-next.1
 
 ### Patch Changes

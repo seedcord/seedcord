@@ -1,5 +1,11 @@
 # @seedcord/eslint-config
 
+## 1.4.3
+
+### Patch Changes
+
+- 78377fa: update LICENSE copyright year
+
 ## 1.4.3-next.0
 
 ### Patch Changes

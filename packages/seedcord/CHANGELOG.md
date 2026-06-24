@@ -1,5 +1,31 @@
 # seedcord
 
+## 0.15.0
+
+### Minor Changes
+
+- c3613bd: Add pagination. `Paginator` renders paged Components V2 replies with first/prev/next/last controls, backed by `ArraySource` for an in-memory list or `CursorSource` for one-page-at-a-time fetches. Each control encodes its target page, so clicks keep working after a restart. The pure `paginate()` math and the `PageView` shape ship from `@seedcord/kit` for headless use.
+- c3613bd: Rename the `SelectHandler` base class to `SelectMenuHandler`, matching `SelectMenuRoute` and `SelectMenuKind`. Select-menu handlers should now extend `SelectMenuHandler`.
+
+### Patch Changes
+
+- 781eb3d: `@internal` now actually hides `__componentDefs` from the docs.
+- 78377fa: mark some exports as internal so they don't show up in the docs
+- 78377fa: add examples to some utils that should have them
+- 51006e2: `__componentDefs` phantom field should be internal
+- 78377fa: update LICENSE copyright year
+- Updated dependencies [78377fa]
+- Updated dependencies [c3613bd]
+- Updated dependencies [0a19719]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+- Updated dependencies [78377fa]
+    - @seedcord/utils@0.7.0
+    - @seedcord/kit@0.2.0
+    - @seedcord/errors@0.2.1
+    - @seedcord/services@0.8.2
+    - @seedcord/types@0.7.1
+
 ## 0.15.0-next.4
 
 ### Patch Changes
