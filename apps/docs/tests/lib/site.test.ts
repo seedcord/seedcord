@@ -45,8 +45,6 @@ describe('pageMetadata', () => {
         expect(meta.description).not.toContain('`');
         expect(meta.description).not.toContain('[');
         expect(meta.description).not.toContain(']');
-        expect(meta.description).not.toContain('(');
-        expect(meta.description).not.toContain(')');
         expect(meta.description).not.toContain('/packages/seedcord/0.14.0/classes/context-menu-handler');
         expect(meta.description).toContain('ContextMenuHandler');
         expect(meta.description).toContain('ApplicationCommandType.User');

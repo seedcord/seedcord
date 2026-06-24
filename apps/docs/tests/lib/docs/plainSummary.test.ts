@@ -20,4 +20,8 @@ describe('plainSummary', () => {
     it('collapses newlines and runs of whitespace', () => {
         expect(plainSummary('first line.\n\nsecond   line.')).toBe('first line. second line.');
     });
+
+    it('leaves prose brackets and non-link parens alone', () => {
+        expect(plainSummary('call `arr[0](idx)` to read, returns []')).toBe('call arr[0](idx) to read, returns []');
+    });
 });
