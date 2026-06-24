@@ -12,6 +12,12 @@ interface SignaturePanelProps extends WithParentDeprecationStatus {
     isActive: boolean;
 }
 
+function deprecationMessageKey(ds?: DeprecationStatus): string | null {
+    if (!ds?.isDeprecated) return null;
+    if (!ds.deprecationMessage) return '__NONE__';
+    return ds.deprecationMessage.map((p) => p.plain).join('\n');
+}
+
 export function SignaturePanel({ signature, isActive, parentDeprecationStatus }: SignaturePanelProps): ReactElement {
     const section = (
         <section
@@ -25,12 +31,6 @@ export function SignaturePanel({ signature, isActive, parentDeprecationStatus }:
             {signature.examples.length ? <CommentExamples examples={signature.examples} /> : null}
         </section>
     );
-
-    function deprecationMessageKey(ds?: DeprecationStatus): string | null {
-        if (!ds?.isDeprecated) return null;
-        if (!ds.deprecationMessage) return '__NONE__';
-        return ds.deprecationMessage.map((p) => p.plain).join('\n');
-    }
 
     const parentKey = deprecationMessageKey(parentDeprecationStatus);
     const sigKey = deprecationMessageKey(signature.deprecationStatus);

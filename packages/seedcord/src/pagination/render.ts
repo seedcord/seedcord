@@ -13,7 +13,7 @@ import type { ButtonBuilder, ActionRowBuilder } from 'discord.js';
 export type ItemRender<Item> = (item: Item, index: number) => string | BuilderComponent<'section'>;
 
 /** What the V2 reply can be built from. Each arm is normalized into a {@link ReplyResponse}. */
-export type Renderable = string | V2Component[] | ReplyResponse;
+type Renderable = string | V2Component[] | ReplyResponse;
 
 /** A full-page render override, handed the page data and the controls factory. */
 export type PageRender<Item> = (view: PageView<Item>, controls: PaginatorControls) => Renderable;

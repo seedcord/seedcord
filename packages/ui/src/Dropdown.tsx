@@ -145,11 +145,13 @@ export interface DropdownProps {
     'aria-label'?: string;
 }
 
+const NO_OPTIONS: readonly DropdownOption[] = [];
+
 export function Dropdown({
     leadingIcon,
     placeholderLabel,
     value,
-    options = [],
+    options = NO_OPTIONS,
     groups,
     onChange,
     minWidth,

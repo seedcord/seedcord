@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import { createContext, use, useEffect, useId, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { cn } from './lib/cn';
 import { tw } from './lib/tw';
@@ -72,20 +72,25 @@ export function Disclosure({
         }
     }, [storageKey, isControlled]);
 
-    const setOpen = (next: boolean): void => {
-        if (!isControlled) setInternalOpen(next);
-        onOpenChange?.(next);
-        if (storageKey && !isControlled && typeof window !== 'undefined') {
-            try {
-                window.localStorage.setItem(storageKey, String(next));
-            } catch {
-                // same swallow reason as the read above
+    const setOpen = useCallback(
+        (next: boolean): void => {
+            if (!isControlled) setInternalOpen(next);
+            onOpenChange?.(next);
+            if (storageKey && !isControlled && typeof window !== 'undefined') {
+                try {
+                    window.localStorage.setItem(storageKey, String(next));
+                } catch {
+                    // same swallow reason as the read above
+                }
             }
-        }
-    };
+        },
+        [isControlled, onOpenChange, storageKey]
+    );
+
+    const value = useMemo(() => ({ open, setOpen, panelId }), [open, setOpen, panelId]);
 
     return (
-        <DisclosureContext value={{ open, setOpen, panelId }}>
+        <DisclosureContext value={value}>
             <div className={cn(className)}>{children}</div>
         </DisclosureContext>
     );

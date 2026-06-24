@@ -12,7 +12,7 @@ const VARIANTS = {
     ink: 'bg-(--seed-dark) text-(--cream) hover:bg-(--flesh-deep)'
 } as const;
 
-export type PosterButtonVariant = keyof typeof VARIANTS;
+type PosterButtonVariant = keyof typeof VARIANTS;
 
 interface PosterButtonProps {
     href: string;

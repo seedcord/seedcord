@@ -45,7 +45,7 @@ export function displayWidth(text: string): number {
     return width;
 }
 
-export function segments(text: string): string[] {
+function segments(text: string): string[] {
     return Array.from(segmenter.segment(text), (entry) => entry.segment);
 }
 
