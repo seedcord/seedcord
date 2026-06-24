@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/kit",
     "type": "module",
-    "version": "0.2.0-next.1",
+    "version": "0.2.0-next.2",
     "description": "Reusable Seedcord building blocks: component builders, the Notice error tree, and the typed customId codec",
     "repository": {
         "type": "git",

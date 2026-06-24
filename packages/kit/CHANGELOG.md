@@ -1,5 +1,11 @@
 # @seedcord/kit
 
+## 0.2.0-next.2
+
+### Patch Changes
+
+- 0a19719: Remove unused exports.
+
 ## 0.2.0-next.1
 
 ### Patch Changes
