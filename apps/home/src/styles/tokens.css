@@ -1,0 +1,10 @@
+:root {
+    /* brand accents */
+    --flesh: var(--accent-a);
+    --rind: var(--accent-b);
+    --vine-deep: #4d7d33;
+    --flesh-deep: #c8341f;
+
+    /* muted text on the warm-dark grounds (code-card scrollbar) */
+    --husk: #9aa089;
+}

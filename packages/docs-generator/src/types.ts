@@ -9,6 +9,7 @@ export interface PackageManifest {
     name: string;
     version: string;
     private?: boolean;
+    description?: string;
     types?: string;
     dependencies?: Record<string, string>;
     seedcordDocs?: SeedcordDocsConfig;
@@ -64,4 +65,5 @@ export interface PackageDocResult {
     reexports?: ReexportEntry[];
     readme?: string;
     changelogUrl?: string;
+    description?: string;
 }

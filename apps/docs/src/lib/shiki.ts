@@ -1,24 +1,19 @@
+import { seedcordBrandDark, seedcordBrandLight } from '@seedcord/ui';
 import langBash from '@shikijs/langs/bash';
 import langJs from '@shikijs/langs/javascript';
 import langJson from '@shikijs/langs/json';
 import langJsx from '@shikijs/langs/jsx';
 import langTsx from '@shikijs/langs/tsx';
 import langTs from '@shikijs/langs/typescript';
-import themeLatte from '@shikijs/themes/catppuccin-latte';
-import themeMacchiato from '@shikijs/themes/catppuccin-macchiato';
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core';
 import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 
-import type { BundledLanguage, BundledTheme, ShikiTransformer } from 'shiki';
+import type { BundledLanguage, ShikiTransformer } from 'shiki';
 
 const THEMES = {
-    light: 'catppuccin-latte',
-    dark: 'catppuccin-macchiato'
-    // light: 'gruvbox-light-medium',
-    // dark: 'gruvbox-dark-medium'
-    // light: 'rose-pine-dawn',
-    // dark: 'rose-pine'
-} as const satisfies Record<'light' | 'dark', BundledTheme>;
+    light: 'seedcord-light',
+    dark: 'seedcord-dark'
+} as const satisfies Record<'light' | 'dark', string>;
 
 export interface CodeLink {
     name: string;
@@ -35,7 +30,7 @@ export interface CodeLink {
 let highlighterPromise: Promise<HighlighterCore> | null = null;
 function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
-        themes: [themeLatte, themeMacchiato],
+        themes: [seedcordBrandLight, seedcordBrandDark],
         langs: [langTs, langTsx, langJs, langJsx, langJson, langBash],
         engine: createOnigurumaEngine(import('shiki/wasm'))
     });

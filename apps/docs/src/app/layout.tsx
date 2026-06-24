@@ -1,5 +1,5 @@
 import { TooltipProvider, cn } from '@seedcord/ui';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Space_Grotesk } from 'next/font/google';
 import Script from 'next/script';
 import { preconnect } from 'react-dom';
 
@@ -10,8 +10,10 @@ import { HotkeyProvider } from '@components/providers/HotkeyProvider';
 import { MotionProvider } from '@components/providers/MotionProvider';
 import { ThemeProvider } from '@components/providers/ThemeProvider';
 import { CommandPalette } from '@components/search/command-palette';
+import { FOREGROUND_HEX } from '@lib/entityColors';
+import { OG_IMAGE_H, OG_IMAGE_W, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
 
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
 const geistSans = Geist({
@@ -24,12 +26,53 @@ const geistMono = Geist_Mono({
     subsets: ['latin']
 });
 
+const spaceGrotesk = Space_Grotesk({
+    variable: '--font-display',
+    subsets: ['latin']
+});
+
 export const metadata: Metadata = {
-    title: 'seedcord',
-    description: 'Api documentation for the Seedcord Bot Framework for Discord.js',
-    icons: {
-        icon: '/icon.svg'
+    metadataBase: new URL(SITE_URL),
+    title: { default: 'seedcord docs', template: '%s · seedcord' },
+    description: SITE_DESCRIPTION,
+    applicationName: SITE_NAME,
+    icons: { icon: '/icon.svg' },
+    openGraph: {
+        type: 'website',
+        siteName: SITE_NAME,
+        url: SITE_URL,
+        locale: 'en_US',
+        title: 'seedcord docs',
+        description: SITE_DESCRIPTION,
+        images: [{ url: '/og', width: OG_IMAGE_W, height: OG_IMAGE_H, alt: 'seedcord docs' }]
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'seedcord docs',
+        description: SITE_DESCRIPTION,
+        images: ['/og']
     }
+};
+
+// default embed stripe for pages without their own tone (root, overview, 404)
+export const viewport: Viewport = {
+    themeColor: [
+        { media: '(prefers-color-scheme: light)', color: FOREGROUND_HEX.light },
+        { media: '(prefers-color-scheme: dark)', color: FOREGROUND_HEX.dark }
+    ]
+};
+
+const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareSourceCode',
+    name: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    codeRepository: REPO_URL,
+    programmingLanguage: 'TypeScript',
+    runtimePlatform: 'Node.js',
+    license: 'https://www.apache.org/licenses/LICENSE-2.0',
+    author: { '@type': 'Person', name: 'Dhruv', url: 'https://github.com/materwelonDhruv' }
 };
 
 interface RootLayoutProps {
@@ -44,10 +87,15 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
         <html lang="en" suppressHydrationWarning>
             <body
                 suppressHydrationWarning
-                className={cn(`${geistSans.variable} ${geistMono.variable} antialiased`)}
+                className={cn(`${geistSans.variable} ${geistMono.variable} ${spaceGrotesk.variable} antialiased`)}
                 data-new-gr-c-s-check-loaded=""
                 data-gr-ext-installed=""
             >
+                <script
+                    type="application/ld+json"
+                    // escape < so the JSON can't break out of the script tag
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+                />
                 <Script id="strip-grammarly-attributes" strategy="beforeInteractive">
                     {`
                         (function () {

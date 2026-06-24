@@ -10,7 +10,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 const segmentedControlContainerClassName = [
     tw`inline-flex items-center border border-(--border) bg-(--surface-subtle)`,
-    tw`rounded-lg`
+    tw`rounded-md`
 ].join(' ');
 
 const segmentedControlOptionBaseClassName = [

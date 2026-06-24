@@ -9,7 +9,7 @@ function DocsLoading(): ReactElement {
                 <div className={cn('h-7 w-2/5 rounded-md bg-(--surface-moderate)')} />
                 <div className={cn('h-4 w-3/5 rounded bg-(--surface-subtle)')} />
             </div>
-            <div className={cn('h-32 rounded-xl border border-(--border) bg-(--surface-subtle)')} />
+            <div className={cn('h-32 rounded-md border border-(--border) bg-(--surface-subtle)')} />
             <div className={cn('space-y-2')}>
                 <div className={cn('h-4 w-full rounded bg-(--surface-subtle)')} />
                 <div className={cn('h-4 w-11/12 rounded bg-(--surface-subtle)')} />

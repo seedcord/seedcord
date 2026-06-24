@@ -43,7 +43,7 @@ export function CopyButton({
         <Button
             variant="ghost"
             size="icon"
-            aria-label={ariaLabel ?? idleLabel}
+            aria-label={ariaLabel ?? (copied ? copiedLabel : idleLabel)}
             onClick={() => {
                 void handleCopy();
             }}

@@ -1,0 +1,69 @@
+@layer utilities {
+    .font-display {
+        font-family: var(--font-display), ui-monospace, monospace;
+    }
+    .font-mono-code {
+        font-family: var(--font-mono), ui-monospace, monospace;
+    }
+
+    /* seamless infinite marquee, two identical tracks slid -50% so the loop has no seam */
+    .marquee-anim {
+        animation: marquee-x 240s linear infinite;
+    }
+    .marquee-mask:hover .marquee-anim {
+        animation-play-state: paused;
+    }
+
+    /* the poster's playful hard offset block shadow + 3px rule (ink = --seed-dark #2d3328) */
+    .blk {
+        box-shadow: 10px 10px 0 0 var(--seed-dark);
+    }
+    .blk-sm {
+        box-shadow: 6px 6px 0 0 var(--seed-dark);
+    }
+    .rule {
+        border: 3px solid var(--seed-dark);
+    }
+    .rule-cream {
+        border: 3px solid var(--cream);
+    }
+    .blk-cream {
+        box-shadow: 10px 10px 0 0 var(--cream);
+    }
+    .blk-rind {
+        box-shadow: 10px 10px 0 0 var(--rind);
+    }
+}
+
+@keyframes marquee-x {
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .marquee-anim {
+        animation: none;
+    }
+}
+
+/* shiki writes its own <pre>, give it the poster code-card padding + size (the bg comes from the brand theme) */
+.code-card .shiki {
+    margin: 0;
+    overflow-x: auto;
+    padding: 1.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.7;
+    scrollbar-width: thin;
+    scrollbar-color: var(--husk) transparent;
+}
+.code-card .shiki::-webkit-scrollbar {
+    height: 8px;
+}
+.code-card .shiki::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: var(--husk);
+}
+.code-card .shiki:hover::-webkit-scrollbar-thumb {
+    background-color: var(--rind);
+}

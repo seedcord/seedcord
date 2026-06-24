@@ -14,6 +14,7 @@ interface ManifestPackage {
     entryPoints: string[];
     output: string | null;
     succeeded: boolean;
+    description?: string;
 }
 interface Manifest {
     tool: string;
@@ -47,6 +48,11 @@ describe('ApiDocsGenerator', () => {
             expect(entry!.succeeded).toBe(true);
             expect(entry!.output).toMatch(/mock-docs\.api\.json$/);
             expect(entry!.entryPoints).toEqual(['dist/index.d.ts']);
+        });
+
+        it('captures the package.json description', () => {
+            const [entry] = manifest.packages;
+            expect(entry!.description).toBe('Mock package exercised by the docs generator tests.');
         });
     });
 

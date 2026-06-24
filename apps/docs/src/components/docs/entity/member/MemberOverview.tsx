@@ -27,8 +27,8 @@ export function MemberOverview({
     return (
         <Card size="md" className={cn('group min-w-0 md:p-5')}>
             <Disclosure defaultOpen>
-                <DisclosureTrigger className={cn('hover:bg-surface-strong rounded-lg py-1 text-(--text)')}>
-                    <span className={cn('text-lg font-semibold')}>Member overview</span>
+                <DisclosureTrigger className={cn('hover:bg-surface-strong rounded-md py-1 text-(--text)')}>
+                    <span className={cn('font-display text-lg font-semibold')}>Member overview</span>
                     <DisclosureChevron size={18} className={cn('ml-auto')} />
                 </DisclosureTrigger>
                 <DisclosurePanel className={cn('min-w-0')}>

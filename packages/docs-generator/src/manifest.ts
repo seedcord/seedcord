@@ -31,7 +31,8 @@ export async function writeManifest(
             ...(result.sources ? { sources: result.sources } : {}),
             ...(result.reexports ? { reexports: result.reexports } : {}),
             ...(result.readme ? { readme: result.readme } : {}),
-            ...(result.changelogUrl ? { changelogUrl: result.changelogUrl } : {})
+            ...(result.changelogUrl ? { changelogUrl: result.changelogUrl } : {}),
+            ...(result.description ? { description: result.description } : {})
         }))
     };
 

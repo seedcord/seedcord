@@ -32,7 +32,7 @@ export function MemberDetailGroup({
             <header>
                 <DisclosureTrigger
                     className={cn(
-                        'justify-between rounded-xl border border-transparent px-3 py-2 transition hover:bg-(--surface-moderate)'
+                        'justify-between rounded-md border border-transparent px-3 py-2 transition hover:bg-(--surface-moderate)'
                     )}
                 >
                     <span className={cn('flex items-center gap-2 text-lg font-semibold text-(--text)')}>

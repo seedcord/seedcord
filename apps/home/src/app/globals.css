@@ -1,0 +1,18 @@
+@import '@seedcord/ui/styles/globals.css';
+@import '../styles/tokens.css';
+@import '../styles/utilities.css';
+
+@layer base {
+    body {
+        background-color: var(--cream);
+        color: var(--seed-dark);
+        font-family:
+            var(--font-sans),
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            sans-serif;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+}

@@ -285,7 +285,9 @@ async function loadSearchTargets(
             continue;
         }
         const entry = await engine.getEntry(pkg.folder);
-        const channel = prerelease ? entry?.prerelease : entry?.stable;
+        // prefer the toggled channel, fall back to the other so a package that only ships one (every
+        // package on the next branch is pre-release-only) stays searchable instead of vanishing.
+        const channel = prerelease ? (entry?.prerelease ?? entry?.stable) : (entry?.stable ?? entry?.prerelease);
         if (!channel) continue;
         await engine.setVersion(pkg.folder, channel.latest).catch(() => undefined);
     }

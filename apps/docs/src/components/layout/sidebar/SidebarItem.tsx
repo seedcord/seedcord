@@ -19,7 +19,7 @@ export function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps
         <Link
             href={href}
             className={cn(
-                'flex w-full items-center gap-2 rounded-lg border border-transparent bg-transparent px-3 py-2 text-left text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2',
+                'flex w-full items-center gap-2 rounded-md border border-transparent bg-transparent px-3 py-2 text-left text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2',
                 toneStyles.item,
                 isActive ? toneStyles.badge : null
             )}
@@ -28,9 +28,7 @@ export function SidebarItem({ item, tone, isActive, onSelect }: SidebarItemProps
                 onSelect?.();
             }}
         >
-            <span
-                className={cn('inline-flex size-6 items-center justify-center rounded-full border', toneStyles.badge)}
-            >
+            <span className={cn('inline-flex size-6 items-center justify-center rounded-md border', toneStyles.badge)}>
                 <ItemIcon size={14} strokeWidth={2} aria-hidden />
             </span>
 

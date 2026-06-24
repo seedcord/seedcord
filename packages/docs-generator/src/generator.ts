@@ -157,6 +157,9 @@ export class ApiDocsGenerator {
             const readme = await readReadme(packageDir);
             if (readme) result.readme = readme;
 
+            const { description } = await readPackageManifest(packageDir);
+            if (description) result.description = description;
+
             if (this.githubBase && existsSync(path.join(packageDir, 'CHANGELOG.md'))) {
                 const repoRelativeDir = this.paths.toRepoRelative(packageDir).split(path.sep).join('/');
                 result.changelogUrl = `${this.githubBase}/blob/${this.ref}/${repoRelativeDir}/CHANGELOG.md`;

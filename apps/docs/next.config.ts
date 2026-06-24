@@ -21,7 +21,17 @@ const nextConfig: NextConfig = {
         '@microsoft/tsdoc',
         '@microsoft/tsdoc-config'
     ],
+    headers() {
+        return [
+            {
+                // RFC 8288 discovery hint pointing agents at the machine-readable index, skips assets + meta routes
+                source: '/((?!_next/|og/|llms/|llms.txt|sitemap.xml|robots.txt).*)',
+                headers: [{ key: 'Link', value: '</llms.txt>; rel="alternate"; type="text/plain"' }]
+            }
+        ];
+    },
     turbopack: {}
 };
 
+// eslint-disable-next-line import/no-default-export -- Next.js config entrypoint
 export default nextConfig;

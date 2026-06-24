@@ -1,84 +1,81 @@
 /* Entity kind accents */
 :root {
-    --entity-class: #3956ff;
-    --entity-interface: #b12bcf;
-    --entity-type: #d97a20;
-    --entity-function: #0a9961;
-    --entity-enum: #d93c62;
-    --entity-variable: #1770ac;
+    --entity-class: #cf4329;
+    --entity-interface: #cb7016;
+    --entity-type: #a8841a;
+    --entity-function: #3f7d2e;
+    --entity-enum: #c23a55;
+    --entity-variable: #6f8a2e;
 }
 
 [data-theme='dark'] {
-    --entity-class: #94b6ff;
-    --entity-interface: #e2b1ff;
-    --entity-type: #f6bb7d;
-    --entity-function: #76e4b3;
-    --entity-enum: #ffa0b6;
-    --entity-variable: #79c4f4;
+    --entity-class: #f0573a;
+    --entity-interface: #f0913f;
+    --entity-type: #e6c24f;
+    --entity-function: #5fb05a;
+    --entity-enum: #e34d6a;
+    --entity-variable: #9fc24a;
 }
 
 :root {
-    /* Badges */
-    --badge-package-border: color-mix(in oklab, var(--accent-b) 38%, var(--border));
-    --badge-package-bg: color-mix(in oklab, var(--accent-b) 16%, var(--surface));
-    --badge-package-text: color-mix(in oklab, var(--text) 88%, var(--accent-b) 12%);
+    --border: color-mix(in oklab, var(--color-base-slate) 68%, var(--color-bg));
+    --text-muted: color-mix(in oklab, var(--color-text) 80%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 42%, transparent);
+}
+[data-theme='dark'] {
+    --border: color-mix(in oklab, var(--cream) 28%, var(--color-bg));
+    --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
+    --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
+}
 
-    --badge-page-border: color-mix(in oklab, var(--accent-a) 34%, var(--border));
-    --badge-page-bg: color-mix(in oklab, var(--accent-a) 14%, var(--surface));
-    --badge-page-text: color-mix(in oklab, var(--text) 90%, var(--accent-a) 10%);
-
-    --badge-resource-border: color-mix(in oklab, var(--accent-r) 46%, var(--border));
-    --badge-resource-bg: color-mix(in oklab, var(--accent-r) 18%, var(--surface));
-    --badge-resource-text: color-mix(in oklab, var(--text) 88%, var(--accent-r) 12%);
-
-    --command-overlay: color-mix(in oklab, var(--bg) 55%, #070917 45%);
+:root {
+    --command-overlay: color-mix(in oklab, var(--bg) 55%, #2d3328 45%);
 
     /* Per-tone Presentation Tokens */
     --tone-class-heading: color-mix(in oklab, var(--entity-class) 80%, var(--color-text));
     --tone-class-item-bg: color-mix(in oklab, var(--entity-class) 12%, transparent);
     --tone-class-badge-bg: color-mix(in oklab, var(--entity-class) 18%, transparent);
-    --tone-class-badge-border: color-mix(in oklab, var(--entity-class) 35%, transparent);
+    --tone-class-badge-border: color-mix(in oklab, var(--entity-class) 35%, var(--border));
     --tone-class-tag-bg: color-mix(in oklab, var(--entity-class) 12%, transparent);
     --tone-class-tag-text: color-mix(in oklab, var(--entity-class) 70%, var(--color-text));
 
     --tone-interface-heading: color-mix(in oklab, var(--entity-interface) 80%, var(--color-text));
     --tone-interface-item-bg: color-mix(in oklab, var(--entity-interface) 12%, transparent);
     --tone-interface-badge-bg: color-mix(in oklab, var(--entity-interface) 18%, transparent);
-    --tone-interface-badge-border: color-mix(in oklab, var(--entity-interface) 35%, transparent);
+    --tone-interface-badge-border: color-mix(in oklab, var(--entity-interface) 35%, var(--border));
     --tone-interface-tag-bg: color-mix(in oklab, var(--entity-interface) 12%, transparent);
     --tone-interface-tag-text: color-mix(in oklab, var(--entity-interface) 70%, var(--color-text));
 
     --tone-type-heading: color-mix(in oklab, var(--entity-type) 80%, var(--color-text));
     --tone-type-item-bg: color-mix(in oklab, var(--entity-type) 12%, transparent);
     --tone-type-badge-bg: color-mix(in oklab, var(--entity-type) 18%, transparent);
-    --tone-type-badge-border: color-mix(in oklab, var(--entity-type) 35%, transparent);
+    --tone-type-badge-border: color-mix(in oklab, var(--entity-type) 35%, var(--border));
     --tone-type-tag-bg: color-mix(in oklab, var(--entity-type) 12%, transparent);
     --tone-type-tag-text: color-mix(in oklab, var(--entity-type) 70%, var(--color-text));
 
     --tone-func-heading: color-mix(in oklab, var(--entity-function) 80%, var(--color-text));
     --tone-func-item-bg: color-mix(in oklab, var(--entity-function) 12%, transparent);
     --tone-func-badge-bg: color-mix(in oklab, var(--entity-function) 18%, transparent);
-    --tone-func-badge-border: color-mix(in oklab, var(--entity-function) 35%, transparent);
+    --tone-func-badge-border: color-mix(in oklab, var(--entity-function) 35%, var(--border));
     --tone-func-tag-bg: color-mix(in oklab, var(--entity-function) 12%, transparent);
     --tone-func-tag-text: color-mix(in oklab, var(--entity-function) 70%, var(--color-text));
 
     --tone-enum-heading: color-mix(in oklab, var(--entity-enum) 80%, var(--color-text));
     --tone-enum-item-bg: color-mix(in oklab, var(--entity-enum) 12%, transparent);
     --tone-enum-badge-bg: color-mix(in oklab, var(--entity-enum) 18%, transparent);
-    --tone-enum-badge-border: color-mix(in oklab, var(--entity-enum) 35%, transparent);
+    --tone-enum-badge-border: color-mix(in oklab, var(--entity-enum) 35%, var(--border));
     --tone-enum-tag-bg: color-mix(in oklab, var(--entity-enum) 12%, transparent);
     --tone-enum-tag-text: color-mix(in oklab, var(--entity-enum) 70%, var(--color-text));
 
     --tone-var-heading: color-mix(in oklab, var(--entity-variable) 78%, var(--color-text));
     --tone-var-item-bg: color-mix(in oklab, var(--entity-variable) 12%, transparent);
     --tone-var-badge-bg: color-mix(in oklab, var(--entity-variable) 18%, transparent);
-    --tone-var-badge-border: color-mix(in oklab, var(--entity-variable) 35%, transparent);
+    --tone-var-badge-border: color-mix(in oklab, var(--entity-variable) 35%, var(--border));
     --tone-var-tag-bg: color-mix(in oklab, var(--entity-variable) 12%, transparent);
     --tone-var-tag-text: color-mix(in oklab, var(--entity-variable) 70%, var(--color-text));
 
     /* Text Mixes */
     --text-accent-b-subtle: color-mix(in oklab, var(--color-text) 85%, var(--accent-b) 15%);
-    --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
     --text-accent-b-strong: color-mix(in oklab, var(--color-text) 65%, var(--accent-b) 35%);
     --text-accent-b-intense: color-mix(in oklab, var(--accent-b) 80%, var(--color-text) 20%);
     --text-enum-mix-72: color-mix(in oklab, var(--entity-enum) 72%, var(--color-text));
@@ -93,17 +90,16 @@
 
     /* Surface Mixes */
     --surface-accent-b-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-b) 8%);
-    --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--accent-b) 15%);
     --surface-accent-a-subtle: color-mix(in oklab, var(--surface) 92%, var(--accent-a) 8%);
     --surface-accent-a-moderate: color-mix(in oklab, var(--surface) 86%, var(--accent-a) 14%);
 
     /* Border Mixes */
     --border-70-transparent: color-mix(in oklab, var(--border) 70%, transparent);
-    --border-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, var(--border));
-    --border-accent-b-moderate: color-mix(in oklab, var(--accent-b) 45%, var(--border));
-    --border-accent-b-strong: color-mix(in oklab, var(--accent-b) 60%, var(--border));
-    --border-accent-a-subtle: color-mix(in oklab, var(--accent-a) 38%, var(--border));
-    --border-accent-a-moderate: color-mix(in oklab, var(--accent-a) 55%, var(--border));
+    --border-accent-b-subtle: color-mix(in oklab, var(--accent-b) 55%, var(--border));
+    --border-accent-b-moderate: color-mix(in oklab, var(--accent-b) 70%, var(--border));
+    --border-accent-b-strong: color-mix(in oklab, var(--accent-b) 85%, var(--border));
+    --border-accent-a-subtle: color-mix(in oklab, var(--accent-a) 55%, var(--border));
+    --border-accent-a-moderate: color-mix(in oklab, var(--accent-a) 70%, var(--border));
 
     /* Outline / Ring Mixes */
     --outline-accent-b-subtle: color-mix(in oklab, var(--accent-b) 35%, transparent);

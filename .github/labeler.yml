@@ -44,6 +44,12 @@ pkg:docs-generator:
 pkg:docs-engine:
   - changed-files:
       - any-glob-to-any-file: 'packages/docs-engine/**'
+app:home:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/home/**'
+app:guide:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/guide/**'
 area:docs:
   - changed-files:
       - any-glob-to-any-file: 'docs/**'

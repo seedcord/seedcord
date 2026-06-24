@@ -1,9 +1,14 @@
 :root {
     --color-bg: #f8f6e8;
-    --color-text: #070917;
-    --color-base-dark: #070917;
-    --color-base-slate: #0f172a;
+    --color-text: #2d3328;
+    --color-base-dark: #0e120c;
+    --color-base-slate: #2d3328;
     --color-surface: rgba(0, 0, 0, 0.02);
+
+    /* canonical brand cream, stays cream in both themes unlike --color-bg which flips dark */
+    --cream: #f8f6e8;
+    /* canonical brand ink (watermelon seeds + the offset mark shadow), fixed in both themes */
+    --seed-dark: #2d3328;
 
     /* mater red */
     --accent-a: #f04e36;
@@ -32,7 +37,7 @@
 }
 
 [data-theme='dark'] {
-    --color-bg: #070917;
+    --color-bg: #0e120c;
     --color-text: #f8f6e8;
     --color-surface: rgba(255, 255, 255, 0.04);
     --border: rgba(255, 255, 255, 0.16);
@@ -77,6 +82,21 @@
     --shadow-card-lg:
         0 12px 32px color-mix(in oklab, var(--color-text) 10%, transparent),
         0 2px 6px color-mix(in oklab, var(--color-text) 4%, transparent);
+
+    /* Badge tones */
+    --badge-package-border: color-mix(in oklab, var(--accent-b) 38%, var(--border));
+    --badge-package-bg: color-mix(in oklab, var(--accent-b) 16%, var(--surface));
+    --badge-package-text: color-mix(in oklab, var(--text) 88%, var(--accent-b) 12%);
+    --badge-page-border: color-mix(in oklab, var(--accent-a) 34%, var(--border));
+    --badge-page-bg: color-mix(in oklab, var(--accent-a) 14%, var(--surface));
+    --badge-page-text: color-mix(in oklab, var(--text) 90%, var(--accent-a) 10%);
+    --badge-resource-border: color-mix(in oklab, var(--accent-r) 46%, var(--border));
+    --badge-resource-bg: color-mix(in oklab, var(--accent-r) 18%, var(--surface));
+    --badge-resource-text: color-mix(in oklab, var(--text) 88%, var(--accent-r) 12%);
+
+    /* SegmentedControl active tints */
+    --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
+    --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--accent-b) 15%);
 }
 
 @layer base {

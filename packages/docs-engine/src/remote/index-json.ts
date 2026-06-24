@@ -28,6 +28,9 @@ export interface PackageIndexEntry {
     // build `/tone/version/slug` URLs for an unloaded package and to drop links to non-entities
     // (params, mis-attributed externals). Absent on legacy indexes.
     entities?: Record<string, EntityTone>;
+    // package.json description of the latest version, version-independent so the catalog reads it
+    // without loading a project.json. Absent on legacy indexes.
+    description?: string;
 }
 
 export function validateIndex(value: unknown): IndexJson {
@@ -73,6 +76,10 @@ function validateEntry(folder: string, value: unknown): PackageIndexEntry {
 
     if (!isNullish(entry.entities)) {
         base.entities = asEntityToneRecord(entry.entities, `${where}.entities`);
+    }
+
+    if (typeof entry.description === 'string') {
+        base.description = entry.description;
     }
 
     return base;

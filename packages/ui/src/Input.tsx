@@ -6,15 +6,13 @@ import { tw } from './lib/tw';
 import type { InputHTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 
 const inputWrapperBaseClassName = [
-    tw`flex items-center gap-2 rounded-lg`,
+    tw`flex items-center gap-2 rounded-md`,
     tw`transition-[color,background-color,border-color,box-shadow] duration-150 ease-out`,
     tw`has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50`
 ].join(' ');
 
 const inputVariantClasses = {
     default: tw`border border-(--border) bg-transparent focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-outline-b)`,
-    // No chrome of its own; the consumer styles the wrapper via `className` (e.g. a search header with
-    // its own border + focus-within treatment). Keeps the flex/gap/sizing from the base + size classes.
     ghost: ''
 } as const;
 

@@ -10,7 +10,7 @@ import type { ComponentPropsWithoutRef, ReactElement, ReactNode, Ref } from 'rea
 const tooltipContentBaseClassName = [
     tw`z-50 max-w-xs`,
     tw`px-2.5 py-1.5`,
-    tw`rounded-lg`,
+    tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`text-xs/snug`,
     tw`shadow-soft-token`,

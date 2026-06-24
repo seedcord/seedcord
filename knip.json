@@ -7,8 +7,8 @@
     },
     "workspaces": {
         ".": {
-            "entry": ["scripts/**/*.ts"],
-            "project": ["scripts/**/*.ts"]
+            "entry": ["scripts/**/*.ts", "turbo/generators/**/*.ts"],
+            "project": ["scripts/**/*.ts", "turbo/generators/**/*.ts"]
         },
         "packages/seedcord": {},
         "packages/services": {},
@@ -30,6 +30,10 @@
         "packages/tsdown-config": {},
         "packages/tsconfig": {},
         "apps/docs": {
+            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
+            "project": ["src/**/*.{ts,tsx}"]
+        },
+        "apps/home": {
             "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx}"]
         }

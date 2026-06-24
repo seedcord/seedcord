@@ -1,6 +1,6 @@
 export type Alignment = 'left' | 'center' | 'right';
 export type BorderStyle = 'double' | 'rounded' | 'ascii' | 'markdown';
-export type Overflow = 'wrap' | 'truncate';
+type Overflow = 'wrap' | 'truncate';
 
 export interface TableOptions {
     /**

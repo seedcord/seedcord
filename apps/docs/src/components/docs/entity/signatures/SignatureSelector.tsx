@@ -31,7 +31,7 @@ export function SignatureSelector({
                         <label
                             key={signature.id}
                             className={cn(
-                                'cursor-pointer rounded-full border px-3 py-1 text-xs font-semibold transition',
+                                'cursor-pointer rounded-sm border px-3 py-1 text-xs font-semibold transition',
                                 checked
                                     ? 'border-(--border-accent-b-moderate) bg-(--surface-accent-b-moderate) text-(--text)'
                                     : 'border-border/70 text-subtle hover:border-(--border-accent-b-subtle)'

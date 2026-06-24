@@ -121,6 +121,35 @@ describe('loadDocsCatalog version badges', () => {
     });
 });
 
+describe('loadDocsCatalog descriptions', () => {
+    it('uses the index description when present and falls back to a generic line otherwise', async () => {
+        const stable = { latest: '1.0.0', latestByMinor: { '1.0': '1.0.0' }, latestByMajor: { '1': '1.0.0' } };
+        const withDesc: PackageIndexEntry = {
+            fullName: '@seedcord/utils',
+            stable,
+            prerelease: null,
+            description: 'Utility helpers for seedcord packages.'
+        };
+        const noDesc: PackageIndexEntry = { fullName: '@seedcord/cli', stable, prerelease: null };
+        const entries: Record<string, PackageIndexEntry> = { utils: withDesc, cli: noDesc };
+
+        engineStub.ready.mockResolvedValue(undefined);
+        engineStub.listPackages.mockResolvedValue([
+            { folder: 'utils', fullName: '@seedcord/utils' },
+            { folder: 'cli', fullName: '@seedcord/cli' }
+        ]);
+        engineStub.getEntry.mockImplementation((folder) => Promise.resolve(entries[folder] ?? null));
+
+        const catalog = await loadDocsCatalog();
+        expect(catalog.find((entry) => entry.manifestName === '@seedcord/utils')?.description).toBe(
+            'Utility helpers for seedcord packages.'
+        );
+        expect(catalog.find((entry) => entry.manifestName === '@seedcord/cli')?.description).toBe(
+            'Reference documentation for cli.'
+        );
+    });
+});
+
 describe('withActiveCategories', () => {
     const categories: NavigationCategory[] = [{ id: 'classes', title: 'Classes', tone: 'class', items: [] }];
 

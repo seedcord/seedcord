@@ -17,6 +17,24 @@
                 "default": "./dist/index.mjs"
             }
         },
+        "./og": {
+            "import": {
+                "types": "./dist/og.d.mts",
+                "default": "./dist/og.mjs"
+            }
+        },
+        "./MaterwelonGlyph": {
+            "import": {
+                "types": "./dist/MaterwelonGlyph.d.mts",
+                "default": "./dist/MaterwelonGlyph.mjs"
+            }
+        },
+        "./Materwelon": {
+            "import": {
+                "types": "./dist/Materwelon.d.mts",
+                "default": "./dist/Materwelon.mjs"
+            }
+        },
         "./styles/globals.css": "./src/styles/globals.css",
         "./styles/tokens.css": "./src/styles/tokens.css"
     },

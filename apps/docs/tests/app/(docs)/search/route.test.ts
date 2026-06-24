@@ -183,11 +183,30 @@ describe('GET /search: version and channel selection', () => {
         expect(engineStub.setVersion).toHaveBeenCalledWith('services', '3.0.0-next.1');
     });
 
-    it('skips another package with nothing in the chosen channel', async () => {
+    it('falls back to the pre-release head when a package has no stable and the toggle is off', async () => {
         engineStub.getEntry.mockResolvedValue({ stable: null, prerelease: { latest: '3.0.0-next.1' } });
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord'));
+        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '3.0.0-next.1');
+    });
+
+    it('falls back to the stable head when a package has no pre-release and the toggle is on', async () => {
+        engineStub.getEntry.mockResolvedValue({ stable: { latest: '2.1.0' }, prerelease: null });
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord&prerelease=1'));
+        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '2.1.0');
+    });
+
+    it('skips another package only when it has nothing in either channel', async () => {
+        engineStub.getEntry.mockResolvedValue({ stable: null, prerelease: null });
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord'));
         expect(engineStub.setVersion).toHaveBeenCalledTimes(1);
         expect(engineStub.setVersion).toHaveBeenCalledWith('seedcord', 'latest');
+    });
+
+    it('searches a pre-release-only package scoped from another package with the toggle off', async () => {
+        engineStub.getEntry.mockResolvedValue({ stable: null, prerelease: { latest: '3.0.0-next.1' } });
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord&scope=services'));
+        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '3.0.0-next.1');
+        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
     });
 
     it('returns no results when the index has no packages', async () => {

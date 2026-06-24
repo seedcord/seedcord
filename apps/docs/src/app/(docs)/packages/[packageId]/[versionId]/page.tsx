@@ -8,11 +8,24 @@ import { ReadmeBlock } from '@components/docs/ReadmeBlock';
 import { loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '@lib/docs/catalog';
 import { getCatalogContext } from '@lib/docs/pageContext';
 import { renderReadme } from '@lib/docs/renderReadme';
+import { pageMetadata } from '@lib/site';
 
 import type { PageParams } from '@lib/docs/pageContext';
+import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
 
 export const dynamic = 'force-static';
+
+export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
+    const { entry, version } = await getCatalogContext(await params);
+    return pageMetadata({
+        title: `${entry.label} ${version.label}`,
+        description: entry.description,
+        path: `/packages/${entry.id}/${version.id}`,
+        image: `/og/packages/${entry.id}/${version.id}`,
+        markdownPath: `/llms/packages/${entry.id}/${version.id}`
+    });
+}
 
 async function PackageOverviewPage({ params }: { params: Promise<PageParams> }): Promise<ReactElement> {
     const { entry, version } = await getCatalogContext(await params);

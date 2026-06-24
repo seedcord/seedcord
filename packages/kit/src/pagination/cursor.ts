@@ -9,7 +9,7 @@ export const PAGE_MAX = 1_000_000;
 // Discord rejects a message with duplicate custom_ids, and two controls can target the same page (first and
 // prev both hit 0), so each control uses a distinct slot.
 // @internal
-export const SLOT_MAX = 4;
+const SLOT_MAX = 4;
 
 /** Page cursor for a paginator. */
 export type PageCursor<Prefix extends string> = CustomId<

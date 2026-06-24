@@ -147,7 +147,14 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
     await mkdir(destDir, { recursive: true });
     await writeFile(path.join(destDir, 'project.json'), `${JSON.stringify(serializeProject(found))}\n`);
     await copyFile(apiSource, path.join(destDir, 'api.json'));
-    return { folder, fullName: pkg.name, version: pkg.version, channel, entities: found.directory.toneMap() };
+    return {
+        folder,
+        fullName: pkg.name,
+        version: pkg.version,
+        channel,
+        entities: found.directory.toneMap(),
+        description: found.manifest.description
+    };
 }
 
 async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {

@@ -43,11 +43,13 @@ export type SwitchSize = keyof typeof switchRootSizeClasses;
 export interface SwitchProps {
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
-    label?: ReactNode;
     disabled?: boolean;
     id?: string;
     size?: SwitchSize;
     className?: string;
+    /** String label auto-supplies accessible name. ReactNode requires `aria-label`. */
+    label?: ReactNode;
+    /** Required when `label` is a ReactNode. */
     'aria-label'?: string;
 }
 

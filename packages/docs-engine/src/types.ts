@@ -66,6 +66,7 @@ export interface DocManifestPackage {
     reexports?: DocReexport[];
     readme?: string;
     changelogUrl?: string;
+    description?: string;
 }
 
 export interface DocManifest {

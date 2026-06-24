@@ -92,6 +92,7 @@ function attachOptionalFields(result: DocManifestPackage, pkg: Partial<DocManife
     if (Array.isArray(pkg.reexports)) result.reexports = pkg.reexports;
     if (typeof pkg.readme === 'string') result.readme = pkg.readme;
     if (typeof pkg.changelogUrl === 'string') result.changelogUrl = pkg.changelogUrl;
+    if (typeof pkg.description === 'string') result.description = pkg.description;
 }
 
 function isRecordShape(value: PackageSourceIndex | undefined): value is PackageSourceIndex {

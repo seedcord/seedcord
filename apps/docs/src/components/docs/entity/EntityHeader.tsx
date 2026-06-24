@@ -57,7 +57,7 @@ const SourceButton = ({ href }: { href: string }): ReactElement => (
         asChild
         variant="ghost"
         size="icon"
-        className={cn('border-border/80 text-subtle size-10 shrink-0 rounded-xl border transition hover:text-(--text)')}
+        className={cn('border-border/80 text-subtle size-10 shrink-0 border transition hover:text-(--text)')}
         aria-label="Open source in a new tab"
     >
         <a href={href} target="_blank" rel="noreferrer noopener">
@@ -103,7 +103,9 @@ function HeaderTop({
 
             <div className={cn('flex items-start gap-3 sm:gap-4')}>
                 <div className={cn('min-w-0 flex-1 space-y-2.5')}>
-                    <h1 className={cn('text-2xl font-semibold text-(--text) sm:text-3xl lg:text-4xl')}>{symbolName}</h1>
+                    <h1 className={cn('font-display text-2xl font-semibold text-(--text) sm:text-3xl lg:text-4xl')}>
+                        {symbolName}
+                    </h1>
                     {overloadSelector}
                     <div className={cn('text-subtle space-y-2 text-sm/relaxed')}>{summaryNodes}</div>
                 </div>
@@ -208,7 +210,7 @@ export function EntityHeader({
     return (
         <header className={cn('min-w-0')}>
             <DeprecatedEntity deprecationStatus={deprecationStatus}>
-                <Card size="md" className={cn('space-y-4 sm:p-5')}>
+                <Card variant="flat" size="md" className={cn('space-y-4 sm:p-5')}>
                     <HeaderTop
                         toneStyles={toneStyles}
                         toneIcon={ToneIcon}

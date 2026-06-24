@@ -10,7 +10,7 @@ import type { ButtonHTMLAttributes, ReactElement, Ref } from 'react';
 const buttonBaseClassName = [
     tw`inline-flex items-center justify-center gap-2`,
     tw`border border-transparent font-medium`,
-    tw`rounded-lg`,
+    tw`rounded-md`,
     // GPU-promote so the first :active scale doesn't paint-stall on press.
     tw`transform-[translateZ(0)] will-change-transform backface-hidden`,
     tw`active:transform-[translateZ(0)_scale(0.97)] disabled:active:transform-[translateZ(0)]`,
@@ -22,7 +22,7 @@ const buttonBaseClassName = [
 const buttonVariantClasses = {
     primary: tw`shadow-soft bg-(--accent-a) text-white hover:bg-(--accent-a-hover)`,
     secondary: tw`shadow-soft bg-(--accent-b) text-black hover:bg-(--accent-b-hover)`,
-    outline: tw`border-(--border) bg-transparent text-(--text) hover:border-(--accent-a)/60 hover:bg-(--surface-subtle)`,
+    outline: tw`border-(--border) bg-transparent text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-subtle)`,
     ghost: tw`bg-transparent text-(--text) hover:bg-(--accent-a-transparent-subtle)`
 } as const;
 

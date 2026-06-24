@@ -33,7 +33,7 @@ export function MobilePanelDialog({
                 <Dialog.Content
                     ref={setPanel}
                     className={cn(
-                        'border-border shadow-soft fixed inset-x-0 bottom-0 z-60 flex max-h-[80vh] origin-bottom flex-col rounded-t-lg border bg-(--bg-dim-subtle) p-4 pb-2 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom sm:inset-y-auto sm:bottom-6 sm:left-1/2 sm:max-h-[85vh] sm:w-[min(480px,92vw)] sm:-translate-x-1/2 sm:rounded-lg'
+                        'border-border shadow-soft fixed inset-x-0 bottom-0 z-60 flex max-h-[80vh] origin-bottom flex-col rounded-t-md border bg-(--bg-dim-subtle) p-4 pb-2 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:animate-in data-[state=open]:slide-in-from-bottom sm:inset-y-auto sm:bottom-6 sm:left-1/2 sm:max-h-[85vh] sm:w-[min(480px,92vw)] sm:-translate-x-1/2 sm:rounded-md'
                     )}
                 >
                     <Dialog.Description className={cn('sr-only')}>
@@ -44,12 +44,7 @@ export function MobilePanelDialog({
                             {title}
                         </Dialog.Title>
                         <Dialog.Close asChild>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Close panel"
-                                className={cn('text-subtle rounded-full')}
-                            >
+                            <Button variant="ghost" size="icon" aria-label="Close panel" className={cn('text-subtle')}>
                                 <X className={cn('size-4')} aria-hidden />
                             </Button>
                         </Dialog.Close>

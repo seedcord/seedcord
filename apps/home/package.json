@@ -1,0 +1,40 @@
+{
+    "name": "@seedcord/home",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "pnpm dlx serve out",
+        "deploy": "wrangler deploy",
+        "deploy:preview": "wrangler versions upload",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache",
+        "tc": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@seedcord/ui": "workspace:*",
+        "lucide-react": "catalog:deps",
+        "next": "catalog:deps",
+        "react": "catalog:react",
+        "react-dom": "catalog:react",
+        "shiki": "catalog:deps"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@tailwindcss/postcss": "catalog:deps",
+        "@types/react": "catalog:react",
+        "@types/react-dom": "catalog:react",
+        "eslint-config-next": "catalog:deps",
+        "eslint-plugin-jsx-a11y": "catalog:deps",
+        "eslint-plugin-react-compiler": "catalog:deps",
+        "prettier": "catalog:deps",
+        "prettier-plugin-tailwindcss": "catalog:deps",
+        "tailwindcss": "catalog:deps",
+        "typescript": "catalog:peer",
+        "wrangler": "^4.103.0"
+    }
+}
