@@ -314,8 +314,13 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (!shouldContinue) return;
 
         for (const entry of handlersToExecute) {
-            // mark a 'once' handler spent before running it, so an abnormal rethrow cannot re-fire it
-            if (entry.frequency === 'once') this.executedOnceHandlers.add(entry.ctor);
+            // mark a 'once' handler spent before running so a rethrow can't re-fire it. the has() re-check
+            // closes the window where a concurrent fire claimed it during the runMiddlewares await, past
+            // the snapshot above
+            if (entry.frequency === 'once') {
+                if (this.executedOnceHandlers.has(entry.ctor)) continue;
+                this.executedOnceHandlers.add(entry.ctor);
+            }
 
             await this.processHandler(eventName, entry.ctor, args);
         }
