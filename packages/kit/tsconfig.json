@@ -11,7 +11,7 @@
             "@pagination/*": ["./src/pagination/*"],
             "@stops/*": ["./src/stops/*"]
         },
-        "types": ["vite/client"]
+        "types": []
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]

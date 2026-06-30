@@ -106,7 +106,6 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         }
     }
 
-    // reloads one file, restoring the last-good units if the reload fails and rollback is enabled
     private async reloadWithRollback(file: string, rollbackEnabled: boolean): Promise<void> {
         const { logger } = this.options;
         const snapshot = this.snapshotUnits(file);
@@ -230,8 +229,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         }
     }
 
-    // snapshot the file's tracked units so a failed reload can re-register the last-good ones. the units
-    // are class objects, so restoring re-registers the same classes and a db plugin's connection is untouched
+    // units are class objects, so restoring re-registers the same classes and a db plugin's connection is untouched
     private snapshotUnits(file: string): { handlers: THandler[]; middlewares: TMiddleware[] } {
         return {
             handlers: Array.from(this.store.fileToHandlers.get(file) ?? []),

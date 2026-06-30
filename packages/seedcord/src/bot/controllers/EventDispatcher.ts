@@ -172,8 +172,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 }
             }
         }
-        // spent follows the ctor identity, so leaving executedOnceHandlers alone here keeps an HMR rollback's
-        // re-registered ctor spent. a genuine reload brings a fresh ctor that is naturally unspent.
+        // spent follows the ctor identity, so leaving executedOnceHandlers alone keeps a rollback-restored ctor spent
     }
 
     private unregisterMiddleware(middlewareCtor: EventMiddlewareConstructor): void {
@@ -315,8 +314,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         for (const entry of handlersToExecute) {
             // mark a 'once' handler spent before running so a rethrow can't re-fire it. the has() re-check
-            // closes the window where a concurrent fire claimed it during the runMiddlewares await, past
-            // the snapshot above
+            // closes the window where a concurrent fire claimed it during the runMiddlewares await
             if (entry.frequency === 'once') {
                 if (this.executedOnceHandlers.has(entry.ctor)) continue;
                 this.executedOnceHandlers.add(entry.ctor);

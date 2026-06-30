@@ -57,6 +57,11 @@ interface TestBot {
     interactions: PrivateInteractionDispatcher;
 }
 
+// justified: reach the private interactions dispatcher off the bot to assert its routing state
+function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
+    return (instance.bot as unknown as TestBot).interactions;
+}
+
 describe('InteractionDispatcher Integration', () => {
     let testEnv: TestEnvironment;
     let seedcord: Seedcord;
@@ -132,7 +137,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
 
         const error: unknown = await controller.init().then(
             () => null,
@@ -183,7 +188,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
 
         const error: unknown = await controller.init().then(
             () => null,
@@ -214,8 +219,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private interactions controller for assertion
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('boom');
@@ -233,7 +237,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         // justified: spy on the private routing entry to assert the ignore gate runs before it
         const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
 
@@ -248,7 +252,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
 
         await controller.handleButton({ customId: CONFIRM_DEF.encode({ choice: 'confirm' }) });
@@ -277,7 +281,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.slashMap.has('ping')).toBe(true);
 
@@ -315,7 +319,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.slashMap.has('alpha')).toBe(true);
         expect(controller.slashMap.has('beta')).toBe(true);
@@ -367,7 +371,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
         expect(controller.slashMap.has('ping')).toBe(true);
 
@@ -453,7 +457,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('allowed');
@@ -489,7 +493,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('refused');
@@ -522,7 +526,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['someone-else'] });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('owner');
@@ -556,7 +560,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['u1'] });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('owner');

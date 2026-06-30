@@ -57,8 +57,9 @@ describe('HmrPlugin', () => {
     it('carries the config rollback flag onto the hmr payload', () => {
         const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } });
         const hotSend = vi.fn();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spy on the private hot getter
-        vi.spyOn(plugin as any, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
+        // justified: spy on the private `hot` getter, which the public type does not expose
+        const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
+        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
 
         const watcher = new EventEmitter();
         const server = {

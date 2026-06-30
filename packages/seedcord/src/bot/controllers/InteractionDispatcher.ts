@@ -147,7 +147,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     /**
      * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
-     * UnhandledEvent at runtime. It warns and does not throw, because a bot may route commands outside the registry.
+     * UnhandledEvent at runtime. A bot may route commands outside the registry, so this does not throw.
      *
      * @internal
      */

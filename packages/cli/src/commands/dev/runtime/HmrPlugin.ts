@@ -35,7 +35,6 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
         return this.server?.environments.ssr.hot;
     }
 
-    // wrapHot keeps the seedcord:* typing off vite's ambient hot map. re-wrapping per access is cheap.
     private get dev(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> | undefined {
         return this.hot ? wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(this.hot) : undefined;
     }
@@ -77,8 +76,7 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
         });
     }
 
-    // debounce keyed per (file, type) because a rapid create-then-update of the same file is two distinct
-    // events, so one shared timestamp would drop the second.
+    // debounce keyed per (file, type), a shared timestamp drops the second of a rapid create-then-update
     private isDebounced(file: string, type: HmrEventType): boolean {
         const key = `${file}::${type}`;
         const now = Date.now();

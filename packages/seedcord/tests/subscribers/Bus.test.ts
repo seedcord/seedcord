@@ -156,6 +156,7 @@ describe('Bus Integration', () => {
 
         const onHmr = vi.spyOn(seedcord.bus, 'onHmr');
         const event: HmrUpdateEvent = { file: filePath, type: 'update' };
+        // justified: reach the private hmrManager to assert the Bus is wired into HMR dispatch
         const { hmrManager } = seedcord as unknown as PrivateSeedcordHmr;
         await hmrManager.handleUpdate(event);
 

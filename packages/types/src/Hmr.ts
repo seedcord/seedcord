@@ -51,8 +51,7 @@ export interface DevChannel<TSend, TRecv> {
 }
 
 // the minimal raw-hot shape, satisfied by both vite's `import.meta.hot` and the CLI's `NormalizedHotChannel`.
-// vite types our `seedcord:*` payloads as `any` (they sit outside its CustomEventMap), so the typed
-// DevChannel above is the real contract callers see.
+// vite types our `seedcord:*` payloads as `any` (they sit outside its CustomEventMap).
 interface RawHot {
     send(event: string, data?: unknown): void;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mirrors vite's own InferCustomEventPayload fallback
