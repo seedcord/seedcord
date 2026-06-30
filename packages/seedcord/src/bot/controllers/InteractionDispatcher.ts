@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { prefixOf } from '@seedcord/kit/internal';
@@ -114,7 +114,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
 
-        // the in-process getConfirmation() collector handles these clicks, so ignore them here or the global
+        // the in-process getConfirmation() collector consumes these clicks, so ignore them here or the global
         // router double-acks them.
         this.keysToIgnore.add(CONFIRM_DEF);
 
@@ -141,14 +141,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger,
-            name: 'Interaction'
+            logger: this.logger
         });
     }
 
     /**
      * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
-     * UnhandledEvent at runtime. Warns rather than throws since a bot may route commands outside the registry.
+     * UnhandledEvent at runtime. It warns and does not throw, because a bot may route commands outside the registry.
      *
      * @internal
      */
@@ -269,7 +268,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // same class re-registered (double import or an HMR re-scan) is idempotent, matching event middleware
         if (this.middlewares.some((entry) => entry.ctor === middlewareCtor)) return;
 
-        // a different class sharing the name used to silently overwrite the first, surface it instead
+        // a different class sharing the name would silently overwrite the first, so this throws to surface it
         if (this.middlewares.some((entry) => entry.ctor.name === middlewareCtor.name)) {
             throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateMiddleware, [middlewareCtor.name]);
         }
@@ -305,7 +304,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             const routes = meta;
             routes.forEach((route) => {
                 const existing = map.get(route);
-                // a different class on the same route would silently shadow (last write would win), throw instead
+                // a different class on the same route would silently shadow (last write wins), so this throws
                 if (existing && existing !== handlerClass) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         route,

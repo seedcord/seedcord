@@ -33,8 +33,8 @@ type SubscriberArtifact = SubscriptionKey[];
  *
  * Provides a centralized system for registering and executing custom subscribers
  * throughout the application lifecycle. Bus subscribers are loaded from configured directories
- * and can be triggered programmatically or by framework events. Accessed via `core.bus`, not
- * constructed directly.
+ * and can be triggered programmatically or by framework events. Accessed via `core.bus`. Do not
+ * construct it directly.
  */
 export class Bus extends Plugin<SubscriptionTuples> {
     public readonly logger = new Logger('Subscribers');
@@ -56,8 +56,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
                 registerHandler: this.registerSubscriber.bind(this),
                 unregisterHandler: this.unregisterSubscriber.bind(this),
                 getArtifacts: this.getArtifacts.bind(this),
-                logger: this.logger,
-                name: 'Subscribers'
+                logger: this.logger
             });
         }
     }
@@ -76,8 +75,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
         this.registerSubscriber(UnknownException);
         this.registerSubscriber(HandledException);
 
-        // both webhook urls are required at startup, the bot refuses to boot without them rather than
-        // silently dropping fault reports when the first exception fires.
+        // require both webhook urls at boot so a missing one stops the boot, never silently dropping fault
+        // reports when the first exception fires.
         Envapter.require('UNKNOWN_EXCEPTION_WEBHOOK_URL', 'HANDLED_EXCEPTION_WEBHOOK_URL');
 
         const subscribersDir = this.core.config.subscribers.path;
@@ -137,7 +136,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
                 handlers.splice(index, 1);
             }
         }
-        this.executedOnceHandlers.delete(handler);
+        // spent follows the ctor identity, so leaving executedOnceHandlers alone keeps a rollback-restored subscriber spent
     }
 
     private isSubscriber(obj: unknown): obj is SubscriberConstructor {

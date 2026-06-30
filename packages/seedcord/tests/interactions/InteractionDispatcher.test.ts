@@ -258,6 +258,126 @@ describe('InteractionDispatcher Integration', () => {
         expect(processSpy).toHaveBeenCalledTimes(1);
     });
 
+    it('rolls back to the last-good handler when a reload fails', async () => {
+        const interactionsDir = 'interactions';
+        const filePath = await testEnv.createFile(
+            `${interactionsDir}/Ping.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingHandler extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('pong');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+        expect(controller.slashMap.has('ping')).toBe(true);
+
+        // a broken edit, the reload import throws
+        await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
+        await controller.onHmr({ file: filePath, type: 'update' });
+
+        // the failed reload restored the last-good handler and kept the route
+        expect(controller.slashMap.has('ping')).toBe(true);
+    });
+
+    it('rolls back both handlers when a reload introduces a duplicate route in one file', async () => {
+        const interactionsDir = 'interactions';
+        const filePath = await testEnv.createFile(
+            `${interactionsDir}/Pair.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('alpha')
+            export class AlphaHandler extends SlashHandler<'alpha'> {
+                public async execute() {
+                    await this.event.reply('a');
+                }
+            }
+
+            @SlashRoute('beta')
+            export class BetaHandler extends SlashHandler<'beta'> {
+                public async execute() {
+                    await this.event.reply('b');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+        expect(controller.slashMap.has('alpha')).toBe(true);
+        expect(controller.slashMap.has('beta')).toBe(true);
+
+        // a broken edit, both handlers now claim 'alpha', so the reload throws a duplicate-route mid-registration
+        await testEnv.createFile(
+            `${interactionsDir}/Pair.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('alpha')
+            export class AlphaHandler extends SlashHandler<'alpha'> {
+                public async execute() {
+                    await this.event.reply('a');
+                }
+            }
+
+            @SlashRoute('alpha')
+            export class BetaHandler extends SlashHandler<'alpha'> {
+                public async execute() {
+                    await this.event.reply('a');
+                }
+            }
+            `
+        );
+
+        // rollback must clear the partial registration first, so restoring both old routes does not re-collide
+        await expect(controller.onHmr({ file: filePath, type: 'update' })).resolves.toBeUndefined();
+        expect(controller.slashMap.has('alpha')).toBe(true);
+        expect(controller.slashMap.has('beta')).toBe(true);
+    });
+
+    it('drops the failed unit when the event disables rollback', async () => {
+        const interactionsDir = 'interactions';
+        const filePath = await testEnv.createFile(
+            `${interactionsDir}/Ping.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingHandler extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('pong');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        await controller.init();
+        expect(controller.slashMap.has('ping')).toBe(true);
+
+        // a broken edit with rollback disabled, so the route is dropped
+        await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
+        await controller.onHmr({ file: filePath, type: 'update', rollback: false });
+
+        expect(controller.slashMap.has('ping')).toBe(false);
+    });
+
     it('should handle HMR updates for interaction handlers', async () => {
         const interactionsDir = 'interactions';
         const filePath = await testEnv.createFile(
@@ -412,7 +532,7 @@ describe('InteractionDispatcher Integration', () => {
             () => controller.slashMap.get('owner')
         );
 
-        // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner instead
+        // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner
         expect(interaction.reply).not.toHaveBeenCalledWith('executed');
         expect(interaction.reply).toHaveBeenCalledTimes(1);
     });

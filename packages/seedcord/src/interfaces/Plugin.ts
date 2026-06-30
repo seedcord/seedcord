@@ -2,6 +2,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { StrictEventEmitter } from '@seedcord/services';
 
+import { getDevChannel } from '@hmr/devChannel';
+
 import type { Core } from './Core';
 import type {
     SENoEvents,
@@ -29,7 +31,7 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
     extends StrictEventEmitter<TPluginEvents>
     implements Initializeable, HmrAware
 {
-    /** Logger instance for this plugin - must be implemented by subclasses */
+    /** Logger instance for this plugin. */
     public abstract logger: Logger;
 
     public name: string = this.constructor.name;
@@ -39,15 +41,14 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
     }
 
     /**
-     * Initialize the plugin - implement setup logic here
-     * @virtual Override this method in your plugin classes
+     * Initialize the plugin.
+     * @virtual
      */
     abstract init(): Promise<void>;
 
     /**
-     * Reloads plugin state on an HMR update.
-     * @param _event - The HMR update event
-     * @virtual Override this method to handle HMR updates
+     * Reloads plugin state on an HMR update. The base implementation is a no-op, override it in your plugin.
+     * @virtual
      */
     public onHmr(_event: HmrUpdateEvent): Promise<void> {
         return Promise.resolve();
@@ -58,9 +59,7 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
      * @param patterns - Glob patterns relative to the project root
      */
     protected registerCriticalFiles(patterns: string[]): void {
-        if (import.meta.hot) {
-            import.meta.hot.send('seedcord:register-critical-files', { patterns });
-        }
+        getDevChannel()?.send('seedcord:register-critical-files', { patterns });
     }
 
     /** @internal */

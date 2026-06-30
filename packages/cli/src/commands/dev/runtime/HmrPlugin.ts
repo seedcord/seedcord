@@ -1,12 +1,19 @@
 import { relative, resolve } from 'node:path';
 
 import { Logger, StrictEventEmitter } from '@seedcord/services';
+import { wrapHot } from '@seedcord/types/internal';
 import chalk from 'chalk';
 import { minimatch } from 'minimatch';
 
 import type { DevEvent } from './events';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types/internal';
+import type {
+    DevChannel,
+    HmrEventType,
+    HmrUpdateEvent,
+    SeedcordCliEvents,
+    SeedcordFrameworkEvents
+} from '@seedcord/types/internal';
 import type {
     EnvironmentModuleNode,
     HotUpdateOptions,
@@ -28,6 +35,11 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
         return this.server?.environments.ssr.hot;
     }
 
+    // wrapHot keeps the seedcord:* typing off vite's ambient hot map. re-wrapping per access is cheap.
+    private get dev(): DevChannel<SeedcordCliEvents, SeedcordFrameworkEvents> | undefined {
+        return this.hot ? wrapHot<SeedcordCliEvents, SeedcordFrameworkEvents>(this.hot) : undefined;
+    }
+
     constructor(private readonly config: ResolvedSeedcordDevConfig) {
         super();
         this.logger = new Logger('HMR', { channel: 'hmr' });
@@ -42,11 +54,7 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
     }
 
     public sendRefreshCommands(shouldRefresh: boolean): void {
-        if (this.server) {
-            if (this.hot) {
-                this.hot.send('seedcord:refresh-commands', { shouldRefresh });
-            }
-        }
+        this.dev?.send('seedcord:refresh-commands', { shouldRefresh });
     }
 
     private configureServer(server: ViteDevServer): void {
@@ -56,23 +64,21 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
         server.watcher.on('addDir', (file) => this.handleFileEvent(file, 'createDir'));
         server.watcher.on('unlinkDir', (file) => this.handleFileEvent(file, 'deleteDir'));
 
-        if (this.hot) {
-            this.hot.on('seedcord:commands-update-prompt', (data) => {
-                this.emit('event', { type: 'command-update-prompt', files: data.files });
-            });
+        this.dev?.on('seedcord:commands-update-prompt', (data) => {
+            this.emit('event', { type: 'command-update-prompt', files: data.files });
+        });
 
-            this.hot.on('seedcord:register-critical-files', (data) => {
-                for (const pattern of data.patterns) {
-                    this.dynamicRestartPatterns.add(pattern);
-                }
+        this.dev?.on('seedcord:register-critical-files', (data) => {
+            for (const pattern of data.patterns) {
+                this.dynamicRestartPatterns.add(pattern);
+            }
 
-                this.logger.utils.list(data.patterns, 'Registered critical file patterns:');
-            });
-        }
+            this.logger.utils.list(data.patterns, 'Registered critical file patterns:');
+        });
     }
 
-    // Debounce per (file, type): a rapid create-then-update of the same file is two distinct events, so a
-    // single shared timestamp would drop the second. Returns true when the event should be suppressed.
+    // debounce keyed per (file, type) because a rapid create-then-update of the same file is two distinct
+    // events, so one shared timestamp would drop the second.
     private isDebounced(file: string, type: HmrEventType): boolean {
         const key = `${file}::${type}`;
         const now = Date.now();
@@ -95,11 +101,9 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
 
         this.logger.info(`${typeColor(type.toUpperCase())} ${chalk.gray(relPath)}`);
 
-        const payload: HmrUpdateEvent = { file, type };
+        const payload: HmrUpdateEvent = { file, type, rollback: this.config.hmr?.rollback ?? true };
 
-        if (this.hot) {
-            this.hot.send('seedcord:hmr', payload);
-        }
+        this.dev?.send('seedcord:hmr', payload);
     }
 
     private hotUpdate(ctx: HotUpdateOptions): EnvironmentModuleNode[] {
@@ -136,16 +140,14 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
             }
         }
 
-        // file-change tells the runtime to invalidate this module in its evaluated-modules graph.
+        // the runtime invalidates this module in its evaluated-modules graph on a file-change event.
         this.emit('event', { type: 'file-change', path: file });
 
-        const payload: HmrUpdateEvent = { file, type, affectedModules };
+        const payload: HmrUpdateEvent = { file, type, affectedModules, rollback: this.config.hmr?.rollback ?? true };
 
-        if (this.hot) {
-            this.hot.send('seedcord:hmr', payload);
-        }
+        this.dev?.send('seedcord:hmr', payload);
 
-        // Returning [] suppresses Vite's default client HMR; invalidation runs through the runtime instead.
+        // returning [] suppresses vite's default client HMR so invalidation runs through the runtime.
         return [];
     }
 

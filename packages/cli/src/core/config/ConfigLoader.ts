@@ -41,6 +41,9 @@ function validateHmr(value: unknown): void {
     if (typeof value.restart !== 'undefined' && !isStringArray(value.restart)) {
         throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRestart);
     }
+    if (typeof value.rollback !== 'undefined' && typeof value.rollback !== 'boolean') {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRollback);
+    }
 }
 
 function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {

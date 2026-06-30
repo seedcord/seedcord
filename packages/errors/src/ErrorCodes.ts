@@ -196,5 +196,7 @@ export enum SeedcordErrorCode {
     /** `commands --clean --all-guilds` matched more guilds than the safety threshold without `--yes`. */
     CliCleanLargeBotUnconfirmed = 3130,
     /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
-    CliCleanApplyNeedsYes = 3131
+    CliCleanApplyNeedsYes = 3131,
+    /** Config hmr rollback flag must be a boolean when provided. */
+    CliConfigInvalidHmrRollback = 3132
 }

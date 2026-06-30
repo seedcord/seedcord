@@ -153,6 +153,7 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
         'Config `hmr.restart` must be an array of strings when provided.',
+    [SeedcordErrorCode.CliConfigInvalidHmrRollback]: () => 'Config `hmr.rollback` must be a boolean when provided.',
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>

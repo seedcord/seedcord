@@ -116,6 +116,20 @@ describe('ConfigLoader', () => {
             new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRestart });
     });
+
+    it('rejects a non-boolean hmr.rollback', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(): TModule {
+                return {
+                    default: { instance: './bot.ts', entry: './index.ts', hmr: { rollback: 'nope' } }
+                } as TModule;
+            }
+        };
+
+        await expect(
+            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRollback });
+    });
 });
 
 describe('isSeedcordInstance', () => {

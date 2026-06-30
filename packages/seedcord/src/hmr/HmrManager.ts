@@ -1,9 +1,12 @@
 import { Logger } from '@seedcord/services';
+import { wrapHot } from '@seedcord/types/internal';
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
+import { getDevChannel, setDevChannel } from './devChannel';
+
+import type { HmrAware, HmrUpdateEvent, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });
@@ -13,10 +16,15 @@ export class HmrManager {
 
     /** @internal */
     public init(): void {
-        if (import.meta.hot && (Envapter.isDevelopment || Envapter.isTest)) {
+        if (!import.meta.hot) return;
+        // the one raw `import.meta.hot` read in the framework, captured into the dev-channel singleton
+        // so every other framework site reads it through getDevChannel
+        setDevChannel(wrapHot<SeedcordFrameworkEvents, SeedcordCliEvents>(import.meta.hot));
+
+        if (Envapter.isDevelopment || Envapter.isTest) {
             this.logger.info('Enabled');
 
-            import.meta.hot.on('seedcord:hmr', (payload) => {
+            getDevChannel()?.on('seedcord:hmr', (payload) => {
                 const affected = payload.affectedModules?.length ?? 0;
                 this.logger.info(`${chalk.bold('1')} module changed, ${chalk.bold(affected)} affected modules`);
 

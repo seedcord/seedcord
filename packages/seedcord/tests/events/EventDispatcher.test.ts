@@ -256,6 +256,43 @@ describe('EventDispatcher Integration', () => {
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
 
+    it('keeps a spent once handler spent after a failed reload rolls it back', async () => {
+        const eventsDir = 'events';
+        const filePath = await testEnv.createFile(
+            `${eventsDir}/OnceRollback.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate', { frequency: 'once' }])
+            export class OnceRollback extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('once') });
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
+
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        const message = { reply: vi.fn() };
+        await testBot.events.processEvent('messageCreate', [message]);
+        expect(message.reply).toHaveBeenCalledTimes(1);
+
+        // a broken edit, the reload fails and rolls the handler back
+        await testEnv.createFile(`${eventsDir}/OnceRollback.ts`, 'export const broken = {{{ not valid');
+        await testBot.events.onHmr({ file: filePath, type: 'update' });
+
+        // the rolled-back handler is the same spent ctor, so a second fire must not re-run it
+        await testBot.events.processEvent('messageCreate', [message]);
+        expect(message.reply).toHaveBeenCalledTimes(1);
+    });
+
     it('should handle HMR updates for event handlers', async () => {
         const eventsDir = 'events';
         const filePath = await testEnv.createFile(

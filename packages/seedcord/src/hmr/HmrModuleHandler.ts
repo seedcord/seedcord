@@ -14,10 +14,6 @@ interface HmrStore<THandler, TMiddleware, TArtifacts> {
     handlerArtifacts: Map<THandler, TArtifacts>;
 }
 
-interface HmrData {
-    hmr?: Record<string, HmrStore<unknown, unknown, unknown>>;
-}
-
 /**
  * Options for configuring the HmrModuleHandler.
  *
@@ -44,8 +40,6 @@ interface HmrModuleHandlerOptions<THandler, TMiddleware = void, TArtifacts = unk
     getArtifacts?: (handler: THandler) => TArtifacts;
     /** Logger instance for logging HMR activities.*/
     logger: Logger;
-    /** Name of the module handler, used in logging. */
-    name: string;
 }
 
 /**
@@ -60,26 +54,16 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>;
 
     constructor(options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
-        // Copy rather than mutate the caller's options object when scoping the logger to the hmr channel.
+        // spread into a new object so scoping the logger to the hmr channel leaves the caller's options unchanged.
         this.options = { ...options, logger: options.logger.inChannel('hmr') };
 
-        if (import.meta.hot) {
-            const data = import.meta.hot.data as HmrData;
-            data.hmr ??= {};
-            this.store = data.hmr[this.options.name] = (data.hmr[this.options.name] as
-                | HmrStore<THandler, TMiddleware, TArtifacts>
-                | undefined) ?? {
-                fileToHandlers: new Map(),
-                fileToMiddlewares: new Map(),
-                handlerArtifacts: new Map()
-            };
-        } else {
-            this.store = {
-                fileToHandlers: new Map(),
-                fileToMiddlewares: new Map(),
-                handlerArtifacts: new Map()
-            };
-        }
+        // the Maps survive a leaf reload by ordinary object lifetime, the Seedcord singleton is never
+        // reconstructed and a reload re-imports only the changed file, so no import.meta.hot.data stash is needed
+        this.store = {
+            fileToHandlers: new Map(),
+            fileToMiddlewares: new Map(),
+            handlerArtifacts: new Map()
+        };
     }
 
     /**
@@ -91,6 +75,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     public async handle(event: HmrUpdateEvent): Promise<void> {
         const { file, affectedModules, type } = event;
         const { logger, handlersDir, middlewaresDir } = this.options;
+        const rollbackEnabled = event.rollback ?? true;
 
         if (type === 'delete' || type === 'deleteDir') {
             this.unload(file);
@@ -117,10 +102,26 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
                 continue;
             }
 
-            this.unload(fileToReload);
-
-            await this.reloadFile(fileToReload);
+            await this.reloadWithRollback(fileToReload, rollbackEnabled);
         }
+    }
+
+    // reloads one file, restoring the last-good units if the reload fails and rollback is enabled
+    private async reloadWithRollback(file: string, rollbackEnabled: boolean): Promise<void> {
+        const { logger } = this.options;
+        const snapshot = this.snapshotUnits(file);
+        this.unload(file);
+
+        const reloaded = await this.reloadFile(file);
+        if (reloaded) return;
+
+        // drop any partial registration the failed reload left, so the file ends in a clean state
+        this.unload(file);
+        if (!rollbackEnabled) return;
+
+        // restore the last-good units, a typo keeps them live until the next good save
+        this.restoreUnits(file, snapshot);
+        logger.warn(`${chalk.yellow.bold('Rolled back')} ${chalk.gray(formatFilePath(file))} to the last-good version`);
     }
 
     /**
@@ -189,18 +190,17 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         }
     }
 
-    private async reloadFile(file: string): Promise<void> {
+    private async reloadFile(file: string): Promise<boolean> {
         const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.options;
 
         if (!existsSync(file)) {
             logger.info(`File does not exist, skipping reload: ${formatFilePath(file)}`);
-            return;
+            return false;
         }
 
         try {
             let fileUrl = pathToFileURL(file).href;
-            // In the vitest environment, we need to bust the cache manually because
-            // we are simulating HMR without a real Vite server handling the module graph updates.
+            // vitest has no real vite server managing the module graph, so bust the import cache manually.
             if (process.env.VITEST === 'true') fileUrl += `?update=${Date.now()}`;
 
             const imported = (await import(fileUrl)) as Record<string, unknown>;
@@ -222,8 +222,34 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
                     );
                 }
             }
+
+            return true;
         } catch (error) {
             logger.error(`Failed to reload file: ${file}`, error);
+            return false;
+        }
+    }
+
+    // snapshot the file's tracked units so a failed reload can re-register the last-good ones. the units
+    // are class objects, so restoring re-registers the same classes and a db plugin's connection is untouched
+    private snapshotUnits(file: string): { handlers: THandler[]; middlewares: TMiddleware[] } {
+        return {
+            handlers: Array.from(this.store.fileToHandlers.get(file) ?? []),
+            middlewares: Array.from(this.store.fileToMiddlewares.get(file) ?? [])
+        };
+    }
+
+    private restoreUnits(file: string, snapshot: { handlers: THandler[]; middlewares: TMiddleware[] }): void {
+        for (const handler of snapshot.handlers) {
+            this.options.registerHandler(handler, file);
+            this.trackHandler(file, handler);
+        }
+
+        if (this.options.registerMiddleware) {
+            for (const middleware of snapshot.middlewares) {
+                this.options.registerMiddleware(middleware, file);
+                this.trackMiddleware(file, middleware);
+            }
         }
     }
 }

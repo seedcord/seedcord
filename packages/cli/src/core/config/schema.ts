@@ -30,6 +30,13 @@ export interface SeedcordHmrConfig {
     restart?: string[];
 
     /**
+     * Whether a failed hot-reload rolls back to the last-good version of the file.
+     *
+     * @defaultValue `true`
+     */
+    rollback?: boolean;
+
+    /**
      * Optional tsconfig path to use for type checking in dev mode.
      *
      * @defaultValue the nearest `tsconfig.json`
