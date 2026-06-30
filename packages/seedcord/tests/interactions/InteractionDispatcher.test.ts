@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { CustomId } from '@seedcord/kit';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -97,6 +98,100 @@ describe('InteractionDispatcher Integration', () => {
 
         const controller = testBot.interactions;
         expect(controller.slashMap.has('ping')).toBe(true);
+    });
+
+    it('throws when two handlers register the same interaction route, naming both', async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/PingOne.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingOne extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('one');
+                }
+            }
+            `
+        );
+        await testEnv.createFile(
+            `${interactionsDir}/PingTwo.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingTwo extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('two');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+
+        const error: unknown = await controller.init().then(
+            () => null,
+            (caught: unknown) => caught
+        );
+        expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateRoute });
+        const message = error instanceof Error ? error.message : String(error);
+        expect(message).toContain('PingOne');
+        expect(message).toContain('PingTwo');
+    });
+
+    it('throws when two interaction middleware classes share a name instead of overwriting', async () => {
+        const middlewaresDir = 'interaction-mw';
+
+        await testEnv.createFile(
+            'interactions/Noop.ts',
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('noop')
+            export class Noop extends SlashHandler<'noop'> {
+                public async execute() {
+                    await Promise.resolve();
+                }
+            }
+            `
+        );
+
+        for (const file of ['RateLimitA', 'RateLimitB']) {
+            await testEnv.createFile(
+                `${middlewaresDir}/${file}.ts`,
+                `
+                import { Middleware, MiddlewareType, InteractionMiddleware } from '${seedcordPath}';
+
+                @Middleware(MiddlewareType.Interaction, 0)
+                export class RateLimit extends InteractionMiddleware {
+                    public async execute() {
+                        await Promise.resolve();
+                    }
+                }
+                `
+            );
+        }
+
+        const config = testConfig({
+            interactions: testEnv.resolvePath('interactions'),
+            interactionMiddlewares: testEnv.resolvePath(middlewaresDir)
+        });
+
+        seedcord = new Seedcord(config);
+        const controller = (seedcord.bot as unknown as TestBot).interactions;
+
+        const error: unknown = await controller.init().then(
+            () => null,
+            (caught: unknown) => caught
+        );
+        expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateMiddleware });
+        const message = error instanceof Error ? error.message : String(error);
+        expect(message).toContain('RateLimit');
     });
 
     it('routes a thrown error from a handler through the boundary to a reply', async () => {

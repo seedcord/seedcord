@@ -266,14 +266,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middlewareCtor) as MiddlewareMetadata | undefined;
         if (metadata?.type !== MiddlewareType.Interaction) return;
 
-        const existingIndex = this.middlewares.findIndex((entry) => entry.ctor.name === middlewareCtor.name);
+        // same class re-registered (double import or an HMR re-scan) is idempotent, matching event middleware
+        if (this.middlewares.some((entry) => entry.ctor === middlewareCtor)) return;
 
-        if (existingIndex !== -1) {
-            this.middlewares[existingIndex] = { ctor: middlewareCtor, priority: metadata.priority };
-        } else {
-            this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        // a different class sharing the name used to silently overwrite the first, surface it instead
+        if (this.middlewares.some((entry) => entry.ctor.name === middlewareCtor.name)) {
+            throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateMiddleware, [middlewareCtor.name]);
         }
 
+        this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
         this.logger.utils.registration(
@@ -302,7 +303,18 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             if (!areRoutes(meta)) continue;
 
             const routes = meta;
-            routes.forEach((route) => map.set(route, handlerClass));
+            routes.forEach((route) => {
+                const existing = map.get(route);
+                // a different class on the same route would silently shadow (last write would win), throw instead
+                if (existing && existing !== handlerClass) {
+                    throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
+                        route,
+                        existing.name,
+                        handlerClass.name
+                    ]);
+                }
+                map.set(route, handlerClass);
+            });
 
             this.logger.utils.registration(handlerClass.name, formatFilePath(relativePath));
         }

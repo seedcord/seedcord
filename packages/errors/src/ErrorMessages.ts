@@ -47,6 +47,11 @@ const messages = {
         'RegisterCommand("guild") requires a non-empty guilds array.',
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: () => 'Middleware priority must be a finite number.',
 
+    [SeedcordErrorCode.InteractionDuplicateRoute]: (route: string, firstClass: string, secondClass: string) =>
+        `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${firstClass} and ${secondClass}. Rename one.`,
+    [SeedcordErrorCode.InteractionDuplicateMiddleware]: (name: string) =>
+        `Two different interaction middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
+
     [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
     [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
 

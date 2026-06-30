@@ -56,6 +56,11 @@ export enum SeedcordErrorCode {
     /** Middleware priority provided by the decorator was not a finite number. */
     DecoratorInvalidMiddlewarePriority = 1306,
 
+    /** Two interaction handlers registered the same route within a scope. */
+    InteractionDuplicateRoute = 1401,
+    /** Two different interaction middleware classes share a class name. */
+    InteractionDuplicateMiddleware = 1402,
+
     /** StrictEventEmitter.waitFor was aborted via its AbortSignal. */
     EventEmitterWaitForAborted = 1501,
     /** StrictEventEmitter.waitFor exceeded its configured timeout. */
