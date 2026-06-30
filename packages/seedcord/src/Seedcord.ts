@@ -131,6 +131,7 @@ export class Seedcord extends Pluggable implements Core {
     private registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
             this.hmrManager.register(this.bot);
+            this.hmrManager.register(this.bus);
             for (const plugin of this.plugins) {
                 this.hmrManager.register(plugin);
             }
