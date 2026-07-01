@@ -1,0 +1,64 @@
+{
+    "name": "@seedcord/core",
+    "type": "module",
+    "version": "0.0.1",
+    "description": "Transport-agnostic core for Seedcord bots",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "packages/core"
+    },
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        },
+        "./internal": {
+            "import": {
+                "types": "./dist/internal.index.d.mts",
+                "default": "./dist/internal.index.mjs"
+            },
+            "require": {
+                "types": "./dist/internal.index.d.cts",
+                "default": "./dist/internal.index.cjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsc --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsdown-config": "workspace:*"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}
