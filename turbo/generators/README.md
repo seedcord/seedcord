@@ -20,10 +20,11 @@ Finish these after generating, none of them are automated.
 2. `.github/labeler.yml`, add a `pkg:<name>` glob block matching `packages/<name>/**`.
 3. `.github/labels.yml`, add the `pkg:<name>` label entry (name, color, description).
 4. `knip.json`, add `"packages/<name>": {}` to the `workspaces` map.
-5. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
-6. The package's own `package.json`, set the real `version`, add runtime `dependencies` (`catalog:deps` or `workspace:*`), any extra `peerDependencies` with `peerDependenciesMeta` (for example `discord.js` as `catalog:peer`), extra `devDependencies`, and the `./internal` export block plus a second tsdown entry plus `src/internal.index.ts` if the package ships an internal surface.
-7. For a private package, drop `publishConfig`, add `"private": true`, and skip step 1, 8, and 9. For a public package, set the `version` first (the changeset pre-mode flow, or by hand), build, then publish from the package folder.
-8. Bootstrap the package on npm by publishing it once by hand. Only `@materwelonDhruv` can do this.
+5. `packages/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry (`displayName` plus any `aliases`) for `@seedcord/<name>`. Without it the docs site renders the full scoped name. The override sets the short display name (`core`) and extra search aliases. Skip for a package with no documented entry point, it never shows in the docs site.
+6. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
+7. The package's own `package.json`, set the real `version`, add runtime `dependencies` (`catalog:deps` or `workspace:*`), any extra `peerDependencies` with `peerDependenciesMeta` (for example `discord.js` as `catalog:peer`), extra `devDependencies`, and the `./internal` export block plus a second tsdown entry plus `src/internal.index.ts` if the package ships an internal surface.
+8. For a private package, drop `publishConfig`, add `"private": true`, and skip step 1, 9, and 10. For a public package, set the `version` first (the changeset pre-mode flow, or by hand), build, then publish from the package folder.
+9. Bootstrap the package on npm by publishing it once by hand. Only `@materwelonDhruv` can do this.
 
     ```sh
     # set "version": "0.0.1" in packages/<name>/package.json first, then:
@@ -35,4 +36,4 @@ Finish these after generating, none of them are automated.
     npm dist-tag add @seedcord/<name>@0.0.1 next
     ```
 
-9. Update OIDC trust for the `publish.yml` workflow for the new packages on the npm page. Only `@materwelonDhruv` can do this as well.
+10. Update OIDC trust for the `publish.yml` workflow for the new packages on the npm page. Only `@materwelonDhruv` can do this as well.
