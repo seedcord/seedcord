@@ -9,6 +9,8 @@ overrides:
   # discord.js/rest pin undici 6.24.1; < 6.27 has a WebSocket DoS (GHSA-vxpw-j846-p89q)
   discord.js>undici: ^6.27.0
   '@discordjs/rest>undici': ^6.27.0
+  # forces one api-types copy so the djs-free reply types assign to djs
+  discord-api-types: ^0.38.49
 
 allowBuilds:
   '@swc/core': true

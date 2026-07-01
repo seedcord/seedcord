@@ -49,6 +49,9 @@
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
     },
+    "dependencies": {
+        "discord-api-types": "catalog:deps"
+    },
     "peerDependencies": {
         "discord.js": "catalog:peer",
         "typescript": "catalog:peer"
