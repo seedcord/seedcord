@@ -1,5 +1,7 @@
+/* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 import path from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { CustomId } from '@seedcord/kit';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
@@ -56,6 +58,11 @@ interface TestBot {
     interactions: PrivateInteractionDispatcher;
 }
 
+// justified: reach the private interactions dispatcher off the bot to assert its routing state
+function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
+    return (instance.bot as unknown as TestBot).interactions;
+}
+
 describe('InteractionDispatcher Integration', () => {
     let testEnv: TestEnvironment;
     let seedcord: Seedcord;
@@ -99,6 +106,100 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.slashMap.has('ping')).toBe(true);
     });
 
+    it('throws when two handlers register the same interaction route, naming both', async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/PingOne.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingOne extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('one');
+                }
+            }
+            `
+        );
+        await testEnv.createFile(
+            `${interactionsDir}/PingTwo.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingTwo extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('two');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+
+        const error: unknown = await controller.init().then(
+            () => null,
+            (caught: unknown) => caught
+        );
+        expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateRoute });
+        const message = error instanceof Error ? error.message : String(error);
+        expect(message).toContain('PingOne');
+        expect(message).toContain('PingTwo');
+    });
+
+    it('throws when two interaction middleware classes share a name instead of overwriting', async () => {
+        const middlewaresDir = 'interaction-mw';
+
+        await testEnv.createFile(
+            'interactions/Noop.ts',
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('noop')
+            export class Noop extends SlashHandler<'noop'> {
+                public async execute() {
+                    await Promise.resolve();
+                }
+            }
+            `
+        );
+
+        for (const file of ['RateLimitA', 'RateLimitB']) {
+            await testEnv.createFile(
+                `${middlewaresDir}/${file}.ts`,
+                `
+                import { Middleware, MiddlewareType, InteractionMiddleware } from '${seedcordPath}';
+
+                @Middleware(MiddlewareType.Interaction, 0)
+                export class RateLimit extends InteractionMiddleware {
+                    public async execute() {
+                        await Promise.resolve();
+                    }
+                }
+                `
+            );
+        }
+
+        const config = testConfig({
+            interactions: testEnv.resolvePath('interactions'),
+            interactionMiddlewares: testEnv.resolvePath(middlewaresDir)
+        });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+
+        const error: unknown = await controller.init().then(
+            () => null,
+            (caught: unknown) => caught
+        );
+        expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateMiddleware });
+        const message = error instanceof Error ? error.message : String(error);
+        expect(message).toContain('RateLimit');
+    });
+
     it('routes a thrown error from a handler through the boundary to a reply', async () => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
@@ -119,8 +220,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
 
         seedcord = new Seedcord(config);
-        // justified: TestBot exposes the private interactions controller for assertion
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('boom');
@@ -138,7 +238,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         // justified: spy on the private routing entry to assert the ignore gate runs before it
         const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
 
@@ -153,7 +253,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         const processSpy = vi.spyOn(controller, 'processInteraction').mockResolvedValue(undefined);
 
         await controller.handleButton({ customId: CONFIRM_DEF.encode({ choice: 'confirm' }) });
@@ -161,6 +261,194 @@ describe('InteractionDispatcher Integration', () => {
 
         await controller.handleButton({ customId: new CustomId('not-ignored').encode({}) });
         expect(processSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('rolls back to the last-good handler when a reload fails', async () => {
+        const interactionsDir = 'interactions';
+        const filePath = await testEnv.createFile(
+            `${interactionsDir}/Ping.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingHandler extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('pong');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+        expect(controller.slashMap.has('ping')).toBe(true);
+
+        // a broken edit, the reload import throws
+        await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
+        await controller.onHmr({ file: filePath, type: 'update' });
+
+        // the failed reload restored the last-good handler and kept the route
+        expect(controller.slashMap.has('ping')).toBe(true);
+    });
+
+    it('rolls back both handlers when a reload introduces a duplicate route in one file', async () => {
+        const interactionsDir = 'interactions';
+        const filePath = await testEnv.createFile(
+            `${interactionsDir}/Pair.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('alpha')
+            export class AlphaHandler extends SlashHandler<'alpha'> {
+                public async execute() {
+                    await this.event.reply('a');
+                }
+            }
+
+            @SlashRoute('beta')
+            export class BetaHandler extends SlashHandler<'beta'> {
+                public async execute() {
+                    await this.event.reply('b');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+        expect(controller.slashMap.has('alpha')).toBe(true);
+        expect(controller.slashMap.has('beta')).toBe(true);
+
+        // a broken edit, both handlers now claim 'alpha', so the reload throws a duplicate-route mid-registration
+        await testEnv.createFile(
+            `${interactionsDir}/Pair.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('alpha')
+            export class AlphaHandler extends SlashHandler<'alpha'> {
+                public async execute() {
+                    await this.event.reply('a');
+                }
+            }
+
+            @SlashRoute('alpha')
+            export class BetaHandler extends SlashHandler<'alpha'> {
+                public async execute() {
+                    await this.event.reply('a');
+                }
+            }
+            `
+        );
+
+        // rollback must clear the partial registration first, so restoring both old routes does not re-collide
+        await expect(controller.onHmr({ file: filePath, type: 'update' })).resolves.toBeUndefined();
+        expect(controller.slashMap.has('alpha')).toBe(true);
+        expect(controller.slashMap.has('beta')).toBe(true);
+    });
+
+    it('rolls back when a multi-route handler reload collides on a later route owned by another file', async () => {
+        const interactionsDir = 'interactions';
+
+        await testEnv.createFile(
+            `${interactionsDir}/Keeper.ts`,
+            `
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
+
+            const Shared = new CustomId('shared');
+
+            @ButtonRoute(Shared)
+            export class KeeperButton extends ButtonHandler<[typeof Shared]> {
+                public async execute() {
+                    await this.event.reply('keeper');
+                }
+            }
+            `
+        );
+
+        const multiPath = await testEnv.createFile(
+            `${interactionsDir}/Multi.ts`,
+            `
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
+
+            const Own = new CustomId('own');
+
+            @ButtonRoute(Own)
+            export class MultiButton extends ButtonHandler<[typeof Own]> {
+                public async execute() {
+                    await this.event.reply('own');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+        expect(controller.buttonMap.has('own')).toBe(true);
+        expect(controller.buttonMap.has('shared')).toBe(true);
+        const lastGood = controller.buttonMap.get('own');
+
+        // the edit claims a route Keeper owns, so registration throws after setting 'own', orphaning it
+        await testEnv.createFile(
+            `${interactionsDir}/Multi.ts`,
+            `
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
+
+            const Own = new CustomId('own');
+            const Shared = new CustomId('shared');
+
+            @ButtonRoute(Own, Shared)
+            export class MultiButton extends ButtonHandler<[typeof Own, typeof Shared]> {
+                public async execute() {
+                    await this.event.reply('own');
+                }
+            }
+            `
+        );
+
+        // rollback restores the last-good handler and must not re-collide on the orphaned route
+        await expect(controller.onHmr({ file: multiPath, type: 'update' })).resolves.toBeUndefined();
+        expect(controller.buttonMap.get('own')).toBe(lastGood);
+        expect(controller.buttonMap.has('shared')).toBe(true);
+    });
+
+    it('drops the failed unit when the event disables rollback', async () => {
+        const interactionsDir = 'interactions';
+        const filePath = await testEnv.createFile(
+            `${interactionsDir}/Ping.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingHandler extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('pong');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+        expect(controller.slashMap.has('ping')).toBe(true);
+
+        // a broken edit with rollback disabled, so the route is dropped
+        await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
+        await controller.onHmr({ file: filePath, type: 'update', rollback: false });
+
+        expect(controller.slashMap.has('ping')).toBe(false);
     });
 
     it('should handle HMR updates for interaction handlers', async () => {
@@ -238,7 +526,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('allowed');
@@ -274,7 +562,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('refused');
@@ -307,7 +595,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['someone-else'] });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('owner');
@@ -317,7 +605,7 @@ describe('InteractionDispatcher Integration', () => {
             () => controller.slashMap.get('owner')
         );
 
-        // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner instead
+        // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner
         expect(interaction.reply).not.toHaveBeenCalledWith('executed');
         expect(interaction.reply).toHaveBeenCalledTimes(1);
     });
@@ -341,7 +629,7 @@ describe('InteractionDispatcher Integration', () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['u1'] });
 
         seedcord = new Seedcord(config);
-        const controller = (seedcord.bot as unknown as TestBot).interactions;
+        const controller = controllerOf(seedcord);
         await controller.init();
 
         const interaction = fakeSlash('owner');

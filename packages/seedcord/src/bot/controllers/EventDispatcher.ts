@@ -82,8 +82,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
             unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger,
-            name: 'Event'
+            logger: this.logger
         });
     }
 
@@ -173,7 +172,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 }
             }
         }
-        this.executedOnceHandlers.delete(handlerClass);
+        // spent follows the ctor identity, so leaving executedOnceHandlers alone keeps a rollback-restored ctor spent
     }
 
     private unregisterMiddleware(middlewareCtor: EventMiddlewareConstructor): void {
@@ -314,8 +313,12 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (!shouldContinue) return;
 
         for (const entry of handlersToExecute) {
-            // mark a 'once' handler spent before running it, so an abnormal rethrow cannot re-fire it
-            if (entry.frequency === 'once') this.executedOnceHandlers.add(entry.ctor);
+            // mark a 'once' handler spent before running so a rethrow can't re-fire it. the has() re-check
+            // closes the window where a concurrent fire claimed it during the runMiddlewares await
+            if (entry.frequency === 'once') {
+                if (this.executedOnceHandlers.has(entry.ctor)) continue;
+                this.executedOnceHandlers.add(entry.ctor);
+            }
 
             await this.processHandler(eventName, entry.ctor, args);
         }

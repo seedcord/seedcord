@@ -11,7 +11,7 @@
             "@utils/*": ["./src/utils/*"],
             "@api/*": ["./src/api/*"]
         },
-        "types": ["react", "vite/client"],
+        "types": ["react"],
         "jsx": "react"
     },
     "include": [

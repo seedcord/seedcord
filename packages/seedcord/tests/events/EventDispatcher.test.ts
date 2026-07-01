@@ -165,6 +165,134 @@ describe('EventDispatcher Integration', () => {
         await expect(testBot.events.processEvent('guildMemberAdd', [{}])).resolves.toBeUndefined();
     });
 
+    it('runs a once handler exactly once when the same event fires concurrently', async () => {
+        const eventsDir = 'events';
+        await testEnv.createFile(
+            `${eventsDir}/OnceConcurrent.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate', { frequency: 'once' }])
+            export class OnceConcurrent extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('once') });
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
+
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        // both fires run their once-filter snapshot before either marks spent, because
+        // `await runMiddlewares` yields between the snapshot and the mark
+        const message = { reply: vi.fn() };
+        await Promise.all([
+            testBot.events.processEvent('messageCreate', [message]),
+            testBot.events.processEvent('messageCreate', [message])
+        ]);
+
+        expect(message.reply).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not consume a once handler when middleware blocks the fire', async () => {
+        const eventsDir = 'events';
+        const middlewaresDir = 'event-mw';
+
+        await testEnv.createFile(
+            `${eventsDir}/OnceAfterBlock.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate', { frequency: 'once' }])
+            export class OnceAfterBlock extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('ran') });
+                }
+            }
+            `
+        );
+
+        await testEnv.createFile(
+            `${middlewaresDir}/BlockFirst.ts`,
+            `
+            import { Middleware, MiddlewareType, EventMiddleware, Silence } from '${seedcordPath}';
+
+            let fires = 0;
+
+            @Middleware(MiddlewareType.Event, 0)
+            export class BlockFirst extends EventMiddleware {
+                public async execute() {
+                    fires++;
+                    if (fires === 1) throw new Silence('block the first fire');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({
+            events: testEnv.resolvePath(eventsDir),
+            eventMiddlewares: testEnv.resolvePath(middlewaresDir)
+        });
+
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        // a middleware block stops the whole event, so it must not spend the once budget
+        const message = { reply: vi.fn() };
+        await testBot.events.processEvent('messageCreate', [message]);
+        expect(message.reply).not.toHaveBeenCalled();
+
+        // the second fire passes middleware, so the once handler still runs
+        await testBot.events.processEvent('messageCreate', [message]);
+        expect(message.reply).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps a spent once handler spent after a failed reload rolls it back', async () => {
+        const eventsDir = 'events';
+        const filePath = await testEnv.createFile(
+            `${eventsDir}/OnceRollback.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate', { frequency: 'once' }])
+            export class OnceRollback extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await this.match({ messageCreate: (message) => message.reply('once') });
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
+
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+        await testBot.events.init();
+
+        const message = { reply: vi.fn() };
+        await testBot.events.processEvent('messageCreate', [message]);
+        expect(message.reply).toHaveBeenCalledTimes(1);
+
+        // a broken edit, the reload fails and rolls the handler back
+        await testEnv.createFile(`${eventsDir}/OnceRollback.ts`, 'export const broken = {{{ not valid');
+        await testBot.events.onHmr({ file: filePath, type: 'update' });
+
+        // the rolled-back handler is the same spent ctor, so a second fire must not re-run it
+        await testBot.events.processEvent('messageCreate', [message]);
+        expect(message.reply).toHaveBeenCalledTimes(1);
+    });
+
     it('should handle HMR updates for event handlers', async () => {
         const eventsDir = 'events';
         const filePath = await testEnv.createFile(

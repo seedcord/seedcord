@@ -30,8 +30,8 @@ export interface KyselyArtifact {
 /**
  * Postgres plugin using Kysely.
  *
- * Handles setting up the connection pool, applying migrations, and
- * registering decorated services so they can be resolved from the core.
+ * Sets up the connection pool, applies migrations, and registers decorated
+ * services so the core can resolve them.
  */
 export class KyselyPg<Database extends object> extends Plugin {
     public readonly logger = new Logger('KyselyPg');
@@ -83,8 +83,7 @@ export class KyselyPg<Database extends object> extends Plugin {
             registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
             unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger,
-            name: 'KyselyPg'
+            logger: this.logger
         });
     }
 
@@ -101,7 +100,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     /**
      * Connects to Postgres, runs any startup migrations, and loads decorated services.
      *
-     * Safe to call multiple times; subsequent calls exit early.
+     * Safe to call multiple times, subsequent calls exit early.
      */
     public async init(): Promise<void> {
         if (this.isInitialised) return;

@@ -54,6 +54,26 @@ describe('HmrPlugin', () => {
         expect(plugin.hotUpdate).toBeDefined();
     });
 
+    it('carries the config rollback flag onto the hmr payload', () => {
+        const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } });
+        const hotSend = vi.fn();
+        // justified: spy on the private `hot` getter, which the public type does not expose
+        const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
+        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
+
+        const watcher = new EventEmitter();
+        const server = {
+            watcher,
+            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+        } as unknown as ViteDevServer;
+        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+        const file = join(process.cwd(), 'src/commands/ping.ts');
+        watcher.emit('add', file);
+
+        expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, { file, type: 'create', rollback: false });
+    });
+
     describe('configureServer (File Events)', () => {
         let serverMock: ViteDevServer;
         let watcher: EventEmitter;
@@ -101,7 +121,8 @@ describe('HmrPlugin', () => {
             expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('CREATE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
-                type: 'create'
+                type: 'create',
+                rollback: true
             });
         });
 
@@ -112,7 +133,8 @@ describe('HmrPlugin', () => {
             expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('DELETE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
-                type: 'delete'
+                type: 'delete',
+                rollback: true
             });
         });
 
@@ -123,7 +145,8 @@ describe('HmrPlugin', () => {
             expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
-                type: 'createDir'
+                type: 'createDir',
+                rollback: true
             });
         });
 
@@ -134,7 +157,8 @@ describe('HmrPlugin', () => {
             expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
-                type: 'deleteDir'
+                type: 'deleteDir',
+                rollback: true
             });
         });
     });
@@ -204,7 +228,8 @@ describe('HmrPlugin', () => {
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'update',
-                affectedModules: expect.arrayContaining([file, importerFile]) as HmrUpdateEvent['affectedModules']
+                affectedModules: expect.arrayContaining([file, importerFile]) as HmrUpdateEvent['affectedModules'],
+                rollback: true
             });
         });
 
@@ -257,7 +282,8 @@ describe('HmrPlugin', () => {
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'update',
-                affectedModules: expect.arrayContaining([file, importerFile]) as HmrUpdateEvent['affectedModules']
+                affectedModules: expect.arrayContaining([file, importerFile]) as HmrUpdateEvent['affectedModules'],
+                rollback: true
             });
         });
 

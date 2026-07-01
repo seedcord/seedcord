@@ -47,6 +47,11 @@ const messages = {
         'RegisterCommand("guild") requires a non-empty guilds array.',
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: () => 'Middleware priority must be a finite number.',
 
+    [SeedcordErrorCode.InteractionDuplicateRoute]: (route: string, firstClass: string, secondClass: string) =>
+        `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${firstClass} and ${secondClass}. Rename one.`,
+    [SeedcordErrorCode.InteractionDuplicateMiddleware]: (name: string) =>
+        `Two different interaction middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
+
     [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
     [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
 
@@ -148,6 +153,7 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
         'Config `hmr.restart` must be an array of strings when provided.',
+    [SeedcordErrorCode.CliConfigInvalidHmrRollback]: () => 'Config `hmr.rollback` must be a boolean when provided.',
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>

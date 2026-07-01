@@ -1,4 +1,4 @@
-/* eslint-disable max-lines */
+/* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { prefixOf } from '@seedcord/kit/internal';
@@ -114,7 +114,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
 
-        // the in-process getConfirmation() collector handles these clicks, so ignore them here or the global
+        // the in-process getConfirmation() collector consumes these clicks, so ignore them here or the global
         // router double-acks them.
         this.keysToIgnore.add(CONFIRM_DEF);
 
@@ -141,14 +141,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             unregisterHandler: this.unregisterHandler.bind(this),
             unregisterMiddleware: this.unregisterMiddleware.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger,
-            name: 'Interaction'
+            logger: this.logger
         });
     }
 
     /**
      * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
-     * UnhandledEvent at runtime. Warns rather than throws since a bot may route commands outside the registry.
+     * UnhandledEvent at runtime. A bot may route commands outside the registry, so this does not throw.
      *
      * @internal
      */
@@ -266,14 +265,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const metadata = Reflect.getMetadata(MiddlewareMetadataKey, middlewareCtor) as MiddlewareMetadata | undefined;
         if (metadata?.type !== MiddlewareType.Interaction) return;
 
-        const existingIndex = this.middlewares.findIndex((entry) => entry.ctor.name === middlewareCtor.name);
+        // same class re-registered (double import or an HMR re-scan) is idempotent, matching event middleware
+        if (this.middlewares.some((entry) => entry.ctor === middlewareCtor)) return;
 
-        if (existingIndex !== -1) {
-            this.middlewares[existingIndex] = { ctor: middlewareCtor, priority: metadata.priority };
-        } else {
-            this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
+        // a different class sharing the name would silently overwrite the first, so this throws to surface it
+        if (this.middlewares.some((entry) => entry.ctor.name === middlewareCtor.name)) {
+            throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateMiddleware, [middlewareCtor.name]);
         }
 
+        this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
         this.logger.utils.registration(
@@ -297,15 +297,30 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
+        // a partial registration would orphan routes and break hmr rollback
+        const writes: [Collection<string, HandlerConstructor>, string][] = [];
+
         for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[routeType], handlerClass);
             if (!areRoutes(meta)) continue;
 
-            const routes = meta;
-            routes.forEach((route) => map.set(route, handlerClass));
+            for (const route of meta) {
+                const existing = map.get(route);
+                // a different class on the same route would silently shadow (last write wins), so this throws
+                if (existing && existing !== handlerClass) {
+                    throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
+                        route,
+                        existing.name,
+                        handlerClass.name
+                    ]);
+                }
+                writes.push([map, route]);
+            }
 
             this.logger.utils.registration(handlerClass.name, formatFilePath(relativePath));
         }
+
+        for (const [map, route] of writes) map.set(route, handlerClass);
     }
 
     /** @internal For use in dev mode */

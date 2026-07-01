@@ -49,8 +49,8 @@ export class Mongo extends Plugin {
         if (!this.servicesReady) {
             throw new SeedcordError(SeedcordErrorCode.PluginMongoServicesNotReady);
         }
-        // MongoServices is augmented per-consumer via declaration merging; the registry holds the
-        // instances opaquely and exposes the generated map shape at this public boundary.
+        // MongoServices is augmented per-consumer via declaration merging, so the registry's opaque
+        // instances surface as the generated map shape at this boundary.
         return this._services;
     }
 
@@ -79,8 +79,7 @@ export class Mongo extends Plugin {
             registerHandler: this.initializeService.bind(this),
             unregisterHandler: this.unregister.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger,
-            name: 'Mongo'
+            logger: this.logger
         });
     }
 
@@ -206,7 +205,7 @@ export class Mongo extends Plugin {
             (Reflect.getMetadata(ModelMetadataKey, Service) as mongoose.Model<unknown> | undefined)?.modelName;
 
         if (key && this._services[key]) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name, not a static property
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name
             delete this._services[key];
         }
 

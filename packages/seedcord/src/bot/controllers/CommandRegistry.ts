@@ -11,6 +11,7 @@ import { Envapter } from 'envapt';
 
 import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
+import { getDevChannel } from '@hmr/devChannel';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { CommandMetadataKey } from '@src/metadataKeys';
 
@@ -39,7 +40,7 @@ interface CommandArtifact {
  * Manages Discord application command registration and deployment.
  *
  * Scans command directories, builds command structures, and registers both global and guild-scoped commands
- * to Discord's API. Accessed via `core.bot.commands`, not constructed directly.
+ * to Discord's API. Accessed via `core.bot.commands`. Do not construct it directly.
  */
 export class CommandRegistry implements Initializeable, HmrAware {
     public readonly name = 'Commands';
@@ -69,8 +70,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             registerHandler: this.registerCommand.bind(this),
             unregisterHandler: this.unregisterCommand.bind(this),
             getArtifacts: this.getArtifacts.bind(this),
-            logger: this.logger,
-            name: 'Commands'
+            logger: this.logger
         });
     }
 
@@ -95,11 +95,9 @@ export class CommandRegistry implements Initializeable, HmrAware {
             'guild groups': this.guildCommands.size
         });
 
-        if (import.meta.hot) {
-            import.meta.hot.on('seedcord:refresh-commands', (data) => {
-                void this.refresh(data.shouldRefresh);
-            });
-        }
+        getDevChannel()?.on('seedcord:refresh-commands', (data) => {
+            void this.refresh(data.shouldRefresh);
+        });
     }
 
     /** @internal */
@@ -124,11 +122,9 @@ export class CommandRegistry implements Initializeable, HmrAware {
         if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {
             this.pendingEvents.delete(event.file);
             this.pendingEvents.set(event.file, event);
-            if (import.meta.hot) {
-                import.meta.hot.send('seedcord:commands-update-prompt', {
-                    files: Array.from(this.pendingEvents.keys()).map((f) => formatFilePath(f))
-                });
-            }
+            getDevChannel()?.send('seedcord:commands-update-prompt', {
+                files: Array.from(this.pendingEvents.keys()).map((f) => formatFilePath(f))
+            });
         } else {
             await this.hmrHandler?.handle(event);
         }
