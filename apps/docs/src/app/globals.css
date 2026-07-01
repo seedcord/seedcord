@@ -56,6 +56,18 @@
     display: inline;
 }
 
+/* renderReadme injects these wordmark imgs from the source README <picture>. dark is hidden by
+ * default so SSR shows the light one before next-themes flips data-theme. */
+.readme-img-dark {
+    display: none;
+}
+[data-theme='dark'] .readme-img-light {
+    display: none;
+}
+[data-theme='dark'] .readme-img-dark {
+    display: inline;
+}
+
 /* Cross-package/external indicator, emitted by decorateProseLinks (prose) and the SeeAlso /
  * inheritedFrom anchors; code-block links open in a new tab without this glyph. nowrap keeps the
  * glyph on the link's last line. */
