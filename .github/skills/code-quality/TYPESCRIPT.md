@@ -19,9 +19,13 @@ const name = (response as any).user.name;
 
 // Good — narrow with a type guard
 function hasName(v: unknown): v is { name: string } {
-    return typeof v === 'object' && v !== null && 'name' in v && typeof (v as Record<string, unknown>).name === 'string';
+    return (
+        typeof v === 'object' && v !== null && 'name' in v && typeof (v as Record<string, unknown>).name === 'string'
+    );
 }
-if (hasName(response)) { const name = response.name; }
+if (hasName(response)) {
+    const name = response.name;
+}
 ```
 
 Use `typeof`, `instanceof`, `in`, and discriminated union checks before reaching for a cast. When a third-party library forces a cast, use a single `as Expected` with `// justified: <reason>`.
@@ -87,7 +91,9 @@ Don't write `T extends any` — constrain generics meaningfully. Let TypeScript 
 
 ```ts
 // Bad — unconstrained, no information at call site
-function first<T>(arr: T[]): T | undefined { return arr[0]; }
+function first<T>(arr: T[]): T | undefined {
+    return arr[0];
+}
 
 // Good — same, but let inference do the work
 const first = <T>(arr: T[]): T | undefined => arr[0];
@@ -133,14 +139,14 @@ type UserDraft = Omit<User, 'id'> & Partial<Pick<User, 'id'>>;
 // Bad — type annotation widens to string, losing literal inference
 const routes: Record<string, string> = {
     home: '/',
-    about: '/about',
+    about: '/about'
     // typo in key: 'abut' would not be caught until runtime
 };
 
 // Good — satisfies validates without widening
 const routes = {
     home: '/',
-    about: '/about',
+    about: '/about'
 } satisfies Record<string, string>;
 
 routes.home; // type: '/' (literal), not string
@@ -152,7 +158,7 @@ type Status = 'pending' | 'fulfilled' | 'cancelled';
 const statusLabels = {
     pending: 'Pending',
     fulfilled: 'Fulfilled',
-    cancelled: 'Cancelled',
+    cancelled: 'Cancelled'
 } satisfies Record<Status, string>;
 // Adding a new Status without updating statusLabels is a compile error
 ```
@@ -170,7 +176,7 @@ const directions = ['north', 'south', 'east', 'west']; // string[]
 // With as const — literal tuple
 const directions = ['north', 'south', 'east', 'west'] as const;
 // readonly ['north', 'south', 'east', 'west']
-type Direction = typeof directions[number]; // 'north' | 'south' | 'east' | 'west'
+type Direction = (typeof directions)[number]; // 'north' | 'south' | 'east' | 'west'
 ```
 
 Combine with `satisfies` for validated, literal-preserving config:
@@ -178,7 +184,7 @@ Combine with `satisfies` for validated, literal-preserving config:
 ```ts
 const buttonSizes = {
     sm: 'px-3 py-2 text-xs',
-    md: 'px-4 py-2.5 text-sm',
+    md: 'px-4 py-2.5 text-sm'
 } as const satisfies Record<string, string>;
 ```
 
@@ -217,9 +223,7 @@ const user = JSON.parse(raw) as User;
 // Good — validate at the boundary with a runtime type guard
 //   (or a Zod schema, if Zod is in use in the consuming package)
 function isUser(v: unknown): v is User {
-    return typeof v === 'object'
-        && v !== null
-        && typeof (v as Record<string, unknown>).id === 'string';
+    return typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string';
 }
 
 const parsed: unknown = JSON.parse(raw);
@@ -255,17 +259,17 @@ registerHandler('click', fn);     // TypeScript error
 let value: any;
 
 // ❌ Double casts
-const v = x as unknown as T;  // fix the declaration instead
+const v = x as unknown as T; // fix the declaration instead
 
 // ❌ Silently widening with as
-const id = rawId as string;    // use a type guard or validated cast at boundary
+const id = rawId as string; // use a type guard or validated cast at boundary
 
 // ❌ Redundant non-null assertions when the type is already correct
-const el = ref.current!;  // if ref.current is HTMLDivElement | null, use assertDefined() or check first
+const el = ref.current!; // if ref.current is HTMLDivElement | null, use assertDefined() or check first
 
 // ❌ import('pkg').Type inline
-type X = import('pkg').SomeType;  // use: import type { SomeType } from 'pkg';
+type X = import('pkg').SomeType; // use: import type { SomeType } from 'pkg';
 
 // ❌ Generic typed useReducer (deprecated form)
-useReducer<React.Reducer<State, Action>>(reducer);  // use: useReducer(reducer) with inferred types
+useReducer<React.Reducer<State, Action>>(reducer); // use: useReducer(reducer) with inferred types
 ```

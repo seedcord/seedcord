@@ -7,15 +7,19 @@ description: Use this when asked to write code, or audit, sweep, or fix code qua
 
 The seedcord monorepo enforces quality through layered checks — mostly tool-enforced now, with a single review-enforced check that's hard to automate (cross-package source paths).
 
-| Layer                                   | What it catches                                                                                             | How to run today                                                                                                                                                                                                                          |
-| --------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ESLint + TypeScript** (tool)          | Type errors, lint violations, import order, formatting, rule violations                                     | `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc` (or `pnpm lint:fix && pnpm tc` from repo root via turbo)                                                                                                                                     |
-| **Vitest** (tool)                       | Behavior regressions                                                                                        | `pnpm -C <pkg> test` (only after lint + tc pass)                                                                                                                                                                                          |
-| **Prettier** (tool)                     | Formatting                                                                                                  | `pnpm -C <pkg> fmt` / `fmt:check`                                                                                                                                                                                                         |
-| **changesets** (tool)                   | Missing version bump on published packages                                                                  | `pnpm cs` when touching a published package; `pnpm cs:status` to check                                                                                                                                                                    |
-| **React 19 antipatterns** (tool)        | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `pnpm react-doctor --verbose` from repo root. Configured via `react-doctor.config.json`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics.                               |
-| **Dead code / unused deps** (tool)      | Unused files, exports, types, deps, devDeps, binaries                                                       | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
-| **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src`                                                  | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`.                                                                                                                                                                |
+<!--prettier-ignore-start-->
+
+| Layer | What it catches | How to run today |
+| --- | --- | --- |
+| **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc` (or `pnpm lint:fix && pnpm tc` from repo root via turbo) |
+| **Vitest** (tool) | Behavior regressions | `pnpm -C <pkg> test` (only after lint + tc pass) |
+| **Prettier** (tool) | Formatting | `pnpm -C <pkg> fmt` / `fmt:check` |
+| **changesets** (tool) | Missing version bump on published packages | `pnpm cs` when touching a published package; `pnpm cs:status` to check |
+| **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `pnpm react-doctor --verbose` from repo root. Configured via `react-doctor.config.json`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
+| **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
+| **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src` | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`. |
+
+<!--prettier-ignore-end-->
 
 The only acceptable end state for a PR is: **lint:fix and tc exit clean for every touched package, every test passes, no React 19 antipattern is shipped in `apps/*`, and any published-package change has a `changeset`.**
 
@@ -50,8 +54,7 @@ These apply to every component in `apps/{docs,guide,home}/src` and to the Ink CL
 
 ### Bugs — must fix before merge
 
-**Mutable values in effect deps**
-`location.pathname`, `ref.current`, or other mutable globals in a `useEffect` deps array. These don't trigger re-renders when they change, so the effect won't re-run.
+**Mutable values in effect deps** `location.pathname`, `ref.current`, or other mutable globals in a `useEffect` deps array. These don't trigger re-renders when they change, so the effect won't re-run.
 
 ```tsx
 // Bad
@@ -71,8 +74,7 @@ useEffect(() => {
 }, []);
 ```
 
-**Array index as React key**
-Index keys break when the list is reordered or filtered.
+**Array index as React key** Index keys break when the list is reordered or filtered.
 
 ```tsx
 // Bad
@@ -85,8 +87,7 @@ items.map((item) => <Item key={item.id} />);
 STATIC_TABS.map((tab) => <Tab key={tab.label} />);
 ```
 
-**Hydration mismatches**
-`new Date()`, `Math.random()`, `window.*`, or any client-only value reached from JSX during SSR. The server renders one value, the client renders another, hydration throws.
+**Hydration mismatches** `new Date()`, `Math.random()`, `window.*`, or any client-only value reached from JSX during SSR. The server renders one value, the client renders another, hydration throws.
 
 ```tsx
 // Bad
@@ -102,8 +103,7 @@ useEffect(() => {
 
 ### Warnings — fix in the same pass
 
-**React 19 deprecated APIs**
-`useContext(X)` is superseded by `use(X)` in React 19. `forwardRef` is no longer needed — `ref` is a normal prop now.
+**React 19 deprecated APIs** `useContext(X)` is superseded by `use(X)` in React 19. `forwardRef` is no longer needed — `ref` is a normal prop now.
 
 ```tsx
 // Bad
@@ -120,11 +120,9 @@ function MyInput({ ref, ...rest }: { ref?: Ref<HTMLInputElement> } & InputHTMLAt
 }
 ```
 
-**`useState(propValue)` without sync**
-If the prop can change externally and the state needs to follow it, add `useEffect(() => setState(prop), [prop])` or remount with a `key` derived from the prop.
+**`useState(propValue)` without sync** If the prop can change externally and the state needs to follow it, add `useEffect(() => setState(prop), [prop])` or remount with a `key` derived from the prop.
 
-**5+ related `useState` calls**
-Collapse related boolean / open-state flags into a `useReducer`.
+**5+ related `useState` calls** Collapse related boolean / open-state flags into a `useReducer`.
 
 ```tsx
 // Bad — 6 related useState calls
@@ -141,8 +139,7 @@ function uiReducer(state: UIState, action: UIAction): UIState {
 const [ui, dispatch] = useReducer(uiReducer, { isOpen: false, isDropdownOpen: false });
 ```
 
-**`.filter().map()` chains**
-Two passes when one would do. Combine with `.reduce()`.
+**`.filter().map()` chains** Two passes when one would do. Combine with `.reduce()`.
 
 ```ts
 // Bad
@@ -155,8 +152,7 @@ items.reduce<Result[]>((acc, item) => {
 }, []);
 ```
 
-**`array.includes()` inside a loop**
-O(n²) membership. Build a `Set` once outside the loop.
+**`array.includes()` inside a loop** O(n²) membership. Build a `Set` once outside the loop.
 
 ```ts
 // Bad
@@ -171,8 +167,7 @@ for (const x of items) {
 }
 ```
 
-**Sequential independent `await`**
-Two independent awaits in sequence run as a waterfall. They should race.
+**Sequential independent `await`** Two independent awaits in sequence run as a waterfall. They should race.
 
 ```ts
 // Bad
@@ -183,8 +178,7 @@ const b = await fetchB();
 const [a, b] = await Promise.all([fetchA(), fetchB()]);
 ```
 
-**`await` before a synchronous early-return guard**
-The guard doesn't need the awaited value — return first.
+**`await` before a synchronous early-return guard** The guard doesn't need the awaited value — return first.
 
 ```ts
 // Bad
@@ -201,8 +195,7 @@ async function handle(input: string | null) {
 }
 ```
 
-**`font-bold` on headings (h1–h6)**
-Bold weight crushes counter shapes at display sizes. Use `font-semibold` at most.
+**`font-bold` on headings (h1–h6)** Bold weight crushes counter shapes at display sizes. Use `font-semibold` at most.
 
 ```tsx
 // Bad
@@ -212,8 +205,7 @@ Bold weight crushes counter shapes at display sizes. Use `font-semibold` at most
 <h2 className="font-semibold">Title</h2>
 ```
 
-**`w-N h-N` when both axes are equal**
-Tailwind v4 collapses to `size-N`.
+**`w-N h-N` when both axes are equal** Tailwind v4 collapses to `size-N`.
 
 ```tsx
 // Bad
@@ -223,8 +215,7 @@ Tailwind v4 collapses to `size-N`.
 <div className="size-4" />
 ```
 
-**Barrel imports inside the same app**
-Importing from a barrel/index when the direct module is one folder away costs unnecessary fan-out for the bundler and HMR.
+**Barrel imports inside the same app** Importing from a barrel/index when the direct module is one folder away costs unnecessary fan-out for the bundler and HMR.
 
 ```ts
 // Bad
@@ -234,11 +225,9 @@ import { useAuthStore } from '../store';
 import { useAuthStore } from '../store/useAuthStore';
 ```
 
-**Em dash (`—`) in JSX text**
-Use comma, colon, semicolon, or parentheses. The em dash visually crowds inline UI text.
+**Em dash (`—`) in JSX text** Use comma, colon, semicolon, or parentheses. The em dash visually crowds inline UI text.
 
-**Giant components (~200+ lines)**
-Extract focused sub-components. The parent reads as an orchestrator — state, effects, and composition. Children own a single visual concern.
+**Giant components (~200+ lines)** Extract focused sub-components. The parent reads as an orchestrator — state, effects, and composition. Children own a single visual concern.
 
 ---
 

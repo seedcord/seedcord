@@ -1,86 +1,86 @@
 pkg:seedcord:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/seedcord/**'
-      - any-glob-to-any-file: 'seedcord/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/seedcord/**'
+          - any-glob-to-any-file: 'seedcord/**'
 pkg:core:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/core/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/core/**'
 pkg:mock:
-  - changed-files:
-      - any-glob-to-any-file: 'mock/**'
+    - changed-files:
+          - any-glob-to-any-file: 'mock/**'
 pkg:services:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/services/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/services/**'
 pkg:plugins:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/plugins/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/plugins/**'
 pkg:errors:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/errors/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/errors/**'
 pkg:kit:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/kit/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/kit/**'
 pkg:ui:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/ui/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/ui/**'
 pkg:types:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/types/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/types/**'
 pkg:utils:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/utils/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/utils/**'
 pkg:eslint-config:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/eslint-config/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/eslint-config/**'
 pkg:tsconfig:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/tsconfig/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/tsconfig/**'
 pkg:tsdown-config:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/tsdown-config/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/tsdown-config/**'
 pkg:cli:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/cli/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/cli/**'
 pkg:docs-generator:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/docs-generator/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/docs-generator/**'
 pkg:docs-engine:
-  - changed-files:
-      - any-glob-to-any-file: 'packages/docs-engine/**'
+    - changed-files:
+          - any-glob-to-any-file: 'packages/docs-engine/**'
 app:home:
-  - changed-files:
-      - any-glob-to-any-file: 'apps/home/**'
+    - changed-files:
+          - any-glob-to-any-file: 'apps/home/**'
 app:guide:
-  - changed-files:
-      - any-glob-to-any-file: 'apps/guide/**'
+    - changed-files:
+          - any-glob-to-any-file: 'apps/guide/**'
 area:docs:
-  - changed-files:
-      - any-glob-to-any-file: 'docs/**'
-      - any-glob-to-any-file: '**/*.md'
+    - changed-files:
+          - any-glob-to-any-file: 'docs/**'
+          - any-glob-to-any-file: '**/*.md'
 area:tests:
-  - changed-files:
-      - any-glob-to-any-file: '**/*.test.ts'
-      - any-glob-to-any-file: '**/*.spec.ts'
-      - any-glob-to-any-file: '**/__tests__/**/*'
+    - changed-files:
+          - any-glob-to-any-file: '**/*.test.ts'
+          - any-glob-to-any-file: '**/*.spec.ts'
+          - any-glob-to-any-file: '**/__tests__/**/*'
 area:ci:
-  - changed-files:
-      - any-glob-to-any-file: '.github/**'
-      - any-glob-to-any-file: turbo.json
-      - any-glob-to-any-file: turbo.jsonc
-      - any-glob-to-any-file: pnpm-workspace.yaml
-      - any-glob-to-any-file: pnpm-lock.yaml
+    - changed-files:
+          - any-glob-to-any-file: '.github/**'
+          - any-glob-to-any-file: turbo.json
+          - any-glob-to-any-file: turbo.jsonc
+          - any-glob-to-any-file: pnpm-workspace.yaml
+          - any-glob-to-any-file: pnpm-lock.yaml
 area:config:
-  - changed-files:
-      - any-glob-to-any-file: '**/*.mjs'
-      - any-glob-to-any-file: '**/*.cjs'
-      - any-glob-to-any-file: '**/*.json'
-      - any-glob-to-any-file: tsconfig.json
-      - any-glob-to-any-file: 'tsconfig/**'
-      - any-glob-to-any-file: eslint.config.mjs
-      - any-glob-to-any-file: vitest.config.ts
+    - changed-files:
+          - any-glob-to-any-file: '**/*.mjs'
+          - any-glob-to-any-file: '**/*.cjs'
+          - any-glob-to-any-file: '**/*.json'
+          - any-glob-to-any-file: tsconfig.json
+          - any-glob-to-any-file: 'tsconfig/**'
+          - any-glob-to-any-file: eslint.config.mjs
+          - any-glob-to-any-file: vitest.config.ts
 area:assets:
-  - changed-files:
-      - any-glob-to-any-file: 'assets/**'
-      - any-glob-to-any-file: '**/*.png'
-      - any-glob-to-any-file: '**/*.svg'
-      - any-glob-to-any-file: '**/*.jpg'
+    - changed-files:
+          - any-glob-to-any-file: 'assets/**'
+          - any-glob-to-any-file: '**/*.png'
+          - any-glob-to-any-file: '**/*.svg'
+          - any-glob-to-any-file: '**/*.jpg'
