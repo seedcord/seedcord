@@ -1,5 +1,22 @@
 # @seedcord/cli
 
+## 0.4.0-next.0
+
+### Minor Changes
+
+- 8635423: A failed hot-reload now restores the file's last-good version, so the handler stays registered through a broken edit until the next good save. Disable it with `hmr.rollback: false` in `seedcord.config.ts`.
+
+### Patch Changes
+
+- 8635423: Decouple HMR from vite's `import.meta.hot` behind a typed `DevChannel`. Drop the `HmrModuleHandler` `name` option where you construct the handler, it was only an internal cache key and is no longer accepted.
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+    - @seedcord/errors@0.2.2-next.0
+    - @seedcord/types@0.7.2-next.0
+    - @seedcord/services@0.8.3-next.0
+    - @seedcord/utils@0.7.1-next.0
+
 ## 0.3.1
 
 ### Patch Changes

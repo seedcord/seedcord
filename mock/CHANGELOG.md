@@ -1,5 +1,17 @@
 # @seedcord/mock
 
+## 0.2.23-next.0
+
+### Patch Changes
+
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+    - seedcord@0.16.0-next.0
+    - @seedcord/plugins@0.7.3-next.0
+
 ## 0.2.22
 
 ### Patch Changes
