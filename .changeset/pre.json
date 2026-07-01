@@ -20,5 +20,11 @@
     "@seedcord/ui": "0.2.0",
     "@seedcord/utils": "0.7.0"
   },
-  "changesets": []
+  "changesets": [
+    "bus-hmr-registration",
+    "duplicate-interaction-guards",
+    "hmr-decouple",
+    "hmr-rollback",
+    "once-handler-concurrent-fire"
+  ]
 }

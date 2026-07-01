@@ -1,5 +1,26 @@
 # seedcord
 
+## 0.16.0-next.0
+
+### Minor Changes
+
+- 8635423: Decouple HMR from vite's `import.meta.hot` behind a typed `DevChannel`. Drop the `HmrModuleHandler` `name` option where you construct the handler, it was only an internal cache key and is no longer accepted.
+- 8635423: A failed hot-reload now restores the file's last-good version, so the handler stays registered through a broken edit until the next good save. Disable it with `hmr.rollback: false` in `seedcord.config.ts`.
+
+### Patch Changes
+
+- 8635423: Register the subscriber bus for HMR so editing a subscriber file hot-reloads it in dev. The wiring existed but was never invoked, so subscriber edits silently needed a full restart.
+- 8635423: Throw on a duplicate interaction route, and on two interaction middleware classes sharing a name. Before, the later registration silently overwrote the earlier one.
+- 8635423: Fix a `once` event handler running twice when the same event fired concurrently. Two overlapping fires both passed the spent-handler check before either marked it spent.
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+    - @seedcord/errors@0.2.2-next.0
+    - @seedcord/types@0.7.2-next.0
+    - @seedcord/kit@0.2.1-next.0
+    - @seedcord/services@0.8.3-next.0
+    - @seedcord/utils@0.7.1-next.0
+
 ## 0.15.0
 
 ### Minor Changes

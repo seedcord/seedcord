@@ -1,5 +1,15 @@
 # @seedcord/kit
 
+## 0.2.1-next.0
+
+### Patch Changes
+
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+    - @seedcord/errors@0.2.2-next.0
+    - @seedcord/types@0.7.2-next.0
+
 ## 0.2.0
 
 ### Minor Changes

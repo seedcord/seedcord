@@ -1,5 +1,11 @@
 # @seedcord/types
 
+## 0.7.2-next.0
+
+### Patch Changes
+
+- 8635423: Decouple HMR from vite's `import.meta.hot` behind a typed `DevChannel`. Drop the `HmrModuleHandler` `name` option where you construct the handler, it was only an internal cache key and is no longer accepted.
+
 ## 0.7.1
 
 ### Patch Changes
