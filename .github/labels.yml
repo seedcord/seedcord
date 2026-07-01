@@ -1,99 +1,74 @@
 - name: '📦 seedcord'
   color: bc6262
-  description: Changes related to the seedcord package
   from_name: 'pkg:seedcord'
 - name: '📦 core'
   color: bc8362
-  description: Changes related to the core package
   from_name: 'pkg:core'
 - name: '📦 mock'
   color: bca562
-  description: Changes related to the mock package
   from_name: 'pkg:mock'
 - name: '📦 services'
   color: b0bc62
-  description: Changes related to shared services
   from_name: 'pkg:services'
 - name: '📦 plugins'
   color: 8fbc62
-  description: Changes related to plugins
   from_name: 'pkg:plugins'
 - name: '📦 errors'
   color: 6ebc62
-  description: Changes related to the errors package
   from_name: 'pkg:errors'
 - name: '📦 kit'
   color: 62bc78
-  description: Changes related to the kit package
   from_name: 'pkg:kit'
 - name: '📦 ui'
   color: 62bc9b
-  description: Changes related to the UI package
   from_name: 'pkg:ui'
 - name: '📦 types'
   color: 62bcbc
-  description: Changes related to shared types
   from_name: 'pkg:types'
 - name: '📦 utils'
   color: 629bbc
-  description: Changes related to utilities
   from_name: 'pkg:utils'
 - name: '📦 eslint-config'
   color: 6278bc
-  description: Changes related to the ESLint config package
   from_name: 'pkg:eslint-config'
 - name: '📦 tsconfig'
   color: 6e62bc
-  description: Changes related to the TSConfig package
   from_name: 'pkg:tsconfig'
 - name: '📦 tsdown-config'
   color: 8f62bc
-  description: Changes related to the tsdown config package
   from_name: 'pkg:tsdown-config'
 - name: '📦 cli'
   color: b062bc
-  description: Changes related to the Seedcord CLI package
   from_name: 'pkg:cli'
 - name: '📦 docs-generator'
   color: bc62a5
-  description: Changes related to API docs tooling
   from_name: 'pkg:docs-generator'
 - name: '📦 docs-engine'
   color: bc6283
-  description: Changes related to the documentation engine package
   from_name: 'pkg:docs-engine'
 - name: '🏠 home'
   color: bc9662
-  description: Changes related to the home marketing site
   from_name: 'app:home'
 - name: '🎓 guide'
   color: 6296bc
-  description: Changes related to the guide site
   from_name: 'app:guide'
 - name: '📚 docs'
   color: 8762bc
-  description: Changes related to the docs site
 - name: '🧪 tests'
   color: 62bc80
-  description: Test updates
   from_name: 'area:tests'
 - name: '🤖 ci'
   color: 6287bc
-  description: Continuous integration and automation changes
   from_name: 'area:ci'
 - name: '🔍 triage'
   color: a269b5
-  description: Needs triage, not yet reviewed
   from_name: 'status:needs-triage'
 - name: '🩹 patch'
   color: 59c58f
-  description: Semver patch release
 - name: '✨ minor'
   color: c5a459
-  description: Semver minor release
 - name: '💥 major'
   color: c55d59
-  description: Semver major release
 - name: good first issue
   color: 7057ff
   description: Great for newcomers to the project

@@ -18,7 +18,7 @@ Finish these after generating, none of them are automated.
 
 1. `.changeset/pre.json`, add `"@seedcord/<name>": "<first-version>"` to `initialVersions` (skip for a private package).
 2. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `packages/<name>/**`.
-3. `.github/labels.yml`, add the `📦 <name>` label entry (name, a muted color, description).
+3. `.github/labels.yml`, add the `📦 <name>` label entry (name, a muted color).
 4. `knip.json`, add `"packages/<name>": {}` to the `workspaces` map.
 5. `packages/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry (`displayName` plus any `aliases`) for `@seedcord/<name>`. Without it the docs site renders the full scoped name. The override sets the short display name (`core`) and extra search aliases. Skip for a package with no documented entry point, it never shows in the docs site.
 6. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
