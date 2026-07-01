@@ -1,102 +1,99 @@
-- name: pkg:seedcord
-  color: ff6b6b
+- name: '📦 seedcord'
+  color: bc6262
   description: Changes related to the seedcord package
-- name: pkg:core
-  color: 27ae60
+  from_name: 'pkg:seedcord'
+- name: '📦 core'
+  color: bc8362
   description: Changes related to the core package
-- name: pkg:mock
-  color: 8d6e63
+  from_name: 'pkg:core'
+- name: '📦 mock'
+  color: bca562
   description: Changes related to the mock package
-- name: pkg:services
-  color: 45b7d1
+  from_name: 'pkg:mock'
+- name: '📦 services'
+  color: b0bc62
   description: Changes related to shared services
-- name: pkg:plugins
-  color: 02796b
+  from_name: 'pkg:services'
+- name: '📦 plugins'
+  color: 8fbc62
   description: Changes related to plugins
-- name: pkg:errors
-  color: e74c3c
+  from_name: 'pkg:plugins'
+- name: '📦 errors'
+  color: 6ebc62
   description: Changes related to the errors package
-- name: pkg:kit
-  color: 16a085
+  from_name: 'pkg:errors'
+- name: '📦 kit'
+  color: 62bc78
   description: Changes related to the kit package
-- name: pkg:ui
-  color: f39c12
+  from_name: 'pkg:kit'
+- name: '📦 ui'
+  color: 62bc9b
   description: Changes related to the UI package
-- name: pkg:types
-  color: ffeaa7
+  from_name: 'pkg:ui'
+- name: '📦 types'
+  color: 62bcbc
   description: Changes related to shared types
-- name: pkg:utils
-  color: dda0dd
+  from_name: 'pkg:types'
+- name: '📦 utils'
+  color: 629bbc
   description: Changes related to utilities
-- name: pkg:eslint-config
-  color: 78597d
-  description: Changes related to ESLint config package
-- name: pkg:tsconfig
-  color: 196699
-  description: Changes related to TSConfig package
-- name: pkg:tsdown-config
-  color: 196699
-  description: Changes related to tsdown config package
-- name: pkg:cli
-  color: 4a90e2
+  from_name: 'pkg:utils'
+- name: '📦 eslint-config'
+  color: 6278bc
+  description: Changes related to the ESLint config package
+  from_name: 'pkg:eslint-config'
+- name: '📦 tsconfig'
+  color: 6e62bc
+  description: Changes related to the TSConfig package
+  from_name: 'pkg:tsconfig'
+- name: '📦 tsdown-config'
+  color: 8f62bc
+  description: Changes related to the tsdown config package
+  from_name: 'pkg:tsdown-config'
+- name: '📦 cli'
+  color: b062bc
   description: Changes related to the Seedcord CLI package
-- name: pkg:docs-generator
-  color: 85c1e9
+  from_name: 'pkg:cli'
+- name: '📦 docs-generator'
+  color: bc62a5
   description: Changes related to API docs tooling
-- name: pkg:docs-engine
-  color: 9b59b6
+  from_name: 'pkg:docs-generator'
+- name: '📦 docs-engine'
+  color: bc6283
   description: Changes related to the documentation engine package
-- name: app:home
-  color: e17055
+  from_name: 'pkg:docs-engine'
+- name: '🏠 home'
+  color: bc9662
   description: Changes related to the home marketing site
-- name: app:guide
-  color: 6c5ce7
+  from_name: 'app:home'
+- name: '🎓 guide'
+  color: 6296bc
   description: Changes related to the guide site
-- name: area:docs
-  color: 28a745
-  description: Documentation updates
-- name: area:tests
-  color: ffc107
+  from_name: 'app:guide'
+- name: '📚 docs'
+  color: 8762bc
+  description: Changes related to the docs site
+- name: '🧪 tests'
+  color: 62bc80
   description: Test updates
-- name: area:ci
-  color: 007bff
+  from_name: 'area:tests'
+- name: '🤖 ci'
+  color: 6287bc
   description: Continuous integration and automation changes
-- name: area:config
-  color: 6c757d
-  description: Repository configuration updates
-- name: area:assets
-  color: fd7e14
-  description: Static asset updates
-- name: type:bug
-  color: dc3545
-  description: Bug fix
-- name: type:feature
-  color: 17a2b8
-  description: New feature or enhancement
-- name: type:chore
-  color: ffc107
-  description: Maintenance tasks
-- name: type:refactor
-  color: 6c757d
-  description: Refactoring work
-- name: type:docs
-  color: 28a745
-  description: Documentation only changes
-- name: priority:high
-  color: dc3545
-  description: Needs urgent attention
-- name: priority:medium
-  color: fd7e14
-  description: Address in the near future
-- name: priority:low
-  color: ffc107
-  description: Nice to have changes
-- name: status:needs-triage
-  color: 6f42c1
-  description: Awaiting triage
-- name: status:blocked
-  color: dc3545
-  description: Blocked by another task or dependency
+  from_name: 'area:ci'
+- name: '🔍 triage'
+  color: a269b5
+  description: Needs triage, not yet reviewed
+  from_name: 'status:needs-triage'
+- name: '🩹 patch'
+  color: 59c58f
+  description: Semver patch release
+- name: '✨ minor'
+  color: c5a459
+  description: Semver minor release
+- name: '💥 major'
+  color: c55d59
+  description: Semver major release
 - name: good first issue
-  color: 28a745
+  color: 7057ff
   description: Great for newcomers to the project
