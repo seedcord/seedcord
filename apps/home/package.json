@@ -12,7 +12,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' --cache",
-        "tc": "tsc --noEmit"
+        "tc": "tsgo --noEmit"
     },
     "dependencies": {
         "@seedcord/ui": "workspace:*",
