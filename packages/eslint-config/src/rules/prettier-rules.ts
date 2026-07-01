@@ -16,7 +16,7 @@ export const PRETTIER_CONFIG: Options = {
     useTabs: false,
     quoteProps: 'as-needed',
     bracketSameLine: false,
-    proseWrap: 'preserve'
+    proseWrap: 'never'
 };
 
 export const PRETTIER_RULES: Linter.RulesRecord = {
