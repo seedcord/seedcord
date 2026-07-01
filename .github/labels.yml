@@ -1,17 +1,21 @@
 - name: '📦 seedcord'
   color: bc6262
+  description: framework orchestrator and bot host
 - name: '📦 core'
   color: bc8362
+  description: transport-agnostic core
 - name: '📦 mock'
   color: bca562
 - name: '📦 services'
   color: b0bc62
+  description: shared runtime services
 - name: '📦 plugins'
   color: 8fbc62
 - name: '📦 errors'
   color: 6ebc62
 - name: '📦 kit'
   color: 62bc78
+  description: component builders, notices, customId codec
 - name: '📦 ui'
   color: 62bc9b
 - name: '📦 types'
@@ -28,8 +32,10 @@
   color: b062bc
 - name: '📦 docs-generator'
   color: bc62a5
+  description: API model generation
 - name: '📦 docs-engine'
   color: bc6283
+  description: docs parser, renderer, explorer
 - name: '🏠 home'
   color: bc9662
 - name: '🎓 guide'
@@ -42,12 +48,16 @@
   color: 6287bc
 - name: '🔍 triage'
   color: a269b5
+  description: not yet reviewed
 - name: '🩹 patch'
   color: 59c58f
+  description: semver patch bump
 - name: '✨ minor'
   color: c5a459
+  description: semver minor bump
 - name: '💥 major'
   color: c55d59
+  description: semver major bump, breaking
 - name: good first issue
   color: 7057ff
-  description: Great for newcomers to the project
+  description: great for newcomers to the project
