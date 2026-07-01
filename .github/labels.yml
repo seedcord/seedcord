@@ -1,68 +1,47 @@
 - name: '📦 seedcord'
   color: bc6262
-  from_name: 'pkg:seedcord'
 - name: '📦 core'
   color: bc8362
-  from_name: 'pkg:core'
 - name: '📦 mock'
   color: bca562
-  from_name: 'pkg:mock'
 - name: '📦 services'
   color: b0bc62
-  from_name: 'pkg:services'
 - name: '📦 plugins'
   color: 8fbc62
-  from_name: 'pkg:plugins'
 - name: '📦 errors'
   color: 6ebc62
-  from_name: 'pkg:errors'
 - name: '📦 kit'
   color: 62bc78
-  from_name: 'pkg:kit'
 - name: '📦 ui'
   color: 62bc9b
-  from_name: 'pkg:ui'
 - name: '📦 types'
   color: 62bcbc
-  from_name: 'pkg:types'
 - name: '📦 utils'
   color: 629bbc
-  from_name: 'pkg:utils'
 - name: '📦 eslint-config'
   color: 6278bc
-  from_name: 'pkg:eslint-config'
 - name: '📦 tsconfig'
   color: 6e62bc
-  from_name: 'pkg:tsconfig'
 - name: '📦 tsdown-config'
   color: 8f62bc
-  from_name: 'pkg:tsdown-config'
 - name: '📦 cli'
   color: b062bc
-  from_name: 'pkg:cli'
 - name: '📦 docs-generator'
   color: bc62a5
-  from_name: 'pkg:docs-generator'
 - name: '📦 docs-engine'
   color: bc6283
-  from_name: 'pkg:docs-engine'
 - name: '🏠 home'
   color: bc9662
-  from_name: 'app:home'
 - name: '🎓 guide'
   color: 6296bc
-  from_name: 'app:guide'
 - name: '📚 docs'
   color: 8762bc
 - name: '🧪 tests'
   color: 62bc80
-  from_name: 'area:tests'
 - name: '🤖 ci'
   color: 6287bc
-  from_name: 'area:ci'
 - name: '🔍 triage'
   color: a269b5
-  from_name: 'status:needs-triage'
 - name: '🩹 patch'
   color: 59c58f
 - name: '✨ minor'
