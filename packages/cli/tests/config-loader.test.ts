@@ -27,10 +27,10 @@ const silentLogger: ILogger = {
 describe('ConfigLoader', () => {
     it('resolves paths and build defaults relative to config directory', async () => {
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
                     default: { instance: './bot.ts', root: './src', entry: './index.ts' } satisfies SeedcordDevConfig
-                } as TModule;
+                } as TModule);
             }
         };
 
@@ -49,8 +49,8 @@ describe('ConfigLoader', () => {
 
     it('throws when instance is missing', async () => {
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return { default: { entry: './index.ts' } } as TModule;
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({ default: { entry: './index.ts' } } as TModule);
             }
         };
 
@@ -63,8 +63,8 @@ describe('ConfigLoader', () => {
 
     it('throws when entry is missing', async () => {
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return { default: { instance: './bot.ts' } } as TModule;
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({ default: { instance: './bot.ts' } } as TModule);
             }
         };
 
@@ -78,10 +78,10 @@ describe('ConfigLoader', () => {
     it('carries hmr config through to the resolved config and resolves hmr.tsconfig', async () => {
         const hmr = { restart: ['**/*.json'], tsconfig: './tsconfig.dev.json' };
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
                     default: { instance: './bot.ts', entry: './index.ts', hmr } satisfies SeedcordDevConfig
-                } as TModule;
+                } as TModule);
             }
         };
 
@@ -95,8 +95,8 @@ describe('ConfigLoader', () => {
 
     it('rejects a non-object default export', async () => {
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return { default: [] } as TModule;
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({ default: [] } as TModule);
             }
         };
 
@@ -107,8 +107,10 @@ describe('ConfigLoader', () => {
 
     it('rejects a non-array hmr.restart', async () => {
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return { default: { instance: './bot.ts', entry: './index.ts', hmr: { restart: 'nope' } } } as TModule;
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts', hmr: { restart: 'nope' } }
+                } as TModule);
             }
         };
 
@@ -119,10 +121,10 @@ describe('ConfigLoader', () => {
 
     it('rejects a non-boolean hmr.rollback', async () => {
         const moduleLoader: ModuleLoader = {
-            importModule<TModule = unknown>(): TModule {
-                return {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
                     default: { instance: './bot.ts', entry: './index.ts', hmr: { rollback: 'nope' } }
-                } as TModule;
+                } as TModule);
             }
         };
 

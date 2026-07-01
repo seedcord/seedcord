@@ -4,7 +4,7 @@ import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@se
 // package exposes only ".", so an unbarreled singleton stays unreachable by user and plugin code at runtime.
 let channel: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents> | undefined;
 
-export function setDevChannel(next: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>): void {
+export function setDevChannel(next: DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents> | undefined): void {
     channel = next;
 }
 

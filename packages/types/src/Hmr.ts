@@ -54,8 +54,7 @@ export interface DevChannel<TSend, TRecv> {
 // vite types our `seedcord:*` payloads as `any` (they sit outside its CustomEventMap).
 interface RawHot {
     send(event: string, data?: unknown): void;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- mirrors vite's own InferCustomEventPayload fallback
-    on(event: string, cb: (data: any) => void): void;
+    on(event: string, cb: (data: unknown) => void): void;
 }
 
 /**
@@ -66,6 +65,7 @@ interface RawHot {
 export function wrapHot<TSend, TRecv>(hot: RawHot): DevChannel<TSend, TRecv> {
     return {
         send: (event, data) => hot.send(event, data),
-        on: (event, cb) => hot.on(event, cb)
+        // justified: RawHot types every payload as unknown, the wire contract guarantees it matches TRecv[Key]
+        on: (event, cb) => hot.on(event, cb as (data: unknown) => void)
     };
 }

@@ -65,6 +65,8 @@ describe('dev channel routing', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
+        // drop the fake channel so a later test never inherits it
+        setDevChannel(undefined);
         vi.clearAllMocks();
     });
 

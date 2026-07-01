@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 import path from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -350,6 +351,74 @@ describe('InteractionDispatcher Integration', () => {
         await expect(controller.onHmr({ file: filePath, type: 'update' })).resolves.toBeUndefined();
         expect(controller.slashMap.has('alpha')).toBe(true);
         expect(controller.slashMap.has('beta')).toBe(true);
+    });
+
+    it('rolls back when a multi-route handler reload collides on a later route owned by another file', async () => {
+        const interactionsDir = 'interactions';
+
+        await testEnv.createFile(
+            `${interactionsDir}/Keeper.ts`,
+            `
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
+
+            const Shared = new CustomId('shared');
+
+            @ButtonRoute(Shared)
+            export class KeeperButton extends ButtonHandler<[typeof Shared]> {
+                public async execute() {
+                    await this.event.reply('keeper');
+                }
+            }
+            `
+        );
+
+        const multiPath = await testEnv.createFile(
+            `${interactionsDir}/Multi.ts`,
+            `
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
+
+            const Own = new CustomId('own');
+
+            @ButtonRoute(Own)
+            export class MultiButton extends ButtonHandler<[typeof Own]> {
+                public async execute() {
+                    await this.event.reply('own');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+        expect(controller.buttonMap.has('own')).toBe(true);
+        expect(controller.buttonMap.has('shared')).toBe(true);
+        const lastGood = controller.buttonMap.get('own');
+
+        // the edit claims a route Keeper owns, so registration throws after setting 'own', orphaning it
+        await testEnv.createFile(
+            `${interactionsDir}/Multi.ts`,
+            `
+            import { CustomId, ButtonHandler, ButtonRoute } from '${seedcordPath}';
+
+            const Own = new CustomId('own');
+            const Shared = new CustomId('shared');
+
+            @ButtonRoute(Own, Shared)
+            export class MultiButton extends ButtonHandler<[typeof Own, typeof Shared]> {
+                public async execute() {
+                    await this.event.reply('own');
+                }
+            }
+            `
+        );
+
+        // rollback restores the last-good handler and must not re-collide on the orphaned route
+        await expect(controller.onHmr({ file: multiPath, type: 'update' })).resolves.toBeUndefined();
+        expect(controller.buttonMap.get('own')).toBe(lastGood);
+        expect(controller.buttonMap.has('shared')).toBe(true);
     });
 
     it('drops the failed unit when the event disables rollback', async () => {

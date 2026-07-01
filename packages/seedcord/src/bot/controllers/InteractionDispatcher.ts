@@ -297,12 +297,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
+        // a partial registration would orphan routes and break hmr rollback
+        const writes: [Collection<string, HandlerConstructor>, string][] = [];
+
         for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[routeType], handlerClass);
             if (!areRoutes(meta)) continue;
 
-            const routes = meta;
-            routes.forEach((route) => {
+            for (const route of meta) {
                 const existing = map.get(route);
                 // a different class on the same route would silently shadow (last write wins), so this throws
                 if (existing && existing !== handlerClass) {
@@ -312,11 +314,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                         handlerClass.name
                     ]);
                 }
-                map.set(route, handlerClass);
-            });
+                writes.push([map, route]);
+            }
 
             this.logger.utils.registration(handlerClass.name, formatFilePath(relativePath));
         }
+
+        for (const [map, route] of writes) map.set(route, handlerClass);
     }
 
     /** @internal For use in dev mode */
