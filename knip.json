@@ -11,6 +11,7 @@
             "project": ["scripts/**/*.ts", "turbo/generators/**/*.ts"]
         },
         "packages/seedcord": {},
+        "packages/core": {},
         "packages/services": {},
         "packages/utils": {},
         "packages/types": {},

@@ -12,7 +12,11 @@ interface PackageOverride {
 const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     seedcord: {
         displayName: 'seedcord',
-        aliases: ['@seedcord', 'core']
+        aliases: ['@seedcord']
+    },
+    '@seedcord/core': {
+        displayName: 'core',
+        aliases: ['core', '@seedcord/core']
     },
     '@seedcord/plugins': {
         displayName: 'plugins',

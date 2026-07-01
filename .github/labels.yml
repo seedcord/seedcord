@@ -1,6 +1,9 @@
 - name: pkg:seedcord
   color: ff6b6b
   description: Changes related to the seedcord package
+- name: pkg:core
+  color: 27ae60
+  description: Changes related to the core package
 - name: pkg:mock
   color: 8d6e63
   description: Changes related to the mock package

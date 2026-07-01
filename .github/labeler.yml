@@ -2,6 +2,9 @@ pkg:seedcord:
   - changed-files:
       - any-glob-to-any-file: 'packages/seedcord/**'
       - any-glob-to-any-file: 'seedcord/**'
+pkg:core:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/core/**'
 pkg:mock:
   - changed-files:
       - any-glob-to-any-file: 'mock/**'
