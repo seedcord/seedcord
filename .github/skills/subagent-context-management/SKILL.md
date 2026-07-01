@@ -28,20 +28,11 @@ Context overflow silently degrades output quality. The model starts forgetting e
 
 ## What sub-agents MUST return
 
-✅ Specific line ranges with direct relevance to your task (not entire files)
-✅ API signatures and interface declarations (not full implementations)
-✅ File paths + class names for dependency lists (not the classes themselves)
-✅ Violation summaries with `file:line` references (not surrounding code)
-✅ Targeted snippets: 5–15 lines max per finding
-✅ Flow descriptions in plain text (not code reconstructions)
+✅ Specific line ranges with direct relevance to your task (not entire files) ✅ API signatures and interface declarations (not full implementations) ✅ File paths + class names for dependency lists (not the classes themselves) ✅ Violation summaries with `file:line` references (not surrounding code) ✅ Targeted snippets: 5–15 lines max per finding ✅ Flow descriptions in plain text (not code reconstructions)
 
 ## What sub-agents must NEVER return
 
-❌ Full file contents
-❌ Entire class implementations
-❌ Large code blocks copy-pasted for "context"
-❌ "All code related to X"
-❌ Anything that could be replaced with a file path + one-sentence description
+❌ Full file contents ❌ Entire class implementations ❌ Large code blocks copy-pasted for "context" ❌ "All code related to X" ❌ Anything that could be replaced with a file path + one-sentence description
 
 ## Example prompts
 
@@ -77,19 +68,11 @@ DO NOT return full file contents."
 
 ## When to use sub-agents
 
-✅ Auditing or exploring > 20 files
-✅ Tracing a pattern or dependency across a large codebase
-✅ Task touches > 10 files and you need integration point mapping
-✅ Architecture is unfamiliar and requires exploration before implementation
-✅ Need to find all call sites of a method across the full project
+✅ Auditing or exploring > 20 files ✅ Tracing a pattern or dependency across a large codebase ✅ Task touches > 10 files and you need integration point mapping ✅ Architecture is unfamiliar and requires exploration before implementation ✅ Need to find all call sites of a method across the full project
 
 ## When NOT to use sub-agents
 
-❌ < 10 files (read them yourself — the overhead isn't worth it)
-❌ You already know which files are affected
-❌ Task plan includes specific file references
-❌ Simple implementation following an existing, understood pattern
-❌ You're doing detailed analysis of violations you've already found
+❌ < 10 files (read them yourself — the overhead isn't worth it) ❌ You already know which files are affected ❌ Task plan includes specific file references ❌ Simple implementation following an existing, understood pattern ❌ You're doing detailed analysis of violations you've already found
 
 ## ⚠️ Parallel Agents and File Conflicts
 

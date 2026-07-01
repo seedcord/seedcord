@@ -192,6 +192,7 @@ See `.github/skills/code-quality/REACT19.md` and `.github/skills/code-quality/TA
 
 - **YAGNI on deps.** Never `pnpm add` a package until the code using it is written in the same commit. Unused deps are dead code — remove them, don't leave them as "future prereqs."
 - **Dead exports.** Before adding `export` to a symbol, verify it is consumed outside the file. Unused exports are dead code — remove the `export` keyword.
+- **Export what callers name.** Add `export` to a symbol only when a consumer might have to reference it by name, whether in a variable annotation, a function parameter or return type, or an `extends`/`implements` clause. A helper type that appears only as the structural shape of another exported type's field stays internal. The parent's own declaration still resolves it in the emitted `.d.ts`, and api-extractor rolls it into the docs with a link (no sidebar entry), so the public surface stays limited to what callers actually write.
 - **Run a dead-code sweep before committing** (see `.github/skills/code-quality/SKILL.md` for the manual `rg` checklist; a `knip` integration is a worthwhile follow-up but is not wired up yet).
 
 ---

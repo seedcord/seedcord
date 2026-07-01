@@ -1,11 +1,25 @@
-import type { APIMessageTopLevelComponent, BaseMessageOptions, JSONEncodable, MessageMentionOptions } from 'discord.js';
+import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 import type { UUID } from 'node:crypto';
 
 /** A ComponentsV2 top-level component, as discord.js accepts it in a message's `components` field. */
-export type V2Component = JSONEncodable<APIMessageTopLevelComponent>;
+export interface V2Component {
+    toJSON(): APIMessageTopLevelComponent;
+}
+
+/** Which roles, users, and mention kinds a reply may ping. */
+interface ReplyAllowedMentions {
+    readonly parse?: ('roles' | 'users' | 'everyone')[];
+    readonly roles?: string[];
+    readonly users?: string[];
+    readonly repliedUser?: boolean;
+}
 
 /** A file as discord.js accepts it in a message's `files` field. */
-export type ReplyFile = NonNullable<BaseMessageOptions['files']>[number];
+interface ReplyFile {
+    readonly attachment: Buffer | string;
+    readonly name?: string;
+    readonly description?: string;
+}
 
 /**
  * A ComponentsV2 reply. Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`,
@@ -13,11 +27,11 @@ export type ReplyFile = NonNullable<BaseMessageOptions['files']>[number];
  */
 export interface ReplyResponse {
     /** The component tree the reply renders from. */
-    components: V2Component[];
+    readonly components: V2Component[];
     /** Which mentions written inside the components resolve into real pings. */
-    allowedMentions?: MessageMentionOptions;
+    readonly allowedMentions?: ReplyAllowedMentions;
     /** Attachments to upload. Under v2 each must be referenced by a thumbnail, media gallery, or file component, or it uploads hidden. */
-    files?: readonly ReplyFile[];
+    readonly files?: readonly ReplyFile[];
 }
 
 /**
@@ -25,7 +39,7 @@ export interface ReplyResponse {
  * uuid the framework logs and puts on the bus.
  */
 export interface RenderContext {
-    uuid: UUID;
+    readonly uuid: UUID;
     /** Contact name a generic fault reply points the user to, from `notifications.developerUsername`. */
-    developerUsername?: string;
+    readonly developerUsername?: string;
 }

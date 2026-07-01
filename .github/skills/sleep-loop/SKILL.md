@@ -66,8 +66,7 @@ Create or overwrite `.vscode/temp.md` with this structure:
 
 ---
 
-**Other notes:**
-[User fills in here]
+**Other notes:** [User fills in here]
 ```
 
 ### Step 2 — Sleep and re-read

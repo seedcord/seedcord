@@ -17,9 +17,9 @@ Every app follows this shape:
 
 ```css
 /* apps/<name>/src/app/globals.css */
-@import 'tailwindcss';            /* single import — replaces @tailwind base/components/utilities */
-@import '../styles/tokens.css';   /* :root + [data-theme='dark'] CSS variables */
-@import '../styles/utilities.css';/* optional: app-specific utility classes */
+@import 'tailwindcss'; /* single import — replaces @tailwind base/components/utilities */
+@import '../styles/tokens.css'; /* :root + [data-theme='dark'] CSS variables */
+@import '../styles/utilities.css'; /* optional: app-specific utility classes */
 ```
 
 ```js
@@ -95,9 +95,9 @@ Each app's `apps/<name>/src/styles/tokens.css` holds the CSS variables for `:roo
     --color-text: #070917;
     --color-surface: rgba(0, 0, 0, 0.02);
 
-    --accent-a: #f04e36;       /* mater red */
-    --accent-b: #6fab49;       /* welon green */
-    --accent-r: #8b90a7;       /* resource accent */
+    --accent-a: #f04e36; /* mater red */
+    --accent-b: #6fab49; /* welon green */
+    --accent-r: #8b90a7; /* resource accent */
 
     --entity-class: #3956ff;
     --entity-interface: #b12bcf;
@@ -227,7 +227,7 @@ Arbitrary values are acceptable only when the design genuinely requires a one-of
 
 ## Rule 8 — Co-locate component variants with the component
 
-For each app's UI primitives (`apps/<name>/src/components/ui/<Primitive>.tsx`), put `BASE_STYLES`, `VARIANTS`, and `SIZES` as `tw\`…\`` constants at the top of the component file. Don't invent a `cva`-style abstraction; the existing`Button.tsx` pattern is the convention. If a primitive is needed in more than one app, extract it to a shared package — don't copy it.
+For each app's UI primitives (`apps/<name>/src/components/ui/<Primitive>.tsx`), put `BASE_STYLES`, `VARIANTS`, and `SIZES` as `tw\`…\``constants at the top of the component file. Don't invent a`cva`-style abstraction; the existing`Button.tsx` pattern is the convention. If a primitive is needed in more than one app, extract it to a shared package — don't copy it.
 
 ```tsx
 // Good — matches apps/docs/src/components/ui/Button.tsx structure
@@ -242,19 +242,19 @@ const VARIANTS = {
 
 ## v4 Gotchas vs v3
 
-| Pattern              | v3                      | v4                                                                     |
-| -------------------- | ----------------------- | ---------------------------------------------------------------------- |
-| Opacity utilities    | `bg-opacity-50`         | `bg-color/50` (old removed)                                            |
-| CSS var in arbitrary | `bg-[--var]`            | `bg-(--var)`                                                           |
-| Important modifier   | `!flex`                 | `flex!`                                                                |
-| Bare `ring` class    | 3px blue                | 1px currentColor — write `ring-3 ring-(--accent-a)`                    |
-| Bare `border` class  | gray-200                | currentColor — always add a color                                      |
-| `outline-none`       | hides outline           | sets `outline: none` literally — use `outline-hidden` to visually hide |
-| Shadow scale         | `shadow-sm` is small    | `shadow-sm` in v4 = v3's bare `shadow` (scale shifted down)            |
-| Container queries    | requires plugin         | built-in — use `@container` + `@sm:` directly                          |
-| `hover:` on mobile   | fires on tap            | only on hover-capable devices                                          |
-| Config               | `tailwind.config.js`    | `@theme {}` in CSS or `:root` custom properties                        |
-| Content scanning     | `content: []` in config | automatic in Next.js; `@source` for files outside the tree             |
+| Pattern | v3 | v4 |
+| --- | --- | --- |
+| Opacity utilities | `bg-opacity-50` | `bg-color/50` (old removed) |
+| CSS var in arbitrary | `bg-[--var]` | `bg-(--var)` |
+| Important modifier | `!flex` | `flex!` |
+| Bare `ring` class | 3px blue | 1px currentColor — write `ring-3 ring-(--accent-a)` |
+| Bare `border` class | gray-200 | currentColor — always add a color |
+| `outline-none` | hides outline | sets `outline: none` literally — use `outline-hidden` to visually hide |
+| Shadow scale | `shadow-sm` is small | `shadow-sm` in v4 = v3's bare `shadow` (scale shifted down) |
+| Container queries | requires plugin | built-in — use `@container` + `@sm:` directly |
+| `hover:` on mobile | fires on tap | only on hover-capable devices |
+| Config | `tailwind.config.js` | `@theme {}` in CSS or `:root` custom properties |
+| Content scanning | `content: []` in config | automatic in Next.js; `@source` for files outside the tree |
 
 ---
 
@@ -267,7 +267,9 @@ No plugin needed. Use `@container` on the parent and `@sm:` etc. on children:
     <div className="grid grid-cols-1 @sm:grid-cols-2 @lg:grid-cols-3" />
 </div>;
 
-{/* Named container */}
+{
+    /* Named container */
+}
 <div className="@container/card">
     <p className="text-sm @md/card:text-base" />
 </div>;
@@ -277,20 +279,20 @@ No plugin needed. Use `@container` on the parent and `@sm:` etc. on children:
 
 ## Anti-patterns checklist
 
-| Pattern                                                    | What to do instead                                            |
-| ---------------------------------------------------------- | ------------------------------------------------------------- |
-| `bg-[#hex]` when a token exists                            | `bg-(--token-name)`                                           |
-| `bg-opacity-50`                                            | `bg-color/50`                                                 |
-| `bg-[--var]`                                               | `bg-(--var)`                                                  |
-| `[a, b].join(' ')` for classNames                          | `cn(a, b)` from `@lib/utils`                                  |
-| `w-N h-N` same value                                       | `size-N`                                                      |
-| `px-N py-N` same value                                     | `p-N`                                                         |
-| `font-bold` / `font-extrabold` on headings                 | `font-semibold`                                               |
-| Inline variant map mixed into JSX                          | Lift to `tw\`…\`` `VARIANTS` const above the component        |
-| Duplicating a primitive across apps                        | Lift to a shared package; propose it before copy-pasting      |
-| Tokens defined in two apps' globals                        | Move to per-app `styles/tokens.css`; lift to shared if reused |
-| `window.innerWidth` read during render                     | Use matchMedia in `useEffect`                                 |
-| New shared package authoring class strings, no `@source`   | Add `@source` pointing to it in the consuming app's globals   |
-| `outline-none` to hide focus ring                          | `outline-hidden`                                              |
-| `@tailwind base/components/utilities`                      | `@import 'tailwindcss'`                                       |
-| `bg-[var(--token)]` (v3 var-in-bracket syntax)             | `bg-(--token)` (v4 paren syntax)                              |
+| Pattern | What to do instead |
+| --- | --- |
+| `bg-[#hex]` when a token exists | `bg-(--token-name)` |
+| `bg-opacity-50` | `bg-color/50` |
+| `bg-[--var]` | `bg-(--var)` |
+| `[a, b].join(' ')` for classNames | `cn(a, b)` from `@lib/utils` |
+| `w-N h-N` same value | `size-N` |
+| `px-N py-N` same value | `p-N` |
+| `font-bold` / `font-extrabold` on headings | `font-semibold` |
+| Inline variant map mixed into JSX | Lift to `tw\`…\`` `VARIANTS` const above the component |
+| Duplicating a primitive across apps | Lift to a shared package; propose it before copy-pasting |
+| Tokens defined in two apps' globals | Move to per-app `styles/tokens.css`; lift to shared if reused |
+| `window.innerWidth` read during render | Use matchMedia in `useEffect` |
+| New shared package authoring class strings, no `@source` | Add `@source` pointing to it in the consuming app's globals |
+| `outline-none` to hide focus ring | `outline-hidden` |
+| `@tailwind base/components/utilities` | `@import 'tailwindcss'` |
+| `bg-[var(--token)]` (v3 var-in-bracket syntax) | `bg-(--token)` (v4 paren syntax) |

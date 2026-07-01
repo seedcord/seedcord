@@ -29,8 +29,10 @@ If you batch multiple iterations into one turn without checkpoints, you are doin
 
 **Before writing any UI element**, read the relevant app's primitive index (e.g. `apps/docs/src/components/ui/` — the seedcord apps don't have a shared `@seedcord/ui` package, each app owns its own primitives today) and resolve every HTML form/interactive element you'd otherwise write raw against an existing primitive. This is not optional and not just for new code — it also applies when you're refactoring a component you didn't author. The pattern below is what to apply (some primitives may not exist yet in a given app — when they don't, that's a signal to lift the pattern into a real primitive rather than inline it):
 
+<!--prettier-ignore-start-->
+
 | If you're about to write… | Check the primitive… | Default expectation |
-|---|---|---|
+| --- | --- | --- |
 | `<button>` | `Button` | **Use it.** Raw `<button>` is only justified for: custom listbox disclosure (`role="option"` rows), layout-id motion contracts where the primitive's child wrapping breaks the animation, invisible modal scrim click-targets, or whole-card-as-button surfaces with bespoke padding. **Inline-justify every raw `<button>` with `// justified: <reason>` so the next audit doesn't re-flag it.** |
 | `<input>`, `<input type="…">` | `Input` | Use it. Raw inputs are justified only when the primitive cannot accommodate a documented mock pattern (e.g. left-side absolutely-positioned icon that needs sibling positioning). |
 | `<select>` | `Select` | Use it. The primitive should bake in `appearance-none` plus a chevron icon — if it doesn't, fix the primitive (don't roll a chevron in every caller). |
@@ -40,6 +42,8 @@ If you batch multiple iterations into one turn without checkpoints, you are doin
 | Drawer / sheet | `Drawer` | Use it. |
 | Toggle / on-off | `Toggle` | Use it. A `<Checkbox>` styled like a switch is wrong. |
 | Card surface | `Card` | Use it. Hand-rolled `rounded-xl border bg-white shadow-*` is a silent violation. |
+
+<!--prettier-ignore-end-->
 
 When a primitive's API doesn't quite fit (e.g. you need a smaller field size, or you need to override outer width), **extend the primitive** — add a token / variant / prop in the shared package — don't write a one-off in the caller. "A 'one-off style' is a missing variant in the design tokens, not an excuse to inline styles."
 
@@ -74,11 +78,9 @@ Header (preserved across iterations):
 ```markdown
 # UI Feedback — interactive component iteration
 
-> Protocol: agent updates this file with one component at a time, then ends its turn.
-> User edits the file with feedback and replies "continue". Loop until "approved" or "ship it".
+> Protocol: agent updates this file with one component at a time, then ends its turn. User edits the file with feedback and replies "continue". Loop until "approved" or "ship it".
 >
-> Dev URL: <http://localhost:PORT/dev/components>
-> Mocks: (path to your visual ground-truth files, if any)
+> Dev URL: <http://localhost:PORT/dev/components> Mocks: (path to your visual ground-truth files, if any)
 
 ---
 ```
@@ -88,9 +90,7 @@ Body (overwritten each iteration):
 ```markdown
 ## Component: <name>
 
-**Mock reference:** <path/file.ext:line-range, if applicable>
-**Live URL:** <http://localhost:PORT/dev/components/component-slug>
-**Implementation:** <path/to/Component.tsx>
+**Mock reference:** <path/file.ext:line-range, if applicable> **Live URL:** <http://localhost:PORT/dev/components/component-slug> **Implementation:** <path/to/Component.tsx>
 
 **What's new this iteration:** (only after the first turn)
 

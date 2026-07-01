@@ -98,32 +98,29 @@ The em-dash `—` and en-dash `–` are banned in prose outright, replace them w
 // out of range would carry into the neighbouring field on decode.
 ```
 
+**Do not reflexively replace a `;` or `:` with ", so".** A semicolon often just sets two related facts side by side, and ", so" asserts a cause the original never claimed. It reads wrong when the real link is a design choice or a plain sequence, and stacking two "so"s in one sentence is a tell. Use ", so" only when the second clause genuinely results from the first. Otherwise use a period, or ", and" for a neutral join.
+
+- BAD, invented cause: "meaningless without a filesystem, so it throws" (the throw is a design choice, and ", so" overstates it as a consequence).
+- GOOD: "meaningless without a filesystem, and it throws instead of ignoring it".
+- BAD, stacked "so": "binds a source per file, so restore it after any swap so later tests see a clean default".
+- GOOD: "binds a source per file. Tests here swap it, so restore it afterward for a clean default."
+
 ---
 
 ## 3. BEFORE → AFTER rewrites
 
 The running example is a generic HTTP client. Substitute your own domain; the transformation is the point.
 
-1. BEFORE: "The same base URL POWERS every request, interceptor, and retry helper."
-   AFTER: "The client reads `baseURL` once at construction. Every request method prepends it; pass the `url` option to override it per call." (Prisma)
-2. BEFORE: "A default header does MORE THAN set a value."
-   AFTER: "A default header is sent on every request unless the per-call `headers` option overrides that key." (Stripe)
-3. BEFORE: "retries failed requests WITHOUT ANY MANUAL WIRING."
-   AFTER: "The client retries on 429 and 503 up to `retries` times with exponential backoff. Other status codes are returned as-is." (esbuild)
-4. BEFORE: "the client seamlessly handles JSON out of the box."
-   AFTER: "If the response `Content-Type` is `application/json`, the client parses the body and returns the parsed value. Otherwise it returns the raw text." (Vue)
-5. BEFORE: "Our powerful interceptor layer ensures your requests are always robust."
-   AFTER: "If a request interceptor throws, the request is never sent and the error propagates to the caller." (Prisma)
-6. BEFORE: "The `@retry` decorator empowers you to effortlessly add resilience to any method."
-   AFTER: "Annotate a method with `@retry(3)` to re-invoke it up to three times on a thrown error. It re-throws the last error if every attempt fails." (esbuild)
-7. BEFORE: "Under the hood, the client leverages a smart pool to unlock connection reuse."
-   AFTER: "The client keeps up to `maxSockets` open connections per host and reuses them across requests." (Vue)
-8. BEFORE: "Helper methods like `client.json()` give you a first-class, blazing-fast developer experience."
-   AFTER: "`client.json(url)` is shorthand for `client.get(url)` followed by `.json()` on the response. It returns the parsed body." (Stripe)
-9. BEFORE: "the client simply works with your existing setup, just drop it in."
-   AFTER: "The client reads proxy settings from `HTTP_PROXY` and `NO_PROXY`, so it respects the same environment your shell already uses." (Prisma)
-10. BEFORE: "A rich set of built-in adapters lets you handle any transport with ease."
-    AFTER: "The client ships adapters for `fetch`, `XMLHttpRequest`, and Node's `http`/`https`. You can register your own adapter." (esbuild/Stripe)
+1. BEFORE: "The same base URL POWERS every request, interceptor, and retry helper." AFTER: "The client reads `baseURL` once at construction. Every request method prepends it; pass the `url` option to override it per call." (Prisma)
+2. BEFORE: "A default header does MORE THAN set a value." AFTER: "A default header is sent on every request unless the per-call `headers` option overrides that key." (Stripe)
+3. BEFORE: "retries failed requests WITHOUT ANY MANUAL WIRING." AFTER: "The client retries on 429 and 503 up to `retries` times with exponential backoff. Other status codes are returned as-is." (esbuild)
+4. BEFORE: "the client seamlessly handles JSON out of the box." AFTER: "If the response `Content-Type` is `application/json`, the client parses the body and returns the parsed value. Otherwise it returns the raw text." (Vue)
+5. BEFORE: "Our powerful interceptor layer ensures your requests are always robust." AFTER: "If a request interceptor throws, the request is never sent and the error propagates to the caller." (Prisma)
+6. BEFORE: "The `@retry` decorator empowers you to effortlessly add resilience to any method." AFTER: "Annotate a method with `@retry(3)` to re-invoke it up to three times on a thrown error. It re-throws the last error if every attempt fails." (esbuild)
+7. BEFORE: "Under the hood, the client leverages a smart pool to unlock connection reuse." AFTER: "The client keeps up to `maxSockets` open connections per host and reuses them across requests." (Vue)
+8. BEFORE: "Helper methods like `client.json()` give you a first-class, blazing-fast developer experience." AFTER: "`client.json(url)` is shorthand for `client.get(url)` followed by `.json()` on the response. It returns the parsed body." (Stripe)
+9. BEFORE: "the client simply works with your existing setup, just drop it in." AFTER: "The client reads proxy settings from `HTTP_PROXY` and `NO_PROXY`, so it respects the same environment your shell already uses." (Prisma)
+10. BEFORE: "A rich set of built-in adapters lets you handle any transport with ease." AFTER: "The client ships adapters for `fetch`, `XMLHttpRequest`, and Node's `http`/`https`. You can register your own adapter." (esbuild/Stripe)
 
 ---
 

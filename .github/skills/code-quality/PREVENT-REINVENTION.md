@@ -1,5 +1,4 @@
-name: prevent-reinvention
-description: Use this before adding code, config, or components in the seedcord monorepo. Audit the existing surface first, then either reuse what exists or add a clean shared extension in the right package. Follow these checks unless the user explicitly instructs otherwise.
+name: prevent-reinvention description: Use this before adding code, config, or components in the seedcord monorepo. Audit the existing surface first, then either reuse what exists or add a clean shared extension in the right package. Follow these checks unless the user explicitly instructs otherwise.
 
 # Prevent Reinvention & Tech-Debt Discipline
 
@@ -130,7 +129,7 @@ Framework / packages:
 Apps:
 
 - **Inline button/tooltip/code-block markup** in a `docs` page when `apps/docs/src/components/ui/` already exports the primitive.
-- **Hardcoded class strings** scattered across components when a `tw\`…\`` constant in the same file (or a shared `lib/` export) covers the case.
+- **Hardcoded class strings** scattered across components when a `tw\`…\``constant in the same file (or a shared`lib/` export) covers the case.
 - **`[a, b, c].join(' ')` for classNames.** Use `cn(a, b, c)` from `@lib/utils`.
 
 Files & config:
