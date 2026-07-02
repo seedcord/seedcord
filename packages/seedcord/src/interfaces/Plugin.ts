@@ -164,9 +164,9 @@ export class Pluggable<
             throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
         }
 
-        // justified: `Core` is augmented by consumers via declaration merging (each attached plugin
-        // adds a key), so `this` cannot satisfy the augmented `Core` until every plugin is attached,
-        // which is exactly what attach() is doing. The host is always a Seedcord (a Core) at runtime.
+        // `Core` is augmented by consumer declaration merging, so `this` only satisfies the augmented type
+        // after every plugin attaches, which is what attach() does. The host is always a Core at runtime.
+        // eslint-disable-next-line no-restricted-syntax -- forced by the declaration-merging note above
         const instance = new Plugin(this as unknown as Core, ...args);
         this.plugins.push(instance);
 

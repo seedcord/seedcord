@@ -306,7 +306,7 @@ export class LoggerChannelRegistry {
         }
 
         const sinkTransport = this.transportFactory.buildSinkTransport(
-            { channel, label: channel, level: logger.level as unknown as LoggerLevel },
+            { channel, label: channel, level: logger.level as LoggerLevel },
             record.sink
         );
 
