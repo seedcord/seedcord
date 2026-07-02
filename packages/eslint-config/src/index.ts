@@ -58,7 +58,7 @@ interface CreateConfigOptions {
     userConfigs?: FlatConfigItem[];
 
     /**
-     * Toggle registration of the `eslint-plugin-import` plugin
+     * Toggle registration of the `eslint-plugin-import-x` plugin
      *
      * @defaultValue `true`
      */

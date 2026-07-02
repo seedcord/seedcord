@@ -76,7 +76,7 @@ export function Disclosure({
         (next: boolean): void => {
             if (!isControlled) setInternalOpen(next);
             onOpenChange?.(next);
-            if (storageKey && !isControlled && typeof window !== 'undefined') {
+            if (storageKey && !isControlled) {
                 try {
                     globalThis.localStorage.setItem(storageKey, String(next));
                 } catch {

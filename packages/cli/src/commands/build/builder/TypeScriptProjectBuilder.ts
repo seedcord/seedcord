@@ -164,7 +164,7 @@ export class TypeScriptProjectBuilder {
         const configDir = dirname(config.configFile);
         const candidate = ['tsconfig.build.json', 'tsconfig.json']
             .map((file) => resolve(configDir, file))
-            .find((candidate) => existsSync(candidate));
+            .find((candidatePath) => existsSync(candidatePath));
 
         if (candidate) return candidate;
 

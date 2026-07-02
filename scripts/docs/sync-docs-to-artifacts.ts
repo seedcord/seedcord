@@ -73,8 +73,9 @@ function parsePublished(raw: string): PublishedPackage[] {
     }
     return parsed.map((entry) => {
         if (typeof entry !== 'object' || entry === null) {
-            throw new Error('each published entry must be an object');
+            throw new TypeError('each published entry must be an object');
         }
+        // justified: validated as a non-null object above, read its optional fields
         const { name, version } = entry as { name?: unknown; version?: unknown };
         if (typeof name !== 'string' || typeof version !== 'string') {
             throw new TypeError('each published entry needs a string name + version');

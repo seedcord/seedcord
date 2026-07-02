@@ -122,12 +122,13 @@ export class ApiDocsGenerator {
 
     private async buildPackageNames(): Promise<Record<string, string>> {
         const dirs = await discoverWorkspacePackages(this.paths);
-        const names: Record<string, string> = {};
-        for (const dir of dirs) {
-            const manifest = await readPackageManifest(dir);
-            names[path.basename(dir)] = manifest.name;
-        }
-        return names;
+        const entries = await Promise.all(
+            dirs.map(async (dir) => {
+                const manifest = await readPackageManifest(dir);
+                return [path.basename(dir), manifest.name] as const;
+            })
+        );
+        return Object.fromEntries(entries);
     }
 
     async run(): Promise<ApiDocsGeneratorResult> {

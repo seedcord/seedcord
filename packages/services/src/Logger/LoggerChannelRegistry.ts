@@ -307,6 +307,7 @@ export class LoggerChannelRegistry {
         }
 
         const sinkTransport = this.transportFactory.buildSinkTransport(
+            // justified: winston types level as string, but this registry only assigns LoggerLevel values
             { channel, label: channel, level: logger.level as LoggerLevel },
             record.sink
         );

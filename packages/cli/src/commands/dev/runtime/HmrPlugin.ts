@@ -191,7 +191,7 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
         const seen = new Set<string>();
 
         const traverse = (mod: EnvironmentModuleNode | ModuleNode): void => {
-            if (!(mod.file && !seen.has(mod.file))) return;
+            if (!mod.file || seen.has(mod.file)) return;
 
             seen.add(mod.file);
             affected.add(mod.file);
