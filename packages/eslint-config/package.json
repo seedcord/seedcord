@@ -76,6 +76,7 @@
         "eslint-plugin-security": "^4.0.1",
         "eslint-plugin-tailwind-canonical-classes": "^1.3.3",
         "eslint-plugin-tsdoc": "^0.5.2",
+        "eslint-plugin-unicorn": "^70.0.0",
         "lodash.merge": "^4.6.2",
         "prettier": "catalog:deps",
         "typescript-eslint": "^8.61.1"

@@ -5,6 +5,7 @@ import eslintImport from 'eslint-plugin-import';
 import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
 import eslintTsdoc from 'eslint-plugin-tsdoc';
+import eslintUnicorn from 'eslint-plugin-unicorn';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
@@ -30,6 +31,7 @@ import {
     SECURITY_RULES,
     TSDOC_RULES,
     TYPESCRIPT_RULES,
+    UNICORN_RULES,
     createImportSettings
 } from './rules';
 
@@ -89,6 +91,14 @@ interface CreateConfigOptions {
      * @defaultValue `true`
      */
     registerTypescriptConfigs?: boolean;
+
+    /**
+     * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
+     * consumers still on eslint 9 must set this to `false`.
+     *
+     * @defaultValue `true`
+     */
+    registerUnicornPlugin?: boolean;
 
     /**
      * Absolute path to the consumer's Tailwind entry CSS file (the one with `@import 'tailwindcss'`).
@@ -168,6 +178,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
+        registerUnicornPlugin = true,
         tailwindEntryPoint,
         tailwindCalleeFunctions = ['cn'],
         tailwindTaggedTemplates = ['tw'],
@@ -247,6 +258,19 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             plugin: eslintTsdoc,
             rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
         }),
+
+        // off for the eslint-9 apps via registerUnicornPlugin (unicorn needs eslint >=10.4).
+        ...(registerUnicornPlugin
+            ? [
+                  pluginBlock({
+                      enabled: true,
+                      files: [...ALL_FILES],
+                      pluginName: 'unicorn',
+                      plugin: eslintUnicorn,
+                      rules: UNICORN_RULES
+                  })
+              ]
+            : []),
 
         // Opt-in via tailwindEntryPoint; off when omitted (see CreateConfigOptions.tailwindEntryPoint).
         tailwindBlock({

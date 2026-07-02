@@ -62,3 +62,4 @@ catalogs:
 
 minimumReleaseAgeExclude:
   - envapt
+  - eslint-plugin-unicorn@70.0.0
