@@ -28,6 +28,7 @@
         "@tailwindcss/postcss": "catalog:deps",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
+        "eslint": "^9.39.4",
         "eslint-config-next": "catalog:deps",
         "eslint-plugin-jsx-a11y": "catalog:deps",
         "eslint-plugin-react-compiler": "catalog:deps",

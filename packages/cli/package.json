@@ -70,12 +70,12 @@
         "vite": "catalog:deps"
     },
     "devDependencies": {
+        "@eslint-react/eslint-plugin": "^5.10.0",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@types/react": "catalog:react",
         "discord.js": "catalog:peer",
-        "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",
         "typescript": "catalog:peer"

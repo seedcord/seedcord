@@ -48,6 +48,7 @@
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "@vitest/coverage-v8": "catalog:test",
+        "eslint": "^9.39.4",
         "eslint-config-next": "catalog:deps",
         "eslint-plugin-jsx-a11y": "catalog:deps",
         "eslint-plugin-react-compiler": "catalog:deps",
