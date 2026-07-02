@@ -14,7 +14,7 @@ import '../utils/mock-env';
 
 import type { APIContainerComponent } from 'discord.js';
 
-const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
+const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface TestBot {
     interactions: {

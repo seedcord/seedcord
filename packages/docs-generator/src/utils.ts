@@ -11,5 +11,5 @@ export async function pathExists(filePath: string): Promise<boolean> {
 
 // tidy up relative paths so they work cross-platform
 export function normalizeRelativePath(segment: string): string {
-    return segment.replace(/^[.][/\\]+/, '').replace(/\\/g, '/');
+    return segment.replace(/^[.][/\\]+/, '').replaceAll('\\', '/');
 }

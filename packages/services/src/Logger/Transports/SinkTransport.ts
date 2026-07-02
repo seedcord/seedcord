@@ -86,7 +86,7 @@ export class SinkTransport extends TransportStream {
         const fallback = info.message;
         if (typeof fallback === 'string') return fallback;
 
-        if (fallback instanceof Error) return fallback.stack ?? fallback.message;
+        if (Error.isError(fallback)) return fallback.stack ?? fallback.message;
 
         // eslint-disable-next-line @typescript-eslint/no-base-to-string -- last-resort stringify for a non-string, non-Error message value
         return String(fallback ?? '');

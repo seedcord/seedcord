@@ -33,7 +33,7 @@ function collectBaseCandidates(options: ResolveOptions): string[] {
         ordered.add(options.workspaceRoot);
     }
 
-    return Array.from(ordered);
+    return [...ordered];
 }
 
 function resolvePackageJsonPath(
@@ -101,7 +101,7 @@ function collectOutputCandidates(output: string, baseCandidates: string[], optio
         addCandidate(path.resolve(base, path.basename(output)));
     }
 
-    return Array.from(ordered);
+    return [...ordered];
 }
 
 function resolveManifestOutputBase(options: ResolveOptions): string | null {

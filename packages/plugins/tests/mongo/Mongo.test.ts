@@ -8,7 +8,7 @@ import { TestEnvironment } from '../utils/test-env';
 
 import type { Core } from 'seedcord';
 
-const pluginsPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
+const pluginsPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 describe('Mongo Plugin Integration', () => {
     let testEnv: TestEnvironment;

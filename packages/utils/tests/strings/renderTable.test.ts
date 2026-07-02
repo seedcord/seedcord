@@ -3,19 +3,19 @@ import { describe, it, expect } from 'vitest';
 import { renderTable } from '../../src/strings/renderTable';
 
 const wideRanges: readonly (readonly [number, number])[] = [
-    [0x1100, 0x115f],
-    [0x2e80, 0x303e],
-    [0x3041, 0x33ff],
-    [0x3400, 0x4dbf],
-    [0x4e00, 0x9fff],
-    [0xa000, 0xa4cf],
-    [0xac00, 0xd7a3],
-    [0xf900, 0xfaff],
-    [0xfe30, 0xfe4f],
-    [0xff00, 0xff60],
-    [0xffe0, 0xffe6],
-    [0x1f300, 0x1faff],
-    [0x20000, 0x3fffd]
+    [0x11_00, 0x11_5f],
+    [0x2e_80, 0x30_3e],
+    [0x30_41, 0x33_ff],
+    [0x34_00, 0x4d_bf],
+    [0x4e_00, 0x9f_ff],
+    [0xa0_00, 0xa4_cf],
+    [0xac_00, 0xd7_a3],
+    [0xf9_00, 0xfa_ff],
+    [0xfe_30, 0xfe_4f],
+    [0xff_00, 0xff_60],
+    [0xff_e0, 0xff_e6],
+    [0x1_f3_00, 0x1_fa_ff],
+    [0x2_00_00, 0x3_ff_fd]
 ];
 
 function refWidth(text: string): number {
@@ -142,7 +142,7 @@ describe('renderTable border styles', () => {
         const table = renderTable([['a']], { border: 'rounded' });
         const lines = table.split('\n');
         expect(lines[0]).toBe('╭───╮');
-        expect(lines[lines.length - 2]).toBe('╰───╯');
+        expect(lines.at(-2)).toBe('╰───╯');
     });
 
     it('draws pure ascii with the ascii preset', () => {
@@ -181,10 +181,10 @@ describe('renderTable markdown alignment and escaping', () => {
     });
 
     it('escapes pipe and backslash in cell content so the row is not corrupted', () => {
-        const table = renderTable([['a|b', 'c\\d']], { border: 'markdown' });
+        const table = renderTable([['a|b', String.raw`c\d`]], { border: 'markdown' });
         const header = table.split('\n')[0];
-        expect(header).toContain('a\\|b');
-        expect(header).toContain('c\\\\d');
+        expect(header).toContain(String.raw`a\|b`);
+        expect(header).toContain(String.raw`c\\d`);
     });
 });
 

@@ -25,7 +25,7 @@ async function fetchRoleInGuild(guild: Guild, roleId: string): Promise<Nullable<
 }
 
 async function scanGuildsForRole(client: Client, roleId: string): Promise<Nullable<Role>> {
-    const cached = client.guilds.cache.map((guild) => guild.roles.cache.get(roleId)).find((role) => role);
+    const cached = client.guilds.cache.map((guild) => guild.roles.cache.get(roleId)).find(Boolean);
     if (cached) return cached;
 
     for (const guild of client.guilds.cache.values()) {

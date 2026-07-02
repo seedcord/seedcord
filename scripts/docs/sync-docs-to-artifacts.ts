@@ -58,7 +58,7 @@ interface Options {
 
 function flagValue(argv: readonly string[], flag: string): string | undefined {
     const index = argv.indexOf(flag);
-    if (index < 0) return undefined;
+    if (index === -1) return undefined;
     const value = argv[index + 1];
     if (value === undefined || value.startsWith('--')) {
         throw new Error(`${flag} requires a value`);
@@ -69,7 +69,7 @@ function flagValue(argv: readonly string[], flag: string): string | undefined {
 function parsePublished(raw: string): PublishedPackage[] {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) {
-        throw new Error('--published must be a JSON array of { name, version }');
+        throw new TypeError('--published must be a JSON array of { name, version }');
     }
     return parsed.map((entry) => {
         if (typeof entry !== 'object' || entry === null) {
@@ -77,7 +77,7 @@ function parsePublished(raw: string): PublishedPackage[] {
         }
         const { name, version } = entry as { name?: unknown; version?: unknown };
         if (typeof name !== 'string' || typeof version !== 'string') {
-            throw new Error('each published entry needs a string name + version');
+            throw new TypeError('each published entry needs a string name + version');
         }
         return { name, version };
     });
@@ -192,7 +192,8 @@ async function prune(opts: Options, ref: RemoteRef, inputs: readonly PackageVers
 
     const isArtifactKey = (key: string): boolean =>
         key === `${opts.prefix}index.json` || key.endsWith('/project.json') || key.endsWith('/api.json');
-    const actual = (await listRemoteKeys(ref)).filter(isArtifactKey);
+    const remoteKeys = await listRemoteKeys(ref);
+    const actual = remoteKeys.filter(isArtifactKey);
     const orphans = actual.filter((key) => !desired.has(key));
 
     if (actual.length > 0 && orphans.length > actual.length * PRUNE_DELETE_CAP && !opts.pruneForce) {

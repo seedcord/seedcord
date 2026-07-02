@@ -111,7 +111,7 @@ export class Pluggable<
     protected readonly startup: CoordinatedStartup;
     protected readonly plugins: Plugin[] = [];
 
-    private static readonly PLUGIN_INIT_TIMEOUT_MS = 15000;
+    private static readonly PLUGIN_INIT_TIMEOUT_MS = 15_000;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
         super();

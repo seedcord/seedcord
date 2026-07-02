@@ -52,7 +52,7 @@ export class RuntimeModuleLoader implements ModuleLoader {
         try {
             return (await tsImport(specifier, { parentURL: import.meta.url, tsconfig })) as TModule;
         } catch (error: unknown) {
-            const reason = error instanceof Error ? error.message : 'Unknown tsx error';
+            const reason = Error.isError(error) ? error.message : 'Unknown tsx error';
             throw new SeedcordError(SeedcordErrorCode.CliTsxImportFailed, [entryPath, reason]);
         }
     }
@@ -66,15 +66,15 @@ export class RuntimeModuleLoader implements ModuleLoader {
             try {
                 return await this.jiti.import(entryPath);
             } catch (fallbackError: unknown) {
-                const nativeReason = nativeError instanceof Error ? nativeError.message : 'Unknown ESM import error';
-                const fallbackReason = fallbackError instanceof Error ? fallbackError.message : 'Unknown jiti error';
+                const nativeReason = Error.isError(nativeError) ? nativeError.message : 'Unknown ESM import error';
+                const fallbackReason = Error.isError(fallbackError) ? fallbackError.message : 'Unknown jiti error';
                 throw new SeedcordError(SeedcordErrorCode.CliImportFailed, [entryPath, nativeReason, fallbackReason]);
             }
         }
     }
 
     private resolveTsconfig(entryPath: string): TsconfigOption {
-        if (typeof this.options.tsconfig !== 'undefined') {
+        if (this.options.tsconfig !== undefined) {
             return this.options.tsconfig;
         }
 

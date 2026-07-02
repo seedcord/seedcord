@@ -42,7 +42,7 @@ function makeMarker(index: number): string {
 function appendStripped(parts: readonly SigPart[], buf: string[], refs: InternalRef[], resolve: ResolveHref): void {
     for (const part of parts) {
         if (part.kind === 'space') {
-            const last = buf[buf.length - 1];
+            const last = buf.at(-1);
             if (last && !last.endsWith(' ')) buf.push(' ');
             continue;
         }
@@ -116,7 +116,8 @@ function needsBlockProbe(keyword: string | null | undefined): boolean {
 async function tryPrettierAsDeclaration(stripped: string, keyword: string | null | undefined): Promise<string | null> {
     const probe = needsBlockProbe(keyword) ? `${stripped} {}` : stripped;
     try {
-        const formatted = (await format(probe, PRETTIER_OPTIONS)).trim();
+        const raw = await format(probe, PRETTIER_OPTIONS);
+        const formatted = raw.trim();
         return formatted.replace(TRAILING_BLOCK_PROBE_RE, '').trim();
     } catch {
         return null;

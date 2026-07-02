@@ -67,7 +67,12 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
      * @param task - Async function to execute
      * @param timeoutMs - Task timeout in milliseconds. {@default `10000`}
      */
-    public override addTask(phase: StartupPhase, taskName: string, task: () => Promise<void>, timeoutMs = 10000): void {
+    public override addTask(
+        phase: StartupPhase,
+        taskName: string,
+        task: () => Promise<void>,
+        timeoutMs = 10_000
+    ): void {
         super.addTask(phase, taskName, task, timeoutMs);
     }
 
@@ -202,10 +207,10 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
      * Aborts the startup sequence if it is currently running.
      */
     public abort(): void {
-        if (this.isStartingUp) {
-            this.isStartingUp = false;
-            this.logger.warn('Aborting coordinated startup sequence');
-        }
+        if (!this.isStartingUp) return;
+
+        this.isStartingUp = false;
+        this.logger.warn('Aborting coordinated startup sequence');
     }
 
     /**

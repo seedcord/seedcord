@@ -53,15 +53,15 @@ export class PackageDirectory {
     }
 
     list(entity: DirectoryEntity): DocNode[] {
-        return Array.from(this.maps[entity].values());
+        return [...this.maps[entity].values()];
     }
 
     listNames(entity: DirectoryEntity): string[] {
-        return Array.from(this.maps[entity].keys()).sort((a, b) => a.localeCompare(b));
+        return [...this.maps[entity].keys()].sort((a, b) => a.localeCompare(b));
     }
 
     entries(entity: DirectoryEntity): [string, DocNode][] {
-        return Array.from(this.maps[entity].entries());
+        return [...this.maps[entity].entries()];
     }
 
     snapshot(): DirectorySnapshot {

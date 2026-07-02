@@ -20,7 +20,7 @@ export function maxBump(changesets: string[]): Bump | null {
         const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(body);
         if (!frontmatter) continue;
         for (const line of (frontmatter[1] ?? '').split('\n')) {
-            const value = line.split(':').pop()?.trim().replace(/['"]/g, '');
+            const value = line.split(':').pop()?.trim().replaceAll(/['"]/g, '');
             if (value && value in RANK && (top === null || RANK[value as Bump] > RANK[top])) {
                 top = value as Bump;
             }
@@ -59,9 +59,9 @@ function api(method: string, path: string, body?: unknown): Promise<Response> {
             authorization: `Bearer ${Envapter.get('GITHUB_TOKEN')}`,
             accept: 'application/vnd.github+json',
             'x-github-api-version': '2022-11-28',
-            ...(body === undefined ? {} : { 'content-type': 'application/json' })
+            ...(!(body === undefined) && { 'content-type': 'application/json' })
         },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) })
+        ...(!(body === undefined) && { body: JSON.stringify(body) })
     });
 }
 
@@ -88,13 +88,13 @@ async function main(): Promise<void> {
     const want = bump ? LABEL[bump] : null;
     const res = await api('GET', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels`);
     // justified: GitHub "list labels on an issue" returns an array of labels
-    const current = ((await res.json()) as { name: string }[]).map((label) => label.name);
+    const current = new Set(((await res.json()) as { name: string }[]).map((label) => label.name));
     for (const stale of Object.values(LABEL)) {
-        if (stale !== want && current.includes(stale)) {
+        if (stale !== want && current.has(stale)) {
             await api('DELETE', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels/${encodeURIComponent(stale)}`);
         }
     }
-    if (want && !current.includes(want)) {
+    if (want && !current.has(want)) {
         await api('POST', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels`, { labels: [want] });
     }
 }

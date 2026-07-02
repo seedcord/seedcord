@@ -39,9 +39,9 @@ function packageNameOf(ref: CanonicalReferenceLike): string | undefined {
 function qualifiedNameOf(ref: CanonicalReferenceLike): string | undefined {
     const key = ref.toString();
     const bang = key.indexOf('!');
-    const afterPackage = bang >= 0 ? key.slice(bang + 1) : key;
+    const afterPackage = bang !== -1 ? key.slice(bang + 1) : key;
     const meaning = afterPackage.lastIndexOf(':');
-    const symbolPath = (meaning >= 0 ? afterPackage.slice(0, meaning) : afterPackage).replace(/~/g, '');
+    const symbolPath = (meaning !== -1 ? afterPackage.slice(0, meaning) : afterPackage).replaceAll('~', '');
     return symbolPath.length > 0 ? symbolPath : undefined;
 }
 

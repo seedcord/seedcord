@@ -17,7 +17,7 @@ import type { Core } from '@interfaces/Core';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vitest';
 
-const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
+const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 type FrameworkChannel = DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>;
 type SendMock = Mock<(event: string, data: unknown) => void>;

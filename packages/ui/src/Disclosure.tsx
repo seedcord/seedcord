@@ -65,7 +65,7 @@ export function Disclosure({
     useEffect(() => {
         if (!storageKey || isControlled) return;
         try {
-            const saved = window.localStorage.getItem(storageKey);
+            const saved = globalThis.localStorage.getItem(storageKey);
             if (saved !== null) setInternalOpen(saved === 'true');
         } catch {
             // localStorage can throw in private mode + SSR fallback; ignore.
@@ -78,7 +78,7 @@ export function Disclosure({
             onOpenChange?.(next);
             if (storageKey && !isControlled && typeof window !== 'undefined') {
                 try {
-                    window.localStorage.setItem(storageKey, String(next));
+                    globalThis.localStorage.setItem(storageKey, String(next));
                 } catch {
                     // same swallow reason as the read above
                 }

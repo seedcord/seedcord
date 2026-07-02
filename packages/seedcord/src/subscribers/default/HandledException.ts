@@ -120,7 +120,7 @@ export function faultSummary(denial: Notice, source: FaultSource): string {
  */
 export function causeStack(denial: Notice): string {
     const { cause } = denial;
-    if (cause instanceof Error) return cause.stack ?? cause.message;
+    if (Error.isError(cause)) return cause.stack ?? cause.message;
     if (typeof cause === 'string') return cause;
     if (typeof cause === 'bigint' || typeof cause === 'symbol' || typeof cause === 'function') return cause.toString();
     if (cause !== undefined) {

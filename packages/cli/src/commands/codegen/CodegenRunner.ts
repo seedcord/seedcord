@@ -86,7 +86,7 @@ export class CodegenRunner {
         try {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
-            const reason = error instanceof Error ? error.message : 'Unknown error';
+            const reason = Error.isError(error) ? error.message : 'Unknown error';
             // an unreadable top-level commands dir would silently pass --check against a stale registry, so fail.
             if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandsDirUnreadable, [dir, reason]);
             this.logger.warn(`Skipping unreadable directory ${dir}. ${reason}.`);

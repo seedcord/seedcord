@@ -116,7 +116,7 @@ export class CleanRunner implements CleanOps {
                 skipped.push({
                     guildId: guild.id,
                     guildName: guild.name,
-                    reason: error instanceof Error ? error.message : 'Unknown error'
+                    reason: Error.isError(error) ? error.message : 'Unknown error'
                 });
             }
         }
@@ -140,7 +140,7 @@ export class CleanRunner implements CleanOps {
                 await rest.delete(Routes.applicationGuildCommand(appId, command.guildId, command.id));
                 deleted++;
             } catch (error: unknown) {
-                failed.push({ command, reason: error instanceof Error ? error.message : 'Unknown error' });
+                failed.push({ command, reason: Error.isError(error) ? error.message : 'Unknown error' });
             }
         }
 
@@ -152,7 +152,7 @@ export class CleanRunner implements CleanOps {
             const app = (await rest.get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
             return app.id;
         } catch (error: unknown) {
-            const reason = error instanceof Error ? error.message : 'Unknown error';
+            const reason = Error.isError(error) ? error.message : 'Unknown error';
             throw new SeedcordError(SeedcordErrorCode.CliCleanAppFetchFailed, [reason]);
         }
     }

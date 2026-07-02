@@ -49,9 +49,8 @@ export async function executeClean(request: CleanRequest): Promise<void> {
         'Connected to Discord.'
     );
 
-    if (scope.allGuilds && guilds.length > LARGE_BOT_THRESHOLD) {
-        if (!(await presenter.largeBotGuard(guilds.length))) return;
-    }
+    if (scope.allGuilds && guilds.length > LARGE_BOT_THRESHOLD && !(await presenter.largeBotGuard(guilds.length)))
+        return;
 
     const scan = await presenter.status(
         `Scanning ${plural(guilds.length, 'guild')} for commands...`,

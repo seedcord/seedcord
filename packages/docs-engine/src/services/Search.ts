@@ -61,7 +61,7 @@ export class DocSearch {
         }
 
         const tokens = normalized
-            .replace(/([a-z0-9])([A-Z])/gu, '$1 $2')
+            .replaceAll(/([a-z0-9])([A-Z])/gu, '$1 $2')
             .split(/[^a-zA-Z0-9]+/gu)
             .filter(Boolean);
 

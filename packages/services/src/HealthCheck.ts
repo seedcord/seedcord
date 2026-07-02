@@ -1,4 +1,4 @@
-import { createServer } from 'http';
+import { createServer } from 'node:http';
 
 import chalk from 'chalk';
 
@@ -7,7 +7,7 @@ import { Logger } from './Logger';
 
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
 import type { HealthCheckConfig } from '@seedcord/types';
-import type { IncomingMessage, Server, ServerResponse } from 'http';
+import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;

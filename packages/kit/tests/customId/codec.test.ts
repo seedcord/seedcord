@@ -48,7 +48,7 @@ describe('CustomId round-trips', () => {
     it('round-trips a negative unbounded int', () => {
         // an unbounded int packs through zigzag, so a negative reputation delta must survive.
         const Reputation = new CustomId('rep').int('delta');
-        expect(Reputation.decode(Reputation.encode({ delta: -424242 })).delta).toBe(-424242);
+        expect(Reputation.decode(Reputation.encode({ delta: -424_242 })).delta).toBe(-424_242);
     });
 
     it('keeps an unbounded int exact at the safe-integer boundary', () => {
@@ -69,7 +69,7 @@ describe('CustomId round-trips', () => {
     it('escapes a string field that contains the wire control characters', () => {
         // a free-text note can hold the bytes the codec uses to split and escape tokens.
         const Note = new CustomId('note').str('body');
-        const body = 'a-b\x1fc\x1bd';
+        const body = 'a-b\u{1F}c\u{1B}d';
         expect(Note.decode(Note.encode({ body })).body).toBe(body);
     });
 
@@ -97,7 +97,7 @@ describe('CustomId stale detection', () => {
 describe('CustomId corruption is rejected', () => {
     it('rejects an appended junk piece', () => {
         const Tag = new CustomId('tag').str('label');
-        expect(() => Tag.decode(`${Tag.encode({ label: 'hi' })}\x1fJUNK`)).toThrow(InvalidCustomId);
+        expect(() => Tag.decode(`${Tag.encode({ label: 'hi' })}\u{1F}JUNK`)).toThrow(InvalidCustomId);
     });
 
     it('rejects a body truncated to the routeKey', () => {

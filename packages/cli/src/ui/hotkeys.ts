@@ -102,19 +102,33 @@ function handleActions(ctx: HotkeyContext): void {
     }
     if (!ctx.interactive) return;
 
-    if (input === 'd') {
-        if (!isSessionLive(state.phase)) return;
-        store.beginDisconnect();
-        void ctx.onDisconnect?.();
-    } else if (input === 'r') {
-        store.beginRestart();
-        void ctx.onRestart?.();
-    } else if (input === 'c') {
-        ctx.setCursor(0);
-        ctx.setShowToggles(true);
-    } else if (input === 'l') {
-        LogStore.instance.clear();
-        ctx.scroll.toBottom();
+    switch (input) {
+        case 'd': {
+            if (!isSessionLive(state.phase)) return;
+            store.beginDisconnect();
+            void ctx.onDisconnect?.();
+
+            break;
+        }
+        case 'r': {
+            store.beginRestart();
+            void ctx.onRestart?.();
+
+            break;
+        }
+        case 'c': {
+            ctx.setCursor(0);
+            ctx.setShowToggles(true);
+
+            break;
+        }
+        case 'l': {
+            LogStore.instance.clear();
+            ctx.scroll.toBottom();
+
+            break;
+        }
+        // No default
     }
 }
 

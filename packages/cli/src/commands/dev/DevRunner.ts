@@ -56,7 +56,7 @@ class SeedcordDevSession {
             const { module } = await this.runtime.loadEntry();
             return module;
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : String(error);
+            const message = Error.isError(error) ? error.message : String(error);
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, message]);
         }
     }
@@ -97,7 +97,7 @@ class SeedcordDevSession {
                 this.stopResolve = resolve;
             });
         } catch (error: unknown) {
-            const reason = error instanceof Error ? error.message : 'Unknown error';
+            const reason = Error.isError(error) ? error.message : 'Unknown error';
             throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
         }
     }
@@ -221,7 +221,7 @@ export class DevRunner {
 
     private async handleError(error: unknown): Promise<void> {
         this.store.setPhase('error');
-        this.store.setError(error instanceof Error ? error : new Error(String(error)));
+        this.store.setError(Error.isError(error) ? error : new Error(String(error)));
         this.store.setStatus('Error occurred. Press r to restart.');
         this.store.setBusy(false);
         await this.waitForSignal();

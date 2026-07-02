@@ -15,17 +15,17 @@ const TEST_LOGS_DIR = path.join(__dirname, '../../logs/logs-test');
  * @param dir - Directory to clean
  */
 function cleanLogsDirectory(dir: string): void {
-    if (fs.existsSync(dir)) {
-        const files = fs.readdirSync(dir);
-        for (const file of files) {
-            const filePath = path.join(dir, file);
-            const stat = fs.statSync(filePath);
-            if (stat.isDirectory()) {
-                cleanLogsDirectory(filePath);
-                fs.rmdirSync(filePath);
-            } else {
-                fs.unlinkSync(filePath);
-            }
+    if (!fs.existsSync(dir)) return;
+
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat.isDirectory()) {
+            cleanLogsDirectory(filePath);
+            fs.rmdirSync(filePath);
+        } else {
+            fs.unlinkSync(filePath);
         }
     }
 }
@@ -218,7 +218,7 @@ describe('Logger File Output', () => {
             expect(files.length).toBeGreaterThan(0);
 
             const logFile = path.join(TEST_LOGS_DIR, files[0]!);
-            const content = fs.readFileSync(logFile, 'utf-8');
+            const content = fs.readFileSync(logFile, 'utf8');
 
             expect(content).toContain('pretty-logger');
             expect(content).toContain('This is a pretty formatted message');
@@ -265,7 +265,7 @@ describe('Logger File Output', () => {
 
             const files = fs.readdirSync(TEST_LOGS_DIR);
             const logFile = path.join(TEST_LOGS_DIR, files[0]!);
-            const content = fs.readFileSync(logFile, 'utf-8');
+            const content = fs.readFileSync(logFile, 'utf8');
 
             expect(content).toContain('[error]');
             expect(content).toContain('[warn]');
@@ -311,7 +311,7 @@ describe('Logger File Output', () => {
 
             const files = fs.readdirSync(TEST_LOGS_DIR);
             const logFile = path.join(TEST_LOGS_DIR, files[0]!);
-            const content = fs.readFileSync(logFile, 'utf-8');
+            const content = fs.readFileSync(logFile, 'utf8');
 
             expect(content).toContain('Message with extras:');
             expect(content).toContain('extra1');
@@ -361,7 +361,7 @@ describe('Logger File Output', () => {
 
             const files = fs.readdirSync(TEST_LOGS_DIR);
             const logFile = path.join(TEST_LOGS_DIR, files[0]!);
-            const content = fs.readFileSync(logFile, 'utf-8');
+            const content = fs.readFileSync(logFile, 'utf8');
 
             const lines = content.trim().split('\n');
             expect(lines.length).toBeGreaterThan(0);
@@ -408,7 +408,7 @@ describe('Logger File Output', () => {
 
             const files = fs.readdirSync(TEST_LOGS_DIR);
             const logFile = path.join(TEST_LOGS_DIR, files[0]!);
-            const content = fs.readFileSync(logFile, 'utf-8');
+            const content = fs.readFileSync(logFile, 'utf8');
 
             const log = JSON.parse(content.trim()) as LogEntry;
             expect(log.level).toBe('info');
@@ -471,8 +471,8 @@ describe('Logger File Output', () => {
             expect(files).toContain('channel-a.log');
             expect(files).toContain('channel-b.log');
 
-            const contentA = fs.readFileSync(path.join(TEST_LOGS_DIR, 'channel-a.log'), 'utf-8');
-            const contentB = fs.readFileSync(path.join(TEST_LOGS_DIR, 'channel-b.log'), 'utf-8');
+            const contentA = fs.readFileSync(path.join(TEST_LOGS_DIR, 'channel-a.log'), 'utf8');
+            const contentB = fs.readFileSync(path.join(TEST_LOGS_DIR, 'channel-b.log'), 'utf8');
 
             expect(contentA).toContain('Message for channel A');
             expect(contentB).toContain('Message for channel B');

@@ -7,19 +7,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // stays at exactly `durationMs` from the most recent trigger. Cleans the timer on unmount.
 export function useTimedToggle(durationMs: number): [boolean, () => void] {
     const [active, setActive] = useState(false);
-    const timerRef = useRef<number | null>(null);
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(
         () => () => {
-            if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+            if (timerRef.current !== null) clearTimeout(timerRef.current);
         },
         []
     );
 
     const trigger = useCallback(() => {
         setActive(true);
-        if (timerRef.current !== null) window.clearTimeout(timerRef.current);
-        timerRef.current = window.setTimeout(() => {
+        if (timerRef.current !== null) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
             setActive(false);
             timerRef.current = null;
         }, durationMs);

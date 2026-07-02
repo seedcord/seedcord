@@ -82,13 +82,32 @@ function escapeLiteral(value: string): string {
     let escaped = '';
     for (const char of value) {
         const code = char.charCodeAt(0);
-        if (char === '\\') escaped += '\\\\';
-        else if (char === "'") escaped += "\\'";
-        else if (char === '\n') escaped += '\\n';
-        else if (char === '\r') escaped += '\\r';
-        else if (char === '\t') escaped += '\\t';
-        else if (code < CONTROL_CHAR) escaped += `\\x${code.toString(HEX_RADIX).padStart(2, '0')}`;
-        else escaped += char;
+        switch (char) {
+            case '\\': {
+                escaped += '\\\\';
+                break;
+            }
+            case "'": {
+                escaped += String.raw`\'`;
+                break;
+            }
+            case '\n': {
+                escaped += String.raw`\n`;
+                break;
+            }
+            case '\r': {
+                escaped += String.raw`\r`;
+                break;
+            }
+            case '\t': {
+                escaped += String.raw`\t`;
+                break;
+            }
+            default: {
+                if (code < CONTROL_CHAR) escaped += String.raw`\x${code.toString(HEX_RADIX).padStart(2, '0')}`;
+                else escaped += char;
+            }
+        }
     }
     return escaped;
 }

@@ -24,8 +24,8 @@ export interface PrettifyOptions {
 
 export function prettify(key: string, opts?: PrettifyOptions): string {
     const result = key
-        .replace(/([a-z])([A-Z])/g, '$1 $2') // camelCase/PascalCase
-        .replace(/[_-]/g, ' ') // snake_case and kebab-case
+        .replaceAll(/([a-z])([A-Z])/g, '$1 $2') // camelCase/PascalCase
+        .replaceAll(/[_-]/g, ' ') // snake_case and kebab-case
         .trim();
 
     if (opts?.capitalize) return capitalize(result);

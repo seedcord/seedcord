@@ -11,7 +11,7 @@ import '../utils/mock-env';
 
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
-const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
+const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface RegisteredSubscriberHandlerEntry {
     ctor: new (...args: unknown[]) => unknown;

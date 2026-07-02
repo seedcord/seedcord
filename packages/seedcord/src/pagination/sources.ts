@@ -32,7 +32,7 @@ export class ArraySource<Item> implements PageSource<Item> {
         opts?: { perPage?: number }
     ) {
         this.perPage = opts?.perPage ?? DEFAULT_PER_PAGE;
-        if (!Number.isInteger(this.perPage) || this.perPage <= 0) {
+        if (!Number.isSafeInteger(this.perPage) || this.perPage <= 0) {
             throw new SeedcordRangeError(SeedcordErrorCode.PaginationInvalidPerPage, [this.perPage]);
         }
     }
@@ -62,7 +62,7 @@ export class CursorSource<Item> implements PageSource<Item> {
         opts?: { perPage?: number }
     ) {
         this.perPage = opts?.perPage ?? DEFAULT_PER_PAGE;
-        if (!Number.isInteger(this.perPage) || this.perPage <= 0) {
+        if (!Number.isSafeInteger(this.perPage) || this.perPage <= 0) {
             throw new SeedcordRangeError(SeedcordErrorCode.PaginationInvalidPerPage, [this.perPage]);
         }
     }

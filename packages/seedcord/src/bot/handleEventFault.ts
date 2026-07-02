@@ -27,7 +27,7 @@ export function handleEventFault(
         if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
         return;
     }
-    if (!(caught instanceof Error)) throw caught;
+    if (!Error.isError(caught)) throw caught;
 
     // empty by default, so a dead resource on an event reports (throttled) until the dev confirms it is
     // an expected dead end and adds the code here. a swallowed code still debug-logs.

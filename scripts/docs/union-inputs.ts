@@ -60,8 +60,8 @@ export function buildUnionInputs(remote: IndexJson | null, emitted: readonly Emi
             folder,
             fullName: value.fullName,
             versions: [...value.versions],
-            ...(value.entities ? { entities: value.entities } : {}),
-            ...(value.description ? { description: value.description } : {})
+            ...(value.entities && { entities: value.entities }),
+            ...(value.description && { description: value.description })
         });
     }
     return inputs;

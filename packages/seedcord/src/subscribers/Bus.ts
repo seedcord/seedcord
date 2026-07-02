@@ -83,7 +83,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
         if (subscribersDir) {
             this.logger.info(chalk.bold(subscribersDir));
             await this.loadSubscribers(subscribersDir);
-            const totalSubscribers = Array.from(this.subscribersMap.values()).reduce(
+            const totalSubscribers = [...this.subscribersMap.values()].reduce(
                 (acc, handlers) => acc + handlers.length,
                 0
             );
@@ -127,7 +127,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
     }
 
     private unregisterSubscriber(handler: SubscriberConstructor, artifacts?: SubscriberArtifact): void {
-        const subscribers = artifacts ?? Array.from(this.subscribersMap.keys());
+        const subscribers = artifacts ?? [...this.subscribersMap.keys()];
         for (const subscriber of subscribers) {
             const handlers = this.subscribersMap.get(subscriber);
             if (!handlers) continue;

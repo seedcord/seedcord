@@ -103,7 +103,7 @@ function parseCatalogEntries(): Set<string> {
             continue;
         }
         const match = /^\s+('[^']+'|"[^"]+"|[^:\s]+)\s*:\s*\S/.exec(line);
-        if (match?.[1]) entries.add(match[1].replace(/^['"]|['"]$/g, ''));
+        if (match?.[1]) entries.add(match[1].replaceAll(/^['"]|['"]$/g, ''));
     }
 
     return entries;

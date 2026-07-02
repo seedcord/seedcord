@@ -39,10 +39,10 @@ export class KpgServiceRegistry<Database extends object> {
             dir,
             (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
-                    if (this.isServiceClass(Service)) {
-                        this.initializeService(Service, rel);
-                        this.plugin.trackServiceFile(fullPath, Service);
-                    }
+                    if (!this.isServiceClass(Service)) continue;
+
+                    this.initializeService(Service, rel);
+                    this.plugin.trackServiceFile(fullPath, Service);
                 }
             },
             this.logger

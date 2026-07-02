@@ -90,6 +90,7 @@ describe('buildIndex', () => {
             { updatedAt: UPDATED_AT }
         );
 
+        // eslint-disable-next-line unicorn/prefer-structured-clone -- exercises the JSON wire round-trip the remote docs format uses
         const reparsed = validateIndex(JSON.parse(JSON.stringify(built)));
         expect(reparsed.packages.x?.description).toBe('Survives serialize + re-read.');
     });

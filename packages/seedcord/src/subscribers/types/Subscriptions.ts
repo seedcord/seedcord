@@ -1,7 +1,7 @@
 import type { Notice } from '@seedcord/kit';
 import type { Nullable } from '@seedcord/types';
-import type { UUID } from 'crypto';
 import type { Guild, User } from 'discord.js';
+import type { UUID } from 'node:crypto';
 
 /**
  * Where a reported fault came from. A union over `kind`.

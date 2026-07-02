@@ -67,7 +67,7 @@ function createSearchEntry(node: DocNode, manifest: DocManifestPackage): DocSear
         }
         return aliasTags;
     });
-    const aliases = Array.from(new Set([...nodeAliases, ...signatureAliases]));
+    const aliases = [...new Set([...nodeAliases, ...signatureAliases])];
     const fileName = node.sources[0]?.fileName;
     const file = typeof fileName === 'string' && fileName.length > 0 ? path.basename(fileName) : undefined;
 
@@ -106,7 +106,7 @@ function collectCommentAliases(comment: DocComment | null | undefined): string[]
     if (!comment) return [];
     const aliasTags = comment.blockTags.filter((tag) => tag.tag === '@alias' || tag.tag === '@label');
     const values = aliasTags.map((tag) => tag.text.trim()).filter((text) => text.length > 0);
-    return Array.from(new Set(values));
+    return [...new Set(values)];
 }
 
 function addTokensFromText(tokens: Set<string>, value: string | undefined): void {
@@ -115,7 +115,7 @@ function addTokensFromText(tokens: Set<string>, value: string | undefined): void
     }
 
     const normalized = value
-        .replace(/([a-z0-9])([A-Z])/gu, '$1 $2')
+        .replaceAll(/([a-z0-9])([A-Z])/gu, '$1 $2')
         .split(/[^a-zA-Z0-9]+/gu)
         .filter(Boolean);
 
@@ -215,7 +215,7 @@ function collectSignatureTokens(signature: DocSignature, aliases: string[]): str
     const signatureSummary = signature.comment?.summary ?? '';
     addTokensFromText(tokens, signatureSummary);
 
-    return Array.from(tokens);
+    return [...tokens];
 }
 
 function collectTokens(node: DocNode, summary: string, file: string | undefined, aliases: string[]): string[] {
@@ -251,7 +251,7 @@ function collectTokens(node: DocNode, summary: string, file: string | undefined,
         addTokensFromText(tokens, typeParam.name);
     }
 
-    return Array.from(tokens);
+    return [...tokens];
 }
 
 // Requires apiPackage already loaded into the shared model so cross-package @link refs resolve.

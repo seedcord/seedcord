@@ -16,11 +16,14 @@
  * ```
  */
 export function fyShuffle<TArray>(items: TArray[]): TArray[] {
-    const array = items.slice();
+    const array = [...items];
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        // @ts-expect-error - TypeScript doesn't recognize that TArray can be swapped
-        [array[i], array[j]] = [array[j], array[i]];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- i and j are always in-bounds in Fisher-Yates
+        const temp = array[i]!;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- same as above
+        array[i] = array[j]!;
+        array[j] = temp;
     }
     return array;
 }

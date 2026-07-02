@@ -44,3 +44,21 @@ describe('StrictEventEmitter.waitFor', () => {
         expect(emitter.listenerCountTyped('ping')).toBe(0);
     });
 });
+
+// The on/once/off/emit overrides enforce strict per-event types. Removing them would lose type safety,
+// since the methods would fall back to EventEmitter's loose (string | symbol, ...args: any[]) types.
+describe('StrictEventEmitter keeps its strict per-event types', () => {
+    it('constrains on() and emit() to the declared event map', () => {
+        const emitter = new StrictEventEmitter<PingEvents>();
+
+        emitter.on('ping', () => {});
+        // @ts-expect-error 'unknown' is not a declared event
+        emitter.on('unknown', () => {});
+
+        emitter.emit('ping', 1);
+        // @ts-expect-error 'ping' requires a number payload
+        emitter.emit('ping', 'oops');
+        // @ts-expect-error 'unknown' is not a declared event
+        emitter.emit('unknown');
+    });
+});

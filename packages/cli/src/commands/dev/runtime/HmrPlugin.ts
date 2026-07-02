@@ -122,10 +122,10 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
 
         const moduleGraph = server.moduleGraph;
         const fileModules = moduleGraph.getModulesByFile(file);
-        const allModules = fileModules ? Array.from(fileModules) : [];
+        const allModules = fileModules ? [...fileModules] : [];
 
         const combinedModules = new Set([...modules, ...allModules]);
-        const affectedModules = this.getAffectedModules(Array.from(combinedModules));
+        const affectedModules = this.getAffectedModules([...combinedModules]);
 
         const filesToInvalidate = new Set([file, ...affectedModules]);
 
@@ -191,14 +191,14 @@ export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
         const seen = new Set<string>();
 
         const traverse = (mod: EnvironmentModuleNode | ModuleNode): void => {
-            if (mod.file && !seen.has(mod.file)) {
-                seen.add(mod.file);
-                affected.add(mod.file);
-                mod.importers.forEach(traverse);
-            }
+            if (!(mod.file && !seen.has(mod.file))) return;
+
+            seen.add(mod.file);
+            affected.add(mod.file);
+            mod.importers.forEach(traverse);
         };
 
         modules.forEach(traverse);
-        return Array.from(affected);
+        return [...affected];
     }
 }

@@ -13,5 +13,5 @@ export function kindKey(kind: number): string {
 
 export function kindName(kind: number): string {
     const key = kindKey(kind);
-    return key.replace(/_([a-z])/g, (_match: string, group: string) => group.toUpperCase());
+    return key.replaceAll(/_([a-z])/g, (_match: string, group: string) => group.toUpperCase());
 }

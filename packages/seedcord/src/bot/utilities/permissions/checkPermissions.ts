@@ -195,7 +195,7 @@ export function checkPermissions(
                   in: b as Guild | TextChannel,
                   scope: c as BotPermissionScope,
                   inverse: d ?? false,
-                  ...(e ?? {})
+                  ...e
               }
             : a;
 

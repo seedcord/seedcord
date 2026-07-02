@@ -81,24 +81,28 @@ export class DevStore extends StrictEventEmitter<{ change: [] }> {
 
     public apply(event: DevEvent): void {
         switch (event.type) {
-            case 'restart-required':
+            case 'restart-required': {
                 this.patch({
                     phase: 'restart-required',
                     status: 'Restart required. Press r to restart.',
                     restartRequired: true
                 });
                 break;
-            case 'command-update-prompt':
+            }
+            case 'command-update-prompt': {
                 this.patch({ commandUpdatePrompt: event.files });
                 break;
+            }
             case 'module-loading':
             case 'module-loaded':
             case 'module-error':
             case 'file-change':
-            case 'ready':
+            case 'ready': {
                 break;
-            default:
+            }
+            default: {
                 assertNever(event);
+            }
         }
     }
 

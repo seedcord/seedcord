@@ -41,10 +41,10 @@ function errorTypeContracts(): void {
     }
 
     function narrowByCode(error: unknown): void {
-        if (isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginKeyExists)) {
-            expectTypeOf(error).toHaveProperty('type').toEqualTypeOf<SeedcordErrorTypeString>();
-            expectTypeOf(error.code).toEqualTypeOf<SeedcordErrorCode.CorePluginKeyExists>();
-        }
+        if (!isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginKeyExists)) return;
+
+        expectTypeOf(error).toHaveProperty('type').toEqualTypeOf<SeedcordErrorTypeString>();
+        expectTypeOf(error.code).toEqualTypeOf<SeedcordErrorCode.CorePluginKeyExists>();
     }
 
     narrowByCode(new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, ['logger']));

@@ -35,20 +35,21 @@ export class KpgMigrationManager<Database extends object> {
     public async migrate(options?: MigrationOptions): Promise<void> {
         const { target, direction = 'latest', steps } = options ?? {};
 
-        if (typeof target !== 'undefined') {
+        if (target !== undefined) {
             const label = target === NO_MIGRATIONS ? 'NO_MIGRATIONS' : target;
             await this.runMigration((migrator) => migrator.migrateTo(target), `Migrating to ${chalk.yellow(label)}...`);
             return;
         }
 
         switch (direction) {
-            case 'latest':
+            case 'latest': {
                 await this.runMigration((migrator) => migrator.migrateToLatest());
                 return;
+            }
             case 'up':
             case 'down': {
                 const stepCount = steps ?? 1;
-                if (!Number.isInteger(stepCount) || stepCount < 0) {
+                if (!Number.isSafeInteger(stepCount) || stepCount < 0) {
                     throw new SeedcordRangeError(SeedcordErrorCode.PluginKpgInvalidStepCount);
                 }
 
@@ -64,13 +65,14 @@ export class KpgMigrationManager<Database extends object> {
                 await this.runStepwise(stepCount, direction, runner);
                 return;
             }
-            default:
+            default: {
                 throw new SeedcordError(SeedcordErrorCode.PluginKpgUnknownDirection, [direction]);
+            }
         }
     }
 
     public async migrateUp(options?: StepMigrationOptions): Promise<void> {
-        if (typeof options?.steps === 'undefined') {
+        if (options?.steps === undefined) {
             await this.migrate({ direction: 'up' });
             return;
         }
@@ -79,7 +81,7 @@ export class KpgMigrationManager<Database extends object> {
     }
 
     public async migrateDown(options?: StepMigrationOptions): Promise<void> {
-        if (typeof options?.steps === 'undefined') {
+        if (options?.steps === undefined) {
             await this.migrate({ direction: 'down' });
             return;
         }
@@ -236,7 +238,7 @@ export class KpgMigrationManager<Database extends object> {
     }
 
     private logMigrationFiles(files: readonly string[]): void {
-        if (!files.length) return;
+        if (files.length === 0) return;
 
         this.ctx.logger.info('Loading migration file(s):');
         for (const file of files) {
@@ -245,7 +247,7 @@ export class KpgMigrationManager<Database extends object> {
     }
 
     private logPreparedMigrations(entries: readonly (readonly [string, Migration])[]): void {
-        if (!entries.length) return;
+        if (entries.length === 0) return;
 
         this.ctx.logger.info('Prepared migrations:');
         for (const [name] of entries) {
@@ -254,7 +256,7 @@ export class KpgMigrationManager<Database extends object> {
     }
 
     private logMigrationResults(results: readonly MigrationResult[]): void {
-        if (!results.length) {
+        if (results.length === 0) {
             this.ctx.logger.info(chalk.gray('No migrations executed.'));
             return;
         }
@@ -287,10 +289,10 @@ export class KpgMigrationManager<Database extends object> {
     }
 
     private handleMigrationError(error: unknown): never {
-        const message = error instanceof Error ? error.message : inspect(error);
+        const message = Error.isError(error) ? error.message : inspect(error);
         this.ctx.logger.error(`Migration failure: ${message}`);
 
-        if (error instanceof Error) {
+        if (Error.isError(error)) {
             throw error;
         }
 

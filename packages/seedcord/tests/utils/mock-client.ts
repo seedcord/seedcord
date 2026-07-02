@@ -19,6 +19,7 @@ const mockClient = {
 
 vi.mock('discord.js', async () => {
     const actual = await vi.importActual('discord.js');
+    const djs = await import('discord.js');
     return {
         ...actual,
         Client: vi.fn().mockImplementation(() => mockClient),
@@ -27,6 +28,6 @@ vi.mock('discord.js', async () => {
             InteractionCreate: 'interactionCreate',
             MessageCreate: 'messageCreate'
         },
-        Collection: (await import('discord.js')).Collection
+        Collection: djs.Collection
     };
 });

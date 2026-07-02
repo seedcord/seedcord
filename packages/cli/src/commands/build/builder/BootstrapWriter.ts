@@ -19,7 +19,7 @@ export class BootstrapWriter {
             await mkdir(dirname(target), { recursive: true });
             await writeFile(target, contents, 'utf8');
         } catch (error: unknown) {
-            const reason = error instanceof Error ? error.message : 'Unknown error';
+            const reason = Error.isError(error) ? error.message : 'Unknown error';
             throw new SeedcordError(SeedcordErrorCode.CliBootstrapWriteFailed, [target, reason]);
         }
 

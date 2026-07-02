@@ -75,12 +75,21 @@ export class AugmentationBuilder {
 
         for (const command of commands) {
             const { json } = command;
-            if (json.type === ApplicationCommandType.User) {
-                this.collectContextMenu('user', json, command.sourceFile, sourceByUserName);
-            } else if (json.type === ApplicationCommandType.Message) {
-                this.collectContextMenu('message', json, command.sourceFile, sourceByMessageName);
-            } else if (json.type === undefined || json.type === ApplicationCommandType.ChatInput) {
-                this.collectSlash(json, command.sourceFile, slash, sourceByRoute);
+            switch (json.type) {
+                case ApplicationCommandType.User: {
+                    this.collectContextMenu('user', json, command.sourceFile, sourceByUserName);
+                    break;
+                }
+                case ApplicationCommandType.Message: {
+                    this.collectContextMenu('message', json, command.sourceFile, sourceByMessageName);
+                    break;
+                }
+                case undefined:
+                case ApplicationCommandType.ChatInput: {
+                    this.collectSlash(json, command.sourceFile, slash, sourceByRoute);
+                    break;
+                }
+                // No default
             }
         }
 
@@ -163,8 +172,8 @@ export class AugmentationBuilder {
             table[option.name] = {
                 kind: KIND_BY_TYPE[option.type],
                 required: option.required ?? false,
-                ...(choices ? { choices } : {}),
-                ...(autocomplete ? { autocomplete } : {})
+                ...(choices && { choices }),
+                ...(autocomplete && { autocomplete })
             };
         }
         return table;
