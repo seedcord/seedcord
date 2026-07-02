@@ -2,6 +2,9 @@
     "name": "@seedcord/utils",
     "type": "module",
     "version": "0.7.1-next.0",
+    "engines": {
+        "node": ">=24"
+    },
     "description": "Utility functions for Seedcord packages",
     "repository": {
         "type": "git",

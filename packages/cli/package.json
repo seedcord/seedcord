@@ -2,6 +2,9 @@
     "name": "@seedcord/cli",
     "type": "module",
     "version": "0.4.0-next.0",
+    "engines": {
+        "node": ">=24"
+    },
     "description": "CLI for seedcord",
     "bin": {
         "seedcord": "./bin/seedcord.mjs"

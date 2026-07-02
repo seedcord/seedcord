@@ -2,6 +2,9 @@
     "name": "@seedcord/errors",
     "type": "module",
     "version": "0.2.2-next.0",
+    "engines": {
+        "node": ">=24"
+    },
     "description": "Framework error classes for Seedcord packages",
     "repository": {
         "type": "git",

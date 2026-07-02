@@ -93,6 +93,6 @@
         "vitest": "catalog:test"
     },
     "engines": {
-        "node": ">=22.13.0"
+        "node": ">=24"
     }
 }

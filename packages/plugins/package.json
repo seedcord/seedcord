@@ -2,6 +2,9 @@
     "name": "@seedcord/plugins",
     "type": "module",
     "version": "0.7.3-next.0",
+    "engines": {
+        "node": ">=24"
+    },
     "description": "Official plugins for Seedcord Discord bot framework",
     "repository": {
         "type": "git",
