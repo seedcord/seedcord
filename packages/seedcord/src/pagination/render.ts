@@ -64,7 +64,7 @@ export function renderPage<Item>(
     const controls = new Controls(cursor, view);
     if (config.render) return toReplyResponse(config.render(view, controls));
 
-    const renderItem = config.renderItem ?? ((item: Item): string => String(item));
+    const renderItem = config.renderItem ?? String;
     const row = controls.row(...(view.totalPages === undefined ? CURSOR_KEYS : ARRAY_KEYS));
     return { components: [new PageContainer(view, renderItem, row).component] };
 }

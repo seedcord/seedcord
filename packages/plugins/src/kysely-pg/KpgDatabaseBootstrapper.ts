@@ -65,7 +65,7 @@ export class KpgDatabaseBootstrapper {
             await this.createDatabase(adminPool, targetDb);
             this.logger.info(chalk.green(`Created database ${chalk.bold(targetDb)}.`));
         } catch (error) {
-            const err = error instanceof Error ? error : new Error(String(error));
+            const err = Error.isError(error) ? error : new Error(String(error));
             this.logger.error(`Failed to ensure database ${targetDb}: ${err.message}`);
             throw err;
         } finally {
@@ -142,6 +142,6 @@ export class KpgDatabaseBootstrapper {
     }
 
     private static escapeIdentifier(identifier: string): string {
-        return `"${identifier.replace(/"/g, '""')}"`;
+        return `"${identifier.replaceAll('"', '""')}"`;
     }
 }

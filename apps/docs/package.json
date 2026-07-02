@@ -12,7 +12,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -48,6 +48,7 @@
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
         "@vitest/coverage-v8": "catalog:test",
+        "eslint": "^9.39.4",
         "eslint-config-next": "catalog:deps",
         "eslint-plugin-jsx-a11y": "catalog:deps",
         "eslint-plugin-react-compiler": "catalog:deps",

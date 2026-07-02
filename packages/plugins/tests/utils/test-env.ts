@@ -24,7 +24,7 @@ export class TestEnvironment {
     public async createFile(relativePath: string, content: string): Promise<string> {
         const filePath = this.resolvePath(relativePath);
         await fs.mkdir(path.dirname(filePath), { recursive: true });
-        await fs.writeFile(filePath, content, 'utf-8');
+        await fs.writeFile(filePath, content, 'utf8');
         return filePath;
     }
 

@@ -165,8 +165,8 @@ export class TransportFactory {
         return new transports.File({
             level,
             filename: resolvedFilename,
-            ...(input.config.maxSize !== undefined ? { maxsize: input.config.maxSize } : {}),
-            ...(input.config.maxFiles !== undefined ? { maxFiles: input.config.maxFiles } : {}),
+            ...(input.config.maxSize !== undefined && { maxsize: input.config.maxSize }),
+            ...(input.config.maxFiles !== undefined && { maxFiles: input.config.maxFiles }),
             tailable: true,
             format: this.buildFileFormat(input.label, effectiveFormat, shouldStripAnsi)
         });

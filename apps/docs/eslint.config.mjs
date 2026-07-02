@@ -9,6 +9,8 @@ export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     registerImportPlugin: false,
     registerTypescriptConfigs: false,
+    // unicorn needs eslint >=10.4; this app is still on eslint 9.
+    registerUnicornPlugin: false,
     tailwindEntryPoint: path.resolve(import.meta.dirname, 'src/app/globals.css'),
     userConfigs: [
         // Next core with Web Vitals. Includes react, hooks, import, jsx-a11y, and @next already.

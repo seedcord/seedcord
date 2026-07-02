@@ -46,6 +46,9 @@ jobs:
             - name: Setup workspace
               uses: ./.github/actions/setup
 
+            - name: Check workspace catalog
+              run: pnpm check:catalog
+
             - name: Lint
               run: pnpm lint
 

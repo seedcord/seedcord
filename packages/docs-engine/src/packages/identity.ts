@@ -61,9 +61,9 @@ function sanitizeExternalKey(value: string): string {
     if (!value) return '';
     return value
         .replace(/^@types\//, '') // DefinitelyTyped (@types/pg) documents the runtime package (pg)
-        .replace(/<.*>/g, '')
-        .replace(/\[\]/g, '')
-        .replace(/\|.*/g, '')
+        .replaceAll(/<.*>/g, '')
+        .replaceAll('[]', '')
+        .replaceAll(/\|.*/g, '')
         .trim();
 }
 
@@ -83,7 +83,7 @@ export function resolveExternalPackageUrl(packageName?: string | null): string |
     }
     const stripped = packageName
         .trim()
-        .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
+        .replaceAll(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
         .trim();
     if (stripped) candidates.add(sanitizeExternalKey(stripped));
 

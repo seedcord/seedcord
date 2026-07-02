@@ -14,7 +14,7 @@ import { TestEnvironment } from '../utils/test-env';
 import '../utils/mock-client';
 import '../utils/mock-env';
 
-const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
+const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface PrivateInteractionDispatcher {
     slashMap: Map<string, unknown>;
@@ -145,7 +145,7 @@ describe('InteractionDispatcher Integration', () => {
             (caught: unknown) => caught
         );
         expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateRoute });
-        const message = error instanceof Error ? error.message : String(error);
+        const message = Error.isError(error) ? error.message : String(error);
         expect(message).toContain('PingOne');
         expect(message).toContain('PingTwo');
     });
@@ -196,7 +196,7 @@ describe('InteractionDispatcher Integration', () => {
             (caught: unknown) => caught
         );
         expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateMiddleware });
-        const message = error instanceof Error ? error.message : String(error);
+        const message = Error.isError(error) ? error.message : String(error);
         expect(message).toContain('RateLimit');
     });
 

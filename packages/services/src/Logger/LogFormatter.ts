@@ -72,7 +72,7 @@ export class LogFormatter {
 
     private sanitizeAnsi(value: unknown): unknown {
         if (typeof value === 'string') return stripAnsi(value);
-        if (value instanceof Error) {
+        if (Error.isError(value)) {
             const error = value;
             const sanitized = new Error(stripAnsi(error.message));
             sanitized.name = error.name;
@@ -112,14 +112,14 @@ export class LogFormatter {
             const extras = this.getExtras(info);
 
             for (const item of extras) {
-                if (item instanceof Error && /\u001b/.test(item.name)) {
-                    const originalName = item.name;
-                    const plainName = stripAnsi(item.name);
+                if (!(Error.isError(item) && /\u001B/.test(item.name))) continue;
 
-                    const formatted = item as FormattedError;
-                    formatted.__formattedName = originalName;
-                    formatted.__plainName = plainName;
-                }
+                const originalName = item.name;
+                const plainName = stripAnsi(item.name);
+
+                const formatted = item as FormattedError;
+                formatted.__formattedName = originalName;
+                formatted.__plainName = plainName;
             }
 
             return info;
@@ -132,15 +132,15 @@ export class LogFormatter {
                 const extras = this.getExtras(info);
 
                 for (const item of extras) {
-                    if (item instanceof Error) {
-                        const { __formattedName: formattedName, __plainName: plainName } = item as FormattedError;
+                    if (!Error.isError(item)) continue;
 
-                        if (typeof formattedName === 'string' && typeof plainName === 'string') {
-                            info.stack = (info.stack as string).replace(
-                                new RegExp(`^${this.escapeRegex(plainName)}`, 'm'),
-                                formattedName
-                            );
-                        }
+                    const { __formattedName: formattedName, __plainName: plainName } = item as FormattedError;
+
+                    if (typeof formattedName === 'string' && typeof plainName === 'string') {
+                        info.stack = (info.stack as string).replace(
+                            new RegExp(`^${this.escapeRegex(plainName)}`, 'm'),
+                            formattedName
+                        );
                     }
                 }
             }
@@ -150,7 +150,7 @@ export class LogFormatter {
     }
 
     private escapeRegex(str: string): string {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return RegExp.escape(str);
     }
 
     /**
@@ -202,14 +202,13 @@ export class LogFormatter {
                 const formatSpecifierCount = typeof rawFormatCount === 'number' ? rawFormatCount : 0;
                 const filtered = cleaned.filter((x, index) => {
                     if (x === null || x === undefined) return false;
-                    if (x instanceof Error && typeof info.stack === 'string') return false;
-                    if (typeof x !== 'object') {
-                        return index >= formatSpecifierCount;
-                    }
+                    if (Error.isError(x) && typeof info.stack === 'string') return false;
+                    if (typeof x !== 'object') return index >= formatSpecifierCount;
+
                     return Object.keys(x).length > 0;
                 });
 
-                if (filtered.length) {
+                if (filtered.length > 0) {
                     const primitives: string[] = [];
                     const objects: string[] = [];
 
@@ -225,12 +224,8 @@ export class LogFormatter {
                         }
                     }
 
-                    if (primitives.length) {
-                        rendered += ` ${primitives.join(' ')}`;
-                    }
-                    if (objects.length) {
-                        rendered += `\n${objects.join('\n')}`;
-                    }
+                    if (primitives.length > 0) rendered += ` ${primitives.join(' ')}`;
+                    if (objects.length > 0) rendered += `\n${objects.join('\n')}`;
                 }
 
                 return rendered;
@@ -255,7 +250,7 @@ export class LogFormatter {
                     info.message = typeof info.message === 'string' ? stripAnsi(info.message) : info.message;
                     if (typeof info.stack === 'string') info.stack = stripAnsi(info.stack);
                     const extras = this.getExtras(info);
-                    if (extras.length) info.extras = extras.map((entry) => this.sanitizeAnsi(entry));
+                    if (extras.length > 0) info.extras = extras.map((entry) => this.sanitizeAnsi(entry));
                     return info;
                 })()
             );

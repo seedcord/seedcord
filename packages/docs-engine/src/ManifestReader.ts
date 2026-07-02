@@ -55,17 +55,18 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
     };
 
     const name = typeof pkg.name === 'string' ? pkg.name : '';
-    const version = typeof pkg.version === 'string' ? pkg.version : '';
     if (name.length === 0) {
         return null;
     }
 
+    const version = typeof pkg.version === 'string' ? pkg.version : '';
+
     const entryPoints = Array.isArray(pkg.entryPoints)
-        ? pkg.entryPoints.map((entry) => String(entry)).filter((entry) => entry.length > 0)
+        ? pkg.entryPoints.map(String).filter((entry) => entry.length > 0)
         : [];
 
-    const warnings = Array.isArray(pkg.warnings) ? pkg.warnings.map((warning) => String(warning)) : [];
-    const errors = Array.isArray(pkg.errors) ? pkg.errors.map((error) => String(error)) : [];
+    const warnings = Array.isArray(pkg.warnings) ? pkg.warnings.map(String) : [];
+    const errors = Array.isArray(pkg.errors) ? pkg.errors.map(String) : [];
 
     const warningCount = typeof pkg.warningCount === 'number' ? pkg.warningCount : warnings.length;
     const errorCount = typeof pkg.errorCount === 'number' ? pkg.errorCount : errors.length;

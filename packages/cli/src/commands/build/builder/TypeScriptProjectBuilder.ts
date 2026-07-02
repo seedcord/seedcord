@@ -36,7 +36,7 @@ export class TypeScriptProjectBuilder {
         } catch (error: unknown) {
             if (isSeedcordError(error)) throw error;
 
-            const reason = error instanceof Error ? error.message : 'Unknown build error';
+            const reason = Error.isError(error) ? error.message : 'Unknown build error';
             throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [reason]);
         }
 
@@ -96,7 +96,7 @@ export class TypeScriptProjectBuilder {
         try {
             return projectRequire.resolve('typescript/bin/tsc');
         } catch (error: unknown) {
-            const reason = error instanceof Error ? error.message : 'Unknown resolution error';
+            const reason = Error.isError(error) ? error.message : 'Unknown resolution error';
             throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [
                 `Unable to resolve typescript. Ensure it is installed in this project.\n${reason}`
             ]);
@@ -162,12 +162,11 @@ export class TypeScriptProjectBuilder {
         }
 
         const configDir = dirname(config.configFile);
-        const candidates = ['tsconfig.build.json', 'tsconfig.json']
+        const candidate = ['tsconfig.build.json', 'tsconfig.json']
             .map((file) => resolve(configDir, file))
-            .filter((candidate) => existsSync(candidate));
+            .find((candidatePath) => existsSync(candidatePath));
 
-        const [firstCandidate] = candidates;
-        if (firstCandidate) return firstCandidate;
+        if (candidate) return candidate;
 
         throw new SeedcordError(SeedcordErrorCode.CliBuildTsconfigNotFound, [configDir]);
     }

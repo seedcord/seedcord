@@ -206,7 +206,7 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
 const stripFunctionWrap: ShikiTransformer = {
     name: 'seedcord-strip-function-wrap',
     code(codeEl) {
-        const root = codeEl as unknown as HastElement;
+        const root = codeEl as HastElement;
         const lines = root.children.filter(isLineElement);
         if (lines.length === 0) return;
 
@@ -225,7 +225,7 @@ const stripFunctionWrap: ShikiTransformer = {
 const stripMemberWrap: ShikiTransformer = {
     name: 'seedcord-strip-member-wrap',
     code(codeEl) {
-        const root = codeEl as unknown as HastElement;
+        const root = codeEl as HastElement;
         const lines = root.children.filter(isLineElement);
         if (lines.length === 0) return;
 
@@ -337,7 +337,7 @@ export async function highlightMemberToHtml(code: string, links: readonly CodeLi
 const stripTypeParamWrap: ShikiTransformer = {
     name: 'seedcord-strip-type-param-wrap',
     code(codeEl) {
-        const root = codeEl as unknown as HastElement;
+        const root = codeEl as HastElement;
         const lines = root.children.filter(isLineElement);
         if (lines.length === 0) return;
 

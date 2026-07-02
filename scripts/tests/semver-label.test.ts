@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { maxBump } from '../semver-label';
+import { changesetPathsFromFiles, encodeContentsPath, maxBump } from '../semver-label';
 
 const changeset = (frontmatter: string): string => `---\n${frontmatter}\n---\n\nSome description.`;
 
@@ -24,5 +24,57 @@ describe('maxBump', () => {
 
     it('ignores a changeset body with no bump lines', () => {
         expect(maxBump([changeset('')])).toBeNull();
+    });
+
+    it('ignores non-bump frontmatter lines', () => {
+        expect(maxBump([changeset("'@seedcord/a': patch\nnote: ignore me")])).toBe('patch');
+    });
+
+    it('handles CRLF line endings and double-quoted keys', () => {
+        expect(maxBump(['---\r\n"@seedcord/a": minor\r\n---\r\n'])).toBe('minor');
+    });
+
+    it('returns null when a body has no frontmatter block', () => {
+        expect(maxBump(['just a summary, no frontmatter'])).toBeNull();
+    });
+});
+
+describe('changesetPathsFromFiles', () => {
+    it('yields nothing for a PR that adds no changeset (a CI-only PR)', () => {
+        const files = [
+            { filename: '.github/workflows/checks.yml', status: 'modified' },
+            { filename: '.github/workflows/coverage.yml', status: 'modified' }
+        ];
+        expect(changesetPathsFromFiles(files)).to.deep.equal([]);
+    });
+
+    it('picks up a changeset the PR adds or edits', () => {
+        const files = [
+            { filename: '.changeset/strict-converters.md', status: 'added' },
+            { filename: '.changeset/existing-edit.md', status: 'modified' },
+            { filename: 'packages/envapt/src/x.ts', status: 'modified' }
+        ];
+        expect(changesetPathsFromFiles(files)).to.deep.equal([
+            '.changeset/strict-converters.md',
+            '.changeset/existing-edit.md'
+        ]);
+    });
+
+    it('skips the changeset README and removed changesets', () => {
+        const files = [
+            { filename: '.changeset/README.md', status: 'modified' },
+            { filename: '.changeset/dropped.md', status: 'removed' }
+        ];
+        expect(changesetPathsFromFiles(files)).to.deep.equal([]);
+    });
+});
+
+describe('encodeContentsPath', () => {
+    it('leaves a normal changeset path untouched', () => {
+        expect(encodeContentsPath('.changeset/funny-lions-dance.md')).toBe('.changeset/funny-lions-dance.md');
+    });
+
+    it('percent-encodes # and ? within a segment while keeping the slash', () => {
+        expect(encodeContentsPath('.changeset/weird#name?.md')).toBe('.changeset/weird%23name%3F.md');
     });
 });

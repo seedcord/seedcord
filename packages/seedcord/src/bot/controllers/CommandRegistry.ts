@@ -123,7 +123,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             this.pendingEvents.delete(event.file);
             this.pendingEvents.set(event.file, event);
             getDevChannel()?.send('seedcord:commands-update-prompt', {
-                files: Array.from(this.pendingEvents.keys()).map((f) => formatFilePath(f))
+                files: [...this.pendingEvents.keys()].map((f) => formatFilePath(f))
             });
         } else {
             await this.hmrHandler?.handle(event);
@@ -177,7 +177,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
         this.ctorToCommand.set(ctor, {
             name: comp.name,
             scope: meta.scope,
-            ...(meta.scope === 'guild' ? { guilds: meta.guilds } : {})
+            ...(meta.scope === 'guild' && { guilds: meta.guilds })
         });
     }
 

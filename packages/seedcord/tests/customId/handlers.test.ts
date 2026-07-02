@@ -138,7 +138,7 @@ describe('this.params on a single-route handler', () => {
     it('throws InvalidCustomId on a corrupt wire', () => {
         // appending a delimited piece pushes the field count past what the shape expects
         const wire = Approve.encode({ userId: USER, caseId: 1, urgent: false, action: 'approve', note: '' });
-        const handler = new ApproveButton(button(`${wire}\x1fJUNK`), core);
+        const handler = new ApproveButton(button(`${wire}\u{1F}JUNK`), core);
         expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
     });
 

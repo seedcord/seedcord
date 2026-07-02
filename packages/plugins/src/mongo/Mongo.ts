@@ -87,8 +87,8 @@ export class Mongo extends Plugin {
         const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
         const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<unknown> | undefined;
         return {
-            ...(key ? { key } : {}),
-            ...(model?.modelName ? { modelName: model.modelName } : {})
+            ...(key && { key }),
+            ...(model?.modelName && { modelName: model.modelName })
         };
     }
 
@@ -161,10 +161,12 @@ export class Mongo extends Plugin {
             servicesDir,
             (fullPath, rel, mod) => {
                 for (const Service of Object.values(mod)) {
-                    if (this.isServiceClass(Service)) {
-                        this.initializeService(Service, rel);
-                        this.hmrHandler?.trackHandler(fullPath, Service);
+                    if (!this.isServiceClass(Service)) {
+                        continue;
                     }
+
+                    this.initializeService(Service, rel);
+                    this.hmrHandler?.trackHandler(fullPath, Service);
                 }
             },
             this.logger

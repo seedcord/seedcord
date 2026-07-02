@@ -2,6 +2,9 @@
     "name": "@seedcord/cli",
     "type": "module",
     "version": "0.4.0-next.0",
+    "engines": {
+        "node": ">=24"
+    },
     "description": "CLI for seedcord",
     "bin": {
         "seedcord": "./bin/seedcord.mjs"
@@ -40,7 +43,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' 'playground/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' 'playground/**/*.{ts,tsx}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' 'playground/**/*.{ts,tsx}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -70,12 +73,12 @@
         "vite": "catalog:deps"
     },
     "devDependencies": {
+        "@eslint-react/eslint-plugin": "^5.10.0",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@types/react": "catalog:react",
         "discord.js": "catalog:peer",
-        "eslint-plugin-react": "^7.37.5",
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",
         "typescript": "catalog:peer"

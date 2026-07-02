@@ -131,9 +131,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: interactionsDir,
             ...(hasKeys(this.core.config.bot.interactions, ['middlewares']) &&
-            this.core.config.bot.interactions.middlewares
-                ? { middlewaresDir: this.core.config.bot.interactions.middlewares }
-                : {}),
+                this.core.config.bot.interactions.middlewares && {
+                    middlewaresDir: this.core.config.bot.interactions.middlewares
+                }),
             isHandler: this.isHandlerClass.bind(this),
             isMiddleware: this.isMiddlewareClass.bind(this),
             registerHandler: this.registerHandler.bind(this),
@@ -419,42 +419,54 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleInteraction(interaction: Interaction): Promise<void> {
         switch (true) {
-            case interaction.isChatInputCommand():
+            case interaction.isChatInputCommand(): {
                 await this.handleSlashCommand(interaction);
                 break;
-            case interaction.isButton():
+            }
+            case interaction.isButton(): {
                 await this.handleButton(interaction);
                 break;
-            case interaction.isModalSubmit():
+            }
+            case interaction.isModalSubmit(): {
                 await this.handleModal(interaction);
                 break;
-            case interaction.isStringSelectMenu():
+            }
+            case interaction.isStringSelectMenu(): {
                 await this.handleStringSelectMenu(interaction);
                 break;
-            case interaction.isUserSelectMenu():
+            }
+            case interaction.isUserSelectMenu(): {
                 await this.handleUserSelectMenu(interaction);
                 break;
-            case interaction.isRoleSelectMenu():
+            }
+            case interaction.isRoleSelectMenu(): {
                 await this.handleRoleSelectMenu(interaction);
                 break;
-            case interaction.isChannelSelectMenu():
+            }
+            case interaction.isChannelSelectMenu(): {
                 await this.handleChannelSelectMenu(interaction);
                 break;
-            case interaction.isMentionableSelectMenu():
+            }
+            case interaction.isMentionableSelectMenu(): {
                 await this.handleMentionableSelectMenu(interaction);
                 break;
-            case interaction.isMessageContextMenuCommand():
+            }
+            case interaction.isMessageContextMenuCommand(): {
                 await this.handleMessageContextMenu(interaction);
                 break;
-            case interaction.isUserContextMenuCommand():
+            }
+            case interaction.isUserContextMenuCommand(): {
                 await this.handleUserContextMenu(interaction);
                 break;
-            case interaction.isAutocomplete():
+            }
+            case interaction.isAutocomplete(): {
                 await this.handleAutocomplete(interaction);
                 break;
-            default:
+            }
+            default: {
                 this.logger.warn(`Unhandled interaction type: ${interaction.type}`);
                 break;
+            }
         }
     }
 

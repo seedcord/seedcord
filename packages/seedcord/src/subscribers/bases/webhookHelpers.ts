@@ -22,7 +22,7 @@ export function isDiscordWebhookUrl(value: string): boolean {
  */
 export function jsonAttachment(name: string, description: string, data: unknown): AttachmentBuilder {
     const content = filterCirculars(data);
-    return new AttachmentBuilder(Buffer.from(JSON.stringify(content, undefined, 2), 'utf-8'), { name, description });
+    return new AttachmentBuilder(Buffer.from(JSON.stringify(content, undefined, 2), 'utf8'), { name, description });
 }
 
 /**

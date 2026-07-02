@@ -110,8 +110,8 @@ function parseArgs(args: string[]): SmokeOptions {
 const sanitizeFileSegment = (segment: string): string =>
     segment
         .trim()
-        .replace(/[^a-z0-9]+/giu, '-')
-        .replace(/^-+|-+$/gu, '')
+        .replaceAll(/[^a-z0-9]+/giu, '-')
+        .replaceAll(/^-+|-+$/gu, '')
         .toLowerCase();
 
 type MissingStatus = 'no-results' | 'unresolved';
@@ -244,7 +244,7 @@ async function main(): Promise<void> {
     try {
         parsed = parseArgs(args);
     } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = Error.isError(error) ? error.message : String(error);
         console.error(`
 Argument parsing error: ${message}`);
         process.exitCode = 1;

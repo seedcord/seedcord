@@ -19,7 +19,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function isOptionalString(value: unknown): boolean {
-    return typeof value === 'undefined' || typeof value === 'string';
+    return value === undefined || typeof value === 'string';
 }
 
 function isStringArray(value: unknown): value is string[] {
@@ -27,7 +27,7 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function validateBuild(value: unknown): void {
-    if (typeof value === 'undefined') return;
+    if (value === undefined) return;
     if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuild);
     if (!isOptionalString(value.outDir)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildOutDir);
     if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildTsconfig);
@@ -35,13 +35,13 @@ function validateBuild(value: unknown): void {
 }
 
 function validateHmr(value: unknown): void {
-    if (typeof value === 'undefined') return;
+    if (value === undefined) return;
     if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmr);
     if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
-    if (typeof value.restart !== 'undefined' && !isStringArray(value.restart)) {
+    if (value.restart !== undefined && !isStringArray(value.restart)) {
         throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRestart);
     }
-    if (typeof value.rollback !== 'undefined' && typeof value.rollback !== 'boolean') {
+    if (value.rollback !== undefined && typeof value.rollback !== 'boolean') {
         throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRollback);
     }
 }

@@ -152,7 +152,7 @@ export class KyselyPg<Database extends object> extends Plugin {
             const dbLabel = this.databaseName ?? 'unknown';
             this.logger.info(`Connected to Postgres database ${chalk.bold.magenta(dbLabel)}`);
         } catch (err) {
-            const error = err instanceof Error ? err : new Error(String(err));
+            const error = Error.isError(err) ? err : new Error(String(err));
             this.logger.error(`Could not connect to Postgres: ${error.message}`);
             throw error;
         }

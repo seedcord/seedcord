@@ -13,8 +13,8 @@
         "fmt": "turbo fmt",
         "fmt:check": "turbo fmt:check",
         "tc": "turbo tc",
-        "tc:scripts": "tsc --noEmit -p scripts/tsconfig.json",
-        "tc:root": "tsc --noEmit -p tsconfig.json",
+        "tc:scripts": "tsgo --noEmit -p scripts/tsconfig.json",
+        "tc:root": "tsgo --noEmit -p tsconfig.json",
         "test": "turbo test",
         "test:scripts": "vitest run scripts/tests --coverage=false",
         "lint:scripts": "eslint 'scripts/**/*.{ts,tsx}' --cache",
@@ -74,6 +74,7 @@
         "@seedcord/tsconfig": "workspace:*",
         "@turbo/gen": "^2.9.18",
         "@types/node": "catalog:deps",
+        "@typescript/native-preview": "7.0.0-dev.20260630.1",
         "@vitest/coverage-v8": "catalog:test",
         "envapt": "catalog:deps",
         "eslint": "catalog:deps",
@@ -92,6 +93,6 @@
         "vitest": "catalog:test"
     },
     "engines": {
-        "node": ">=22.13.0"
+        "node": ">=24"
     }
 }

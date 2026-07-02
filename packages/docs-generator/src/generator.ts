@@ -106,7 +106,10 @@ export class ApiDocsGenerator {
 
     private async scopeToPackage(packageDirs: string[], target: string): Promise<string[]> {
         const named = await Promise.all(
-            packageDirs.map(async (dir) => ({ dir, name: (await readPackageManifest(dir)).name }))
+            packageDirs.map(async (dir) => {
+                const manifest = await readPackageManifest(dir);
+                return { dir, name: manifest.name };
+            })
         );
         const matches = named
             .filter(({ name }) => name === target || unscopedName(name) === target)
@@ -119,9 +122,13 @@ export class ApiDocsGenerator {
 
     private async buildPackageNames(): Promise<Record<string, string>> {
         const dirs = await discoverWorkspacePackages(this.paths);
-        const names: Record<string, string> = {};
-        for (const dir of dirs) names[path.basename(dir)] = (await readPackageManifest(dir)).name;
-        return names;
+        const entries = await Promise.all(
+            dirs.map(async (dir) => {
+                const manifest = await readPackageManifest(dir);
+                return [path.basename(dir), manifest.name] as const;
+            })
+        );
+        return Object.fromEntries(entries);
     }
 
     async run(): Promise<ApiDocsGeneratorResult> {
@@ -149,7 +156,7 @@ export class ApiDocsGenerator {
                 githubBase: this.githubBase ?? '',
                 ref: this.ref,
                 packageNames,
-                ...(result.sourceEntry ? { entry: result.sourceEntry } : {})
+                ...(result.sourceEntry && { entry: result.sourceEntry })
             });
             result.sources = scan.sources;
             if (scan.reexports.length > 0) result.reexports = scan.reexports;

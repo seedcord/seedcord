@@ -96,7 +96,7 @@ export function Middleware<MType extends MiddlewareType, const Events extends re
             priority: normalizedPriority,
             type,
             // an empty array means catchall, only store a real filter
-            ...(options.events && options.events.length > 0 ? { events: options.events } : {})
+            ...(options.events && options.events.length > 0 && { events: options.events })
         };
 
         Reflect.defineMetadata(MiddlewareMetadataKey, metadata, ctor);

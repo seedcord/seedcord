@@ -72,9 +72,9 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: eventsDir,
-            ...(hasKeys(this.core.config.bot.events, ['middlewares'])
-                ? { middlewaresDir: this.core.config.bot.events.middlewares }
-                : {}),
+            ...(hasKeys(this.core.config.bot.events, ['middlewares']) && {
+                middlewaresDir: this.core.config.bot.events.middlewares
+            }),
             isHandler: this.isEventHandlerClass.bind(this),
             isMiddleware: this.isMiddlewareClass.bind(this),
             registerHandler: this.registerHandler.bind(this),
@@ -160,7 +160,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     }
 
     private unregisterHandler(handlerClass: EventHandlerConstructor, artifacts?: EventArtifact[]): void {
-        const events = artifacts ?? Array.from(this.eventMap.keys());
+        const events = artifacts ?? [...this.eventMap.keys()];
         for (const event of events) {
             const handlers = this.eventMap.get(event as keyof ClientEvents);
             if (!handlers) continue;
@@ -192,7 +192,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         this.middlewares.push({
             ctor: middlewareCtor,
             priority: metadata.priority,
-            ...(metadata.events ? { events: metadata.events } : {})
+            ...(metadata.events && { events: metadata.events })
         });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 

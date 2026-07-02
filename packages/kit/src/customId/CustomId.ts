@@ -13,7 +13,7 @@ const MAX_WIRE_LENGTH = 100;
 
 function routeKeyOf(wire: string): string {
     const colon = wire.indexOf(':');
-    return colon < 0 ? '' : wire.slice(0, colon);
+    return colon === -1 ? '' : wire.slice(0, colon);
 }
 
 /** Strip the layout hash off the routeKey to recover the stable prefix the controller routes by. @internal */
@@ -54,7 +54,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     constructor(prefix: Prefix, shape: Shape = {} as Shape) {
         // an empty prefix would make the routeKey all-hash so prefixOf strips it to nothing and the
         // controller cannot route it, and a colon or control char would break the wire framing.
-        if (!prefix || /[:\x1b\x1f]/.test(prefix)) {
+        if (!prefix || /[:\x1B\x1F]/.test(prefix)) {
             throw new SeedcordError(SeedcordErrorCode.CustomIdInvalidPrefix, [prefix]);
         }
         this.prefix = prefix;

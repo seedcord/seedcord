@@ -63,7 +63,7 @@ export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILog
             this.buffer.push({
                 id: this.nextId++,
                 channel: entry.channel,
-                text: line.replace(/\p{Cc}/gu, (char) => (char === ESC ? char : '')),
+                text: line.replaceAll(/\p{Cc}/gu, (char) => (char === ESC ? char : '')),
                 timestamp: now
             });
         }

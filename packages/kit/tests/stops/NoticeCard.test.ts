@@ -26,7 +26,7 @@ describe('NoticeCard', () => {
     });
 
     it('applies the configured bot color as the container accent', () => {
-        setBotColor(0xfe565a);
-        expect(new NoticeCard('body').component.data.accent_color).toBe(0xfe565a);
+        setBotColor(0xfe_56_5a);
+        expect(new NoticeCard('body').component.data.accent_color).toBe(0xfe_56_5a);
     });
 });

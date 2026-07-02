@@ -98,7 +98,7 @@ export class Controls implements PaginatorControls {
     }
 
     row(...keys: ControlKey[]): ActionRowBuilder<ButtonBuilder> {
-        if (keys.length < 1) {
+        if (keys.length === 0) {
             throw new SeedcordRangeError(SeedcordErrorCode.PaginationEmptyControls);
         }
         if (keys.length > MAX_BUTTONS_PER_ROW) {

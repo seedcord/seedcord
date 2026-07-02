@@ -91,25 +91,25 @@ export {};
             survey: { answer: { kind: 'string', required: true, choices: ["don't", 'yes'] } }
         });
 
-        expect(output).toContain("choices: ['don\\'t', 'yes']");
+        expect(output).toContain(String.raw`choices: ['don\'t', 'yes']`);
     });
 
     it('escapes a backslash in a string choice value', () => {
         const output = renderSlash({
-            path: { dir: { kind: 'string', required: true, choices: ['C:\\Users'] } }
+            path: { dir: { kind: 'string', required: true, choices: [String.raw`C:\Users`] } }
         });
 
         // input is C:\Users (one backslash); output literal doubles it to C:\\Users
-        expect(output).toContain("choices: ['C:\\\\Users']");
+        expect(output).toContain(String.raw`choices: ['C:\\Users']`);
     });
 
     it('escapes both a backslash and an apostrophe together', () => {
         const output = renderSlash({
-            weird: { val: { kind: 'string', required: false, choices: ["it's a \\test"] } }
+            weird: { val: { kind: 'string', required: false, choices: [String.raw`it's a \test`] } }
         });
 
         // input: it's a \test  ->  literal: 'it\'s a \\test'
-        expect(output).toContain("choices: ['it\\'s a \\\\test']");
+        expect(output).toContain(String.raw`choices: ['it\'s a \\test']`);
     });
 
     it('leaves a double-quote unescaped inside a single-quoted choice literal', () => {
@@ -133,7 +133,7 @@ export {};
             note: { tone: { kind: 'string', required: true, choices: ['a\nb'] } }
         });
 
-        expect(output).toContain("choices: ['a\\nb']");
+        expect(output).toContain(String.raw`choices: ['a\nb']`);
         expect(output).not.toContain('a\nb');
     });
 
@@ -348,7 +348,7 @@ export {};
             emojis: {}
         });
 
-        expect(output).toContain("        'Tony\\'s Profile': true;");
+        expect(output).toContain(String.raw`        'Tony\'s Profile': true;`);
     });
 
     it('leaves an identifier-safe context-menu name unquoted', () => {
@@ -414,7 +414,7 @@ describe('renderAugmentation emoji rows', () => {
             emojis: { "Tony's": 'string' }
         });
 
-        expect(output).toContain("        'Tony\\'s': 'application';");
+        expect(output).toContain(String.raw`        'Tony\'s': 'application';`);
     });
 
     it('is byte-stable across input order for the emoji keys', () => {

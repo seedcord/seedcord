@@ -20,8 +20,8 @@ const BASE = 64n;
 const CHAR_TO_VALUE = new Map([...ALPHABET].map((char, index) => [char, index] as const));
 
 // unbounded fields trail after the packed block, split by this char and escaped by the next.
-const DELIMITER = '\x1f';
-const ESCAPE = '\x1b';
+const DELIMITER = '\u{1F}';
+const ESCAPE = '\u{1B}';
 
 /** @internal */
 export const HASH_LENGTH = 3;
@@ -59,7 +59,7 @@ function zigzagDecode(encoded: bigint): bigint {
 }
 
 function escapeToken(text: string): string {
-    return text.replace(/[\x1b\x1f]/g, (char) => ESCAPE + char);
+    return text.replaceAll(/[\x1B\x1F]/g, (char) => ESCAPE + char);
 }
 function unescapeToken(text: string): string {
     let out = '';
@@ -103,25 +103,31 @@ function isBounded(field: CustomIdField<unknown>): boolean {
 // how many distinct values the field has. mixed-radix packing uses this as the field's base.
 function radixOf(field: CustomIdField<unknown>): bigint {
     switch (field.kind) {
-        case 'snowflake':
+        case 'snowflake': {
             return 1n << 64n;
-        case 'uuid':
+        }
+        case 'uuid': {
             return 1n << 128n;
-        case 'bool':
+        }
+        case 'bool': {
             return 2n;
-        case 'oneOf':
+        }
+        case 'oneOf': {
             // oneOf() rejects an empty list at define time, so no choices here means a hand-built
             // corrupt shape rather than a real state.
             if (!field.choices?.length) throw new InvalidCustomId('oneOf field has no choices');
             return BigInt(field.choices.length);
-        case 'int':
+        }
+        case 'int': {
             // isBounded only routes a min-and-max int here, so a missing bound means a corrupt shape.
             if (field.min === undefined || field.max === undefined)
                 throw new InvalidCustomId('bounded int field is missing a bound');
             // bigint before the math, max - min + 1 in float64 drops the +1 at 2^53.
             return BigInt(field.max) - BigInt(field.min) + 1n;
-        default:
+        }
+        default: {
             throw new InvalidCustomId(`field kind ${field.kind} has no radix`);
+        }
     }
 }
 
@@ -143,22 +149,25 @@ function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown
         }
         case 'uuid': {
             if (typeof value !== 'string') return outOfRange(name, value);
-            const hex = value.replace(/-/g, '');
+            const hex = value.replaceAll('-', '');
             if (!/^[0-9a-fA-F]{32}$/.test(hex)) return outOfRange(name, value);
             return BigInt(`0x${hex}`);
         }
-        case 'bool':
+        case 'bool': {
             return value ? 1n : 0n;
+        }
         case 'oneOf': {
             const index = (field.choices ?? []).indexOf(value as string);
-            return index < 0 ? outOfRange(name, value) : BigInt(index);
+            return index === -1 ? outOfRange(name, value) : BigInt(index);
         }
         case 'int': {
+            // eslint-disable-next-line unicorn/prefer-number-is-safe-integer -- a bounded int field may declare max up to 2**53 exactly (a power of two, exact in float64)
             if (!Number.isInteger(value)) return outOfRange(name, value);
             return BigInt((value as number) - (field.min ?? 0));
         }
-        default:
+        default: {
             return outOfRange(name, value);
+        }
     }
 }
 
@@ -169,18 +178,24 @@ function outOfRange(name: string, value: unknown): never {
 // inverse of boundedSlot, turn the slot back into the field's value.
 function bigintToBoundedValue(field: CustomIdField<unknown>, slot: bigint): unknown {
     switch (field.kind) {
-        case 'snowflake':
+        case 'snowflake': {
             return slot.toString();
-        case 'uuid':
+        }
+        case 'uuid': {
             return bigintToUuid(slot);
-        case 'bool':
+        }
+        case 'bool': {
             return slot === 1n;
-        case 'oneOf':
+        }
+        case 'oneOf': {
             return (field.choices ?? [])[Number(slot)];
-        case 'int':
+        }
+        case 'int': {
             return Number(slot) + (field.min ?? 0);
-        default:
+        }
+        default: {
             throw new InvalidCustomId(`field kind ${field.kind} is not bounded`);
+        }
     }
 }
 

@@ -17,7 +17,7 @@ describe('kinds helpers', () => {
     });
 
     it('falls back to #<kind> for unknown numeric kinds', () => {
-        const unknown = 999999;
+        const unknown = 999_999;
         expect(kindLabel(unknown)).toBe('#999999');
         expect(kindKey(unknown)).toBe('#999999');
         expect(kindName(unknown)).toBe('#999999');

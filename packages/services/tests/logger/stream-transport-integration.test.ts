@@ -250,12 +250,12 @@ describe('Stream Transport Integration', () => {
 
     it('should strip ANSI codes when stripAnsi is true', () => {
         const logger = new Logger('test-prefix', { channel: 'stream-test' });
-        logger.info('Message with \u001b[31mcolor\u001b[0m');
+        logger.info('Message with \u{1B}[31mcolor\u{1B}[0m');
 
         expect(capturedLogs.length).toBeGreaterThan(0);
         const logEntry = capturedLogs[0]?.toString('utf8') ?? '';
         // Should not contain ANSI escape codes
-        expect(logEntry).not.toMatch(/\u001b\[\d+m/);
+        expect(logEntry).not.toMatch(/\u001B\[\d+m/);
     });
 
     it('should handle channel-specific stream transports', () => {

@@ -43,7 +43,7 @@ class TestContainer extends BuilderComponent<'container'> {
 class PresetContainer extends BuilderComponent<'container'> {
     constructor() {
         super('container');
-        this.instance.setAccentColor(0xef4860);
+        this.instance.setAccentColor(0xef_48_60);
     }
 }
 
@@ -53,8 +53,8 @@ describe('BuilderComponent bot color', () => {
     });
 
     it('resolves a numeric ColorResolvable into a container accent', () => {
-        setBotColor(0xfe565a);
-        expect(new TestContainer().component.data.accent_color).toBe(0xfe565a);
+        setBotColor(0xfe_56_5a);
+        expect(new TestContainer().component.data.accent_color).toBe(0xfe_56_5a);
     });
 
     it('resolves a named ColorResolvable into a container accent', () => {
@@ -64,7 +64,7 @@ describe('BuilderComponent bot color', () => {
 
     it('applies the bot color to an embed', () => {
         setBotColor('#123456');
-        expect(new TestEmbed().component.data.color).toBe(0x123456);
+        expect(new TestEmbed().component.data.color).toBe(0x12_34_56);
     });
 
     it('leaves the container accent unset when no bot color is configured', () => {
@@ -72,8 +72,8 @@ describe('BuilderComponent bot color', () => {
     });
 
     it('does not overwrite a color the subclass set in its own constructor', () => {
-        setBotColor(0xfe565a);
-        expect(new PresetContainer().component.data.accent_color).toBe(0xef4860);
+        setBotColor(0xfe_56_5a);
+        expect(new PresetContainer().component.data.accent_color).toBe(0xef_48_60);
     });
 });
 

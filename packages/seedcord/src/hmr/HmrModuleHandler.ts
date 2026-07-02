@@ -75,7 +75,6 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     public async handle(event: HmrUpdateEvent): Promise<void> {
         const { file, affectedModules, type } = event;
         const { logger, handlersDir, middlewaresDir } = this.options;
-        const rollbackEnabled = event.rollback ?? true;
 
         if (type === 'delete' || type === 'deleteDir') {
             this.unload(file);
@@ -90,6 +89,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             return;
         }
 
+        const rollbackEnabled = event.rollback ?? true;
         const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
         const absHandlersDir = resolve(process.cwd(), handlersDir);
         const absMiddlewaresDir = middlewaresDir ? resolve(process.cwd(), middlewaresDir) : null;
@@ -232,8 +232,8 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     // units are class objects, so restoring re-registers the same classes and a db plugin's connection is untouched
     private snapshotUnits(file: string): { handlers: THandler[]; middlewares: TMiddleware[] } {
         return {
-            handlers: Array.from(this.store.fileToHandlers.get(file) ?? []),
-            middlewares: Array.from(this.store.fileToMiddlewares.get(file) ?? [])
+            handlers: [...(this.store.fileToHandlers.get(file) ?? [])],
+            middlewares: [...(this.store.fileToMiddlewares.get(file) ?? [])]
         };
     }
 

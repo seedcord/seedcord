@@ -56,12 +56,12 @@ describe('DevRunner command refresh', () => {
     it('skips a second regeneration while one is in flight, then allows the next', async () => {
         let release: () => void = () => undefined;
         const codegen = {
-            run: vi.fn(
-                () =>
-                    new Promise<void>((resolve) => {
-                        release = resolve;
-                    })
-            )
+            run: vi.fn(() => {
+                // eslint-disable-next-line @typescript-eslint/no-invalid-void-type -- void is valid here as a Promise resolution type
+                const { promise, resolve } = Promise.withResolvers<void>();
+                release = resolve;
+                return promise;
+            })
         };
         const runner = makeRunner(codegen);
 

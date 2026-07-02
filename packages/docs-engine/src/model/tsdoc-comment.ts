@@ -35,13 +35,13 @@ export function codeDestinationName(codeDestination: unknown): string {
         packageName?: string;
     };
     const members = dest.memberReferences ?? [];
-    const lastName = members[members.length - 1]?.memberIdentifier?.identifier;
+    const lastName = members.at(-1)?.memberIdentifier?.identifier;
     return lastName ?? dest.packageName ?? '';
 }
 
 function pushText(parts: CommentDisplayPart[], text: string): void {
     if (!text) return;
-    const last = parts[parts.length - 1];
+    const last = parts.at(-1);
     if (last?.kind === 'text') last.text += text;
     else parts.push({ kind: 'text', text });
 }
@@ -61,29 +61,35 @@ function walkLinkTag(link: DocLinkTag, parts: CommentDisplayPart[], resolveLink:
     // (TypeDoc rendered `{@link Error}` as "Error", not an empty span).
     const text = explicitText ?? codeDestinationName(link.codeDestination);
     const target = link.codeDestination ? resolveLink(link.codeDestination, text) : undefined;
-    parts.push({ kind: 'inline-tag', tag: '@link', text, ...(target ? { target } : {}) });
+    parts.push({ kind: 'inline-tag', tag: '@link', text, ...(target && { target }) });
 }
 
 function walk(node: DocNode, parts: CommentDisplayPart[], resolveLink: LinkResolver): void {
     switch (node.kind) {
-        case 'PlainText':
+        case 'PlainText': {
             pushText(parts, (node as DocPlainText).text);
             return;
-        case 'SoftBreak':
+        }
+        case 'SoftBreak': {
             pushText(parts, '\n');
             return;
-        case 'EscapedText':
+        }
+        case 'EscapedText': {
             pushText(parts, (node as DocEscapedText).decodedText);
             return;
-        case 'CodeSpan':
+        }
+        case 'CodeSpan': {
             parts.push({ kind: 'code', text: (node as DocCodeSpan).code });
             return;
-        case 'FencedCode':
+        }
+        case 'FencedCode': {
             parts.push({ kind: 'code', text: (node as DocFencedCode).code });
             return;
-        case 'LinkTag':
+        }
+        case 'LinkTag': {
             walkLinkTag(node as DocLinkTag, parts, resolveLink);
             return;
+        }
         case 'InlineTag': {
             const inline = node as DocInlineTag;
             // only `{@default}` is surfaced (a param-default tag), other custom inline tags drop as before
@@ -92,12 +98,14 @@ function walk(node: DocNode, parts: CommentDisplayPart[], resolveLink: LinkResol
             }
             return;
         }
-        case 'Paragraph':
+        case 'Paragraph': {
             for (const child of node.getChildNodes()) walk(child, parts, resolveLink);
             pushText(parts, '\n\n');
             return;
-        default:
+        }
+        default: {
             for (const child of node.getChildNodes()) walk(child, parts, resolveLink);
+        }
     }
 }
 
@@ -108,7 +116,7 @@ function partsFromSection(
     if (!section) return [];
     const parts: CommentDisplayPart[] = [];
     for (const node of section.nodes) walk(node, parts, resolveLink);
-    const last = parts[parts.length - 1];
+    const last = parts.at(-1);
     if (last?.kind === 'text') last.text = last.text.replace(/\n+$/, '');
     return parts;
 }
@@ -173,7 +181,7 @@ function splitParamDefault(parts: CommentDisplayPart[]): { parts: CommentDisplay
     if (index === -1) return { parts };
     const value = parts[index]?.text;
     const cleaned = parts.filter((_, i) => i !== index);
-    const last = cleaned[cleaned.length - 1];
+    const last = cleaned.at(-1);
     if (last?.kind === 'text') last.text = last.text.replace(/\s+$/, '');
     return value ? { parts: cleaned, defaultValue: value } : { parts: cleaned };
 }

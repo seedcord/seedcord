@@ -13,7 +13,7 @@ import type { PageView } from './PageView';
  * @throws SeedcordRangeError when `perPage` is not a positive integer.
  */
 export function paginate<Item>(items: readonly Item[], page: number, perPage: number): PageView<Item> {
-    if (!Number.isInteger(perPage) || perPage <= 0) {
+    if (!Number.isSafeInteger(perPage) || perPage <= 0) {
         throw new SeedcordRangeError(SeedcordErrorCode.PaginationInvalidPerPage, [perPage]);
     }
 

@@ -99,7 +99,7 @@ describe('TransportFactory', () => {
                     type: 'file',
                     level: 'info',
                     filename: 'logs/test.log',
-                    maxSize: 5242880 // 5MB
+                    maxSize: 5_242_880 // 5MB
                 },
                 defaultFormat: 'json',
                 stripAnsi: true

@@ -121,7 +121,7 @@ export class CommandMentionInjector {
     }
 
     private toPlain(route: string): string {
-        return `/${route.split('/').join(' ')}`;
+        return `/${route.replaceAll('/', ' ')}`;
     }
 
     private clear(): void {

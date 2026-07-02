@@ -105,10 +105,10 @@ export class LoggerChannelRegistry {
 
         return {
             name,
-            ...(level !== undefined ? { level } : {}),
-            ...(stripAnsi !== undefined ? { stripAnsi } : {}),
-            ...(format !== undefined ? { format } : {}),
-            ...(transports !== undefined ? { transports } : {})
+            ...(level !== undefined && { level }),
+            ...(stripAnsi !== undefined && { stripAnsi }),
+            ...(format !== undefined && { format }),
+            ...(transports !== undefined && { transports })
         };
     }
 
@@ -119,7 +119,7 @@ export class LoggerChannelRegistry {
      */
     public configure(config: Partial<LoggerConfiguration>): void {
         this.disposeCachedLoggers();
-        this.config = { ...this.config, ...config, channels: { ...this.config.channels, ...(config.channels ?? {}) } };
+        this.config = { ...this.config, ...config, channels: { ...this.config.channels, ...config.channels } };
         this.cache.clear();
     }
 
@@ -128,6 +128,7 @@ export class LoggerChannelRegistry {
     // sink wrappers) across reconfigures, e.g. on every dev HMR cycle.
     private disposeCachedLoggers(): void {
         for (const logger of this.cache.values()) {
+            // eslint-disable-next-line unicorn/no-useless-spread -- defensive copy of winston's live transports array, which remove() splices mid-iteration
             for (const transport of [...logger.transports]) {
                 logger.remove(transport);
                 transport.close?.();
@@ -151,9 +152,9 @@ export class LoggerChannelRegistry {
      */
     public getChannels(): string[] {
         const configuredChannels = Object.keys(this.config.channels);
-        const cachedChannels = Array.from(this.cache.keys());
+        const cachedChannels = [...this.cache.keys()];
         const allChannels = new Set([...configuredChannels, ...cachedChannels, this.config.defaultChannel]);
-        return Array.from(allChannels).sort();
+        return [...allChannels].sort();
     }
 
     /**
@@ -299,14 +300,15 @@ export class LoggerChannelRegistry {
                     removed.push(t);
                 }
             }
-            if (removed.length) {
+            if (removed.length > 0) {
                 for (const t of removed) logger.remove(t);
                 record.removedConsoleByChannel.set(channel, removed);
             }
         }
 
         const sinkTransport = this.transportFactory.buildSinkTransport(
-            { channel, label: channel, level: logger.level as unknown as LoggerLevel },
+            // justified: winston types level as string, but this registry only assigns LoggerLevel values
+            { channel, label: channel, level: logger.level as LoggerLevel },
             record.sink
         );
 

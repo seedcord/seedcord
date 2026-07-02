@@ -9,7 +9,7 @@ import { TestEnvironment } from '../utils/test-env';
 import '../utils/mock-client';
 import '../utils/mock-env';
 
-const seedcordPath = path.resolve(__dirname, '../../src/index').replace(/\\/g, '/');
+const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface PrivateEventDispatcher {
     eventMap: Map<string, unknown[]>;

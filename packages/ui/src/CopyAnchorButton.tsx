@@ -26,7 +26,7 @@ export function CopyAnchorButton({ anchorId, label, className }: CopyAnchorButto
 
     const handleCopyLink = useCallback(() => {
         try {
-            const url = new URL(window.location.href);
+            const url = new URL(globalThis.location.href);
             url.hash = anchorId;
 
             if (typeof navigator !== 'undefined' && 'clipboard' in navigator) {

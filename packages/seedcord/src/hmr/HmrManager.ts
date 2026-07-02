@@ -51,7 +51,7 @@ export class HmrManager {
     }
 
     private async handleUpdate(event: HmrUpdateEvent): Promise<void> {
-        const promises = Array.from(this.listeners).map(async (listener) => {
+        const promises = [...this.listeners].map(async (listener) => {
             try {
                 await listener.onHmr(event);
             } catch (error) {

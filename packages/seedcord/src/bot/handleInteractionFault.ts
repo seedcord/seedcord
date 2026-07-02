@@ -27,7 +27,7 @@ export async function handleInteractionFault(
         if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
         return;
     }
-    if (!(caught instanceof Error)) throw caught;
+    if (!Error.isError(caught)) throw caught;
 
     // empty by default, so every api code from the handler's own work reports. the reply sender swallows
     // the harmless reply-token codes on its own send regardless, see HARMLESS_API_CODES.

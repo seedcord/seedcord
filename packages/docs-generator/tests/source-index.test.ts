@@ -20,7 +20,7 @@ describe('buildSourceIndex', () => {
     beforeAll(() => {
         withBase = scan();
         withoutBase = scan('');
-    }, 60000);
+    }, 60_000);
 
     it('records the exact src line and column of a top-level export', () => {
         const [source] = withBase.sources.MockClass ?? [];

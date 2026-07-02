@@ -108,20 +108,27 @@ export function buildDeclarationHeader(
 
 function declarationKeyword(kind: number, flags: DocFlags): string | null {
     switch (kind) {
-        case DocKind.Class:
+        case DocKind.Class: {
             return 'class';
-        case DocKind.Interface:
+        }
+        case DocKind.Interface: {
             return 'interface';
-        case DocKind.Enum:
+        }
+        case DocKind.Enum: {
             return 'enum';
-        case DocKind.TypeAlias:
+        }
+        case DocKind.TypeAlias: {
             return 'type';
-        case DocKind.Function:
+        }
+        case DocKind.Function: {
             return 'function';
-        case DocKind.Variable:
+        }
+        case DocKind.Variable: {
             return flags.isConst ? 'const' : 'var';
-        default:
+        }
+        default: {
             return null;
+        }
     }
 }
 
@@ -198,16 +205,16 @@ export function explicitModifiers(item: ApiItem, name: string): { access: DocFla
     if (!(item instanceof ApiDeclaredItem)) return { access: null, isReadonly: false };
     const text = item.excerptTokens[0]?.text ?? '';
     const nameIndex = text.indexOf(name);
-    const prefix = nameIndex >= 0 ? text.slice(0, nameIndex) : text;
-    const words = prefix.split(/\s+/).filter((word) => MODIFIER_WORDS.has(word));
-    const access: DocFlags['access'] = words.includes('private')
+    const prefix = nameIndex !== -1 ? text.slice(0, nameIndex) : text;
+    const words = new Set(prefix.split(/\s+/).filter((word) => MODIFIER_WORDS.has(word)));
+    const access: DocFlags['access'] = words.has('private')
         ? 'private'
-        : words.includes('protected')
+        : words.has('protected')
           ? 'protected'
-          : words.includes('public')
+          : words.has('public')
             ? 'public'
             : null;
-    return { access, isReadonly: words.includes('readonly') };
+    return { access, isReadonly: words.has('readonly') };
 }
 
 /** A getter/setter arrives as an `ApiProperty` whose excerpt begins with `get `/`set `. */
@@ -245,7 +252,7 @@ export function buildAccessorSignature(
     const parameters: DocSignatureParameter[] =
         role === 'setter' ? [{ id: 0, name: 'value', kind: DocKind.Parameter, flags: paramFlags(false) }] : [];
     const renderParameters: RenderedSignature['parameters'] =
-        role === 'setter' ? [{ name: 'value', optional: false, ...(valueType ? { type: valueType } : {}) }] : [];
+        role === 'setter' ? [{ name: 'value', optional: false, ...(valueType && { type: valueType }) }] : [];
     const render: RenderedSignature = { name: [{ kind: 'text', text: owner.name }], parameters: renderParameters };
     if (role !== 'setter' && valueType) render.returnType = valueType;
     // AE gives the get + set halves one shared comment; attach it only to the first signature so a

@@ -228,8 +228,8 @@ describe('SegmentedControl full-width layout', () => {
 describe('SegmentedControl reduced-motion behaviour', () => {
     it('renders the same static markup whether or not prefers-reduced-motion is set', () => {
         // justified: jsdom omits matchMedia; stub it to report a reduced-motion preference so motion/react sees the same signal a real browser would surface.
-        const original = (window as { matchMedia?: unknown }).matchMedia;
-        Object.defineProperty(window, 'matchMedia', {
+        const original = (globalThis as { matchMedia?: unknown }).matchMedia;
+        Object.defineProperty(globalThis, 'matchMedia', {
             configurable: true,
             writable: true,
             value: (query: string) => ({
@@ -250,9 +250,9 @@ describe('SegmentedControl reduced-motion behaviour', () => {
             expect(grid.querySelector('[aria-hidden="true"]')).not.toBeNull();
         } finally {
             if (original === undefined) {
-                delete (window as { matchMedia?: unknown }).matchMedia;
+                delete (globalThis as { matchMedia?: unknown }).matchMedia;
             } else {
-                Object.defineProperty(window, 'matchMedia', {
+                Object.defineProperty(globalThis, 'matchMedia', {
                     configurable: true,
                     writable: true,
                     value: original

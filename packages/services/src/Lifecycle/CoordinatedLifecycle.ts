@@ -115,11 +115,11 @@ export abstract class CoordinatedLifecycle<
             // Pass the raw phase name; chalk's ANSI codes would otherwise leak into the serialized
             // error message (e.g. the unknown-exception webhook payload).
             throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
-        } else {
-            this.logger.info(
-                `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
-            );
         }
+
+        this.logger.info(
+            `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
+        );
 
         this.emitPhase(phase, 'complete');
     }

@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * Applies one semver label (🩹 patch / ✨ minor / 💥 major) to a pull request from its changeset bumps.
  * The Semver labeler workflow runs this with `tsx`; the token, repo, PR number, and head sha come from env.
  */
 import { fileURLToPath } from 'node:url';
 
-import { Envapter } from 'envapt';
+import { Converters, Envapter } from 'envapt';
 
 Envapter.strict = true;
 
@@ -20,7 +19,7 @@ export function maxBump(changesets: string[]): Bump | null {
         const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(body);
         if (!frontmatter) continue;
         for (const line of (frontmatter[1] ?? '').split('\n')) {
-            const value = line.split(':').pop()?.trim().replace(/['"]/g, '');
+            const value = line.split(':').pop()?.trim().replaceAll(/['"]/g, '');
             if (value && value in RANK && (top === null || RANK[value as Bump] > RANK[top])) {
                 top = value as Bump;
             }
@@ -29,52 +28,86 @@ export function maxBump(changesets: string[]): Bump | null {
     return top;
 }
 
+/** The changeset files this PR adds or edits. */
+export function changesetPathsFromFiles(files: { filename: string; status: string }[]): string[] {
+    return files
+        .filter((file) => {
+            const name = file.filename.split('/').pop() ?? '';
+            const touched = file.status === 'added' || file.status === 'modified';
+            return file.filename.startsWith('.changeset/') && name.endsWith('.md') && name !== 'README.md' && touched;
+        })
+        .map((file) => file.filename);
+}
+
 interface Ctx {
     owner: string;
     repo: string;
     pr: number;
     sha: string;
+    token: string;
 }
 
 function readCtx(): Ctx {
-    const split = (s: string | undefined): [string, string] => {
-        const [a, b] = (s ?? '').split('/');
-        return [a, b] as [string, string];
-    };
+    const repository = Envapter.getUsing('GITHUB_REPOSITORY', { converter: Converters.String, required: true });
+    const pr = Envapter.getUsing('PR_NUMBER', { converter: Converters.Number, required: true });
+    const sha = Envapter.getUsing('HEAD_SHA', { converter: Converters.String, required: true });
+    const token = Envapter.getUsing('GITHUB_TOKEN', { converter: Converters.String, required: true });
 
-    const [owner, repo] = Envapter.getWith('GITHUB_REPOSITORY', {
-        converter: (s) => split(s),
-        required: true
-    });
-
-    const pr = Envapter.getNumber('PR_NUMBER')!;
-    const sha = Envapter.get('HEAD_SHA')!;
-    return { owner, repo, pr, sha };
+    const [owner, repo] = repository.split('/');
+    if (!owner || !repo) throw new Error('[semver-label] GITHUB_REPOSITORY must be "owner/repo"');
+    return { owner, repo, pr, sha, token };
 }
 
-function api(method: string, path: string, body?: unknown): Promise<Response> {
+function api(token: string, method: string, path: string, body?: unknown): Promise<Response> {
     return fetch(`https://api.github.com${path}`, {
         method,
         headers: {
-            authorization: `Bearer ${Envapter.get('GITHUB_TOKEN')}`,
+            authorization: `Bearer ${token}`,
             accept: 'application/vnd.github+json',
             'x-github-api-version': '2022-11-28',
-            ...(body === undefined ? {} : { 'content-type': 'application/json' })
+            ...(!(body === undefined) && { 'content-type': 'application/json' })
         },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) })
+        ...(!(body === undefined) && { body: JSON.stringify(body) })
     });
 }
 
+async function prChangedFiles(ctx: Ctx): Promise<{ filename: string; status: string }[]> {
+    const files: { filename: string; status: string }[] = [];
+    for (let page = 1; ; page++) {
+        const res = await api(
+            ctx.token,
+            'GET',
+            `/repos/${ctx.owner}/${ctx.repo}/pulls/${ctx.pr}/files?per_page=100&page=${page}`
+        );
+        // throw so a failed listing can't silently apply no label
+        if (!res.ok)
+            throw new Error(`[semver-label] listing PR #${ctx.pr} files failed: ${res.status} ${res.statusText}`);
+        // justified: GitHub "list pull request files" returns an array of file entries
+        const pageFiles = (await res.json()) as { filename: string; status: string }[];
+        files.push(...pageFiles);
+        if (pageFiles.length < 100) break;
+    }
+    return files;
+}
+
+/** Percent-encodes each segment so a `#` or `?` in a changeset filename can't truncate the Contents API URL. */
+export function encodeContentsPath(path: string): string {
+    return path
+        .split('/')
+        .map((segment) => encodeURIComponent(segment))
+        .join('/');
+}
+
 async function changesetBodies(ctx: Ctx): Promise<string[]> {
-    const list = await api('GET', `/repos/${ctx.owner}/${ctx.repo}/contents/.changeset?ref=${ctx.sha}`);
-    if (!list.ok) return [];
-    // justified: GitHub "get directory contents" returns an array of entries
-    const entries = (await list.json()) as { type: string; name: string; path: string }[];
     const bodies: string[] = [];
-    for (const entry of entries) {
-        if (entry.type !== 'file' || !entry.name.endsWith('.md') || entry.name === 'README.md') continue;
-        const file = await api('GET', `/repos/${ctx.owner}/${ctx.repo}/contents/${entry.path}?ref=${ctx.sha}`);
-        if (!file.ok) continue;
+    for (const path of changesetPathsFromFiles(await prChangedFiles(ctx))) {
+        const file = await api(
+            ctx.token,
+            'GET',
+            `/repos/${ctx.owner}/${ctx.repo}/contents/${encodeContentsPath(path)}?ref=${ctx.sha}`
+        );
+        // throw so a skipped changeset can't silently drop its bump
+        if (!file.ok) throw new Error(`[semver-label] reading ${path} failed: ${file.status} ${file.statusText}`);
         // justified: GitHub "get file contents" returns base64 content
         const { content } = (await file.json()) as { content: string };
         bodies.push(Buffer.from(content, 'base64').toString('utf8'));
@@ -86,16 +119,20 @@ async function main(): Promise<void> {
     const ctx = readCtx();
     const bump = maxBump(await changesetBodies(ctx));
     const want = bump ? LABEL[bump] : null;
-    const res = await api('GET', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels`);
+    const res = await api(ctx.token, 'GET', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels`);
     // justified: GitHub "list labels on an issue" returns an array of labels
-    const current = ((await res.json()) as { name: string }[]).map((label) => label.name);
+    const current = new Set(((await res.json()) as { name: string }[]).map((label) => label.name));
     for (const stale of Object.values(LABEL)) {
-        if (stale !== want && current.includes(stale)) {
-            await api('DELETE', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels/${encodeURIComponent(stale)}`);
+        if (stale !== want && current.has(stale)) {
+            await api(
+                ctx.token,
+                'DELETE',
+                `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels/${encodeURIComponent(stale)}`
+            );
         }
     }
-    if (want && !current.includes(want)) {
-        await api('POST', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels`, { labels: [want] });
+    if (want && !current.has(want)) {
+        await api(ctx.token, 'POST', `/repos/${ctx.owner}/${ctx.repo}/issues/${ctx.pr}/labels`, { labels: [want] });
     }
 }
 

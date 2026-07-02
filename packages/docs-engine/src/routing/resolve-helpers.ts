@@ -18,7 +18,7 @@ export function orderedPackageCandidates(
     for (const name of available) {
         ordered.add(name);
     }
-    return Array.from(ordered);
+    return [...ordered];
 }
 
 export function resolveWithinPackage(reference: DocReference, pkg: DocPackageModel): DocNode | null {

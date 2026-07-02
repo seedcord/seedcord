@@ -1,10 +1,11 @@
 import { defineConfig } from 'eslint/config';
 import path from 'path';
 import prettierConfig from 'eslint-config-prettier';
-import eslintImport from 'eslint-plugin-import';
+import { importX } from 'eslint-plugin-import-x';
 import eslintPrettier from 'eslint-plugin-prettier';
 import eslintSecurity from 'eslint-plugin-security';
 import eslintTsdoc from 'eslint-plugin-tsdoc';
+import eslintUnicorn from 'eslint-plugin-unicorn';
 import merge from 'lodash.merge';
 import tseslint from 'typescript-eslint';
 
@@ -30,6 +31,7 @@ import {
     SECURITY_RULES,
     TSDOC_RULES,
     TYPESCRIPT_RULES,
+    UNICORN_RULES,
     createImportSettings
 } from './rules';
 
@@ -56,7 +58,7 @@ interface CreateConfigOptions {
     userConfigs?: FlatConfigItem[];
 
     /**
-     * Toggle registration of the `eslint-plugin-import` plugin
+     * Toggle registration of the `eslint-plugin-import-x` plugin
      *
      * @defaultValue `true`
      */
@@ -89,6 +91,14 @@ interface CreateConfigOptions {
      * @defaultValue `true`
      */
     registerTypescriptConfigs?: boolean;
+
+    /**
+     * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
+     * consumers still on eslint 9 must set this to `false`.
+     *
+     * @defaultValue `true`
+     */
+    registerUnicornPlugin?: boolean;
 
     /**
      * Absolute path to the consumer's Tailwind entry CSS file (the one with `@import 'tailwindcss'`).
@@ -145,9 +155,12 @@ function pluginBlock(params: {
     settings?: Linter.Config['settings'];
 }): FlatConfigItem {
     const item: FlatConfigItem = { files: [...params.files] };
+    // when disabled, drop the rules and settings as well. eslint throws "rule not found" if a
+    // <plugin>/* rule is set while its plugin is unregistered.
+    if (!params.enabled) return item;
     if (params.settings) item.settings = params.settings;
     if (params.rules) item.rules = params.rules;
-    if (params.enabled && params.plugin && params.pluginName) {
+    if (params.plugin && params.pluginName) {
         item.plugins = { [params.pluginName]: params.plugin };
     }
     return item;
@@ -168,6 +181,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         registerSecurityPlugin = true,
         registerTsdocPlugin = true,
         registerTypescriptConfigs = true,
+        registerUnicornPlugin = true,
         tailwindEntryPoint,
         tailwindCalleeFunctions = ['cn'],
         tailwindTaggedTemplates = ['tw'],
@@ -226,8 +240,8 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         pluginBlock({
             enabled: registerImportPlugin,
             files: [...ALL_FILES],
-            pluginName: 'import',
-            plugin: eslintImport,
+            pluginName: 'import-x',
+            plugin: importX,
             settings: createImportSettings(tsconfigRootDir),
             rules: IMPORT_RULES
         }),
@@ -246,6 +260,14 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             pluginName: 'tsdoc',
             plugin: eslintTsdoc,
             rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
+        }),
+
+        pluginBlock({
+            enabled: registerUnicornPlugin,
+            files: [...ALL_FILES],
+            pluginName: 'unicorn',
+            plugin: eslintUnicorn,
+            rules: UNICORN_RULES
         }),
 
         // Opt-in via tailwindEntryPoint; off when omitted (see CreateConfigOptions.tailwindEntryPoint).
