@@ -1,5 +1,15 @@
 # @seedcord/types
 
+## 0.8.0-next.1
+
+### Minor Changes
+
+- d8b91f5: Make `ReplyResponse` djs-free. `V2Component`, `ReplyFile`, and the new `ReplyAllowedMentions` are structural types backed by `discord-api-types`, so the reply types no longer import `discord.js`.
+
+    **BREAKING:** `files` now takes only `{ attachment: Buffer | string; name?; description? }`. A discord.js `AttachmentBuilder` or `Attachment`, or a node `Stream`, no longer assigns, so pass the plain object instead.
+
+- c046193: **BREAKING:** require Node 24. `engines.node` moves to `>=24` so the framework can use Node 24 APIs like `Error.isError` and `RegExp.escape`. Upgrade your runtime to Node 24 or newer.
+
 ## 0.7.2-next.0
 
 ### Patch Changes

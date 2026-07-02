@@ -1,5 +1,23 @@
 # @seedcord/plugins
 
+## 0.8.0-next.1
+
+### Minor Changes
+
+- c046193: **BREAKING:** require Node 24. `engines.node` moves to `>=24` so the framework can use Node 24 APIs like `Error.isError` and `RegExp.escape`. Upgrade your runtime to Node 24 or newer.
+
+### Patch Changes
+
+- c046193: Modernize internals via the curated eslint-plugin-unicorn rules (modern array, string, and number APIs, and `Error.isError` in error checks). Behavior-preserving, no public API change.
+- Updated dependencies [c046193]
+- Updated dependencies [d8b91f5]
+- Updated dependencies [c046193]
+    - seedcord@0.16.0-next.1
+    - @seedcord/services@0.9.0-next.1
+    - @seedcord/utils@0.8.0-next.1
+    - @seedcord/types@0.8.0-next.1
+    - @seedcord/errors@0.3.0-next.1
+
 ## 0.7.3-next.0
 
 ### Patch Changes

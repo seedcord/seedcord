@@ -1,5 +1,21 @@
 # @seedcord/eslint-config
 
+## 1.5.0-next.0
+
+### Minor Changes
+
+- c046193: Replace `eslint-plugin-import` with the maintained `eslint-plugin-import-x` fork, which fixes the `import/order` autofixer crashing under eslint 10 (the original calls the removed `getTokenOrCommentBefore` API). It uses import-x's faster `resolver-next` resolver and adds `no-rename-default`. Import rule and setting names move from the `import/` namespace to `import-x/`, so update any `import/*` overrides or disable comments to `import-x/*`.
+
+    A disabled plugin now also drops its rules. Turning a plugin off (for example `registerImportPlugin: false`) previously left its rules in the config, which threw "rule not found" unless another config registered that plugin.
+
+- c046193: Support eslint 10. `eslint` moves from `dependencies` to `peerDependencies` at `^9.39.4 || ^10.6.0`, so consumers stay on eslint 9 or move to 10 as they choose. Consumers still on `eslint-plugin-react` (which breaks on eslint 10) can pin eslint 9 without conflict.
+- c046193: Add a curated set of eslint-plugin-unicorn rules (correctness, modern APIs, clarity), on by default via the new `registerUnicornPlugin` option. Consumers on eslint 9 must set `registerUnicornPlugin: false`, because unicorn requires eslint >=10.4.
+- 86c1299: proseWrap is now set to `never` instead of `preserve`
+
+### Patch Changes
+
+- c046193: The `no-restricted-syntax` bans on inline `import()` types and `as X as Y` double casts fire again, after a second rule definition had silently shadowed them. `.test.tsx` files now also receive the test-file rule exemptions.
+
 ## 1.4.3
 
 ### Patch Changes
