@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { changesetPathsFromFiles, maxBump } from '../semver-label';
+import { changesetPathsFromFiles, encodeContentsPath, maxBump } from '../semver-label';
 
 const changeset = (frontmatter: string): string => `---\n${frontmatter}\n---\n\nSome description.`;
 
@@ -66,5 +66,15 @@ describe('changesetPathsFromFiles', () => {
             { filename: '.changeset/dropped.md', status: 'removed' }
         ];
         expect(changesetPathsFromFiles(files)).to.deep.equal([]);
+    });
+});
+
+describe('encodeContentsPath', () => {
+    it('leaves a normal changeset path untouched', () => {
+        expect(encodeContentsPath('.changeset/funny-lions-dance.md')).toBe('.changeset/funny-lions-dance.md');
+    });
+
+    it('percent-encodes # and ? within a segment while keeping the slash', () => {
+        expect(encodeContentsPath('.changeset/weird#name?.md')).toBe('.changeset/weird%23name%3F.md');
     });
 });

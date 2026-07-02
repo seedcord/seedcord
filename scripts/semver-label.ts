@@ -90,10 +90,22 @@ async function prChangedFiles(ctx: Ctx): Promise<{ filename: string; status: str
     return files;
 }
 
+/** Percent-encodes each segment so a `#` or `?` in a changeset filename can't truncate the Contents API URL. */
+export function encodeContentsPath(path: string): string {
+    return path
+        .split('/')
+        .map((segment) => encodeURIComponent(segment))
+        .join('/');
+}
+
 async function changesetBodies(ctx: Ctx): Promise<string[]> {
     const bodies: string[] = [];
     for (const path of changesetPathsFromFiles(await prChangedFiles(ctx))) {
-        const file = await api(ctx.token, 'GET', `/repos/${ctx.owner}/${ctx.repo}/contents/${path}?ref=${ctx.sha}`);
+        const file = await api(
+            ctx.token,
+            'GET',
+            `/repos/${ctx.owner}/${ctx.repo}/contents/${encodeContentsPath(path)}?ref=${ctx.sha}`
+        );
         // throw so a skipped changeset can't silently drop its bump
         if (!file.ok) throw new Error(`[semver-label] reading ${path} failed: ${file.status} ${file.statusText}`);
         // justified: GitHub "get file contents" returns base64 content
