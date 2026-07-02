@@ -1,27 +1,25 @@
 import path from 'node:path';
 
 import { Linter } from 'eslint';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 
 // Import plugin configuration
 export const createImportSettings = (rootDir: string) => ({
-    'import/resolver': {
-        typescript: {
+    'import-x/resolver-next': [
+        createTypeScriptImportResolver({
             alwaysTryTypes: true,
             project: [path.join(rootDir, 'tsconfig.json')]
-        },
-        node: {
-            extensions: ['.js', '.jsx', '.ts', '.tsx']
-        }
-    },
-    'import/parsers': {
+        })
+    ],
+    'import-x/parsers': {
         '@typescript-eslint/parser': ['.ts', '.tsx']
     },
-    'import/internal-regex': '^(src/|@/)',
-    'import/external-module-folders': ['node_modules', 'dist']
+    'import-x/internal-regex': '^(src/|@/)',
+    'import-x/external-module-folders': ['node_modules', 'dist']
 });
 
 export const IMPORT_RULES: Linter.RulesRecord = {
-    'import/order': [
+    'import-x/order': [
         'warn',
         {
             groups: ['builtin', 'external', 'internal', ['parent', 'sibling'], 'index', 'type'],
@@ -43,14 +41,15 @@ export const IMPORT_RULES: Linter.RulesRecord = {
             pathGroupsExcludedImportTypes: ['builtin']
         }
     ],
-    'import/newline-after-import': ['error', { count: 1 }],
-    'import/no-duplicates': ['error', { considerQueryString: true }],
-    'import/no-unresolved': 'error',
-    'import/no-cycle': 'warn',
-    'import/no-unused-modules': 'off',
-    'import/no-deprecated': 'warn',
-    'import/first': 'error',
-    'import/no-absolute-path': 'error',
-    'import/no-self-import': 'error',
-    'import/no-useless-path-segments': ['error', { noUselessIndex: true }]
+    'import-x/newline-after-import': ['error', { count: 1 }],
+    'import-x/no-duplicates': ['error', { considerQueryString: true }],
+    'import-x/no-unresolved': 'error',
+    'import-x/no-cycle': 'warn',
+    'import-x/no-unused-modules': 'off',
+    'import-x/no-deprecated': 'warn',
+    'import-x/first': 'error',
+    'import-x/no-absolute-path': 'error',
+    'import-x/no-self-import': 'error',
+    'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
+    'import-x/no-rename-default': 'error'
 };
