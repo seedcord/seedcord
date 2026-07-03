@@ -11,14 +11,14 @@ export default mergeConfig(
     defineConfig({
         resolve: {
             alias: {
-                '@src': path.resolve(__dirname, './src'),
-                '@pagination': path.resolve(__dirname, './src/pagination')
+                '@src': path.resolve(__dirname, './src')
             }
         },
         test: {
             globals: true,
             environment: 'node',
-            testTimeout: 10_000
+            testTimeout: 10_000,
+            passWithNoTests: true
         }
     })
 );

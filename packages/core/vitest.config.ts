@@ -3,7 +3,7 @@ import path from 'node:path';
 import { defineConfig, mergeConfig } from 'vitest/config';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore ts is crying because the import isn't from cli's src dir
+// @ts-ignore the root vitest config sits outside this package's tsconfig rootDir
 import rootConfig from '../../vitest.config';
 
 export default mergeConfig(
@@ -14,6 +14,7 @@ export default mergeConfig(
                 '@src': path.resolve(__dirname, './src'),
                 '@components': path.resolve(__dirname, './src/components'),
                 '@customId': path.resolve(__dirname, './src/customId'),
+                '@pagination': path.resolve(__dirname, './src/pagination'),
                 '@registries': path.resolve(__dirname, './src/registries'),
                 '@stops': path.resolve(__dirname, './src/stops')
             }

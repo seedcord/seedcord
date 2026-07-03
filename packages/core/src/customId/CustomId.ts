@@ -78,7 +78,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Add a Discord ID field, decoded as a string (the discord.js `Snowflake` type).
+     * Add a Discord ID field, decoded as a string (the `Snowflake` type from discord-api-types).
      *
      * @example
      * ```ts

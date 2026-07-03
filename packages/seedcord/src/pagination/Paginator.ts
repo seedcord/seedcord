@@ -1,4 +1,4 @@
-import { pageCursor } from '@seedcord/kit/internal';
+import { pageCursor } from '@seedcord/core/internal';
 
 import { ReplySender } from '@bot/ReplySender';
 import { ButtonHandler } from '@handlers/interaction/components';
@@ -10,7 +10,7 @@ import type { ItemRender, PageRender } from './render';
 import type { PageSource } from './sources';
 import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
-import type { PageCursor } from '@seedcord/kit/internal';
+import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 import type { ButtonInteraction, Message } from 'discord.js';
 

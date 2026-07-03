@@ -5,8 +5,7 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@src/*": ["./src/*"],
-            "@pagination/*": ["./src/pagination/*"]
+            "@src/*": ["./src/*"]
         },
         "types": []
     },

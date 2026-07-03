@@ -1,10 +1,10 @@
 import { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
+import { PAGE_MAX, type PageCursor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { PAGE_MAX, type PageCursor } from '@seedcord/kit/internal';
 import { ButtonStyle } from 'discord.js';
 
-import type { PageView } from '@seedcord/kit';
+import type { PageView } from '@seedcord/core';
 import type { APIMessageComponentEmoji } from 'discord.js';
 
 /** The five built-in nav controls. */

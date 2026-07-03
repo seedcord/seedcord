@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { pageCursor } from '@seedcord/kit/internal';
+import { pageCursor } from '@seedcord/core/internal';
 import { ComponentType } from 'discord.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 

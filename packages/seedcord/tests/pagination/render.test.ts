@@ -1,12 +1,12 @@
 import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
 import { BuilderComponent } from '@seedcord/core';
-import { pageCursor } from '@seedcord/kit/internal';
+import { pageCursor } from '@seedcord/core/internal';
 import { ButtonStyle, ComponentType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { renderPage } from '@pagination/render';
 
-import type { PageView } from '@seedcord/kit';
+import type { PageView } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord.js';
 
