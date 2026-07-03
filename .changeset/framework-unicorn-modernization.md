@@ -2,7 +2,6 @@
 'seedcord': patch
 '@seedcord/services': patch
 '@seedcord/utils': patch
-'@seedcord/kit': patch
 '@seedcord/plugins': patch
 '@seedcord/cli': patch
 ---

@@ -3,7 +3,6 @@
 '@seedcord/services': minor
 '@seedcord/utils': minor
 '@seedcord/types': minor
-'@seedcord/kit': minor
 '@seedcord/errors': minor
 '@seedcord/plugins': minor
 '@seedcord/cli': minor

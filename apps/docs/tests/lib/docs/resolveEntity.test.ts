@@ -19,7 +19,7 @@ const { getEngineStub } = vi.hoisted(() => ({
 vi.mock('../../../src/lib/docs/engine', () => ({ getDocsEngine: getEngineStub }));
 vi.mock('../../../src/lib/docs/pageContext', () => ({
     getCatalogContext: () =>
-        Promise.resolve({ entry: { id: 'kit', manifestName: '@seedcord/kit' }, version: { id: '1.0.0' } })
+        Promise.resolve({ entry: { id: 'core', manifestName: '@seedcord/core' }, version: { id: '1.0.0' } })
 }));
 vi.mock('@seedcord/docs-engine', () => ({ parseEntityPathSegments: () => ({ slug: 'thing', tone: 'class' }) }));
 // the bug source: loadActiveVersion fetches its OWN engine and sets the version on that one.
@@ -33,7 +33,9 @@ vi.mock('../../../src/lib/docs/catalog', () => ({
 // resolves to a model only when the engine it was handed already has its version set.
 vi.mock('../../../src/lib/docs/loadEntityModel', () => ({
     loadEntityModel: (engine: { versionSet: boolean }) =>
-        Promise.resolve(engine.versionSet ? { name: 'Thing', kind: 'class', displayPackage: 'kit', summary: [] } : null)
+        Promise.resolve(
+            engine.versionSet ? { name: 'Thing', kind: 'class', displayPackage: 'core', summary: [] } : null
+        )
 }));
 
 const { resolveEntity } = await import('@lib/docs/resolveEntity');
@@ -41,7 +43,7 @@ const { resolveEntity } = await import('@lib/docs/resolveEntity');
 describe('resolveEntity', () => {
     it('sets the version and loads the model on one engine instance, with no cache dedup', async () => {
         const resolved = await resolveEntity({
-            packageId: 'kit',
+            packageId: 'core',
             versionId: '1.0.0',
             entitySegments: ['classes', 'thing']
         });

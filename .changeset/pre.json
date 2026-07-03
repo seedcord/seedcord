@@ -10,7 +10,6 @@
     "@seedcord/docs-generator": "0.2.4",
     "@seedcord/errors": "0.2.1",
     "@seedcord/eslint-config": "1.4.3",
-    "@seedcord/kit": "0.2.0",
     "@seedcord/plugins": "0.7.2",
     "seedcord": "0.15.0",
     "@seedcord/services": "0.8.2",
