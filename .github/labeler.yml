@@ -1,7 +1,6 @@
 '📦 seedcord':
   - changed-files:
       - any-glob-to-any-file: 'packages/seedcord/**'
-      - any-glob-to-any-file: 'seedcord/**'
 '📦 core':
   - changed-files:
       - any-glob-to-any-file: 'packages/core/**'
