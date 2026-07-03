@@ -1,3 +1,5 @@
+import noChoicesAndAutocomplete from './rules/discord/no-choices-and-autocomplete';
+import noConflictingButtonProps from './rules/discord/no-conflicting-button-props';
 import commandBuilderMissingRegisterCommand from './rules/seedcord/command-builder-missing-register-command';
 import eventHandlerMissingRegisterEvent from './rules/seedcord/event-handler-missing-register-event';
 import interactionHandlerMissingRoute from './rules/seedcord/interaction-handler-missing-route';
@@ -14,7 +16,10 @@ const seedcordRules = {
     'use-custom-id-codec': useCustomIdCodec
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
 
-const djsRules = {} satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
+const djsRules = {
+    'no-choices-and-autocomplete': noChoicesAndAutocomplete,
+    'no-conflicting-button-props': noConflictingButtonProps
+} satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
 
 const plugin: TSESLint.FlatConfig.Plugin = {
     meta: { name: '@seedcord/eslint-plugin', version: process.env.PACKAGE_VERSION ?? '0.0.0' },
