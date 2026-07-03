@@ -1,11 +1,12 @@
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { Logger } from '@seedcord/services';
 import { routeLeavesOf } from '@seedcord/utils/internal';
-import { chatInputApplicationCommandMention, SlashCommandBuilder } from 'discord.js';
+import { chatInputApplicationCommandMention } from 'discord.js';
 
 import type { DeployResult } from '@bControllers/CommandRegistry';
 import type { Core } from '@interfaces/Core';
 import type { SlashOptionRegistry } from '@seedcord/core';
-import type { ApplicationCommand, Collection, Snowflake } from 'discord.js';
+import type { ApplicationCommand, Snowflake } from 'discord.js';
 
 const mentionStorage: Record<string, string> = {};
 
@@ -71,14 +72,14 @@ export class CommandMentionInjector {
         return [...new Set(slash)];
     }
 
-    private indexByName(collection: Collection<Snowflake, ApplicationCommand>): Map<string, Snowflake> {
+    private indexByName(collection: Map<Snowflake, ApplicationCommand>): Map<string, Snowflake> {
         const map = new Map<string, Snowflake>();
         for (const command of collection.values()) map.set(command.name, command.id);
         return map;
     }
 
     private indexGuilds(
-        guilds: Collection<Snowflake, Collection<Snowflake, ApplicationCommand>>
+        guilds: Map<Snowflake, Map<Snowflake, ApplicationCommand>>
     ): Map<string, Snowflake | typeof MULTI_GUILD> {
         const map = new Map<string, Snowflake | typeof MULTI_GUILD>();
         for (const collection of guilds.values()) {

@@ -24,7 +24,7 @@ function cacheOf(emojis: EmojiStub[]): Collection<string, EmojiStub> {
 }
 
 function stubCore(opts: StubOptions): Core {
-    const guilds = new Collection<string, unknown>();
+    const guilds = new Map<string, unknown>();
     for (const [guildId, emojis] of Object.entries(opts.guilds ?? {})) {
         guilds.set(guildId, { emojis: { fetch: vi.fn().mockResolvedValue(undefined), cache: cacheOf(emojis) } });
     }
@@ -118,7 +118,7 @@ describe('EmojiInjector', () => {
                 cache
             }
         };
-        const guilds = new Collection<string, unknown>();
+        const guilds = new Map<string, unknown>();
         guilds.set('g1', guild);
         const core = {
             config: { bot: { emojis: { Wave: ['wave', 'g1'] } } },
@@ -141,7 +141,7 @@ describe('EmojiInjector', () => {
         const smile: EmojiStub = { id: '2', name: 'smile' };
         const fetch = vi.fn().mockResolvedValue(undefined);
         const guild = { emojis: { fetch, cache: cacheOf([wave, smile]) } };
-        const guilds = new Collection<string, unknown>();
+        const guilds = new Map<string, unknown>();
         guilds.set('g1', guild);
         const core = {
             config: { bot: { emojis: { Wave: ['wave', 'g1'], Smile: ['smile', 'g1'] } } },

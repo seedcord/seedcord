@@ -1,7 +1,7 @@
+import { SlashCommandBuilder } from '@discordjs/builders';
 import { routeLeavesOf } from '@seedcord/utils/internal';
-import { SlashCommandBuilder } from 'discord.js';
 
-import type { ContextMenuCommandBuilder } from 'discord.js';
+import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 
 /**
  * Collects the route keys of every executable slash leaf across a set of command builders, deduplicated. The

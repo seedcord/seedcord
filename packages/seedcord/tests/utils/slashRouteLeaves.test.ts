@@ -1,4 +1,5 @@
-import { ApplicationCommandType, ContextMenuCommandBuilder, SlashCommandBuilder } from 'discord.js';
+import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { ApplicationCommandType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';

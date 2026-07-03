@@ -1,4 +1,4 @@
-import { ContainerBuilder } from 'discord.js';
+import { ContainerBuilder } from '@discordjs/builders';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getConfirmation } from '@bot/confirm';

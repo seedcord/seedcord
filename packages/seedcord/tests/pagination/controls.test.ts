@@ -5,8 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 import { Controls } from '@pagination/controls';
 
+import type { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
 import type { PageView } from '@seedcord/kit';
-import type { ActionRowBuilder, APIButtonComponentWithCustomId, ButtonBuilder } from 'discord.js';
+import type { APIButtonComponentWithCustomId } from 'discord.js';
 
 const cursor = pageCursor('bans');
 
@@ -79,7 +80,7 @@ describe('controls.button', () => {
     });
 
     it('drops the default label for an icon-only button (emoji, no label)', () => {
-        const button = new Controls(cursor, arrayView(1, 3)).button('prev', { emoji: '⬅️' });
+        const button = new Controls(cursor, arrayView(1, 3)).button('prev', { emoji: { name: '⬅️' } });
         expect(labelOf(button)).toBeUndefined();
         expect(jsonOf(button).emoji).toBeDefined();
     });
@@ -89,7 +90,7 @@ describe('controls.button', () => {
     });
 
     it('keeps the indicator text even with an emoji', () => {
-        const indicator = new Controls(cursor, arrayView(1, 3)).button('indicator', { emoji: '📄' });
+        const indicator = new Controls(cursor, arrayView(1, 3)).button('indicator', { emoji: { name: '📄' } });
         expect(labelOf(indicator)).toBe('Page 2 of 3');
     });
 

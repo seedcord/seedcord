@@ -1,6 +1,7 @@
-import { ApplicationCommandType, ContextMenuCommandBuilder } from 'discord.js';
+import { ContextMenuCommandBuilder } from '@discordjs/builders';
+import { ApplicationCommandType } from 'discord.js';
 
-import type { SlashCommandBuilder } from 'discord.js';
+import type { SlashCommandBuilder } from '@discordjs/builders';
 
 /** The registered context-menu command names, split by kind, deduplicated. @internal */
 export interface ContextMenuLeaves {

@@ -3,7 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { CommandMetadataKey } from '@src/metadataKeys';
 
-import type { BuilderComponent } from '@seedcord/kit';
+import type { BuilderComponent } from '@seedcord/core';
 import type { Constructor } from 'type-fest';
 
 /** @internal */

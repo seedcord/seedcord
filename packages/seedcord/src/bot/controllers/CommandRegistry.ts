@@ -1,12 +1,13 @@
 import { resolve } from 'node:path';
 
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { BuilderComponent } from '@seedcord/kit';
 import { Logger } from '@seedcord/services';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { Collection, SlashCommandBuilder } from 'discord.js';
+import { Collection } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
@@ -17,10 +18,11 @@ import { CommandMetadataKey } from '@src/metadataKeys';
 
 import type { CommandMeta } from '@bDecorators/Command';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
+import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
-import type { ApplicationCommand, ContextMenuCommandBuilder, Snowflake } from 'discord.js';
+import type { ApplicationCommand, Snowflake } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
 

@@ -1,4 +1,5 @@
-import { ContainerBuilder, DiscordAPIError, MessageFlags, RESTJSONErrorCodes } from 'discord.js';
+import { ContainerBuilder } from '@discordjs/builders';
+import { DiscordAPIError, MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ReplySender } from '@bot/ReplySender';
