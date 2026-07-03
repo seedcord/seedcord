@@ -49,6 +49,12 @@
 - name: '🔍 triage'
   color: a269b5
   description: not yet reviewed
+- name: '🔧 build'
+  color: f9b233
+  description: build and config changes
+- name: '🔗 deps'
+  color: 9e7cb5
+  description: dependency changes
 - name: '🩹 patch'
   color: 59c58f
   description: semver patch bump
