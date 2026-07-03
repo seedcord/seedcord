@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.3.0-next.1
+
+### Minor Changes
+
+- c046193: **BREAKING:** require Node 24. `engines.node` moves to `>=24` so the framework can use Node 24 APIs like `Error.isError` and `RegExp.escape`. Upgrade your runtime to Node 24 or newer.
+
 ## 0.2.2-next.0
 
 ### Patch Changes
