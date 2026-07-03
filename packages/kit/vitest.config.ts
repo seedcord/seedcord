@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
@@ -12,7 +12,6 @@ export default mergeConfig(
         resolve: {
             alias: {
                 '@src': path.resolve(__dirname, './src'),
-                '@components': path.resolve(__dirname, './src/components'),
                 '@customId': path.resolve(__dirname, './src/customId'),
                 '@pagination': path.resolve(__dirname, './src/pagination'),
                 '@stops': path.resolve(__dirname, './src/stops')
@@ -21,7 +20,7 @@ export default mergeConfig(
         test: {
             globals: true,
             environment: 'node',
-            testTimeout: 10000
+            testTimeout: 10_000
         }
     })
 );

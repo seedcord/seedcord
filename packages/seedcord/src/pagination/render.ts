@@ -1,13 +1,13 @@
-import { BuilderComponent } from '@seedcord/kit';
-import { TextDisplayBuilder } from 'discord.js';
+import { TextDisplayBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/core';
 
 import { Controls } from './controls';
 
 import type { ControlKey, PaginatorControls } from './controls';
+import type { ButtonBuilder, ActionRowBuilder } from '@discordjs/builders';
 import type { PageView } from '@seedcord/kit';
 import type { PageCursor } from '@seedcord/kit/internal';
 import type { ReplyResponse, V2Component } from '@seedcord/types';
-import type { ButtonBuilder, ActionRowBuilder } from 'discord.js';
 
 /** What `renderItem` returns for one item, a text line or a section. */
 export type ItemRender<Item> = (item: Item, index: number) => string | BuilderComponent<'section'>;

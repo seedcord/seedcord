@@ -1,3 +1,4 @@
+export * from './discord-rules';
 export * from './general-rules';
 export * from './import-rules';
 export * from './prettier-rules';

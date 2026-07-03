@@ -1,10 +1,11 @@
+import { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { PAGE_MAX, type PageCursor } from '@seedcord/kit/internal';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ButtonStyle } from 'discord.js';
 
 import type { PageView } from '@seedcord/kit';
-import type { ComponentEmojiResolvable } from 'discord.js';
+import type { APIMessageComponentEmoji } from 'discord.js';
 
 /** The five built-in nav controls. */
 export type ControlKey = 'first' | 'prev' | 'indicator' | 'next' | 'last';
@@ -16,7 +17,7 @@ type CustomIdStyle = ButtonStyle.Primary | ButtonStyle.Secondary | ButtonStyle.S
 export interface ControlCosmetics {
     label?: string;
     style?: CustomIdStyle;
-    emoji?: ComponentEmojiResolvable;
+    emoji?: APIMessageComponentEmoji;
 }
 
 /** The controls passed to `render`. Each accessor returns a fresh builder stamped with its target page. */

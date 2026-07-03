@@ -1,4 +1,5 @@
-import { Collection, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { Collection } from 'discord.js';
 import { describe, it, expect, vi } from 'vitest';
 
 import { CommandRegistry } from '@bControllers/CommandRegistry';

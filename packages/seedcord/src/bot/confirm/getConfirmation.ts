@@ -1,5 +1,6 @@
-import { BuilderComponent, RowComponent } from '@seedcord/kit';
-import { ButtonBuilder, ButtonStyle, ComponentType, TextDisplayBuilder } from 'discord.js';
+import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
+import { BuilderComponent, RowComponent } from '@seedcord/core';
+import { ButtonStyle, ComponentType } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';
 
@@ -177,7 +178,8 @@ export function getConfirmation(
  *
  * @example
  * ```ts
- * import { ButtonBuilder, ButtonStyle, TextDisplayBuilder } from 'discord.js';
+ * import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
+ * import { ButtonStyle } from 'discord.js';
  * import { BuilderComponent, RowComponent, getConfirmation } from 'seedcord';
  *
  * class BanPrompt extends BuilderComponent<'container'> {

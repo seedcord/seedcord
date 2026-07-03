@@ -27,7 +27,7 @@ import {
     TextDisplayBuilder,
     TextInputBuilder,
     UserSelectMenuBuilder
-} from 'discord.js';
+} from '@discordjs/builders';
 
 /**
  * Available Discord.js builder classes for use with BuilderComponent for commands, embeds, modals, etc.

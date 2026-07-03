@@ -11,7 +11,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  * @example
  * ```ts
  * import { Notice, BuilderComponent, type RenderContext, type ReplyResponse } from 'seedcord';
- * import { TextDisplayBuilder } from 'discord.js';
+ * import { TextDisplayBuilder } from '@discordjs/builders';
  *
  * // reading `.component` applies the configured bot color to the container accent
  * class TooPoorCard extends BuilderComponent<'container'> {

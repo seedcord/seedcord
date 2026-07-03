@@ -1,1 +1,1 @@
-export {};
+export { setBotColor } from './components/botColorHolder';

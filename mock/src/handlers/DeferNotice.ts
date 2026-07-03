@@ -1,4 +1,5 @@
-import { MessageFlags, TextDisplayBuilder } from 'discord.js';
+import { TextDisplayBuilder } from '@discordjs/builders';
+import { MessageFlags } from 'discord.js';
 import { Notice, SlashHandler, SlashRoute } from 'seedcord';
 
 import type { ReplyResponse } from 'seedcord';

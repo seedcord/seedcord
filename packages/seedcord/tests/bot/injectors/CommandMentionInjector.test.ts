@@ -1,4 +1,5 @@
-import { Collection, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from '@discordjs/builders';
+import { Collection } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
 import { CommandMentionInjector, CommandMentions } from '@bot/injectors/CommandMentionInjector';
@@ -15,10 +16,10 @@ function stubCore(global: SlashCommandBuilder[], guilds = new Collection<string,
 }
 
 function commandCollection(entries: [id: string, name: string][]): Collection<string, ApplicationCommand> {
-    const collection = new Collection<string, ApplicationCommand>();
+    const commands = new Collection<string, ApplicationCommand>();
     // fixture: only id (key) and name are read
-    for (const [id, name] of entries) collection.set(id, { id, name } as unknown as ApplicationCommand);
-    return collection;
+    for (const [id, name] of entries) commands.set(id, { id, name } as unknown as ApplicationCommand);
+    return commands;
 }
 
 function guildBucket(

@@ -1,7 +1,6 @@
 import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { Collection } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
@@ -41,7 +40,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
     /** @internal */
     public override readonly name = 'Subscribers';
     private isInitialized = false;
-    private readonly subscribersMap = new Collection<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();
+    private readonly subscribersMap = new Map<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();
     private readonly executedOnceHandlers = new Set<SubscriberConstructor>();
     private readonly hmrHandler?: HmrModuleHandler<SubscriberConstructor, void, SubscriberArtifact>;
 

@@ -3,7 +3,7 @@ import { ButtonHandler, ButtonRoute, CustomId, paginate, SlashHandler, SlashRout
 import { LeaderboardCard, LeaderboardControls } from '../components/bundles/Leaderboard';
 
 import type { LeaderboardEntry } from '../components/bundles/Leaderboard';
-import type { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from 'discord.js';
+import type { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from '@discordjs/builders';
 
 const PER_PAGE = 5;
 const PAGE_BOUND = 999;

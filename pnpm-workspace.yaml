@@ -11,6 +11,8 @@ overrides:
   '@discordjs/rest>undici': ^6.27.0
   # forces one api-types copy so the djs-free reply types assign to djs
   discord-api-types: ^0.38.49
+  # djs pins 3.5.3, rest needs ^3.5.5, collapse to one (same API)
+  '@sapphire/snowflake': 3.5.5
 
 allowBuilds:
   '@swc/core': true
@@ -23,6 +25,7 @@ allowBuilds:
 
 catalogs:
   deps:
+    '@discordjs/builders': ^1.14.1
     '@tailwindcss/postcss': ^4.3.1
     '@types/node': ^25.9.3
     chalk: ^5.6.2

@@ -5,7 +5,7 @@ import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { Collection, Events } from 'discord.js';
+import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { runHandlerGates } from '@bDecorators/Gated';
@@ -71,17 +71,17 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     public readonly name: string = 'Interactions';
 
-    private readonly slashMap = new Collection<string, HandlerConstructor>();
-    private readonly buttonMap = new Collection<string, HandlerConstructor>();
-    private readonly modalMap = new Collection<string, HandlerConstructor>();
-    private readonly stringSelectMap = new Collection<string, HandlerConstructor>();
-    private readonly userSelectMap = new Collection<string, HandlerConstructor>();
-    private readonly roleSelectMap = new Collection<string, HandlerConstructor>();
-    private readonly channelSelectMap = new Collection<string, HandlerConstructor>();
-    private readonly mentionableSelectMap = new Collection<string, HandlerConstructor>();
-    private readonly messageContextMenuMap = new Collection<string, HandlerConstructor>();
-    private readonly userContextMenuMap = new Collection<string, HandlerConstructor>();
-    private readonly autocompleteMap = new Collection<string, HandlerConstructor>();
+    private readonly slashMap = new Map<string, HandlerConstructor>();
+    private readonly buttonMap = new Map<string, HandlerConstructor>();
+    private readonly modalMap = new Map<string, HandlerConstructor>();
+    private readonly stringSelectMap = new Map<string, HandlerConstructor>();
+    private readonly userSelectMap = new Map<string, HandlerConstructor>();
+    private readonly roleSelectMap = new Map<string, HandlerConstructor>();
+    private readonly channelSelectMap = new Map<string, HandlerConstructor>();
+    private readonly mentionableSelectMap = new Map<string, HandlerConstructor>();
+    private readonly messageContextMenuMap = new Map<string, HandlerConstructor>();
+    private readonly userContextMenuMap = new Map<string, HandlerConstructor>();
+    private readonly autocompleteMap = new Map<string, HandlerConstructor>();
 
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares: RegisteredMiddleware[] = [];
@@ -92,7 +92,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         InteractionArtifact[]
     >;
 
-    private readonly routeTypes: [InteractionRoutes, Collection<string, HandlerConstructor>][] = [
+    private readonly routeTypes: [InteractionRoutes, Map<string, HandlerConstructor>][] = [
         [InteractionRoutes.Slash, this.slashMap],
         [InteractionRoutes.Button, this.buttonMap],
         [InteractionRoutes.Modal, this.modalMap],
@@ -298,7 +298,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
         // a partial registration would orphan routes and break hmr rollback
-        const writes: [Collection<string, HandlerConstructor>, string][] = [];
+        const writes: [Map<string, HandlerConstructor>, string][] = [];
 
         for (const [routeType, map] of this.routeTypes) {
             const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[routeType], handlerClass);
@@ -367,7 +367,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
         interaction: TInteraction,
-        getMap: () => Collection<string, HandlerConstructor>,
+        getMap: () => Map<string, HandlerConstructor>,
         interactionType: string
     ): Promise<void> {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;

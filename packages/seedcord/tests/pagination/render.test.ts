@@ -1,6 +1,7 @@
-import { BuilderComponent } from '@seedcord/kit';
+import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/core';
 import { pageCursor } from '@seedcord/kit/internal';
-import { ButtonBuilder, ButtonStyle, ComponentType, TextDisplayBuilder } from 'discord.js';
+import { ButtonStyle, ComponentType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { renderPage } from '@pagination/render';

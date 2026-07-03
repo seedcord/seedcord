@@ -3,7 +3,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
 import { hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
-import { Collection, type ClientEvents } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { runHandlerGates } from '@bDecorators/Gated';
@@ -23,6 +22,7 @@ import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
+import type { ClientEvents } from 'discord.js';
 
 interface RegisteredEventMiddleware {
     readonly ctor: EventMiddlewareConstructor;
@@ -50,7 +50,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
     public readonly name = 'Events';
 
-    private readonly eventMap = new Collection<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
+    private readonly eventMap = new Map<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
     private readonly middlewares: RegisteredEventMiddleware[] = [];
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();

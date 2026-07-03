@@ -1,0 +1,39 @@
+// Ported verbatim from discord.js (Apache-2.0), src/util/Colors.js.
+export const Colors = {
+    Aqua: 0x1a_bc_9c,
+    Blue: 0x34_98_db,
+    Blurple: 0x58_65_f2,
+    DarkAqua: 0x11_80_6a,
+    DarkBlue: 0x20_66_94,
+    DarkButNotBlack: 0x2c_2f_33,
+    DarkerGrey: 0x7f_8c_8d,
+    DarkGold: 0xc2_7c_0e,
+    DarkGreen: 0x1f_8b_4c,
+    DarkGrey: 0x97_9c_9f,
+    DarkNavy: 0x2c_3e_50,
+    DarkOrange: 0xa8_43_00,
+    DarkPurple: 0x71_36_8a,
+    DarkRed: 0x99_2d_22,
+    DarkVividPink: 0xad_14_57,
+    Default: 0x00_00_00,
+    Fuchsia: 0xeb_45_9e,
+    Gold: 0xf1_c4_0f,
+    Green: 0x57_f2_87,
+    Grey: 0x95_a5_a6,
+    Greyple: 0x99_aa_b5,
+    LightGrey: 0xbc_c0_c0,
+    LuminousVividPink: 0xe9_1e_63,
+    Navy: 0x34_49_5e,
+    NotQuiteBlack: 0x23_27_2a,
+    Orange: 0xe6_7e_22,
+    Purple: 0x9b_59_b6,
+    Red: 0xed_42_45,
+    White: 0xff_ff_ff,
+    Yellow: 0xfe_e7_5c
+} as const;
+
+/** A discord.js color name, or `'Random'`. */
+type ColorName = keyof typeof Colors | 'Random';
+
+/** Any color the bot color accepts: a name, a raw integer, a `#hex` string, or an rgb tuple. */
+export type BotColor = ColorName | number | `#${string}` | readonly [number, number, number];

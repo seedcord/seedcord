@@ -23,6 +23,7 @@ import {
     TYPESCRIPT_LANGUAGE_OPTIONS
 } from './constants';
 import {
+    DISCORD_RULES,
     DOCUMENTATION_RULES,
     GENERAL_RULES,
     IMPORT_RULES,
@@ -35,116 +36,8 @@ import {
     createImportSettings
 } from './rules';
 
+import type { CreateConfigOptions, FlatConfig, FlatConfigItem } from './options';
 import type { Linter } from 'eslint';
-
-/** @internal */
-type FlatConfig = Linter.Config[];
-
-/** @internal */
-type FlatConfigItem = Linter.Config;
-
-interface CreateConfigOptions {
-    /**
-     * Root directory for TypeScript configuration
-     *
-     * @defaultValue `process.cwd()`
-     */
-    tsconfigRootDir?: string;
-
-    /** Additional glob patterns to extend the shared ignore list */
-    generalIgnores?: string[];
-
-    /** Additional user-defined ESLint configuration items to merge */
-    userConfigs?: FlatConfigItem[];
-
-    /**
-     * Toggle registration of the `eslint-plugin-import-x` plugin
-     *
-     * @defaultValue `true`
-     */
-    registerImportPlugin?: boolean;
-
-    /**
-     * Toggle registration of the `eslint-plugin-prettier` plugin
-     *
-     * @defaultValue `true`
-     */
-    registerPrettierPlugin?: boolean;
-
-    /**
-     * Toggle registration of the `eslint-plugin-security` plugin
-     *
-     * @defaultValue `true`
-     */
-    registerSecurityPlugin?: boolean;
-
-    /**
-     * Toggle registration of the `eslint-plugin-tsdoc` plugin
-     *
-     * @defaultValue `true`
-     */
-    registerTsdocPlugin?: boolean;
-
-    /**
-     * Toggle registration of TypeScript ESLint configs
-     *
-     * @defaultValue `true`
-     */
-    registerTypescriptConfigs?: boolean;
-
-    /**
-     * Toggle registration of the `eslint-plugin-unicorn` plugin. unicorn requires eslint >=10.4, so
-     * consumers still on eslint 9 must set this to `false`.
-     *
-     * @defaultValue `true`
-     */
-    registerUnicornPlugin?: boolean;
-
-    /**
-     * Absolute path to the consumer's Tailwind entry CSS file (the one with `@import 'tailwindcss'`).
-     * When provided, the canonical-class lint rules are registered as `warn`:
-     * - `better-tailwindcss/enforce-canonical-classes` (shorthand combining, e.g. `h-N w-N → size-N`)
-     * - `tailwind-canonical-classes/tailwind-canonical-classes` (arbitrary-value scale normalization)
-     *
-     * When omitted, both rules are off, useful for packages with no Tailwind surface (CLI, framework, types).
-     * Shared packages without their own `globals.css` should pass a sibling app's entry via {@link resolveSharedTailwindEntry}.
-     *
-     * Requires `tailwindcss` to be installed in the consuming package (an optional peerDependency).
-     */
-    tailwindEntryPoint?: string;
-
-    /**
-     * Utility function names whose string arguments should be scanned for non-canonical Tailwind classes.
-     *
-     * Applied to both plugins (better-tailwindcss `callees` + tailwind-canonical-classes `calleeFunctions`).
-     * Defaults to seedcord's `cn` helper, the only call site that holds literal class strings; the `tw`
-     * tagged template is handled by {@link CreateConfigOptions.tailwindTaggedTemplates}.
-     *
-     * @default ['cn']
-     */
-    tailwindCalleeFunctions?: string[];
-
-    /**
-     * Tagged template literal names whose template content should be scanned for non-canonical Tailwind classes.
-     *
-     * Only the `better-tailwindcss` plugin supports tagged templates today; `tailwind-canonical-classes`
-     * canonicalizes JSX className attrs + string-literal callees only. Seedcord uses a custom `tw` template
-     * tag in `packages/ui/src/lib/tw.ts`, so the default scans that.
-     *
-     * @default ['tw']
-     */
-    tailwindTaggedTemplates?: string[];
-
-    /**
-     * File globs to enable MDX linting on (typically every `.mdx` file).
-     *
-     * When provided, registers the `eslint-mdx` parser + `mdx` plugin and applies the core
-     * `no-unused-expressions` rule to embedded JS/JSX. Omit to disable entirely (no parser,
-     * no rules), mirroring how {@link CreateConfigOptions.tailwindEntryPoint} gates Tailwind.
-     * Does not lint markdown prose. Requires `eslint-plugin-mdx` (bundled as a dependency).
-     */
-    mdxFiles?: string[];
-}
 
 function pluginBlock(params: {
     enabled: boolean;
@@ -185,7 +78,8 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         tailwindEntryPoint,
         tailwindCalleeFunctions = ['cn'],
         tailwindTaggedTemplates = ['tw'],
-        mdxFiles
+        mdxFiles,
+        discordRules = false
     } = options;
 
     const createTsParserOptions = (rootDir: string) => ({
@@ -280,6 +174,8 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
         // Opt-in via mdxFiles; the spread drops the block entirely when omitted.
         ...(mdxFiles ? [mdxBlock(mdxFiles)] : []),
+
+        ...(discordRules ? [{ files: [...TS_FILES], rules: DISCORD_RULES }] : []),
 
         {
             files: [...ALL_FILES],

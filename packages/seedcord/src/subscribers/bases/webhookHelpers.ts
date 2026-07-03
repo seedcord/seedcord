@@ -1,4 +1,4 @@
-import { BuilderComponent } from '@seedcord/kit';
+import { BuilderComponent } from '@seedcord/core';
 import { filterCirculars } from '@seedcord/utils';
 import { AttachmentBuilder, SeparatorSpacingSize } from 'discord.js';
 

@@ -25,6 +25,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@discordjs/builders": "catalog:deps",
         "@seedcord/plugins": "workspace:*",
         "discord.js": "catalog:peer",
         "envapt": "catalog:deps",
