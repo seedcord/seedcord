@@ -31,6 +31,9 @@
 '📦 eslint-config':
   - changed-files:
       - any-glob-to-any-file: 'packages/eslint-config/**'
+'📦 eslint-plugin':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-plugin/**'
 '📦 tsconfig':
   - changed-files:
       - any-glob-to-any-file: 'packages/tsconfig/**'

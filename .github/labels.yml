@@ -24,6 +24,9 @@
   color: 629bbc
 - name: '📦 eslint-config'
   color: 6278bc
+- name: '📦 eslint-plugin'
+  color: 6272bc
+  description: ESLint plugin for seedcord and discord.js bots
 - name: '📦 tsconfig'
   color: 6e62bc
 - name: '📦 tsdown-config'

@@ -28,6 +28,7 @@
         "packages/eslint-config": {
             "ignoreDependencies": ["@typescript-eslint/eslint-plugin", "@typescript-eslint/parser"]
         },
+        "packages/eslint-plugin": {},
         "packages/tsdown-config": {},
         "packages/tsconfig": {},
         "apps/docs": {
