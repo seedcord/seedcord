@@ -1,5 +1,4 @@
-import { Notice } from '@seedcord/core';
-import { CustomId } from '@seedcord/kit';
+import { Notice, CustomId } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
 import { ButtonRoute, ModalRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';

@@ -1,4 +1,3 @@
-export { CustomId } from '@customId/CustomId';
 export { paginate } from '@pagination/paginate';
 export { type PageView } from '@pagination/PageView';
 

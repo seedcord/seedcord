@@ -17,7 +17,7 @@ export type InteractionsConfig =
           path: string;
           /**
            * Component customIds the controller skips instead of routing. A real `CustomId` (from
-           * `@seedcord/kit`) satisfies {@link CustomIdMatcher}, matched against the raw customId wire.
+           * `@seedcord/core`) satisfies {@link CustomIdMatcher}, matched against the raw customId wire.
            */
           ignoreCustomIds?: CustomIdMatcher[];
           /**

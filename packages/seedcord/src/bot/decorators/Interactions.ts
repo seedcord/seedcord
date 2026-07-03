@@ -1,4 +1,4 @@
-import { ComponentDefsKey } from '@seedcord/kit/internal';
+import { ComponentDefsKey } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 
 import { areRoutes } from '@miscellaneous/areRoutes';
@@ -11,7 +11,7 @@ import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandle
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { SlashHandler } from '@handlers/interaction/SlashHandler';
 import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/core';
-import type { HasComponentDefs, AnyCustomId } from '@seedcord/kit/internal';
+import type { HasComponentDefs, AnyCustomId } from '@seedcord/core/internal';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

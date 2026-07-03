@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { ComponentDefsKey } from '@seedcord/kit/internal';
+import { ComponentDefsKey } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 

@@ -7,6 +7,7 @@
         "paths": {
             "@src/*": ["./src/*"],
             "@components/*": ["./src/components/*"],
+            "@customId/*": ["./src/customId/*"],
             "@registries/*": ["./src/registries/*"],
             "@stops/*": ["./src/stops/*"]
         }

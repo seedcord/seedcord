@@ -1,4 +1,4 @@
-import { CustomId } from '@seedcord/kit';
+import { CustomId } from '@seedcord/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { ButtonRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';

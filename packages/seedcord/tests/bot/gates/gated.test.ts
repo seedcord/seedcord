@@ -1,4 +1,4 @@
-import { CustomId } from '@seedcord/kit';
+import { CustomId } from '@seedcord/core';
 import { ApplicationCommandType } from 'discord.js';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';

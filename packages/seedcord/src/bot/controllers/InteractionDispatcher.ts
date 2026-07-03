@@ -1,7 +1,7 @@
 /* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
+import { prefixOf } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';

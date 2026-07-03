@@ -6,7 +6,6 @@
         "outDir": "./dist",
         "paths": {
             "@src/*": ["./src/*"],
-            "@customId/*": ["./src/customId/*"],
             "@pagination/*": ["./src/pagination/*"]
         },
         "types": []
