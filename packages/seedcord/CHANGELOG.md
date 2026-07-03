@@ -1,5 +1,17 @@
 # seedcord
 
+## 0.16.0-next.2
+
+### Patch Changes
+
+- 993f609: **BREAKING:** The codegen registry types (`SlashOptionRegistry`, `SlashOption`, `OptionKind`, `UserContextMenuRegistry`, `MessageContextMenuRegistry`) move from `@seedcord/types` to `@seedcord/core`.
+- Updated dependencies [993f609]
+    - @seedcord/core@0.1.0-next.0
+    - @seedcord/types@0.8.0-next.2
+    - @seedcord/kit@0.3.0-next.2
+    - @seedcord/services@0.9.0-next.2
+    - @seedcord/utils@0.8.0-next.2
+
 ## 0.16.0-next.1
 
 ### Minor Changes
