@@ -48,6 +48,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@discordjs/builders": "catalog:deps",
         "@seedcord/core": "workspace:*",
         "@seedcord/errors": "workspace:*",
         "@seedcord/kit": "workspace:*",

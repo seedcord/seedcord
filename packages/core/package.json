@@ -52,6 +52,11 @@
     "peerDependencies": {
         "typescript": "catalog:peer"
     },
+    "dependencies": {
+        "@discordjs/builders": "catalog:deps",
+        "@seedcord/errors": "workspace:*",
+        "discord-api-types": "catalog:deps"
+    },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
