@@ -21,3 +21,36 @@ export function hasDecoratorNamed(node: TSESTree.ClassDeclaration, names: Readon
         return name !== undefined && names.has(name);
     });
 }
+
+export function methodName(call: TSESTree.CallExpression): string | undefined {
+    const { callee } = call;
+    if (callee.type !== AST_NODE_TYPES.MemberExpression || callee.computed) return undefined;
+    if (callee.property.type !== AST_NODE_TYPES.Identifier) return undefined;
+    return callee.property.name;
+}
+
+// the outermost call of a fluent chain, the one not itself the object of a further `.method()`
+export function isChainTop(node: TSESTree.CallExpression): boolean {
+    const { parent } = node;
+    return parent.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node;
+}
+
+// every `.method()` call in a fluent chain, from the outermost down
+export function collectChain(top: TSESTree.CallExpression): TSESTree.CallExpression[] {
+    const calls: TSESTree.CallExpression[] = [];
+    let current: TSESTree.Node = top;
+    while (current.type === AST_NODE_TYPES.CallExpression && current.callee.type === AST_NODE_TYPES.MemberExpression) {
+        calls.push(current);
+        current = current.callee.object;
+    }
+    return calls;
+}
+
+// the value a chain is built on, e.g. the `new ButtonBuilder()` a chain of setters runs against
+export function chainRoot(top: TSESTree.CallExpression): TSESTree.Node {
+    let current: TSESTree.Node = top;
+    while (current.type === AST_NODE_TYPES.CallExpression && current.callee.type === AST_NODE_TYPES.MemberExpression) {
+        current = current.callee.object;
+    }
+    return current;
+}

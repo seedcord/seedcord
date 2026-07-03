@@ -39,6 +39,16 @@ opt.addChoices({ name: 'A', value: 'a' });`,
             // setChoices variant on an integer option
             code: `new SlashCommandIntegerOption().setName('n').setAutocomplete(true).setChoices({ name: 'One', value: 1 });`,
             errors: [{ messageId: 'bothSet' }]
+        },
+        {
+            // seedcord command, the option is built through this.instance.addStringOption
+            code: `class MyCommand extends BuilderComponent<'command'> {
+    constructor() {
+        super('command');
+        this.instance.addStringOption((o) => o.setName('q').setAutocomplete(true).addChoices({ name: 'A', value: 'a' }));
+    }
+}`,
+            errors: [{ messageId: 'bothSet' }]
         }
     ]
 });

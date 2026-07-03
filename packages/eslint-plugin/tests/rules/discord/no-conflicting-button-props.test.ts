@@ -30,6 +30,16 @@ b.setURL('https://example.com');`
         {
             code: `new ButtonBuilder().setStyle(ButtonStyle.Link).setCustomId('x').setLabel('y');`,
             errors: [{ messageId: 'linkWithCustomId' }]
+        },
+        {
+            // seedcord BuilderComponent, this.instance is the ButtonBuilder
+            code: `class ApproveButton extends BuilderComponent<'button'> {
+    constructor() {
+        super('button');
+        this.instance.setCustomId('x').setURL('https://example.com');
+    }
+}`,
+            errors: [{ messageId: 'idAndUrl' }]
         }
     ]
 });
