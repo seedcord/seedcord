@@ -1,15 +1,9 @@
-import {
-    ContainerBuilder,
-    ContextMenuCommandBuilder,
-    EmbedBuilder,
-    InteractionContextType,
-    resolveColor,
-    SlashCommandBuilder
-} from 'discord.js';
+import { ContainerBuilder, ContextMenuCommandBuilder, EmbedBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { InteractionContextType } from 'discord-api-types/v10';
 
-import { getBotColor } from '@src/botColorHolder';
-
+import { getBotColor } from './botColorHolder';
 import { BuilderTypes, RowTypes } from './builderTypes';
+import { resolveColor } from './resolveColor';
 
 import type { BuilderType, InstantiatedActionRow, InstantiatedBuilder, RowType } from './builderTypes';
 
@@ -30,8 +24,8 @@ abstract class BaseComponent<TComponent> {
     /**
      * Returns the live builder, ready to send in a Discord message or nest in another component.
      *
-     * Configure it through `this.instance`, not here. Reading this can apply the bot color (see
-     * {@link BuilderComponent}), so a read is not side-effect free.
+     * Configure it through `this.instance`. Reading this can apply the bot color (see
+     * {@link BuilderComponent}), so it has a side effect.
      * @example new SomeComponent().component
      */
     public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<RowType>;
@@ -81,7 +75,7 @@ export abstract class BuilderComponent<BuilderKey extends BuilderType> extends B
 
         const color = getBotColor();
         if (this.instance instanceof EmbedBuilder) {
-            if (this.instance.data.color === undefined) this.instance.setColor(color);
+            if (this.instance.data.color === undefined) this.instance.setColor(resolveColor(color));
         } else if (this.instance instanceof ContainerBuilder) {
             const accent = this.instance.data.accent_color;
             if (accent === null || accent === undefined) {

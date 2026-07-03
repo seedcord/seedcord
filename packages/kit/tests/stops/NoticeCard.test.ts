@@ -1,7 +1,8 @@
-import { ComponentType, ContainerBuilder } from 'discord.js';
+import { ContainerBuilder } from '@discordjs/builders';
+import { setBotColor } from '@seedcord/core/internal';
+import { ComponentType } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { setBotColor } from '@src/botColorHolder';
 import { NoticeCard } from '@stops/NoticeCard';
 
 function cardText(card: ContainerBuilder): string {

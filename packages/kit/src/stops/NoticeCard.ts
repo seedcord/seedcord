@@ -1,6 +1,5 @@
-import { TextDisplayBuilder } from 'discord.js';
-
-import { BuilderComponent } from '@components/Component';
+import { TextDisplayBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/core';
 
 /**
  * Built fresh inside a {@link Notice}'s `render` to back its ComponentsV2 reply. The title renders as
