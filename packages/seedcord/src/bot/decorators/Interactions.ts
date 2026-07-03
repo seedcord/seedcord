@@ -10,8 +10,8 @@ import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHand
 import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { SlashHandler } from '@handlers/interaction/SlashHandler';
+import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/core';
 import type { HasComponentDefs, AnyCustomId } from '@seedcord/kit/internal';
-import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/types';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

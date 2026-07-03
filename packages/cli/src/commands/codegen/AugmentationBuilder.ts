@@ -3,7 +3,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { routeLeavesOf, type SlashRouteLeaf } from '@seedcord/utils/internal';
 import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-api-types/v10';
 
-import type { EmojiConfig, ILogger, OptionKind, SlashOption } from '@seedcord/types';
+import type { OptionKind, SlashOption } from '@seedcord/core';
+import type { EmojiConfig, ILogger } from '@seedcord/types';
 import type {
     APIApplicationCommandBasicOption,
     RESTPostAPIApplicationCommandsJSONBody,

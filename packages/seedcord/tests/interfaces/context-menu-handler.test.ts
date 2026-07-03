@@ -16,7 +16,7 @@ import type {
 // Compile-time spec for ContextMenuHandler and @ContextMenuRoute. The execute() bodies are typechecked but
 // never run, so each guarded mistake fails the build if it stops being a compile error. The two registries
 // stay separate because Discord allows a user command and a message command to share a name.
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface UserContextMenuRegistry {
         'View Profile': true;
         Report: true;

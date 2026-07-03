@@ -9,7 +9,7 @@ import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction } from
 
 // fixtures for the autocomplete suite, distinct routes from the other interface test files so the registry
 // augmentation does not collide.
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         search: {
             query: { kind: 'string'; required: true; autocomplete: true };

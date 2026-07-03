@@ -24,7 +24,7 @@ import type {
     UserSelectMenuInteraction
 } from 'discord.js';
 
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         gateprobe: { note: { kind: 'string'; required: false } };
     }

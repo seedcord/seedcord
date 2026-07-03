@@ -1,4 +1,4 @@
-import type { OptionKind, SlashOptionRegistry } from '@seedcord/types';
+import type { OptionKind, SlashOptionRegistry } from '@seedcord/core';
 import type { IsNever } from 'type-fest';
 
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
