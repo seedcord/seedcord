@@ -33,6 +33,7 @@
     "hmr-rollback",
     "once-handler-concurrent-fire",
     "quick-hounds-brake",
+    "registry-types-to-core",
     "reply-response-djs-free",
     "require-node-24",
     "restore-restricted-syntax-bans"
