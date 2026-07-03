@@ -8,11 +8,7 @@ export default mergeConfig(
     rootConfig,
     defineConfig({
         test: {
-            globals: true,
-            environment: 'node',
-            testTimeout: 10_000,
-            globalSetup: './tests/utils/globalSetup.ts',
-            fileParallelism: false
+            testTimeout: 15_000
         }
     })
 );

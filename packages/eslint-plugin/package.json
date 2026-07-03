@@ -51,6 +51,7 @@
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@typescript-eslint/rule-tester": "^8.61.1",
+        "discord.js": "catalog:peer",
         "eslint": "catalog:deps"
     },
     "publishConfig": {

@@ -693,6 +693,9 @@ importers:
       '@typescript-eslint/rule-tester':
         specifier: ^8.61.1
         version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
       eslint:
         specifier: catalog:deps
         version: 10.6.0(jiti@2.7.0)
