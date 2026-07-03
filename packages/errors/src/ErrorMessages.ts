@@ -93,6 +93,9 @@ const messages = {
     [SeedcordErrorCode.PaginationDuplicateControls]: (key: string) =>
         `A control row cannot repeat the '${key}' control.`,
 
+    [SeedcordErrorCode.ColorUnresolvable]: (value: string) => `Cannot convert ${value} into a color.`,
+    [SeedcordErrorCode.ColorOutOfRange]: () => 'Color must be within the range 0 to 16777215 (0xffffff).',
+
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
     [SeedcordErrorCode.PluginMongoModelDecoratorMissing]: (className: string) =>

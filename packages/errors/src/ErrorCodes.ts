@@ -105,6 +105,11 @@ export enum SeedcordErrorCode {
     /** A control row repeats the same control, which would collide the custom_ids. */
     PaginationDuplicateControls = 1804,
 
+    /** A color value could not be resolved to a Discord color integer. */
+    ColorUnresolvable = 1901,
+    /** A resolved color fell outside Discord's 0x000000 to 0xffffff range. */
+    ColorOutOfRange = 1902,
+
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
     /** Mongo model class is missing the `@RegisterMongoModel` decorator. */
