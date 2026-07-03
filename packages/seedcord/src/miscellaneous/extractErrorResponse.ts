@@ -1,6 +1,6 @@
 import * as crypto from 'node:crypto';
 
-import { Notice, Fault } from '@seedcord/kit';
+import { Notice, Fault } from '@seedcord/core';
 import { prefixOf } from '@seedcord/kit/internal';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';

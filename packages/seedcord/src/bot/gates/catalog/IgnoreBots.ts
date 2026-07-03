@@ -1,4 +1,4 @@
-import { Silence } from '@seedcord/kit';
+import { Silence } from '@seedcord/core';
 
 import { defineGate } from '../Gate';
 

@@ -1,4 +1,4 @@
-import { Silence, Fault } from '@seedcord/kit';
+import { Silence, Fault } from '@seedcord/core';
 import { DiscordAPIError, MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

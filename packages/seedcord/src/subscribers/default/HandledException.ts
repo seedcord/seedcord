@@ -1,7 +1,6 @@
-import { BuilderComponent } from '@seedcord/core';
+import { BuilderComponent, Notice } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Notice } from '@seedcord/kit';
 import { WebhookClient } from 'discord.js';
 import { Envapt } from 'envapt';
 

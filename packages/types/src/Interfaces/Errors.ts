@@ -3,7 +3,7 @@ import type { UUID } from 'node:crypto';
 
 /**
  * Structural shape of a renderable denial. A framework `Notice` subclass satisfies it. Used to type
- * {@link ErrorsConfig.defaultError} without importing the concrete class (defined in `@seedcord/kit`).
+ * {@link ErrorsConfig.defaultError} without importing the concrete class (defined in `@seedcord/core`).
  */
 export interface RenderableNotice {
     /** Whether the denial is a reported fault. */

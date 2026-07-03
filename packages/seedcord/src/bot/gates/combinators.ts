@@ -1,4 +1,4 @@
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 
 import { NeedsAny, NotAllowed } from '@bot/notices';
 

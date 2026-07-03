@@ -513,6 +513,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
       discord-api-types:
         specifier: ^0.38.49
         version: 0.38.49

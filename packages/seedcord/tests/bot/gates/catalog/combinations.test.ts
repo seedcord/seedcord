@@ -1,4 +1,4 @@
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 import { describe, it, expect, vi } from 'vitest';
 
 import { and, Cooldown, GuildOnly, or, OwnerOnly } from '@bot/gates';

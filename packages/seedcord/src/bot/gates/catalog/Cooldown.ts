@@ -7,7 +7,7 @@ import { OnCooldown } from '@bot/notices';
 import { defineEffectGate } from '../Gate';
 
 import type { EffectGate, GateContextBase } from '../Gate';
-import type { Notice } from '@seedcord/kit';
+import type { Notice } from '@seedcord/core';
 import type { EpochMs } from '@seedcord/types';
 
 /**

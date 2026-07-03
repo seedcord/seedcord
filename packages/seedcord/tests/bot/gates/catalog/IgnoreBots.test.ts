@@ -1,4 +1,4 @@
-import { Silence } from '@seedcord/kit';
+import { Silence } from '@seedcord/core';
 import { describe, it, expect } from 'vitest';
 
 import { IgnoreBots } from '@bot/gates/catalog';

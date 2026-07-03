@@ -55,6 +55,7 @@
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/types": "workspace:*",
         "discord-api-types": "catalog:deps"
     },
     "devDependencies": {

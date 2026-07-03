@@ -1,4 +1,4 @@
-import { Fault, Notice, Silence } from '@seedcord/kit';
+import { Fault, Notice, Silence } from '@seedcord/core';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { and, defineGate, or } from '@bot/gates';

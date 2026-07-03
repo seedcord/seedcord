@@ -1,4 +1,4 @@
-import type { Notice } from '@seedcord/kit';
+import type { Notice } from '@seedcord/core';
 import type { Nullable } from '@seedcord/types';
 import type { Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';

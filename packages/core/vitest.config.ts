@@ -12,8 +12,9 @@ export default mergeConfig(
         resolve: {
             alias: {
                 '@src': path.resolve(__dirname, './src'),
-                '@customId': path.resolve(__dirname, './src/customId'),
-                '@pagination': path.resolve(__dirname, './src/pagination')
+                '@components': path.resolve(__dirname, './src/components'),
+                '@registries': path.resolve(__dirname, './src/registries'),
+                '@stops': path.resolve(__dirname, './src/stops')
             }
         },
         test: {

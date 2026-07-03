@@ -1,1 +1,3 @@
-export { setBotColor } from './components/botColorHolder';
+export { setBotColor } from '@components/botColorHolder';
+
+export { NoticeCard } from '@stops/NoticeCard';

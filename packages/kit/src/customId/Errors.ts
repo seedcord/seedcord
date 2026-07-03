@@ -1,5 +1,5 @@
-import { Notice } from '@stops/Notice';
-import { NoticeCard } from '@stops/NoticeCard';
+import { Notice } from '@seedcord/core';
+import { NoticeCard } from '@seedcord/core/internal';
 
 import type { ReplyResponse } from '@seedcord/types';
 

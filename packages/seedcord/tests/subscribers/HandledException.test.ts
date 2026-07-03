@@ -1,6 +1,6 @@
 import '../utils/mock-env';
 
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
 import { causeStack, faultSummary } from '@subscribers/default/HandledException';

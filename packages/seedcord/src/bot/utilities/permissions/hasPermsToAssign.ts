@@ -5,7 +5,7 @@ import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/
 import { checkBotPermissions } from './checkBotPermissions';
 import { getBotRole } from '../roles/getBotRole';
 
-import type { Notice } from '@seedcord/kit';
+import type { Notice } from '@seedcord/core';
 
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.

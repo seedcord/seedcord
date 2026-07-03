@@ -1,4 +1,5 @@
-import { CustomId, Fault } from '@seedcord/kit';
+import { Fault } from '@seedcord/core';
+import { CustomId } from '@seedcord/kit';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse, faultThrottle } from '@miscellaneous/extractErrorResponse';
