@@ -7,7 +7,7 @@ import { BaseHandler } from '@handlers/BaseHandler';
 import type { Handler } from '@handlers/BaseHandler';
 import type { AutocompleteOptions } from '@inputs/AutocompleteOptions';
 import type { Core } from '@interfaces/Core';
-import type { SlashOptionRegistry } from '@seedcord/types';
+import type { SlashOptionRegistry } from '@seedcord/core';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

@@ -13,7 +13,7 @@ import type {
 } from 'discord.js';
 
 // functions are typechecked but never run. routes are distinct from the other type-test files because all declare-module augmentations merge during one tc run
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         purge: {
             who: { kind: 'user'; required: true };

@@ -4,7 +4,7 @@ import { chatInputApplicationCommandMention, SlashCommandBuilder } from 'discord
 
 import type { DeployResult } from '@bControllers/CommandRegistry';
 import type { Core } from '@interfaces/Core';
-import type { SlashOptionRegistry } from '@seedcord/types';
+import type { SlashOptionRegistry } from '@seedcord/core';
 import type { ApplicationCommand, Collection, Snowflake } from 'discord.js';
 
 const mentionStorage: Record<string, string> = {};

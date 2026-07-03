@@ -22,7 +22,7 @@ import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
 import type { Events } from 'discord.js';
 
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         catalogprobe: { note: { kind: 'string'; required: false } };
     }

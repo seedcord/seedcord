@@ -6,7 +6,7 @@ import type { GuildMember, User } from 'discord.js';
 // each @ts-expect-error fails the typecheck if its guard stops being an error. vitest never runs these.
 
 // augment the registry exactly as `seedcord codegen` would emit it for one command
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         ban: {
             target: { kind: 'user'; required: true };

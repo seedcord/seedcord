@@ -9,7 +9,7 @@ import type { CommandInteractionOption, User } from 'discord.js';
 // Compile-time spec for SlashHandler. The execute() bodies are typechecked but never run, so each guarded
 // mistake below fails the build if it stops being a compile error. Distinct routes from typed-options.test.ts
 // avoid a duplicate registry augmentation.
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         kick: { member: { kind: 'user'; required: true } };
         warn: { user: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };

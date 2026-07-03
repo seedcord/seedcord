@@ -1,4 +1,4 @@
-import type { OptionKind, SlashOptionRegistry } from '@seedcord/types';
+import type { OptionKind, SlashOptionRegistry } from '@seedcord/core';
 import type { CacheType, CommandInteractionOption } from 'discord.js';
 import type { IsNever } from 'type-fest';
 

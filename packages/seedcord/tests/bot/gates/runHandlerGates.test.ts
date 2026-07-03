@@ -14,7 +14,7 @@ import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { Events } from 'discord.js';
 
-declare module '@seedcord/types' {
+declare module '@seedcord/core' {
     interface SlashOptionRegistry {
         runprobe: { note: { kind: 'string'; required: false } };
     }
