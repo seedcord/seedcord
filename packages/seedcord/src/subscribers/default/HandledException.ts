@@ -1,4 +1,4 @@
-import { BuilderComponent, Notice } from '@seedcord/core';
+import { BuilderComponent } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { WebhookClient } from 'discord.js';
@@ -11,6 +11,7 @@ import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
 
 import type { AllSubscriptions, FaultSource } from '../types/Subscriptions';
+import type { Notice } from '@seedcord/core';
 
 function webhookUrlValidator(raw: unknown): string {
     if (raw !== null && typeof raw !== 'string') {
