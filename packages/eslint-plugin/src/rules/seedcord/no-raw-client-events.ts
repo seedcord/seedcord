@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { extendsDjsType } from '../../typeUtils';
 import { methodName } from '../../utils';
 
 // client meta and lifecycle events, plus interactionCreate (routed through the interaction dispatcher). not
@@ -21,6 +22,9 @@ const NON_GATEWAY_EVENTS = new Set([
     'interactionCreate'
 ]);
 
+// on/once and the EventEmitter aliases the Client inherits, all register a listener
+const REGISTER_METHODS = new Set(['on', 'once', 'addListener', 'prependListener', 'prependOnceListener']);
+
 export default createRule({
     name: 'no-raw-client-events',
     meta: {
@@ -30,22 +34,23 @@ export default createRule({
         },
         messages: {
             rawEvent:
-                'Handle this gateway event with an @RegisterEvent handler. A raw client.on bypasses the event dispatcher and its middleware.'
+                'Handle this gateway event with a @RegisterEvent handler. A raw client.on bypasses the event dispatcher and its middleware.'
         },
         schema: []
     },
     defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
 
         return {
             CallExpression(node) {
                 const method = methodName(node);
-                if (method !== 'on' && method !== 'once') return;
+                if (method === undefined || !REGISTER_METHODS.has(method)) return;
                 if (node.callee.type !== AST_NODE_TYPES.MemberExpression) return;
 
-                const receiver = services.getTypeAtLocation(node.callee.object).getSymbol()?.getName();
-                if (receiver !== 'Client') return;
+                const receiverType = services.getTypeAtLocation(node.callee.object);
+                if (!extendsDjsType(checker, receiverType, 'Client')) return;
 
                 const eventArg = node.arguments[0];
                 if (!eventArg || eventArg.type === AST_NODE_TYPES.SpreadElement) return;

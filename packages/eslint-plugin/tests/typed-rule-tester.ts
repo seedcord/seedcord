@@ -8,6 +8,11 @@ RuleTester.describe = describe;
 RuleTester.it = it;
 RuleTester.itOnly = it.only;
 
+// a plain RuleTester (no type information) for the AST-only rules
+export function createRuleTester(): RuleTester {
+    return new RuleTester();
+}
+
 export function createTypedRuleTester(): RuleTester {
     return new RuleTester({
         languageOptions: {

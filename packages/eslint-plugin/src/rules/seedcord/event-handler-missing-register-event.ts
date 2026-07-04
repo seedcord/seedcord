@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
-import { hasDecoratorNamed, isSeedcordSource } from '../../utils';
+import { forEachSeedcordImport, hasDecoratorNamed } from '../../utils';
 
 const REGISTER_EVENT = new Set(['RegisterEvent']);
 
@@ -24,17 +24,18 @@ export default createRule({
 
         return {
             ImportDeclaration(node) {
-                if (typeof node.source.value !== 'string' || !isSeedcordSource(node.source.value)) return;
-                for (const spec of node.specifiers) {
-                    if (spec.type !== AST_NODE_TYPES.ImportSpecifier) continue;
-                    if (spec.imported.type !== AST_NODE_TYPES.Identifier) continue;
-                    if (spec.imported.name === 'EventHandler') bases.add(spec.local.name);
-                }
+                forEachSeedcordImport(node, (imported, local) => {
+                    if (imported === 'EventHandler') bases.add(local);
+                });
             },
             ClassDeclaration(node) {
-                if (node.abstract) return;
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
                 if (!bases.has(node.superClass.name)) return;
+                // an abstract subclass becomes a base for later concrete handlers (same-file intermediate)
+                if (node.abstract) {
+                    if (node.id) bases.add(node.id.name);
+                    return;
+                }
                 if (hasDecoratorNamed(node, REGISTER_EVENT)) return;
 
                 context.report({ node: node.id ?? node, messageId: 'missingRegister' });

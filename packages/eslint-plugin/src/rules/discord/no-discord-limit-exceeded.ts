@@ -44,11 +44,12 @@ const LIMITS: readonly Limit[] = [
     }
 ];
 
-// undefined when the count is not statically known (spread, variable, or non-array arg)
+// the runtime item count: addMethod appends, setMethod replaces everything before it. collectChain is
+// outermost-first, so walk it reversed to follow source order. undefined when a count is not statically known.
 function countStaticItems(calls: TSESTree.CallExpression[], limit: Limit): number | undefined {
     let count = 0;
     let matched = false;
-    for (const call of calls) {
+    for (const call of [...calls].reverse()) {
         const name = methodName(call);
         if (name === limit.addMethod) {
             matched = true;
@@ -59,7 +60,7 @@ function countStaticItems(calls: TSESTree.CallExpression[], limit: Limit): numbe
             const arg = call.arguments[0];
             if (arg?.type !== AST_NODE_TYPES.ArrayExpression) return undefined;
             if (arg.elements.some((element) => element?.type === AST_NODE_TYPES.SpreadElement)) return undefined;
-            count += arg.elements.length;
+            count = arg.elements.length;
         }
     }
     return matched ? count : undefined;

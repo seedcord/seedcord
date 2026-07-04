@@ -2,6 +2,7 @@
 // eslint-config's dependency on the plugin.
 import {
     ActionRowBuilder,
+    ButtonBuilder,
     ContainerBuilder,
     ContextMenuCommandBuilder,
     EmbedBuilder,
@@ -14,7 +15,8 @@ const BuilderTypes = {
     context_menu: ContextMenuCommandBuilder,
     embed: EmbedBuilder,
     menu_string: StringSelectMenuBuilder,
-    container: ContainerBuilder
+    container: ContainerBuilder,
+    button: ButtonBuilder
 } as const;
 
 type BuilderType = keyof typeof BuilderTypes;

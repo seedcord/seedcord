@@ -1,49 +1,127 @@
-import { RuleTester } from '@typescript-eslint/rule-tester';
-import { afterAll, describe, it } from 'vitest';
+import dedent from 'dedent';
 
 import rule from '../../../src/rules/discord/prefer-ephemeral-flag';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-RuleTester.afterAll = afterAll;
-RuleTester.describe = describe;
-RuleTester.it = it;
-RuleTester.itOnly = it.only;
-
-const ruleTester = new RuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('prefer-ephemeral-flag', rule, {
     valid: [
         // already using flags
-        `interaction.reply({ content: 'hi', flags: MessageFlags.Ephemeral });`,
+        dedent`
+            import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+            declare const interaction: ChatInputCommandInteraction;
+            interaction.reply({ content: 'hi', flags: MessageFlags.Ephemeral });
+        `,
         // no ephemeral option at all
-        `interaction.reply({ content: 'hi' });`,
-        // a method that is not an interaction reply, left alone
-        `channel.send({ ephemeral: true });`
+        dedent`
+            import { ChatInputCommandInteraction } from 'discord.js';
+            declare const interaction: ChatInputCommandInteraction;
+            interaction.reply({ content: 'hi' });
+        `,
+        // a channel send is not an interaction reply
+        dedent`
+            import { TextChannel } from 'discord.js';
+            declare const channel: TextChannel;
+            channel.send({ content: 'hi' });
+        `,
+        // a non-interaction object with a reply method is not flagged
+        dedent`
+            declare const mock: { reply(options: { ephemeral: boolean }): void };
+            mock.reply({ ephemeral: true });
+        `
     ],
     invalid: [
         {
             // autofixed because MessageFlags is imported and there is no existing flags key
-            code: `import { MessageFlags } from 'discord.js';
-interaction.reply({ content: 'hi', ephemeral: true });`,
-            output: `import { MessageFlags } from 'discord.js';
-interaction.reply({ content: 'hi', flags: MessageFlags.Ephemeral });`,
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.reply({ content: 'hi', ephemeral: true });
+            `,
+            output: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.reply({ content: 'hi', flags: MessageFlags.Ephemeral });
+            `,
             errors: [{ messageId: 'deprecated' }]
         },
         {
-            code: `import { MessageFlags } from 'discord.js';
-interaction.deferReply({ ephemeral: true });`,
-            output: `import { MessageFlags } from 'discord.js';
-interaction.deferReply({ flags: MessageFlags.Ephemeral });`,
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.deferReply({ ephemeral: true });
+            `,
+            output: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.deferReply({ flags: MessageFlags.Ephemeral });
+            `,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // followUp autofix path
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.followUp({ ephemeral: true, content: 'x' });
+            `,
+            output: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.followUp({ flags: MessageFlags.Ephemeral, content: 'x' });
+            `,
             errors: [{ messageId: 'deprecated' }]
         },
         {
             // ephemeral: false is still deprecated, flagged but not auto-rewritten
-            code: `interaction.followUp({ ephemeral: false, content: 'x' });`,
+            code: dedent`
+                import { ChatInputCommandInteraction } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.followUp({ ephemeral: false, content: 'x' });
+            `,
             output: null,
             errors: [{ messageId: 'deprecated' }]
         },
         {
             // MessageFlags is not imported, so the flag stays but no fix is applied
-            code: `interaction.reply({ ephemeral: true });`,
+            code: dedent`
+                import { ChatInputCommandInteraction } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.reply({ ephemeral: true });
+            `,
+            output: null,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // an existing flags key blocks the autofix
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.reply({ content: 'hi', ephemeral: true, flags: 0 });
+            `,
+            output: null,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // a spread in the options blocks the autofix
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                declare const base: object;
+                interaction.reply({ ...base, ephemeral: true });
+            `,
+            output: null,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // options built into a variable are still inspected
+            code: dedent`
+                import { ChatInputCommandInteraction } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                const opts = { ephemeral: true, content: 'x' };
+                interaction.reply(opts);
+            `,
             output: null,
             errors: [{ messageId: 'deprecated' }]
         }

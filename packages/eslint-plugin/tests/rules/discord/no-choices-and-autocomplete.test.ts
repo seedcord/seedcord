@@ -1,53 +1,135 @@
-import { RuleTester } from '@typescript-eslint/rule-tester';
-import { afterAll, describe, it } from 'vitest';
+import dedent from 'dedent';
 
 import rule from '../../../src/rules/discord/no-choices-and-autocomplete';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-RuleTester.afterAll = afterAll;
-RuleTester.describe = describe;
-RuleTester.it = it;
-RuleTester.itOnly = it.only;
-
-const ruleTester = new RuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('no-choices-and-autocomplete', rule, {
     valid: [
         // autocomplete alone
-        `new SlashCommandStringOption().setName('q').setDescription('d').setAutocomplete(true);`,
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            new SlashCommandStringOption()
+                .setName('q')
+                .setDescription('d')
+                .setAutocomplete(true);
+        `,
         // choices alone
-        `new SlashCommandStringOption().setName('q').setDescription('d').addChoices({ name: 'A', value: 'a' });`,
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            new SlashCommandStringOption()
+                .setName('q')
+                .setDescription('d')
+                .addChoices({ name: 'A', value: 'a' });
+        `,
         // autocomplete explicitly off, choices are fine
-        `new SlashCommandStringOption().setName('q').setAutocomplete(false).addChoices({ name: 'A', value: 'a' });`,
-        // split across statements, not a single chain, left alone
-        `const opt = new SlashCommandStringOption().setName('q');
-opt.setAutocomplete(true);
-opt.addChoices({ name: 'A', value: 'a' });`,
-        // dynamic choices spread, count is not statically known, left alone
-        `new SlashCommandStringOption().setName('q').setAutocomplete(true).addChoices(...dynamicChoices);`
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            new SlashCommandStringOption()
+                .setName('q')
+                .setAutocomplete(false)
+                .addChoices({ name: 'A', value: 'a' });
+        `,
+        // a later setAutocomplete(false) overrides the earlier true, so there is no conflict
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            new SlashCommandStringOption()
+                .setName('q')
+                .setAutocomplete(true)
+                .setAutocomplete(false)
+                .addChoices({ name: 'A', value: 'a' });
+        `,
+        // props split across statements are on separate chains
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            const opt = new SlashCommandStringOption().setName('q');
+            opt.setAutocomplete(true);
+            opt.addChoices({ name: 'A', value: 'a' });
+        `,
+        // dynamic choices spread, count is not statically known
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            declare const dynamicChoices: { name: string; value: string }[];
+            new SlashCommandStringOption()
+                .setName('q')
+                .setAutocomplete(true)
+                .addChoices(...dynamicChoices);
+        `,
+        // a non-option object with the same method names is not a slash option
+        dedent`
+            class FormField {
+                setAutocomplete(on: boolean): this {
+                    return this;
+                }
+                addChoices(...choices: unknown[]): this {
+                    return this;
+                }
+            }
+            new FormField().setAutocomplete(true).addChoices({ label: 'A', value: 'a' });
+        `
     ],
     invalid: [
         {
-            code: `new SlashCommandStringOption().setName('q').setDescription('d').setAutocomplete(true).addChoices({ name: 'A', value: 'a' });`,
+            code: dedent`
+                import { SlashCommandStringOption } from 'discord.js';
+                new SlashCommandStringOption()
+                    .setName('q')
+                    .setDescription('d')
+                    .setAutocomplete(true)
+                    .addChoices({ name: 'A', value: 'a' });
+            `,
             errors: [{ messageId: 'bothSet' }]
         },
         {
             // reversed order
-            code: `new SlashCommandStringOption().setName('q').addChoices({ name: 'A', value: 'a' }).setAutocomplete(true);`,
+            code: dedent`
+                import { SlashCommandStringOption } from 'discord.js';
+                new SlashCommandStringOption()
+                    .setName('q')
+                    .addChoices({ name: 'A', value: 'a' })
+                    .setAutocomplete(true);
+            `,
             errors: [{ messageId: 'bothSet' }]
         },
         {
             // setChoices variant on an integer option
-            code: `new SlashCommandIntegerOption().setName('n').setAutocomplete(true).setChoices({ name: 'One', value: 1 });`,
+            code: dedent`
+                import { SlashCommandIntegerOption } from 'discord.js';
+                new SlashCommandIntegerOption()
+                    .setName('n')
+                    .setAutocomplete(true)
+                    .setChoices({ name: 'One', value: 1 });
+            `,
+            errors: [{ messageId: 'bothSet' }]
+        },
+        {
+            // a number option, same conflict
+            code: dedent`
+                import { SlashCommandNumberOption } from 'discord.js';
+                new SlashCommandNumberOption()
+                    .setName('n')
+                    .setAutocomplete(true)
+                    .addChoices({ name: 'One', value: 1 });
+            `,
             errors: [{ messageId: 'bothSet' }]
         },
         {
             // seedcord command, the option is built through this.instance.addStringOption
-            code: `class MyCommand extends BuilderComponent<'command'> {
-    constructor() {
-        super('command');
-        this.instance.addStringOption((o) => o.setName('q').setAutocomplete(true).addChoices({ name: 'A', value: 'a' }));
-    }
-}`,
+            code: dedent`
+                import { BuilderComponent } from './seedcord';
+                class MyCommand extends BuilderComponent<'command'> {
+                    constructor() {
+                        super('command');
+                        this.instance.addStringOption(
+                            (o) => o
+                                .setName('q')
+                                .setAutocomplete(true)
+                                .addChoices({ name: 'A', value: 'a' })
+                        );
+                    }
+                }
+            `,
             errors: [{ messageId: 'bothSet' }]
         }
     ]

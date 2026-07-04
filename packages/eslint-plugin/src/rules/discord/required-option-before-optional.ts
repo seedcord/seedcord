@@ -19,12 +19,27 @@ const ADD_OPTION = new Set([
 
 type OptionState = 'required' | 'optional' | 'unknown';
 
+// the option-builder expression a callback returns: its expression body, or the return of a block body
+function optionChain(callback: TSESTree.CallExpressionArgument | undefined): TSESTree.Expression | undefined {
+    if (
+        callback?.type !== AST_NODE_TYPES.ArrowFunctionExpression &&
+        callback?.type !== AST_NODE_TYPES.FunctionExpression
+    ) {
+        return undefined;
+    }
+    if (callback.body.type !== AST_NODE_TYPES.BlockStatement) return callback.body;
+    for (const statement of callback.body.body) {
+        if (statement.type === AST_NODE_TYPES.ReturnStatement) return statement.argument ?? undefined;
+    }
+    return undefined;
+}
+
 // read an option builder callback's literal setRequired, unknown when it is dynamic or not a readable chain
 function optionRequiredState(callback: TSESTree.CallExpressionArgument | undefined): OptionState {
-    if (callback?.type !== AST_NODE_TYPES.ArrowFunctionExpression) return 'unknown';
-    if (callback.body.type !== AST_NODE_TYPES.CallExpression) return 'unknown';
+    const chain = optionChain(callback);
+    if (chain?.type !== AST_NODE_TYPES.CallExpression) return 'unknown';
 
-    const setRequired = collectChain(callback.body).find((call) => methodName(call) === 'setRequired');
+    const setRequired = collectChain(chain).find((call) => methodName(call) === 'setRequired');
     if (!setRequired) return 'optional';
 
     const arg = setRequired.arguments[0];
@@ -53,20 +68,19 @@ export default createRule({
                 if (!isChainTop(node)) return;
 
                 // collectChain is outermost-first, reverse to source order
-                const optionCalls = collectChain(node)
+                const options = collectChain(node)
                     .filter((call) => ADD_OPTION.has(methodName(call) ?? ''))
-                    .reverse();
-                if (optionCalls.length < 2) return;
-
-                const states = optionCalls.map((call) => optionRequiredState(call.arguments[0]));
-                if (states.includes('unknown')) return;
+                    .reverse()
+                    .map((call) => ({ call, state: optionRequiredState(call.arguments[0]) }));
+                if (options.length < 2) return;
+                if (options.some((option) => option.state === 'unknown')) return;
 
                 let seenOptional = false;
-                for (const [index, state] of states.entries()) {
+                for (const { call, state } of options) {
                     if (state === 'optional') {
                         seenOptional = true;
                     } else if (seenOptional) {
-                        context.report({ node: optionCalls[index] ?? node, messageId: 'outOfOrder' });
+                        context.report({ node: call, messageId: 'outOfOrder' });
                         return;
                     }
                 }

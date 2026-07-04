@@ -1,6 +1,7 @@
-import { ESLintUtils } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { isFromDiscordJs } from '../../typeUtils';
 
 export default createRule({
     name: 'prefer-v2-component',
@@ -20,9 +21,20 @@ export default createRule({
         const checker = services.program.getTypeChecker();
 
         return {
-            // a raw discord.js embed, new EmbedBuilder()
             NewExpression(node) {
-                if (services.getTypeAtLocation(node).getSymbol()?.getName() === 'EmbedBuilder') {
+                const symbol = services.getTypeAtLocation(node).getSymbol();
+                if (symbol?.getName() === 'EmbedBuilder' && isFromDiscordJs(symbol)) {
+                    context.report({ node, messageId: 'preferV2' });
+                }
+            },
+            // EmbedBuilder.from() is a static factory that returns an embed without `new`
+            CallExpression(node) {
+                if (node.callee.type !== AST_NODE_TYPES.MemberExpression) return;
+                if (node.callee.property.type !== AST_NODE_TYPES.Identifier || node.callee.property.name !== 'from') {
+                    return;
+                }
+                const symbol = services.getTypeAtLocation(node.callee.object).getSymbol();
+                if (symbol?.getName() === 'EmbedBuilder' && isFromDiscordJs(symbol)) {
                     context.report({ node, messageId: 'preferV2' });
                 }
             },
@@ -39,7 +51,8 @@ export default createRule({
                     component,
                     services.esTreeNodeToTSNodeMap.get(node)
                 );
-                if (componentType.getSymbol()?.getName() === 'EmbedBuilder') {
+                const componentSymbol = componentType.getSymbol();
+                if (componentSymbol?.getName() === 'EmbedBuilder' && isFromDiscordJs(componentSymbol)) {
                     context.report({ node: node.id, messageId: 'preferV2' });
                 }
             }

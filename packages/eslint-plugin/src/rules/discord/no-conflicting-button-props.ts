@@ -1,13 +1,16 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
-import { collectChain, isChainTop, methodName } from '../../utils';
+import { extendsDjsType } from '../../typeUtils';
+import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
 function setsLinkStyle(call: TSESTree.CallExpression): boolean {
     if (methodName(call) !== 'setStyle') return false;
     const arg = call.arguments[0];
+    // ButtonStyle.Link, or its raw enum value 5
+    if (arg?.type === AST_NODE_TYPES.Literal && arg.value === 5) return true;
     return (
         arg?.type === AST_NODE_TYPES.MemberExpression &&
         arg.object.type === AST_NODE_TYPES.Identifier &&
@@ -32,9 +35,14 @@ export default createRule({
     },
     defaultOptions: [],
     create(context) {
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
+
         return {
             CallExpression(node) {
                 if (!isChainTop(node)) return;
+                if (!extendsDjsType(checker, services.getTypeAtLocation(chainRoot(node)), 'ButtonBuilder')) return;
+
                 const calls = collectChain(node);
                 const hasCustomId = calls.some((call) => methodName(call) === 'setCustomId');
                 const hasUrl = calls.some((call) => methodName(call) === 'setURL');

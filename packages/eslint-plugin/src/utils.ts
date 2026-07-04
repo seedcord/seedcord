@@ -22,6 +22,19 @@ export function hasDecoratorNamed(node: TSESTree.ClassDeclaration, names: Readon
     });
 }
 
+// call `fn` with the imported and local name of every named import from a seedcord package
+export function forEachSeedcordImport(
+    node: TSESTree.ImportDeclaration,
+    fn: (imported: string, local: string) => void
+): void {
+    if (typeof node.source.value !== 'string' || !isSeedcordSource(node.source.value)) return;
+    for (const spec of node.specifiers) {
+        if (spec.type !== AST_NODE_TYPES.ImportSpecifier) continue;
+        if (spec.imported.type !== AST_NODE_TYPES.Identifier) continue;
+        fn(spec.imported.name, spec.local.name);
+    }
+}
+
 export function methodName(call: TSESTree.CallExpression): string | undefined {
     const { callee } = call;
     if (callee.type !== AST_NODE_TYPES.MemberExpression || callee.computed) return undefined;
@@ -29,7 +42,7 @@ export function methodName(call: TSESTree.CallExpression): string | undefined {
     return callee.property.name;
 }
 
-// the outermost call of a fluent chain, the one not itself the object of a further `.method()`
+// the outermost call of a fluent chain
 export function isChainTop(node: TSESTree.CallExpression): boolean {
     const { parent } = node;
     return parent.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node;

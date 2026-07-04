@@ -1,6 +1,7 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { extendsDjsType } from '../../typeUtils';
 import { methodName } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
@@ -29,7 +30,29 @@ export default createRule({
     },
     defaultOptions: [],
     create(context) {
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
         let messageFlagsImported = false;
+
+        // the options object, inline or resolved from a same-scope const variable
+        function resolveOptions(
+            arg: TSESTree.CallExpressionArgument | undefined
+        ): TSESTree.ObjectExpression | undefined {
+            if (arg?.type === AST_NODE_TYPES.ObjectExpression) return arg;
+            if (arg?.type !== AST_NODE_TYPES.Identifier) return undefined;
+
+            const variable = context.sourceCode
+                .getScope(arg)
+                .references.find((reference) => reference.identifier === arg)?.resolved;
+            const definition = variable?.defs[0];
+            if (
+                definition?.node.type === AST_NODE_TYPES.VariableDeclarator &&
+                definition.node.init?.type === AST_NODE_TYPES.ObjectExpression
+            ) {
+                return definition.node.init;
+            }
+            return undefined;
+        }
 
         return {
             ImportDeclaration(node) {
@@ -47,9 +70,11 @@ export default createRule({
             CallExpression(node) {
                 const name = methodName(node);
                 if (!name || !REPLY_METHODS.has(name)) return;
+                if (node.callee.type !== AST_NODE_TYPES.MemberExpression) return;
+                if (!extendsDjsType(checker, services.getTypeAtLocation(node.callee.object), 'BaseInteraction')) return;
 
-                const options = node.arguments[0];
-                if (options?.type !== AST_NODE_TYPES.ObjectExpression) return;
+                const options = resolveOptions(node.arguments[0]);
+                if (options === undefined) return;
 
                 const ephemeral = options.properties.find((property) => propertyName(property) === 'ephemeral');
                 if (ephemeral?.type !== AST_NODE_TYPES.Property) return;

@@ -1,6 +1,19 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { extendsDjsType } from '../../typeUtils';
+
+// discord.js component builders that carry a customId
+const CUSTOM_ID_BUILDERS = new Set([
+    'ButtonBuilder',
+    'StringSelectMenuBuilder',
+    'UserSelectMenuBuilder',
+    'RoleSelectMenuBuilder',
+    'ChannelSelectMenuBuilder',
+    'MentionableSelectMenuBuilder',
+    'ModalBuilder',
+    'TextInputBuilder'
+]);
 
 export default createRule({
     name: 'use-custom-id-codec',
@@ -18,19 +31,24 @@ export default createRule({
     },
     defaultOptions: [],
     create(context) {
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
+
         return {
             CallExpression(node) {
                 const { callee } = node;
                 if (callee.type !== AST_NODE_TYPES.MemberExpression || callee.computed) return;
                 if (callee.property.type !== AST_NODE_TYPES.Identifier || callee.property.name !== 'setCustomId')
                     return;
+                if (!extendsDjsType(checker, services.getTypeAtLocation(callee.object), CUSTOM_ID_BUILDERS)) return;
 
                 const arg = node.arguments[0];
                 if (!arg) return;
 
                 const isStringLiteral = arg.type === AST_NODE_TYPES.Literal && typeof arg.value === 'string';
                 const isTemplate = arg.type === AST_NODE_TYPES.TemplateLiteral;
-                if (isStringLiteral || isTemplate) {
+                const isConcat = arg.type === AST_NODE_TYPES.BinaryExpression;
+                if (isStringLiteral || isTemplate || isConcat) {
                     context.report({ node: arg, messageId: 'rawCustomId' });
                 }
             }

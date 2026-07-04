@@ -39,8 +39,57 @@ const BUILDERS = new Set([
     'UserSelectMenuBuilder'
 ]);
 
+type Report = (node: TSESTree.Node) => void;
+
 function isDiscordJs(node: TSESTree.Node): boolean {
     return node.type === AST_NODE_TYPES.Literal && node.value === 'discord.js';
+}
+
+function reportObjectPattern(pattern: TSESTree.ObjectPattern, report: Report): void {
+    for (const prop of pattern.properties) {
+        if (
+            prop.type === AST_NODE_TYPES.Property &&
+            prop.key.type === AST_NODE_TYPES.Identifier &&
+            BUILDERS.has(prop.key.name)
+        ) {
+            report(prop);
+        }
+    }
+}
+
+// the destructured pattern of a `.then(({ X }) => ...)` callback on the module
+function thenCallbackPattern(consumer: TSESTree.MemberExpression): TSESTree.ObjectPattern | undefined {
+    if (consumer.property.type !== AST_NODE_TYPES.Identifier || consumer.property.name !== 'then') return undefined;
+    if (consumer.parent.type !== AST_NODE_TYPES.CallExpression) return undefined;
+
+    const callback = consumer.parent.arguments[0];
+    const param =
+        callback?.type === AST_NODE_TYPES.ArrowFunctionExpression ||
+        callback?.type === AST_NODE_TYPES.FunctionExpression
+            ? callback.params[0]
+            : undefined;
+    return param?.type === AST_NODE_TYPES.ObjectPattern ? param : undefined;
+}
+
+// a destructure or member access off require('discord.js') / import('discord.js')
+function checkModuleConsumer(moduleExpr: TSESTree.Node, report: Report): void {
+    let consumer = moduleExpr.parent;
+    if (consumer?.type === AST_NODE_TYPES.AwaitExpression) consumer = consumer.parent;
+    if (consumer === undefined) return;
+
+    if (consumer.type === AST_NODE_TYPES.VariableDeclarator && consumer.id.type === AST_NODE_TYPES.ObjectPattern) {
+        reportObjectPattern(consumer.id, report);
+        return;
+    }
+    if (consumer.type !== AST_NODE_TYPES.MemberExpression || consumer.property.type !== AST_NODE_TYPES.Identifier) {
+        return;
+    }
+    if (BUILDERS.has(consumer.property.name)) {
+        report(consumer);
+        return;
+    }
+    const pattern = thenCallbackPattern(consumer);
+    if (pattern !== undefined) reportObjectPattern(pattern, report);
 }
 
 export default createRule({
@@ -59,32 +108,7 @@ export default createRule({
     defaultOptions: [],
     create(context) {
         const namespaces = new Set<string>();
-
-        function checkModuleConsumer(moduleExpr: TSESTree.Node): void {
-            let consumer = moduleExpr.parent;
-            if (consumer?.type === AST_NODE_TYPES.AwaitExpression) consumer = consumer.parent;
-
-            if (
-                consumer?.type === AST_NODE_TYPES.VariableDeclarator &&
-                consumer.id.type === AST_NODE_TYPES.ObjectPattern
-            ) {
-                for (const prop of consumer.id.properties) {
-                    if (
-                        prop.type === AST_NODE_TYPES.Property &&
-                        prop.key.type === AST_NODE_TYPES.Identifier &&
-                        BUILDERS.has(prop.key.name)
-                    ) {
-                        context.report({ node: prop, messageId: 'useBuildersPkg' });
-                    }
-                }
-            } else if (
-                consumer?.type === AST_NODE_TYPES.MemberExpression &&
-                consumer.property.type === AST_NODE_TYPES.Identifier &&
-                BUILDERS.has(consumer.property.name)
-            ) {
-                context.report({ node: consumer, messageId: 'useBuildersPkg' });
-            }
-        }
+        const report: Report = (node) => context.report({ node, messageId: 'useBuildersPkg' });
 
         return {
             ImportDeclaration(node) {
@@ -99,7 +123,7 @@ export default createRule({
                         spec.imported.type === AST_NODE_TYPES.Identifier &&
                         BUILDERS.has(spec.imported.name)
                     ) {
-                        context.report({ node: spec, messageId: 'useBuildersPkg' });
+                        report(spec);
                     }
                 }
             },
@@ -111,7 +135,7 @@ export default createRule({
                         spec.local.type === AST_NODE_TYPES.Identifier &&
                         BUILDERS.has(spec.local.name)
                     ) {
-                        context.report({ node: spec, messageId: 'useBuildersPkg' });
+                        report(spec);
                     }
                 }
             },
@@ -122,7 +146,7 @@ export default createRule({
                     node.property.type === AST_NODE_TYPES.Identifier &&
                     BUILDERS.has(node.property.name)
                 ) {
-                    context.report({ node, messageId: 'useBuildersPkg' });
+                    report(node);
                 }
             },
             CallExpression(node) {
@@ -132,11 +156,11 @@ export default createRule({
                     node.arguments[0] !== undefined &&
                     isDiscordJs(node.arguments[0])
                 ) {
-                    checkModuleConsumer(node);
+                    checkModuleConsumer(node, report);
                 }
             },
             ImportExpression(node) {
-                if (isDiscordJs(node.source)) checkModuleConsumer(node);
+                if (isDiscordJs(node.source)) checkModuleConsumer(node, report);
             }
         };
     }
