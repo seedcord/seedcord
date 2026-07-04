@@ -124,6 +124,47 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
             `,
             output: null,
             errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // FP-04: aliased import must produce alias in the fix text, not the original export name
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags as MF } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.reply({ content: 'hi', ephemeral: true });
+            `,
+            output: dedent`
+                import { ChatInputCommandInteraction, MessageFlags as MF } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.reply({ content: 'hi', flags: MF.Ephemeral });
+            `,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // FN-21: destructured reply from a BaseInteraction is still flagged
+            code: dedent`
+                import { ChatInputCommandInteraction } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                const { reply } = interaction;
+                reply({ ephemeral: true, content: 'hi' });
+            `,
+            output: null,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // MT-25: variable-resolved options with MessageFlags imported — fix rewrites the initializer
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                const opts = { ephemeral: true, content: 'x' };
+                interaction.reply(opts);
+            `,
+            output: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                const opts = { flags: MessageFlags.Ephemeral, content: 'x' };
+                interaction.reply(opts);
+            `,
+            errors: [{ messageId: 'deprecated' }]
         }
     ]
 });

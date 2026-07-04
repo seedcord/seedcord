@@ -57,9 +57,19 @@ export default createRule({
 
                 // a string literal and an Events enum member both resolve to the same string literal type
                 const eventType = services.getTypeAtLocation(eventArg);
-                if (!eventType.isStringLiteral() || NON_GATEWAY_EVENTS.has(eventType.value)) return;
 
-                context.report({ node, messageId: 'rawEvent' });
+                if (eventType.isStringLiteral()) {
+                    if (!NON_GATEWAY_EVENTS.has(eventType.value)) context.report({ node, messageId: 'rawEvent' });
+                    return;
+                }
+
+                // conservative: skip if any member is dynamic or a non-gateway event
+                if (
+                    eventType.isUnionOrIntersection() &&
+                    eventType.types.every((m) => m.isStringLiteral() && !NON_GATEWAY_EVENTS.has(m.value))
+                ) {
+                    context.report({ node, messageId: 'rawEvent' });
+                }
             }
         };
     }

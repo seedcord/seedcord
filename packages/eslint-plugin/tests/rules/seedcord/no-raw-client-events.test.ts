@@ -39,6 +39,20 @@ ruleTester.run('no-raw-client-events', rule, {
             declare const evt: string;
             client.on(evt, () => {});
         `,
+        // a union containing a non-gateway event is skipped conservatively
+        dedent`
+            import { Client, Events } from 'discord.js';
+            declare const client: Client;
+            declare const evt: Events.MessageCreate | 'ready';
+            client.on(evt, () => {});
+        `,
+        // a union with a dynamic member is skipped conservatively
+        dedent`
+            import { Client, Events } from 'discord.js';
+            declare const client: Client;
+            declare const evt: Events.MessageCreate | string;
+            client.on(evt, () => {});
+        `,
         // ready is a lifecycle event, not a gateway dispatch
         dedent`
             import { Client } from 'discord.js';
@@ -100,6 +114,34 @@ ruleTester.run('no-raw-client-events', rule, {
                 import { Client } from 'discord.js';
                 declare const client: Client;
                 client.addListener('messageCreate', () => {});
+            `,
+            errors: [{ messageId: 'rawEvent' }]
+        },
+        {
+            // prependListener is in REGISTER_METHODS
+            code: dedent`
+                import { Client } from 'discord.js';
+                declare const client: Client;
+                client.prependListener('messageCreate', () => {});
+            `,
+            errors: [{ messageId: 'rawEvent' }]
+        },
+        {
+            // prependOnceListener is in REGISTER_METHODS
+            code: dedent`
+                import { Client } from 'discord.js';
+                declare const client: Client;
+                client.prependOnceListener('guildCreate', () => {});
+            `,
+            errors: [{ messageId: 'rawEvent' }]
+        },
+        {
+            // a union of gateway event literals must be decomposed and flagged
+            code: dedent`
+                import { Client, Events } from 'discord.js';
+                declare const client: Client;
+                declare const evt: Events.MessageCreate | Events.GuildCreate;
+                client.on(evt, () => {});
             `,
             errors: [{ messageId: 'rawEvent' }]
         }

@@ -54,6 +54,16 @@ ruleTester.run('valid-command-name', rule, {
         dedent`
             import { SlashCommandSubcommandBuilder } from 'discord.js';
             new SlashCommandSubcommandBuilder().setName('sub-name');
+        `,
+        // a subcommand group name, also lowercase
+        dedent`
+            import { SlashCommandSubcommandGroupBuilder } from 'discord.js';
+            new SlashCommandSubcommandGroupBuilder().setName('my-group');
+        `,
+        // 32-char name is exactly at the upper boundary and must be valid
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            new SlashCommandBuilder().setName('abcdefghijklmnopqrstuvwxyz123456');
         `
     ],
     invalid: [
@@ -103,6 +113,42 @@ new SlashCommandBuilder().setName(\`Ban\`);`,
             code: dedent`
                 import { SlashCommandSubcommandBuilder } from 'discord.js';
                 new SlashCommandSubcommandBuilder().setName('Sub Name');
+            `,
+            errors: [{ messageId: 'invalidName' }]
+        },
+        {
+            // a subcommand group name with uppercase and space
+            code: dedent`
+                import { SlashCommandSubcommandGroupBuilder } from 'discord.js';
+                new SlashCommandSubcommandGroupBuilder().setName('My Group');
+            `,
+            errors: [{ messageId: 'invalidName' }]
+        },
+        {
+            // 33-char name is one over the limit and must be invalid
+            code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
+                new SlashCommandBuilder().setName('abcdefghijklmnopqrstuvwxyz1234567');
+            `,
+            errors: [{ messageId: 'invalidName' }]
+        },
+        {
+            // union-typed receiver — TypeScript has no single symbol for a union, so getSymbol() returns
+            // undefined and the old guard bailed; extendsDjsType walks union members instead
+            code: dedent`
+                import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
+                declare const b: SlashCommandBuilder | SlashCommandSubcommandBuilder;
+                b.setName('Invalid Name');
+            `,
+            errors: [{ messageId: 'invalidName' }]
+        },
+        {
+            // subclass of a slash builder — getSymbol().getName() returns the subclass name which is not
+            // in SLASH_BUILDERS; extendsDjsType walks the base chain
+            code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
+                class MyBuilder extends SlashCommandBuilder {}
+                new MyBuilder().setName('Ban User');
             `,
             errors: [{ messageId: 'invalidName' }]
         }

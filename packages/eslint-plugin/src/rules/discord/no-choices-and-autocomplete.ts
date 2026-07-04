@@ -8,7 +8,7 @@ import type { TSESTree } from '@typescript-eslint/utils';
 
 const OPTION_BUILDERS = new Set(['SlashCommandStringOption', 'SlashCommandIntegerOption', 'SlashCommandNumberOption']);
 
-// the last setAutocomplete call decides. collectChain is outermost-first, so the first match is the last executed
+// the last setAutocomplete call is the effective one. collectChain is outermost-first, so the first match is the last executed
 function autocompleteOn(calls: TSESTree.CallExpression[]): boolean {
     const last = calls.find((call) => methodName(call) === 'setAutocomplete');
     const arg = last?.arguments[0];
@@ -23,7 +23,15 @@ function declaresChoices(calls: TSESTree.CallExpression[]): boolean {
         if (name === 'addChoices') {
             if (call.arguments.some((arg) => arg.type !== AST_NODE_TYPES.SpreadElement)) has = true;
         } else if (name === 'setChoices') {
-            has = call.arguments.some((arg) => arg.type !== AST_NODE_TYPES.SpreadElement);
+            has = call.arguments.some((arg) => {
+                if (arg.type === AST_NODE_TYPES.SpreadElement) return false;
+                if (arg.type === AST_NODE_TYPES.ArrayExpression) {
+                    return (
+                        arg.elements.length > 0 && !arg.elements.some((el) => el?.type === AST_NODE_TYPES.SpreadElement)
+                    );
+                }
+                return true;
+            });
         }
     }
     return has;

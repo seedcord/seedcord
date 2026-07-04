@@ -42,8 +42,13 @@ export default createRule({
                     return;
                 if (!extendsDjsType(checker, services.getTypeAtLocation(callee.object), CUSTOM_ID_BUILDERS)) return;
 
-                const arg = node.arguments[0];
+                let arg = node.arguments[0];
                 if (!arg) return;
+
+                // unwrap type assertions so `'x' as string` is still caught
+                while (arg.type === AST_NODE_TYPES.TSAsExpression || arg.type === AST_NODE_TYPES.TSTypeAssertion) {
+                    arg = arg.expression;
+                }
 
                 const isStringLiteral = arg.type === AST_NODE_TYPES.Literal && typeof arg.value === 'string';
                 const isTemplate = arg.type === AST_NODE_TYPES.TemplateLiteral;

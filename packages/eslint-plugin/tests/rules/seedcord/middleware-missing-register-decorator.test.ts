@@ -1,9 +1,9 @@
 import dedent from 'dedent';
 
 import rule from '../../../src/rules/seedcord/middleware-missing-register-decorator';
-import { createRuleTester } from '../../typed-rule-tester';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-const ruleTester = createRuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('middleware-missing-register-decorator', rule, {
     valid: [
@@ -73,6 +73,14 @@ ruleTester.run('middleware-missing-register-decorator', rule, {
             code: dedent`
                 import { EventMiddleware } from 'seedcord';
                 abstract class BaseMw extends EventMiddleware {}
+                export class LogMw extends BaseMw {}
+            `,
+            errors: [{ messageId: 'missingMiddleware' }]
+        },
+        {
+            // a concrete subclass of a cross-file abstract middleware base (FN-13)
+            code: dedent`
+                import { BaseMw } from './project-bases';
                 export class LogMw extends BaseMw {}
             `,
             errors: [{ messageId: 'missingMiddleware' }]

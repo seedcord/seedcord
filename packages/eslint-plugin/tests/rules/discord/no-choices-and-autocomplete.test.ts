@@ -56,6 +56,24 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 .setAutocomplete(true)
                 .addChoices(...dynamicChoices);
         `,
+        // dynamic setChoices spread, count is not statically known
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            declare const dynamicChoices: { name: string; value: string }[];
+            new SlashCommandStringOption()
+                .setName('q')
+                .setAutocomplete(true)
+                .setChoices(...dynamicChoices);
+        `,
+        // setChoices([]) clears all choices at runtime, so a following setAutocomplete(true) is safe
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            new SlashCommandStringOption()
+                .setName('q')
+                .addChoices({ name: 'A', value: 'a' })
+                .setChoices([])
+                .setAutocomplete(true);
+        `,
         // a non-option object with the same method names is not a slash option
         dedent`
             class FormField {

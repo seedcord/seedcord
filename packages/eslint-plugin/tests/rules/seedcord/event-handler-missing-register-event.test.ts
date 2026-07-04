@@ -1,9 +1,9 @@
 import dedent from 'dedent';
 
 import rule from '../../../src/rules/seedcord/event-handler-missing-register-event';
-import { createRuleTester } from '../../typed-rule-tester';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-const ruleTester = createRuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('event-handler-missing-register-event', rule, {
     valid: [
@@ -61,6 +61,14 @@ ruleTester.run('event-handler-missing-register-event', rule, {
             code: dedent`
                 import { EventHandler } from 'seedcord';
                 abstract class BaseEvent extends EventHandler<Events.MessageCreate> {}
+                export class PingPong extends BaseEvent {}
+            `,
+            errors: [{ messageId: 'missingRegister' }]
+        },
+        {
+            // a concrete subclass of a cross-file abstract handler base (FN-11)
+            code: dedent`
+                import { BaseEvent } from './project-bases';
                 export class PingPong extends BaseEvent {}
             `,
             errors: [{ messageId: 'missingRegister' }]

@@ -1,9 +1,9 @@
 import dedent from 'dedent';
 
 import rule from '../../../src/rules/seedcord/command-builder-missing-register-command';
-import { createRuleTester } from '../../typed-rule-tester';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-const ruleTester = createRuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('command-builder-missing-register-command', rule, {
     valid: [
@@ -22,6 +22,12 @@ ruleTester.run('command-builder-missing-register-command', rule, {
             import { BuilderComponent } from '@seedcord/core';
             @RegisterCommand('guild', ['123456789'])
             export class AdminCommand extends BuilderComponent<'command'> {}
+        `,
+        // a bare @RegisterCommand identifier (no parens) still registers (MT-32)
+        dedent`
+            import { BuilderComponent } from '@seedcord/core';
+            @RegisterCommand
+            export class ProbeCommand extends BuilderComponent<'command'> {}
         `,
         // non-command builders are not deployable, never flagged
         dedent`
@@ -102,6 +108,14 @@ ruleTester.run('command-builder-missing-register-command', rule, {
             code: dedent`
                 import { BuilderComponent } from '@seedcord/core';
                 abstract class BaseCommand extends BuilderComponent<'command'> {}
+                export class ProbeCommand extends BaseCommand {}
+            `,
+            errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
+        },
+        {
+            // a concrete subclass of a cross-file abstract command base, kind read from its type (FN-14)
+            code: dedent`
+                import { BaseCommand } from './project-bases';
                 export class ProbeCommand extends BaseCommand {}
             `,
             errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]

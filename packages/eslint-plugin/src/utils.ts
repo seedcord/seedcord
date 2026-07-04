@@ -2,7 +2,7 @@ import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
-export function isSeedcordSource(source: string): boolean {
+function isSeedcordSource(source: string): boolean {
     return source === 'seedcord' || source.startsWith('@seedcord/');
 }
 
@@ -22,7 +22,6 @@ export function hasDecoratorNamed(node: TSESTree.ClassDeclaration, names: Readon
     });
 }
 
-// call `fn` with the imported and local name of every named import from a seedcord package
 export function forEachSeedcordImport(
     node: TSESTree.ImportDeclaration,
     fn: (imported: string, local: string) => void

@@ -1,9 +1,11 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { extendsSeedcordType } from '../../typeUtils';
 import { forEachSeedcordImport, hasDecoratorNamed } from '../../utils';
 
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
+import type * as ts from 'typescript';
 
 const KIND_LABEL = {
     command: 'slash command',
@@ -13,6 +15,7 @@ const KIND_LABEL = {
 type CommandKind = keyof typeof KIND_LABEL;
 
 const REGISTER_COMMAND = new Set(['RegisterCommand']);
+const BUILDER_COMPONENT = 'BuilderComponent';
 
 function isCommandKind(value: string): value is CommandKind {
     return value in KIND_LABEL;
@@ -24,6 +27,23 @@ function commandKindOf(node: TSESTree.ClassDeclaration): CommandKind | undefined
     const { literal } = first;
     if (literal.type !== AST_NODE_TYPES.Literal || typeof literal.value !== 'string') return undefined;
     return isCommandKind(literal.value) ? literal.value : undefined;
+}
+
+// the command kind for a class whose BuilderComponent base is imported from another file
+function crossFileCommandKind(
+    node: TSESTree.ClassDeclaration,
+    checker: ts.TypeChecker,
+    services: ParserServicesWithTypeInformation
+): CommandKind | undefined {
+    if (!node.id) return undefined;
+    const symbol = services.getSymbolAtLocation(node.id);
+    if (!symbol) return undefined;
+    const classType = checker.getDeclaredTypeOfSymbol(symbol);
+    if (!extendsSeedcordType(checker, classType, BUILDER_COMPONENT)) return undefined;
+    const typeProperty = classType.getProperty('type');
+    if (!typeProperty) return undefined;
+    const kindType = checker.getTypeOfSymbolAtLocation(typeProperty, services.esTreeNodeToTSNodeMap.get(node));
+    return kindType.isStringLiteral() && isCommandKind(kindType.value) ? kindType.value : undefined;
 }
 
 export default createRule({
@@ -40,13 +60,15 @@ export default createRule({
     },
     defaultOptions: [],
     create(context) {
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
         const builderComponentNames = new Set<string>();
         const intermediateKinds = new Map<string, CommandKind>();
 
         return {
             ImportDeclaration(node) {
                 forEachSeedcordImport(node, (imported, local) => {
-                    if (imported === 'BuilderComponent') builderComponentNames.add(local);
+                    if (imported === BUILDER_COMPONENT) builderComponentNames.add(local);
                 });
             },
             ClassDeclaration(node) {
@@ -56,7 +78,7 @@ export default createRule({
                 let kind: CommandKind | undefined;
                 if (builderComponentNames.has(superName)) kind = commandKindOf(node);
                 else if (intermediateKinds.has(superName)) kind = intermediateKinds.get(superName);
-                else return;
+                else kind = crossFileCommandKind(node, checker, services);
                 if (kind === undefined) return;
 
                 // an abstract subclass carries the kind to later concrete commands (same-file intermediate)

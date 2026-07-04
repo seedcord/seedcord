@@ -41,22 +41,22 @@ export default createRule({
     create(context) {
         const services = ESLintUtils.getParserServices(context);
 
-        // a type, one of its union members, or an array element type that is a discord.js v2 builder
         function isV2Type(type: ts.Type): boolean {
             if (type.isUnion()) return type.types.some(isV2Type);
             const symbol = type.getSymbol();
             return symbol !== undefined && V2_BUILDERS.has(symbol.getName()) && isFromDiscordJs(symbol);
         }
 
-        // whether the components value holds a v2 builder, as an inline array or a variable array
         function holdsV2(value: TSESTree.Node): boolean {
             if (value.type === AST_NODE_TYPES.ArrayExpression) {
-                return value.elements.some(
-                    (element) =>
-                        element !== null &&
-                        element.type !== AST_NODE_TYPES.SpreadElement &&
-                        isV2Type(services.getTypeAtLocation(element))
-                );
+                return value.elements.some((element) => {
+                    if (element === null) return false;
+                    if (element.type === AST_NODE_TYPES.SpreadElement) {
+                        const elementType = services.getTypeAtLocation(element.argument).getNumberIndexType();
+                        return elementType !== undefined && isV2Type(elementType);
+                    }
+                    return isV2Type(services.getTypeAtLocation(element));
+                });
             }
             const elementType = services.getTypeAtLocation(value).getNumberIndexType();
             return elementType !== undefined && isV2Type(elementType);

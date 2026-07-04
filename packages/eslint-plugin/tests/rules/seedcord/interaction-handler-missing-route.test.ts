@@ -1,9 +1,9 @@
 import dedent from 'dedent';
 
 import rule from '../../../src/rules/seedcord/interaction-handler-missing-route';
-import { createRuleTester } from '../../typed-rule-tester';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-const ruleTester = createRuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('interaction-handler-missing-route', rule, {
     valid: [
@@ -59,6 +59,12 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             import { AutocompleteHandler } from 'seedcord';
             @AutocompleteRoute('search')
             export class Search extends AutocompleteHandler<'search'> {}
+        `,
+        // modal handler with its route (MT-27)
+        dedent`
+            import { ModalHandler } from 'seedcord';
+            @ModalRoute(Feedback)
+            export class FeedbackModal extends ModalHandler<[typeof Feedback]> {}
         `,
         // not a handler at all
         `export class Plain {}`
@@ -132,6 +138,14 @@ ruleTester.run('interaction-handler-missing-route', rule, {
                 import { SlashHandler } from 'seedcord';
                 abstract class BaseSlash extends SlashHandler<'x'> {}
                 export class Ban extends BaseSlash {}
+            `,
+            errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
+        },
+        {
+            // a concrete subclass of a cross-file abstract handler base (FN-12)
+            code: dedent`
+                import { BaseSlash } from './project-bases';
+                export class BanHandler extends BaseSlash {}
             `,
             errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
         }

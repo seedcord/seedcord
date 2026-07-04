@@ -1,46 +1,71 @@
 import dedent from 'dedent';
 
 import rule from '../../../src/rules/discord/required-option-before-optional';
-import { createRuleTester } from '../../typed-rule-tester';
+import { createTypedRuleTester } from '../../typed-rule-tester';
 
-const ruleTester = createRuleTester();
+const ruleTester = createTypedRuleTester();
 
 ruleTester.run('required-option-before-optional', rule, {
     valid: [
         // required before optional, the correct order
         dedent`
+            import { SlashCommandBuilder } from 'discord.js';
             new SlashCommandBuilder()
                 .addStringOption((o) => o.setName('a').setRequired(true))
                 .addStringOption((o) => o.setName('b'));
         `,
         // all required
         dedent`
+            import { SlashCommandBuilder } from 'discord.js';
             new SlashCommandBuilder()
                 .addStringOption((o) => o.setName('a').setRequired(true))
                 .addStringOption((o) => o.setName('b').setRequired(true));
         `,
         // all optional
         dedent`
+            import { SlashCommandBuilder } from 'discord.js';
             new SlashCommandBuilder()
                 .addStringOption((o) => o.setName('a')).addStringOption((o) => o.setName('b'));
-            `,
-        // a dynamic setRequired means the order is not statically provable, left alone
+        `,
+        // all optional, separate lines
         dedent`
+            import { SlashCommandBuilder } from 'discord.js';
             new SlashCommandBuilder()
                 .addStringOption((o) => o.setName('a'))
                 .addStringOption((o) => o.setName('b'));
         `,
-        // a dynamic setRequired means the order is not statically provable, left alone
+        // dynamic setRequired is not statically provable, left alone
         dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            declare const isReq: boolean;
             new SlashCommandBuilder()
                 .addStringOption((o) => o.setName('a').setRequired(isReq))
                 .addStringOption((o) => o.setName('b').setRequired(true));
+        `,
+        // a non-djs class with matching method names is not a slash command builder
+        dedent`
+            class FormSchema {
+                addStringOption(fn: (o: { setRequired(r: boolean): unknown }) => unknown): this { return this; }
+                addIntegerOption(fn: (o: { setRequired(r: boolean): unknown }) => unknown): this { return this; }
+            }
+            new FormSchema()
+                .addStringOption((o) => o.setRequired(false))
+                .addIntegerOption((o) => o.setRequired(true));
+        `,
+        // 3 options: required, required, optional
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            new SlashCommandBuilder()
+                .addStringOption((o) => o.setName('a').setRequired(true))
+                .addStringOption((o) => o.setName('b').setRequired(true))
+                .addStringOption((o) => o.setName('c'));
         `
     ],
     invalid: [
         {
             // implicit optional (no setRequired) then required
             code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
                 new SlashCommandBuilder()
                     .addStringOption((o) => o.setName('a'))
                     .addStringOption((o) => o.setName('b').setRequired(true));
@@ -50,6 +75,7 @@ ruleTester.run('required-option-before-optional', rule, {
         {
             // explicit optional then required
             code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
                 new SlashCommandBuilder()
                     .addIntegerOption((o) => o.setName('a').setRequired(false))
                     .addStringOption((o) => o.setName('b').setRequired(true));
@@ -59,6 +85,7 @@ ruleTester.run('required-option-before-optional', rule, {
         {
             // seedcord command, options added through this.instance
             code: dedent`
+                import { BuilderComponent } from './seedcord';
                 class MyCommand extends BuilderComponent<'command'> {
                     constructor() {
                         super('command');
@@ -73,6 +100,7 @@ ruleTester.run('required-option-before-optional', rule, {
         {
             // block-bodied arrow callbacks are still analyzed
             code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
                 new SlashCommandBuilder()
                     .addStringOption((o) => { return o.setName('a'); })
                     .addStringOption((o) => { return o.setName('b').setRequired(true); });
@@ -82,9 +110,21 @@ ruleTester.run('required-option-before-optional', rule, {
         {
             // function expression callbacks are still analyzed
             code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
                 new SlashCommandBuilder()
                     .addStringOption(function (o) { return o.setName('a'); })
                     .addStringOption(function (o) { return o.setName('b').setRequired(true); });
+            `,
+            errors: [{ messageId: 'outOfOrder' }]
+        },
+        {
+            // 3 options: optional, optional, required
+            code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
+                new SlashCommandBuilder()
+                    .addStringOption((o) => o.setName('a'))
+                    .addStringOption((o) => o.setName('b'))
+                    .addStringOption((o) => o.setName('c').setRequired(true));
             `,
             errors: [{ messageId: 'outOfOrder' }]
         }

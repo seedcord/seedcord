@@ -1,6 +1,7 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { extendsSeedcordType } from '../../typeUtils';
 import { forEachSeedcordImport, hasDecoratorNamed } from '../../utils';
 
 const MIDDLEWARE_BASES = new Set(['InteractionMiddleware', 'EventMiddleware']);
@@ -20,6 +21,8 @@ export default createRule({
     },
     defaultOptions: [],
     create(context) {
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
         const bases = new Set<string>();
 
         return {
@@ -30,7 +33,19 @@ export default createRule({
             },
             ClassDeclaration(node) {
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
-                if (!bases.has(node.superClass.name)) return;
+
+                let isBase = bases.has(node.superClass.name);
+                if (!isBase && node.id) {
+                    const symbol = services.getSymbolAtLocation(node.id);
+                    if (symbol) {
+                        isBase = extendsSeedcordType(
+                            checker,
+                            checker.getDeclaredTypeOfSymbol(symbol),
+                            MIDDLEWARE_BASES
+                        );
+                    }
+                }
+                if (!isBase) return;
                 // an abstract subclass becomes a base for later concrete middleware (same-file intermediate)
                 if (node.abstract) {
                     if (node.id) bases.add(node.id.name);

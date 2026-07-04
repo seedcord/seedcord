@@ -111,6 +111,50 @@ ruleTester.run('use-custom-id-codec', rule, {
                 }
             `,
             errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            // FN-18: TSAsExpression wrapping a raw literal bypassed detection
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder().setCustomId('approve' as string).setLabel('Approve');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        // MT-22: coverage for the five CUSTOM_ID_BUILDERS previously untested
+        {
+            code: dedent`
+                import { UserSelectMenuBuilder } from 'discord.js';
+                new UserSelectMenuBuilder().setCustomId('pick-user');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            code: dedent`
+                import { RoleSelectMenuBuilder } from 'discord.js';
+                new RoleSelectMenuBuilder().setCustomId('pick-role');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            code: dedent`
+                import { ChannelSelectMenuBuilder } from 'discord.js';
+                new ChannelSelectMenuBuilder().setCustomId('pick-channel');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            code: dedent`
+                import { MentionableSelectMenuBuilder } from 'discord.js';
+                new MentionableSelectMenuBuilder().setCustomId('pick-mentionable');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            code: dedent`
+                import { TextInputBuilder } from 'discord.js';
+                new TextInputBuilder().setCustomId('feedback-input');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
         }
     ]
 });

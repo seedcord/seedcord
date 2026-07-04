@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
+import { extendsDjsType } from '../../typeUtils';
 import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
@@ -81,6 +82,7 @@ export default createRule({
     defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
 
         return {
             CallExpression(node) {
@@ -88,13 +90,11 @@ export default createRule({
 
                 const calls = collectChain(node);
                 const methods = new Set(calls.map((call) => methodName(call)));
-                // resolve the receiver type only when a capped method is on the chain, keeping type lookups off unrelated chains
+                // skip the type lookup when no capped method is on the chain
                 if (!LIMITS.some((limit) => methods.has(limit.addMethod) || methods.has(limit.setMethod))) return;
 
-                const builderName = services.getTypeAtLocation(chainRoot(node)).getSymbol()?.getName();
-                if (builderName === undefined) return;
-
-                const limit = LIMITS.find((entry) => entry.builders.has(builderName));
+                const type = services.getTypeAtLocation(chainRoot(node));
+                const limit = LIMITS.find((entry) => extendsDjsType(checker, type, entry.builders));
                 if (!limit) return;
 
                 const count = countStaticItems(calls, limit);

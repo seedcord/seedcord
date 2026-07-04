@@ -34,6 +34,17 @@ ruleTester.run('prefer-v2-component', rule, {
                 }
             }
             new EmbedBuilder();
+        `,
+        // a non-seedcord class with a component getter returning an EmbedBuilder is not a seedcord component
+        dedent`
+            import { EmbedBuilder } from 'discord.js';
+            declare const embed: EmbedBuilder;
+            class BaseTemplate {}
+            class ReportTemplate extends BaseTemplate {
+                get component(): EmbedBuilder {
+                    return embed;
+                }
+            }
         `
     ],
     invalid: [

@@ -16,7 +16,14 @@ ruleTester.run('no-djs-builder-import', rule, {
         // a type-only import or re-export is erased, so no CJS copy reaches runtime
         `import type { EmbedBuilder } from 'discord.js';`,
         `import { type ButtonBuilder } from 'discord.js';`,
-        `export type { EmbedBuilder } from 'discord.js';`
+        `export type { EmbedBuilder } from 'discord.js';`,
+        // non-builder re-export: Client is not in the builder set
+        `export { Client } from 'discord.js';`,
+        // function param named Djs shadows the namespace import; the access is not from discord.js
+        dedent`
+            import * as Djs from 'discord.js';
+            function inspect(Djs: { EmbedBuilder: string }) { return Djs.EmbedBuilder; }
+        `
     ],
     invalid: [
         {
@@ -72,6 +79,16 @@ ruleTester.run('no-djs-builder-import', rule, {
         {
             // a .then callback destructures the module
             code: `import('discord.js').then(({ EmbedBuilder }) => new EmbedBuilder());`,
+            errors: [{ messageId: 'useBuildersPkg' }]
+        },
+        {
+            // mixed re-export: only the builder is flagged, Client is not
+            code: `export { EmbedBuilder, Client } from 'discord.js';`,
+            errors: [{ messageId: 'useBuildersPkg' }]
+        },
+        {
+            // named (non-destructured) then-callback param used as a namespace
+            code: `import('discord.js').then((djs) => { new djs.EmbedBuilder(); })`,
             errors: [{ messageId: 'useBuildersPkg' }]
         }
     ]

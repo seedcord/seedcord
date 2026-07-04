@@ -1,9 +1,12 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
-import { collectChain, isChainTop, methodName } from '../../utils';
+import { extendsDjsType } from '../../typeUtils';
+import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
+
+const SLASH_COMMAND_BUILDERS = new Set(['SlashCommandBuilder', 'SlashCommandSubcommandBuilder']);
 
 const ADD_OPTION = new Set([
     'addStringOption',
@@ -34,7 +37,6 @@ function optionChain(callback: TSESTree.CallExpressionArgument | undefined): TSE
     return undefined;
 }
 
-// read an option builder callback's literal setRequired, unknown when it is dynamic or not a readable chain
 function optionRequiredState(callback: TSESTree.CallExpressionArgument | undefined): OptionState {
     const chain = optionChain(callback);
     if (chain?.type !== AST_NODE_TYPES.CallExpression) return 'unknown';
@@ -63,9 +65,14 @@ export default createRule({
     },
     defaultOptions: [],
     create(context) {
+        const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
+
         return {
             CallExpression(node) {
                 if (!isChainTop(node)) return;
+                if (!extendsDjsType(checker, services.getTypeAtLocation(chainRoot(node)), SLASH_COMMAND_BUILDERS))
+                    return;
 
                 // collectChain is outermost-first, reverse to source order
                 const options = collectChain(node)

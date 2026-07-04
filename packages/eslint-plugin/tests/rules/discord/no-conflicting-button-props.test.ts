@@ -111,6 +111,17 @@ ruleTester.run('no-conflicting-button-props', rule, {
                 }
             `,
             errors: [{ messageId: 'linkWithCustomId' }]
+        },
+        {
+            // ButtonStyle.Link stored in a const - the type resolves to the numeric literal 5
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                const linkStyle = ButtonStyle.Link;
+                new ButtonBuilder()
+                    .setStyle(linkStyle)
+                    .setCustomId('x');
+            `,
+            errors: [{ messageId: 'linkWithCustomId' }]
         }
     ]
 });

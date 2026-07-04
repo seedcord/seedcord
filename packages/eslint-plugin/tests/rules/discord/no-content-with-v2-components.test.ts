@@ -92,6 +92,24 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 const payload = { content: 'hi', components: comps };
             `,
             errors: [{ messageId: 'v2WithContent' }]
+        },
+        {
+            // union element type: exercises the isUnion branch in isV2Type
+            code: dedent`
+                import { ContainerBuilder, ActionRowBuilder } from 'discord.js';
+                declare const comps: Array<ContainerBuilder | ActionRowBuilder>;
+                const payload = { content: 'hi', components: comps };
+            `,
+            errors: [{ messageId: 'v2WithContent' }]
+        },
+        {
+            // spread of a v2 array into the inline components list must still be flagged
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                declare const v2arr: ContainerBuilder[];
+                const payload = { content: 'hi', components: [...v2arr] };
+            `,
+            errors: [{ messageId: 'v2WithContent' }]
         }
     ]
 });

@@ -49,6 +49,13 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
                     this.instance.addFields(${objs(25)});
                 }
             }
+        `,
+        // FP-01: local class named ActionRowBuilder is not from discord.js, not flagged
+        dedent`
+            class ActionRowBuilder {
+                addComponents(...items: unknown[]): this { return this; }
+            }
+            new ActionRowBuilder().addComponents({}, {}, {}, {}, {}, {});
         `
     ],
     invalid: [
@@ -149,6 +156,15 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             errors: [{ messageId: 'tooMany' }]
         },
         {
+            // FN-16: subclass of ActionRowBuilder inherits the same limit
+            code: dedent`
+                import { ActionRowBuilder } from 'discord.js';
+                class CompactRow extends ActionRowBuilder {}
+                new CompactRow().addComponents({}, {}, {}, {}, {}, {});
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
             code: dedent`
                 import { StringSelectMenuBuilder } from 'discord.js';
                 new StringSelectMenuBuilder().setOptions([${objs(26)}]);
@@ -159,6 +175,22 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             code: dedent`
                 import { SlashCommandStringOption } from 'discord.js';
                 new SlashCommandStringOption().setChoices([${objs(26)}]);
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // MT-28: integer option setChoices over cap
+            code: dedent`
+                import { SlashCommandIntegerOption } from 'discord.js';
+                new SlashCommandIntegerOption().setChoices([${objs(26)}]);
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // MT-28: number option setChoices over cap
+            code: dedent`
+                import { SlashCommandNumberOption } from 'discord.js';
+                new SlashCommandNumberOption().setChoices([${objs(26)}]);
             `,
             errors: [{ messageId: 'tooMany' }]
         }

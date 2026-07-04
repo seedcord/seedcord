@@ -4,20 +4,24 @@ import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
 import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 
-function setsLinkStyle(call: TSESTree.CallExpression): boolean {
+function setsLinkStyle(call: TSESTree.CallExpression, services: ParserServicesWithTypeInformation): boolean {
     if (methodName(call) !== 'setStyle') return false;
     const arg = call.arguments[0];
-    // ButtonStyle.Link, or its raw enum value 5
-    if (arg?.type === AST_NODE_TYPES.Literal && arg.value === 5) return true;
-    return (
-        arg?.type === AST_NODE_TYPES.MemberExpression &&
+    if (arg === undefined) return false;
+    if (arg.type === AST_NODE_TYPES.Literal && arg.value === 5) return true;
+    if (
+        arg.type === AST_NODE_TYPES.MemberExpression &&
         arg.object.type === AST_NODE_TYPES.Identifier &&
         arg.object.name === 'ButtonStyle' &&
         arg.property.type === AST_NODE_TYPES.Identifier &&
         arg.property.name === 'Link'
-    );
+    )
+        return true;
+    // type-aware fallback: an identifier or expression whose type resolves to the numeric literal 5
+    const type = services.getTypeAtLocation(arg);
+    return type.isNumberLiteral() && type.value === 5;
 }
 
 export default createRule({
@@ -49,7 +53,7 @@ export default createRule({
 
                 if (hasCustomId && hasUrl) {
                     context.report({ node, messageId: 'idAndUrl' });
-                } else if (hasCustomId && calls.some(setsLinkStyle)) {
+                } else if (hasCustomId && calls.some((call) => setsLinkStyle(call, services))) {
                     context.report({ node, messageId: 'linkWithCustomId' });
                 }
             }

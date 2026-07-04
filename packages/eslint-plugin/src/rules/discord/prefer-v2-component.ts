@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
-import { isFromDiscordJs } from '../../typeUtils';
+import { extendsSeedcordType, isFromDiscordJs } from '../../typeUtils';
 
 export default createRule({
     name: 'prefer-v2-component',
@@ -44,7 +44,10 @@ export default createRule({
 
                 const symbol = services.getSymbolAtLocation(node.id);
                 if (!symbol) return;
-                const component = checker.getDeclaredTypeOfSymbol(symbol).getProperty('component');
+                const classType = checker.getDeclaredTypeOfSymbol(symbol);
+                if (!extendsSeedcordType(checker, classType, 'BuilderComponent')) return;
+
+                const component = classType.getProperty('component');
                 if (!component) return;
 
                 const componentType = checker.getTypeOfSymbolAtLocation(

@@ -18,9 +18,7 @@ function asClassOrInterface(type: ts.Type): ts.InterfaceType | undefined {
     return undefined;
 }
 
-// the type, or one of its base or union members, is a discord.js class whose name is in `names`
-export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: string | ReadonlySet<string>): boolean {
-    const wanted = typeof names === 'string' ? new Set([names]) : names;
+function walkBaseChain(checker: ts.TypeChecker, type: ts.Type, match: (symbol: ts.Symbol) => boolean): boolean {
     const seen = new Set<ts.Type>();
     const stack: ts.Type[] = [type];
 
@@ -35,11 +33,26 @@ export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: st
         }
 
         const symbol = current.getSymbol();
-        if (symbol !== undefined && wanted.has(symbol.getName()) && isFromDiscordJs(symbol)) return true;
+        if (symbol !== undefined && match(symbol)) return true;
 
         const iface = asClassOrInterface(current);
         if (iface !== undefined) stack.push(...checker.getBaseTypes(iface));
     }
 
     return false;
+}
+
+export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: string | ReadonlySet<string>): boolean {
+    const wanted = typeof names === 'string' ? new Set([names]) : names;
+    return walkBaseChain(checker, type, (symbol) => wanted.has(symbol.getName()) && isFromDiscordJs(symbol));
+}
+
+// match by name only. a path-origin guard is ambiguous because "seedcord" appears in the plugin's own source paths
+export function extendsSeedcordType(
+    checker: ts.TypeChecker,
+    type: ts.Type,
+    names: string | ReadonlySet<string>
+): boolean {
+    const wanted = typeof names === 'string' ? new Set([names]) : names;
+    return walkBaseChain(checker, type, (symbol) => wanted.has(symbol.getName()));
 }
