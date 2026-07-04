@@ -31,6 +31,12 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             import { ActionRowBuilder } from 'discord.js';
             new ActionRowBuilder().addComponents({}, {}, {}, {}).setComponents([{}, {}]);
         `,
+        // setComponents with a variable, the count is not statically known
+        dedent`
+            import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
+            declare const items: ButtonBuilder[];
+            new ActionRowBuilder().setComponents(items);
+        `,
         // select and embed exactly at their cap of 25
         dedent`
             import { StringSelectMenuBuilder } from 'discord.js';
@@ -50,7 +56,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
                 }
             }
         `,
-        // FP-01: local class named ActionRowBuilder is not from discord.js, not flagged
+        // local class named ActionRowBuilder is not from discord.js, so it stays unflagged
         dedent`
             class ActionRowBuilder {
                 addComponents(...items: unknown[]): this { return this; }
@@ -156,7 +162,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             errors: [{ messageId: 'tooMany' }]
         },
         {
-            // FN-16: subclass of ActionRowBuilder inherits the same limit
+            // subclass of ActionRowBuilder inherits the same limit
             code: dedent`
                 import { ActionRowBuilder } from 'discord.js';
                 class CompactRow extends ActionRowBuilder {}
@@ -179,7 +185,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             errors: [{ messageId: 'tooMany' }]
         },
         {
-            // MT-28: integer option setChoices over cap
+            // integer option setChoices over cap
             code: dedent`
                 import { SlashCommandIntegerOption } from 'discord.js';
                 new SlashCommandIntegerOption().setChoices([${objs(26)}]);
@@ -187,7 +193,7 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             errors: [{ messageId: 'tooMany' }]
         },
         {
-            // MT-28: number option setChoices over cap
+            // number option setChoices over cap
             code: dedent`
                 import { SlashCommandNumberOption } from 'discord.js';
                 new SlashCommandNumberOption().setChoices([${objs(26)}]);

@@ -149,6 +149,18 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 }
             `,
             errors: [{ messageId: 'bothSet' }]
+        },
+        {
+            // a literal choice sitting next to a spread in setChoices still declares choices
+            code: dedent`
+                import { SlashCommandStringOption } from 'discord.js';
+                declare const extra: { name: string; value: string }[];
+                new SlashCommandStringOption()
+                    .setName('q')
+                    .setAutocomplete(true)
+                    .setChoices([...extra, { name: 'A', value: 'a' }]);
+            `,
+            errors: [{ messageId: 'bothSet' }]
         }
     ]
 });

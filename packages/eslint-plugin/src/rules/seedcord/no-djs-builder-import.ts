@@ -90,8 +90,10 @@ function checkModuleConsumer(moduleExpr: TSESTree.Node, report: Report, bindings
     if (consumer?.type === AST_NODE_TYPES.AwaitExpression) consumer = consumer.parent;
     if (consumer === undefined) return;
 
-    if (consumer.type === AST_NODE_TYPES.VariableDeclarator && consumer.id.type === AST_NODE_TYPES.ObjectPattern) {
-        reportObjectPattern(consumer.id, report);
+    if (consumer.type === AST_NODE_TYPES.VariableDeclarator) {
+        if (consumer.id.type === AST_NODE_TYPES.ObjectPattern) reportObjectPattern(consumer.id, report);
+        // `const djs = require('discord.js')`, track the alias so the MemberExpression visitor catches djs.Builder
+        else if (consumer.id.type === AST_NODE_TYPES.Identifier) bindings.add(consumer.id);
         return;
     }
     if (consumer.type !== AST_NODE_TYPES.MemberExpression || consumer.property.type !== AST_NODE_TYPES.Identifier) {
@@ -116,7 +118,7 @@ export default createRule({
     meta: {
         type: 'problem',
         docs: {
-            description: 'Disallow importing component builders from discord.js instead of @discordjs/builders.'
+            description: 'Disallow importing component builders from discord.js. Import them from @discordjs/builders.'
         },
         messages: {
             useBuildersPkg:
@@ -157,6 +159,10 @@ export default createRule({
                         report(spec);
                     }
                 }
+            },
+            ExportAllDeclaration(node) {
+                // `export * from 'discord.js'` re-exports every CJS builder
+                if (node.exportKind !== 'type' && isDiscordJs(node.source)) report(node);
             },
             MemberExpression(node) {
                 if (

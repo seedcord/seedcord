@@ -118,13 +118,23 @@ ruleTester.run('required-option-before-optional', rule, {
             errors: [{ messageId: 'outOfOrder' }]
         },
         {
-            // 3 options: optional, optional, required
+            // 3 options: optional, optional, required, the error points at the third option
             code: dedent`
                 import { SlashCommandBuilder } from 'discord.js';
                 new SlashCommandBuilder()
                     .addStringOption((o) => o.setName('a'))
                     .addStringOption((o) => o.setName('b'))
                     .addStringOption((o) => o.setName('c').setRequired(true));
+            `,
+            errors: [{ messageId: 'outOfOrder', line: 5 }]
+        },
+        {
+            // a subcommand builder is validated the same way
+            code: dedent`
+                import { SlashCommandSubcommandBuilder } from 'discord.js';
+                new SlashCommandSubcommandBuilder()
+                    .addStringOption((o) => o.setName('a'))
+                    .addStringOption((o) => o.setName('b').setRequired(true));
             `,
             errors: [{ messageId: 'outOfOrder' }]
         }

@@ -26,6 +26,17 @@ ruleTester.run('no-raw-client-events', rule, {
             declare const client: Client;
             client.on('error', () => {});
         `,
+        // more client lifecycle events, all left alone
+        dedent`
+            import { Client } from 'discord.js';
+            declare const client: Client;
+            client.on('clientReady', () => {});
+        `,
+        dedent`
+            import { Client } from 'discord.js';
+            declare const client: Client;
+            client.on('debug', () => {});
+        `,
         // interactionCreate routes through the interaction dispatcher
         dedent`
             import { Client } from 'discord.js';

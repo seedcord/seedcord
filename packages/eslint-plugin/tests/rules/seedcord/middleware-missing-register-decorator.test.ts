@@ -78,7 +78,7 @@ ruleTester.run('middleware-missing-register-decorator', rule, {
             errors: [{ messageId: 'missingMiddleware' }]
         },
         {
-            // a concrete subclass of a cross-file abstract middleware base (FN-13)
+            // a concrete subclass of a cross-file abstract middleware base
             code: dedent`
                 import { BaseMw } from './project-bases';
                 export class LogMw extends BaseMw {}

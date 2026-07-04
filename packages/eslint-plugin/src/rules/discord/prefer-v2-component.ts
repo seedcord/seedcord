@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
-import { extendsSeedcordType, isFromDiscordJs } from '../../typeUtils';
+import { extendsDjsType, extendsSeedcordType, isFromDiscordJs } from '../../typeUtils';
 
 export default createRule({
     name: 'prefer-v2-component',
@@ -22,8 +22,7 @@ export default createRule({
 
         return {
             NewExpression(node) {
-                const symbol = services.getTypeAtLocation(node).getSymbol();
-                if (symbol?.getName() === 'EmbedBuilder' && isFromDiscordJs(symbol)) {
+                if (extendsDjsType(checker, services.getTypeAtLocation(node), 'EmbedBuilder')) {
                     context.report({ node, messageId: 'preferV2' });
                 }
             },
@@ -33,8 +32,7 @@ export default createRule({
                 if (node.callee.property.type !== AST_NODE_TYPES.Identifier || node.callee.property.name !== 'from') {
                     return;
                 }
-                const symbol = services.getTypeAtLocation(node.callee.object).getSymbol();
-                if (symbol?.getName() === 'EmbedBuilder' && isFromDiscordJs(symbol)) {
+                if (extendsDjsType(checker, services.getTypeAtLocation(node.callee.object), 'EmbedBuilder')) {
                     context.report({ node, messageId: 'preferV2' });
                 }
             },

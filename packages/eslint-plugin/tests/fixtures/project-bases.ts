@@ -26,3 +26,9 @@ export abstract class BaseCommand extends BuilderComponent<'command'> {
         super('command');
     }
 }
+
+export abstract class BaseContextMenu extends BuilderComponent<'context_menu'> {
+    protected constructor() {
+        super('context_menu');
+    }
+}

@@ -6,7 +6,6 @@ export function isFromDiscordJs(symbol: ts.Symbol | undefined): boolean {
     return file !== undefined && (file.includes('/discord.js/') || file.includes('/@discordjs/'));
 }
 
-// a class/interface type directly, or the underlying class behind a generic instantiation (TypeReference).
 // discord.js interactions are generic (ChatInputCommandInteraction<Cached>), so their base chain is only
 // reachable through the target.
 function asClassOrInterface(type: ts.Type): ts.InterfaceType | undefined {

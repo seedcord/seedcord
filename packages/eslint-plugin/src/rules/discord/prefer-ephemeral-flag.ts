@@ -26,7 +26,9 @@ function resolveOptions(
     const definition = variable?.defs[0];
     if (
         definition?.node.type === AST_NODE_TYPES.VariableDeclarator &&
-        definition.node.init?.type === AST_NODE_TYPES.ObjectExpression
+        definition.node.init?.type === AST_NODE_TYPES.ObjectExpression &&
+        // a later reassignment means the initializer is not what reaches the call
+        !variable?.references.some((ref) => ref.isWrite() && !ref.init)
     ) {
         return definition.node.init;
     }
@@ -39,7 +41,7 @@ function canReplaceEphemeral(
     messageFlagsAlias: string | undefined
 ): boolean {
     const hasFlags = options.properties.some((property) => propertyName(property) === 'flags');
-    // a spread could already carry flags, so skip the autofix rather than risk duplicating the key
+    // a spread could already carry a flags key, so the autofix is skipped to avoid duplicating it
     const hasSpread = options.properties.some((property) => property.type === AST_NODE_TYPES.SpreadElement);
     const isTrue = ephemeral.value.type === AST_NODE_TYPES.Literal && ephemeral.value.value === true;
     return messageFlagsAlias !== undefined && !hasFlags && !hasSpread && isTrue;

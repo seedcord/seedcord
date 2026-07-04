@@ -1,13 +1,13 @@
 # no-raw-client-events
 
-Disallow handling a gateway event on the client directly instead of with `@RegisterEvent`.
+Disallow raw client.on handlers for gateway events. Route them through `@RegisterEvent`.
 
-A raw `client.on('messageCreate', ...)` runs outside seedcord. It never sees the event dispatcher or the middleware chain that an `@RegisterEvent` handler runs through.
+A raw `client.on('messageCreate', ...)` runs outside seedcord. It bypasses the event dispatcher and the middleware chain that an `@RegisterEvent` handler runs through.
 
 This rule resolves the receiver's type and fires only when it is a discord.js `Client`. It reads the event name from the argument's type, so `client.on('guildCreate', ...)` and `client.on(Events.GuildCreate, ...)` are treated the same. It does not flag:
 
 - Client meta and lifecycle events (`ready`, `error`, `warn`, `debug`, `cacheSweep`, `invalidated`, and the `shard*` events), which are not gateway dispatch events.
-- `interactionCreate`, which routes through the interaction dispatcher and its handlers, not `@RegisterEvent`.
+- `interactionCreate`, which routes through the interaction dispatcher and its handlers.
 - A dynamic event name, which cannot be classified.
 
 ## Incorrect

@@ -90,6 +90,29 @@ ruleTester.run('no-djs-builder-import', rule, {
             // named (non-destructured) then-callback param used as a namespace
             code: `import('discord.js').then((djs) => { new djs.EmbedBuilder(); })`,
             errors: [{ messageId: 'useBuildersPkg' }]
+        },
+        {
+            // require bound to a plain identifier, then a member access
+            code: dedent`
+                const djs = require('discord.js');
+                new djs.EmbedBuilder();
+            `,
+            errors: [{ messageId: 'useBuildersPkg' }]
+        },
+        {
+            // a wildcard re-export pulls in the CJS builders
+            code: `export * from 'discord.js';`,
+            errors: [{ messageId: 'useBuildersPkg' }]
+        },
+        {
+            // an aliased re-export does not hide the builder
+            code: `export { EmbedBuilder as Embed } from 'discord.js';`,
+            errors: [{ messageId: 'useBuildersPkg' }]
+        },
+        {
+            // a function-expression then-callback, named param used as a namespace
+            code: `import('discord.js').then(function (djs) { new djs.EmbedBuilder(); })`,
+            errors: [{ messageId: 'useBuildersPkg' }]
         }
     ]
 });

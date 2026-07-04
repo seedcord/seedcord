@@ -64,6 +64,15 @@ ruleTester.run('valid-command-name', rule, {
         dedent`
             import { SlashCommandBuilder } from 'discord.js';
             new SlashCommandBuilder().setName('abcdefghijklmnopqrstuvwxyz123456');
+        `,
+        // Discord accepts Thai and Devanagari localized names, which use combining marks
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            new SlashCommandBuilder().setName('ชื่อ');
+        `,
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            new SlashCommandBuilder().setName('हिन्दी');
         `
     ],
     invalid: [
@@ -133,8 +142,7 @@ new SlashCommandBuilder().setName(\`Ban\`);`,
             errors: [{ messageId: 'invalidName' }]
         },
         {
-            // union-typed receiver — TypeScript has no single symbol for a union, so getSymbol() returns
-            // undefined and the old guard bailed; extendsDjsType walks union members instead
+            // a union-typed receiver has no single symbol, so extendsDjsType walks its members
             code: dedent`
                 import { SlashCommandBuilder, SlashCommandSubcommandBuilder } from 'discord.js';
                 declare const b: SlashCommandBuilder | SlashCommandSubcommandBuilder;
@@ -143,12 +151,19 @@ new SlashCommandBuilder().setName(\`Ban\`);`,
             errors: [{ messageId: 'invalidName' }]
         },
         {
-            // subclass of a slash builder — getSymbol().getName() returns the subclass name which is not
-            // in SLASH_BUILDERS; extendsDjsType walks the base chain
+            // a subclass reports its own symbol name, so extendsDjsType walks the base chain
             code: dedent`
                 import { SlashCommandBuilder } from 'discord.js';
                 class MyBuilder extends SlashCommandBuilder {}
                 new MyBuilder().setName('Ban User');
+            `,
+            errors: [{ messageId: 'invalidName' }]
+        },
+        {
+            // a directly-constructed option builder name is validated like a command name
+            code: dedent`
+                import { SlashCommandIntegerOption } from 'discord.js';
+                new SlashCommandIntegerOption().setName('Bad Name');
             `,
             errors: [{ messageId: 'invalidName' }]
         }

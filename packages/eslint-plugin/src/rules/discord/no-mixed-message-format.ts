@@ -25,6 +25,12 @@ function getProperty(node: TSESTree.ObjectExpression, name: string): TSESTree.Pr
     return undefined;
 }
 
+function isV2Type(type: ts.Type): boolean {
+    if (type.isUnion()) return type.types.some(isV2Type);
+    const symbol = type.getSymbol();
+    return symbol !== undefined && V2_BUILDERS.has(symbol.getName()) && isFromDiscordJs(symbol);
+}
+
 export default createRule({
     name: 'no-content-with-v2-components',
     meta: {
@@ -41,12 +47,6 @@ export default createRule({
     create(context) {
         const services = ESLintUtils.getParserServices(context);
 
-        function isV2Type(type: ts.Type): boolean {
-            if (type.isUnion()) return type.types.some(isV2Type);
-            const symbol = type.getSymbol();
-            return symbol !== undefined && V2_BUILDERS.has(symbol.getName()) && isFromDiscordJs(symbol);
-        }
-
         function holdsV2(value: TSESTree.Node): boolean {
             if (value.type === AST_NODE_TYPES.ArrayExpression) {
                 return value.elements.some((element) => {
@@ -62,12 +62,23 @@ export default createRule({
             return elementType !== undefined && isV2Type(elementType);
         }
 
+        // content or embeds can arrive through a spread of another object, so check the spread's type too
+        function findConflictSpread(node: TSESTree.ObjectExpression): TSESTree.SpreadElement | undefined {
+            for (const prop of node.properties) {
+                if (prop.type !== AST_NODE_TYPES.SpreadElement) continue;
+                const type = services.getTypeAtLocation(prop.argument);
+                if (type.getProperty('content') !== undefined || type.getProperty('embeds') !== undefined) return prop;
+            }
+            return undefined;
+        }
+
         return {
             ObjectExpression(node) {
                 const components = getProperty(node, 'components');
                 if (components === undefined) return;
 
-                const conflict = getProperty(node, 'content') ?? getProperty(node, 'embeds');
+                const conflict =
+                    getProperty(node, 'content') ?? getProperty(node, 'embeds') ?? findConflictSpread(node);
                 if (conflict === undefined) return;
 
                 if (holdsV2(components.value)) {

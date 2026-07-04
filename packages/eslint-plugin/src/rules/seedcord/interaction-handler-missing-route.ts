@@ -17,14 +17,6 @@ type HandlerBase = keyof typeof BASE_TO_DECORATOR;
 
 const HANDLER_BASE_NAMES = Object.keys(BASE_TO_DECORATOR) as HandlerBase[];
 
-const DECORATOR_SETS = HANDLER_BASE_NAMES.reduce<Record<HandlerBase, ReadonlySet<string>>>(
-    (acc, base) => {
-        acc[base] = new Set([BASE_TO_DECORATOR[base]]);
-        return acc;
-    },
-    {} as Record<HandlerBase, ReadonlySet<string>>
-);
-
 function isHandlerBase(name: string): name is HandlerBase {
     return name in BASE_TO_DECORATOR;
 }
@@ -72,7 +64,7 @@ export default createRule({
                     return;
                 }
                 // only the decorator matching this handler's base registers it. a wrong-type route still fails
-                if (hasDecoratorNamed(node, DECORATOR_SETS[base])) return;
+                if (hasDecoratorNamed(node, new Set([BASE_TO_DECORATOR[base]]))) return;
 
                 context.report({
                     node: node.id ?? node,

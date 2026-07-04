@@ -64,6 +64,15 @@ ruleTester.run('prefer-v2-component', rule, {
             errors: [{ messageId: 'preferV2' }]
         },
         {
+            // a subclass of EmbedBuilder is still an embed
+            code: dedent`
+                import { EmbedBuilder } from 'discord.js';
+                class BrandEmbed extends EmbedBuilder {}
+                new BrandEmbed();
+            `,
+            errors: [{ messageId: 'preferV2' }]
+        },
+        {
             // a seedcord embed component exposes an EmbedBuilder through .component
             code: dedent`
                 import { BuilderComponent } from './seedcord';

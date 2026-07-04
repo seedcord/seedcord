@@ -60,7 +60,7 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             @AutocompleteRoute('search')
             export class Search extends AutocompleteHandler<'search'> {}
         `,
-        // modal handler with its route (MT-27)
+        // modal handler with its route
         dedent`
             import { ModalHandler } from 'seedcord';
             @ModalRoute(Feedback)
@@ -142,7 +142,7 @@ ruleTester.run('interaction-handler-missing-route', rule, {
             errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
         },
         {
-            // a concrete subclass of a cross-file abstract handler base (FN-12)
+            // a concrete subclass of a cross-file abstract handler base
             code: dedent`
                 import { BaseSlash } from './project-bases';
                 export class BanHandler extends BaseSlash {}

@@ -29,6 +29,14 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
         dedent`
             declare const mock: { reply(options: { ephemeral: boolean }): void };
             mock.reply({ ephemeral: true });
+        `,
+        // a reassigned options variable, its initializer is dead so the rule leaves it alone
+        dedent`
+            import { ChatInputCommandInteraction } from 'discord.js';
+            declare const interaction: ChatInputCommandInteraction;
+            let opts = { ephemeral: true, content: 'hi' };
+            opts = { content: 'bye' };
+            interaction.reply(opts);
         `
     ],
     invalid: [
@@ -43,6 +51,22 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
                 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
                 declare const interaction: ChatInputCommandInteraction;
                 interaction.reply({ content: 'hi', flags: MessageFlags.Ephemeral });
+            `,
+            errors: [{ messageId: 'deprecated' }]
+        },
+        {
+            // a reply destructured off the interaction, MessageFlags imported, the fix still rewrites it
+            code: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                const { reply } = interaction;
+                reply({ ephemeral: true, content: 'hi' });
+            `,
+            output: dedent`
+                import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                const { reply } = interaction;
+                reply({ flags: MessageFlags.Ephemeral, content: 'hi' });
             `,
             errors: [{ messageId: 'deprecated' }]
         },
@@ -126,7 +150,7 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
             errors: [{ messageId: 'deprecated' }]
         },
         {
-            // FP-04: aliased import must produce alias in the fix text, not the original export name
+            // aliased import must put its local alias into the fix text
             code: dedent`
                 import { ChatInputCommandInteraction, MessageFlags as MF } from 'discord.js';
                 declare const interaction: ChatInputCommandInteraction;
@@ -140,7 +164,7 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
             errors: [{ messageId: 'deprecated' }]
         },
         {
-            // FN-21: destructured reply from a BaseInteraction is still flagged
+            // destructured reply from a BaseInteraction is still flagged
             code: dedent`
                 import { ChatInputCommandInteraction } from 'discord.js';
                 declare const interaction: ChatInputCommandInteraction;
@@ -151,7 +175,7 @@ ruleTester.run('prefer-ephemeral-flag', rule, {
             errors: [{ messageId: 'deprecated' }]
         },
         {
-            // MT-25: variable-resolved options with MessageFlags imported — fix rewrites the initializer
+            // variable-resolved options with MessageFlags imported, fix rewrites the initializer
             code: dedent`
                 import { ChatInputCommandInteraction, MessageFlags } from 'discord.js';
                 declare const interaction: ChatInputCommandInteraction;

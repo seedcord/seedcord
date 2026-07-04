@@ -6,7 +6,7 @@ Discord rejects a slash command or option name that is not lowercase, or that us
 
 This rule resolves the type of the builder `setName` is called on. It flags the name only when that builder is a slash command or option builder (`SlashCommandBuilder`, `SlashCommandStringOption`, and the rest of the `SlashCommand*` family), so a `ContextMenuCommandBuilder` name is not flagged. The seedcord `this.instance` form resolves the same way through the component's generic.
 
-There is no autofix. Slugifying a name would rename the command, which desyncs it from its route.
+The rule provides no autofix. Slugifying a name would rename the command and desync it from its route.
 
 ## Incorrect
 

@@ -23,7 +23,7 @@ ruleTester.run('command-builder-missing-register-command', rule, {
             @RegisterCommand('guild', ['123456789'])
             export class AdminCommand extends BuilderComponent<'command'> {}
         `,
-        // a bare @RegisterCommand identifier (no parens) still registers (MT-32)
+        // a bare @RegisterCommand identifier (no parens) still registers
         dedent`
             import { BuilderComponent } from '@seedcord/core';
             @RegisterCommand
@@ -113,12 +113,20 @@ ruleTester.run('command-builder-missing-register-command', rule, {
             errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
         },
         {
-            // a concrete subclass of a cross-file abstract command base, kind read from its type (FN-14)
+            // a concrete subclass of a cross-file abstract command base, kind read from its type
             code: dedent`
                 import { BaseCommand } from './project-bases';
                 export class ProbeCommand extends BaseCommand {}
             `,
             errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
+        },
+        {
+            // a cross-file abstract context_menu base, its kind also read from the type
+            code: dedent`
+                import { BaseContextMenu } from './project-bases';
+                export class ViewProfile extends BaseContextMenu {}
+            `,
+            errors: [{ messageId: 'missingRegister', data: { label: 'context menu command' } }]
         }
     ]
 });

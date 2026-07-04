@@ -66,7 +66,7 @@ ruleTester.run('event-handler-missing-register-event', rule, {
             errors: [{ messageId: 'missingRegister' }]
         },
         {
-            // a concrete subclass of a cross-file abstract handler base (FN-11)
+            // a concrete subclass of a cross-file abstract handler base
             code: dedent`
                 import { BaseEvent } from './project-bases';
                 export class PingPong extends BaseEvent {}

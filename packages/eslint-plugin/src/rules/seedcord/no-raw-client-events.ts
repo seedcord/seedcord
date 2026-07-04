@@ -4,8 +4,8 @@ import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
 import { methodName } from '../../utils';
 
-// client meta and lifecycle events, plus interactionCreate (routed through the interaction dispatcher). not
-// gateway dispatch events, so a raw client.on for them is not flagged.
+// client meta and lifecycle events, plus interactionCreate (routed through the interaction dispatcher).
+// a raw client.on for these is allowed.
 const NON_GATEWAY_EVENTS = new Set([
     'ready',
     'clientReady',
@@ -30,7 +30,7 @@ export default createRule({
     meta: {
         type: 'problem',
         docs: {
-            description: 'Disallow handling a gateway event on the client directly instead of with @RegisterEvent.'
+            description: 'Disallow raw client.on handlers for gateway events. Route them through @RegisterEvent.'
         },
         messages: {
             rawEvent:

@@ -15,9 +15,10 @@ function autocompleteOn(calls: TSESTree.CallExpression[]): boolean {
     return arg?.type === AST_NODE_TYPES.Literal && arg.value === true;
 }
 
-// addChoices appends literal choices, setChoices replaces them. a spread or empty setChoices leaves none provable
+// addChoices appends literal choices, setChoices replaces them
 function declaresChoices(calls: TSESTree.CallExpression[]): boolean {
     let has = false;
+    // reversed to source order, so a later setChoices resets an earlier addChoices
     for (const call of [...calls].reverse()) {
         const name = methodName(call);
         if (name === 'addChoices') {
@@ -26,9 +27,7 @@ function declaresChoices(calls: TSESTree.CallExpression[]): boolean {
             has = call.arguments.some((arg) => {
                 if (arg.type === AST_NODE_TYPES.SpreadElement) return false;
                 if (arg.type === AST_NODE_TYPES.ArrayExpression) {
-                    return (
-                        arg.elements.length > 0 && !arg.elements.some((el) => el?.type === AST_NODE_TYPES.SpreadElement)
-                    );
+                    return arg.elements.some((el) => el !== null && el.type !== AST_NODE_TYPES.SpreadElement);
                 }
                 return true;
             });

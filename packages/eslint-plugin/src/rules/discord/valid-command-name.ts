@@ -22,9 +22,9 @@ const SLASH_BUILDERS = new Set([
     'SlashCommandAttachmentOption'
 ]);
 
-// matches Discord's chat-input name rule
+// mirrors Discord's chat-input name character rule (\p{Ll} already excludes uppercase)
 function isValidChatInputName(name: string): boolean {
-    return /^[-_\p{L}\p{N}]{1,32}$/u.test(name) && name === name.toLowerCase();
+    return /^[\p{Ll}\p{Lm}\p{Lo}\p{N}\p{sc=Devanagari}\p{sc=Thai}_-]{1,32}$/u.test(name);
 }
 
 function staticName(arg: TSESTree.CallExpressionArgument): string | undefined {

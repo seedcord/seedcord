@@ -113,14 +113,30 @@ ruleTester.run('use-custom-id-codec', rule, {
             errors: [{ messageId: 'rawCustomId' }]
         },
         {
-            // FN-18: TSAsExpression wrapping a raw literal bypassed detection
+            // an "as" cast wrapping a raw literal must still be caught
             code: dedent`
                 import { ButtonBuilder } from 'discord.js';
                 new ButtonBuilder().setCustomId('approve' as string).setLabel('Approve');
             `,
             errors: [{ messageId: 'rawCustomId' }]
         },
-        // MT-22: coverage for the five CUSTOM_ID_BUILDERS previously untested
+        {
+            // a "satisfies" wrapping a raw literal must still be caught
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder().setCustomId('approve' satisfies string).setLabel('Approve');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            // the angle-bracket assertion form
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder().setCustomId(<string>'approve').setLabel('Approve');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        // coverage for the remaining CUSTOM_ID_BUILDERS
         {
             code: dedent`
                 import { UserSelectMenuBuilder } from 'discord.js';

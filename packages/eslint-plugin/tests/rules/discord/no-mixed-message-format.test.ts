@@ -23,6 +23,12 @@ ruleTester.run('no-content-with-v2-components', rule, {
         dedent`
             class SectionBuilder {}
             const payload = { content: 'x', components: [new SectionBuilder()] };
+        `,
+        // a spread with no content or embeds is not a conflict
+        dedent`
+            import { ContainerBuilder } from 'discord.js';
+            const base = { flags: 0 };
+            const payload = { ...base, components: [new ContainerBuilder()] };
         `
     ],
     invalid: [
@@ -108,6 +114,15 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 import { ContainerBuilder } from 'discord.js';
                 declare const v2arr: ContainerBuilder[];
                 const payload = { content: 'hi', components: [...v2arr] };
+            `,
+            errors: [{ messageId: 'v2WithContent' }]
+        },
+        {
+            // content arriving through an object spread must still be flagged
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                const base = { content: 'hi' };
+                const payload = { ...base, components: [new ContainerBuilder()] };
             `,
             errors: [{ messageId: 'v2WithContent' }]
         }

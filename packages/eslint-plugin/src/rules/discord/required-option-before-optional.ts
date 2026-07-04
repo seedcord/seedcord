@@ -87,7 +87,10 @@ export default createRule({
                     if (state === 'optional') {
                         seenOptional = true;
                     } else if (seenOptional) {
-                        context.report({ node: call, messageId: 'outOfOrder' });
+                        // so squiggle lands on the offending option
+                        const target =
+                            call.callee.type === AST_NODE_TYPES.MemberExpression ? call.callee.property : call;
+                        context.report({ node: target, messageId: 'outOfOrder' });
                         return;
                     }
                 }

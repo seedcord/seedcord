@@ -45,8 +45,12 @@ export default createRule({
                 let arg = node.arguments[0];
                 if (!arg) return;
 
-                // unwrap type assertions so `'x' as string` is still caught
-                while (arg.type === AST_NODE_TYPES.TSAsExpression || arg.type === AST_NODE_TYPES.TSTypeAssertion) {
+                // unwrap as / satisfies / <T> so a raw literal behind them is still caught
+                while (
+                    arg.type === AST_NODE_TYPES.TSAsExpression ||
+                    arg.type === AST_NODE_TYPES.TSTypeAssertion ||
+                    arg.type === AST_NODE_TYPES.TSSatisfiesExpression
+                ) {
                     arg = arg.expression;
                 }
 
