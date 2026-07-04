@@ -1,6 +1,6 @@
 import { ComponentHandler } from './ComponentHandler';
 
-import type { AnyCustomId } from '@seedcord/kit/internal';
+import type { AnyCustomId } from '@seedcord/core/internal';
 import type { CacheType, ModalSubmitInteraction } from 'discord.js';
 
 /**

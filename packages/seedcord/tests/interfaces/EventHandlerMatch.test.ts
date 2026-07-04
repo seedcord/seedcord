@@ -1,5 +1,5 @@
+import { Notice } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Notice } from '@seedcord/kit';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 

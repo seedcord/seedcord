@@ -1,4 +1,4 @@
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
 import { defineGate } from '@bot/gates';

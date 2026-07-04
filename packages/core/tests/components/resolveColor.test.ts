@@ -1,8 +1,8 @@
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
-import { Colors } from '../../src/components/colors';
-import { resolveColor } from '../../src/components/resolveColor';
+import { Colors } from '@components/colors';
+import { resolveColor } from '@components/resolveColor';
 
 describe('resolveColor', () => {
     it('passes a number through unchanged', () => {

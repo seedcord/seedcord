@@ -1,7 +1,7 @@
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SelectMenuInteractionFor, SelectMenuKind } from '@bDecorators/Interactions';
-import type { AnyCustomId } from '@seedcord/kit/internal';
+import type { AnyCustomId } from '@seedcord/core/internal';
 import type { CacheType } from 'discord.js';
 
 /**

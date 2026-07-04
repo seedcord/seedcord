@@ -4,7 +4,7 @@ import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 import { HasDangerousPermissions, MissingPermissions } from '@bot/notices';
 
 import type { PermSubject } from '@bot/notices/utils';
-import type { Notice } from '@seedcord/kit';
+import type { Notice } from '@seedcord/core';
 import type { Nullable } from '@seedcord/types';
 import type { PermissionsBitField, TextChannel } from 'discord.js';
 

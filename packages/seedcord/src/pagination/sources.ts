@@ -1,9 +1,9 @@
+import { paginate } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError } from '@seedcord/errors/internal';
-import { paginate } from '@seedcord/kit';
 
 import type { PageContext } from './PageContext';
-import type { PageView } from '@seedcord/kit';
+import type { PageView } from '@seedcord/core';
 import type { Promisable } from 'type-fest';
 
 const DEFAULT_PER_PAGE = 10;

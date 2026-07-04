@@ -1,4 +1,4 @@
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 import { GuildMember } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 

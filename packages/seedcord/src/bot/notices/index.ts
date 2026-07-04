@@ -1,5 +1,5 @@
-import { Notice } from '@seedcord/kit';
-import { NoticeCard } from '@seedcord/kit/internal';
+import { Notice } from '@seedcord/core';
+import { NoticeCard } from '@seedcord/core/internal';
 import { toEpochSeconds } from '@seedcord/utils';
 
 import { labelFor, mentionFor } from './utils';

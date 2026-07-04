@@ -2,7 +2,7 @@ import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 
 import { UserNotFound } from '@bot/notices';
 
-import type { Notice } from '@seedcord/kit';
+import type { Notice } from '@seedcord/core';
 import type { Client, User } from 'discord.js';
 
 /**

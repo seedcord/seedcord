@@ -1,12 +1,12 @@
 import 'reflect-metadata';
 
+import { decodeFor, ComponentDefsKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { decodeFor, ComponentDefsKey } from '@seedcord/kit/internal';
 
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
-import type { AnyCustomId, DecodedParams, HasComponentDefs } from '@seedcord/kit/internal';
+import type { AnyCustomId, DecodedParams, HasComponentDefs } from '@seedcord/core/internal';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

@@ -5,8 +5,8 @@ import { Controls } from './controls';
 
 import type { ControlKey, PaginatorControls } from './controls';
 import type { ButtonBuilder, ActionRowBuilder } from '@discordjs/builders';
-import type { PageView } from '@seedcord/kit';
-import type { PageCursor } from '@seedcord/kit/internal';
+import type { PageView } from '@seedcord/core';
+import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse, V2Component } from '@seedcord/types';
 
 /** What `renderItem` returns for one item, a text line or a section. */

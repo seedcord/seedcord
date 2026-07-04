@@ -55,12 +55,14 @@
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/types": "workspace:*",
         "discord-api-types": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

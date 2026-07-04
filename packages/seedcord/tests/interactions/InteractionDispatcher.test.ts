@@ -1,8 +1,8 @@
 /* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 import path from 'node:path';
 
+import { CustomId } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { CustomId } from '@seedcord/kit';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { CONFIRM_DEF } from '@bot/confirm/reserved';

@@ -1,4 +1,4 @@
-import type { Notice } from '@seedcord/kit';
+import type { Notice } from '@seedcord/core';
 
 /**
  * The override a catalog gate accepts, a one-line `message` reword or a full `notice` replacement. Accepted by the

@@ -1,4 +1,4 @@
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 

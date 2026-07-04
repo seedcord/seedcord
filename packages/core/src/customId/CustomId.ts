@@ -5,7 +5,7 @@ import { computeLayoutHash, decodeBody, encodeBody, HASH_LENGTH } from './codec'
 import { InvalidCustomId, StaleCustomId } from './Errors';
 
 import type { CustomIdField, CustomIdShape, DecodedParams } from './Field';
-import type { Snowflake } from 'discord.js';
+import type { Snowflake } from 'discord-api-types/v10';
 import type { NonEmptyTuple } from 'type-fest';
 
 // discord caps a customId at 100 chars.
@@ -78,7 +78,7 @@ export class CustomId<Prefix extends string, Shape extends CustomIdShape = {}> {
     }
 
     /**
-     * Add a Discord ID field, decoded as a string (the discord.js `Snowflake` type).
+     * Add a Discord ID field, decoded as a string (the `Snowflake` type from discord-api-types).
      *
      * @example
      * ```ts

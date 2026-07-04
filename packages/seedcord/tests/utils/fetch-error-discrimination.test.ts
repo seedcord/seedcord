@@ -1,4 +1,4 @@
-import { Notice } from '@seedcord/kit';
+import { Notice } from '@seedcord/core';
 import { DiscordAPIError, Guild, RESTJSONErrorCodes } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 

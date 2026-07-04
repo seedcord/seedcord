@@ -3,8 +3,16 @@
     "extends": "@seedcord/tsconfig/node",
     "compilerOptions": {
         "rootDir": "./",
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "paths": {
+            "@src/*": ["./src/*"],
+            "@components/*": ["./src/components/*"],
+            "@customId/*": ["./src/customId/*"],
+            "@pagination/*": ["./src/pagination/*"],
+            "@registries/*": ["./src/registries/*"],
+            "@stops/*": ["./src/stops/*"]
+        }
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

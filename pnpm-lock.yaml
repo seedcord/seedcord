@@ -513,6 +513,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
       discord-api-types:
         specifier: ^0.38.49
         version: 0.38.49
@@ -529,6 +532,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
 
   packages/docs-engine:
     dependencies:
@@ -666,43 +672,6 @@ importers:
         specifier: catalog:deps
         version: 10.6.0(jiti@2.7.0)
 
-  packages/kit:
-    dependencies:
-      '@discordjs/builders':
-        specifier: catalog:deps
-        version: 1.14.1
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../core
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      discord.js:
-        specifier: catalog:peer
-        version: 14.26.4
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-      vite:
-        specifier: catalog:deps
-        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
-
   packages/plugins:
     dependencies:
       '@seedcord/errors':
@@ -769,9 +738,6 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
-      '@seedcord/kit':
-        specifier: workspace:*
-        version: link:../kit
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services

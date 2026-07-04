@@ -1,5 +1,5 @@
+import { Notice } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { Notice } from '@seedcord/kit';
 import { RateLimiter } from '@seedcord/services';
 import { describe, it, expect, vi } from 'vitest';
 

@@ -1,4 +1,4 @@
-import { Notice, Silence } from '@seedcord/kit';
+import { Notice, Silence } from '@seedcord/core';
 import { Logger } from '@seedcord/services';
 import { DiscordAPIError } from 'discord.js';
 

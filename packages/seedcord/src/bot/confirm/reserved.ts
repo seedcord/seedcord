@@ -1,4 +1,4 @@
-import { CustomId } from '@seedcord/kit';
+import { CustomId } from '@seedcord/core';
 
 const RESERVED_CONFIRM_PREFIX = '__seedcord_confirm';
 
