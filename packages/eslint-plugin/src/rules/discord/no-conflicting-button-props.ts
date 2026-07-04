@@ -6,11 +6,13 @@ import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 
+const BUTTON_STYLE_LINK = 5; // stable Discord wire value for a link button
+
 function setsLinkStyle(call: TSESTree.CallExpression, services: ParserServicesWithTypeInformation): boolean {
     if (methodName(call) !== 'setStyle') return false;
     const arg = call.arguments[0];
     if (arg === undefined) return false;
-    if (arg.type === AST_NODE_TYPES.Literal && arg.value === 5) return true;
+    if (arg.type === AST_NODE_TYPES.Literal && arg.value === BUTTON_STYLE_LINK) return true;
     if (
         arg.type === AST_NODE_TYPES.MemberExpression &&
         arg.object.type === AST_NODE_TYPES.Identifier &&
@@ -19,9 +21,9 @@ function setsLinkStyle(call: TSESTree.CallExpression, services: ParserServicesWi
         arg.property.name === 'Link'
     )
         return true;
-    // type-aware fallback: an identifier or expression whose type resolves to the numeric literal 5
+    // a variable whose type resolves to the numeric literal ButtonStyle.Link
     const type = services.getTypeAtLocation(arg);
-    return type.isNumberLiteral() && type.value === 5;
+    return type.isNumberLiteral() && type.value === BUTTON_STYLE_LINK;
 }
 
 export default createRule({
