@@ -28,6 +28,7 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
         }
     ],
     '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/no-deprecated': 'warn',
     '@typescript-eslint/prefer-nullish-coalescing': 'error',
     '@typescript-eslint/prefer-optional-chain': 'error',
     '@typescript-eslint/no-unnecessary-type-assertion': 'error',
