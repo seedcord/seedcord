@@ -61,11 +61,16 @@ ruleTester.run('no-mixed-message-format', rule, {
             declare const row: RowComponent<'button'>;
             const payload = { content: 'hi', components: [row.component] };
         `,
-        // a user subclass of a v2 builder is invisible to the name-only builder match, a known miss
+        // an undefined value serializes to nothing, so the payload is not mixed
         dedent`
             import { ContainerBuilder } from 'discord.js';
-            class MyContainer extends ContainerBuilder {}
-            const payload = { content: 'hi', components: [new MyContainer()] };
+            const payload = { content: undefined, components: [new ContainerBuilder()] };
+        `,
+        // same through a spread whose content type is exactly undefined
+        dedent`
+            import { ContainerBuilder } from 'discord.js';
+            const base = { content: undefined };
+            const payload = { ...base, components: [new ContainerBuilder()] };
         `
     ],
     invalid: [
@@ -98,6 +103,24 @@ ruleTester.run('no-mixed-message-format', rule, {
                         return { content: 'hi', components: [this.instance] };
                     }
                 }
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // a maybe-undefined value can still carry content at runtime
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                declare const maybe: string | undefined;
+                const payload = { content: maybe, components: [new ContainerBuilder()] };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // a subclass of a v2 builder resolves through its base chain
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                class MyContainer extends ContainerBuilder {}
+                const payload = { content: 'hi', components: [new MyContainer()] };
             `,
             errors: [{ messageId: 'mixedFormat' }]
         },

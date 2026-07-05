@@ -49,11 +49,6 @@ ruleTester.run('select-menu-min-exceeds-max', rule, {
             const MAX = 5;
             new StringSelectMenuBuilder().setCustomId('c').setMinValues(MIN).setMaxValues(MAX);
         `,
-        // a cast widens the literal away, so the bound is not statically provable and it is skipped
-        dedent`
-            import { StringSelectMenuBuilder } from 'discord.js';
-            new StringSelectMenuBuilder().setCustomId('c').setMinValues(5 as number).setMaxValues(2);
-        `,
         // a later setMinValues overrides the bad one
         dedent`
             import { StringSelectMenuBuilder } from 'discord.js';
@@ -131,6 +126,14 @@ ruleTester.run('select-menu-min-exceeds-max', rule, {
             code: dedent`
                 import { StringSelectMenuBuilder } from 'discord.js';
                 new StringSelectMenuBuilder().setCustomId('c').setMinValues(5).setMaxValues(6).setMaxValues(2);
+            `,
+            errors: [{ messageId: 'minOverMax' }]
+        },
+        {
+            // the cast only lies to the checker, the runtime value is still the literal behind it
+            code: dedent`
+                import { StringSelectMenuBuilder } from 'discord.js';
+                new StringSelectMenuBuilder().setCustomId('c').setMinValues(5 as number).setMaxValues(2);
             `,
             errors: [{ messageId: 'minOverMax' }]
         },

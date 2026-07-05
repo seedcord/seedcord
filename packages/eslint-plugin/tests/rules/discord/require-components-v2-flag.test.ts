@@ -70,13 +70,6 @@ ruleTester.run('require-components-v2-flag', rule, {
             declare const interaction: ChatInputCommandInteraction;
             interaction.editReply({ components: [new ContainerBuilder()], flags: MessageFlags.IsComponentsV2 });
         `,
-        // a user subclass of a v2 builder is invisible to the name-only builder match, a known miss
-        dedent`
-            import { TextChannel, ContainerBuilder } from 'discord.js';
-            declare const channel: TextChannel;
-            class MyContainer extends ContainerBuilder {}
-            channel.send({ components: [new MyContainer()] });
-        `,
         // a bitwise combination that includes the flag folds to present
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
@@ -382,6 +375,27 @@ ruleTester.run('require-components-v2-flag', rule, {
                 declare const channel: TextChannel;
                 const payload: MessageCreateOptions = { components: [new ContainerBuilder()] };
                 channel.send(payload);
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // a payload reused across sends is one fix at one declaration, reported once
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                declare const channel: TextChannel;
+                const payload = { components: [new ContainerBuilder()] };
+                channel.send(payload);
+                channel.send(payload);
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // a subclass of a v2 builder resolves through its base chain
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                declare const channel: TextChannel;
+                class MyContainer extends ContainerBuilder {}
+                channel.send({ components: [new MyContainer()] });
             `,
             errors: [{ messageId: 'missingFlag' }]
         },

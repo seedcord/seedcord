@@ -1,14 +1,20 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
-import { SymbolFlags } from 'typescript';
+import { SymbolFlags, TypeFlags } from 'typescript';
 
 import { hasV2Components } from '../../componentsV2';
 import { createRule } from '../../createRule';
 import { getProperty } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
+import type * as ts from 'typescript';
 
 // a message carries content through these fields or through builder components, never both
 const CONTENT_FIELDS = ['content', 'embeds', 'poll', 'stickers', 'sticker_ids'];
+
+// JSON serialization drops an undefined property, so the wire payload carries no such field
+function isDefinitelyUndefined(type: ts.Type): boolean {
+    return (type.flags & TypeFlags.Undefined) !== 0;
+}
 
 export default createRule({
     name: 'no-mixed-message-format',
@@ -36,7 +42,8 @@ export default createRule({
                 const type = services.getTypeAtLocation(prop.argument);
                 const carries = CONTENT_FIELDS.some((name) => {
                     const symbol = type.getProperty(name);
-                    return symbol !== undefined && (symbol.flags & SymbolFlags.Optional) === 0;
+                    if (symbol === undefined || (symbol.flags & SymbolFlags.Optional) !== 0) return false;
+                    return !isDefinitelyUndefined(checker.getTypeOfSymbol(symbol));
                 });
                 if (carries) return true;
             }
@@ -44,8 +51,11 @@ export default createRule({
         }
 
         function hasContentField(node: TSESTree.ObjectExpression): boolean {
-            if (CONTENT_FIELDS.some((name) => getProperty(node, name) !== undefined)) return true;
-            return spreadHasContent(node);
+            const direct = CONTENT_FIELDS.some((name) => {
+                const prop = getProperty(node, name);
+                return prop !== undefined && !isDefinitelyUndefined(services.getTypeAtLocation(prop.value));
+            });
+            return direct || spreadHasContent(node);
         }
 
         return {

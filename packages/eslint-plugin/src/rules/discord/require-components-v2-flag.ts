@@ -167,6 +167,7 @@ export default createRule({
     create(context) {
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
+        const reportedInits = new Set<TSESTree.ObjectExpression>();
 
         function payloadViolates(node: TSESTree.ObjectExpression): boolean {
             return hasV2Components(node, services, checker) && flagState(node, services, checker) === 'absent';
@@ -194,9 +195,14 @@ export default createRule({
                     if (init?.type !== AST_NODE_TYPES.ObjectExpression) continue;
                     // an annotated declaration is already reported at the object literal
                     if (contextualType(init) !== undefined) continue;
+                    // a payload reused across sends is one fix at one declaration
+                    if (reportedInits.has(init)) continue;
                     const contextual = contextualType(arg);
                     if (contextual === undefined || !isMessageOptionsType(contextual)) continue;
-                    if (payloadViolates(init)) context.report({ node: init, messageId: 'missingFlag' });
+                    if (payloadViolates(init)) {
+                        reportedInits.add(init);
+                        context.report({ node: init, messageId: 'missingFlag' });
+                    }
                 }
             }
         };

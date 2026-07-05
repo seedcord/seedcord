@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
-import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
+import { chainRoot, collectChain, isChainTop, methodName, unwrapAssertions } from '../../utils';
 
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 
@@ -16,9 +16,11 @@ function staticNumber(
     services: ParserServicesWithTypeInformation
 ): number | undefined {
     if (arg === undefined || arg.type === AST_NODE_TYPES.SpreadElement) return undefined;
-    if (arg.type === AST_NODE_TYPES.Literal && typeof arg.value === 'number') return arg.value;
+    // a cast only changes the checker's view, the literal behind it is the runtime value
+    const target = unwrapAssertions(arg);
+    if (target.type === AST_NODE_TYPES.Literal && typeof target.value === 'number') return target.value;
     // a const bound resolves through its number-literal type
-    const type = services.getTypeAtLocation(arg);
+    const type = services.getTypeAtLocation(target);
     return type.isNumberLiteral() ? type.value : undefined;
 }
 
