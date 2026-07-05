@@ -1,9 +1,10 @@
 import noChoicesAndAutocomplete from './rules/discord/no-choices-and-autocomplete';
 import noConflictingButtonProps from './rules/discord/no-conflicting-button-props';
-import noContentWithV2Components from './rules/discord/no-content-with-v2-components';
 import noDiscordLimitExceeded from './rules/discord/no-discord-limit-exceeded';
+import noMixedMessageFormat from './rules/discord/no-mixed-message-format';
 import preferEphemeralFlag from './rules/discord/prefer-ephemeral-flag';
 import preferV2Component from './rules/discord/prefer-v2-component';
+import requireComponentsV2Flag from './rules/discord/require-components-v2-flag';
 import requiredOptionBeforeOptional from './rules/discord/required-option-before-optional';
 import validCommandName from './rules/discord/valid-command-name';
 import commandBuilderMissingRegisterCommand from './rules/seedcord/command-builder-missing-register-command';
@@ -29,10 +30,11 @@ const seedcordRules = {
 const djsRules = {
     'no-choices-and-autocomplete': noChoicesAndAutocomplete,
     'no-conflicting-button-props': noConflictingButtonProps,
-    'no-content-with-v2-components': noContentWithV2Components,
+    'no-mixed-message-format': noMixedMessageFormat,
     'no-discord-limit-exceeded': noDiscordLimitExceeded,
     'prefer-ephemeral-flag': preferEphemeralFlag,
     'prefer-v2-component': preferV2Component,
+    'require-components-v2-flag': requireComponentsV2Flag,
     'required-option-before-optional': requiredOptionBeforeOptional,
     'valid-command-name': validCommandName
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;

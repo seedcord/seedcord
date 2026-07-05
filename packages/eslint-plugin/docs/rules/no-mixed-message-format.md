@@ -1,16 +1,18 @@
-# no-content-with-v2-components
+# no-mixed-message-format
 
-Disallow content or embeds on a message that uses a components v2 builder.
+Disallow a message that mixes builder components with content, embeds, poll, or stickers.
 
-A message built with the components v2 system (`ContainerBuilder`, `SectionBuilder`, `TextDisplayBuilder`, `MediaGalleryBuilder`, `FileBuilder`, `SeparatorBuilder`) cannot also set `content` or `embeds`. Discord rejects the payload.
+A Discord message uses one of two formats, never both: builder components (the components v2 layout, `ContainerBuilder`, `SectionBuilder`, `TextDisplayBuilder`, `MediaGalleryBuilder`, `FileBuilder`, `SeparatorBuilder`, `ThumbnailBuilder`), or the content fields (`content`, `embeds`, `poll`, `stickers` / `sticker_ids`). Set both on one payload and Discord rejects it.
 
-This rule reads the type of each element in a `components` array. It flags the message only when one of them is a components v2 builder, so a traditional `ActionRowBuilder` alongside `content` is not flagged. A v2 component reached through a seedcord `BuilderComponent`'s `.component` getter resolves the same way.
+The rule reads types, so it resolves each side wherever it comes from, an inline array, a variable, or a spread of another object. An `ActionRowBuilder` is not a v2 builder, so it can sit alongside `content`. A v2 component reached through a seedcord `BuilderComponent`'s `.component` getter resolves the same way.
 
 ## Incorrect
 
 ```ts
 interaction.reply({ content: 'hi', components: [new ContainerBuilder()] });
-interaction.reply({ embeds: [embed], components: [card.component] });
+interaction.reply({ poll, components: [card.component] });
+const base = { components: [new ContainerBuilder()] };
+interaction.reply({ ...base, content: 'hi' });
 ```
 
 ## Correct

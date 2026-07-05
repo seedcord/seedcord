@@ -66,3 +66,13 @@ export function chainRoot(top: TSESTree.CallExpression): TSESTree.Node {
     }
     return current;
 }
+
+export function getProperty(node: TSESTree.ObjectExpression, name: string): TSESTree.Property | undefined {
+    for (const prop of node.properties) {
+        if (prop.type !== AST_NODE_TYPES.Property) continue;
+        const { key } = prop;
+        if (key.type === AST_NODE_TYPES.Identifier && key.name === name) return prop;
+        if (key.type === AST_NODE_TYPES.Literal && key.value === name) return prop;
+    }
+    return undefined;
+}

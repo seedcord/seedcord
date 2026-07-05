@@ -1,88 +1,57 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
+import { SymbolFlags } from 'typescript';
 
+import { hasV2Components } from '../../componentsV2';
 import { createRule } from '../../createRule';
-import { isFromDiscordJs } from '../../typeUtils';
+import { getProperty } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
-import type * as ts from 'typescript';
 
-const V2_BUILDERS = new Set([
-    'ContainerBuilder',
-    'SectionBuilder',
-    'TextDisplayBuilder',
-    'MediaGalleryBuilder',
-    'FileBuilder',
-    'SeparatorBuilder'
-]);
-
-function getProperty(node: TSESTree.ObjectExpression, name: string): TSESTree.Property | undefined {
-    for (const prop of node.properties) {
-        if (prop.type !== AST_NODE_TYPES.Property) continue;
-        const { key } = prop;
-        if (key.type === AST_NODE_TYPES.Identifier && key.name === name) return prop;
-        if (key.type === AST_NODE_TYPES.Literal && key.value === name) return prop;
-    }
-    return undefined;
-}
-
-function isV2Type(type: ts.Type): boolean {
-    if (type.isUnion()) return type.types.some(isV2Type);
-    const symbol = type.getSymbol();
-    return symbol !== undefined && V2_BUILDERS.has(symbol.getName()) && isFromDiscordJs(symbol);
-}
+// a message carries content through these fields or through builder components, never both
+const CONTENT_FIELDS = ['content', 'embeds', 'poll', 'stickers', 'sticker_ids'];
 
 export default createRule({
-    name: 'no-content-with-v2-components',
+    name: 'no-mixed-message-format',
     meta: {
         type: 'problem',
         docs: {
-            description: 'Disallow content or embeds on a message that uses a components v2 builder.'
+            description: 'Disallow a message that mixes builder components with content, embeds, poll, or stickers.'
         },
         messages: {
-            v2WithContent: 'A components v2 message cannot also set content or embeds. Discord rejects the payload.'
+            mixedFormat:
+                'A message cannot mix builder components with content, embeds, poll, or stickers. Discord rejects the payload.'
         },
         schema: []
     },
     defaultOptions: [],
     create(context) {
         const services = ESLintUtils.getParserServices(context);
+        const checker = services.program.getTypeChecker();
 
-        function holdsV2(value: TSESTree.Node): boolean {
-            if (value.type === AST_NODE_TYPES.ArrayExpression) {
-                return value.elements.some((element) => {
-                    if (element === null) return false;
-                    if (element.type === AST_NODE_TYPES.SpreadElement) {
-                        const elementType = services.getTypeAtLocation(element.argument).getNumberIndexType();
-                        return elementType !== undefined && isV2Type(elementType);
-                    }
-                    return isV2Type(services.getTypeAtLocation(element));
-                });
-            }
-            const elementType = services.getTypeAtLocation(value).getNumberIndexType();
-            return elementType !== undefined && isV2Type(elementType);
-        }
-
-        // content or embeds can arrive through a spread of another object, so check the spread's type too
-        function findConflictSpread(node: TSESTree.ObjectExpression): TSESTree.SpreadElement | undefined {
+        // the content side can also arrive through a spread of another object, so read the spread's type.
+        // an optional field may be absent at runtime. only a required one is certainly set
+        function spreadHasContent(node: TSESTree.ObjectExpression): boolean {
             for (const prop of node.properties) {
                 if (prop.type !== AST_NODE_TYPES.SpreadElement) continue;
                 const type = services.getTypeAtLocation(prop.argument);
-                if (type.getProperty('content') !== undefined || type.getProperty('embeds') !== undefined) return prop;
+                const carries = CONTENT_FIELDS.some((name) => {
+                    const symbol = type.getProperty(name);
+                    return symbol !== undefined && (symbol.flags & SymbolFlags.Optional) === 0;
+                });
+                if (carries) return true;
             }
-            return undefined;
+            return false;
+        }
+
+        function hasContentField(node: TSESTree.ObjectExpression): boolean {
+            if (CONTENT_FIELDS.some((name) => getProperty(node, name) !== undefined)) return true;
+            return spreadHasContent(node);
         }
 
         return {
             ObjectExpression(node) {
-                const components = getProperty(node, 'components');
-                if (components === undefined) return;
-
-                const conflict =
-                    getProperty(node, 'content') ?? getProperty(node, 'embeds') ?? findConflictSpread(node);
-                if (conflict === undefined) return;
-
-                if (holdsV2(components.value)) {
-                    context.report({ node: conflict, messageId: 'v2WithContent' });
+                if (hasV2Components(node, services, checker) && hasContentField(node)) {
+                    context.report({ node, messageId: 'mixedFormat' });
                 }
             }
         };

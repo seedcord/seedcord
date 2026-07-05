@@ -1,18 +1,18 @@
 import dedent from 'dedent';
 
-import rule from '../../../src/rules/discord/no-content-with-v2-components';
+import rule from '../../../src/rules/discord/no-mixed-message-format';
 import { createTypedRuleTester } from '../../typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();
 
-ruleTester.run('no-content-with-v2-components', rule, {
+ruleTester.run('no-mixed-message-format', rule, {
     valid: [
         // v2 components with no content or embeds
         dedent`
             import { ContainerBuilder } from 'discord.js';
             const payload = { components: [new ContainerBuilder()] };
         `,
-        // content with a traditional action row, not a v2 component
+        // an action row is not a v2 builder, so it can sit alongside content
         dedent`
             import { ActionRowBuilder } from 'discord.js';
             const payload = { content: 'hi', components: [new ActionRowBuilder()] };
@@ -29,6 +29,19 @@ ruleTester.run('no-content-with-v2-components', rule, {
             import { ContainerBuilder } from 'discord.js';
             const base = { flags: 0 };
             const payload = { ...base, components: [new ContainerBuilder()] };
+        `,
+        // a spread type that only declares optional content fields does not set them
+        dedent`
+            import { ContainerBuilder } from 'discord.js';
+            import type { MessageCreateOptions } from 'discord.js';
+            declare const base: MessageCreateOptions;
+            const payload = { ...base, components: [new ContainerBuilder()] };
+        `,
+        // a later components key overrides the v2 spread, so the final payload is not v2
+        dedent`
+            import { ContainerBuilder, ActionRowBuilder } from 'discord.js';
+            const base = { components: [new ContainerBuilder()] };
+            const payload = { ...base, components: [new ActionRowBuilder()], content: 'hi' };
         `
     ],
     invalid: [
@@ -37,14 +50,14 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 import { ContainerBuilder } from 'discord.js';
                 const payload = { content: 'hi', components: [new ContainerBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             code: dedent`
                 import { ContainerBuilder, EmbedBuilder } from 'discord.js';
                 const payload = { embeds: [new EmbedBuilder()], components: [new ContainerBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             // a v2 component reached through a seedcord container's .component getter
@@ -53,42 +66,49 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 declare const card: BuilderComponent<'container'>;
                 const payload = { content: 'hi', components: [card.component] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             code: dedent`
                 import { SectionBuilder } from 'discord.js';
                 const payload = { content: 'x', components: [new SectionBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             code: dedent`
                 import { TextDisplayBuilder } from 'discord.js';
                 const payload = { content: 'x', components: [new TextDisplayBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             code: dedent`
                 import { MediaGalleryBuilder } from 'discord.js';
                 const payload = { content: 'x', components: [new MediaGalleryBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             code: dedent`
                 import { FileBuilder } from 'discord.js';
                 const payload = { content: 'x', components: [new FileBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             code: dedent`
                 import { SeparatorBuilder } from 'discord.js';
                 const payload = { content: 'x', components: [new SeparatorBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            code: dedent`
+                import { ThumbnailBuilder } from 'discord.js';
+                const payload = { content: 'x', components: [new ThumbnailBuilder()] };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             // a v2 component stored in a variable is still a v2 component
@@ -97,7 +117,7 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 const comps = [new ContainerBuilder()];
                 const payload = { content: 'hi', components: comps };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             // union element type: exercises the isUnion branch in isV2Type
@@ -106,7 +126,7 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 declare const comps: Array<ContainerBuilder | ActionRowBuilder>;
                 const payload = { content: 'hi', components: comps };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             // spread of a v2 array into the inline components list must still be flagged
@@ -115,7 +135,7 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 declare const v2arr: ContainerBuilder[];
                 const payload = { content: 'hi', components: [...v2arr] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
         },
         {
             // content arriving through an object spread must still be flagged
@@ -124,7 +144,42 @@ ruleTester.run('no-content-with-v2-components', rule, {
                 const base = { content: 'hi' };
                 const payload = { ...base, components: [new ContainerBuilder()] };
             `,
-            errors: [{ messageId: 'v2WithContent' }]
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // a poll and a builder component cannot share a message
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                declare const poll: object;
+                const payload = { poll, components: [new ContainerBuilder()] };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // so do stickers
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                declare const sticker: unknown;
+                const payload = { stickers: [sticker], components: [new ContainerBuilder()] };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // and the raw sticker_ids field
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                const payload = { sticker_ids: ['123'], components: [new ContainerBuilder()] };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // the builder component can arrive through a spread while content is inline
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                const base = { components: [new ContainerBuilder()] };
+                const payload = { ...base, content: 'hi' };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
         }
     ]
 });
