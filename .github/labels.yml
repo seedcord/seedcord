@@ -13,6 +13,9 @@
   color: 8fbc62
 - name: '📦 errors'
   color: 6ebc62
+- name: '📦 rate-limiter'
+  color: 62bc6a
+  description: in-memory rate limiter and key helper
 - name: '📦 kit'
   color: 62bc78
   description: component builders, notices, customId codec

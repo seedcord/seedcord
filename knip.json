@@ -17,7 +17,7 @@
         "packages/types": {},
         "packages/plugins": {},
         "packages/errors": {},
-        "packages/kit": {},
+        "packages/rate-limiter": {},
         "packages/cli": {
             "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
         },

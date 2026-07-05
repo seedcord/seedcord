@@ -18,7 +18,8 @@
     "@seedcord/types": "0.7.1",
     "@seedcord/ui": "0.2.0",
     "@seedcord/utils": "0.7.0",
-    "@seedcord/core": "0.0.1"
+    "@seedcord/core": "0.0.1",
+    "@seedcord/rate-limiter": "0.0.1"
   },
   "changesets": [
     "bus-hmr-registration",
