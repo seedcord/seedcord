@@ -84,6 +84,14 @@ ruleTester.run('middleware-missing-register-decorator', rule, {
                 export class LogMw extends BaseMw {}
             `,
             errors: [{ messageId: 'missingMiddleware' }]
+        },
+        {
+            // an anonymous default export is still a concrete middleware
+            code: dedent`
+                import { BaseMw } from './project-bases';
+                export default class extends BaseMw {}
+            `,
+            errors: [{ messageId: 'missingMiddleware' }]
         }
     ]
 });

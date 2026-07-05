@@ -72,6 +72,14 @@ ruleTester.run('event-handler-missing-register-event', rule, {
                 export class PingPong extends BaseEvent {}
             `,
             errors: [{ messageId: 'missingRegister' }]
+        },
+        {
+            // an anonymous default export is still a concrete handler
+            code: dedent`
+                import { BaseEvent } from './project-bases';
+                export default class extends BaseEvent {}
+            `,
+            errors: [{ messageId: 'missingRegister' }]
         }
     ]
 });

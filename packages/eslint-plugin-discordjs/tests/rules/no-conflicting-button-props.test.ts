@@ -48,6 +48,14 @@ ruleTester.run('no-conflicting-button-props', rule, {
                 }
             }
             new CustomCard().setCustomId('card').setURL('https://example.com');
+        `,
+        // a local enum sharing the ButtonStyle name resolves to its own value, 1 is not the link style
+        dedent`
+            import { ButtonBuilder } from 'discord.js';
+            enum ButtonStyle { Link = 1 }
+            new ButtonBuilder()
+                .setStyle(ButtonStyle.Link)
+                .setCustomId('x');
         `
     ],
     invalid: [

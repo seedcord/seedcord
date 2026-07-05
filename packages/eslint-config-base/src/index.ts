@@ -1,5 +1,5 @@
 import { defineConfig } from 'eslint/config';
-import path from 'path';
+import path from 'node:path';
 import prettierConfig from 'eslint-config-prettier';
 import { importX } from 'eslint-plugin-import-x';
 import eslintPrettier from 'eslint-plugin-prettier';
@@ -23,7 +23,6 @@ import {
     TYPESCRIPT_LANGUAGE_OPTIONS
 } from './constants';
 import {
-    DOCUMENTATION_RULES,
     GENERAL_RULES,
     IMPORT_RULES,
     OVERRIDE_RULES,
@@ -92,7 +91,9 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             ...tseslint.configs.recommended.map((c) => ({ ...c, files: [...TS_FILES] })),
             ...tseslint.configs.recommendedTypeChecked.map((c) => ({ ...c, files: [...TS_FILES] })),
             ...tseslint.configs.strict.map((c) => ({ ...c, files: [...TS_FILES] })),
-            ...tseslint.configs.stylistic.map((c) => ({ ...c, files: [...TS_FILES] }))
+            ...tseslint.configs.stylistic.map((c) => ({ ...c, files: [...TS_FILES] })),
+            // gated here because these rules need the plugin the presets above register
+            { files: [...TS_FILES], rules: merge({}, TYPESCRIPT_RULES) }
         );
     }
 
@@ -126,6 +127,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             files: [...ALL_FILES],
             pluginName: 'security',
             plugin: eslintSecurity,
+            // justified: the plugin's rules type and eslint's RulesRecord differ on the severity shape
             rules: merge({}, eslintSecurity.configs.recommended.rules) as Linter.RulesRecord
         }),
 
@@ -151,7 +153,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             files: [...TS_FILES],
             pluginName: 'tsdoc',
             plugin: eslintTsdoc,
-            rules: merge({}, TYPESCRIPT_RULES, TSDOC_RULES, DOCUMENTATION_RULES)
+            rules: merge({}, TSDOC_RULES)
         }),
 
         pluginBlock({

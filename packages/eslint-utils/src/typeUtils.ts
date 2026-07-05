@@ -1,5 +1,6 @@
 import { TypeFlags } from 'typescript';
 
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
 
 // the symbol is declared inside the discord.js or @discordjs packages, so a same-named local class is excluded
@@ -52,6 +53,20 @@ export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: st
 export function booleanLiteralValue(checker: ts.TypeChecker, type: ts.Type): boolean | undefined {
     if ((type.flags & TypeFlags.BooleanLiteral) === 0) return undefined;
     return checker.typeToString(type) === 'true';
+}
+
+// an anonymous default export has no id, so its instance type comes off the construct signature
+export function classInstanceType(
+    node: TSESTree.ClassDeclaration,
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker
+): ts.Type | undefined {
+    if (node.id) {
+        const symbol = services.getSymbolAtLocation(node.id);
+        return symbol === undefined ? undefined : checker.getDeclaredTypeOfSymbol(symbol);
+    }
+    const type = services.getTypeAtLocation(node);
+    return type.getConstructSignatures()[0]?.getReturnType() ?? type;
 }
 
 // match by name only. a path-origin guard is ambiguous because "seedcord" appears in the plugin's own source paths

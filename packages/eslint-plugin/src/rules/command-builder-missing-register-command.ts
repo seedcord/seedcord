@@ -1,4 +1,9 @@
-import { extendsSeedcordType, forEachSeedcordImport, hasDecoratorNamed } from '@seedcord/eslint-utils';
+import {
+    classInstanceType,
+    extendsSeedcordType,
+    forEachSeedcordImport,
+    hasDecoratorNamed
+} from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
@@ -34,11 +39,8 @@ function crossFileCommandKind(
     checker: ts.TypeChecker,
     services: ParserServicesWithTypeInformation
 ): CommandKind | undefined {
-    if (!node.id) return undefined;
-    const symbol = services.getSymbolAtLocation(node.id);
-    if (!symbol) return undefined;
-    const classType = checker.getDeclaredTypeOfSymbol(symbol);
-    if (!extendsSeedcordType(checker, classType, BUILDER_COMPONENT)) return undefined;
+    const classType = classInstanceType(node, services, checker);
+    if (!classType || !extendsSeedcordType(checker, classType, BUILDER_COMPONENT)) return undefined;
     const typeProperty = classType.getProperty('type');
     if (!typeProperty) return undefined;
     const kindType = checker.getTypeOfSymbolAtLocation(typeProperty, services.esTreeNodeToTSNodeMap.get(node));
@@ -75,7 +77,9 @@ export default createRule({
                 const superName = node.superClass.name;
 
                 let kind: CommandKind | undefined;
-                if (builderComponentNames.has(superName)) kind = commandKindOf(node);
+                // the checker fallback also resolves a declared type alias to its literal kind
+                if (builderComponentNames.has(superName))
+                    kind = commandKindOf(node) ?? crossFileCommandKind(node, checker, services);
                 else if (intermediateKinds.has(superName)) kind = intermediateKinds.get(superName);
                 else kind = crossFileCommandKind(node, checker, services);
                 if (kind === undefined) return;

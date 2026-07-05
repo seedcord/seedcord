@@ -1,5 +1,5 @@
 import { extendsDjsType, chainRoot, collectChain, isChainTop, methodName } from '@seedcord/eslint-utils';
-import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
 
@@ -11,16 +11,8 @@ function setsLinkStyle(call: TSESTree.CallExpression, services: ParserServicesWi
     if (methodName(call) !== 'setStyle') return false;
     const arg = call.arguments[0];
     if (arg === undefined) return false;
-    if (arg.type === AST_NODE_TYPES.Literal && arg.value === BUTTON_STYLE_LINK) return true;
-    if (
-        arg.type === AST_NODE_TYPES.MemberExpression &&
-        arg.object.type === AST_NODE_TYPES.Identifier &&
-        arg.object.name === 'ButtonStyle' &&
-        arg.property.type === AST_NODE_TYPES.Identifier &&
-        arg.property.name === 'Link'
-    )
-        return true;
-    // a variable whose type resolves to the numeric literal ButtonStyle.Link
+    // the type covers every form (literal, enum member, const), and a shadowed ButtonStyle resolves
+    // to its own value
     const type = services.getTypeAtLocation(arg);
     return type.isNumberLiteral() && type.value === BUTTON_STYLE_LINK;
 }

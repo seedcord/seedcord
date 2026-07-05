@@ -148,6 +148,14 @@ ruleTester.run('interaction-handler-missing-route', rule, {
                 export class BanHandler extends BaseSlash {}
             `,
             errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
+        },
+        {
+            // an anonymous default export is still a concrete handler
+            code: dedent`
+                import { BaseSlash } from './project-bases';
+                export default class extends BaseSlash {}
+            `,
+            errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
         }
     ]
 });

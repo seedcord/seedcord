@@ -51,4 +51,19 @@ describe('createConfig plugin toggles', () => {
         const rules = await resolveRules({}, 'src/example.ts');
         expect(Object.keys(rules).filter((name) => name.startsWith('@seedcord/'))).toEqual([]);
     });
+
+    it('registers both plugins together', async () => {
+        const rules = await resolveRules(
+            { registerDiscordjsPlugin: true, registerSeedcordPlugin: true },
+            'src/example.ts'
+        );
+        expect(rules['discordjs/no-mixed-message-format']).toBeDefined();
+        expect(rules['@seedcord/no-djs-builder-import']).toBeDefined();
+    });
+
+    it('keeps the typescript rules when tsdoc is disabled', async () => {
+        const rules = await resolveRules({ registerTsdocPlugin: false }, 'src/example.ts');
+        expect(rules['@typescript-eslint/no-deprecated']).toBeDefined();
+        expect(rules['tsdoc/syntax']).toBeUndefined();
+    });
 });

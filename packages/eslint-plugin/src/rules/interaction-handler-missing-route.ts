@@ -1,4 +1,9 @@
-import { extendsSeedcordType, forEachSeedcordImport, hasDecoratorNamed } from '@seedcord/eslint-utils';
+import {
+    classInstanceType,
+    extendsSeedcordType,
+    forEachSeedcordImport,
+    hasDecoratorNamed
+} from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
@@ -49,10 +54,9 @@ export default createRule({
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
 
                 let base = bases.get(node.superClass.name);
-                if (base === undefined && node.id) {
-                    const symbol = services.getSymbolAtLocation(node.id);
-                    if (symbol) {
-                        const classType = checker.getDeclaredTypeOfSymbol(symbol);
+                if (base === undefined) {
+                    const classType = classInstanceType(node, services, checker);
+                    if (classType) {
                         base = HANDLER_BASE_NAMES.find((name) => extendsSeedcordType(checker, classType, name));
                     }
                 }

@@ -127,6 +127,23 @@ ruleTester.run('command-builder-missing-register-command', rule, {
                 export class ViewProfile extends BaseContextMenu {}
             `,
             errors: [{ messageId: 'missingRegister', data: { label: 'context menu command' } }]
+        },
+        {
+            // a declared type alias resolves to a literal kind through the checker
+            code: dedent`
+                import { BuilderComponent } from '@seedcord/core';
+                type Kind = 'command';
+                export class Dyn extends BuilderComponent<Kind> {}
+            `,
+            errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
+        },
+        {
+            // an anonymous default export is still a concrete command
+            code: dedent`
+                import { BaseCommand } from './project-bases';
+                export default class extends BaseCommand {}
+            `,
+            errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
         }
     ]
 });

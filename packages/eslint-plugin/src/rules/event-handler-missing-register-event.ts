@@ -1,4 +1,9 @@
-import { extendsSeedcordType, forEachSeedcordImport, hasDecoratorNamed } from '@seedcord/eslint-utils';
+import {
+    classInstanceType,
+    extendsSeedcordType,
+    forEachSeedcordImport,
+    hasDecoratorNamed
+} from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
@@ -35,11 +40,9 @@ export default createRule({
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
 
                 let isBase = bases.has(node.superClass.name);
-                if (!isBase && node.id) {
-                    const symbol = services.getSymbolAtLocation(node.id);
-                    if (symbol) {
-                        isBase = extendsSeedcordType(checker, checker.getDeclaredTypeOfSymbol(symbol), EVENT_HANDLER);
-                    }
+                if (!isBase) {
+                    const classType = classInstanceType(node, services, checker);
+                    if (classType) isBase = extendsSeedcordType(checker, classType, EVENT_HANDLER);
                 }
                 if (!isBase) return;
                 // an abstract subclass becomes a base for later concrete handlers (same-file intermediate)
