@@ -3,7 +3,7 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 import { hasV2Components } from '../../componentsV2';
 import { createRule } from '../../createRule';
 import { isFromDiscordJs } from '../../typeUtils';
-import { resolveConstInit } from '../../utils';
+import { propertyKeyIs, resolveConstInit } from '../../utils';
 
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
@@ -124,14 +124,6 @@ function flagValueState(value: TSESTree.Node, services: ParserServicesWithTypeIn
     return elementState(value, services);
 }
 
-function isFlagsKey(prop: TSESTree.Property): boolean {
-    if (prop.computed) return false;
-    const { key } = prop;
-    if (key.type === AST_NODE_TYPES.Identifier) return key.name === 'flags';
-    // a non-computed, non-identifier key is a string or number literal
-    return key.value === 'flags';
-}
-
 // object properties apply left to right, so the last flags contributor (a key or a spread) wins
 function flagState(
     node: TSESTree.ObjectExpression,
@@ -140,7 +132,7 @@ function flagState(
 ): FlagState {
     let state: FlagState = 'absent';
     for (const prop of node.properties) {
-        if (prop.type === AST_NODE_TYPES.Property && isFlagsKey(prop)) {
+        if (prop.type === AST_NODE_TYPES.Property && propertyKeyIs(prop, 'flags')) {
             state = flagValueState(prop.value, services);
         } else if (prop.type === AST_NODE_TYPES.SpreadElement) {
             const symbol = services.getTypeAtLocation(prop.argument).getProperty('flags');

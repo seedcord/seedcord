@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
-import { resolveConstInit } from '../../utils';
+import { resolveConstInit, unwrapAssertions } from '../../utils';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
@@ -17,19 +17,6 @@ const CUSTOM_ID_BUILDERS = new Set([
     'ModalBuilder',
     'TextInputBuilder'
 ]);
-
-// unwrap as / satisfies / <T> so a raw literal behind them is still flagged
-function unwrapAssertions(expr: TSESTree.Expression): TSESTree.Expression {
-    let current = expr;
-    while (
-        current.type === AST_NODE_TYPES.TSAsExpression ||
-        current.type === AST_NODE_TYPES.TSTypeAssertion ||
-        current.type === AST_NODE_TYPES.TSSatisfiesExpression
-    ) {
-        current = current.expression;
-    }
-    return current;
-}
 
 function isRawString(expr: TSESTree.Expression): boolean {
     if (expr.type === AST_NODE_TYPES.Literal) return typeof expr.value === 'string';

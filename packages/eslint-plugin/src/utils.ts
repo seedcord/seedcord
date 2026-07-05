@@ -79,12 +79,29 @@ export function resolveConstInit(
     return definition.node.init ?? undefined;
 }
 
+export function propertyKeyIs(prop: TSESTree.Property, name: string): boolean {
+    if (prop.computed) return false;
+    const { key } = prop;
+    if (key.type === AST_NODE_TYPES.Identifier) return key.name === name;
+    // a non-computed, non-identifier key is a string or number literal
+    return key.value === name;
+}
+
 export function getProperty(node: TSESTree.ObjectExpression, name: string): TSESTree.Property | undefined {
-    for (const prop of node.properties) {
-        if (prop.type !== AST_NODE_TYPES.Property) continue;
-        const { key } = prop;
-        if (key.type === AST_NODE_TYPES.Identifier && key.name === name) return prop;
-        if (key.type === AST_NODE_TYPES.Literal && key.value === name) return prop;
+    return node.properties.find(
+        (prop): prop is TSESTree.Property => prop.type === AST_NODE_TYPES.Property && propertyKeyIs(prop, name)
+    );
+}
+
+// unwrap as / satisfies / <T> so the expression behind them is still readable
+export function unwrapAssertions(expr: TSESTree.Expression): TSESTree.Expression {
+    let current = expr;
+    while (
+        current.type === AST_NODE_TYPES.TSAsExpression ||
+        current.type === AST_NODE_TYPES.TSTypeAssertion ||
+        current.type === AST_NODE_TYPES.TSSatisfiesExpression
+    ) {
+        current = current.expression;
     }
-    return undefined;
+    return current;
 }
