@@ -1,14 +1,15 @@
 {
-    "name": "@seedcord/eslint-config",
+    "name": "@seedcord/eslint-config-base",
     "type": "module",
-    "version": "1.5.0-next.0",
-    "description": "ESlint config for Seedcord projects",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Internal ESLint config content, bundled into @seedcord/eslint-config",
+    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/eslint-config"
+        "directory": "packages/eslint-config-base"
     },
-    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
             "import": {
@@ -31,12 +32,6 @@
             }
         }
     },
-    "files": [
-        "dist",
-        "package.json",
-        "README.md",
-        "LICENSE"
-    ],
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
@@ -44,10 +39,7 @@
         "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
         "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
         "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
-        "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
+        "tc": "tsgo --noEmit"
     },
     "peerDependencies": {
         "eslint": "^9.22.0 || ^10.4.0",
@@ -81,11 +73,8 @@
         "typescript-eslint": "catalog:eslint"
     },
     "devDependencies": {
-        "@seedcord/eslint-config-base": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@types/lodash.merge": "^4.6.9",
         "eslint": "catalog:eslint"
-    },
-    "publishConfig": {
-        "access": "public",
-        "provenance": true
     }
 }

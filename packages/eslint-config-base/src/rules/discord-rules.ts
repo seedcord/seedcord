@@ -34,7 +34,7 @@ const DISCORD_JS_BUILDERS = [
     'UserSelectMenuBuilder'
 ];
 
-/** discord.js-specific lint rules (opt-in via `discordRules`). Bans the discord.js copy of the component builders. */
+// opt-in via the discordRules option
 export const DISCORD_RULES: Linter.RulesRecord = {
     'no-restricted-imports': [
         'error',

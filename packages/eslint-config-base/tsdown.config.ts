@@ -13,7 +13,7 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
     outDir: 'dist',
-    deps: { alwaysBundle: ['@seedcord/eslint-config-base'] },
+    deps: { skipNodeModulesBundle: true },
     fixedExtension: true,
     checks: { legacyCjs: false }
 });

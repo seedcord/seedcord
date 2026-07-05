@@ -47,13 +47,13 @@
         "@typescript-eslint/utils": "^8.61.1"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@typescript-eslint/rule-tester": "^8.61.1",
         "dedent": "^1.7.2",
         "discord.js": "catalog:peer",
-        "eslint": "catalog:deps"
+        "eslint": "catalog:eslint"
     },
     "publishConfig": {
         "access": "public",

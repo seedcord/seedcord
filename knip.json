@@ -26,8 +26,26 @@
             "ignore": ["tests/mock/**"]
         },
         "packages/eslint-config": {
-            "ignoreDependencies": ["@typescript-eslint/eslint-plugin", "@typescript-eslint/parser"]
+            "ignoreDependencies": [
+                "@types/eslint-plugin-security",
+                "@typescript-eslint/eslint-plugin",
+                "@typescript-eslint/parser",
+                "eslint-config-prettier",
+                "eslint-import-resolver-typescript",
+                "eslint-plugin-better-tailwindcss",
+                "eslint-plugin-import-x",
+                "eslint-plugin-mdx",
+                "eslint-plugin-prettier",
+                "eslint-plugin-security",
+                "eslint-plugin-tailwind-canonical-classes",
+                "eslint-plugin-tsdoc",
+                "eslint-plugin-unicorn",
+                "lodash.merge",
+                "prettier",
+                "typescript-eslint"
+            ]
         },
+        "packages/eslint-config-base": {},
         "packages/eslint-plugin": {},
         "packages/tsdown-config": {},
         "packages/tsconfig": {},
