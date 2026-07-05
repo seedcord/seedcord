@@ -56,13 +56,7 @@
         "discord-api-types": "catalog:deps"
     },
     "peerDependencies": {
-        "discord.js": "catalog:peer",
         "typescript": "catalog:peer"
-    },
-    "peerDependenciesMeta": {
-        "discord.js": {
-            "optional": true
-        }
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

@@ -1,4 +1,4 @@
-import type { BotColor } from './colors';
+import type { BotColor } from '@seedcord/types';
 
 // must be 'Default' so the container guard in applyBotColor leaves the accent unset
 const DEFAULT_COLOR: BotColor = 'Default';

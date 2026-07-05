@@ -49,6 +49,7 @@ describe('CommandRegistry Integration', () => {
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
+        expect(seedcord.version).toBe('0.0.0');
         if (!seedcord.bot.commands) throw new Error('Commands not initialized');
         await seedcord.bot.commands.init();
 

@@ -1,7 +1,7 @@
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
-import type { ClientOptions, ColorResolvable } from 'discord.js';
+import type { BotColor } from '../Types/Colors';
 
 // interactions, events, commands, services, bus subscribers
 
@@ -27,25 +27,6 @@ export type InteractionsConfig =
       }
     | {
           /** No interactions configured */
-          path: null;
-      };
-
-/**
- * Djs Events handlers
- */
-export type EventsConfig =
-    | {
-          /**
-           * Path to dir containing event handlers.
-           */
-          path: string;
-          /**
-           * Optional path to event middleware directory
-           */
-          middlewares?: string;
-      }
-    | {
-          /** No events configured */
           path: null;
       };
 
@@ -84,13 +65,7 @@ export type SubscribersConfig =
  */
 export interface BotConfig {
     interactions: InteractionsConfig;
-    events: EventsConfig;
     commands: CommandsConfig;
-
-    /**
-     * Discord.js ClientOptions passed directly to the Client constructor
-     */
-    clientOptions: ClientOptions;
 
     /**
      * Optional emoji map. Each value is an emoji name loaded from your application emojis, or a
@@ -157,7 +132,7 @@ export interface Config {
      *
      * Omit for Discord's default color.
      */
-    botColor?: ColorResolvable;
+    botColor?: BotColor;
 
     /**
      * Whether coordinated shutdown registers OS signal handlers and runs teardown tasks.

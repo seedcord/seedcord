@@ -5,6 +5,8 @@ export type * from '@registries/SlashOptionRegistry';
 
 export { RegisterCommand } from '@decorators/Command';
 
+export type { CoreBase } from '@interfaces/CoreBase';
+
 export { BuilderComponent, RowComponent } from '@components/Component';
 export { type RowType, type BuilderType } from '@components/builderTypes';
 

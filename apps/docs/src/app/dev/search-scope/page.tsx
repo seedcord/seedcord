@@ -23,7 +23,7 @@ interface MockResult extends CommandAction {
     pkg: Pkg;
 }
 
-const PACKAGES = ['seedcord', 'services', 'plugins', 'utils', 'types'] as const;
+const PACKAGES = ['seedcord', 'services', 'plugins', 'utils', 'types', 'rate-limiter'] as const;
 type Pkg = (typeof PACKAGES)[number];
 
 const PACKAGE_OPTIONS: SegmentedControlOption<Pkg>[] = PACKAGES.map((pkg) => ({ value: pkg, label: pkg }));
@@ -81,11 +81,11 @@ const MOCK: MockResult[] = [
         'SeedcordErrorCode.PluginKpgServiceDecoratorMissing'
     ),
     entry('services', 'Logger', 'class'),
-    entry('services', 'RateLimiter', 'class'),
+    entry('rate-limiter', 'MemoryRateLimiter', 'class'),
     entry('services', 'HealthCheck', 'class'),
     entry('services', 'StrictEventEmitter', 'class'),
     entry('services', 'LogLevel', 'enum'),
-    entry('services', 'hit', 'method', 'RateLimiter#hit'),
+    entry('rate-limiter', 'charge', 'method', 'MemoryRateLimiter#charge'),
     entry('plugins', 'Mongo', 'class'),
     entry('plugins', 'KpgService', 'class'),
     entry('plugins', 'PluginConfig', 'interface'),

@@ -50,8 +50,8 @@ describe('catalog gate combinators', () => {
     });
 
     it('commits a real Cooldown nested in an and after the whole set passes', async () => {
-        const hit = vi.fn();
-        const rateLimiter = { peek: () => ({ limited: false }), hit };
+        const charge = vi.fn();
+        const rateLimiter = { peek: () => ({ limited: false }), charge };
         const ctx = {
             core: { rateLimiter, config: { ownerIds: [] } },
             user: { id: 'u1' },
@@ -63,6 +63,6 @@ describe('catalog gate combinators', () => {
         await runGates([and(GuildOnly(), Cooldown(5))], ctx);
 
         // the and passed, so Cooldown's commit charged the slot
-        expect(hit).toHaveBeenCalledTimes(1);
+        expect(charge).toHaveBeenCalledTimes(1);
     });
 });

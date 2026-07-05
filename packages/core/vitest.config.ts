@@ -15,6 +15,7 @@ export default mergeConfig(
                 '@components': path.resolve(__dirname, './src/components'),
                 '@customId': path.resolve(__dirname, './src/customId'),
                 '@decorators': path.resolve(__dirname, './src/decorators'),
+                '@interfaces': path.resolve(__dirname, './src/interfaces'),
                 '@notices': path.resolve(__dirname, './src/notices'),
                 '@pagination': path.resolve(__dirname, './src/pagination'),
                 '@registries': path.resolve(__dirname, './src/registries'),

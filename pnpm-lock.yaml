@@ -889,6 +889,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
       type-fest:
         specifier: catalog:deps
         version: 5.7.0

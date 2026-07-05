@@ -1,4 +1,5 @@
-import type { Config, CustomIdMatcher } from '@seedcord/types';
+import type { GatewayConfig } from '@interfaces/Config';
+import type { CustomIdMatcher } from '@seedcord/types';
 
 interface TestConfigOverrides {
     interactions?: string;
@@ -11,7 +12,7 @@ interface TestConfigOverrides {
     ownerIds?: string[];
 }
 
-export function testConfig(overrides: TestConfigOverrides = {}): Config {
+export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
     const {
         interactions,
         interactionMiddlewares,
@@ -23,7 +24,7 @@ export function testConfig(overrides: TestConfigOverrides = {}): Config {
         ownerIds
     } = overrides;
 
-    const config: Config = {
+    const config: GatewayConfig = {
         bot: {
             interactions:
                 interactions === undefined

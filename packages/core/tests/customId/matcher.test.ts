@@ -19,9 +19,7 @@ describe('CustomIdMatcher', () => {
         const config = {
             bot: {
                 interactions: { path: 'x', ignoreCustomIds: [id] },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
+                commands: { path: null }
             },
             subscribers: { path: null }
         } satisfies Config;
@@ -32,9 +30,7 @@ describe('CustomIdMatcher', () => {
             bot: {
                 // @ts-expect-error a raw string is no longer a valid ignoreCustomIds entry
                 interactions: { path: 'x', ignoreCustomIds: ['raw-string'] },
-                events: { path: null },
-                commands: { path: null },
-                clientOptions: { intents: [] }
+                commands: { path: null }
             },
             subscribers: { path: null }
         } satisfies Config;

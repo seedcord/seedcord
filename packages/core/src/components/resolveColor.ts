@@ -3,7 +3,7 @@ import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal
 
 import { Colors } from './colors';
 
-import type { BotColor } from './colors';
+import type { BotColor } from '@seedcord/types';
 
 const MAX_COLOR = 0xff_ff_ff;
 const RED_SHIFT = 16;

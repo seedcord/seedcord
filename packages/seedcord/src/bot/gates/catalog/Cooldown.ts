@@ -20,7 +20,7 @@ import type { EpochMs } from '@seedcord/types';
  * // one use per channel, rewording the refusal with the retry time
  * Cooldown('10s', {
  *     per: 'channel',
- *     message: (expires) => `Slow down. Try again <t:${Math.round(expires / 1000)}:R>.`
+ *     message: (resetAt) => `Slow down. Try again <t:${Math.round(resetAt / 1000)}:R>.`
  * });
  * ```
  *
@@ -45,14 +45,14 @@ export interface CooldownOptions {
     limit?: number;
     /**
      * Reword the refusal, keeping the standard notice card. Receives the epoch ms the key frees up, so the
-     * text can include the retry time with `<t:${Math.round(expires / 1000)}:R>`.
+     * text can include the retry time with `<t:${Math.round(resetAt / 1000)}:R>`.
      */
-    message?: (expires: EpochMs) => string;
+    message?: (resetAt: EpochMs) => string;
     /**
      * Replace the refusal Notice entirely, for full control or a translated copy. Receives the epoch ms the
      * key frees up.
      */
-    notice?: (expires: EpochMs) => Notice;
+    notice?: (resetAt: EpochMs) => Notice;
 }
 
 // each Cooldown() gets its own bucket, so two handlers that both use a cooldown do not share one window
@@ -75,7 +75,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
  *
  * @see {@link Gated}
- * @see {@link RateLimiter}
+ * @see {@link IRateLimiter}
  *
  * @example
  * ```ts
@@ -128,14 +128,14 @@ export function Cooldown(
 
     return defineEffectGate(
         'Cooldown',
-        (ctx) => {
-            const result = ctx.core.rateLimiter.peek(keyOf(ctx), window);
+        async (ctx) => {
+            const result = await ctx.core.rateLimiter.peek(keyOf(ctx), window);
             if (!result.limited) return;
-            if (options?.notice) throw options.notice(result.expires);
-            throw new OnCooldown(result.expires, options?.message?.(result.expires));
+            if (options?.notice) throw options.notice(result.resetAt);
+            throw new OnCooldown(result.resetAt, options?.message?.(result.resetAt));
         },
-        (ctx) => {
-            ctx.core.rateLimiter.hit(keyOf(ctx), window);
+        async (ctx) => {
+            await ctx.core.rateLimiter.charge(keyOf(ctx), window);
         }
     );
 }
