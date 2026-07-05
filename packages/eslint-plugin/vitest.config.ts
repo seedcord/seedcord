@@ -8,7 +8,8 @@ export default mergeConfig(
     rootConfig,
     defineConfig({
         test: {
-            testTimeout: 15_000
+            // each type-aware test builds a TS program, and prePush runs every suite in parallel
+            testTimeout: 60_000
         }
     })
 );
