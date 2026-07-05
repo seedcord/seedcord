@@ -1,12 +1,12 @@
 {
-    "name": "@seedcord/eslint-plugin",
+    "name": "eslint-plugin-discordjs",
     "type": "module",
     "version": "0.0.1",
-    "description": "ESLint rules for seedcord bots",
+    "description": "ESLint rules for discord.js bots",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/eslint-plugin"
+        "directory": "packages/eslint-plugin-discordjs"
     },
     "types": "./dist/index.d.mts",
     "exports": {
@@ -44,8 +44,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@typescript-eslint/utils": "catalog:eslint",
-        "eslint-plugin-discordjs": "workspace:*"
+        "@typescript-eslint/utils": "catalog:eslint"
     },
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:*",

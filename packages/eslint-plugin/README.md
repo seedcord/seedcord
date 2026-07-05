@@ -7,6 +7,16 @@
 
 # @seedcord/eslint-plugin
 
-ESLint plugin for seedcord and discord.js bots
+ESLint rules for seedcord bots. The `seedcord` preset layers these over [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended`, so one entry covers both the framework rules and the discord.js rules.
+
+```js
+// eslint.config.js
+import seedcord from '@seedcord/eslint-plugin';
+
+export default [
+    // ...your existing config
+    ...seedcord.configs.seedcord
+];
+```
 
 Part of the [seedcord](https://github.com/seedcord/seedcord) framework. Until a major v1.0.0 release, expect breaking changes in minor versions.

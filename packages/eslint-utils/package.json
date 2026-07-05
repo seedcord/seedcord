@@ -1,0 +1,46 @@
+{
+    "name": "@seedcord/eslint-utils",
+    "type": "module",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Internal shared utilities for the seedcord eslint plugins",
+    "types": "./dist/index.d.mts",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "packages/eslint-utils"
+    },
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.ts' --cache",
+        "lint:fix": "eslint 'src/**/*.ts' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,json,md}' --cache",
+        "tc": "tsgo --noEmit"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@typescript-eslint/utils": "catalog:eslint"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config-base": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsdown-config": "workspace:*",
+        "eslint": "catalog:eslint"
+    }
+}

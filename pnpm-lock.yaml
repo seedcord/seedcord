@@ -64,6 +64,12 @@ catalogs:
     '@typescript-eslint/parser':
       specifier: ^8.61.1
       version: 8.62.1
+    '@typescript-eslint/rule-tester':
+      specifier: ^8.61.1
+      version: 8.62.1
+    '@typescript-eslint/utils':
+      specifier: ^8.61.1
+      version: 8.62.1
     eslint:
       specifier: ^10.6.0
       version: 10.6.0
@@ -145,6 +151,9 @@ catalogs:
     '@vitest/coverage-v8':
       specifier: ^4.1.9
       version: 4.1.9
+    dedent:
+      specifier: ^1.7.2
+      version: 1.7.2
     jsdom:
       specifier: ^29.1.1
       version: 29.1.1
@@ -785,7 +794,78 @@ importers:
   packages/eslint-plugin:
     dependencies:
       '@typescript-eslint/utils':
-        specifier: ^8.61.1
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint-plugin-discordjs:
+        specifier: workspace:*
+        version: link:../eslint-plugin-discordjs
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@seedcord/eslint-utils':
+        specifier: workspace:*
+        version: link:../eslint-utils
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@typescript-eslint/rule-tester':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      dedent:
+        specifier: catalog:test
+        version: 1.7.2
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      eslint:
+        specifier: catalog:eslint
+        version: 10.6.0(jiti@2.7.0)
+
+  packages/eslint-plugin-discordjs:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@seedcord/eslint-utils':
+        specifier: workspace:*
+        version: link:../eslint-utils
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@typescript-eslint/rule-tester':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      dedent:
+        specifier: catalog:test
+        version: 1.7.2
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      eslint:
+        specifier: catalog:eslint
+        version: 10.6.0(jiti@2.7.0)
+
+  packages/eslint-utils:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
         version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
       typescript:
         specifier: catalog:peer
@@ -800,15 +880,6 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
-      '@typescript-eslint/rule-tester':
-        specifier: ^8.61.1
-        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
-      dedent:
-        specifier: ^1.7.2
-        version: 1.7.2
-      discord.js:
-        specifier: catalog:peer
-        version: 14.26.4
       eslint:
         specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
@@ -971,9 +1042,9 @@ importers:
         specifier: catalog:deps
         version: 0.22.3(@typescript/native-preview@7.0.0-dev.20260630.1)(oxc-resolver@11.21.3)(tsx@4.22.4)(typescript@6.0.3)
     devDependencies:
-      '@seedcord/eslint-config':
+      '@seedcord/eslint-config-base':
         specifier: workspace:*
-        version: link:../eslint-config
+        version: link:../eslint-config-base
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig

@@ -11,6 +11,7 @@
     "@seedcord/eslint-config": "1.4.3",
     "@seedcord/eslint-config-base": "0.0.1",
     "@seedcord/eslint-plugin": "0.0.1",
+    "@seedcord/eslint-utils": "0.0.1",
     "@seedcord/home": "0.0.1",
     "@seedcord/mock": "0.2.22",
     "@seedcord/plugins": "0.7.2",
@@ -20,6 +21,7 @@
     "@seedcord/types": "0.7.1",
     "@seedcord/ui": "0.2.0",
     "@seedcord/utils": "0.7.0",
+    "eslint-plugin-discordjs": "0.0.1",
     "seedcord": "0.15.0"
   },
   "changesets": [
