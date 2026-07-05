@@ -23,10 +23,10 @@ export const happyStartup: Scenario = {
     async run(ctx) {
         ctx.store.setFrameworkVersion('0.16.0');
         ctx.store.setPhase('starting');
-        ctx.store.setStatus('Loading config...');
+        ctx.store.setStatus('Loading config…');
         await ctx.wait(LOAD_MS);
 
-        ctx.store.setStatus('Connecting to Discord...');
+        ctx.store.setStatus('Connecting to Discord…');
         await ctx.wait(CONNECT_MS);
 
         ctx.store.setPhase('running');

@@ -1,6 +1,4 @@
-import { Silence } from '@seedcord/core';
-
-import { defineGate } from '../Gate';
+import { defineGate, Silence } from '@seedcord/core';
 
 import type { EventGateContext } from '../Gate';
 

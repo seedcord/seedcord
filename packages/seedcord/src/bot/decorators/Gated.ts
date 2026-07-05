@@ -1,9 +1,7 @@
 import { GatedMetadataKey } from '@seedcord/core/internal';
 
-import { runGates } from '@bot/gates/runGates';
-
-import type { Gate, GateContext, GateContextBase } from '@bot/gates';
 import type { AnyHandlerCtor, FitAll } from '@bot/gates/matching';
+import type { Gate, GateContextBase } from '@seedcord/core';
 import type { NonEmptyTuple } from 'type-fest';
 
 /**
@@ -45,17 +43,4 @@ export function Gated<const Gates extends NonEmptyTuple<Gate<GateContextBase>>>(
         const existing = (Reflect.getMetadata(GatedMetadataKey, ctor) as readonly Gate[] | undefined) ?? [];
         Reflect.defineMetadata(GatedMetadataKey, [...existing, ...gates], ctor);
     };
-}
-
-/**
- * Runs the gates a handler was decorated with against the given context. The dispatcher calls this before
- * `execute`, inside the boundary, so a refusal renders or drops.
- *
- * @param handlerCtor - The handler class whose attached gates are read from metadata.
- * @param ctx - The context passed to each gate, supplying what the gate checks against.
- */
-export async function runHandlerGates(handlerCtor: object, ctx: GateContext): Promise<void> {
-    const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
-    if (!gates) return;
-    await runGates(gates, ctx);
 }

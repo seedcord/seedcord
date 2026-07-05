@@ -3,11 +3,10 @@ import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
 import type { BotColor } from '../Types/Colors';
 
-// interactions, events, commands, services, bus subscribers
+// interactions, commands, services, bus subscribers
 
 /**
- * Djs Interactions handlers
- *
+ * Interaction handlers configuration
  */
 export type InteractionsConfig =
     | {
@@ -31,7 +30,7 @@ export type InteractionsConfig =
       };
 
 /**
- * Djs SlashCommands and ContextMenuCommands
+ * Slash commands and context menu commands
  */
 export type CommandsConfig =
     | {

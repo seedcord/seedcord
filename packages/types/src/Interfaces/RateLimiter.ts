@@ -4,8 +4,8 @@ import type { EpochMs } from '../Types/Epoch';
  * A usage window for an {@link IRateLimiter} key.
  */
 export interface RateLimitWindow {
-    /** Window length in milliseconds. */
-    delay: number;
+    /** The sliding-window length. */
+    windowMs: number;
     /**
      * Uses allowed inside the window before the key is limited.
      *
@@ -28,11 +28,11 @@ export interface RateLimitResult {
     /** Slots left in the current window. Exact after a `charge`, advisory on a `peek`. */
     remaining: number;
     /** Milliseconds until {@link RateLimitResult.resetAt}. `0` when not limited. */
-    retryAfter: number;
+    retryAfterMs: number;
 }
 
 /**
- * Sliding-window rate limiting keyed by caller-built strings, reachable at `core.rateLimiter`.
+ * Sliding-window rate limiting keyed by caller-built strings, available as `core.rateLimiter`.
  *
  * Async so one interface spans the in-memory default and durable store backends. The in-memory
  * implementation resolves synchronously, so the `await` costs no event-loop yield.

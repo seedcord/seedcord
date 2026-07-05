@@ -2,6 +2,10 @@ export { setBotColor } from '@components/botColorHolder';
 
 export type { CommandMeta } from '@decorators/Command';
 
+export { runHandlerGates } from '@gates/runGates';
+export { pickNotice } from '@gates/catalog/options';
+export type { GateFitsWith } from '@gates/matching';
+
 export { GateNotice, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '@notices/index';
 
 export {

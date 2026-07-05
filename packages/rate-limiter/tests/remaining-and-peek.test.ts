@@ -8,7 +8,7 @@ describe('MemoryRateLimiter remaining semantics', () => {
 
     it('reports one fewer remaining on charge than on peek for the same state', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000, limit: 1 };
+        const window = { windowMs: 1000, limit: 1 };
 
         // peek is advisory, so a fresh key shows the slot as still available
         expect(await limiter.peek('user', window)).toMatchObject({ remaining: 1 });
@@ -18,7 +18,7 @@ describe('MemoryRateLimiter remaining semantics', () => {
 
     it('keeps peek remaining constant across repeated peeks and records nothing', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000, limit: 3 };
+        const window = { windowMs: 1000, limit: 3 };
 
         expect(await limiter.peek('user', window)).toMatchObject({ remaining: 3 });
         expect(await limiter.peek('user', window)).toMatchObject({ remaining: 3 });

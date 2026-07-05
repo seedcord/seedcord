@@ -1,13 +1,13 @@
-import { Notice } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, vi } from 'vitest';
 
-import { Cooldown } from '@bot/gates/catalog';
-import { OnCooldown } from '@bot/notices';
+import { Cooldown } from '@gates/catalog/Cooldown';
+import { OnCooldown } from '@notices/index';
+import { Notice } from '@stops/Notice';
 
-import type { GateContextBase } from '@bot/gates';
-import type { Core } from '@interfaces/Core';
+import type { GateContextBase } from '@gates/Gate';
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { ReplyResponse } from '@seedcord/types';
 
 // a full-replacement refusal proving the notice factory receives the runtime retry-after
@@ -22,13 +22,13 @@ class CustomRefusal extends Notice {
 
 function cdCtx(
     rateLimiter: object,
-    ids: { user?: string; guildId?: string; channelId?: string } = {}
+    ids: { userId?: string; guildId?: string; channelId?: string } = {}
 ): GateContextBase {
-    // the gate reads core.rateLimiter and user/guild/channel ids, so a minimal cast stands in
-    const core = { rateLimiter } as unknown as Core;
+    // the gate reads core.rateLimiter and the id scalars, so a minimal cast stands in
+    const core = { rateLimiter } as unknown as CoreBase;
     return {
         core,
-        user: { id: ids.user ?? 'u1' },
+        userId: ids.userId ?? 'u1',
         guildId: ids.guildId ?? 'g1',
         channelId: ids.channelId ?? 'c1'
     } as unknown as GateContextBase;
@@ -118,11 +118,11 @@ describe('Cooldown', () => {
         expect(caught).toBeInstanceOf(CustomRefusal);
     });
 
-    it('accepts a duration string and converts it to the window delay', async () => {
+    it('accepts a duration string and converts it to the window length', async () => {
         const peek = vi.fn().mockReturnValue({ limited: false });
         await Cooldown('30m').check(cdCtx({ peek, charge: vi.fn() }));
-        // 30 minutes in ms is the window the limiter sees
-        expect(peek.mock.calls[0]?.[1]).toEqual({ delay: 1_800_000 });
+        // 30 minutes in ms is the window passed to the limiter
+        expect(peek.mock.calls[0]?.[1]).toEqual({ windowMs: 1_800_000 });
     });
 
     it('rejects a malformed duration literal at compile time', () => {
@@ -133,11 +133,50 @@ describe('Cooldown', () => {
     it('throws a SeedcordError for a duration that types but parses to nothing', () => {
         let caught: unknown;
         try {
-            // '0s' is a valid duration literal by type but parses to 0, not a positive window
+            // '0s' types as a ValidDuration but parseDuration returns null for it
             Cooldown('0s');
         } catch (error) {
             caught = error;
         }
         expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
+    });
+
+    it.each([0, -1])('throws a SeedcordError for the non-positive numeric duration %d', (duration) => {
+        let caught: unknown;
+        try {
+            Cooldown(duration);
+        } catch (error) {
+            caught = error;
+        }
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.GateInvalidCooldownDuration)).toBe(true);
+    });
+
+    it('converts a numeric duration from seconds to the window length', async () => {
+        const peek = vi.fn().mockReturnValue({ limited: false });
+        await Cooldown(30).check(cdCtx({ peek, charge: vi.fn() }));
+        expect(peek.mock.calls[0]?.[1]).toEqual({ windowMs: 30_000 });
+    });
+
+    it.each([
+        ['channel' as const, 'c9', { channelId: 'c9' }],
+        ['user' as const, 'u9', { userId: 'u9' }]
+    ])('keys by the %s scope', async (per, expected, ids) => {
+        const peek = vi.fn().mockReturnValue({ limited: false });
+        await Cooldown(5, { per }).check(cdCtx({ peek, charge: vi.fn() }, ids));
+        expect(String(peek.mock.calls[0]?.[0])).toContain(expected);
+    });
+
+    it('falls back to the global bucket when the scope value is missing', async () => {
+        const peek = vi.fn().mockReturnValue({ limited: false });
+        const ctx = {
+            core: { rateLimiter: { peek, charge: vi.fn() } },
+            userId: null,
+            guildId: 'g1',
+            channelId: 'c1'
+        } as unknown as GateContextBase;
+
+        await Cooldown(5).check(ctx);
+
+        expect(String(peek.mock.calls[0]?.[0])).toContain('global');
     });
 });

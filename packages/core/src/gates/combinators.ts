@@ -1,6 +1,6 @@
-import { Notice } from '@seedcord/core';
-
-import { NeedsAny, NotAllowed } from '@bot/notices';
+import { NeedsAny, NotAllowed } from '@notices/index';
+import { Fault } from '@stops/Fault';
+import { Notice } from '@stops/Notice';
 
 import { markCommits, rollbackCommits, runCheck } from './effects';
 import { defineGate } from './Gate';
@@ -35,14 +35,14 @@ export function and<Gates extends TwoOrMore<Gate<GateContextBase>>>(
     ...gates: Gates
 ): Gate<IntersectRequired<Gates> & GateContextBase, JoinNames<Gates, ' & '>>;
 export function and(...gates: readonly Gate<GateContextBase>[]): Gate<GateContextBase> {
-    return defineGate('and', async (ctx) => {
+    return defineGate(gates.map((gate) => gate.name).join(' & '), async (ctx) => {
         for (const gate of gates) {
             await runCheck(gate, ctx);
         }
     });
 }
 
-// the author's message when every or arm refuses, replacing the default list or neutral refusal
+// the caller-supplied refusal when every or arm refuses, replacing the default list or neutral refusal
 interface OrOptions {
     fail: Notice | ((ctx: GateContextBase) => Notice);
 }
@@ -93,7 +93,7 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
     const options = last !== undefined && isOrOptions(last) ? last : undefined;
     const gates = (options ? args.slice(0, -1) : args) as readonly Gate<GateContextBase>[];
 
-    return defineGate('or', async (ctx) => {
+    return defineGate(gates.map((gate) => gate.name).join(' | '), async (ctx) => {
         const summaries: string[] = [];
         let everyArmHasSummary = true;
         for (const gate of gates) {
@@ -102,8 +102,8 @@ export function or(...args: readonly (Gate<GateContextBase> | OrOptions)[]): Gat
                 await runCheck(gate, ctx);
                 return;
             } catch (error) {
-                // only a refusal is an arm declining, a Fault, a Silence, or a raw error stops everything
-                if (error instanceof Notice && !error.report) {
+                // only a refusal is an arm declining, a Fault (even report-false), a Silence, or a raw error stops everything
+                if (error instanceof Notice && !(error instanceof Fault) && !error.report) {
                     // the arm may have queued an effect's commit before refusing, drop it so the winner does not carry it
                     rollbackCommits(ctx, mark);
                     if (error.summary === undefined) everyArmHasSummary = false;

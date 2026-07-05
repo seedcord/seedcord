@@ -2,38 +2,33 @@ import { GuildMember } from 'discord.js';
 
 import { deriveEventActor } from '@miscellaneous/deriveEventActor';
 
-import { discardCommits, runCheck, runCommits } from './effects';
-
-import type { EventGateContext, Gate, GateContext, GateContextBase, InteractionGateContext } from './Gate';
+import type { EventGateContext, InteractionGateContext } from './Gate';
 import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { ClientEvents } from 'discord.js';
 
-/**
- * Runs each gate's check in order, so the first refusal propagates to the dispatcher boundary. An effect
- * gate's commit runs once the whole set passes.
- */
-export async function runGates(gates: readonly Gate<GateContextBase>[], ctx: GateContext): Promise<void> {
-    try {
-        for (const gate of gates) {
-            await runCheck(gate, ctx);
-        }
-        await runCommits(ctx);
-    } finally {
-        discardCommits(ctx);
-    }
-}
-
 export function interactionGateContext(interaction: Repliables, core: Core): InteractionGateContext {
+    const rawMember = interaction.member;
+    // an uncached member still arrives as the raw payload shape, whose roles are already ids. the cache
+    // additionally carries the everyone role (id equals the guild id), which the raw payload never does,
+    // so it is filtered out for one shape across cache states
+    const memberRoleIds =
+        rawMember instanceof GuildMember
+            ? [...rawMember.roles.cache.keys()].filter((id) => id !== interaction.guildId)
+            : (rawMember?.roles ?? []);
+
     return {
         kind: 'interaction',
         interaction,
         core,
         user: interaction.user,
         guild: interaction.guild,
-        member: interaction.member instanceof GuildMember ? interaction.member : null,
+        member: rawMember instanceof GuildMember ? rawMember : null,
+        userId: interaction.user.id,
         guildId: interaction.guildId,
-        channelId: interaction.channelId
+        channelId: interaction.channelId,
+        memberRoleIds,
+        memberPermissions: interaction.memberPermissions?.bitfield ?? null
     };
 }
 
@@ -51,7 +46,11 @@ export function eventGateContext(
         user: actor.user,
         guild: actor.guild,
         member: actor.member,
+        userId: actor.user?.id ?? null,
         guildId: actor.guild?.id ?? null,
-        channelId: actor.channelId
+        channelId: actor.channelId,
+        // the cache carries the everyone role (id equals the guild id), filtered out to match the interaction shape
+        memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
+        memberPermissions: actor.member?.permissions.bitfield ?? null
     };
 }

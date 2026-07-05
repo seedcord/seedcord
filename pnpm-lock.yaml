@@ -529,6 +529,9 @@ importers:
       '@seedcord/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@seedcord/rate-limiter':
+        specifier: workspace:*
+        version: link:../rate-limiter
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig

@@ -89,10 +89,7 @@ export class Seedcord extends Pluggable implements Core {
         this.registerStartupTasks();
     }
 
-    /**
-     * Resets the singleton state.
-     * @internal
-     */
+    /** @internal */
     // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
         Seedcord.isInstantiated = false;

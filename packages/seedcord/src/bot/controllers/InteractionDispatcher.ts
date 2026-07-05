@@ -4,7 +4,8 @@ import {
     InteractionRouteKeys,
     InteractionRoutes,
     MiddlewareMetadataKey,
-    prefixOf
+    prefixOf,
+    runHandlerGates
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -14,7 +15,6 @@ import chalk from 'chalk';
 import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
-import { runHandlerGates } from '@bDecorators/Gated';
 import { MiddlewareType } from '@bDecorators/Middlewares';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
 import { UnhandledEvent } from '@bot/defaults';
@@ -408,6 +408,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
             // @ts-expect-error TS can't infer the type of interaction here
             const handler = new HandlerCtor(interaction as Repliables, this.core);
+            // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
             if (!interaction.isAutocomplete()) {
                 await runHandlerGates(HandlerCtor, interactionGateContext(interaction as Repliables, this.core));
             }

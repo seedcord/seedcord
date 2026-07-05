@@ -1,19 +1,21 @@
-import { Notice } from '@seedcord/core';
 import { describe, it, expect, vi } from 'vitest';
 
-import { and, Cooldown, GuildOnly, or, OwnerOnly } from '@bot/gates';
-import { runGates } from '@bot/gates/runGates';
-import { NotInGuild, NotOwner } from '@bot/notices';
+import { GuildOnly, OwnerOnly } from '@gates/catalog/access';
+import { Cooldown } from '@gates/catalog/Cooldown';
+import { and, or } from '@gates/combinators';
+import { runGates } from '@gates/runGates';
+import { NotInGuild, NotOwner } from '@notices/index';
+import { Notice } from '@stops/Notice';
 
-import type { GateContext, GateContextBase } from '@bot/gates';
-import type { Core } from '@interfaces/Core';
+import type { GateContextBase } from '@gates/Gate';
+import type { CoreBase } from '@interfaces/CoreBase';
 
 function ctxOf(opts: { guild?: boolean; userId?: string; owners?: string[] }): GateContextBase {
-    // the gates read core.config.ownerIds, user, and guild, so a minimal cast stands in
+    // the gates read core.config.ownerIds and the id scalars, so a minimal cast stands in
     return {
-        core: { config: { ownerIds: opts.owners ?? [] } } as unknown as Core,
-        user: { id: opts.userId ?? 'u1' },
-        guild: opts.guild ? {} : null
+        core: { config: { ownerIds: opts.owners ?? [] } } as unknown as CoreBase,
+        userId: opts.userId ?? 'u1',
+        guildId: opts.guild ? 'g1' : null
     } as unknown as GateContextBase;
 }
 
@@ -54,15 +56,13 @@ describe('catalog gate combinators', () => {
         const rateLimiter = { peek: () => ({ limited: false }), charge };
         const ctx = {
             core: { rateLimiter, config: { ownerIds: [] } },
-            user: { id: 'u1' },
-            guild: {},
+            userId: 'u1',
             guildId: 'g1',
             channelId: 'c1'
-        } as unknown as GateContext;
+        } as unknown as GateContextBase;
 
         await runGates([and(GuildOnly(), Cooldown(5))], ctx);
 
-        // the and passed, so Cooldown's commit charged the slot
         expect(charge).toHaveBeenCalledTimes(1);
     });
 });

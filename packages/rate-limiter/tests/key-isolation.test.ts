@@ -9,7 +9,7 @@ describe('MemoryRateLimiter key isolation', () => {
 
     it('limits one key without affecting a different key', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000 };
+        const window = { windowMs: 1000 };
 
         await limiter.charge('a', window);
         expect(await limiter.charge('a', window)).toMatchObject({ limited: true });
@@ -18,7 +18,7 @@ describe('MemoryRateLimiter key isolation', () => {
 
     it('tracks one entry per distinct key', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000 };
+        const window = { windowMs: 1000 };
 
         await limiter.charge('a', window);
         await limiter.charge('b', window);
@@ -29,7 +29,7 @@ describe('MemoryRateLimiter key isolation', () => {
 
     it('collides only when buildKey composes the same scope', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000 };
+        const window = { windowMs: 1000 };
 
         await limiter.charge(buildKey('cooldown', '111'), window);
         expect(await limiter.charge(buildKey('cooldown', '111'), window)).toMatchObject({ limited: true });
@@ -38,7 +38,7 @@ describe('MemoryRateLimiter key isolation', () => {
 
     it('resets one key and leaves the others intact', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000 };
+        const window = { windowMs: 1000 };
         await limiter.charge('a', window);
         await limiter.charge('b', window);
 

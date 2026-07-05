@@ -54,6 +54,17 @@ describe('RequirePermissions', () => {
             RequirePermissions([PermissionFlagsBits.BanMembers]).check(ctxOf(null, null))
         ).rejects.toBeInstanceOf(NotInGuild);
     });
+
+    it('refuses an uncached member in a guild with its own message', async () => {
+        let caught: unknown;
+        await RequirePermissions([PermissionFlagsBits.BanMembers])
+            .check(ctxOf(null, guildFake()))
+            .catch((error: unknown) => {
+                caught = error;
+            });
+        expect(caught).toBeInstanceOf(NotInGuild);
+        expect((caught as NotInGuild).message).toBe('Your server member data could not be resolved. Try again.');
+    });
 });
 
 describe('RequireBotPermissions', () => {
@@ -124,5 +135,16 @@ describe('RequireRole', () => {
 
     it('refuses in a DM with NotInGuild', async () => {
         await expect(RequireRole('r1').check(ctxOf(null, null))).rejects.toBeInstanceOf(NotInGuild);
+    });
+
+    it('refuses an uncached member in a guild with its own message', async () => {
+        let caught: unknown;
+        await RequireRole('r1')
+            .check(ctxOf(null, guildFake()))
+            .catch((error: unknown) => {
+                caught = error;
+            });
+        expect(caught).toBeInstanceOf(NotInGuild);
+        expect((caught as NotInGuild).message).toBe('Your server member data could not be resolved. Try again.');
     });
 });

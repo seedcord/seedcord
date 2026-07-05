@@ -2,13 +2,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { parseDuration, type ValidDuration } from '@seedcord/utils';
 
-import { OnCooldown } from '@bot/notices';
+import { defineEffectGate } from '@gates/Gate';
+import { OnCooldown } from '@notices/index';
 
-import { defineEffectGate } from '../Gate';
-
-import type { EffectGate, GateContextBase } from '../Gate';
-import type { Notice } from '@seedcord/core';
+import type { EffectGate, GateContextBase } from '@gates/Gate';
 import type { EpochMs } from '@seedcord/types';
+import type { Notice } from '@stops/Notice';
 
 /**
  * Options for {@link Cooldown}. `per` sets the bucket the window applies to and `limit` the uses allowed per
@@ -32,7 +31,7 @@ import type { EpochMs } from '@seedcord/types';
  */
 export interface CooldownOptions {
     /**
-     * The bucket the cooldown window applies to. 'user' scopes by user ID, 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel). If your handler can run in DMs and you want a per-user cooldown, use 'user' and it won't charge a shared global bucket for users without IDs.
+     * The bucket the cooldown window applies to. 'user' scopes by user ID, falls back to global when the source carries no user id. 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
      *
      * @defaultValue `'user'`
      */
@@ -61,7 +60,7 @@ let bucketSeq = 0;
 function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): string {
     if (per === 'guild') return ctx.guildId ?? 'global';
     if (per === 'channel') return ctx.channelId ?? 'global';
-    return ctx.user?.id ?? 'global';
+    return ctx.userId ?? 'global';
 }
 
 /**
@@ -74,7 +73,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * @param duration - A number is seconds, a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
  *
- * @see {@link Gated}
+ * @see the `@Gated` decorator from `seedcord`
  * @see {@link IRateLimiter}
  *
  * @example
@@ -91,7 +90,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  *
  * @example
  * ```ts
- * // a string is a duration, here scoped per guild instead of per user
+ * // a string is a duration, here scoped per guild (the default is per user)
  * Cooldown('30m', { per: 'guild' });
  * ```
  *
@@ -111,19 +110,23 @@ export function Cooldown(
     duration: number | ValidDuration,
     options?: CooldownOptions
 ): EffectGate<GateContextBase, 'Cooldown'> {
-    let delay: number;
+    let windowMs: number;
     if (typeof duration === 'number') {
-        delay = duration * 1000;
+        windowMs = duration * 1000;
     } else {
         const parsed = parseDuration(duration);
         if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [duration]);
-        delay = parsed;
+        windowMs = parsed;
+    }
+    // a zero or negative window would never limit, refuse it the same way an unparseable string is refused
+    if (windowMs <= 0) {
+        throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [String(duration)]);
     }
 
     const bucket = `cooldown:${bucketSeq++}`;
     const per = options?.per ?? 'user';
     // omit limit when unset so the limiter applies its default of 1, exactOptionalPropertyTypes rejects an explicit undefined
-    const window = options?.limit === undefined ? { delay } : { delay, limit: options.limit };
+    const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
     const keyOf = (ctx: GateContextBase): string => `${bucket}:${scopeValue(ctx, per)}`;
 
     return defineEffectGate(

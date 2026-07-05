@@ -44,7 +44,7 @@ export async function executeClean(request: CleanRequest): Promise<void> {
     const { runner, scope, apply, token, presenter, knownGuilds } = request;
 
     const { appId, guilds } = await presenter.status(
-        'Connecting to Discord...',
+        'Connecting to Discord…',
         () => runner.resolveTargets(scope, token),
         'Connected to Discord.'
     );
@@ -53,7 +53,7 @@ export async function executeClean(request: CleanRequest): Promise<void> {
         return;
 
     const scan = await presenter.status(
-        `Scanning ${plural(guilds.length, 'guild')} for commands...`,
+        `Scanning ${plural(guilds.length, 'guild')} for commands…`,
         () => runner.scanGuilds(token, appId, overlayNames(guilds, knownGuilds), scope.purge),
         `Scanned ${plural(guilds.length, 'guild')}.`
     );
@@ -73,7 +73,7 @@ export async function executeClean(request: CleanRequest): Promise<void> {
     if (!(await presenter.confirmDelete(scan.flagged.length, scan.skipped.length))) return;
 
     const deletion = await presenter.status(
-        `Deleting ${plural(scan.flagged.length, 'guild command')}...`,
+        `Deleting ${plural(scan.flagged.length, 'guild command')}…`,
         () => runner.applyDeletions(token, appId, scan.flagged),
         'Deletion complete.'
     );

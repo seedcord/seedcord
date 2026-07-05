@@ -5,7 +5,7 @@ import type { DevPhase } from '@ui/stores/devPhase';
 import type { DOMElement } from 'ink';
 import type { RefObject } from 'react';
 
-// lock the rail width once the session is running, so it doesn't resize while logs stream. a restart measures again
+// lock the rail width once per run, so it doesn't resize while logs stream. held until the next restart
 export function useRailWidth(
     railRef: RefObject<DOMElement | null>,
     phase: DevPhase,
@@ -18,6 +18,9 @@ export function useRailWidth(
     useLayoutEffect(() => {
         if (phase !== 'running') {
             needsMeasureRef.current = true;
+            // drop the lock too, a rail still constrained by it would measure back the old width
+            // eslint-disable-next-line @eslint-react/set-state-in-effect, react-hooks/set-state-in-effect -- see the measurement set below
+            setRailWidth(null);
             return;
         }
         if (!needsMeasureRef.current || !railRef.current) return;

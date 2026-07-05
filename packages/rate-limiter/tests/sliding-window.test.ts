@@ -6,9 +6,9 @@ describe('MemoryRateLimiter sliding window', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
 
-    it('keeps a slot limited through delay-1 ms and frees it at delay ms', async () => {
+    it('keeps a slot limited through windowMs-1 and frees it at windowMs', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000 };
+        const window = { windowMs: 1000 };
         await limiter.charge('user', window);
 
         vi.advanceTimersByTime(999);
@@ -20,7 +20,7 @@ describe('MemoryRateLimiter sliding window', () => {
 
     it('frees one staggered slot at a time as each expiry passes', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000, limit: 3 };
+        const window = { windowMs: 1000, limit: 3 };
         const start = Date.now();
 
         await limiter.charge('user', window);
@@ -43,7 +43,7 @@ describe('MemoryRateLimiter sliding window', () => {
 
     it('reports resetAt as the earliest live expiry', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000, limit: 2 };
+        const window = { windowMs: 1000, limit: 2 };
         const start = Date.now();
 
         await limiter.charge('user', window);
@@ -57,7 +57,7 @@ describe('MemoryRateLimiter sliding window', () => {
 
     it('counts only live uses and excludes an expired one from resetAt', async () => {
         const limiter = new MemoryRateLimiter();
-        const window = { delay: 1000, limit: 2 };
+        const window = { windowMs: 1000, limit: 2 };
         const start = Date.now();
 
         await limiter.charge('user', window);

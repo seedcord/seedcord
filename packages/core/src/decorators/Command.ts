@@ -27,16 +27,14 @@ export type CommandMeta = GlobalMeta | GuildMeta;
 type CommandScope = CommandMeta['scope'];
 
 /**
- * Registers a command for global deployment.
+ * Attaches deployment metadata so the framework registers this command globally or in specific guilds.
  *
  * @param scope - Must be 'global' for global registration
  * @decorator
  * @example
  * ```typescript
  * \@RegisterCommand('global')
- * class PingCommand extends BuilderComponent {
- *   // Global command
- * }
+ * class PingCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
  * ```
  */
 export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
@@ -50,9 +48,7 @@ export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
  * @example
  * ```typescript
  * \@RegisterCommand('guild', ['123456789'])
- * class AdminCommand extends BuilderComponent {
- *   // Guild-specific command
- * }
+ * class AdminCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
  * ```
  */
 export function RegisterCommand(scope: 'guild', guilds: string[]): (ctor: CommandCtor) => void;

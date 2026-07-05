@@ -1,5 +1,5 @@
 import { MessageFlags } from 'discord.js';
-import { SlashRoute, SlashHandler } from 'seedcord';
+import { SlashHandler, SlashRoute } from 'seedcord';
 
 @SlashRoute('probe')
 export class Probe extends SlashHandler<'probe'> {

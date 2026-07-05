@@ -3,13 +3,13 @@ import type { EpochMs, IRateLimiter, RateLimitResult, RateLimitWindow } from '@s
 const SWEEP_GAP_MS = 60_000;
 
 function limitedResult(live: readonly number[], now: number): RateLimitResult {
-    // soonest a slot frees is the earliest expiry
-    const resetAt = Math.min(...live) as EpochMs;
-    return { limited: true, resetAt, remaining: 0, retryAfter: resetAt - now };
+    // soonest a slot frees is the earliest expiry. a reduce, because spreading into Math.min throws past the argument cap
+    const resetAt = live.reduce((earliest, exp) => Math.min(earliest, exp), Number.POSITIVE_INFINITY) as EpochMs;
+    return { limited: true, resetAt, remaining: 0, retryAfterMs: resetAt - now };
 }
 
 function openResult(remaining: number): RateLimitResult {
-    return { limited: false, resetAt: 0 as EpochMs, remaining, retryAfter: 0 };
+    return { limited: false, resetAt: 0 as EpochMs, remaining, retryAfterMs: 0 };
 }
 
 /**
@@ -40,7 +40,7 @@ export class MemoryRateLimiter implements IRateLimiter {
             return Promise.resolve(limitedResult(live, now));
         }
 
-        live.push(now + window.delay);
+        live.push(now + window.windowMs);
         this.map.set(key, live);
         return Promise.resolve(openResult(limit - live.length));
     }
@@ -49,7 +49,7 @@ export class MemoryRateLimiter implements IRateLimiter {
         const now = Date.now();
         this.maybeSweep(now);
         const limit = Math.max(1, window.limit ?? 1);
-        // a read, so the filtered list is never written back, charge is the only writer
+        // a read, the filtered list is never written back
         const live = this.live(key, now);
 
         if (live.length >= limit) return Promise.resolve(limitedResult(live, now));

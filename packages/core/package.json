@@ -62,6 +62,7 @@
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/rate-limiter": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "reflect-metadata": "catalog:peer",

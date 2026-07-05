@@ -11,8 +11,6 @@ export abstract class GateNotice extends Notice {
     }
 }
 
-// ----- catalog gate refusals -----
-
 export class NotOwner extends GateNotice {
     public constructor(message = 'Only the bot owner can use this.') {
         super(message);
@@ -39,8 +37,6 @@ export class OnCooldown extends GateNotice {
         super(message ?? `You are doing that too fast. Try again <t:${toEpochSeconds(resetAt)}:R>.`);
     }
 }
-
-// ----- gate combinator refusals -----
 
 export class NotAllowed extends Notice {
     public constructor() {
