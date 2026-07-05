@@ -3,14 +3,13 @@ import { assertNever } from '@seedcord/utils';
 
 import type { DevPhase } from './devPhase';
 import type { DevEvent } from '@commands/dev/runtime/events';
-import type { Config } from '@seedcord/types';
 
 export interface DevState {
     readonly phase: DevPhase;
     readonly status: string;
     readonly error: Error | null;
     readonly isBusy: boolean;
-    readonly config: Config | null;
+    readonly frameworkVersion: string | null;
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
 }
@@ -20,7 +19,7 @@ const INITIAL: DevState = {
     status: 'Initializing...',
     error: null,
     isBusy: true,
-    config: null,
+    frameworkVersion: null,
     restartRequired: false,
     commandUpdatePrompt: null
 };
@@ -51,8 +50,8 @@ export class DevStore extends StrictEventEmitter<{ change: [] }> {
         this.patch({ error });
     }
 
-    public setConfig(config: Config): void {
-        this.patch({ config });
+    public setFrameworkVersion(frameworkVersion: string | null): void {
+        this.patch({ frameworkVersion });
     }
 
     public clearPrompt(): void {

@@ -1,6 +1,6 @@
 import { LoggerChannelRegistry } from '@seedcord/services';
 import { formatFilePath } from '@seedcord/utils';
-import { Box, Text, useWindowSize } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import { formatUptime } from '@ui/format';
@@ -13,9 +13,6 @@ import { HotkeyBar } from './HotkeyBar';
 import type { DevState } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
-
-// Below this many terminal rows the rail drops the config paths so the rest still fits.
-const COMPACT_ROWS = 26;
 
 const MAX_RAIL = 40;
 
@@ -76,9 +73,6 @@ export function Sidebar({
     width,
     ref
 }: SidebarProps): ReactElement {
-    const { rows } = useWindowSize();
-    const compact = rows < COMPACT_ROWS;
-
     return (
         <Box
             ref={ref}
@@ -90,7 +84,7 @@ export function Sidebar({
             overflow="hidden"
         >
             <Box flexShrink={0}>
-                <Banner config={state.config} compact={compact} />
+                <Banner version={state.frameworkVersion} />
             </Box>
             <Box flexShrink={0} marginTop={1}>
                 <StatusBlock state={state} uptimeMs={uptimeMs} />
