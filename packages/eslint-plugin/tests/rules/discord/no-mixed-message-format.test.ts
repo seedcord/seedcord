@@ -42,6 +42,30 @@ ruleTester.run('no-mixed-message-format', rule, {
             import { ContainerBuilder, ActionRowBuilder } from 'discord.js';
             const base = { components: [new ContainerBuilder()] };
             const payload = { ...base, components: [new ActionRowBuilder()], content: 'hi' };
+        `,
+        // a later spread overrides the v2 key with non-v2 components, the other direction
+        dedent`
+            import { ContainerBuilder, ActionRowBuilder } from 'discord.js';
+            const base = { components: [new ActionRowBuilder()] };
+            const payload = { content: 'hi', components: [new ContainerBuilder()], ...base };
+        `,
+        // files sit alongside v2 components, Discord permits attachments with a v2 layout
+        dedent`
+            import { ContainerBuilder } from 'discord.js';
+            declare const file: unknown;
+            const payload = { files: [file], components: [new ContainerBuilder()] };
+        `,
+        // a seedcord row accessory is an action row, so content next to it is fine
+        dedent`
+            import { RowComponent } from './seedcord';
+            declare const row: RowComponent<'button'>;
+            const payload = { content: 'hi', components: [row.component] };
+        `,
+        // a user subclass of a v2 builder is invisible to the name-only builder match, a known miss
+        dedent`
+            import { ContainerBuilder } from 'discord.js';
+            class MyContainer extends ContainerBuilder {}
+            const payload = { content: 'hi', components: [new MyContainer()] };
         `
     ],
     invalid: [
@@ -49,6 +73,31 @@ ruleTester.run('no-mixed-message-format', rule, {
             code: dedent`
                 import { ContainerBuilder } from 'discord.js';
                 const payload = { content: 'hi', components: [new ContainerBuilder()] };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // content and a v2 component each arrive through a separate spread
+            code: dedent`
+                import { ContainerBuilder } from 'discord.js';
+                const c = { components: [new ContainerBuilder()] };
+                const t = { content: 'hi' };
+                const payload = { ...c, ...t };
+            `,
+            errors: [{ messageId: 'mixedFormat' }]
+        },
+        {
+            // the seedcord protected-field form inside the subclass itself
+            code: dedent`
+                import { BuilderComponent } from './seedcord';
+                class Card extends BuilderComponent<'container'> {
+                    constructor() {
+                        super('container');
+                    }
+                    build() {
+                        return { content: 'hi', components: [this.instance] };
+                    }
+                }
             `,
             errors: [{ messageId: 'mixedFormat' }]
         },

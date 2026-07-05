@@ -6,6 +6,7 @@ import preferEphemeralFlag from './rules/discord/prefer-ephemeral-flag';
 import preferV2Component from './rules/discord/prefer-v2-component';
 import requireComponentsV2Flag from './rules/discord/require-components-v2-flag';
 import requiredOptionBeforeOptional from './rules/discord/required-option-before-optional';
+import selectMenuMinExceedsMax from './rules/discord/select-menu-min-exceeds-max';
 import validCommandName from './rules/discord/valid-command-name';
 import commandBuilderMissingRegisterCommand from './rules/seedcord/command-builder-missing-register-command';
 import eventHandlerMissingRegisterEvent from './rules/seedcord/event-handler-missing-register-event';
@@ -36,6 +37,7 @@ const djsRules = {
     'prefer-v2-component': preferV2Component,
     'require-components-v2-flag': requireComponentsV2Flag,
     'required-option-before-optional': requiredOptionBeforeOptional,
+    'select-menu-min-exceeds-max': selectMenuMinExceedsMax,
     'valid-command-name': validCommandName
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
 

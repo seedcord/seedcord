@@ -37,6 +37,46 @@ ruleTester.run('require-components-v2-flag', rule, {
             declare const channel: TextChannel;
             channel.send({ components: [new ContainerBuilder()], flags: [MessageFlags.IsComponentsV2] });
         `,
+        // a const flag resolves through its enum literal type
+        dedent`
+            import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
+            declare const channel: TextChannel;
+            const F = MessageFlags.IsComponentsV2;
+            channel.send({ components: [new ContainerBuilder()], flags: F });
+        `,
+        // a const numeric flag resolves the same way
+        dedent`
+            import { TextChannel, ContainerBuilder } from 'discord.js';
+            declare const channel: TextChannel;
+            const F = 32768;
+            channel.send({ components: [new ContainerBuilder()], flags: F });
+        `,
+        // a let flag widens to number, so it is skipped even though the value would be present
+        dedent`
+            import { TextChannel, ContainerBuilder } from 'discord.js';
+            declare const channel: TextChannel;
+            let F = 32768;
+            channel.send({ components: [new ContainerBuilder()], flags: F });
+        `,
+        // satisfies keeps the literal type
+        dedent`
+            import { TextChannel, ContainerBuilder } from 'discord.js';
+            declare const channel: TextChannel;
+            channel.send({ components: [new ContainerBuilder()], flags: 32768 satisfies number });
+        `,
+        // editReply is a message-options position and the flag is set
+        dedent`
+            import { ChatInputCommandInteraction, ContainerBuilder, MessageFlags } from 'discord.js';
+            declare const interaction: ChatInputCommandInteraction;
+            interaction.editReply({ components: [new ContainerBuilder()], flags: MessageFlags.IsComponentsV2 });
+        `,
+        // a user subclass of a v2 builder is invisible to the name-only builder match, a known miss
+        dedent`
+            import { TextChannel, ContainerBuilder } from 'discord.js';
+            declare const channel: TextChannel;
+            class MyContainer extends ContainerBuilder {}
+            channel.send({ components: [new MyContainer()] });
+        `,
         // a bitwise combination that includes the flag folds to present
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
@@ -185,6 +225,69 @@ ruleTester.run('require-components-v2-flag', rule, {
                 import { TextChannel, ContainerBuilder } from 'discord.js';
                 declare const channel: TextChannel;
                 channel.send({ components: [new ContainerBuilder()] });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // a zero literal sets no bit
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                declare const channel: TextChannel;
+                channel.send({ components: [new ContainerBuilder()], flags: 0 });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // a bitwise AND that clears every set bit folds to absent
+            code: dedent`
+                import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
+                declare const channel: TextChannel;
+                channel.send({ components: [new ContainerBuilder()], flags: MessageFlags.IsComponentsV2 & MessageFlags.SuppressEmbeds });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // v2 components supplied through a variable, no flag anywhere
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                declare const channel: TextChannel;
+                const comps = [new ContainerBuilder()];
+                channel.send({ components: comps });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // a const flag that resolves to a non-v2 value
+            code: dedent`
+                import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
+                declare const channel: TextChannel;
+                const F = MessageFlags.SuppressEmbeds;
+                channel.send({ components: [new ContainerBuilder()], flags: F });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // a non-v2 literal behind an as cast still folds to absent
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                declare const channel: TextChannel;
+                channel.send({ components: [new ContainerBuilder()], flags: 4 as number });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            code: dedent`
+                import { ChatInputCommandInteraction, ContainerBuilder } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.followUp({ components: [new ContainerBuilder()] });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            code: dedent`
+                import { ChatInputCommandInteraction, ContainerBuilder } from 'discord.js';
+                declare const interaction: ChatInputCommandInteraction;
+                interaction.editReply({ components: [new ContainerBuilder()] });
             `,
             errors: [{ messageId: 'missingFlag' }]
         },
