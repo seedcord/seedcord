@@ -1,8 +1,12 @@
-import { ComponentDefsKey } from '@seedcord/core/internal';
+import {
+    ComponentDefsKey,
+    InteractionMetadataKey,
+    InteractionRouteKeys,
+    InteractionRoutes
+} from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 
 import { areRoutes } from '@miscellaneous/areRoutes';
-import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
 
 import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
 import type { HandlerConstructor } from '@handlers/constructors';
@@ -154,9 +158,9 @@ type NamesFor<Kind extends ApplicationCommandType.User | ApplicationCommandType.
     Kind extends ApplicationCommandType.User ? keyof UserContextMenuRegistry : keyof MessageContextMenuRegistry;
 
 /**
- * The context-menu kind a handler serves, read off its event's `commandType` discriminant. Reading the
- * literal off the event rather than inferring the `ContextMenuHandler` generic directly keeps the kind from
- * widening to the whole union, the handler's conditional members make the generic inference imprecise.
+ * The context-menu kind a handler serves, read off its event's `commandType` discriminant. Direct
+ * inference from the `ContextMenuHandler` generic widens the kind to the whole union because the handler's
+ * conditional members blur it, so this uses the event literal to keep it narrow.
  *
  * @internal
  */

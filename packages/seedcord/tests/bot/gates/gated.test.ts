@@ -1,4 +1,5 @@
 import { CustomId } from '@seedcord/core';
+import { GatedMetadataKey } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
@@ -11,7 +12,6 @@ import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
 import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { GatedMetadataKey } from '@src/metadataKeys';
 
 import type { EventGateContext, InteractionGateContext } from '@bot/gates';
 import type {

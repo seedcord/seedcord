@@ -1,3 +1,4 @@
+import { SubscribeMetadataKey } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/services';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -5,7 +6,6 @@ import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { Plugin } from '@interfaces/Plugin';
-import { SubscribeMetadataKey } from '@src/metadataKeys';
 
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';

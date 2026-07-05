@@ -1,5 +1,6 @@
+import { GatedMetadataKey } from '@seedcord/core/internal';
+
 import { runGates } from '@bot/gates/runGates';
-import { GatedMetadataKey } from '@src/metadataKeys';
 
 import type { Gate, GateContext, GateContextBase } from '@bot/gates';
 import type { AnyHandlerCtor, FitAll } from '@bot/gates/matching';
@@ -37,7 +38,7 @@ import type { NonEmptyTuple } from 'type-fest';
  * @decorator
  */
 export function Gated<const Gates extends NonEmptyTuple<Gate<GateContextBase>>>(...gates: Gates) {
-    // mismatch resolves to the error tuple instead of TCtor, so the class fails to assign and TS names the gate
+    // mismatch resolves to the error tuple, so the class fails to assign and TS names the gate
     return function <TCtor extends AnyHandlerCtor>(
         ctor: FitAll<TCtor, Gates> extends Gates ? TCtor : FitAll<TCtor, Gates>
     ): void {

@@ -1,4 +1,4 @@
-import { SubscribeMetadataKey } from '@src/metadataKeys';
+import { SubscribeMetadataKey } from '@seedcord/core/internal';
 
 import type { Subscriber } from '../Subscriber';
 import type { SubscriptionKey } from '../types/Subscriptions';
@@ -17,19 +17,9 @@ export interface SubscribeOptions {
     readonly frequency?: EventFrequency | undefined;
 }
 
-/**
- * Metadata entry representing a registered subscriber handler.
- *
- * @internal
- */
+/** @internal */
 export interface SubscribeMetadataEntry {
-    /** The subscriber event name to register for. */
     readonly subscriber: SubscriptionKey;
-    /**
-     * Frequency: `'once'` or `'on'`.
-     *
-     * @defaultValue `'on'`
-     */
     readonly frequency?: EventFrequency | undefined;
 }
 

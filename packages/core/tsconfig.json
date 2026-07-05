@@ -8,6 +8,8 @@
             "@src/*": ["./src/*"],
             "@components/*": ["./src/components/*"],
             "@customId/*": ["./src/customId/*"],
+            "@decorators/*": ["./src/decorators/*"],
+            "@notices/*": ["./src/notices/*"],
             "@pagination/*": ["./src/pagination/*"],
             "@registries/*": ["./src/registries/*"],
             "@stops/*": ["./src/stops/*"]

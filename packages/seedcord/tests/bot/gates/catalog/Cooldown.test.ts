@@ -70,7 +70,6 @@ describe('Cooldown', () => {
         const gate = Cooldown(60, { limit: 3 });
         const ctx = cdCtx(rl);
 
-        // three uses pass, each peeked then charged on commit
         for (let i = 0; i < 3; i++) {
             await expect(gate.check(ctx)).resolves.toBeUndefined();
             await gate.commit(ctx);
@@ -87,7 +86,7 @@ describe('Cooldown', () => {
             .catch((error: unknown) => {
                 caught = error;
             });
-        expect((caught as OnCooldown).expires).toBe(1_700_000_000_000);
+        expect((caught as OnCooldown).resetAt).toBe(1_700_000_000_000);
     });
 
     it('rewords the refusal with the message factory, receiving the retry-after', async () => {

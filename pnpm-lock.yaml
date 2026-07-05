@@ -516,6 +516,9 @@ importers:
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
       discord-api-types:
         specifier: ^0.38.49
         version: 0.38.49
@@ -532,6 +535,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.7.0
