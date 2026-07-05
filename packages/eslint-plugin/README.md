@@ -7,7 +7,7 @@
 
 # @seedcord/eslint-plugin
 
-ESLint rules for seedcord bots. The `seedcord` preset layers these over [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended`, so one entry covers both the framework rules and the discord.js rules.
+ESLint rules for seedcord bots. The `seedcord` preset layers these over [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s `recommended`, so one entry covers both the framework rules and the discord.js rules. The preset is for setups with their own ESLint config. A project on `@seedcord/eslint-config` sets `registerSeedcordPlugin` and `registerDiscordjsPlugin` instead.
 
 ```js
 // eslint.config.js
