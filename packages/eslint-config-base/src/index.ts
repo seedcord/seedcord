@@ -23,7 +23,6 @@ import {
     TYPESCRIPT_LANGUAGE_OPTIONS
 } from './constants';
 import {
-    DISCORD_RULES,
     DOCUMENTATION_RULES,
     GENERAL_RULES,
     IMPORT_RULES,
@@ -78,8 +77,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
         tailwindEntryPoint,
         tailwindCalleeFunctions = ['cn'],
         tailwindTaggedTemplates = ['tw'],
-        mdxFiles,
-        discordRules = false
+        mdxFiles
     } = options;
 
     const createTsParserOptions = (rootDir: string) => ({
@@ -174,8 +172,6 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
 
         // Opt-in via mdxFiles; the spread drops the block entirely when omitted.
         ...(mdxFiles ? [mdxBlock(mdxFiles)] : []),
-
-        ...(discordRules ? [{ files: [...TS_FILES], rules: DISCORD_RULES }] : []),
 
         {
             files: [...ALL_FILES],

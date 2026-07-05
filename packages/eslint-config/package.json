@@ -64,11 +64,13 @@
         }
     },
     "dependencies": {
+        "@seedcord/eslint-plugin": "workspace:*",
         "@types/eslint-plugin-security": "catalog:eslint",
         "@typescript-eslint/parser": "catalog:eslint",
         "eslint-config-prettier": "catalog:eslint",
         "eslint-import-resolver-typescript": "catalog:eslint",
         "eslint-plugin-better-tailwindcss": "catalog:eslint",
+        "eslint-plugin-discordjs": "workspace:*",
         "eslint-plugin-import-x": "catalog:eslint",
         "eslint-plugin-mdx": "catalog:eslint",
         "eslint-plugin-prettier": "catalog:eslint",
@@ -82,6 +84,7 @@
     },
     "devDependencies": {
         "@seedcord/eslint-config-base": "workspace:*",
+        "@typescript-eslint/utils": "catalog:eslint",
         "eslint": "catalog:eslint"
     },
     "publishConfig": {

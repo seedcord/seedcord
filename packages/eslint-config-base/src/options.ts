@@ -91,12 +91,4 @@ export interface CreateConfigOptions {
      * plugin and runs `no-unused-expressions` on embedded JS/JSX. Does not lint markdown prose.
      */
     mdxFiles?: string[];
-
-    /**
-     * Enable seedcord's discord.js lint rules, off by default. Bans importing the component builders
-     * from `discord.js`, whose CJS copy is a separate class from the ESM `@discordjs/builders` seedcord uses.
-     *
-     * @defaultValue `false`
-     */
-    discordRules?: boolean;
 }

@@ -1,11 +1,11 @@
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
-import createConfig, { type CreateConfigOptions } from '../src/index';
+import createConfig, { type SeedcordConfigOptions } from '../src/index';
 
 import type { Linter } from 'eslint';
 
-async function resolveRules(options: CreateConfigOptions, file: string): Promise<Partial<Linter.RulesRecord>> {
+async function resolveRules(options: SeedcordConfigOptions, file: string): Promise<Partial<Linter.RulesRecord>> {
     const eslint = new ESLint({
         overrideConfigFile: true,
         overrideConfig: createConfig({ tsconfigRootDir: process.cwd(), ...options })
@@ -26,5 +26,29 @@ describe('createConfig plugin toggles', () => {
     it('keeps plugin rules when the plugin is enabled', async () => {
         const rules = await resolveRules({ registerImportPlugin: true }, 'src/example.ts');
         expect(rules['import-x/order']).toBeDefined();
+    });
+
+    it('registers the discordjs rules when enabled', async () => {
+        const rules = await resolveRules({ registerDiscordjsPlugin: true }, 'src/example.ts');
+        expect(rules['discordjs/no-mixed-message-format']).toBeDefined();
+        // the resolver normalizes severities to numbers, 1 is warn
+        expect(rules['discordjs/prefer-v2-component']).toEqual([1]);
+    });
+
+    it('omits the discordjs rules by default', async () => {
+        const rules = await resolveRules({}, 'src/example.ts');
+        expect(Object.keys(rules).filter((name) => name.startsWith('discordjs/'))).toEqual([]);
+    });
+
+    it('registers the seedcord rules when enabled', async () => {
+        const rules = await resolveRules({ registerSeedcordPlugin: true }, 'src/example.ts');
+        expect(rules['@seedcord/no-djs-builder-import']).toBeDefined();
+        // the seedcord toggle registers only its own plugin, the discordjs one stays separate
+        expect(Object.keys(rules).filter((name) => name.startsWith('discordjs/'))).toEqual([]);
+    });
+
+    it('omits the seedcord rules by default', async () => {
+        const rules = await resolveRules({}, 'src/example.ts');
+        expect(Object.keys(rules).filter((name) => name.startsWith('@seedcord/'))).toEqual([]);
     });
 });

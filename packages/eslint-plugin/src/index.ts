@@ -30,11 +30,13 @@ for (const name of Object.keys(rules)) {
     presetRules[`@seedcord/${name}`] = 'error';
 }
 
+export const recommended: TSESLint.FlatConfig.Config = {
+    plugins: { '@seedcord': plugin },
+    rules: presetRules
+};
+
 // the seedcord preset layers the framework rules over the discord.js set
-export const seedcord: TSESLint.FlatConfig.Config[] = [
-    discordjsRecommended,
-    { plugins: { '@seedcord': plugin }, rules: presetRules }
-];
+export const seedcord: TSESLint.FlatConfig.Config[] = [discordjsRecommended, recommended];
 
 plugin.configs = { seedcord };
 

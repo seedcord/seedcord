@@ -662,6 +662,9 @@ importers:
 
   packages/eslint-config:
     dependencies:
+      '@seedcord/eslint-plugin':
+        specifier: workspace:*
+        version: link:../eslint-plugin
       '@types/eslint-plugin-security':
         specifier: catalog:eslint
         version: 3.0.1
@@ -677,6 +680,9 @@ importers:
       eslint-plugin-better-tailwindcss:
         specifier: catalog:eslint
         version: 4.6.0(eslint@10.6.0(jiti@2.7.0))(oxlint@1.69.0)(tailwindcss@4.3.1)(typescript@6.0.3)
+      eslint-plugin-discordjs:
+        specifier: workspace:*
+        version: link:../eslint-plugin-discordjs
       eslint-plugin-import-x:
         specifier: catalog:eslint
         version: 4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0))
@@ -720,6 +726,9 @@ importers:
       '@seedcord/eslint-config-base':
         specifier: workspace:*
         version: link:../eslint-config-base
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
       eslint:
         specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
