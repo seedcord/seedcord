@@ -6,7 +6,7 @@ Some builders have a hard cap that Discord rejects, an action row holds 5 compon
 
 It also covers the seedcord form. A `this.instance` chain inside a `RowComponent` or `BuilderComponent<'embed' | 'menu_string'>` resolves to the same cap through the class's generic.
 
-It never fires on dynamic construction. A spread (`addComponents(...items)`), a `.map()` result, a variable passed to `setX`, a chain built on a variable receiver, or a builder that is not capped (a container) all mean the count is a runtime value, so nothing is flagged.
+A spread or variable whose type is a fixed-arity tuple (an `as const` array) counts through its arity, so `addComponents(...six)` with a six-element tuple is flagged. Anything else dynamic, a plain-array spread, a `.map()` result, or a builder that is not capped (a container), means the count is a runtime value, so nothing is flagged.
 
 ## Incorrect
 

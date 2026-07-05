@@ -3,6 +3,7 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 import { hasV2Components } from '../../componentsV2';
 import { createRule } from '../../createRule';
 import { isFromDiscordJs } from '../../typeUtils';
+import { resolveConstInit } from '../../utils';
 
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
@@ -175,16 +176,36 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
 
+        function payloadViolates(node: TSESTree.ObjectExpression): boolean {
+            return hasV2Components(node, services, checker) && flagState(node, services, checker) === 'absent';
+        }
+
+        function contextualType(node: TSESTree.Identifier | TSESTree.ObjectExpression): ts.Type | undefined {
+            // justified: the node map widens an identifier to declaration kinds it cannot be in value position
+            return checker.getContextualType(services.esTreeNodeToTSNodeMap.get(node) as ts.Expression);
+        }
+
         return {
             ObjectExpression(node) {
-                if (!hasV2Components(node, services, checker)) return;
-                if (flagState(node, services, checker) !== 'absent') return;
-
-                const tsNode = services.esTreeNodeToTSNodeMap.get(node);
-                const contextual = checker.getContextualType(tsNode);
+                if (!payloadViolates(node)) return;
+                const contextual = contextualType(node);
                 if (contextual === undefined || !isMessageOptionsType(contextual)) return;
 
                 context.report({ node, messageId: 'missingFlag' });
+            },
+            // an unannotated payload variable has no contextual type at its declaration, so it
+            // resolves at the call site
+            CallExpression(node) {
+                for (const arg of node.arguments) {
+                    if (arg.type !== AST_NODE_TYPES.Identifier) continue;
+                    const init = resolveConstInit(context.sourceCode, arg);
+                    if (init?.type !== AST_NODE_TYPES.ObjectExpression) continue;
+                    // an annotated declaration is already reported at the object literal
+                    if (contextualType(init) !== undefined) continue;
+                    const contextual = contextualType(arg);
+                    if (contextual === undefined || !isMessageOptionsType(contextual)) continue;
+                    if (payloadViolates(init)) context.report({ node: init, messageId: 'missingFlag' });
+                }
             }
         };
     }

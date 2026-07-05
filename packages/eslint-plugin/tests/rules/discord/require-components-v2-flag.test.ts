@@ -81,6 +81,28 @@ ruleTester.run('require-components-v2-flag', rule, {
             declare function render(opts: { components: unknown[] }): void;
             render({ components: [new ContainerBuilder()] });
         `,
+        // an unannotated payload variable that sets the flag
+        dedent`
+            import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
+            declare const channel: TextChannel;
+            const payload = { components: [new ContainerBuilder()], flags: MessageFlags.IsComponentsV2 };
+            channel.send(payload);
+        `,
+        // an unannotated payload variable passed somewhere that is not a message position
+        dedent`
+            import { ContainerBuilder } from 'discord.js';
+            declare function render(opts: { components: unknown[] }): void;
+            const payload = { components: [new ContainerBuilder()] };
+            render(payload);
+        `,
+        // a reassigned payload variable, its initializer is dead, so it is skipped
+        dedent`
+            import { TextChannel, ContainerBuilder } from 'discord.js';
+            declare const channel: TextChannel;
+            let payload = { components: [new ContainerBuilder()] };
+            payload = { components: [] };
+            channel.send(payload);
+        `,
         // the flag is added at the spread site, so the inline payload is valid
         dedent`
             import { TextChannel, ContainerBuilder, MessageFlags } from 'discord.js';
@@ -236,6 +258,27 @@ ruleTester.run('require-components-v2-flag', rule, {
                 declare const channel: TextChannel;
                 const base = { components: [new ContainerBuilder()] };
                 channel.send({ ...base });
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // an unannotated payload variable resolves through the send call
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                declare const channel: TextChannel;
+                const payload = { components: [new ContainerBuilder()] };
+                channel.send(payload);
+            `,
+            errors: [{ messageId: 'missingFlag' }]
+        },
+        {
+            // an annotated payload variable is reported exactly once
+            code: dedent`
+                import { TextChannel, ContainerBuilder } from 'discord.js';
+                import type { MessageCreateOptions } from 'discord.js';
+                declare const channel: TextChannel;
+                const payload: MessageCreateOptions = { components: [new ContainerBuilder()] };
+                channel.send(payload);
             `,
             errors: [{ messageId: 'missingFlag' }]
         },

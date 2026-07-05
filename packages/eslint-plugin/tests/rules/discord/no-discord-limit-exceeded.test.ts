@@ -62,6 +62,13 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
                 addComponents(...items: unknown[]): this { return this; }
             }
             new ActionRowBuilder().addComponents({}, {}, {}, {}, {}, {});
+        `,
+        // a spread of an as-const tuple exactly at the cap
+        dedent`
+            import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
+            declare const btn: ButtonBuilder;
+            const five = [btn, btn, btn, btn, btn] as const;
+            new ActionRowBuilder().addComponents(...five);
         `
     ],
     invalid: [
@@ -167,6 +174,36 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
                 import { ActionRowBuilder } from 'discord.js';
                 class CompactRow extends ActionRowBuilder {}
                 new CompactRow().addComponents({}, {}, {}, {}, {}, {});
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // a spread of an as-const tuple counts through its arity
+            code: dedent`
+                import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
+                declare const btn: ButtonBuilder;
+                const six = [btn, btn, btn, btn, btn, btn] as const;
+                new ActionRowBuilder().addComponents(...six);
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // a tuple passed whole to the set method
+            code: dedent`
+                import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
+                declare const btn: ButtonBuilder;
+                const six = [btn, btn, btn, btn, btn, btn] as const;
+                new ActionRowBuilder().setComponents(six);
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // a tuple spread inside the set array
+            code: dedent`
+                import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
+                declare const btn: ButtonBuilder;
+                const six = [btn, btn, btn, btn, btn, btn] as const;
+                new ActionRowBuilder().setComponents([...six]);
             `,
             errors: [{ messageId: 'tooMany' }]
         },

@@ -2,6 +2,9 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
+import { resolveConstInit } from '../../utils';
+
+import type { TSESTree } from '@typescript-eslint/utils';
 
 // discord.js component builders that carry a customId
 const CUSTOM_ID_BUILDERS = new Set([
@@ -14,6 +17,24 @@ const CUSTOM_ID_BUILDERS = new Set([
     'ModalBuilder',
     'TextInputBuilder'
 ]);
+
+// unwrap as / satisfies / <T> so a raw literal behind them is still flagged
+function unwrapAssertions(expr: TSESTree.Expression): TSESTree.Expression {
+    let current = expr;
+    while (
+        current.type === AST_NODE_TYPES.TSAsExpression ||
+        current.type === AST_NODE_TYPES.TSTypeAssertion ||
+        current.type === AST_NODE_TYPES.TSSatisfiesExpression
+    ) {
+        current = current.expression;
+    }
+    return current;
+}
+
+function isRawString(expr: TSESTree.Expression): boolean {
+    if (expr.type === AST_NODE_TYPES.Literal) return typeof expr.value === 'string';
+    return expr.type === AST_NODE_TYPES.TemplateLiteral || expr.type === AST_NODE_TYPES.BinaryExpression;
+}
 
 export default createRule({
     name: 'use-custom-id-codec',
@@ -42,24 +63,18 @@ export default createRule({
                     return;
                 if (!extendsDjsType(checker, services.getTypeAtLocation(callee.object), CUSTOM_ID_BUILDERS)) return;
 
-                let arg = node.arguments[0];
-                if (!arg) return;
+                const arg = node.arguments[0];
+                if (!arg || arg.type === AST_NODE_TYPES.SpreadElement) return;
 
-                // unwrap as / satisfies / <T> so a raw literal behind them is still caught
-                while (
-                    arg.type === AST_NODE_TYPES.TSAsExpression ||
-                    arg.type === AST_NODE_TYPES.TSTypeAssertion ||
-                    arg.type === AST_NODE_TYPES.TSSatisfiesExpression
-                ) {
-                    arg = arg.expression;
+                let target = unwrapAssertions(arg);
+                if (target.type === AST_NODE_TYPES.Identifier) {
+                    const init = resolveConstInit(context.sourceCode, target);
+                    if (init === undefined) return;
+                    target = unwrapAssertions(init);
                 }
 
-                const isStringLiteral = arg.type === AST_NODE_TYPES.Literal && typeof arg.value === 'string';
-                const isTemplate = arg.type === AST_NODE_TYPES.TemplateLiteral;
-                const isConcat = arg.type === AST_NODE_TYPES.BinaryExpression;
-                if (isStringLiteral || isTemplate || isConcat) {
-                    context.report({ node: arg, messageId: 'rawCustomId' });
-                }
+                // report at the argument, a shared init would collapse several call sites into one report
+                if (isRawString(target)) context.report({ node: arg, messageId: 'rawCustomId' });
             }
         };
     }

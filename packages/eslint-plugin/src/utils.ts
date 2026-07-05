@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 function isSeedcordSource(source: string): boolean {
     return source === 'seedcord' || source.startsWith('@seedcord/');
@@ -65,6 +65,18 @@ export function chainRoot(top: TSESTree.CallExpression): TSESTree.Node {
         current = current.callee.object;
     }
     return current;
+}
+
+// a later reassignment means the initializer is not the value that reaches the use site
+export function resolveConstInit(
+    sourceCode: TSESLint.SourceCode,
+    identifier: TSESTree.Identifier
+): TSESTree.Expression | undefined {
+    const variable = sourceCode.getScope(identifier).references.find((ref) => ref.identifier === identifier)?.resolved;
+    const definition = variable?.defs[0];
+    if (definition?.node.type !== AST_NODE_TYPES.VariableDeclarator) return undefined;
+    if (variable?.references.some((ref) => ref.isWrite() && !ref.init)) return undefined;
+    return definition.node.init ?? undefined;
 }
 
 export function getProperty(node: TSESTree.ObjectExpression, name: string): TSESTree.Property | undefined {

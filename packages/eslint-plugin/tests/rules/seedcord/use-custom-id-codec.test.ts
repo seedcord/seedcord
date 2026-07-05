@@ -55,6 +55,21 @@ ruleTester.run('use-custom-id-codec', rule, {
                 }
             }
             new AriaWidget().setCustomId('search-box');
+        `,
+        // a variable holding an encoded id resolves to a call, that is the codec path
+        dedent`
+            import { ButtonBuilder } from 'discord.js';
+            declare const ApproveId: { encode(data: object): string };
+            const id = ApproveId.encode({ action: 'approve' });
+            new ButtonBuilder().setCustomId(id);
+        `,
+        // a reassigned variable, its initializer is dead, so it is skipped
+        dedent`
+            import { ButtonBuilder } from 'discord.js';
+            declare const encoded: string;
+            let id = 'raw';
+            id = encoded;
+            new ButtonBuilder().setCustomId(id);
         `
     ],
     invalid: [
@@ -133,6 +148,25 @@ ruleTester.run('use-custom-id-codec', rule, {
             code: dedent`
                 import { ButtonBuilder } from 'discord.js';
                 new ButtonBuilder().setCustomId(<string>'approve').setLabel('Approve');
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            // a variable holding a raw literal is still a hand-written id
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                const id = 'confirm:yes';
+                new ButtonBuilder().setCustomId(id);
+            `,
+            errors: [{ messageId: 'rawCustomId' }]
+        },
+        {
+            // a variable holding a hand-rolled template
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                declare const userId: string;
+                const id = \`approve:\${userId}\`;
+                new ButtonBuilder().setCustomId(id);
             `,
             errors: [{ messageId: 'rawCustomId' }]
         },

@@ -1,3 +1,5 @@
+import { TypeFlags } from 'typescript';
+
 import type * as ts from 'typescript';
 
 // the symbol is declared inside the discord.js or @discordjs packages, so a same-named local class is excluded
@@ -44,6 +46,12 @@ function walkBaseChain(checker: ts.TypeChecker, type: ts.Type, match: (symbol: t
 export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: string | ReadonlySet<string>): boolean {
     const wanted = typeof names === 'string' ? new Set([names]) : names;
     return walkBaseChain(checker, type, (symbol) => wanted.has(symbol.getName()) && isFromDiscordJs(symbol));
+}
+
+// a boolean literal's value is only reachable through its printed name
+export function booleanLiteralValue(checker: ts.TypeChecker, type: ts.Type): boolean | undefined {
+    if ((type.flags & TypeFlags.BooleanLiteral) === 0) return undefined;
+    return checker.typeToString(type) === 'true';
 }
 
 // match by name only. a path-origin guard is ambiguous because "seedcord" appears in the plugin's own source paths

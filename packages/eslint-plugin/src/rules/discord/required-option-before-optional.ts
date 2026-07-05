@@ -1,10 +1,11 @@
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
-import { extendsDjsType } from '../../typeUtils';
+import { booleanLiteralValue, extendsDjsType } from '../../typeUtils';
 import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
+import type * as ts from 'typescript';
 
 const SLASH_COMMAND_BUILDERS = new Set(['SlashCommandBuilder', 'SlashCommandSubcommandBuilder']);
 
@@ -37,7 +38,11 @@ function optionChain(callback: TSESTree.CallExpressionArgument | undefined): TSE
     return undefined;
 }
 
-function optionRequiredState(callback: TSESTree.CallExpressionArgument | undefined): OptionState {
+function optionRequiredState(
+    callback: TSESTree.CallExpressionArgument | undefined,
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker
+): OptionState {
     const chain = optionChain(callback);
     if (chain?.type !== AST_NODE_TYPES.CallExpression) return 'unknown';
 
@@ -48,7 +53,11 @@ function optionRequiredState(callback: TSESTree.CallExpressionArgument | undefin
     if (arg?.type === AST_NODE_TYPES.Literal && typeof arg.value === 'boolean') {
         return arg.value ? 'required' : 'optional';
     }
-    return 'unknown';
+    if (arg === undefined || arg.type === AST_NODE_TYPES.SpreadElement) return 'unknown';
+    // a const flag's boolean literal type is its value
+    const value = booleanLiteralValue(checker, services.getTypeAtLocation(arg));
+    if (value === undefined) return 'unknown';
+    return value ? 'required' : 'optional';
 }
 
 export default createRule({
@@ -78,7 +87,7 @@ export default createRule({
                 const options = collectChain(node)
                     .filter((call) => ADD_OPTION.has(methodName(call) ?? ''))
                     .reverse()
-                    .map((call) => ({ call, state: optionRequiredState(call.arguments[0]) }));
+                    .map((call) => ({ call, state: optionRequiredState(call.arguments[0], services, checker) }));
                 if (options.length < 2) return;
                 if (options.some((option) => option.state === 'unknown')) return;
 

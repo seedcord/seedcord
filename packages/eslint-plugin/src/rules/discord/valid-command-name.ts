@@ -57,7 +57,15 @@ export default createRule({
                 if (methodName(node) !== 'setName') return;
                 const arg = node.arguments[0];
                 if (arg === undefined) return;
-                const name = staticName(arg);
+                let name = staticName(arg);
+                // a const string's literal type is its value
+                if (
+                    name === undefined &&
+                    (arg.type === AST_NODE_TYPES.Identifier || arg.type === AST_NODE_TYPES.MemberExpression)
+                ) {
+                    const argType = services.getTypeAtLocation(arg);
+                    if (argType.isStringLiteral()) name = argType.value;
+                }
                 if (name === undefined || isValidChatInputName(name)) return;
 
                 // a context menu name allows any case, so restrict the check to the discord.js slash builders

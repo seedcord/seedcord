@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
-import { methodName } from '../../utils';
+import { methodName, resolveConstInit } from '../../utils';
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
@@ -22,17 +22,8 @@ function resolveOptions(
 ): TSESTree.ObjectExpression | undefined {
     if (arg?.type === AST_NODE_TYPES.ObjectExpression) return arg;
     if (arg?.type !== AST_NODE_TYPES.Identifier) return undefined;
-    const variable = sourceCode.getScope(arg).references.find((reference) => reference.identifier === arg)?.resolved;
-    const definition = variable?.defs[0];
-    if (
-        definition?.node.type === AST_NODE_TYPES.VariableDeclarator &&
-        definition.node.init?.type === AST_NODE_TYPES.ObjectExpression &&
-        // a later reassignment means the initializer is not what reaches the call
-        !variable?.references.some((ref) => ref.isWrite() && !ref.init)
-    ) {
-        return definition.node.init;
-    }
-    return undefined;
+    const init = resolveConstInit(sourceCode, arg);
+    return init?.type === AST_NODE_TYPES.ObjectExpression ? init : undefined;
 }
 
 function canReplaceEphemeral(

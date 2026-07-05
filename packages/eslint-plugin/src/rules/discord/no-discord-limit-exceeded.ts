@@ -4,7 +4,8 @@ import { createRule } from '../../createRule';
 import { extendsDjsType } from '../../typeUtils';
 import { chainRoot, collectChain, isChainTop, methodName } from '../../utils';
 
-import type { TSESTree } from '@typescript-eslint/utils';
+import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
+import type * as ts from 'typescript';
 
 interface Limit {
     builders: ReadonlySet<string>;
@@ -45,7 +46,50 @@ const LIMITS: readonly Limit[] = [
     }
 ];
 
-function countStaticItems(calls: TSESTree.CallExpression[], limit: Limit): number | undefined {
+// a fixed-arity tuple type (an as-const array) has a statically known length
+function tupleLength(type: ts.Type, checker: ts.TypeChecker): number | undefined {
+    if (!checker.isTupleType(type)) return undefined;
+    // justified: isTupleType narrows to a reference whose target is the tuple shape
+    const reference = type as ts.TypeReference;
+    const target = reference.target as ts.TupleType;
+    const length = checker.getTypeArguments(reference).length;
+    // an optional or rest element raises the argument count past minLength, so the arity is uncertain
+    return target.minLength === length ? length : undefined;
+}
+
+function spreadCount(
+    spread: TSESTree.SpreadElement,
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker
+): number | undefined {
+    return tupleLength(services.getTypeAtLocation(spread.argument), checker);
+}
+
+// the array length when every element is countable, spreads resolve through tuple arity
+function arrayLength(
+    array: TSESTree.ArrayExpression,
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker
+): number | undefined {
+    let count = 0;
+    for (const element of array.elements) {
+        if (element?.type === AST_NODE_TYPES.SpreadElement) {
+            const arity = spreadCount(element, services, checker);
+            if (arity === undefined) return undefined;
+            count += arity;
+        } else {
+            count += 1;
+        }
+    }
+    return count;
+}
+
+function countStaticItems(
+    calls: TSESTree.CallExpression[],
+    limit: Limit,
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker
+): number | undefined {
     let count = 0;
     let matched = false;
     // reversed to source order, so a later setMethod wins over earlier adds
@@ -53,14 +97,26 @@ function countStaticItems(calls: TSESTree.CallExpression[], limit: Limit): numbe
         const name = methodName(call);
         if (name === limit.addMethod) {
             matched = true;
-            if (call.arguments.some((arg) => arg.type === AST_NODE_TYPES.SpreadElement)) return undefined;
-            count += call.arguments.length;
+            for (const arg of call.arguments) {
+                if (arg.type === AST_NODE_TYPES.SpreadElement) {
+                    const arity = spreadCount(arg, services, checker);
+                    if (arity === undefined) return undefined;
+                    count += arity;
+                } else {
+                    count += 1;
+                }
+            }
         } else if (name === limit.setMethod) {
             matched = true;
             const arg = call.arguments[0];
-            if (arg?.type !== AST_NODE_TYPES.ArrayExpression) return undefined;
-            if (arg.elements.some((element) => element?.type === AST_NODE_TYPES.SpreadElement)) return undefined;
-            count = arg.elements.length; // setMethod replaces, so this resets the count
+            const length =
+                arg?.type === AST_NODE_TYPES.ArrayExpression
+                    ? arrayLength(arg, services, checker)
+                    : arg !== undefined && arg.type !== AST_NODE_TYPES.SpreadElement
+                      ? tupleLength(services.getTypeAtLocation(arg), checker)
+                      : undefined;
+            if (length === undefined) return undefined;
+            count = length; // setMethod replaces, so this resets the count
         }
     }
     return matched ? count : undefined;
@@ -96,7 +152,7 @@ export default createRule({
                 const limit = LIMITS.find((entry) => extendsDjsType(checker, type, entry.builders));
                 if (!limit) return;
 
-                const count = countStaticItems(calls, limit);
+                const count = countStaticItems(calls, limit, services, checker);
                 if (count !== undefined && count > limit.cap) {
                     context.report({ node, messageId: 'tooMany', data: { detail: limit.detail, count } });
                 }

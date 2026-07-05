@@ -31,6 +31,24 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                 .setAutocomplete(false)
                 .addChoices({ name: 'A', value: 'a' });
         `,
+        // a plain boolean variable is not statically provable, so it is skipped
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            declare const flag: boolean;
+            new SlashCommandStringOption()
+                .setName('q')
+                .setAutocomplete(flag)
+                .addChoices({ name: 'A', value: 'a' });
+        `,
+        // a const false resolves through its literal type, no conflict
+        dedent`
+            import { SlashCommandStringOption } from 'discord.js';
+            const OFF = false;
+            new SlashCommandStringOption()
+                .setName('q')
+                .setAutocomplete(OFF)
+                .addChoices({ name: 'A', value: 'a' });
+        `,
         // a later setAutocomplete(false) overrides the earlier true, so there is no conflict
         dedent`
             import { SlashCommandStringOption } from 'discord.js';
@@ -95,6 +113,18 @@ ruleTester.run('no-choices-and-autocomplete', rule, {
                     .setName('q')
                     .setDescription('d')
                     .setAutocomplete(true)
+                    .addChoices({ name: 'A', value: 'a' });
+            `,
+            errors: [{ messageId: 'bothSet' }]
+        },
+        {
+            // a const true resolves through its literal type
+            code: dedent`
+                import { SlashCommandStringOption } from 'discord.js';
+                const ON = true;
+                new SlashCommandStringOption()
+                    .setName('q')
+                    .setAutocomplete(ON)
                     .addChoices({ name: 'A', value: 'a' });
             `,
             errors: [{ messageId: 'bothSet' }]

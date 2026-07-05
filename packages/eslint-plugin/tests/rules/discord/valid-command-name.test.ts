@@ -21,6 +21,18 @@ ruleTester.run('valid-command-name', rule, {
             import { SlashCommandBuilder } from 'discord.js';
             new SlashCommandBuilder().addStringOption((o) => o.setName('target').setDescription('d'));
         `,
+        // a valid name in a const resolves through its literal type
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            const NAME = 'ban-user';
+            new SlashCommandBuilder().setName(NAME);
+        `,
+        // a plain string variable has no literal type, so it is skipped
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            declare const name: string;
+            new SlashCommandBuilder().setName(name);
+        `,
         // a context menu command name may use spaces and uppercase, so it is left alone
         dedent`
             import { ContextMenuCommandBuilder } from 'discord.js';
@@ -80,6 +92,15 @@ ruleTester.run('valid-command-name', rule, {
             code: dedent`
                 import { SlashCommandBuilder } from 'discord.js';
                 new SlashCommandBuilder().setName('Ban');
+            `,
+            errors: [{ messageId: 'invalidName' }]
+        },
+        {
+            // an invalid name in a const resolves through its literal type
+            code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
+                const NAME = 'Ban User';
+                new SlashCommandBuilder().setName(NAME);
             `,
             errors: [{ messageId: 'invalidName' }]
         },

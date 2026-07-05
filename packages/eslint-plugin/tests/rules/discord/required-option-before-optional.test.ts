@@ -59,6 +59,14 @@ ruleTester.run('required-option-before-optional', rule, {
                 .addStringOption((o) => o.setName('a').setRequired(true))
                 .addStringOption((o) => o.setName('b').setRequired(true))
                 .addStringOption((o) => o.setName('c'));
+        `,
+        // a const flag resolves through its literal type, required then optional is the correct order
+        dedent`
+            import { SlashCommandBuilder } from 'discord.js';
+            const REQ = true;
+            new SlashCommandBuilder()
+                .addStringOption((o) => o.setName('a').setRequired(REQ))
+                .addStringOption((o) => o.setName('b'));
         `
     ],
     invalid: [
@@ -69,6 +77,17 @@ ruleTester.run('required-option-before-optional', rule, {
                 new SlashCommandBuilder()
                     .addStringOption((o) => o.setName('a'))
                     .addStringOption((o) => o.setName('b').setRequired(true));
+            `,
+            errors: [{ messageId: 'outOfOrder' }]
+        },
+        {
+            // a const flag resolves through its literal type
+            code: dedent`
+                import { SlashCommandBuilder } from 'discord.js';
+                const REQ = true;
+                new SlashCommandBuilder()
+                    .addStringOption((o) => o.setName('a'))
+                    .addStringOption((o) => o.setName('b').setRequired(REQ));
             `,
             errors: [{ messageId: 'outOfOrder' }]
         },
