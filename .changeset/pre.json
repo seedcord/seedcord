@@ -28,6 +28,7 @@
   "changesets": [
     "add-eslint-plugin",
     "bus-hmr-registration",
+    "button-builder-rules",
     "cli-dev-layout-measure",
     "cli-sidebar-dedupe",
     "color-error-codes",
