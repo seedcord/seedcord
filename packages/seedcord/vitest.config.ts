@@ -1,4 +1,4 @@
-import path from 'path';
+import path from 'node:path';
 
 import { defineConfig, mergeConfig } from 'vitest/config';
 
@@ -30,7 +30,7 @@ export default mergeConfig(
         test: {
             globals: true,
             environment: 'node',
-            testTimeout: 10000,
+            testTimeout: 10_000,
             setupFiles: ['./tests/setup.ts']
         }
     })

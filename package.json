@@ -77,7 +77,7 @@
         "@typescript/native-preview": "7.0.0-dev.20260630.1",
         "@vitest/coverage-v8": "catalog:test",
         "envapt": "catalog:deps",
-        "eslint": "catalog:deps",
+        "eslint": "catalog:eslint",
         "husky": "^9.1.7",
         "knip": "^6.17.1",
         "lint-staged": "^17.0.7",

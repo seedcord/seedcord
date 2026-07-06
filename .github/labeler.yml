@@ -31,6 +31,18 @@
 '📦 eslint-config':
   - changed-files:
       - any-glob-to-any-file: 'packages/eslint-config/**'
+'📦 eslint-config-base':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-config-base/**'
+'📦 eslint-plugin':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-plugin/**'
+'📦 eslint-plugin-discordjs':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-plugin-discordjs/**'
+'📦 eslint-utils':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-utils/**'
 '📦 tsconfig':
   - changed-files:
       - any-glob-to-any-file: 'packages/tsconfig/**'

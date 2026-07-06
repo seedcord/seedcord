@@ -21,18 +21,9 @@ catalogs:
     envapt:
       specifier: ^6.0.2
       version: 6.0.2
-    eslint:
-      specifier: ^10.6.0
-      version: 10.6.0
-    eslint-config-next:
-      specifier: ^16.2.9
-      version: 16.2.9
-    eslint-plugin-jsx-a11y:
-      specifier: ^6.10.2
-      version: 6.10.2
-    eslint-plugin-react-compiler:
-      specifier: 19.1.0-rc.2
-      version: 19.1.0-rc.2
+    lodash.merge:
+      specifier: ^4.6.2
+      version: 4.6.2
     lucide-react:
       specifier: ^1.21.0
       version: 1.21.0
@@ -66,6 +57,64 @@ catalogs:
     vite:
       specifier: ^8.0.16
       version: 8.0.16
+  eslint:
+    '@types/eslint-plugin-security':
+      specifier: ^3.0.1
+      version: 3.0.1
+    '@typescript-eslint/parser':
+      specifier: ^8.61.1
+      version: 8.62.1
+    '@typescript-eslint/rule-tester':
+      specifier: ^8.61.1
+      version: 8.62.1
+    '@typescript-eslint/utils':
+      specifier: ^8.61.1
+      version: 8.62.1
+    eslint:
+      specifier: ^10.6.0
+      version: 10.6.0
+    eslint-config-next:
+      specifier: ^16.2.9
+      version: 16.2.9
+    eslint-config-prettier:
+      specifier: ^10.1.8
+      version: 10.1.8
+    eslint-import-resolver-typescript:
+      specifier: ^4.4.5
+      version: 4.4.5
+    eslint-plugin-better-tailwindcss:
+      specifier: ^4.6.0
+      version: 4.6.0
+    eslint-plugin-import-x:
+      specifier: ^4.17.1
+      version: 4.17.1
+    eslint-plugin-jsx-a11y:
+      specifier: ^6.10.2
+      version: 6.10.2
+    eslint-plugin-mdx:
+      specifier: ^3.8.1
+      version: 3.8.1
+    eslint-plugin-prettier:
+      specifier: ^5.5.6
+      version: 5.5.6
+    eslint-plugin-react-compiler:
+      specifier: 19.1.0-rc.2
+      version: 19.1.0-rc.2
+    eslint-plugin-security:
+      specifier: ^4.0.1
+      version: 4.0.1
+    eslint-plugin-tailwind-canonical-classes:
+      specifier: ^1.3.3
+      version: 1.3.3
+    eslint-plugin-tsdoc:
+      specifier: ^0.5.2
+      version: 0.5.2
+    eslint-plugin-unicorn:
+      specifier: ^70.0.0
+      version: 70.0.0
+    typescript-eslint:
+      specifier: ^8.61.1
+      version: 8.61.1
   peer:
     discord.js:
       specifier: ^14.26.4
@@ -102,6 +151,9 @@ catalogs:
     '@vitest/coverage-v8':
       specifier: ^4.1.9
       version: 4.1.9
+    dedent:
+      specifier: ^1.7.2
+      version: 1.7.2
     jsdom:
       specifier: ^29.1.1
       version: 29.1.1
@@ -159,7 +211,7 @@ importers:
         specifier: catalog:deps
         version: 6.0.2
       eslint:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
       husky:
         specifier: ^9.1.7
@@ -292,13 +344,13 @@ importers:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)
       eslint-config-next:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 16.2.9(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
       eslint-plugin-jsx-a11y:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 6.10.2(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-react-compiler:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0))
       jsdom:
         specifier: catalog:test
@@ -353,13 +405,13 @@ importers:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)
       eslint-config-next:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 16.2.9(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)))(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3)
       eslint-plugin-jsx-a11y:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 6.10.2(eslint@9.39.4(jiti@2.7.0))
       eslint-plugin-react-compiler:
-        specifier: catalog:deps
+        specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0))
       prettier:
         specifier: catalog:deps
@@ -610,44 +662,50 @@ importers:
 
   packages/eslint-config:
     dependencies:
+      '@seedcord/eslint-plugin':
+        specifier: workspace:*
+        version: link:../eslint-plugin
       '@types/eslint-plugin-security':
-        specifier: ^3.0.1
+        specifier: catalog:eslint
         version: 3.0.1
       '@typescript-eslint/parser':
-        specifier: ^8.61.1
-        version: 8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
       eslint-config-prettier:
-        specifier: ^10.1.8
+        specifier: catalog:eslint
         version: 10.1.8(eslint@10.6.0(jiti@2.7.0))
       eslint-import-resolver-typescript:
-        specifier: ^4.4.5
+        specifier: catalog:eslint
         version: 4.4.5(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@10.6.0(jiti@2.7.0))
       eslint-plugin-better-tailwindcss:
-        specifier: ^4.6.0
+        specifier: catalog:eslint
         version: 4.6.0(eslint@10.6.0(jiti@2.7.0))(oxlint@1.69.0)(tailwindcss@4.3.1)(typescript@6.0.3)
+      eslint-plugin-discordjs:
+        specifier: workspace:*
+        version: link:../eslint-plugin-discordjs
       eslint-plugin-import-x:
-        specifier: ^4.17.1
+        specifier: catalog:eslint
         version: 4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0))
       eslint-plugin-mdx:
-        specifier: ^3.8.1
+        specifier: catalog:eslint
         version: 3.8.1(eslint@10.6.0(jiti@2.7.0))
       eslint-plugin-prettier:
-        specifier: ^5.5.6
+        specifier: catalog:eslint
         version: 5.5.6(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.6.0(jiti@2.7.0)))(eslint@10.6.0(jiti@2.7.0))(prettier@3.8.4)
       eslint-plugin-security:
-        specifier: ^4.0.1
+        specifier: catalog:eslint
         version: 4.0.1
       eslint-plugin-tailwind-canonical-classes:
-        specifier: ^1.3.3
+        specifier: catalog:eslint
         version: 1.3.3(eslint@10.6.0(jiti@2.7.0))
       eslint-plugin-tsdoc:
-        specifier: ^0.5.2
+        specifier: catalog:eslint
         version: 0.5.2(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
       eslint-plugin-unicorn:
-        specifier: ^70.0.0
+        specifier: catalog:eslint
         version: 70.0.0(eslint@10.6.0(jiti@2.7.0))
       lodash.merge:
-        specifier: ^4.6.2
+        specifier: catalog:deps
         version: 4.6.2
       prettier:
         specifier: catalog:deps
@@ -662,14 +720,177 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
       typescript-eslint:
-        specifier: ^8.61.1
+        specifier: catalog:eslint
         version: 8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
     devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint:
+        specifier: catalog:eslint
+        version: 10.6.0(jiti@2.7.0)
+
+  packages/eslint-config-base:
+    dependencies:
+      '@types/eslint-plugin-security':
+        specifier: catalog:eslint
+        version: 3.0.1
+      '@typescript-eslint/parser':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint-config-prettier:
+        specifier: catalog:eslint
+        version: 10.1.8(eslint@10.6.0(jiti@2.7.0))
+      eslint-import-resolver-typescript:
+        specifier: catalog:eslint
+        version: 4.4.5(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@10.6.0(jiti@2.7.0))
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.6.0(eslint@10.6.0(jiti@2.7.0))(oxlint@1.69.0)(tailwindcss@4.3.1)(typescript@6.0.3)
+      eslint-plugin-import-x:
+        specifier: catalog:eslint
+        version: 4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0))
+      eslint-plugin-mdx:
+        specifier: catalog:eslint
+        version: 3.8.1(eslint@10.6.0(jiti@2.7.0))
+      eslint-plugin-prettier:
+        specifier: catalog:eslint
+        version: 5.5.6(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.6.0(jiti@2.7.0)))(eslint@10.6.0(jiti@2.7.0))(prettier@3.8.4)
+      eslint-plugin-security:
+        specifier: catalog:eslint
+        version: 4.0.1
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.3.3(eslint@10.6.0(jiti@2.7.0))
+      eslint-plugin-tsdoc:
+        specifier: catalog:eslint
+        version: 0.5.2(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint-plugin-unicorn:
+        specifier: catalog:eslint
+        version: 70.0.0(eslint@10.6.0(jiti@2.7.0))
+      lodash.merge:
+        specifier: catalog:deps
+        version: 4.6.2
+      prettier:
+        specifier: catalog:deps
+        version: 3.8.4
+      prettier-plugin-tailwindcss:
+        specifier: catalog:deps
+        version: 0.8.0(prettier@3.8.4)
+      tailwindcss:
+        specifier: catalog:deps
+        version: 4.3.1
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+      typescript-eslint:
+        specifier: catalog:eslint
+        version: 8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+    devDependencies:
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
       '@types/lodash.merge':
         specifier: ^4.6.9
         version: 4.6.9
       eslint:
-        specifier: catalog:deps
+        specifier: catalog:eslint
+        version: 10.6.0(jiti@2.7.0)
+
+  packages/eslint-plugin:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint-plugin-discordjs:
+        specifier: workspace:*
+        version: link:../eslint-plugin-discordjs
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@seedcord/eslint-utils':
+        specifier: workspace:*
+        version: link:../eslint-utils
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@typescript-eslint/rule-tester':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      dedent:
+        specifier: catalog:test
+        version: 1.7.2
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      eslint:
+        specifier: catalog:eslint
+        version: 10.6.0(jiti@2.7.0)
+
+  packages/eslint-plugin-discordjs:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@seedcord/eslint-utils':
+        specifier: workspace:*
+        version: link:../eslint-utils
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@typescript-eslint/rule-tester':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      dedent:
+        specifier: catalog:test
+        version: 1.7.2
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      eslint:
+        specifier: catalog:eslint
+        version: 10.6.0(jiti@2.7.0)
+
+  packages/eslint-utils:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      eslint:
+        specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
 
   packages/plugins:
@@ -830,9 +1051,9 @@ importers:
         specifier: catalog:deps
         version: 0.22.3(@typescript/native-preview@7.0.0-dev.20260630.1)(oxc-resolver@11.21.3)(tsx@4.22.4)(typescript@6.0.3)
     devDependencies:
-      '@seedcord/eslint-config':
+      '@seedcord/eslint-config-base':
         specifier: workspace:*
-        version: link:../eslint-config
+        version: link:../eslint-config-base
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -3760,9 +3981,6 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@tailwindcss/node@4.3.0':
-    resolution: {integrity: sha512-aFb4gUhFOgdh9AXo4IzBEOzBkkAxm9VigwDJnMIYv3lcfXCJVesNfbEaBl4BNgVRyid92AmdviqwBUBRKSeY3g==}
-
   '@tailwindcss/node@4.3.1':
     resolution: {integrity: sha512-6NDaqRoAMSXD1mr/RXu0HBvNE9a2n5tHPsxu9XHLws8o4Twes5rBM2205SUUiJ9goAtadrN6xTGX0UDEwp/N4A==}
 
@@ -4046,6 +4264,13 @@ packages:
       eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
+  '@typescript-eslint/parser@8.62.1':
+    resolution: {integrity: sha512-sPhE4iHuJDSvoAiec+Ro8JyXw8f0ql13HFR82P99nCm9GwTEKG0KYLvDe6REk8BCXuit6vJAv/Yxg5ABaNS2rA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
+      typescript: '>=4.8.4 <6.1.0'
+
   '@typescript-eslint/project-service@8.56.1':
     resolution: {integrity: sha512-TAdqQTzHNNvlVFfR+hu2PDJrURiwKsUvxFn1M0h95BB8ah5jejas08jUWG4dBA68jDMI988IvtfdAI53JzEHOQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -4062,6 +4287,13 @@ packages:
     resolution: {integrity: sha512-yQ3RgY5RkSBpsNS1Bx/JQEcA24FOSdfGktoyprAr5u18390UQdtVcfnEv4nIrIshNnavlVyZBKxQwT1fIAE6cg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
+      typescript: '>=4.8.4 <6.1.0'
+
+  '@typescript-eslint/rule-tester@8.62.1':
+    resolution: {integrity: sha512-qq2Io5qOVAyKsXfcgpqc5qIef++7bFMit3R8gNLNYlxrivwWtZH5pfIuU0nc69mUHAxowv4sUGfbpwykfBGHYQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^8.57.0 || ^9.0.0 || ^10.0.0
       typescript: '>=4.8.4 <6.1.0'
 
   '@typescript-eslint/scope-manager@8.56.1':
@@ -4902,6 +5134,14 @@ packages:
 
   decode-named-character-reference@1.3.0:
     resolution: {integrity: sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q==}
+
+  dedent@1.7.2:
+    resolution: {integrity: sha512-WzMx3mW98SN+zn3hgemf4OzdmyNhhhKz5Ay0pUfQiMQ3e1g+xmTJWp/pKdwKVXhdSkAEGIIzqeuWrL3mV/AXbA==}
+    peerDependencies:
+      babel-plugin-macros: ^3.1.0
+    peerDependenciesMeta:
+      babel-plugin-macros:
+        optional: true
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
@@ -7615,9 +7855,6 @@ packages:
 
   tailwind-merge@3.6.0:
     resolution: {integrity: sha512-uxL7qAVQriqRQPAyK3pj66VqskWqoZ37PW94jwOTwNfq/z9oyu1V+eqrZqtR2+fCiXdYOZe/Modt8GtvqNzu+w==}
-
-  tailwindcss@4.3.0:
-    resolution: {integrity: sha512-y6nxMGB1nMW9R6k96e5gdIFzcfL/gTJRNaqGes1YvkLnPVXzWgbqFF2yLC0T8G774n24cx3Pe8XrKoniCOAH+Q==}
 
   tailwindcss@4.3.1:
     resolution: {integrity: sha512-hk+TB1m+K8CYNrP6rjQaq/Y+4Zylwpa87mLYBKCunwnnQ9p+fHb7kmSfGqyEJoxF/O6CDyABWVFEafNSYKll+Q==}
@@ -10841,16 +11078,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@tailwindcss/node@4.3.0':
-    dependencies:
-      '@jridgewell/remapping': 2.3.5
-      enhanced-resolve: 5.24.0
-      jiti: 2.7.0
-      lightningcss: 1.32.0
-      magic-string: 0.30.21
-      source-map-js: 1.2.1
-      tailwindcss: 4.3.0
-
   '@tailwindcss/node@4.3.1':
     dependencies:
       '@jridgewell/remapping': 2.3.5
@@ -11149,9 +11376,21 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@typescript-eslint/parser@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/scope-manager': 8.62.1
+      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/typescript-estree': 8.62.1(typescript@6.0.3)
+      '@typescript-eslint/visitor-keys': 8.62.1
+      debug: 4.4.3
+      eslint: 10.6.0(jiti@2.7.0)
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
   '@typescript-eslint/project-service@8.56.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.61.1(typescript@6.0.3)
+      '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.62.1
       debug: 4.4.3
       typescript: 6.0.3
@@ -11160,7 +11399,7 @@ snapshots:
 
   '@typescript-eslint/project-service@8.61.1(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/tsconfig-utils': 8.61.1(typescript@6.0.3)
+      '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.62.1
       debug: 4.4.3
       typescript: 6.0.3
@@ -11172,6 +11411,20 @@ snapshots:
       '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
       '@typescript-eslint/types': 8.62.1
       debug: 4.4.3
+      typescript: 6.0.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/rule-tester@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)':
+    dependencies:
+      '@typescript-eslint/parser': 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/typescript-estree': 8.62.1(typescript@6.0.3)
+      '@typescript-eslint/utils': 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      ajv: 6.15.0
+      eslint: 10.6.0(jiti@2.7.0)
+      json-stable-stringify-without-jsonify: 1.0.1
+      lodash.merge: 4.6.2
+      semver: 7.8.4
       typescript: 6.0.3
     transitivePeerDependencies:
       - supports-color
@@ -12026,6 +12279,8 @@ snapshots:
     dependencies:
       character-entities: 2.0.2
 
+  dedent@1.7.2: {}
+
   deep-is@0.1.4: {}
 
   define-data-property@1.1.4:
@@ -12406,7 +12661,7 @@ snapshots:
       tinyglobby: 0.2.17
       unrs-resolver: 1.12.2
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0))
+      eslint-plugin-import: 2.32.0(@typescript-eslint/parser@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0))
       eslint-plugin-import-x: 4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0))
     transitivePeerDependencies:
       - supports-color
@@ -12430,11 +12685,11 @@ snapshots:
       - bluebird
       - supports-color
 
-  eslint-module-utils@2.13.0(@typescript-eslint/parser@8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0)):
+  eslint-module-utils@2.13.0(@typescript-eslint/parser@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0)):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
-      '@typescript-eslint/parser': 8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/parser': 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.6.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
       eslint-import-resolver-typescript: 4.4.5(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.6.0(jiti@2.7.0)))(eslint-plugin-import@2.32.0)(eslint@10.6.0(jiti@2.7.0))
@@ -12507,7 +12762,7 @@ snapshots:
       - supports-color
     optional: true
 
-  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0)):
+  eslint-plugin-import@2.32.0(@typescript-eslint/parser@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -12518,7 +12773,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 10.6.0(jiti@2.7.0)
       eslint-import-resolver-node: 0.3.10
-      eslint-module-utils: 2.13.0(@typescript-eslint/parser@8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0))
+      eslint-module-utils: 2.13.0(@typescript-eslint/parser@8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint-import-resolver-typescript@4.4.5)(eslint@10.6.0(jiti@2.7.0))
       hasown: 2.0.4
       is-core-module: 2.16.2
       is-glob: 4.0.3
@@ -12530,7 +12785,7 @@ snapshots:
       string.prototype.trimend: 1.0.10
       tsconfig-paths: 3.15.0
     optionalDependencies:
-      '@typescript-eslint/parser': 8.61.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      '@typescript-eslint/parser': 8.62.1(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
     transitivePeerDependencies:
       - eslint-import-resolver-typescript
       - eslint-import-resolver-webpack
@@ -12767,7 +13022,7 @@ snapshots:
 
   eslint-plugin-tailwind-canonical-classes@1.3.3(eslint@10.6.0(jiti@2.7.0)):
     dependencies:
-      '@tailwindcss/node': 4.3.0
+      '@tailwindcss/node': 4.3.1
       eslint: 10.6.0(jiti@2.7.0)
       synckit: 0.9.3
 
@@ -14581,7 +14836,7 @@ snapshots:
 
   oxlint-plugin-react-doctor@0.5.6:
     dependencies:
-      '@typescript-eslint/types': 8.61.1
+      '@typescript-eslint/types': 8.62.1
       eslint-scope: 9.1.2
       eslint-visitor-keys: 5.0.1
       oxc-parser: 0.132.0
@@ -15483,8 +15738,6 @@ snapshots:
   tailwind-csstree@0.3.3: {}
 
   tailwind-merge@3.6.0: {}
-
-  tailwindcss@4.3.0: {}
 
   tailwindcss@4.3.1: {}
 
