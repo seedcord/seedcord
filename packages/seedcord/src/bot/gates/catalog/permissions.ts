@@ -4,8 +4,9 @@ import { pickNotice } from '@seedcord/core/internal';
 import { MissingRole, NotInGuild } from '@bot/notices';
 import { checkPermissions } from '@bUtilities/permissions/checkPermissions';
 
-import type { InteractionGateContext, NonModalInteraction } from '../Gate';
+import type { InteractionGateContext } from '../Gate';
 import type { BotPermissionScope, PermissionErrorCtors } from '@bUtilities/permissions/checkPermissions';
+import type { NonModalInteraction } from '@handlers/BaseHandler';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
 
 // shown to a caller who is in a guild but whose member the cache could not resolve

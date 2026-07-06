@@ -3,7 +3,8 @@ import { pickNotice } from '@seedcord/core/internal';
 
 import { NotNsfw } from '@bot/notices';
 
-import type { InteractionGateContext, NonModalInteraction } from '../Gate';
+import type { InteractionGateContext } from '../Gate';
+import type { NonModalInteraction } from '@handlers/BaseHandler';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
 
 // a thread carries no nsfw flag of its own, so it inherits the parent channel's

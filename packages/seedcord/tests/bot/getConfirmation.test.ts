@@ -5,7 +5,7 @@ import { getConfirmation } from '@bot/confirm';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
 
 import type { DefaultConfirmOptions } from '@bot/confirm';
-import type { NonModalInteraction } from '@bot/gates/Gate';
+import type { NonModalInteraction } from '@handlers/BaseHandler';
 import type { ReplyResponse } from '@seedcord/types';
 import type { ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 

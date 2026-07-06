@@ -6,8 +6,7 @@ import { ReplySender } from '@bot/ReplySender';
 
 import { CONFIRM_DEF } from './reserved';
 
-import type { NonModalInteraction } from '@bot/gates/Gate';
-import type { Repliables } from '@handlers/BaseHandler';
+import type { NonModalInteraction, Repliables } from '@handlers/BaseHandler';
 import type { ReplyResponse } from '@seedcord/types';
 import type { ButtonInteraction, Message } from 'discord.js';
 import type { Promisable } from 'type-fest';

@@ -1,7 +1,7 @@
 import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { GateContextBase } from '@seedcord/core';
-import type { ClientEvents, Guild, GuildMember, ModalSubmitInteraction, User } from 'discord.js';
+import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
 
 /**
  * The interaction arm. It extends the scalar {@link GateContextBase} with the live interaction and
@@ -92,20 +92,3 @@ export interface EventGateContext<
  * ```
  */
 export type GateContext = InteractionGateContext | EventGateContext;
-
-/**
- * Every repliable interaction except ModalSubmit, the kinds with a reliable caller member and channel.
- * {@link RequirePermissions}, {@link RequireRole}, and {@link Nsfw} require this, which is why they are
- * a compile error on a modal handler.
- *
- * @example
- * ```ts
- * // gates needing a reliable caller member and channel exclude ModalSubmit
- * function MyGuard(): Gate<InteractionGateContext<NonModalInteraction>, 'MyGuard'> {
- *     return defineGate('MyGuard', (ctx: InteractionGateContext<NonModalInteraction>) => {
- *         void ctx.interaction.channel; // present on every non-modal interaction
- *     });
- * }
- * ```
- */
-export type NonModalInteraction = Exclude<Repliables, ModalSubmitInteraction>;

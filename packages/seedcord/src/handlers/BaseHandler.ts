@@ -26,6 +26,8 @@ export type ValidEventTypes = ValidInteractionTypes | ClientEvents[ValidNonInter
 
 export type Repliables = Exclude<ValidInteractionTypes, AutocompleteInteraction>;
 
+export type NonModalInteraction = Exclude<Repliables, ModalSubmitInteraction>;
+
 /** @internal */
 export interface Handler {
     execute(): Promise<void>;
