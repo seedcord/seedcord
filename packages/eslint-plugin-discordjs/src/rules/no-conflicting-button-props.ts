@@ -10,7 +10,7 @@ import {
 } from '@seedcord/eslint-utils';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-import { gatherFacts, LINK, PREMIUM, STYLE_NAMES } from '../buttons';
+import { gatherFacts, knownStyle, LINK, PREMIUM, STYLE_NAMES } from '../buttons';
 import { createRule } from '../createRule';
 
 import type { ButtonFacts, ButtonProp } from '../buttons';
@@ -86,7 +86,7 @@ export default createRule({
             const trusted = gatherFacts(calls, trustedConstructorData(root, rootType));
 
             // the type resolves every literal form (enum member, raw value, const, shadowed ButtonStyle) to its own value
-            const style = staticNumber(trusted.styleSource, services);
+            const style = knownStyle(staticNumber(trusted.styleSource, services));
 
             if (style === PREMIUM) reportPremiumProps(trusted.props);
             else reportConflicts(anchor, style, trusted);

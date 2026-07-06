@@ -126,6 +126,20 @@ export function constructorData(root: TSESTree.Node): TSESTree.ObjectExpression 
     return value.type === AST_NODE_TYPES.ObjectExpression ? value : undefined;
 }
 
+// the outermost assertion wrapping this expression, so `b as X` classifies like `b`
+export function outermostAssertion(node: TSESTree.Expression): TSESTree.Expression {
+    let current: TSESTree.Expression = node;
+    while (
+        current.parent.type === AST_NODE_TYPES.TSAsExpression ||
+        current.parent.type === AST_NODE_TYPES.TSTypeAssertion ||
+        current.parent.type === AST_NODE_TYPES.TSSatisfiesExpression ||
+        current.parent.type === AST_NODE_TYPES.TSNonNullExpression
+    ) {
+        current = current.parent;
+    }
+    return current;
+}
+
 // unwrap as / satisfies / <T> so the expression behind them is still readable
 export function unwrapAssertions(expr: TSESTree.Expression): TSESTree.Expression {
     let current = expr;

@@ -14,6 +14,11 @@ export const STYLE_NAMES: Record<number, string> = {
 export const LINK = 5;
 export const PREMIUM = 6;
 
+// a wire value outside the six styles resolves like a dynamic style
+export function knownStyle(value: number | undefined): number | undefined {
+    return value !== undefined && value in STYLE_NAMES ? value : undefined;
+}
+
 export type ButtonProp = 'customId' | 'label' | 'url' | 'emoji' | 'skuId';
 
 // each prop's setter and its snake_case constructor data key. discord.js also accepts the

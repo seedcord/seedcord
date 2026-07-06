@@ -5,11 +5,12 @@ import {
     collectChain,
     isFromDiscordJs,
     methodName,
+    outermostAssertion,
     staticNumber
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
-import { gatherFacts, LINK, PREMIUM, STYLE_NAMES } from '../buttons';
+import { gatherFacts, knownStyle, LINK, PREMIUM, STYLE_NAMES } from '../buttons';
 import { createRule } from '../createRule';
 
 import type { ButtonFacts } from '../buttons';
@@ -38,15 +39,17 @@ function referenceCalls(id: TSESTree.Identifier, info: TypeInfo): TSESTree.CallE
         // a setter chain returns the builder itself, so its result must be dropped or consumed,
         // never bound where props could still be added
         if (!extendsDjsType(info.checker, info.services.getTypeAtLocation(top), 'ButtonBuilder')) return calls;
-        if (top.parent.type === AST_NODE_TYPES.ExpressionStatement) return calls;
-        if (top.parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(top.parent, top, info)) {
+        const sealed = outermostAssertion(top);
+        if (sealed.parent.type === AST_NODE_TYPES.ExpressionStatement) return calls;
+        if (sealed.parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(sealed.parent, sealed, info)) {
             return calls;
         }
         return undefined;
     }
-    if (id.parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(id.parent, id, info)) {
+    const wrapped = outermostAssertion(id);
+    if (wrapped.parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(wrapped.parent, wrapped, info)) {
         // a from() source is a template, its copies carry the completion
-        return methodName(id.parent) === 'from' ? undefined : [];
+        return methodName(wrapped.parent) === 'from' ? undefined : [];
     }
     // exporting an incomplete builder is flagged deliberately, cross-module completion mutates a
     // shared instance and stays out of scope
@@ -86,13 +89,14 @@ function reachableCalls(
     info: TypeInfo
 ): TSESTree.CallExpression[] | undefined {
     const calls = top.type === AST_NODE_TYPES.CallExpression ? collectChain(top) : [];
-    const parent = top.parent;
+    const sealed = outermostAssertion(top);
+    const parent = sealed.parent;
     if (parent.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.Identifier) {
         const later = completionCalls(parent, info);
         return later === undefined ? undefined : [...later, ...calls];
     }
     if (parent.type === AST_NODE_TYPES.ExpressionStatement) return calls;
-    if (parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(parent, top, info)) return calls;
+    if (parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(parent, sealed, info)) return calls;
     return undefined;
 }
 
@@ -157,8 +161,9 @@ export default createRule({
                     context.report({ node: top, messageId: 'missingStyle' });
                     return;
                 }
-                // a style that is set but not static keeps the requirements unknowable
-                const style = staticNumber(facts.styleSource, services);
+                // a style that is set but not static (or outside the wire range) keeps the
+                // requirements unknowable
+                const style = knownStyle(staticNumber(facts.styleSource, services));
                 if (style === undefined) return;
 
                 reportMissing(top, style, facts);

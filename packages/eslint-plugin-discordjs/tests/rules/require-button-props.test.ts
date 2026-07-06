@@ -21,6 +21,11 @@ ruleTester.run('require-button-props', rule, {
             declare const style: ButtonStyle;
             new ButtonBuilder().setStyle(style).setLabel('x');
         `,
+        // a wire value outside the six styles counts as unknown
+        dedent`
+            import { ButtonBuilder } from 'discord.js';
+            new ButtonBuilder().setStyle(7);
+        `,
         // constructor data carries the customId
         dedent`
             import { ButtonBuilder, ButtonStyle } from 'discord.js';
@@ -187,6 +192,26 @@ ruleTester.run('require-button-props', rule, {
                 row.addComponents(b);
             `,
             errors: [{ messageId: 'missingCustomId', data: { style: 'Danger' } }]
+        },
+        {
+            // consumption through an assertion seals it the same way
+            code: dedent`
+                import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+                declare const row: ActionRowBuilder<ButtonBuilder>;
+                const b = new ButtonBuilder().setStyle(ButtonStyle.Danger).setLabel('x');
+                row.addComponents(b as ButtonBuilder);
+            `,
+            errors: [{ messageId: 'missingCustomId', data: { style: 'Danger' } }]
+        },
+        {
+            // an assertion on the declarator init changes nothing about the lifetime
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                export const btn = new ButtonBuilder()
+                    .setStyle(ButtonStyle.Link)
+                    .setURL('https://example.com') as ButtonBuilder;
+            `,
+            errors: [{ messageId: 'missingLabel', data: { style: 'Link' } }]
         },
         {
             code: dedent`

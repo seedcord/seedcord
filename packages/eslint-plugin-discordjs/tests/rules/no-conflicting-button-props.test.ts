@@ -194,6 +194,15 @@ ruleTester.run('no-conflicting-button-props', rule, {
             errors: [{ messageId: 'linkWithCustomId' }]
         },
         {
+            // a wire value outside the six styles counts as unknown, and the style-independent
+            // skuId pair still reports
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder().setStyle(7).setSKUId('123').setLabel('x');
+            `,
+            errors: [{ messageId: 'skuIdWithProp', data: { prop: 'label' } }]
+        },
+        {
             code: dedent`
                 import { ButtonBuilder, ButtonStyle } from 'discord.js';
                 new ButtonBuilder()
