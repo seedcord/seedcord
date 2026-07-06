@@ -43,7 +43,7 @@ export function markCommits(ctx: GateContextBase): number {
     return commitQueues.get(ctx)?.length ?? 0;
 }
 
-/** Removes commits queued after `mark`, allowing an `or` arm that queued an effect but failed to revert the queue state. */
+/** Removes commits queued after `mark`, so an `or` arm that queued an effect and then refused leaves no commit behind. */
 export function rollbackCommits(ctx: GateContextBase, mark: number): void {
     const queue = commitQueues.get(ctx);
     if (queue && queue.length > mark) queue.length = mark;

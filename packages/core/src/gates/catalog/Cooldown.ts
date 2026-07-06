@@ -67,6 +67,7 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, a string is
  * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction. The
  * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
+ * That split also means two requests racing the same key can both pass before either charges the slot.
  * Each call gets its own bucket, so two handlers never share a window. Reword the refusal with {@link CooldownOptions.message}
  * or replace it with {@link CooldownOptions.notice}.
  *

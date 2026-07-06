@@ -55,8 +55,6 @@ export function RegisterCommand(scope: 'guild', guilds: string[]): (ctor: Comman
 
 export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
     return (ctor: CommandCtor): void => {
-        const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
-
         const existingMeta = Reflect.getOwnMetadata(CommandMetadataKey, ctor) as CommandMeta | undefined;
         if (existingMeta) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandAlreadyRegistered, [
@@ -74,6 +72,7 @@ export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds);
         }
 
+        const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
         Reflect.defineMetadata(CommandMetadataKey, meta, ctor);
     };
 }

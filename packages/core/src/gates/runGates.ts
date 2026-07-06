@@ -27,6 +27,7 @@ export async function runGates(gates: readonly Gate<GateContextBase>[], ctx: Gat
  * @param ctx - The context passed to each gate, supplying what the gate checks against.
  */
 export async function runHandlerGates(handlerCtor: object, ctx: GateContextBase): Promise<void> {
+    // justified: getMetadata returns any, and this key only ever stores the @Gated gate array
     const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
     if (!gates) return;
     await runGates(gates, ctx);

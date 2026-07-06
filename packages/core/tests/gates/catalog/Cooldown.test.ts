@@ -3,6 +3,7 @@ import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Cooldown } from '@gates/catalog/Cooldown';
+import { runGates } from '@gates/runGates';
 import { OnCooldown } from '@notices/index';
 import { Notice } from '@stops/Notice';
 
@@ -164,6 +165,28 @@ describe('Cooldown', () => {
         const peek = vi.fn().mockReturnValue({ limited: false });
         await Cooldown(5, { per }).check(cdCtx({ peek, charge: vi.fn() }, ids));
         expect(String(peek.mock.calls[0]?.[0])).toContain(expected);
+    });
+
+    it('lets two requests racing the same key both pass before either commits', async () => {
+        const rl = new MemoryRateLimiter();
+        const gate = Cooldown(60);
+        const ctxA = cdCtx(rl);
+        const ctxB = cdCtx(rl);
+
+        // both checks run before either commit charges, the charge-in-commit trade-off admits both
+        await expect(Promise.all([runGates([gate], ctxA), runGates([gate], ctxB)])).resolves.toBeDefined();
+
+        await expect(runGates([gate], cdCtx(rl))).rejects.toBeInstanceOf(OnCooldown);
+    });
+
+    // flips when the limiter gains an atomic reserve, the peek/charge split admits both rn
+    it.fails('admits exactly one of two requests racing the same key', async () => {
+        const rl = new MemoryRateLimiter();
+        const gate = Cooldown(60);
+
+        const results = await Promise.allSettled([runGates([gate], cdCtx(rl)), runGates([gate], cdCtx(rl))]);
+        const refused = results.filter((result) => result.status === 'rejected');
+        expect(refused).toHaveLength(1);
     });
 
     it('falls back to the global bucket when the scope value is missing', async () => {

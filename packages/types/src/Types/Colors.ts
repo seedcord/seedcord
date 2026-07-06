@@ -2,7 +2,7 @@
  * A discord.js color name, or `'Random'`.
  *
  * Duplicated from the djs `Colors` keys so `@seedcord/types` stays discord.js-free. A type test in
- * `@seedcord/core` pins it against the real table, so it cannot drift silently.
+ * this package pins it against the real table
  */
 export type ColorName =
     | 'Aqua'
