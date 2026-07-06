@@ -1,5 +1,17 @@
 # @seedcord/types
 
+## 0.8.0-next.3
+
+### Minor Changes
+
+- 7174db3: New `CoreBase` in `@seedcord/core` with `config` and `rateLimiter`. The gateway `Core` extends it. `core.rateLimiter` is an async `IRateLimiter` backed by `MemoryRateLimiter`. `seedcord` re-exports `@seedcord/rate-limiter`. `SeedcordInstance` adds `version` and moves to `@seedcord/types/internal`.
+
+    **BREAKING:** `@seedcord/types` no longer depends on discord.js. `clientOptions` and `events` move from `BotConfig` to `GatewayBotConfig` in `seedcord`, and the `Seedcord` constructor takes `GatewayConfig`. `Config.botColor` is a `BotColor`.
+
+    **BREAKING:** `@seedcord/services` no longer exports `RateLimiter`, `RateLimitWindow`, or `RateLimitResult`. Use `MemoryRateLimiter` from `@seedcord/rate-limiter` and the types from `@seedcord/types`. `hit` is replaced by the async `charge`, and results carry `resetAt`, `remaining`, `retryAfterMs`.
+
+- 7174db3: New `@seedcord/rate-limiter` package: `MemoryRateLimiter` (exact sliding window, in-memory) and `buildKey`. `IRateLimiter` (`charge`/`peek`/`reset`) and `RateLimitWindow`/`RateLimitResult` are in `@seedcord/types`.
+
 ## 0.8.0-next.2
 
 ### Minor Changes

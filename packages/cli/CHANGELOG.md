@@ -1,5 +1,20 @@
 # @seedcord/cli
 
+## 0.4.0-next.4
+
+### Patch Changes
+
+- 7174db3: The dev sidebar no longer shows the config paths and now shows the framework version. The rail width locks at the first running render of each run.
+- Updated dependencies [7174db3]
+- Updated dependencies [7174db3]
+- Updated dependencies [7174db3]
+- Updated dependencies [7174db3]
+    - @seedcord/core@0.1.0-next.2
+    - @seedcord/types@0.8.0-next.3
+    - @seedcord/services@0.9.0-next.4
+    - @seedcord/utils@0.8.0-next.3
+    - @seedcord/errors@0.3.0-next.2
+
 ## 0.4.0-next.3
 
 ### Patch Changes
