@@ -67,6 +67,30 @@ export function chainRoot(top: TSESTree.CallExpression): TSESTree.Node {
     return current;
 }
 
+// the outermost call of the fluent chain built on this expression, or the expression itself when unchained
+export function enclosingChainTop<Node extends TSESTree.Node>(node: Node): Node | TSESTree.CallExpression {
+    let current: Node | TSESTree.CallExpression = node;
+    while (
+        current.parent?.type === AST_NODE_TYPES.MemberExpression &&
+        current.parent.object === current &&
+        current.parent.parent.type === AST_NODE_TYPES.CallExpression &&
+        current.parent.parent.callee === current.parent
+    ) {
+        current = current.parent.parent;
+    }
+    return current;
+}
+
+// collectChain is outermost-first, so the first match is the last call executed, and that one wins
+export function lastCall(calls: TSESTree.CallExpression[], name: string): TSESTree.CallExpression | undefined {
+    return calls.find((call) => methodName(call) === name);
+}
+
+// the property token of a member call, the natural report target for an offending setter
+export function calleeProperty(call: TSESTree.CallExpression): TSESTree.Node {
+    return call.callee.type === AST_NODE_TYPES.MemberExpression ? call.callee.property : call;
+}
+
 // a later reassignment means the initializer is not the value that reaches the use site
 export function resolveConstInit(
     sourceCode: TSESLint.SourceCode,
@@ -91,6 +115,15 @@ export function getProperty(node: TSESTree.ObjectExpression, name: string): TSES
     return node.properties.find(
         (prop): prop is TSESTree.Property => prop.type === AST_NODE_TYPES.Property && propertyKeyIs(prop, name)
     );
+}
+
+// the data object literal behind a builder chain's `new X({ ... })` root
+export function constructorData(root: TSESTree.Node): TSESTree.ObjectExpression | undefined {
+    if (root.type !== AST_NODE_TYPES.NewExpression) return undefined;
+    const arg = root.arguments[0];
+    if (arg === undefined || arg.type === AST_NODE_TYPES.SpreadElement) return undefined;
+    const value = unwrapAssertions(arg);
+    return value.type === AST_NODE_TYPES.ObjectExpression ? value : undefined;
 }
 
 // unwrap as / satisfies / <T> so the expression behind them is still readable

@@ -31,6 +31,11 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             import { ActionRowBuilder } from 'discord.js';
             new ActionRowBuilder().addComponents({}, {}, {}, {}).setComponents([{}, {}]);
         `,
+        // setComponents also replaces the constructor items
+        dedent`
+            import { ActionRowBuilder } from 'discord.js';
+            new ActionRowBuilder({ components: [${objs(6)}] }).setComponents([{}, {}]);
+        `,
         // setComponents with a variable, the count is not statically known
         dedent`
             import { ActionRowBuilder, ButtonBuilder } from 'discord.js';
@@ -76,6 +81,38 @@ ruleTester.run('no-discord-limit-exceeded', rule, {
             code: dedent`
                 import { ActionRowBuilder } from 'discord.js';
                 new ActionRowBuilder().addComponents({}, {}, {}, {}, {}, {});
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // the constructor data alone exceeds the cap, no chain
+            code: dedent`
+                import { ActionRowBuilder } from 'discord.js';
+                new ActionRowBuilder({ components: [${objs(6)}] });
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // constructor items and chained adds sum past the cap
+            code: dedent`
+                import { ActionRowBuilder } from 'discord.js';
+                new ActionRowBuilder({ components: [${objs(3)}] }).addComponents({}, {}, {});
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // a sole leading array argument is the whole list at runtime
+            code: dedent`
+                import { ActionRowBuilder } from 'discord.js';
+                new ActionRowBuilder().addComponents([${objs(6)}]);
+            `,
+            errors: [{ messageId: 'tooMany' }]
+        },
+        {
+            // the set methods take the rest form too
+            code: dedent`
+                import { ActionRowBuilder } from 'discord.js';
+                new ActionRowBuilder().setComponents(${objs(6)});
             `,
             errors: [{ messageId: 'tooMany' }]
         },

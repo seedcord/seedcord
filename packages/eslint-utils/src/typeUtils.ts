@@ -1,4 +1,7 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { TypeFlags } from 'typescript';
+
+import { constructorData, unwrapAssertions } from './utils';
 
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
@@ -47,6 +50,33 @@ function walkBaseChain(checker: ts.TypeChecker, type: ts.Type, match: (symbol: t
 export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: string | ReadonlySet<string>): boolean {
     const wanted = typeof names === 'string' ? new Set([names]) : names;
     return walkBaseChain(checker, type, (symbol) => wanted.has(symbol.getName()) && isFromDiscordJs(symbol));
+}
+
+// a user subclass constructor may repurpose the data argument, so it only counts on
+// discord.js's own classes
+export function trustedConstructorData(root: TSESTree.Node, rootType: ts.Type): TSESTree.ObjectExpression | undefined {
+    const data = constructorData(root);
+    return data !== undefined && isFromDiscordJs(rootType.getSymbol()) ? data : undefined;
+}
+
+export function staticNumber(
+    node: TSESTree.CallExpressionArgument | TSESTree.Property['value'] | undefined,
+    services: ParserServicesWithTypeInformation
+): number | undefined {
+    if (
+        node === undefined ||
+        node.type === AST_NODE_TYPES.SpreadElement ||
+        node.type === AST_NODE_TYPES.AssignmentPattern ||
+        node.type === AST_NODE_TYPES.TSEmptyBodyFunctionExpression
+    ) {
+        return undefined;
+    }
+    // a cast only changes the checker's view, the literal behind it is the runtime value
+    const target = unwrapAssertions(node);
+    if (target.type === AST_NODE_TYPES.Literal && typeof target.value === 'number') return target.value;
+    // a const bound resolves through its number-literal type
+    const type = services.getTypeAtLocation(target);
+    return type.isNumberLiteral() ? type.value : undefined;
 }
 
 // a boolean literal's value is only reachable through its printed name

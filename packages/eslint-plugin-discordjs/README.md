@@ -44,9 +44,10 @@ If your config already sets up typed linting, drop the `languageOptions` block a
 | --- | --- |
 | [no-mixed-message-format](docs/rules/no-mixed-message-format.md) | components v2 builders mixed with `content`/`embeds`/`poll`/`stickers`, Discord rejects the payload |
 | [require-components-v2-flag](docs/rules/require-components-v2-flag.md) | v2 components without `MessageFlags.IsComponentsV2` |
-| [select-menu-min-exceeds-max](docs/rules/select-menu-min-exceeds-max.md) | `setMinValues` above `setMaxValues`, no builder error, the API rejects it |
-| [no-discord-limit-exceeded](docs/rules/no-discord-limit-exceeded.md) | more items than a builder's hard cap (5 row components, 25 options/fields/choices) |
-| [no-conflicting-button-props](docs/rules/no-conflicting-button-props.md) | a Link button with a customId, or a url on a non-link style |
+| [select-menu-min-exceeds-max](docs/rules/select-menu-min-exceeds-max.md) | a minimum above the maximum, from setters or constructor data, the API rejects it |
+| [no-discord-limit-exceeded](docs/rules/no-discord-limit-exceeded.md) | more items than a builder's hard cap (5 row components, 25 options/fields/choices), constructor data included |
+| [no-conflicting-button-props](docs/rules/no-conflicting-button-props.md) | customId with url, a url or skuId on the wrong style, a Premium button with a customId, label, url, or emoji |
+| [require-button-props](docs/rules/require-button-props.md) | a sealed button missing its style or its style's required props (customId, url, skuId, label/emoji) |
 | [no-choices-and-autocomplete](docs/rules/no-choices-and-autocomplete.md) | autocomplete and static choices on one slash option |
 | [required-option-before-optional](docs/rules/required-option-before-optional.md) | a required slash option after an optional one |
 | [valid-command-name](docs/rules/valid-command-name.md) | slash command and option names Discord rejects |

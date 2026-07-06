@@ -56,6 +56,43 @@ ruleTester.run('no-conflicting-button-props', rule, {
             new ButtonBuilder()
                 .setStyle(ButtonStyle.Link)
                 .setCustomId('x');
+        `,
+        // a style only known at runtime stays unflagged
+        dedent`
+            import { ButtonBuilder, ButtonStyle } from 'discord.js';
+            declare const style: ButtonStyle;
+            new ButtonBuilder()
+                .setStyle(style)
+                .setURL('https://example.com')
+                .setLabel('y');
+        `,
+        // a premium button, skuId only
+        dedent`
+            import { ButtonBuilder, ButtonStyle } from 'discord.js';
+            new ButtonBuilder()
+                .setStyle(ButtonStyle.Premium)
+                .setSKUId('123')
+                .setDisabled(true);
+        `,
+        // a subclass constructor argument is not API data
+        dedent`
+            import { ButtonBuilder } from 'discord.js';
+            class NavButton extends ButtonBuilder {
+                constructor(opts: { url: string; custom_id: string }) {
+                    super();
+                    void opts;
+                }
+            }
+            new NavButton({ url: 'https://example.com', custom_id: 'x' });
+        `,
+        // the last setStyle wins, and it moves the button off the Link style
+        dedent`
+            import { ButtonBuilder, ButtonStyle } from 'discord.js';
+            new ButtonBuilder()
+                .setStyle(ButtonStyle.Link)
+                .setStyle(ButtonStyle.Primary)
+                .setCustomId('x')
+                .setLabel('y');
         `
     ],
     invalid: [
@@ -68,6 +105,93 @@ ruleTester.run('no-conflicting-button-props', rule, {
                     .setLabel('y');
             `,
             errors: [{ messageId: 'idAndUrl' }]
+        },
+        {
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                new ButtonBuilder()
+                    .setStyle(ButtonStyle.Danger)
+                    .setURL('https://example.com')
+                    .setLabel('y');
+            `,
+            errors: [{ messageId: 'urlOnNonLink', data: { style: 'Danger' } }]
+        },
+        {
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                new ButtonBuilder()
+                    .setStyle(ButtonStyle.Secondary)
+                    .setCustomId('x')
+                    .setLabel('y')
+                    .setSKUId('123');
+            `,
+            errors: [{ messageId: 'skuIdOnNonPremium', data: { style: 'Secondary' } }]
+        },
+        {
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                new ButtonBuilder()
+                    .setStyle(ButtonStyle.Premium)
+                    .setSKUId('123')
+                    .setLabel('y')
+                    .setEmoji({ name: 'x' });
+            `,
+            errors: [
+                { messageId: 'premiumProp', data: { prop: 'label' } },
+                { messageId: 'premiumProp', data: { prop: 'emoji' } }
+            ]
+        },
+        {
+            // constructor data carries the same state as the setters
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder({ custom_id: 'x', label: 'y' })
+                    .setURL('https://example.com');
+            `,
+            errors: [{ messageId: 'idAndUrl' }]
+        },
+        {
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                new ButtonBuilder({ style: ButtonStyle.Success, label: 'y' })
+                    .setURL('https://example.com');
+            `,
+            errors: [{ messageId: 'urlOnNonLink', data: { style: 'Success' } }]
+        },
+        {
+            // no chain at all, the conflict sits entirely in the constructor
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder({ custom_id: 'x', url: 'https://example.com', label: 'y' });
+            `,
+            errors: [{ messageId: 'idAndUrl' }]
+        },
+        {
+            // discord.js snake_cases camelCase data at construction
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder({ customId: 'x', label: 'y' }).setURL('https://example.com');
+            `,
+            errors: [{ messageId: 'idAndUrl' }]
+        },
+        {
+            // skuId with any premium-forbidden prop throws under every style
+            code: dedent`
+                import { ButtonBuilder } from 'discord.js';
+                new ButtonBuilder().setSKUId('123').setCustomId('x');
+            `,
+            errors: [{ messageId: 'skuIdWithProp', data: { prop: 'customId' } }]
+        },
+        {
+            // the chained setStyle runs after the constructor and wins
+            code: dedent`
+                import { ButtonBuilder, ButtonStyle } from 'discord.js';
+                new ButtonBuilder({ style: ButtonStyle.Primary })
+                    .setStyle(ButtonStyle.Link)
+                    .setCustomId('x')
+                    .setLabel('y');
+            `,
+            errors: [{ messageId: 'linkWithCustomId' }]
         },
         {
             code: dedent`
@@ -121,7 +245,7 @@ ruleTester.run('no-conflicting-button-props', rule, {
             errors: [{ messageId: 'linkWithCustomId' }]
         },
         {
-            // ButtonStyle.Link stored in a const - the type resolves to the numeric literal 5
+            // ButtonStyle.Link stored in a const, the type resolves to the numeric literal 5
             code: dedent`
                 import { ButtonBuilder, ButtonStyle } from 'discord.js';
                 const linkStyle = ButtonStyle.Link;
