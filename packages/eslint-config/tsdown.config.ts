@@ -1,8 +1,6 @@
 import { defineConfig } from 'tsdown';
 
-// Inlined (not using createTsdownConfig) because @seedcord/tsdown-config
-// depends on @seedcord/eslint-config transitively. Keep this file in sync
-// with packages/tsdown-config/src/index.ts defaults.
+// inlined to avoid circular dependency. Keep in sync with packages/tsdown-config/src/index.ts.
 export default defineConfig({
     format: ['esm', 'cjs'],
     entry: ['src/index.ts', 'src/prettier.ts'],
@@ -15,7 +13,7 @@ export default defineConfig({
     minify: false,
     sourcemap: true,
     outDir: 'dist',
-    deps: { skipNodeModulesBundle: true },
+    deps: { alwaysBundle: ['@seedcord/eslint-config-base'] },
     fixedExtension: true,
     checks: { legacyCjs: false }
 });

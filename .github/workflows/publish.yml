@@ -78,7 +78,7 @@ jobs:
             - run: npm config get registry && npm ping
 
             - name: Build prettier config dependency
-              run: pnpm --filter @seedcord/eslint-config build
+              run: pnpm exec turbo run build --filter=@seedcord/eslint-config
 
             - id: changesets
               uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0

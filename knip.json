@@ -10,26 +10,6 @@
             "entry": ["scripts/**/*.ts", "turbo/generators/**/*.ts"],
             "project": ["scripts/**/*.ts", "turbo/generators/**/*.ts"]
         },
-        "packages/seedcord": {},
-        "packages/core": {},
-        "packages/services": {},
-        "packages/utils": {},
-        "packages/types": {},
-        "packages/plugins": {},
-        "packages/errors": {},
-        "packages/rate-limiter": {},
-        "packages/cli": {
-            "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
-        },
-        "packages/docs-engine": {},
-        "packages/docs-generator": {
-            "ignore": ["tests/mock/**"]
-        },
-        "packages/eslint-config": {
-            "ignoreDependencies": ["@typescript-eslint/eslint-plugin", "@typescript-eslint/parser"]
-        },
-        "packages/tsdown-config": {},
-        "packages/tsconfig": {},
         "apps/docs": {
             "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx}"]
@@ -37,6 +17,47 @@
         "apps/home": {
             "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx}"]
-        }
+        },
+        "packages/cli": {
+            "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
+        },
+        "packages/core": {},
+        "packages/docs-engine": {},
+        "packages/docs-generator": {
+            "ignore": ["tests/mock/**"]
+        },
+        "packages/errors": {},
+        "packages/eslint-config": {
+            "ignoreDependencies": [
+                "@types/eslint-plugin-security",
+                "@typescript-eslint/eslint-plugin",
+                "@typescript-eslint/parser",
+                "eslint-config-prettier",
+                "eslint-import-resolver-typescript",
+                "eslint-plugin-better-tailwindcss",
+                "eslint-plugin-import-x",
+                "eslint-plugin-mdx",
+                "eslint-plugin-prettier",
+                "eslint-plugin-security",
+                "eslint-plugin-tailwind-canonical-classes",
+                "eslint-plugin-tsdoc",
+                "eslint-plugin-unicorn",
+                "lodash.merge",
+                "prettier",
+                "typescript-eslint"
+            ]
+        },
+        "packages/eslint-config-base": {},
+        "packages/eslint-plugin": {},
+        "packages/eslint-plugin-discordjs": {},
+        "packages/eslint-utils": {},
+        "packages/plugins": {},
+        "packages/rate-limiter": {},
+        "packages/seedcord": {},
+        "packages/services": {},
+        "packages/tsconfig": {},
+        "packages/tsdown-config": {},
+        "packages/types": {},
+        "packages/utils": {}
     }
 }

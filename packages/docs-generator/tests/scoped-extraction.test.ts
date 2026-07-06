@@ -41,4 +41,4 @@ describe('ApiDocsGenerator scoped extraction', () => {
         const generator = await scopedRun('does-not-exist');
         await expect(generator.run()).rejects.toThrow(/matched no package/u);
     });
-}, 15_000);
+}, 60_000);

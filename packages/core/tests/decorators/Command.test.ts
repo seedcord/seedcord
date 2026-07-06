@@ -8,6 +8,7 @@ import { CommandMetadataKey } from '@src/metadataKeys';
 
 import type { CommandMeta } from '@decorators/Command';
 
+// eslint-disable-next-line @seedcord/command-builder-missing-register-command -- the tests apply RegisterCommand manually
 class TestCommand extends BuilderComponent<'command'> {
     constructor() {
         super('command');
