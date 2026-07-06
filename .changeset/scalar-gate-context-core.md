@@ -3,6 +3,6 @@
 'seedcord': minor
 ---
 
-The gate machinery moves to `@seedcord/core`: `defineGate`/`defineEffectGate`, `and`/`or`, `runGates`, the effect commit queue, the fit-check type atoms, and the scalar catalog gates (`OwnerOnly`, `GuildOnly`, `DmOnly`, `Cooldown`). The gateway keeps its arms (`InteractionGateContext`, `EventGateContext`), the cache-reading gates (`RequireRole`, `RequirePermissions`, `RequireBotPermissions`, `Nsfw`, `IgnoreBots`), and the `@Gated` decorator. Everything stays importable from `seedcord`.
+Gates move to `@seedcord/core`: `defineGate`/`defineEffectGate`, `and`/`or`, `OwnerOnly`/`GuildOnly`/`DmOnly`/`Cooldown`. `InteractionGateContext`/`EventGateContext`, the cache-reading gates, and `@Gated` stay in `seedcord`, which re-exports the moved pieces.
 
-**BREAKING:** `GateContextBase` is scalar: `core` (now `CoreBase`), `userId`, `guildId`, `channelId`, `memberRoleIds`, and `memberPermissions` (channel-scoped on interactions, guild-level on events). The djs `user`/`guild`/`member` objects survive only on the gateway arms, so an agnostic gate reading `ctx.user` must read `ctx.userId` or annotate an arm.
+**BREAKING:** `GateContextBase` is scalar: `core`, `userId`, `guildId`, `channelId`, `memberRoleIds`, `memberPermissions`. A gate that read `ctx.user`/`ctx.guild`/`ctx.member` now reads the id scalars or annotates a gateway arm.

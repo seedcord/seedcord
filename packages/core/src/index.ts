@@ -10,7 +10,6 @@ export type { CoreBase } from '@interfaces/CoreBase';
 export { defineEffectGate, defineGate } from '@gates/Gate';
 export type { EffectGate, Gate, GateContextBase, RequiredOf } from '@gates/Gate';
 export { and, or } from '@gates/combinators';
-export { runGates } from '@gates/runGates';
 export { DmOnly, GuildOnly, OwnerOnly } from '@gates/catalog/access';
 export { Cooldown, type CooldownOptions } from '@gates/catalog/Cooldown';
 export type { GateNoticeOptions } from '@gates/catalog/options';

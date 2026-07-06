@@ -1,4 +1,3 @@
-/** @internal */
 export enum InteractionRoutes {
     Slash = 'slash',
     Button = 'button',
@@ -13,10 +12,8 @@ export enum InteractionRoutes {
     Autocomplete = 'autocomplete'
 }
 
-/** @internal */
 export const InteractionMetadataKey = Symbol('seedcord:interaction:metadata');
 
-/** @internal */
 export const InteractionRouteKeys: Record<InteractionRoutes, symbol> = {
     [InteractionRoutes.Slash]: Symbol('seedcord:interaction:slash'),
     [InteractionRoutes.Button]: Symbol('seedcord:interaction:button'),
@@ -31,17 +28,12 @@ export const InteractionRouteKeys: Record<InteractionRoutes, symbol> = {
     [InteractionRoutes.Autocomplete]: Symbol('seedcord:interaction:autocomplete')
 };
 
-/** @internal */
 export const MiddlewareMetadataKey = Symbol('seedcord:middleware:metadata');
 
-/** @internal */
 export const EventMetadataKey = Symbol('seedcord:event:metadata');
 
-/** @internal */
 export const CommandMetadataKey = Symbol('seedcord:command:metadata');
 
-/** @internal */
 export const GatedMetadataKey = Symbol('seedcord:gated:metadata');
 
-/** @internal */
 export const SubscribeMetadataKey = Symbol('seedcord:subscribe:metadata');

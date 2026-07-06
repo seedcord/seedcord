@@ -5,8 +5,8 @@
 'seedcord': minor
 ---
 
-New `CoreBase` in `@seedcord/core` with `config` and `rateLimiter`. The gateway `Core` now extends `CoreBase`. The `core.rateLimiter` property is an async `IRateLimiter` implementation backed by `MemoryRateLimiter`. The `seedcord` package re-exports `@seedcord/rate-limiter`. `SeedcordInstance` gains `version` (the framework package version the instance runs on, implemented by `Seedcord`) and moves to `@seedcord/types/internal`, next to the brand mechanism its consumers already use.
+New `CoreBase` in `@seedcord/core` with `config` and `rateLimiter`. The gateway `Core` extends it. `core.rateLimiter` is an async `IRateLimiter` backed by `MemoryRateLimiter`. `seedcord` re-exports `@seedcord/rate-limiter`. `SeedcordInstance` adds `version` and moves to `@seedcord/types/internal`.
 
-**BREAKING:** `@seedcord/types` no longer depends on discord.js. `BotConfig.clientOptions` and `BotConfig.events` (with `EventsConfig`) have been moved to `GatewayBotConfig` in the gateway package, since an http bot receives no gateway events. The `Seedcord` constructor now accepts `GatewayConfig`. `Config.botColor` is now `BotColor` without discord.js dependencies.
+**BREAKING:** `@seedcord/types` no longer depends on discord.js. `clientOptions` and `events` move from `BotConfig` to `GatewayBotConfig` in `seedcord`, and the `Seedcord` constructor takes `GatewayConfig`. `Config.botColor` is a `BotColor`.
 
-**BREAKING:** `@seedcord/services` no longer exports `RateLimiter`, `RateLimitWindow`, or `RateLimitResult`. Use `MemoryRateLimiter` from `@seedcord/rate-limiter` and types from `@seedcord/types`. `RateLimitResult.expires` has been replaced with `resetAt` along with `remaining` and `retryAfter` properties. The `hit` method has been replaced with the async `charge` method.
+**BREAKING:** `@seedcord/services` no longer exports `RateLimiter`, `RateLimitWindow`, or `RateLimitResult`. Use `MemoryRateLimiter` from `@seedcord/rate-limiter` and the types from `@seedcord/types`. `hit` is replaced by the async `charge`, and results carry `resetAt`, `remaining`, `retryAfterMs`.

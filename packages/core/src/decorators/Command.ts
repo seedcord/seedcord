@@ -6,24 +6,19 @@ import { CommandMetadataKey } from '@src/metadataKeys';
 import type { BuilderComponent } from '@components/Component';
 import type { Constructor } from 'type-fest';
 
-/** @internal */
 type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;
 
-/** @internal */
 interface GlobalMeta {
     scope: 'global';
 }
 
-/** @internal */
 interface GuildMeta {
     scope: 'guild';
     guilds: string[];
 }
 
-/** @internal */
 export type CommandMeta = GlobalMeta | GuildMeta;
 
-/** @internal */
 type CommandScope = CommandMeta['scope'];
 
 /**
