@@ -25,12 +25,20 @@
     "seedcord": "0.15.0"
   },
   "changesets": [
+    "add-eslint-plugin",
     "bus-hmr-registration",
     "cli-dev-layout-measure",
+    "color-error-codes",
+    "core-component-builders",
+    "dissolve-kit-into-core",
     "duplicate-interaction-guards",
     "eslint-config-import-x",
+    "eslint-config-private-base-split",
+    "eslint-config-register-discordjs",
     "eslint-config-support-eslint-10",
+    "eslint-config-ts-rules-decouple",
     "eslint-config-unicorn-rules",
+    "eslint-plugin-discordjs-initial",
     "framework-unicorn-modernization",
     "hmr-decouple",
     "hmr-rollback",
@@ -39,6 +47,7 @@
     "registry-types-to-core",
     "reply-response-djs-free",
     "require-node-24",
-    "restore-restricted-syntax-bans"
+    "restore-restricted-syntax-bans",
+    "seedcord-builders-off-djs"
   ]
 }

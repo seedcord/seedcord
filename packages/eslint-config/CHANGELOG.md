@@ -1,5 +1,20 @@
 # @seedcord/eslint-config
 
+## 1.5.0-next.1
+
+### Minor Changes
+
+- 9650385: Add `registerDiscordjsPlugin` and `registerSeedcordPlugin` options. `registerDiscordjsPlugin` applies `eslint-plugin-discordjs`'s recommended preset, `registerSeedcordPlugin` applies `@seedcord/eslint-plugin`'s. The seedcord preset includes `no-djs-builder-import`, which bans discord.js component builder imports in favor of `@discordjs/builders`.
+
+### Patch Changes
+
+- 9650385: Split the config content into a private bundled base package. No consumer-visible change.
+- 9650385: Keep the TypeScript rule set applied when `registerTsdocPlugin` is off. The tsdoc toggle now controls only `tsdoc/syntax`.
+- Updated dependencies [9650385]
+- Updated dependencies [9650385]
+    - @seedcord/eslint-plugin@0.1.0-next.0
+    - eslint-plugin-discordjs@0.1.0-next.0
+
 ## 1.5.0-next.0
 
 ### Minor Changes

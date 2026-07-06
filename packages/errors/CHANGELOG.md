@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.3.0-next.2
+
+### Minor Changes
+
+- b384e8f: Add `ColorUnresolvable` and `ColorOutOfRange` error codes for color resolution.
+
 ## 0.3.0-next.1
 
 ### Minor Changes

@@ -1,5 +1,28 @@
 # seedcord
 
+## 0.16.0-next.3
+
+### Minor Changes
+
+- b384e8f: Build seedcord's component builders on `@discordjs/builders`. Import any builder you nest inside a seedcord component from `@discordjs/builders` too. The copy discord.js re-exports is a separate class that breaks `instanceof` and `toJSON`.
+
+    **BREAKING:** `ControlCosmetics.emoji` (on `PaginatorControls.button`) narrows from `ComponentEmojiResolvable` to `APIMessageComponentEmoji`. Pass an emoji object like `{ name: '👍' }`. A bare string no longer type-checks.
+
+### Patch Changes
+
+- 7f4fb2e: Dissolve `@seedcord/kit` into `@seedcord/core`. The Notice stop tree, the customId codec, and pagination move into `@seedcord/core`, joining the component builders already there, and `@seedcord/kit` is removed.
+
+    **BREAKING:** `@seedcord/kit` is removed. Import its former exports (`Notice`, `Fault`, `Silence`, `CustomId`, `paginate`, `PageView`, `BuilderComponent`, `RowComponent`) from `seedcord` or `@seedcord/core`.
+
+- Updated dependencies [b384e8f]
+- Updated dependencies [b384e8f]
+- Updated dependencies [7f4fb2e]
+    - @seedcord/errors@0.3.0-next.2
+    - @seedcord/core@0.1.0-next.1
+    - @seedcord/services@0.9.0-next.3
+    - @seedcord/types@0.8.0-next.2
+    - @seedcord/utils@0.8.0-next.2
+
 ## 0.16.0-next.2
 
 ### Patch Changes
