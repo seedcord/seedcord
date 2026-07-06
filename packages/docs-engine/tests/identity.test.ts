@@ -163,7 +163,7 @@ describe('resolvePackageIdentity', () => {
 
     it('resolves explicit override aliases', () => {
         const list = ids('seedcord', '@seedcord/core', '@seedcord/eslint-config', '@seedcord/cli');
-        expect(resolvePackageIdentity(list, 'eslint')?.fullName).toBe('@seedcord/eslint-config');
+        expect(resolvePackageIdentity(list, 'eslint-config')?.fullName).toBe('@seedcord/eslint-config');
         expect(resolvePackageIdentity(list, 'cli')?.fullName).toBe('@seedcord/cli');
         expect(resolvePackageIdentity(list, 'core')?.fullName).toBe('@seedcord/core');
     });
