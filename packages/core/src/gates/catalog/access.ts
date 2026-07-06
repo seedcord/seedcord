@@ -1,10 +1,10 @@
-import { NotInDm, NotInGuild, NotOwner } from '@bot/notices';
+import { defineGate } from '@gates/Gate';
+import { NotInDm, NotInGuild, NotOwner } from '@notices/index';
 
-import { defineGate } from '../Gate';
 import { pickNotice } from './options';
 
 import type { GateNoticeOptions } from './options';
-import type { Gate, GateContextBase } from '../Gate';
+import type { Gate, GateContextBase } from '@gates/Gate';
 
 /**
  * Passes only for a user id listed in `config.ownerIds`, else refuses.
@@ -13,7 +13,7 @@ import type { Gate, GateContextBase } from '../Gate';
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
- * @see {@link Gated}
+ * @see the `@Gated` decorator from `seedcord`
  *
  * @example
  * ```ts
@@ -35,7 +35,7 @@ import type { Gate, GateContextBase } from '../Gate';
 export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'OwnerOnly'> {
     return defineGate('OwnerOnly', (ctx) => {
         const owners = ctx.core.config.ownerIds ?? [];
-        if (ctx.user && owners.includes(ctx.user.id)) return;
+        if (ctx.userId !== null && owners.includes(ctx.userId)) return;
         throw pickNotice(options, (message) => new NotOwner(message));
     });
 }
@@ -43,11 +43,11 @@ export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'O
 /**
  * Passes inside a guild, else refuses.
  *
- * Agnostic, so it attaches to any handler kind. Often paired with {@link RequirePermissions} in an {@link and}.
+ * Agnostic, so it attaches to any handler kind. Often paired with `RequirePermissions` in an {@link and}.
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
- * @see {@link Gated}
+ * @see the `@Gated` decorator from `seedcord`
  *
  * @example
  * ```ts
@@ -64,7 +64,7 @@ export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'O
  */
 export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'GuildOnly'> {
     return defineGate('GuildOnly', (ctx) => {
-        if (ctx.guild) return;
+        if (ctx.guildId) return;
         throw pickNotice(options, (message) => new NotInGuild(message));
     });
 }
@@ -76,7 +76,7 @@ export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'G
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
- * @see {@link Gated}
+ * @see the `@Gated` decorator from `seedcord`
  *
  * @example
  * ```ts
@@ -91,7 +91,7 @@ export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'G
  */
 export function DmOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'DmOnly'> {
     return defineGate('DmOnly', (ctx) => {
-        if (!ctx.guild) return;
+        if (!ctx.guildId) return;
         throw pickNotice(options, (message) => new NotInDm(message));
     });
 }

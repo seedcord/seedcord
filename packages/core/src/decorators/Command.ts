@@ -3,40 +3,33 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { CommandMetadataKey } from '@src/metadataKeys';
 
-import type { BuilderComponent } from '@seedcord/core';
+import type { BuilderComponent } from '@components/Component';
 import type { Constructor } from 'type-fest';
 
-/** @internal */
 type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;
 
-/** @internal */
 interface GlobalMeta {
     scope: 'global';
 }
 
-/** @internal */
 interface GuildMeta {
     scope: 'guild';
     guilds: string[];
 }
 
-/** @internal */
 export type CommandMeta = GlobalMeta | GuildMeta;
 
-/** @internal */
 type CommandScope = CommandMeta['scope'];
 
 /**
- * Registers a command for global deployment.
+ * Attaches deployment metadata so the framework registers this command globally or in specific guilds.
  *
  * @param scope - Must be 'global' for global registration
  * @decorator
  * @example
  * ```typescript
  * \@RegisterCommand('global')
- * class PingCommand extends BuilderComponent {
- *   // Global command
- * }
+ * class PingCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
  * ```
  */
 export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
@@ -50,18 +43,13 @@ export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
  * @example
  * ```typescript
  * \@RegisterCommand('guild', ['123456789'])
- * class AdminCommand extends BuilderComponent {
- *   // Guild-specific command
- * }
+ * class AdminCommand extends BuilderComponent<'command'> {} // or BuilderComponent<'context_menu'>
  * ```
  */
 export function RegisterCommand(scope: 'guild', guilds: string[]): (ctor: CommandCtor) => void;
 
 export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
     return (ctor: CommandCtor): void => {
-        const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
-
-        // Reject a second @RegisterCommand on the same class.
         const existingMeta = Reflect.getOwnMetadata(CommandMetadataKey, ctor) as CommandMeta | undefined;
         if (existingMeta) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandAlreadyRegistered, [
@@ -71,16 +59,15 @@ export function RegisterCommand(scope: CommandScope, guilds: string[] = []) {
             ]);
         }
 
-        // Also make sure guilds aren't provided for global scope
         if (scope === 'global' && guilds.length > 0) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandGlobalWithGuilds);
         }
 
-        // Also make sure guilds are provided for guild scope
         if (scope === 'guild' && (!Array.isArray(guilds) || guilds.length === 0)) {
             throw new SeedcordError(SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds);
         }
 
+        const meta: GlobalMeta | GuildMeta = scope === 'global' ? { scope } : { scope, guilds };
         Reflect.defineMetadata(CommandMetadataKey, meta, ctor);
     };
 }

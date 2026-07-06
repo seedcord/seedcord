@@ -3,10 +3,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { DevStore } from '@ui/stores/DevStore';
 
 import type { DevEvent } from '@commands/dev/runtime/events';
-import type { Config } from '@seedcord/types';
-
-// fixture: DevStore only stores the reference and never inspects it on these paths
-const fakeConfig = {} as unknown as Config;
 
 describe('DevStore', () => {
     it('starts in the initial state', () => {
@@ -15,7 +11,6 @@ describe('DevStore', () => {
             phase: 'starting',
             isBusy: true,
             error: null,
-            config: null,
             restartRequired: false,
             commandUpdatePrompt: null
         });
@@ -30,14 +25,14 @@ describe('DevStore', () => {
         store.setBusy(false);
         store.setPhase('running');
         store.setError(new Error('boom'));
-        store.setConfig(fakeConfig);
+        store.setFrameworkVersion('1.2.3');
 
         const state = store.getState();
         expect(state.status).toBe('running');
         expect(state.isBusy).toBe(false);
         expect(state.phase).toBe('running');
         expect(state.error).toBeInstanceOf(Error);
-        expect(state.config).toBe(fakeConfig);
+        expect(state.frameworkVersion).toBe('1.2.3');
         expect(onChange).toHaveBeenCalledTimes(5);
     });
 
@@ -63,7 +58,7 @@ describe('DevStore', () => {
             isBusy: true,
             restartRequired: false,
             error: null,
-            status: 'Restarting...'
+            status: 'Restarting…'
         });
         expect(onChange).toHaveBeenCalledTimes(1);
     });
@@ -80,7 +75,7 @@ describe('DevStore', () => {
             isBusy: true,
             restartRequired: false,
             error: null,
-            status: 'Disconnecting...'
+            status: 'Disconnecting…'
         });
         expect(onChange).toHaveBeenCalledTimes(1);
     });
@@ -92,7 +87,7 @@ describe('DevStore', () => {
 
         store.beginQuit();
 
-        expect(store.getState()).toMatchObject({ phase: 'quitting', isBusy: true, status: 'Shutting down...' });
+        expect(store.getState()).toMatchObject({ phase: 'quitting', isBusy: true, status: 'Shutting down…' });
         expect(onChange).toHaveBeenCalledTimes(1);
     });
 
@@ -109,6 +104,18 @@ describe('DevStore', () => {
         store.apply({ type: 'command-update-prompt', files });
 
         expect(store.getState().commandUpdatePrompt).toEqual(files);
+    });
+
+    it('clearPrompt drops the pending prompt with one change', () => {
+        const store = new DevStore();
+        store.apply({ type: 'command-update-prompt', files: ['a.ts'] });
+        const onChange = vi.fn();
+        store.on('change', onChange);
+
+        store.clearPrompt();
+
+        expect(store.getState().commandUpdatePrompt).toBeNull();
+        expect(onChange).toHaveBeenCalledTimes(1);
     });
 
     it.each<DevEvent>([

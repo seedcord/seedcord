@@ -1,54 +1,30 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
-    "ignoreBinaries": [
-        "seedcord",
-        "continue"
-    ],
-    "ignoreWorkspaces": [
-        "mock"
-    ],
+    "ignoreBinaries": ["seedcord", "continue"],
+    "ignoreWorkspaces": ["mock"],
     "rules": {
         "optionalPeerDependencies": "off"
     },
     "workspaces": {
         ".": {
-            "entry": [
-                "scripts/**/*.ts",
-                "turbo/generators/**/*.ts"
-            ],
-            "project": [
-                "scripts/**/*.ts",
-                "turbo/generators/**/*.ts"
-            ]
+            "entry": ["scripts/**/*.ts", "turbo/generators/**/*.ts"],
+            "project": ["scripts/**/*.ts", "turbo/generators/**/*.ts"]
         },
         "apps/docs": {
-            "entry": [
-                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
-            ],
-            "project": [
-                "src/**/*.{ts,tsx}"
-            ]
+            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
+            "project": ["src/**/*.{ts,tsx}"]
         },
         "apps/home": {
-            "entry": [
-                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
-            ],
-            "project": [
-                "src/**/*.{ts,tsx}"
-            ]
+            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
+            "project": ["src/**/*.{ts,tsx}"]
         },
         "packages/cli": {
-            "ignoreDependencies": [
-                "fix-esm-import-path",
-                "@seedcord/tsconfig"
-            ]
+            "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
         },
         "packages/core": {},
         "packages/docs-engine": {},
         "packages/docs-generator": {
-            "ignore": [
-                "tests/mock/**"
-            ]
+            "ignore": ["tests/mock/**"]
         },
         "packages/errors": {},
         "packages/eslint-config": {
@@ -75,8 +51,8 @@
         "packages/eslint-plugin": {},
         "packages/eslint-plugin-discordjs": {},
         "packages/eslint-utils": {},
-        "packages/kit": {},
         "packages/plugins": {},
+        "packages/rate-limiter": {},
         "packages/seedcord": {},
         "packages/services": {},
         "packages/tsconfig": {},

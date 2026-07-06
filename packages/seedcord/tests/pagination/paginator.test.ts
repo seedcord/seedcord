@@ -1,6 +1,11 @@
 import 'reflect-metadata';
 
-import { ComponentDefsKey } from '@seedcord/core/internal';
+import {
+    ComponentDefsKey,
+    InteractionMetadataKey,
+    InteractionRouteKeys,
+    InteractionRoutes
+} from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
@@ -8,7 +13,6 @@ import { ButtonRoute } from '@bDecorators/Interactions';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { Paginator } from '@pagination/Paginator';
 import { ArraySource } from '@pagination/sources';
-import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
 
 import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';

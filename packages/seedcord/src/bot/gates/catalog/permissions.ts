@@ -1,12 +1,16 @@
+import { defineGate } from '@seedcord/core';
+import { pickNotice } from '@seedcord/core/internal';
+
 import { MissingRole, NotInGuild } from '@bot/notices';
 import { checkPermissions } from '@bUtilities/permissions/checkPermissions';
 
-import { defineGate } from '../Gate';
-import { pickNotice } from './options';
-
-import type { GateNoticeOptions } from './options';
-import type { Gate, InteractionGateContext, NonModalInteraction } from '../Gate';
+import type { InteractionGateContext } from '../Gate';
 import type { BotPermissionScope, PermissionErrorCtors } from '@bUtilities/permissions/checkPermissions';
+import type { NonModalInteraction } from '@handlers/BaseHandler';
+import type { Gate, GateNoticeOptions } from '@seedcord/core';
+
+// shown to a caller who is in a guild but whose member the cache could not resolve
+const UNCACHED_MEMBER = 'Your server member data could not be resolved. Try again.';
 
 /**
  * Options for {@link RequirePermissions} and {@link RequireBotPermissions}, one override per refusal the gate
@@ -72,7 +76,8 @@ export function RequirePermissions(
     options?: RequirePermissionsOptions
 ): Gate<InteractionGateContext<NonModalInteraction>, 'RequirePermissions'> {
     return defineGate('RequirePermissions', (ctx: InteractionGateContext<NonModalInteraction>) => {
-        if (!ctx.member || !ctx.guild) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message));
+        if (!ctx.guild) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message));
+        if (!ctx.member) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message ?? UNCACHED_MEMBER));
         checkPermissions(
             ctx.member,
             ctx.guild,
@@ -86,7 +91,7 @@ export function RequirePermissions(
 /**
  * Requires the bot to hold every permission in `scope`, via `checkPermissions`. Refuses outside a guild.
  *
- * Checks the bot's own member, so unlike {@link RequirePermissions} it attaches to a modal handler too.
+ * It reads the bot's own member, so it attaches to modal handlers as well.
  *
  * @param scope - The permission flag bits the bot must all hold.
  * @param options - Override each refusal, the outside-guild one with `notInGuild` and the missing-permissions one with `missing`.
@@ -150,7 +155,8 @@ export function RequireRole(
     options?: RequireRoleOptions
 ): Gate<InteractionGateContext<NonModalInteraction>, 'RequireRole'> {
     return defineGate('RequireRole', (ctx: InteractionGateContext<NonModalInteraction>) => {
-        if (!ctx.member || !ctx.guild) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message));
+        if (!ctx.guild) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message));
+        if (!ctx.member) throw pickNotice(options?.notInGuild, (message) => new NotInGuild(message ?? UNCACHED_MEMBER));
         if (ctx.member.roles.cache.has(roleId)) return;
         const role = ctx.guild.roles.cache.get(roleId) ?? null;
         throw pickNotice(options?.missingRole, (message) => new MissingRole(message, role));

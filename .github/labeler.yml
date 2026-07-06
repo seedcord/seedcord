@@ -16,9 +16,9 @@
 '📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'
-'📦 kit':
+'📦 rate-limiter':
   - changed-files:
-      - any-glob-to-any-file: 'packages/kit/**'
+      - any-glob-to-any-file: 'packages/rate-limiter/**'
 '📦 ui':
   - changed-files:
       - any-glob-to-any-file: 'packages/ui/**'

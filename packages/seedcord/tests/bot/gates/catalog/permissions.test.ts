@@ -4,7 +4,8 @@ import { describe, it, expect } from 'vitest';
 import { RequireBotPermissions, RequirePermissions, RequireRole } from '@bot/gates/catalog';
 import { MissingPermissions, MissingRole, NotInGuild } from '@bot/notices';
 
-import type { InteractionGateContext, NonModalInteraction } from '@bot/gates';
+import type { InteractionGateContext } from '@bot/gates';
+import type { NonModalInteraction } from '@handlers/BaseHandler';
 
 // a Guild instance so checkPermissions takes its `instanceof Guild` branch and reads member.permissions
 function guildFake(extra: object = {}): Guild {
@@ -53,6 +54,17 @@ describe('RequirePermissions', () => {
         await expect(
             RequirePermissions([PermissionFlagsBits.BanMembers]).check(ctxOf(null, null))
         ).rejects.toBeInstanceOf(NotInGuild);
+    });
+
+    it('refuses an uncached member in a guild with its own message', async () => {
+        let caught: unknown;
+        await RequirePermissions([PermissionFlagsBits.BanMembers])
+            .check(ctxOf(null, guildFake()))
+            .catch((error: unknown) => {
+                caught = error;
+            });
+        expect(caught).toBeInstanceOf(NotInGuild);
+        expect((caught as NotInGuild).message).toBe('Your server member data could not be resolved. Try again.');
     });
 });
 
@@ -124,5 +136,16 @@ describe('RequireRole', () => {
 
     it('refuses in a DM with NotInGuild', async () => {
         await expect(RequireRole('r1').check(ctxOf(null, null))).rejects.toBeInstanceOf(NotInGuild);
+    });
+
+    it('refuses an uncached member in a guild with its own message', async () => {
+        let caught: unknown;
+        await RequireRole('r1')
+            .check(ctxOf(null, guildFake()))
+            .catch((error: unknown) => {
+                caught = error;
+            });
+        expect(caught).toBeInstanceOf(NotInGuild);
+        expect((caught as NotInGuild).message).toBe('Your server member data could not be resolved. Try again.');
     });
 });

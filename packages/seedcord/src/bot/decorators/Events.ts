@@ -1,4 +1,4 @@
-import { EventMetadataKey } from '@src/metadataKeys';
+import { EventMetadataKey } from '@seedcord/core/internal';
 
 import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventHandler } from '@handlers/event';
@@ -16,11 +16,7 @@ export interface RegisterEventOptions {
     readonly frequency?: EventFrequency | undefined;
 }
 
-/**
- * Metadata entry representing a registered event handler.
- *
- * @internal
- */
+/** @internal */
 export interface RegisterEventMetadataEntry<EventKey extends keyof ClientEvents> {
     readonly event: EventKey;
     readonly frequency: EventFrequency;

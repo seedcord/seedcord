@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { BuilderComponent } from '@seedcord/core';
+import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
@@ -14,13 +15,12 @@ import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import { getDevChannel } from '@hmr/devChannel';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { CommandMetadataKey } from '@src/metadataKeys';
 
-import type { CommandMeta } from '@bDecorators/Command';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
+import type { CommandMeta } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 import type { ApplicationCommand, Snowflake } from 'discord.js';
 

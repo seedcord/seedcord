@@ -36,7 +36,11 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     },
     '@seedcord/eslint-config': {
         displayName: 'eslint-config',
-        aliases: ['eslint', '@seedcord/eslint-config']
+        aliases: ['eslint-config', '@seedcord/eslint-config']
+    },
+    '@seedcord/eslint-plugin': {
+        displayName: 'eslint-plugin',
+        aliases: ['eslint-plugin', '@seedcord/eslint-plugin']
     },
     '@seedcord/cli': {
         displayName: 'cli',
@@ -45,6 +49,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/errors': {
         displayName: 'errors',
         aliases: ['errors', '@seedcord/errors']
+    },
+    '@seedcord/rate-limiter': {
+        displayName: 'rate-limiter',
+        aliases: ['rate-limiter', '@seedcord/rate-limiter']
     }
 };
 

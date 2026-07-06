@@ -1,17 +1,16 @@
-import { CustomId } from '@seedcord/core';
+import { and, CustomId, defineGate, or } from '@seedcord/core';
+import { GatedMetadataKey } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '@bDecorators/Gated';
 import { ButtonRoute, ContextMenuRoute, ModalRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';
-import { and, defineGate, or } from '@bot/gates';
 import { EventHandler } from '@handlers/event';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
 import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { GatedMetadataKey } from '@src/metadataKeys';
 
 import type { EventGateContext, InteractionGateContext } from '@bot/gates';
 import type {
@@ -106,7 +105,7 @@ describe('@Gated', () => {
     });
 
     it('rejects a stacked gate whose context the handler does not provide', () => {
-        // @ts-expect-error SlashGate needs a slash interaction, so it cannot stack onto a button handler
+        // @ts-expect-error SlashGate requires a slash interaction, so it cannot stack onto a button handler
         @Gated(ButtonGate, SlashGate)
         @ButtonRoute(ProbeId)
         class Handler extends ButtonHandler<[typeof ProbeId]> {
@@ -237,7 +236,7 @@ describe('@Gated', () => {
     });
 
     it('rejects @Gated with no gates', () => {
-        // @ts-expect-error @Gated needs at least one gate
+        // @ts-expect-error @Gated requires at least one gate
         @Gated()
         @ButtonRoute(ProbeId)
         class Handler extends ButtonHandler<[typeof ProbeId]> {
@@ -287,7 +286,7 @@ describe('@Gated combinator coverage', () => {
     });
 
     it('rejects uninhabitable and(interaction, event) on the interaction handler', () => {
-        // @ts-expect-error and(button, message) needs a context that is both an interaction and an event
+        // @ts-expect-error and(button, message) requires a context that is both an interaction and an event
         @Gated(and(ButtonGate, MessageGate))
         @ButtonRoute(ProbeId)
         class Handler extends ButtonHandler<[typeof ProbeId]> {
@@ -300,7 +299,7 @@ describe('@Gated combinator coverage', () => {
     });
 
     it('rejects uninhabitable and(interaction, event) on the event handler', () => {
-        // @ts-expect-error and(button, message) needs a context that is both an interaction and an event
+        // @ts-expect-error and(button, message) requires a context that is both an interaction and an event
         @Gated(and(ButtonGate, MessageGate))
         class Handler extends EventHandler<Events.MessageCreate> {
             async execute(): Promise<void> {
@@ -312,7 +311,7 @@ describe('@Gated combinator coverage', () => {
     });
 
     it('rejects uninhabitable and(button, slash) on a button handler', () => {
-        // @ts-expect-error and(button, slash) needs an interaction that is both kinds
+        // @ts-expect-error and(button, slash) requires an interaction that is both kinds
         @Gated(and(ButtonGate, SlashGate))
         @ButtonRoute(ProbeId)
         class Handler extends ButtonHandler<[typeof ProbeId]> {

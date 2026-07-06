@@ -51,6 +51,7 @@
         "@discordjs/builders": "catalog:deps",
         "@seedcord/core": "workspace:*",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/rate-limiter": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

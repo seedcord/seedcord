@@ -1,5 +1,7 @@
+import type { ColorName, TypedOmit } from '@seedcord/types';
+
 // Ported verbatim from discord.js (Apache-2.0), src/util/Colors.js.
-export const Colors = {
+export const Colors: TypedOmit<Record<ColorName, number>, 'Random'> = {
     Aqua: 0x1a_bc_9c,
     Blue: 0x34_98_db,
     Blurple: 0x58_65_f2,
@@ -31,9 +33,3 @@ export const Colors = {
     White: 0xff_ff_ff,
     Yellow: 0xfe_e7_5c
 } as const;
-
-/** A discord.js color name, or `'Random'`. */
-type ColorName = keyof typeof Colors | 'Random';
-
-/** Any color the bot color accepts: a name, a raw integer, a `#hex` string, or an rgb tuple. */
-export type BotColor = ColorName | number | `#${string}` | readonly [number, number, number];

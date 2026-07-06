@@ -36,7 +36,7 @@ export async function pickFromList(opts: PickFromListOptions): Promise<string[]>
             message: opts.message,
             options,
             maxItems,
-            placeholder: 'Type to search...',
+            placeholder: 'Type to search…',
             filter: (search, option) =>
                 includesIgnoreCase(option.label ?? '', search) || includesIgnoreCase(String(option.value), search)
         })

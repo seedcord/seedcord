@@ -8,18 +8,17 @@ import { InvalidCustomId } from './Errors';
 import type { CustomIdField, CustomIdShape } from './Field';
 
 // wire is routeKey, a colon, then the body. the routeKey is the stable prefix plus a short shape
-// hash, so a shape change moves the routeKey and decode catches an old wire as stale. bounded
+// hash, so a shape change produces a new routeKey and decode rejects an old wire as stale. bounded
 // fields (known range) fold into one base64 integer by mixed-radix packing, unbounded ones (free
 // string, unbounded int) trail it as delimited tokens.
 //
-// works on runtime values (unknown), the typed facade in CustomId.ts guarantees the types.
+// works on runtime values (unknown), CustomId.ts adds the typed layer.
 
-// url-safe base64, one utf-16 unit per char so discord never rewrites it.
+// url-safe base64, one utf-16 unit per char so encode's wire.length cap counts chars exactly.
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const BASE = 64n;
 const CHAR_TO_VALUE = new Map([...ALPHABET].map((char, index) => [char, index] as const));
 
-// unbounded fields trail after the packed block, split by this char and escaped by the next.
 const DELIMITER = '\u{1F}';
 const ESCAPE = '\u{1B}';
 
@@ -29,7 +28,7 @@ export const HASH_LENGTH = 3;
 const SAFE_MAX = BigInt(Number.MAX_SAFE_INTEGER);
 const SAFE_MIN = BigInt(Number.MIN_SAFE_INTEGER);
 
-// manual accumulator, never parseInt, which loses precision past 2^53.
+// toString and parseInt top out at base 36, and float64 loses integers past 2^53.
 function bigintToBase64(value: bigint): string {
     if (value === 0n) return ALPHABET.charAt(0);
     let text = '';
@@ -100,7 +99,7 @@ function isBounded(field: CustomIdField<unknown>): boolean {
     return field.kind === 'snowflake' || field.kind === 'uuid' || field.kind === 'bool' || field.kind === 'oneOf';
 }
 
-// how many distinct values the field has. mixed-radix packing uses this as the field's base.
+// how many distinct values the field can hold.
 function radixOf(field: CustomIdField<unknown>): bigint {
     switch (field.kind) {
         case 'snowflake': {
@@ -114,7 +113,7 @@ function radixOf(field: CustomIdField<unknown>): bigint {
         }
         case 'oneOf': {
             // oneOf() rejects an empty list at define time, so no choices here means a hand-built
-            // corrupt shape rather than a real state.
+            // corrupt shape.
             if (!field.choices?.length) throw new InvalidCustomId('oneOf field has no choices');
             return BigInt(field.choices.length);
         }
@@ -138,12 +137,12 @@ function boundedToBigint(field: CustomIdField<unknown>, name: string, value: unk
     return slot;
 }
 
-// map a value to its slot, an integer in [0, radix). each kind maps differently.
+// a slot is the value as an integer in [0, radix).
 function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown): bigint {
     switch (field.kind) {
         case 'snowflake': {
-            // a discord id is a non-negative integer string. reject non-strings here so a bad value
-            // throws the branded out-of-range error rather than a raw BigInt() TypeError.
+            // BigInt() throws a bare TypeError or SyntaxError on a bad value, so the guard throws
+            // the branded error first.
             if (typeof value !== 'string' || !/^\d+$/.test(value)) return outOfRange(name, value);
             return BigInt(value);
         }
@@ -175,7 +174,7 @@ function outOfRange(name: string, value: unknown): never {
     throw new SeedcordRangeError(SeedcordErrorCode.CustomIdValueOutOfRange, [name, String(value)]);
 }
 
-// inverse of boundedSlot, turn the slot back into the field's value.
+// inverse of boundedSlot.
 function bigintToBoundedValue(field: CustomIdField<unknown>, slot: bigint): unknown {
     switch (field.kind) {
         case 'snowflake': {
@@ -216,19 +215,14 @@ function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unk
     // an int always encodes to at least one char, so an empty piece is a truncated wire
     if (piece === '') throw new InvalidCustomId('empty integer token');
     const decoded = zigzagDecode(base64ToBigint(piece));
-    // an unbounded int is authored as a js number, so anything past 2^53 was tampered with.
+    // an unbounded int is authored as a js number, so a value past 2^53 cannot come from encode.
     if (decoded > SAFE_MAX || decoded < SAFE_MIN) throw new InvalidCustomId('integer out of safe range');
     return Number(decoded);
 }
 
-/**
- * A short fingerprint of the shape. Change the shape and the hash changes, so an old customId no
- * longer matches the current routeKey and decode catches it as stale.
- *
- * @internal
- */
+/** @internal */
 export function computeLayoutHash(shape: CustomIdShape): string {
-    // a structured json signature, never a joined string, so a value holding a separator cannot collide.
+    // stringify escapes the choice strings, so two different shapes cannot produce the same signature.
     const signature = JSON.stringify(
         Object.entries(shape).map(([name, field]) => [
             name,
@@ -250,11 +244,7 @@ export function computeLayoutHash(shape: CustomIdShape): string {
     return text;
 }
 
-/**
- * Pack values into a body. Bounded fields fold into one integer, unbounded fields trail after it.
- *
- * @internal
- */
+/** @internal */
 export function encodeBody(shape: CustomIdShape, values: Record<string, unknown>): string {
     const fields = Object.entries(shape);
     const pieces: string[] = [];
@@ -262,7 +252,6 @@ export function encodeBody(shape: CustomIdShape, values: Record<string, unknown>
     const bounded = fields.filter(([, field]) => isBounded(field));
     if (bounded.length > 0) {
         let packed = 0n;
-        // fold each field in, multiply the running value by the field's radix then add its slot.
         for (const [name, field] of bounded)
             packed = packed * radixOf(field) + boundedToBigint(field, name, values[name]);
         pieces.push(bigintToBase64(packed));
@@ -273,7 +262,6 @@ export function encodeBody(shape: CustomIdShape, values: Record<string, unknown>
     return pieces.join(DELIMITER);
 }
 
-// unpack the single bounded block back into result, reversing the field order.
 function unpackBounded(
     bounded: [string, CustomIdField<unknown>][],
     blob: string | undefined,
@@ -288,21 +276,16 @@ function unpackBounded(
         result[name] = bigintToBoundedValue(field, packed % radix);
         packed /= radix;
     }
-    // leftover bits after every field is out means a corrupt block.
     if (packed !== 0n) throw new InvalidCustomId('leftover bits after unpacking');
 }
 
-/**
- * Reverse of encodeBody. Rejects any malformed or truncated body.
- *
- * @internal
- */
+/** @internal */
 export function decodeBody(shape: CustomIdShape, body: string): Record<string, unknown> {
     const fields = Object.entries(shape);
     const bounded = fields.filter(([, field]) => isBounded(field));
     const unbounded = fields.filter(([, field]) => !isBounded(field));
 
-    // a shape with no fields encodes to an empty body, so there is nothing to split or unpack.
+    // a shape with no fields encodes to an empty body.
     const expected = (bounded.length > 0 ? 1 : 0) + unbounded.length;
     if (expected === 0) {
         if (body !== '') throw new InvalidCustomId(`expected an empty body, got ${JSON.stringify(body)}`);

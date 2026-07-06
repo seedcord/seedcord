@@ -3,29 +3,28 @@ import { assertNever } from '@seedcord/utils';
 
 import type { DevPhase } from './devPhase';
 import type { DevEvent } from '@commands/dev/runtime/events';
-import type { Config } from '@seedcord/types';
 
 export interface DevState {
     readonly phase: DevPhase;
     readonly status: string;
     readonly error: Error | null;
     readonly isBusy: boolean;
-    readonly config: Config | null;
+    readonly frameworkVersion: string | null;
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
 }
 
 const INITIAL: DevState = {
     phase: 'starting',
-    status: 'Initializing...',
+    status: 'Initializing…',
     error: null,
     isBusy: true,
-    config: null,
+    frameworkVersion: null,
     restartRequired: false,
     commandUpdatePrompt: null
 };
 
-// Single source of truth for the dev UI. The runner pushes scalar updates through the setters; runtime
+// Single source of truth for the dev UI. The runner pushes scalar updates through the setters, and runtime
 // events reduce through `apply`. `getState` returns a stable reference between mutations, which
 // `useSyncExternalStore` requires to avoid render loops.
 export class DevStore extends StrictEventEmitter<{ change: [] }> {
@@ -51,8 +50,8 @@ export class DevStore extends StrictEventEmitter<{ change: [] }> {
         this.patch({ error });
     }
 
-    public setConfig(config: Config): void {
-        this.patch({ config });
+    public setFrameworkVersion(frameworkVersion: string | null): void {
+        this.patch({ frameworkVersion });
     }
 
     public clearPrompt(): void {
@@ -62,7 +61,7 @@ export class DevStore extends StrictEventEmitter<{ change: [] }> {
     // Optimistic UI transitions: the user pressed r/d, so reset to a busy "reconnecting" state in one atomic
     // patch (one render) before the runner stops the session and starts the next one.
     public beginRestart(): void {
-        this.patch({ phase: 'starting', isBusy: true, restartRequired: false, error: null, status: 'Restarting...' });
+        this.patch({ phase: 'starting', isBusy: true, restartRequired: false, error: null, status: 'Restarting…' });
     }
 
     public beginDisconnect(): void {
@@ -71,12 +70,12 @@ export class DevStore extends StrictEventEmitter<{ change: [] }> {
             isBusy: true,
             restartRequired: false,
             error: null,
-            status: 'Disconnecting...'
+            status: 'Disconnecting…'
         });
     }
 
     public beginQuit(): void {
-        this.patch({ phase: 'quitting', isBusy: true, status: 'Shutting down...' });
+        this.patch({ phase: 'quitting', isBusy: true, status: 'Shutting down…' });
     }
 
     public apply(event: DevEvent): void {

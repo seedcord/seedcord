@@ -1,7 +1,8 @@
 import { setBotColor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { RateLimiter, HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
+import { MemoryRateLimiter } from '@seedcord/rate-limiter';
+import { HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
@@ -9,9 +10,11 @@ import { Bot } from './bot/Bot';
 import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
 import { Bus } from './subscribers/Bus';
+import { version as packageVersion } from './version';
 
+import type { GatewayConfig } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
-import type { Config } from '@seedcord/types';
+import type { IRateLimiter } from '@seedcord/types';
 
 /**
  * Main Seedcord bot framework class
@@ -27,6 +30,9 @@ export class Seedcord extends Pluggable implements Core {
      * */
     public readonly [SeedcordBrand] = true;
 
+    /** The framework package version this instance runs on. */
+    public readonly version: string = packageVersion;
+
     private static isInstantiated = false;
 
     /** @see {@link CoordinatedShutdown} */
@@ -41,8 +47,8 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link Bot} */
     public readonly bot: Bot;
 
-    /** @see {@link RateLimiter} */
-    public readonly rateLimiter: RateLimiter;
+    /** @see {@link IRateLimiter} */
+    public readonly rateLimiter: IRateLimiter;
 
     /** @see {@link HealthCheck} */
     private readonly healthCheck: HealthCheck;
@@ -56,7 +62,7 @@ export class Seedcord extends Pluggable implements Core {
      * @param config - Bot configuration including paths and Discord client options
      * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
      */
-    constructor(public readonly config: Config) {
+    constructor(public readonly config: GatewayConfig) {
         if (Seedcord.isInstantiated) {
             throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
         }
@@ -77,16 +83,13 @@ export class Seedcord extends Pluggable implements Core {
         this.hmrManager.init();
         this.bus = new Bus(this);
         this.bot = new Bot(this);
-        this.rateLimiter = new RateLimiter();
+        this.rateLimiter = new MemoryRateLimiter();
         this.healthCheck = new HealthCheck(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();
     }
 
-    /**
-     * Resets the singleton state.
-     * @internal
-     */
+    /** @internal */
     // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
         Seedcord.isInstantiated = false;

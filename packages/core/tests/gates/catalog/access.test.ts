@@ -1,20 +1,20 @@
 import { describe, it, expect } from 'vitest';
 
-import { DmOnly, GuildOnly, OwnerOnly } from '@bot/gates/catalog';
-import { NotInDm, NotInGuild, NotOwner } from '@bot/notices';
+import { DmOnly, GuildOnly, OwnerOnly } from '@gates/catalog/access';
+import { NotInDm, NotInGuild, NotOwner } from '@notices/index';
 
-import type { GateContextBase } from '@bot/gates';
-import type { Core } from '@interfaces/Core';
+import type { GateContextBase } from '@gates/Gate';
+import type { CoreBase } from '@interfaces/CoreBase';
 
 function ownerCtx(userId: string | null, ownerIds: string[]): GateContextBase {
-    // the gate reads only core.config.ownerIds and user, so a minimal cast stands in
-    const core = { config: { ownerIds } } as unknown as Core;
-    return { core, user: userId === null ? null : { id: userId } } as unknown as GateContextBase;
+    // the gate reads only core.config.ownerIds and userId, so a minimal cast stands in
+    const core = { config: { ownerIds } } as unknown as CoreBase;
+    return { core, userId } as unknown as GateContextBase;
 }
 
 function guildCtx(inGuild: boolean): GateContextBase {
-    // the gate reads only guild, so a minimal cast stands in
-    return { guild: inGuild ? {} : null } as unknown as GateContextBase;
+    // the gate reads only guildId, so a minimal cast stands in
+    return { guildId: inGuild ? 'g1' : null } as unknown as GateContextBase;
 }
 
 describe('OwnerOnly', () => {
@@ -28,6 +28,10 @@ describe('OwnerOnly', () => {
 
     it('refuses when no owners are configured', async () => {
         await expect(OwnerOnly().check(ownerCtx('u2', []))).rejects.toBeInstanceOf(NotOwner);
+    });
+
+    it('refuses with NotOwner when the context carries no user id', async () => {
+        await expect(OwnerOnly().check(ownerCtx(null, ['o1']))).rejects.toBeInstanceOf(NotOwner);
     });
 
     it('throws the override notice when given one', async () => {

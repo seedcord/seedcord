@@ -1,5 +1,3 @@
-import { FIXTURE_CONFIG } from '../fixtures';
-
 import type { Scenario } from './types';
 
 const FEED: readonly (readonly [string, string])[] = [
@@ -23,12 +21,12 @@ export const happyStartup: Scenario = {
     name: 'happy-startup',
     description: 'Starting to running, then a steady stream of multi-channel logs (good for scroll + filter)',
     async run(ctx) {
+        ctx.store.setFrameworkVersion('0.16.0');
         ctx.store.setPhase('starting');
-        ctx.store.setStatus('Loading config...');
+        ctx.store.setStatus('Loading config…');
         await ctx.wait(LOAD_MS);
 
-        ctx.store.setConfig(FIXTURE_CONFIG);
-        ctx.store.setStatus('Connecting to Discord...');
+        ctx.store.setStatus('Connecting to Discord…');
         await ctx.wait(CONNECT_MS);
 
         ctx.store.setPhase('running');

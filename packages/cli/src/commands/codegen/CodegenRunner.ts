@@ -4,7 +4,7 @@ import { dirname, join, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { SeedcordBrand, type Brandable } from '@seedcord/types/internal';
+import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
 import { isTsOrJsFile } from '@seedcord/utils';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
@@ -19,7 +19,7 @@ import { renderAugmentation } from './renderAugmentation';
 import type { ScannedCommand } from './AugmentationBuilder';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
-import type { EmojiConfig, ILogger, SeedcordInstance } from '@seedcord/types';
+import type { EmojiConfig, ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 const OUTPUT_FILENAME = 'seedcord-gen.d.ts';

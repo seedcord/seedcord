@@ -17,7 +17,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'Mongo' },
     { query: 'Bot' },
     { query: 'BaseComponent' },
-    { query: 'RateLimiter' },
+    { query: 'MemoryRateLimiter' },
     { query: 'WebhookLog' },
 
     // Properties

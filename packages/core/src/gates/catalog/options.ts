@@ -1,10 +1,10 @@
-import type { Notice } from '@seedcord/core';
+import type { Notice } from '@stops/Notice';
 
 /**
- * The override a catalog gate accepts, a one-line `message` reword or a full `notice` replacement. Accepted by the
- * agnostic, role, and nsfw gates ({@link OwnerOnly}, {@link GuildOnly}, {@link DmOnly}, {@link RequireRole},
- * {@link Nsfw}, and {@link Cooldown}). {@link RequirePermissions} and {@link RequireBotPermissions} take
- * {@link RequirePermissionsOptions} instead.
+ * The override a catalog gate accepts, a one-line `message` reword or a full `notice` replacement. Accepted by
+ * the agnostic gates ({@link OwnerOnly}, {@link GuildOnly}, {@link DmOnly}, {@link Cooldown}) and the gateway's
+ * `RequireRole` and `Nsfw`. The gateway's `RequirePermissions` and `RequireBotPermissions` take
+ * `RequirePermissionsOptions` instead.
  *
  * @example
  * ```ts
@@ -25,7 +25,6 @@ export interface GateNoticeOptions {
     notice?: Notice;
 }
 
-// the author's notice override when given, else the gate's default
 export function pickNotice(options: GateNoticeOptions | undefined, makeDefault: (message?: string) => Notice): Notice {
     return options?.notice ?? makeDefault(options?.message);
 }

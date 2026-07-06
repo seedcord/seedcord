@@ -1,3 +1,4 @@
+import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
@@ -5,14 +6,12 @@ import { hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
-import { runHandlerGates } from '@bDecorators/Gated';
 import { MiddlewareType } from '@bDecorators/Middlewares';
 import { eventGateContext } from '@bot/gates/runGates';
 import { handleEventFault } from '@bot/handleEventFault';
 import { EventHandler, EventMiddleware } from '@handlers/event';
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
-import { EventMetadataKey, MiddlewareMetadataKey } from '@src/metadataKeys';
 
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';

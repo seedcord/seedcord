@@ -1,6 +1,8 @@
 import type { Bot } from '@bot/Bot';
-import type { RateLimiter, CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
-import type { Config, SeedcordInstance } from '@seedcord/types';
+import type { GatewayConfig } from '@interfaces/Config';
+import type { CoreBase } from '@seedcord/core';
+import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/services';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Bus } from '@subscribers/Bus';
 
 /**
@@ -20,14 +22,13 @@ import type { Bus } from '@subscribers/Bus';
  * }
  * ```
  * */
-export interface Core extends SeedcordInstance {
+export interface Core extends CoreBase, SeedcordInstance {
     readonly shutdown: CoordinatedShutdown;
     readonly startup: CoordinatedStartup;
 
     readonly bot: Bot;
     readonly bus: Bus;
-    readonly config: Config;
-    readonly rateLimiter: RateLimiter;
+    readonly config: GatewayConfig;
 
     start(): Promise<this>;
 }

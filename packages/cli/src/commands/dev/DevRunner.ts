@@ -4,7 +4,7 @@ import { dirname } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/services';
-import { SeedcordBrand, type Brandable } from '@seedcord/types/internal';
+import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
@@ -18,7 +18,7 @@ import { TscRunner } from './TscRunner';
 
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type { ILogger, SeedcordInstance } from '@seedcord/types';
+import type { ILogger } from '@seedcord/types';
 import type { DevStore } from '@ui/stores/DevStore';
 
 export function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
@@ -75,11 +75,11 @@ class SeedcordDevSession {
         }
 
         this.instance = instance;
-        this.store.setConfig(instance.config);
+        this.store.setFrameworkVersion(instance.version);
 
         try {
             this.store.setPhase('starting');
-            this.store.setStatus('Starting Seedcord instance...');
+            this.store.setStatus('Starting Seedcord instance…');
             this.startupPromise = Promise.resolve(instance.start());
             await this.startupPromise;
 

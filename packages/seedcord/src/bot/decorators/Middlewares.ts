@@ -1,7 +1,6 @@
+import { MiddlewareMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
-
-import { MiddlewareMetadataKey } from '@src/metadataKeys';
 
 import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventMiddleware } from '@handlers/event';
@@ -32,23 +31,10 @@ export interface MiddlewareOptions<
     readonly events?: MType extends MiddlewareType.Event ? Events : never;
 }
 
-/**
- * Metadata stored for middleware registration
- *
- * @internal
- */
+/** @internal */
 export interface MiddlewareMetadata {
-    /**
-     * Priority number used to order middleware
-     */
     priority: number;
-    /**
-     * Middleware kind from {@link MiddlewareType}
-     */
     type: MiddlewareType;
-    /**
-     * Optional list of Discord client events to target
-     */
     events?: readonly ValidNonInteractionKeys[];
 }
 

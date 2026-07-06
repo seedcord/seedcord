@@ -44,7 +44,7 @@ async function buildScope(runner: CleanRunner, token: string): Promise<ScopePlan
     if (target === 'all') return { scope: { guildIds: [], allGuilds: true, purge: false } };
 
     const status = spinner();
-    status.start('Fetching the guilds the bot is in...');
+    status.start('Fetching the guilds the bot is in…');
     let guilds: GuildSummary[];
     try {
         guilds = await runner.listBotGuilds(token);

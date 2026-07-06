@@ -568,6 +568,9 @@ importers:
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
       discord-api-types:
         specifier: ^0.38.49
         version: 0.38.49
@@ -578,12 +581,18 @@ importers:
       '@seedcord/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@seedcord/rate-limiter':
+        specifier: workspace:*
+        version: link:../rate-limiter
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.7.0
@@ -948,6 +957,25 @@ importers:
         specifier: catalog:deps
         version: 5.7.0
 
+  packages/rate-limiter:
+    dependencies:
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+
   packages/seedcord:
     dependencies:
       '@discordjs/builders':
@@ -959,6 +987,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/rate-limiter':
+        specifier: workspace:*
+        version: link:../rate-limiter
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services

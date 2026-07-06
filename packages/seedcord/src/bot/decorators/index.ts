@@ -1,4 +1,4 @@
-export { RegisterCommand } from './Command';
+export { RegisterCommand } from '@seedcord/core';
 export { RegisterEvent, type EventSpec, type RegisterEventOptions } from './Events';
 export { Gated } from './Gated';
 export {
