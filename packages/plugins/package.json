@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/plugins",
     "type": "module",
-    "version": "0.8.0-next.3",
+    "version": "0.8.0-next.4",
     "engines": {
         "node": ">=24"
     },
