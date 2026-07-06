@@ -4,6 +4,7 @@ import noDiscordLimitExceeded from './rules/no-discord-limit-exceeded';
 import noMixedMessageFormat from './rules/no-mixed-message-format';
 import preferEphemeralFlag from './rules/prefer-ephemeral-flag';
 import preferV2Component from './rules/prefer-v2-component';
+import requireButtonProps from './rules/require-button-props';
 import requireComponentsV2Flag from './rules/require-components-v2-flag';
 import requiredOptionBeforeOptional from './rules/required-option-before-optional';
 import selectMenuMinExceedsMax from './rules/select-menu-min-exceeds-max';
@@ -18,6 +19,7 @@ const rules = {
     'no-mixed-message-format': noMixedMessageFormat,
     'prefer-ephemeral-flag': preferEphemeralFlag,
     'prefer-v2-component': preferV2Component,
+    'require-button-props': requireButtonProps,
     'require-components-v2-flag': requireComponentsV2Flag,
     'required-option-before-optional': requiredOptionBeforeOptional,
     'select-menu-min-exceeds-max': selectMenuMinExceedsMax,

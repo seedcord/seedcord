@@ -6,6 +6,8 @@ Some builders have a hard cap that Discord rejects, an action row holds 5 compon
 
 It also covers the seedcord form. A `this.instance` chain inside a `RowComponent` or `BuilderComponent<'embed' | 'menu_string'>` resolves to the same cap through the class's generic.
 
+Constructor data seeds the count, so `new ActionRowBuilder({ components })` counts its items before any chained adds, and a later `setComponents` replaces them.
+
 A spread or variable whose type is a fixed-arity tuple (an `as const` array) counts through its arity, so `addComponents(...six)` with a six-element tuple is flagged. Anything else dynamic, a plain-array spread, a `.map()` result, or a builder that is not capped (a container), means the count is a runtime value, so nothing is flagged.
 
 ## Incorrect

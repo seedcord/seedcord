@@ -1,33 +1,41 @@
 import {
+    calleeProperty,
+    constructorData,
+    enclosingChainTop,
     extendsDjsType,
     chainRoot,
     collectChain,
+    getProperty,
     isChainTop,
-    methodName,
-    unwrapAssertions
+    lastCall,
+    staticNumber,
+    trustedConstructorData
 } from '@seedcord/eslint-utils';
-import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
 
-import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
-// collectChain is outermost-first, so the first match is the last call executed, and that one wins
-function lastCall(calls: TSESTree.CallExpression[], name: string): TSESTree.CallExpression | undefined {
-    return calls.find((call) => methodName(call) === name);
+interface Bound {
+    source: TSESTree.CallExpressionArgument | TSESTree.Property['value'] | undefined;
+    site: TSESTree.Node;
 }
 
-function staticNumber(
-    arg: TSESTree.CallExpressionArgument | undefined,
-    services: ParserServicesWithTypeInformation
-): number | undefined {
-    if (arg === undefined || arg.type === AST_NODE_TYPES.SpreadElement) return undefined;
-    // a cast only changes the checker's view, the literal behind it is the runtime value
-    const target = unwrapAssertions(arg);
-    if (target.type === AST_NODE_TYPES.Literal && typeof target.value === 'number') return target.value;
-    // a const bound resolves through its number-literal type
-    const type = services.getTypeAtLocation(target);
-    return type.isNumberLiteral() ? type.value : undefined;
+// a chained setter runs after the constructor, so it wins over the data key. discord.js also
+// accepts the camelCase key and snake_cases it at construction
+function boundOf(
+    calls: TSESTree.CallExpression[],
+    data: TSESTree.ObjectExpression | undefined,
+    method: string,
+    key: string,
+    camelKey: string
+): Bound | undefined {
+    const call = lastCall(calls, method);
+    if (call !== undefined) return { source: call.arguments[0], site: calleeProperty(call) };
+    const prop = data === undefined ? undefined : (getProperty(data, key) ?? getProperty(data, camelKey));
+    if (prop !== undefined) return { source: prop.value, site: prop };
+    return undefined;
 }
 
 export default createRule({
@@ -38,7 +46,8 @@ export default createRule({
             description: 'Disallow a select menu whose minimum selections exceed its maximum.'
         },
         messages: {
-            minOverMax: 'setMinValues({{min}}) is greater than setMaxValues({{max}}). Discord rejects the select menu.'
+            minOverMax:
+                'A minimum of {{min}} selections exceeds the maximum of {{max}}. Discord rejects the select menu.'
         },
         schema: []
     },
@@ -47,28 +56,37 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
 
+        function check(calls: TSESTree.CallExpression[], root: TSESTree.Node): void {
+            // both bounds must be present from some source before the type lookup
+            const rawData = constructorData(root);
+            if (boundOf(calls, rawData, 'setMinValues', 'min_values', 'minValues') === undefined) return;
+            if (boundOf(calls, rawData, 'setMaxValues', 'max_values', 'maxValues') === undefined) return;
+
+            const rootType = services.getTypeAtLocation(root);
+            if (!extendsDjsType(checker, rootType, 'BaseSelectMenuBuilder')) return;
+
+            const data = trustedConstructorData(root, rootType);
+            const min = boundOf(calls, data, 'setMinValues', 'min_values', 'minValues');
+            const max = boundOf(calls, data, 'setMaxValues', 'max_values', 'maxValues');
+            if (min === undefined || max === undefined) return;
+
+            const minValue = staticNumber(min.source, services);
+            const maxValue = staticNumber(max.source, services);
+            if (minValue === undefined || maxValue === undefined || minValue <= maxValue) return;
+
+            // so the squiggle lands on the offending bound
+            context.report({ node: min.site, messageId: 'minOverMax', data: { min: minValue, max: maxValue } });
+        }
+
         return {
             CallExpression(node) {
                 if (!isChainTop(node)) return;
-
-                const calls = collectChain(node);
-                // both setters must be on the chain before the type lookup is worth paying for
-                const minCall = lastCall(calls, 'setMinValues');
-                const maxCall = lastCall(calls, 'setMaxValues');
-                if (minCall === undefined || maxCall === undefined) return;
-
-                if (!extendsDjsType(checker, services.getTypeAtLocation(chainRoot(node)), 'BaseSelectMenuBuilder')) {
-                    return;
-                }
-
-                const min = staticNumber(minCall.arguments[0], services);
-                const max = staticNumber(maxCall.arguments[0], services);
-                if (min === undefined || max === undefined || min <= max) return;
-
-                // so the squiggle lands on the offending setter
-                const target =
-                    minCall.callee.type === AST_NODE_TYPES.MemberExpression ? minCall.callee.property : minCall;
-                context.report({ node: target, messageId: 'minOverMax', data: { min, max } });
+                check(collectChain(node), chainRoot(node));
+            },
+            NewExpression(node) {
+                // a chained root is anchored by its chain-top CallExpression visit instead
+                if (enclosingChainTop(node) !== node) return;
+                check([], node);
             }
         };
     }

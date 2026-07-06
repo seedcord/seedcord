@@ -1,4 +1,14 @@
-import { extendsDjsType, chainRoot, collectChain, isChainTop, methodName } from '@seedcord/eslint-utils';
+import {
+    constructorData,
+    enclosingChainTop,
+    extendsDjsType,
+    chainRoot,
+    collectChain,
+    getProperty,
+    isChainTop,
+    methodName,
+    trustedConstructorData
+} from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
@@ -10,6 +20,7 @@ interface Limit {
     builders: ReadonlySet<string>;
     addMethod: string;
     setMethod: string;
+    dataKey?: string;
     cap: number;
     detail: string;
 }
@@ -19,6 +30,7 @@ const LIMITS: readonly Limit[] = [
         builders: new Set(['ActionRowBuilder']),
         addMethod: 'addComponents',
         setMethod: 'setComponents',
+        dataKey: 'components',
         cap: 5,
         detail: 'An action row holds at most 5 components'
     },
@@ -26,6 +38,7 @@ const LIMITS: readonly Limit[] = [
         builders: new Set(['StringSelectMenuBuilder']),
         addMethod: 'addOptions',
         setMethod: 'setOptions',
+        dataKey: 'options',
         cap: 25,
         detail: 'A select menu holds at most 25 options'
     },
@@ -33,9 +46,11 @@ const LIMITS: readonly Limit[] = [
         builders: new Set(['EmbedBuilder']),
         addMethod: 'addFields',
         setMethod: 'setFields',
+        dataKey: 'fields',
         cap: 25,
         detail: 'An embed holds at most 25 fields'
     },
+    // the slash option builders take no constructor data
     {
         builders: new Set(['SlashCommandStringOption', 'SlashCommandIntegerOption', 'SlashCommandNumberOption']),
         addMethod: 'addChoices',
@@ -83,40 +98,64 @@ function arrayLength(
     return count;
 }
 
+// discord.js normalizeArray reads a sole leading array argument (or array-typed variable) as the
+// whole list and drops the remaining arguments
+function callItems(
+    call: TSESTree.CallExpression,
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker
+): number | undefined {
+    const first = call.arguments[0];
+    if (first === undefined) return 0;
+    if (first.type === AST_NODE_TYPES.ArrayExpression) return arrayLength(first, services, checker);
+    if (first.type !== AST_NODE_TYPES.SpreadElement) {
+        const type = services.getTypeAtLocation(first);
+        if (checker.isArrayLikeType(type)) return tupleLength(type, checker);
+    }
+    let count = 0;
+    for (const arg of call.arguments) {
+        if (arg.type === AST_NODE_TYPES.SpreadElement) {
+            const arity = spreadCount(arg, services, checker);
+            if (arity === undefined) return undefined;
+            count += arity;
+        } else {
+            count += 1;
+        }
+    }
+    return count;
+}
+
 function countStaticItems(
     calls: TSESTree.CallExpression[],
     limit: Limit,
+    data: TSESTree.ObjectExpression | undefined,
     services: ParserServicesWithTypeInformation,
     checker: ts.TypeChecker
 ): number | undefined {
     let count = 0;
     let matched = false;
+
+    // the constructor runs first, so its items seed the count
+    const seed = data !== undefined && limit.dataKey !== undefined ? getProperty(data, limit.dataKey) : undefined;
+    if (seed !== undefined) {
+        const length =
+            seed.value.type === AST_NODE_TYPES.ArrayExpression
+                ? arrayLength(seed.value, services, checker)
+                : tupleLength(services.getTypeAtLocation(seed.value), checker);
+        if (length === undefined) return undefined;
+        count = length;
+        matched = true;
+    }
+
     // reversed to source order, so a later setMethod wins over earlier adds
     for (const call of [...calls].reverse()) {
         const name = methodName(call);
-        if (name === limit.addMethod) {
-            matched = true;
-            for (const arg of call.arguments) {
-                if (arg.type === AST_NODE_TYPES.SpreadElement) {
-                    const arity = spreadCount(arg, services, checker);
-                    if (arity === undefined) return undefined;
-                    count += arity;
-                } else {
-                    count += 1;
-                }
-            }
-        } else if (name === limit.setMethod) {
-            matched = true;
-            const arg = call.arguments[0];
-            const length =
-                arg?.type === AST_NODE_TYPES.ArrayExpression
-                    ? arrayLength(arg, services, checker)
-                    : arg !== undefined && arg.type !== AST_NODE_TYPES.SpreadElement
-                      ? tupleLength(services.getTypeAtLocation(arg), checker)
-                      : undefined;
-            if (length === undefined) return undefined;
-            count = length; // setMethod replaces, so this resets the count
-        }
+        if (name !== limit.addMethod && name !== limit.setMethod) continue;
+        matched = true;
+        const items = callItems(call, services, checker);
+        if (items === undefined) return undefined;
+        // the setMethod replaces, so it resets the count
+        count = name === limit.addMethod ? count + items : items;
     }
     return matched ? count : undefined;
 }
@@ -129,7 +168,7 @@ export default createRule({
             description: 'Disallow exceeding a Discord builder limit with a statically-known number of items.'
         },
         messages: {
-            tooMany: '{{detail}}. This chain declares {{count}}.'
+            tooMany: '{{detail}}. This builder declares {{count}}.'
         },
         schema: []
     },
@@ -138,23 +177,39 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
 
+        function check(anchor: TSESTree.Node, calls: TSESTree.CallExpression[], root: TSESTree.Node): void {
+            const rawData = constructorData(root);
+            const methods = new Set(calls.map((call) => methodName(call)));
+            // skip the type lookup when no capped method or data key is present
+            const relevant = LIMITS.some(
+                (limit) =>
+                    methods.has(limit.addMethod) ||
+                    methods.has(limit.setMethod) ||
+                    (rawData !== undefined &&
+                        limit.dataKey !== undefined &&
+                        getProperty(rawData, limit.dataKey) !== undefined)
+            );
+            if (!relevant) return;
+
+            const rootType = services.getTypeAtLocation(root);
+            const limit = LIMITS.find((entry) => extendsDjsType(checker, rootType, entry.builders));
+            if (!limit) return;
+
+            const count = countStaticItems(calls, limit, trustedConstructorData(root, rootType), services, checker);
+            if (count !== undefined && count > limit.cap) {
+                context.report({ node: anchor, messageId: 'tooMany', data: { detail: limit.detail, count } });
+            }
+        }
+
         return {
             CallExpression(node) {
                 if (!isChainTop(node)) return;
-
-                const calls = collectChain(node);
-                const methods = new Set(calls.map((call) => methodName(call)));
-                // skip the type lookup when no capped method is on the chain
-                if (!LIMITS.some((limit) => methods.has(limit.addMethod) || methods.has(limit.setMethod))) return;
-
-                const type = services.getTypeAtLocation(chainRoot(node));
-                const limit = LIMITS.find((entry) => extendsDjsType(checker, type, entry.builders));
-                if (!limit) return;
-
-                const count = countStaticItems(calls, limit, services, checker);
-                if (count !== undefined && count > limit.cap) {
-                    context.report({ node, messageId: 'tooMany', data: { detail: limit.detail, count } });
-                }
+                check(node, collectChain(node), chainRoot(node));
+            },
+            NewExpression(node) {
+                // a chained root is anchored by its chain-top CallExpression visit instead
+                if (enclosingChainTop(node) !== node) return;
+                check(node, [], node);
             }
         };
     }

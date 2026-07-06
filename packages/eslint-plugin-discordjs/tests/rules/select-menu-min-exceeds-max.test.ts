@@ -72,6 +72,30 @@ ruleTester.run('select-menu-min-exceeds-max', rule, {
             errors: [{ messageId: 'minOverMax' }]
         },
         {
+            // both bounds in the constructor, no chain
+            code: dedent`
+                import { StringSelectMenuBuilder } from 'discord.js';
+                new StringSelectMenuBuilder({ custom_id: 'c', min_values: 3, max_values: 2 });
+            `,
+            errors: [{ messageId: 'minOverMax' }]
+        },
+        {
+            // one bound in the constructor, the other chained
+            code: dedent`
+                import { StringSelectMenuBuilder } from 'discord.js';
+                new StringSelectMenuBuilder({ custom_id: 'c', min_values: 3 }).setMaxValues(2);
+            `,
+            errors: [{ messageId: 'minOverMax' }]
+        },
+        {
+            // discord.js snake_cases camelCase data at construction
+            code: dedent`
+                import { StringSelectMenuBuilder } from 'discord.js';
+                new StringSelectMenuBuilder({ customId: 'c', minValues: 3, maxValues: 2 });
+            `,
+            errors: [{ messageId: 'minOverMax' }]
+        },
+        {
             // max set before min, the order does not matter
             code: dedent`
                 import { StringSelectMenuBuilder } from 'discord.js';
