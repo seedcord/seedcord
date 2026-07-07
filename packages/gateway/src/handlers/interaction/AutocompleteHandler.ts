@@ -7,7 +7,7 @@ import { BaseHandler } from '@handlers/BaseHandler';
 import type { Handler } from '@handlers/BaseHandler';
 import type { AutocompleteOptions } from '@inputs/AutocompleteOptions';
 import type { Core } from '@interfaces/Core';
-import type { SlashOptionRegistry } from '@seedcord/core';
+import type { DispatchContext, SlashOptionRegistry } from '@seedcord/core';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
@@ -80,8 +80,8 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
 {
     // keep this ctor. it gives typeof AutocompleteHandler a public construct signature that HandlerConstructor
     // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses HandlerConstructor to never.
-    constructor(event: AutocompleteInteraction<Cache>, core: Core) {
-        super(event, core);
+    constructor(event: AutocompleteInteraction<Cache>, core: Core, dispatch?: DispatchContext) {
+        super(event, core, dispatch);
     }
 
     /**

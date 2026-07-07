@@ -1,6 +1,7 @@
 import { Logger } from '@seedcord/services';
 
 import type { Core } from '@interfaces/Core';
+import type { DispatchContext } from '@seedcord/core';
 import type {
     AnySelectMenuInteraction,
     AutocompleteInteraction,
@@ -39,13 +40,17 @@ export interface Handler {
 export abstract class BaseHandler<ValidEvent extends ValidEventTypes> implements Handler {
     protected readonly event: ValidEvent;
     protected readonly logger: Logger;
+    // the per-dispatch bag, set on an interaction handler, undefined on an event handler for now
+    protected readonly dispatch?: DispatchContext | undefined;
 
     protected constructor(
         event: ValidEvent,
-        public readonly core: Core
+        public readonly core: Core,
+        dispatch?: DispatchContext
     ) {
         this.event = event;
         this.logger = new Logger(this.constructor.name);
+        this.dispatch = dispatch;
     }
 
     /**

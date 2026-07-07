@@ -5,6 +5,9 @@ export type * from '@registries/SlashOptionRegistry';
 
 export { RegisterCommand } from '@decorators/Command';
 
+export { DispatchContext } from '@src/dispatch/DispatchContext';
+export type { DispatchState } from '@src/dispatch/DispatchContext';
+
 export type { CoreBase } from '@interfaces/CoreBase';
 
 export { defineEffectGate, defineGate } from '@gates/Gate';
