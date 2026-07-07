@@ -1,5 +1,11 @@
 # @seedcord/gateway
 
+## 0.1.0-next.0
+
+### Minor Changes
+
+- 8cb06e1: **BREAKING:** The gateway framework moves from `seedcord` to `@seedcord/gateway`, and the CLI from `@seedcord/cli` to `seedcord`. Import the framework from `@seedcord/gateway`, and `defineConfig` from `seedcord`.
+
 ---
 
 #### Versions below were published as `seedcord`, before the split into scoped packages.
