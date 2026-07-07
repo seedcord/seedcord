@@ -1,5 +1,5 @@
 ---
-'seedcord': patch
+'@seedcord/gateway': patch
 '@seedcord/errors': patch
 ---
 

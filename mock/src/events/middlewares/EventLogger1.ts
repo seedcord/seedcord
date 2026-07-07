@@ -1,5 +1,5 @@
 import { Events } from 'discord.js';
-import { EventMiddleware, Middleware, MiddlewareType } from 'seedcord';
+import { EventMiddleware, Middleware, MiddlewareType } from '@seedcord/gateway';
 
 /**
  * Logs which message event fired across create, delete, and update. A multi-event middleware runs the same for

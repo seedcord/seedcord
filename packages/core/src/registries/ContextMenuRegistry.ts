@@ -1,6 +1,6 @@
 /**
  * Maps each user context-menu command name to a presence marker. Populated by `seedcord codegen`, which
- * reads every command's `toJSON()` and emits a `declare module 'seedcord'` augmentation, so
+ * reads every command's `toJSON()` and emits a `declare module '@seedcord/gateway'` augmentation, so
  * `keyof UserContextMenuRegistry` is the compile-time union of every registered user context-menu name.
  * Do not augment it by hand, run `seedcord codegen`.
  *
@@ -10,7 +10,7 @@
  * @example
  * ```ts
  * // seedcord-gen.d.ts (emitted, committed)
- * declare module 'seedcord' {
+ * declare module '@seedcord/gateway' {
  *   interface UserContextMenuRegistry {
  *     'View Profile': true;
  *   }

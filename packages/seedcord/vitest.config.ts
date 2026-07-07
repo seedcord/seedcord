@@ -11,27 +11,17 @@ export default mergeConfig(
     defineConfig({
         resolve: {
             alias: {
-                '@src': path.resolve(__dirname, './src'),
-                '@bot': path.resolve(__dirname, './src/bot'),
-                '@subscribers': path.resolve(__dirname, './src/subscribers'),
-                '@hmr': path.resolve(__dirname, './src/hmr'),
-                '@interfaces': path.resolve(__dirname, './src/interfaces'),
-                '@handlers': path.resolve(__dirname, './src/handlers'),
-                '@inputs': path.resolve(__dirname, './src/inputs'),
-                '@pagination': path.resolve(__dirname, './src/pagination'),
-                '@miscellaneous': path.resolve(__dirname, './src/miscellaneous'),
-
-                // Paths inside bot
-                '@bUtilities': path.resolve(__dirname, './src/bot/utilities'),
-                '@bControllers': path.resolve(__dirname, './src/bot/controllers'),
-                '@bDecorators': path.resolve(__dirname, './src/bot/decorators')
+                '@ui': path.resolve(__dirname, './src/ui'),
+                '@core': path.resolve(__dirname, './src/core'),
+                '@commands': path.resolve(__dirname, './src/commands'),
+                '@utils': path.resolve(__dirname, './src/utils'),
+                '@api': path.resolve(__dirname, './src/api')
             }
         },
         test: {
             globals: true,
             environment: 'node',
-            testTimeout: 10_000,
-            setupFiles: ['./tests/setup.ts']
+            testTimeout: 5000
         }
     })
 );

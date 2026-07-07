@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
-import { HmrModuleHandler, Plugin } from 'seedcord';
+import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
@@ -21,7 +21,7 @@ import type { KpgOptions } from './types/KpgOptions';
 import type { KpgServices } from './types/KpgServices';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 import type { MigrationInfo } from 'kysely/migration';
-import type { Core } from 'seedcord';
+import type { Core } from '@seedcord/gateway';
 
 export interface KyselyArtifact {
     key?: string;

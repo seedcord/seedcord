@@ -31,10 +31,10 @@
         "envapt": "catalog:deps",
         "mongoose": "catalog:peer",
         "reflect-metadata": "catalog:peer",
-        "seedcord": "workspace:*"
+        "@seedcord/gateway": "workspace:*"
     },
     "devDependencies": {
-        "@seedcord/cli": "workspace:*",
+        "seedcord": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*"
     }

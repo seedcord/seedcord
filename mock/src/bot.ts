@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { Mongo } from '@seedcord/plugins';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapt, Envapter } from 'envapt';
-import { Seedcord, StartupPhase } from 'seedcord';
+import { Seedcord, StartupPhase } from '@seedcord/gateway';
 
 Envapter.baseDir = resolve(import.meta.dirname, '..');
 
@@ -57,7 +57,7 @@ export const seedcord = new Seedcord({
     name: Vars.dbName
 });
 
-declare module 'seedcord' {
+declare module '@seedcord/gateway' {
     interface Core {
         db: Mongo;
     }

@@ -1,7 +1,7 @@
 ---
-'seedcord': minor
+'@seedcord/gateway': minor
 '@seedcord/types': patch
-'@seedcord/cli': patch
+'seedcord': patch
 '@seedcord/plugins': patch
 ---
 

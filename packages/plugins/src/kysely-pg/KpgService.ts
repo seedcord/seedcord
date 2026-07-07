@@ -6,7 +6,7 @@ import { PgServiceMetadataKey, PgTableMetadataKey } from './decorators/RegisterK
 import type { KyselyPg } from './KyselyPg';
 import type { TypedConstructor } from '@seedcord/types';
 import type { Kysely } from 'kysely';
-import type { Core } from 'seedcord';
+import type { Core } from '@seedcord/gateway';
 import type { LiteralUnion } from 'type-fest';
 
 /**

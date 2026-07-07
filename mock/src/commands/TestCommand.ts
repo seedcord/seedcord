@@ -1,4 +1,4 @@
-import { RegisterCommand, BuilderComponent } from 'seedcord';
+import { RegisterCommand, BuilderComponent } from '@seedcord/gateway';
 
 @RegisterCommand('global')
 export class TestCommand extends BuilderComponent<'command'> {

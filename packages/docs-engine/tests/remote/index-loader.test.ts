@@ -92,7 +92,7 @@ describe('IndexLoader', () => {
 
         describe('0-stable (prerelease-only) package', () => {
             const prereleaseOnly: PackageIndexEntry = {
-                fullName: '@seedcord/cli',
+                fullName: '@seedcord/gateway',
                 stable: null,
                 prerelease: { latest: '0.11.0-next.0' }
             };

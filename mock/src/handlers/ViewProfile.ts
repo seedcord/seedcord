@@ -1,8 +1,8 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { ApplicationCommandType, MessageFlags } from 'discord.js';
-import { ContextMenuHandler, ContextMenuRoute, Cooldown, Gated, Notice } from 'seedcord';
+import { ContextMenuHandler, ContextMenuRoute, Cooldown, Gated, Notice } from '@seedcord/gateway';
 
-import type { ReplyResponse } from 'seedcord';
+import type { ReplyResponse } from '@seedcord/gateway';
 
 class ProfileCooldown extends Notice {
     public constructor(private readonly resetAt: number) {

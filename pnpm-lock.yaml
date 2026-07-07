@@ -434,6 +434,9 @@ importers:
       '@discordjs/builders':
         specifier: catalog:deps
         version: 1.14.1
+      '@seedcord/gateway':
+        specifier: workspace:*
+        version: link:../packages/gateway
       '@seedcord/plugins':
         specifier: workspace:*
         version: link:../packages/plugins
@@ -449,113 +452,19 @@ importers:
       reflect-metadata:
         specifier: catalog:peer
         version: 0.2.2
-      seedcord:
-        specifier: workspace:*
-        version: link:../packages/seedcord
       typescript:
         specifier: catalog:peer
         version: 6.0.3
     devDependencies:
-      '@seedcord/cli':
-        specifier: workspace:*
-        version: link:../packages/cli
       '@seedcord/eslint-config':
         specifier: workspace:*
         version: link:../packages/eslint-config
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:../packages/tsconfig
-
-  packages/cli:
-    dependencies:
-      '@clack/prompts':
-        specifier: ^1.6.0
-        version: 1.6.0
-      '@commander-js/extra-typings':
-        specifier: ^15.0.0
-        version: 15.0.0(commander@15.0.0)
-      '@discordjs/rest':
-        specifier: ^2.6.1
-        version: 2.6.1
-      '@seedcord/core':
+      seedcord:
         specifier: workspace:*
-        version: link:../core
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/services':
-        specifier: workspace:*
-        version: link:../services
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      commander:
-        specifier: ^15.0.0
-        version: 15.0.0
-      discord-api-types:
-        specifier: ^0.38.49
-        version: 0.38.49
-      envapt:
-        specifier: catalog:deps
-        version: 6.0.2
-      fix-esm-import-path:
-        specifier: ^1.10.3
-        version: 1.10.3
-      ink:
-        specifier: ^7.1.0
-        version: 7.1.0(@types/react@19.2.17)(react@19.2.7)
-      ink-spinner:
-        specifier: ^5.0.0
-        version: 5.0.0(ink@7.1.0(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
-      jiti:
-        specifier: ^2.7.0
-        version: 2.7.0
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
-      react:
-        specifier: catalog:react
-        version: 19.2.7
-      tsx:
-        specifier: catalog:deps
-        version: 4.22.4
-      vite:
-        specifier: catalog:deps
-        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
-    devDependencies:
-      '@eslint-react/eslint-plugin':
-        specifier: ^5.10.0
-        version: 5.10.0(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@types/react':
-        specifier: catalog:react
-        version: 19.2.17
-      discord.js:
-        specifier: catalog:peer
-        version: 14.26.4
-      eslint-plugin-react-hooks:
-        specifier: ^7.1.1
-        version: 7.1.1(eslint@10.6.0(jiti@2.7.0))
-      ink-testing-library:
-        specifier: ^4.0.0
-        version: 4.0.0(@types/react@19.2.17)
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
+        version: link:../packages/seedcord
 
   packages/core:
     dependencies:
@@ -902,81 +811,7 @@ importers:
         specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
 
-  packages/plugins:
-    dependencies:
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/services':
-        specifier: workspace:*
-        version: link:../services
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 6.0.2
-      seedcord:
-        specifier: workspace:*
-        version: link:../seedcord
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@types/pg':
-        specifier: ^8.20.0
-        version: 8.20.0
-      kysely:
-        specifier: ^0.29.2
-        version: 0.29.2
-      mongoose:
-        specifier: catalog:peer
-        version: 9.7.1
-      pg:
-        specifier: ^8.21.0
-        version: 8.21.0
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-
-  packages/rate-limiter:
-    dependencies:
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-
-  packages/seedcord:
+  packages/gateway:
     dependencies:
       '@discordjs/builders':
         specifier: catalog:deps
@@ -1030,6 +865,171 @@ importers:
       vite:
         specifier: catalog:deps
         version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
+
+  packages/plugins:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@seedcord/gateway':
+        specifier: workspace:*
+        version: link:../gateway
+      '@seedcord/services':
+        specifier: workspace:*
+        version: link:../services
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 6.0.2
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
+      kysely:
+        specifier: ^0.29.2
+        version: 0.29.2
+      mongoose:
+        specifier: catalog:peer
+        version: 9.7.1
+      pg:
+        specifier: ^8.21.0
+        version: 8.21.0
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+
+  packages/rate-limiter:
+    dependencies:
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+
+  packages/seedcord:
+    dependencies:
+      '@clack/prompts':
+        specifier: ^1.6.0
+        version: 1.6.0
+      '@commander-js/extra-typings':
+        specifier: ^15.0.0
+        version: 15.0.0(commander@15.0.0)
+      '@discordjs/rest':
+        specifier: ^2.6.1
+        version: 2.6.1
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../core
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@seedcord/services':
+        specifier: workspace:*
+        version: link:../services
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      commander:
+        specifier: ^15.0.0
+        version: 15.0.0
+      discord-api-types:
+        specifier: ^0.38.49
+        version: 0.38.49
+      envapt:
+        specifier: catalog:deps
+        version: 6.0.2
+      fix-esm-import-path:
+        specifier: ^1.10.3
+        version: 1.10.3
+      ink:
+        specifier: ^7.1.0
+        version: 7.1.0(@types/react@19.2.17)(react@19.2.7)
+      ink-spinner:
+        specifier: ^5.0.0
+        version: 5.0.0(ink@7.1.0(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
+      jiti:
+        specifier: ^2.7.0
+        version: 2.7.0
+      minimatch:
+        specifier: ^10.2.5
+        version: 10.2.5
+      react:
+        specifier: catalog:react
+        version: 19.2.7
+      tsx:
+        specifier: catalog:deps
+        version: 4.22.4
+      vite:
+        specifier: catalog:deps
+        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
+    devDependencies:
+      '@eslint-react/eslint-plugin':
+        specifier: ^5.10.0
+        version: 5.10.0(eslint@10.6.0(jiti@2.7.0))(typescript@6.0.3)
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@types/react':
+        specifier: catalog:react
+        version: 19.2.17
+      discord.js:
+        specifier: catalog:peer
+        version: 14.26.4
+      eslint-plugin-react-hooks:
+        specifier: ^7.1.1
+        version: 7.1.1(eslint@10.6.0(jiti@2.7.0))
+      ink-testing-library:
+        specifier: ^4.0.0
+        version: 4.0.0(@types/react@19.2.17)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
 
   packages/services:
     dependencies:

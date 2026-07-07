@@ -7,7 +7,7 @@ import { keepDefined, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
-import { HmrModuleHandler, Plugin } from 'seedcord';
+import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
 
 import { ModelMetadataKey } from './decorators/RegisterMongoModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';
@@ -18,7 +18,7 @@ import type { MongoOptions } from './types/MongoOptions';
 import type { MongoServices } from './types/MongoServices';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 import type { Mongoose } from 'mongoose';
-import type { Core } from 'seedcord';
+import type { Core } from '@seedcord/gateway';
 
 interface MongoArtifact {
     key?: string;

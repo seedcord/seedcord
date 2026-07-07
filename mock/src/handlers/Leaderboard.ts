@@ -1,4 +1,4 @@
-import { ButtonHandler, ButtonRoute, CustomId, paginate, SlashHandler, SlashRoute } from 'seedcord';
+import { ButtonHandler, ButtonRoute, CustomId, paginate, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import { LeaderboardCard, LeaderboardControls } from '../components/bundles/Leaderboard';
 

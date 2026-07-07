@@ -24,7 +24,7 @@ describe('formatDisplayPackageName', () => {
     it('strips the @seedcord scope for known overrides', () => {
         expect(formatDisplayPackageName('@seedcord/plugins')).toBe('plugins');
         expect(formatDisplayPackageName('@seedcord/services')).toBe('services');
-        expect(formatDisplayPackageName('@seedcord/cli')).toBe('cli');
+        expect(formatDisplayPackageName('@seedcord/gateway')).toBe('gateway');
     });
 
     it('keeps the canonical core name', () => {
@@ -162,9 +162,9 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('resolves explicit override aliases', () => {
-        const list = ids('seedcord', '@seedcord/core', '@seedcord/eslint-config', '@seedcord/cli');
+        const list = ids('@seedcord/gateway', '@seedcord/core', '@seedcord/eslint-config', 'seedcord');
         expect(resolvePackageIdentity(list, 'eslint-config')?.fullName).toBe('@seedcord/eslint-config');
-        expect(resolvePackageIdentity(list, 'cli')?.fullName).toBe('@seedcord/cli');
+        expect(resolvePackageIdentity(list, 'cli')?.fullName).toBe('seedcord');
         expect(resolvePackageIdentity(list, 'core')?.fullName).toBe('@seedcord/core');
     });
 

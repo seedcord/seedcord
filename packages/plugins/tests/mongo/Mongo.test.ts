@@ -6,7 +6,7 @@ import { Mongo } from '@src/mongo/Mongo';
 
 import { TestEnvironment } from '../utils/test-env';
 
-import type { Core } from 'seedcord';
+import type { Core } from '@seedcord/gateway';
 
 const pluginsPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 

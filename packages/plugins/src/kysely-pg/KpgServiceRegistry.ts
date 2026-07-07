@@ -8,7 +8,7 @@ import type { KyselyServiceConstructor } from './KpgService';
 import type { KyselyArtifact, KyselyPg } from './KyselyPg';
 import type { KpgServices } from './types/KpgServices';
 import type { Logger } from '@seedcord/services';
-import type { Core } from 'seedcord';
+import type { Core } from '@seedcord/gateway';
 
 /**
  * Discovers and registers Postgres services for the plugin.

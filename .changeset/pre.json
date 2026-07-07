@@ -2,7 +2,6 @@
   "mode": "pre",
   "tag": "next",
   "initialVersions": {
-    "@seedcord/cli": "0.3.1",
     "@seedcord/core": "0.0.1",
     "@seedcord/docs": "0.1.5",
     "@seedcord/docs-engine": "0.3.1",
@@ -12,6 +11,7 @@
     "@seedcord/eslint-config-base": "0.0.1",
     "@seedcord/eslint-plugin": "0.0.1",
     "@seedcord/eslint-utils": "0.0.1",
+    "@seedcord/gateway": "0.0.1",
     "@seedcord/home": "0.0.1",
     "@seedcord/mock": "0.2.22",
     "@seedcord/plugins": "0.7.2",

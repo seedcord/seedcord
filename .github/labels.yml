@@ -1,4 +1,4 @@
-- name: '📦 seedcord'
+- name: '📦 gateway'
   color: bc6262
   description: framework orchestrator and bot host
 - name: '📦 core'
@@ -40,7 +40,7 @@
   color: 6e62bc
 - name: '📦 tsdown-config'
   color: 8f62bc
-- name: '📦 cli'
+- name: '📦 seedcord'
   color: b062bc
 - name: '📦 docs-generator'
   color: bc62a5

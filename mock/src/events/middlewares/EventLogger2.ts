@@ -1,4 +1,4 @@
-import { EventMiddleware, Middleware, MiddlewareType } from 'seedcord';
+import { EventMiddleware, Middleware, MiddlewareType } from '@seedcord/gateway';
 
 /**
  * A catchall that logs every client event before its handlers run. With no `{ events }` filter `this.event` is

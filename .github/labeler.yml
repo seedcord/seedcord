@@ -1,6 +1,6 @@
-'📦 seedcord':
+'📦 gateway':
   - changed-files:
-      - any-glob-to-any-file: 'packages/seedcord/**'
+      - any-glob-to-any-file: 'packages/gateway/**'
 '📦 core':
   - changed-files:
       - any-glob-to-any-file: 'packages/core/**'
@@ -49,9 +49,9 @@
 '📦 tsdown-config':
   - changed-files:
       - any-glob-to-any-file: 'packages/tsdown-config/**'
-'📦 cli':
+'📦 seedcord':
   - changed-files:
-      - any-glob-to-any-file: 'packages/cli/**'
+      - any-glob-to-any-file: 'packages/seedcord/**'
 '📦 docs-generator':
   - changed-files:
       - any-glob-to-any-file: 'packages/docs-generator/**'

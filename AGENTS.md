@@ -28,7 +28,7 @@ const x: NoteForAgentAddedByTheUser = 42; // forces a type error
 
 ## Design Patterns
 
-- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface (`packages/seedcord`, `packages/services`, `packages/plugins`) leans on classes — extend or compose them rather than re-implementing parallel function pipelines.
+- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface leans on classes — extend or compose them rather than re-implementing parallel function pipelines.
 
 ```ts
 // Bad
@@ -126,7 +126,7 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 - **Verify paths** with `pwd` and `ls` when hitting "No such file or directory."
 - **Use package `scripts`** for common tasks; add and document new scripts when needed. Check the closest `package.json` first — don't assume scripts exist.
 - **Prefer changing file extension to `.txt`** to preserve files marked for deletion (preserves git history).
-- **When a shared package changes, rebuild it** (`pnpm -C packages/<name> build`) and re-run `tc` on the dependents (e.g. `pnpm -C packages/seedcord tc`, `pnpm -C apps/docs tc`).
+- **When a shared package changes, rebuild it** (`pnpm -C packages/<name> build`) and re-run `tc` on the dependents (e.g. `pnpm -C packages/gateway tc`, `pnpm -C apps/docs tc`).
 - **Run `pnpm prePush`** before pushing — it runs `build && tc && lint && test` across the whole workspace and is what husky's pre-push hook gates on.
 - **For published packages**, add a `changeset` (`pnpm cs`) so the release pipeline can publish the new version and changelog entry. `pnpm cs:status` shows pending changesets.
 
@@ -136,18 +136,21 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 
 A monorepo of focused leaf packages under `packages/`, Next.js docs apps under `apps/`, and a mock bot. Read a package's own barrel and `package.json` for its current surface, not a list here.
 
-- `packages/seedcord` — the core framework orchestrator and bot host.
-- `packages/services` — shared runtime services (logging, lifecycle, health, rate limiting, events).
-- `packages/utils` — small stateless helpers.
-- `packages/types` — shared types and interfaces. Import from here before redefining locally.
-- `packages/kit` — component builders, the error/`Notice` tree, and the typed customId codec.
-- `packages/errors` — the chalk-only `SeedcordError` tree.
-- `packages/cli` — the `seedcord` CLI.
-- `packages/plugins` — the plugin contract and first-party plugins.
-- `packages/docs-engine`, `packages/docs-generator` — the docs extraction and rendering pipeline.
-- the `*-config` packages — workspace-internal config (not published).
-- `apps/*` — the Next.js documentation surfaces.
-- `mock/` — a mock Discord bot consumed by tests.
+- `packages/core`, the transport-agnostic core (registries, the `Notice` stop tree, the customId codec, component builders, gates + machinery, `CoreBase`). Both transports build on it.
+- `packages/gateway`, the gateway transport, the `Seedcord` framework class and bot host (discord.js).
+- `packages/seedcord`, the `seedcord` CLI and dev tooling (`build`, `dev`, `codegen`, `commands`, `defineConfig`).
+- `packages/services`, shared runtime services (logging, lifecycle, health, events).
+- `packages/rate-limiter`, `MemoryRateLimiter` + the key helper. The async `IRateLimiter` contract is in `@seedcord/types`.
+- `packages/types`, shared djs-free types and interfaces. Import from here before redefining locally.
+- `packages/utils`, small stateless helpers.
+- `packages/errors`, the chalk-only `SeedcordError` tree.
+- `packages/plugins`, the plugin contract and first-party plugins.
+- `packages/eslint-plugin`, `packages/eslint-plugin-discordjs`, `packages/eslint-utils`, the published eslint rule packages.
+- `packages/docs-engine`, `packages/docs-generator`, the docs extraction and rendering pipeline.
+- `packages/ui`, shared UI primitives and brand tokens for the apps.
+- the `*-config` packages (`tsconfig`, `tsdown-config`, `eslint-config`, `eslint-config-base`), workspace-internal config (not published).
+- `apps/{docs,guide}`, the documentation surfaces. `apps/home`, the marketing site.
+- `mock/`, a mock Discord bot consumed by tests.
 - `.github/agents`, `.github/prompts`, `.github/skills` — agent prompts, slash prompts, and skill libraries. `.claude/skills` symlinks to `.github/skills`, and `CLAUDE.md` symlinks to this file.
 
 ---
@@ -170,7 +173,7 @@ When a mock or design reference is provided for an app, it is visual ground trut
 
 ## React / Next.js Patterns
 
-These apply to `apps/{docs,guide,home}` and to the Ink-based React surface in `packages/cli/src`. They are review-enforced today (no react-doctor installed yet):
+These apply to `apps/{docs,guide,home}` and to the Ink-based React surface in `packages/seedcord/src`. `react-doctor` catches many of them (`pnpm react-doctor`, run deliberately, off `prePush`), and the rest are review-enforced:
 
 - **`.filter().map()`** → combine into a single `.reduce()` — never iterate twice.
 - **`array.includes()` in a loop** → `new Set()` for O(1) membership; build it once outside the loop.
@@ -193,7 +196,7 @@ See `.github/skills/code-quality/REACT19.md` and `.github/skills/code-quality/TA
 - **YAGNI on deps.** Never `pnpm add` a package until the code using it is written in the same commit. Unused deps are dead code — remove them, don't leave them as "future prereqs."
 - **Dead exports.** Before adding `export` to a symbol, verify it is consumed outside the file. Unused exports are dead code — remove the `export` keyword.
 - **Export what callers name.** Add `export` to a symbol only when a consumer might have to reference it by name, whether in a variable annotation, a function parameter or return type, or an `extends`/`implements` clause. A helper type that appears only as the structural shape of another exported type's field stays internal. The parent's own declaration still resolves it in the emitted `.d.ts`, and api-extractor rolls it into the docs with a link (no sidebar entry), so the public surface stays limited to what callers actually write.
-- **Run a dead-code sweep before committing** (see `.github/skills/code-quality/SKILL.md` for the manual `rg` checklist; a `knip` integration is a worthwhile follow-up but is not wired up yet).
+- **Run a dead-code sweep before committing** with `pnpm knip` from the repo root (configured via `knip.json`), plus the manual `rg` checklist in `.github/skills/code-quality/SKILL.md`.
 
 ---
 

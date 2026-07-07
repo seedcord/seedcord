@@ -1,9 +1,9 @@
 import { ActionRowBuilder, TextDisplayBuilder } from '@discordjs/builders';
 import { ButtonStyle } from 'discord.js';
-import { BuilderComponent } from 'seedcord';
+import { BuilderComponent } from '@seedcord/gateway';
 
 import type { ButtonBuilder } from '@discordjs/builders';
-import type { PageView, PaginatorControls } from 'seedcord';
+import type { PageView, PaginatorControls } from '@seedcord/gateway';
 
 /** One paginated activity event. */
 export interface FeedEvent {

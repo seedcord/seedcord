@@ -1,4 +1,4 @@
-import { defineConfig } from '@seedcord/cli';
+import { defineConfig } from 'seedcord';
 
 export default defineConfig({
     root: './src',

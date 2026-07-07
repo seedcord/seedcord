@@ -1,6 +1,6 @@
 ---
+'@seedcord/gateway': minor
 'seedcord': minor
-'@seedcord/cli': minor
 '@seedcord/errors': patch
 ---
 

@@ -1,4 +1,4 @@
-import { SlashHandler, SlashRoute } from 'seedcord';
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 @SlashRoute('throw')
 export class TestError extends SlashHandler<'throw'> {

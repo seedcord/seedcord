@@ -1,4 +1,4 @@
-import { BuilderComponent } from 'seedcord';
+import { BuilderComponent } from '@seedcord/gateway';
 
 import type { Client } from 'discord.js';
 

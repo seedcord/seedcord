@@ -1,4 +1,4 @@
-import { ButtonRoute, CursorSource, Paginator, SlashHandler, SlashRoute } from 'seedcord';
+import { ButtonRoute, CursorSource, Paginator, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import { FeedCard } from '../components/bundles/Feed';
 
