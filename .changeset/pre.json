@@ -49,6 +49,7 @@
     "hmr-decouple",
     "hmr-rollback",
     "once-handler-concurrent-fire",
+    "package-rename",
     "quick-hounds-brake",
     "rate-limiter-leaf",
     "registry-types-to-core",
