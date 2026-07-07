@@ -8,7 +8,9 @@ import type {
     Attachment,
     GuildBasedChannel,
     GuildMember,
+    NewsChannel,
     Role,
+    TextChannel,
     User
 } from 'discord.js';
 
@@ -46,6 +48,12 @@ declare module '@seedcord/core' {
         };
         flag: {
             reason: { kind: 'string'; required: true };
+        };
+        // codegen emits channelTypes as wire numbers (GuildText 0, GuildAnnouncement 5)
+        move: {
+            dest: { kind: 'channel'; required: true; channelTypes: [0] };
+            hall: { kind: 'channel'; required: false; channelTypes: [0, 5] };
+            any: { kind: 'channel'; required: true };
         };
     }
 }
@@ -90,6 +98,16 @@ function channelIsWide(options: SlashOptions<'purge'>): void {
     expectTypeOf(options.getChannel('where')).toEqualTypeOf<GuildBasedChannel>();
     // @ts-expect-error getChannel accepts only the option name, not a channelTypes argument
     void options.getChannel('where', []);
+}
+
+function channelNarrowsToDeclaredTypes(options: SlashOptions<'move'>): void {
+    // a declared channel_types narrows getChannel to the matching djs channel subtype
+    expectTypeOf(options.getChannel('dest')).toEqualTypeOf<TextChannel>();
+    expectTypeOf(options.getChannel('dest')).not.toEqualTypeOf<GuildBasedChannel>();
+    // multiple declared types union their subtypes, and an optional option adds null
+    expectTypeOf(options.getChannel('hall')).toEqualTypeOf<TextChannel | NewsChannel | null>();
+    // an undeclared channel option keeps the wide resolver return
+    expectTypeOf(options.getChannel('any')).toEqualTypeOf<GuildBasedChannel>();
 }
 
 function rawCacheVariant(options: SlashOptions<'report', 'raw'>): void {
@@ -159,6 +177,7 @@ describe('SlashOptions rich kinds and cache variants', () => {
         expect(typeof auditIntegerChoices).toBe('function');
         expect(typeof memberAlwaysNullable).toBe('function');
         expect(typeof channelIsWide).toBe('function');
+        expect(typeof channelNarrowsToDeclaredTypes).toBe('function');
         expect(typeof rawCacheVariant).toBe('function');
         expect(typeof mentionableHasMemberArm).toBe('function');
         expect(typeof onlyPresentKindGetters).toBe('function');

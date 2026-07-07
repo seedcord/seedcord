@@ -1,5 +1,5 @@
 import type { OptionKind, SlashOptionRegistry } from '@seedcord/core';
-import type { CacheType, CommandInteractionOption } from 'discord.js';
+import type { CacheType, ChannelType, CommandInteractionOption } from 'discord.js';
 import type { IsNever } from 'type-fest';
 
 // the option table generated for one route
@@ -9,6 +9,18 @@ type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
 type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKind> = {
     [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;
 }[keyof Row<Route>];
+
+// codegen emits channelTypes as wire numbers. PublicThreadChannel.type is PublicThread | AnnouncementThread,
+// so requesting one alone would Extract to never. widen to both, matching discord.js getChannel.
+type ChannelWireType<Types extends number> = Types extends ChannelType.PublicThread | ChannelType.AnnouncementThread
+    ? ChannelType.PublicThread | ChannelType.AnnouncementThread
+    : Types;
+
+type ResolvedChannel<Cache extends CacheType, Entry> = Entry extends {
+    channelTypes: readonly (infer Types extends number)[];
+}
+    ? Extract<NonNullable<CommandInteractionOption<Cache>['channel']>, { type: ChannelWireType<Types> }>
+    : NonNullable<CommandInteractionOption<Cache>['channel']>;
 
 // choices narrow to their literal union. rich kinds derive straight off CommandInteractionOption so they equal what the djs resolver returns
 type ResolvedValue<Cache extends CacheType, Entry> = Entry extends { choices: readonly (infer Choice)[] }
@@ -22,7 +34,7 @@ type ResolvedValue<Cache extends CacheType, Entry> = Entry extends { choices: re
           : Entry extends { kind: 'user' }
             ? NonNullable<CommandInteractionOption<Cache>['user']>
             : Entry extends { kind: 'channel' }
-              ? NonNullable<CommandInteractionOption<Cache>['channel']>
+              ? ResolvedChannel<Cache, Entry>
               : Entry extends { kind: 'role' }
                 ? NonNullable<CommandInteractionOption<Cache>['role']>
                 : Entry extends { kind: 'mentionable' }
@@ -65,8 +77,8 @@ type MemberGetter<Route extends keyof SlashOptionRegistry, Cache extends CacheTy
  * on required options, narrows `choices` to their literal union, and only appears when the route has an
  * option of that kind. The rich kinds return exactly what the djs resolver returns.
  *
- * Pass the raw `this.event.options` resolver for anything this view does not cover, such as narrowing a
- * channel option with `getChannel(name, channelTypes)`.
+ * A channel option declared with `addChannelTypes` narrows `getChannel` to the matching channel subtype.
+ * Pass the raw `this.event.options` resolver for anything this view does not cover.
  *
  * @typeParam Route - A route key from the generated {@link SlashOptionRegistry}.
  * @typeParam Cache - The interaction cache state, `'cached'` by default.
