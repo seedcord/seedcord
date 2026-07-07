@@ -1,8 +1,10 @@
+import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
 
 import { and, or } from '@gates/combinators';
 import { defineEffectGate, defineGate } from '@gates/Gate';
-import { runGates } from '@gates/runGates';
+import { runGates, runHandlerGates } from '@gates/runGates';
+import { GatedMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
 import { Notice } from '@stops/Notice';
 
 import { TestNotice } from '../utils/TestNotice';
@@ -160,5 +162,35 @@ describe('effect gates', () => {
 
         // the first arm queued charge then refused, the or moved to pass, so charge must not commit
         expect(committed).toEqual([]);
+    });
+});
+
+describe('runHandlerGates', () => {
+    it('threads the handler route id onto the context as kind:route', async () => {
+        let seen: string | null | undefined;
+        const probe = defineGate('probe', (c: GateContextBase) => {
+            seen = c.routeId;
+        });
+        // runHandlerGates only reads metadata off the ctor, so a plain object stands in for the handler class
+        const dailyHandler = {};
+        Reflect.defineMetadata(InteractionRouteKeys[InteractionRoutes.Slash], ['daily'], dailyHandler);
+        Reflect.defineMetadata(GatedMetadataKey, [probe], dailyHandler);
+
+        await runHandlerGates(dailyHandler, ctx);
+
+        expect(seen).toBe('slash:daily');
+    });
+
+    it('leaves routeId null for a handler with no route metadata', async () => {
+        let seen: string | null | undefined = 'unset';
+        const probe = defineGate('probe', (c: GateContextBase) => {
+            seen = c.routeId;
+        });
+        const plain = {};
+        Reflect.defineMetadata(GatedMetadataKey, [probe], plain);
+
+        await runHandlerGates(plain, ctx);
+
+        expect(seen).toBeNull();
     });
 });

@@ -54,9 +54,6 @@ export interface CooldownOptions {
     notice?: (resetAt: EpochMs) => Notice;
 }
 
-// each Cooldown() gets its own bucket, so two handlers that both use a cooldown do not share one window
-let bucketSeq = 0;
-
 function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): string {
     if (per === 'guild') return ctx.guildId ?? 'global';
     if (per === 'channel') return ctx.channelId ?? 'global';
@@ -68,8 +65,8 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
  * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction. The
  * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
  * That split also means two requests racing the same key can both pass before either charges the slot.
- * Each call gets its own bucket, so two handlers never share a window. Reword the refusal with {@link CooldownOptions.message}
- * or replace it with {@link CooldownOptions.notice}.
+ * The key combines the handler's route with the window settings, so two different handlers keep separate
+ * windows. Reword the refusal with {@link CooldownOptions.message} or replace it with {@link CooldownOptions.notice}.
  *
  * @param duration - A number is seconds, a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
@@ -124,11 +121,13 @@ export function Cooldown(
         throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [String(duration)]);
     }
 
-    const bucket = `cooldown:${bucketSeq++}`;
     const per = options?.per ?? 'user';
     // omit limit when unset so the limiter applies its default of 1, exactOptionalPropertyTypes rejects an explicit undefined
     const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
-    const keyOf = (ctx: GateContextBase): string => `${bucket}:${scopeValue(ctx, per)}`;
+    // route + window config keys the slot, so it is stable across restarts and isolates for a durable store,
+    // and two cooldowns with different settings on one handler stay separate
+    const keyOf = (ctx: GateContextBase): string =>
+        `cooldown:${ctx.routeId ?? 'anon'}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
 
     return defineEffectGate(
         'Cooldown',

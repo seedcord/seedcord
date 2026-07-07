@@ -2,7 +2,7 @@ export { setBotColor } from '@components/botColorHolder';
 
 export type { CommandMeta } from '@decorators/Command';
 
-export { runGates, runHandlerGates } from '@gates/runGates';
+export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
 export type { GateFitsWith } from '@gates/matching';
 

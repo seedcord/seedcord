@@ -28,7 +28,8 @@ export function interactionGateContext(interaction: Repliables, core: Core): Int
         guildId: interaction.guildId,
         channelId: interaction.channelId,
         memberRoleIds,
-        memberPermissions: interaction.memberPermissions?.bitfield ?? null
+        memberPermissions: interaction.memberPermissions?.bitfield ?? null,
+        routeId: null // runHandlerGates fills this from the handler metadata before the gates run
     };
 }
 
@@ -51,6 +52,7 @@ export function eventGateContext(
         channelId: actor.channelId,
         // the cache carries the everyone role (id equals the guild id), filtered out to match the interaction shape
         memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
-        memberPermissions: actor.member?.permissions.bitfield ?? null
+        memberPermissions: actor.member?.permissions.bitfield ?? null,
+        routeId: null // runHandlerGates fills this from the handler metadata before the gates run
     };
 }

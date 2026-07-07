@@ -24,15 +24,21 @@ export interface GateContextBase {
     /** The channel id, or null when the source carries none. */
     readonly channelId: string | null;
     /**
-     * The acting member's role ids without the everyone role, the shape a raw interaction payload
-     * carries. Empty outside a guild or when the source carries none.
+     * The member's role ids without the everyone role, the shape a raw interaction payload
+     * contains. Empty outside a guild or when the source contains none.
      */
     readonly memberRoleIds: readonly string[];
     /**
-     * The acting member's permission bits, or null outside a guild. On an interaction these are the
-     * channel-scoped permissions the payload carries, on a gateway event the member's guild-level ones.
+     * The member's permission bits, or null outside a guild. On an interaction these are the
+     * channel-scoped permissions the payload contains, on a gateway event the member's guild-level ones.
      */
     readonly memberPermissions: bigint | null;
+    /**
+     * The dispatched handler as `kind:route` (`slash:daily`, `button:confirm`), or null off a route (a
+     * plain event handler, or a gate run outside a handler). `runHandlerGates` populates it from the handler's
+     * metadata. `Cooldown` uses it so its window is stable across restarts and isolates.
+     */
+    readonly routeId: string | null;
 }
 
 // phantom brand, so a bare check function or a plain object is rejected where a Gate is expected
