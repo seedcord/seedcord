@@ -1,5 +1,5 @@
 import { Events, type Message, type PartialMessage } from 'discord.js';
-import { EventHandler, Gated, IgnoreBots, RegisterEvent } from 'seedcord';
+import { EventHandler, Gated, IgnoreBots, RegisterEvent } from '@seedcord/gateway';
 
 @Gated(IgnoreBots)
 @RegisterEvent([Events.MessageCreate, { frequency: 'once' }], [Events.MessageUpdate])

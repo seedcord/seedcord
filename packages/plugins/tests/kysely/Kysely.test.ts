@@ -6,7 +6,7 @@ import { KyselyPg } from '@src/kysely-pg/KyselyPg';
 
 import { TestEnvironment } from '../utils/test-env';
 
-import type { Core } from 'seedcord';
+import type { Core } from '@seedcord/gateway';
 
 const pluginsPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 

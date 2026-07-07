@@ -22,13 +22,13 @@ export interface SlashOption {
 
 /**
  * Maps each slash route string to its option table. Populated by `seedcord codegen`, which reads every
- * command's `toJSON()` and emits a `declare module 'seedcord'` augmentation, so `keyof SlashOptionRegistry`
+ * command's `toJSON()` and emits a `declare module '@seedcord/gateway'` augmentation, so `keyof SlashOptionRegistry`
  * is the compile-time union of every registered route. Do not augment it by hand, run `seedcord codegen`.
  *
  * @example
  * ```ts
  * // seedcord-gen.d.ts (emitted, committed)
- * declare module 'seedcord' {
+ * declare module '@seedcord/gateway' {
  *   interface SlashOptionRegistry {
  *     ban: { target: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
  *     'demo/setup': { channel: { kind: 'channel'; required: true } };

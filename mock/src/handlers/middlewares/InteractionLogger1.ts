@@ -1,4 +1,4 @@
-import { Middleware, MiddlewareType, InteractionMiddleware, type Repliables } from 'seedcord';
+import { Middleware, MiddlewareType, InteractionMiddleware, type Repliables } from '@seedcord/gateway';
 
 /**
  * Logs incoming interactions before handlers execute.

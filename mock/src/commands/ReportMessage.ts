@@ -1,5 +1,5 @@
 import { ApplicationCommandType } from 'discord.js';
-import { RegisterCommand, BuilderComponent } from 'seedcord';
+import { RegisterCommand, BuilderComponent } from '@seedcord/gateway';
 
 @RegisterCommand('global')
 export class ReportMessageCommand extends BuilderComponent<'context_menu'> {

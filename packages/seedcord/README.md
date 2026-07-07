@@ -7,6 +7,8 @@
 
 ---
 
+The seedcord CLI and dev tooling.
+
 _This repository is a work in progress._
 
 - There are no stable releases yet but changes are being made actively.

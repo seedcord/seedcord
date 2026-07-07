@@ -18,7 +18,7 @@
             "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
             "project": ["src/**/*.{ts,tsx}"]
         },
-        "packages/cli": {
+        "packages/seedcord": {
             "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
         },
         "packages/core": {},
@@ -53,7 +53,7 @@
         "packages/eslint-utils": {},
         "packages/plugins": {},
         "packages/rate-limiter": {},
-        "packages/seedcord": {},
+        "packages/gateway": {},
         "packages/services": {},
         "packages/tsconfig": {},
         "packages/tsdown-config": {},

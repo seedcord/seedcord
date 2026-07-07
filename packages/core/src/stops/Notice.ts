@@ -10,7 +10,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  *
  * @example
  * ```ts
- * import { Notice, BuilderComponent, type RenderContext, type ReplyResponse } from 'seedcord';
+ * import { Notice, BuilderComponent, type RenderContext, type ReplyResponse } from '@seedcord/gateway';
  * import { TextDisplayBuilder } from '@discordjs/builders';
  *
  * // reading `.component` applies the configured bot color to the container accent

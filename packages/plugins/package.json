@@ -67,7 +67,7 @@
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps",
-        "seedcord": "workspace:*"
+        "@seedcord/gateway": "workspace:*"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

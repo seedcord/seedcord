@@ -1,5 +1,5 @@
 ---
-'seedcord': minor
+'@seedcord/gateway': minor
 ---
 
 Build seedcord's component builders on `@discordjs/builders`. Import any builder you nest inside a seedcord component from `@discordjs/builders` too. The copy discord.js re-exports is a separate class that breaks `instanceof` and `toJSON`.

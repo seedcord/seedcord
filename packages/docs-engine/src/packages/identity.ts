@@ -10,9 +10,9 @@ interface PackageOverride {
 }
 
 const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
-    seedcord: {
-        displayName: 'seedcord',
-        aliases: ['@seedcord']
+    '@seedcord/gateway': {
+        displayName: 'gateway',
+        aliases: ['gateway', '@seedcord/gateway']
     },
     '@seedcord/core': {
         displayName: 'core',
@@ -42,9 +42,9 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'eslint-plugin',
         aliases: ['eslint-plugin', '@seedcord/eslint-plugin']
     },
-    '@seedcord/cli': {
-        displayName: 'cli',
-        aliases: ['cli', '@seedcord/cli']
+    seedcord: {
+        displayName: 'seedcord',
+        aliases: ['cli', 'seedcord']
     },
     '@seedcord/errors': {
         displayName: 'errors',
@@ -148,11 +148,7 @@ export interface PackageIdentity {
     fullName: string;
 }
 
-/**
- * Resolve a requested package string (folder, scoped name, last segment, or override alias) to its
- * index identity. Defaults to `seedcord` when present, else the first package; returns null only for
- * an empty list.
- */
+// Resolves a package request, falling back to `seedcord` or the first available package.
 export function resolvePackageIdentity(
     packages: readonly PackageIdentity[],
     requested?: string | null

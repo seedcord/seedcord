@@ -13,7 +13,7 @@
  * @example
  * ```ts
  * // after `seedcord codegen`, use it anywhere
- * import { Emojis } from 'seedcord';
+ * import { Emojis } from '@seedcord/gateway';
  * Emojis.ThumbsUp; // ApplicationEmoji
  * Emojis.Lol; // GuildEmoji
  * ```

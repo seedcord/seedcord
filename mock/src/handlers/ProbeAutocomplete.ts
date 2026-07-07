@@ -1,4 +1,4 @@
-import { AutocompleteRoute, AutocompleteHandler } from 'seedcord';
+import { AutocompleteRoute, AutocompleteHandler } from '@seedcord/gateway';
 
 const FRUITS = ['apple', 'apricot', 'banana', 'blueberry', 'cherry'];
 

@@ -1,4 +1,4 @@
-import { ArraySource, ButtonRoute, Paginator, SlashHandler, SlashRoute } from 'seedcord';
+import { ArraySource, ButtonRoute, Paginator, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 const MEMBERS = Array.from({ length: 37 }, (_, index) => `Member ${index + 1}`);
 

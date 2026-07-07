@@ -7,7 +7,7 @@
  *
  * @example
  * ```ts
- * import { Silence } from 'seedcord';
+ * import { Silence } from '@seedcord/gateway';
  *
  * // before any reply or defer, drop the interaction with no reply and no report
  * if (await isBlacklisted(interaction.user.id)) throw new Silence('blacklisted user');

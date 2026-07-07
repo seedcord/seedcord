@@ -17,7 +17,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  *
  * @example
  * ```ts
- * import { Fault } from 'seedcord';
+ * import { Fault } from '@seedcord/gateway';
  *
  * try {
  *     await db.write(record);

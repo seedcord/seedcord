@@ -1,5 +1,5 @@
 import { MessageFlags, PermissionFlagsBits, TextChannel } from 'discord.js';
-import { CommandMentions, Gated, GuildOnly, RequirePermissions, SlashHandler, SlashRoute } from 'seedcord';
+import { CommandMentions, Gated, GuildOnly, RequirePermissions, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 
