@@ -1,4 +1,5 @@
-import type { EpochMs, IRateLimiter, RateLimitResult, RateLimitWindow } from '@seedcord/types';
+import type { EpochMs, RateLimitResult, RateLimitWindow } from '@seedcord/types';
+import type { Store, StoreKind } from '@seedcord/types/internal';
 
 const SWEEP_GAP_MS = 60_000;
 
@@ -19,7 +20,12 @@ function openResult(remaining: number): RateLimitResult {
  * Each key holds its live uses' expiry times. State is per-process and lost on restart. Expired keys
  * are dropped on the first access at least a minute after the previous sweep.
  */
-export class MemoryRateLimiter implements IRateLimiter {
+export class MemoryRateLimiter implements Store<'charge'> {
+    /** @internal */
+    public readonly kind: StoreKind = 'memory';
+    /** @internal */
+    public readonly caps: ReadonlySet<'charge'> = new Set(['charge']);
+
     private readonly map = new Map<string, number[]>();
     private lastSweep = Date.now();
 

@@ -1,6 +1,7 @@
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
+import type { Store } from './Store';
 import type { BotColor } from '../Types/Colors';
 
 // interactions, commands, services, bus subscribers
@@ -154,4 +155,10 @@ export interface Config {
      * User ids the `OwnerOnly` gate treats as bot owners.
      */
     ownerIds?: string[];
+
+    /**
+     * The in-memory default resets on restart and is per-isolate on serverless. Pass a durable store
+     * to keep framework state across restarts and isolates.
+     */
+    store?: Store<'charge'>;
 }
