@@ -6,7 +6,7 @@ declare module '@seedcord/gateway' {
         defernotice: {};
         feed: {};
         leaderboard: {};
-        maintenance: { notify: { kind: 'user'; required: true }; reason: { kind: 'string'; required: false } };
+        maintenance: { notify: { kind: 'user'; required: true }; target: { kind: 'channel'; required: true; channelTypes: [0, 5] }; reason: { kind: 'string'; required: false } };
         probe: { query: { kind: 'string'; required: true; autocomplete: true }; count: { kind: 'integer'; required: false; autocomplete: true }; ratio: { kind: 'number'; required: false; autocomplete: true }; category: { kind: 'string'; required: false; choices: ['books', 'films'] }; exact: { kind: 'boolean'; required: false } };
         roster: {};
         'test/confirmable/v2': {};

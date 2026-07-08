@@ -1,5 +1,5 @@
-import { MessageFlags, PermissionFlagsBits, TextChannel } from 'discord.js';
 import { CommandMentions, Gated, GuildOnly, RequirePermissions, SlashHandler, SlashRoute } from '@seedcord/gateway';
+import { MessageFlags, PermissionFlagsBits } from 'discord.js';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
 
@@ -11,15 +11,15 @@ export class Maintenance extends SlashHandler<'maintenance'> {
 
         const notify = this.options.getUser('notify'); // User, required so never null
         const reason = this.options.getString('reason'); // string | null
-        const channel = this.event.channel as TextChannel;
+        const target = this.options.getChannel('target'); // TextChannel | NewsChannel, required so never null
 
-        await channel.send({
+        await target.send({
             embeds: [new MaintenanceEmbed(this.event.client).component]
         });
 
         await this.event.editReply({
             content:
-                `Maintenance message sent, notified <@${notify.id}>${reason ? ` (${reason})` : ''}.\n` +
+                `Maintenance message sent to <#${target.id}>, notified <@${notify.id}>${reason ? ` (${reason})` : ''}.\n` +
                 `- ${CommandMentions['test/confirmable/v2']}\n` +
                 `- ${CommandMentions.maintenance}\n` +
                 `- ${CommandMentions.probe}\n` +

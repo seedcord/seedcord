@@ -2,6 +2,7 @@ import { BaseHandler } from '@handlers/BaseHandler';
 
 import type { Handler, Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { DispatchContext } from '@seedcord/core';
 
 /**
  * Shared base the typed interaction handlers extend.
@@ -18,7 +19,7 @@ export abstract class InteractionHandler<Repliable extends Repliables>
 {
     // keep this ctor. it gives typeof InteractionHandler a public construct signature that HandlerConstructor
     // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses HandlerConstructor to never.
-    constructor(event: Repliable, core: Core) {
-        super(event, core);
+    constructor(event: Repliable, core: Core, dispatch?: DispatchContext) {
+        super(event, core, dispatch);
     }
 }

@@ -1,10 +1,12 @@
 /* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
+import { DispatchContext } from '@seedcord/core';
 import {
     InteractionMetadataKey,
     InteractionRouteKeys,
     InteractionRoutes,
     MiddlewareMetadataKey,
     prefixOf,
+    routeIdOf,
     runHandlerGates
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -406,8 +408,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             }
 
             this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
+            const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
             // @ts-expect-error TS can't infer the type of interaction here
-            const handler = new HandlerCtor(interaction as Repliables, this.core);
+            const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
             if (!interaction.isAutocomplete()) {
                 await runHandlerGates(HandlerCtor, interactionGateContext(interaction as Repliables, this.core));

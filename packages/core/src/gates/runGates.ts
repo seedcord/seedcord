@@ -1,8 +1,18 @@
-import { GatedMetadataKey } from '@src/metadataKeys';
+import { GatedMetadataKey, InteractionRouteKeys } from '@src/metadataKeys';
 
 import { discardCommits, runCheck, runCommits } from './effects';
 
 import type { Gate, GateContextBase } from './Gate';
+
+// the stable id a route decorator stored, e.g. slash:daily or button:confirm. null for a plain event handler.
+export function routeIdOf(handlerCtor: object): string | null {
+    for (const [kind, key] of Object.entries(InteractionRouteKeys)) {
+        // justified: getMetadata returns any, this key only ever stores the route/prefix string array
+        const routes = Reflect.getMetadata(key, handlerCtor) as string[] | undefined;
+        if (routes?.length) return `${kind}:${routes.join(',')}`;
+    }
+    return null;
+}
 
 /**
  * Runs each gate's check in order, so the first refusal propagates to the dispatcher boundary. An effect
@@ -24,5 +34,5 @@ export async function runHandlerGates(handlerCtor: object, ctx: GateContextBase)
     // justified: getMetadata returns any, and this key only ever stores the @Gated gate array
     const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
     if (!gates) return;
-    await runGates(gates, ctx);
+    await runGates(gates, { ...ctx, routeId: routeIdOf(handlerCtor) });
 }

@@ -53,6 +53,8 @@ function renderOption(opt: SlashOption): string {
     const parts = [`kind: '${opt.kind}'`, `required: ${opt.required}`];
     if (opt.choices && opt.choices.length > 0) parts.push(`choices: [${opt.choices.map(renderChoice).join(', ')}]`);
     if (opt.autocomplete) parts.push('autocomplete: true');
+    // emitted as wire numbers, the typed view maps them to channel subtypes
+    if (opt.channelTypes && opt.channelTypes.length > 0) parts.push(`channelTypes: [${opt.channelTypes.join(', ')}]`);
     return `{ ${parts.join('; ')} }`;
 }
 

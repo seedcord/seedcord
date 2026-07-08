@@ -5,12 +5,8 @@ import type { ILogger } from '@seedcord/types';
 type Ask = (question: string) => Promise<string>;
 
 async function readlineAsk(question: string): Promise<string> {
-    const rl = createInterface({ input: process.stdin, output: process.stdout });
-    try {
-        return await new Promise<string>((resolve) => rl.question(question, resolve));
-    } finally {
-        rl.close();
-    }
+    using rl = createInterface({ input: process.stdin, output: process.stdout });
+    return await new Promise<string>((resolve) => rl.question(question, resolve));
 }
 
 /**

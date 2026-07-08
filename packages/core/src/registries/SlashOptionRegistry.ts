@@ -1,4 +1,6 @@
-/** A slash option kind, named for the registry rather than the raw discord.js `ApplicationCommandOptionType` int. */
+import type { ChannelType } from 'discord-api-types/v10';
+
+/** A slash option kind as a plain string union (`string`, `channel`, ...), keyed to the registry. */
 export type OptionKind =
     | 'string'
     | 'integer'
@@ -18,6 +20,9 @@ export interface SlashOption {
     // these two are mutually exclusive. Djs makes sure of that.
     choices?: readonly (string | number)[];
     autocomplete?: true;
+
+    // a channel option's declared addChannelTypes, read by the typed view to narrow getChannel
+    channelTypes?: readonly ChannelType[];
 }
 
 /**

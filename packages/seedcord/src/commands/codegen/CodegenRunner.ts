@@ -75,13 +75,17 @@ export class CodegenRunner {
         const { commandsDir, emojis, augmentTarget } = await this.resolveInstance(config);
 
         const commands: ScannedCommand[] = [];
-        if (commandsDir) await this.walk(commandsDir, commands, new Set(), true);
+        if (commandsDir) {
+            for await (const command of this.walk(commandsDir, new Set(), true)) {
+                commands.push(command);
+            }
+        }
         return { commands, emojis, augmentTarget };
     }
 
     // the bot's own scan runs under tsx/vite, so its import() handles .ts. codegen runs under plain node, so
     // it imports each command file through the tsx-backed module loader instead.
-    private async walk(dir: string, commands: ScannedCommand[], seen: Set<unknown>, isRoot: boolean): Promise<void> {
+    private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<ScannedCommand> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
@@ -96,7 +100,7 @@ export class CodegenRunner {
         for (const entry of entries) {
             const fullPath = join(dir, entry.name);
             if (entry.isDirectory()) {
-                await this.walk(fullPath, commands, seen, false);
+                yield* this.walk(fullPath, seen, false);
             } else if (isTsOrJsFile(entry)) {
                 const imported = await this.moduleLoader.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {
@@ -104,7 +108,7 @@ export class CodegenRunner {
                     if (seen.has(exported)) continue;
                     seen.add(exported);
                     const json = this.commandJsonOf(exported);
-                    if (json) commands.push({ sourceFile: fullPath, json });
+                    if (json) yield { sourceFile: fullPath, json };
                 }
             }
         }

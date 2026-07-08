@@ -36,6 +36,10 @@ export interface ScannedCommand {
 }
 
 type CommandOption = SlashRouteLeaf['options'][number];
+type BasicOption = Exclude<
+    CommandOption,
+    { type: ApplicationCommandOptionType.Subcommand | ApplicationCommandOptionType.SubcommandGroup }
+>;
 
 // keyed by the djs enum so a renamed member breaks here, and constrained to the full set of basic option
 // types so a new upstream option kind fails to satisfy until it is mapped.
@@ -163,20 +167,29 @@ export class AugmentationBuilder {
             ) {
                 continue;
             }
-
-            // empty choices would narrow the value to never
-            const choices =
-                'choices' in option && option.choices && option.choices.length > 0
-                    ? option.choices.map((choice) => choice.value)
-                    : undefined;
-            const autocomplete = 'autocomplete' in option && option.autocomplete === true ? true : undefined;
-            table[option.name] = {
-                kind: KIND_BY_TYPE[option.type],
-                required: option.required ?? false,
-                ...(choices && { choices }),
-                ...(autocomplete && { autocomplete })
-            };
+            table[option.name] = this.toSlashOption(option);
         }
         return table;
+    }
+
+    private toSlashOption(option: BasicOption): SlashOption {
+        // empty choices would narrow the value to never
+        const choices =
+            'choices' in option && option.choices && option.choices.length > 0
+                ? option.choices.map((choice) => choice.value)
+                : undefined;
+        const autocomplete = 'autocomplete' in option && option.autocomplete === true ? true : undefined;
+        // sorted so a declaration reordering its types produces the same output under `--check`
+        const channelTypes =
+            'channel_types' in option && option.channel_types && option.channel_types.length > 0
+                ? [...option.channel_types].sort((first, second) => first - second)
+                : undefined;
+        return {
+            kind: KIND_BY_TYPE[option.type],
+            required: option.required ?? false,
+            ...(choices && { choices }),
+            ...(autocomplete && { autocomplete }),
+            ...(channelTypes && { channelTypes })
+        };
     }
 }
