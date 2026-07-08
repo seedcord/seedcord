@@ -159,7 +159,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         this.logger.info(
             `${chalk.bold.yellow('Starting')} coordinated shutdown with exit code ${chalk.bold.cyan(exitCode)}`
         );
-        this.emit('shutdown:start');
+        this.emitSafe('shutdown:start');
 
         try {
             for (const phase of PHASE_ORDER) {
@@ -167,10 +167,10 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
             }
 
             this.logger.info(`${chalk.bold.green('Coordinated shutdown completed')} successfully`);
-            this.emit('shutdown:complete');
+            this.emitSafe('shutdown:complete');
         } catch (error) {
             this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`);
-            this.emit('shutdown:error', error);
+            this.emitSafe('shutdown:error', error);
         } finally {
             if (exitProcess) {
                 this.logger.info(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);

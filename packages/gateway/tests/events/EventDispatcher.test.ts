@@ -67,6 +67,43 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
 
+    it('a throwing any:event observer does not abort the dispatch', async () => {
+        const eventsDir = 'events';
+        await testEnv.createFile(
+            `${eventsDir}/Ping.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate'])
+            export class PingHandler extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await Promise.resolve();
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
+        seedcord = new Seedcord(config);
+        const testBot = seedcord.bot as unknown as TestBot;
+
+        // capture the messageCreate handler attachListener registers on the client
+        const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+        await testBot.events.init();
+
+        seedcord.bot.on('any:event', () => {
+            throw new Error('observer boom');
+        });
+
+        const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
+            | ((...args: unknown[]) => void)
+            | undefined;
+
+        expect(fire).toBeDefined();
+        expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
+    });
+
     it('threads the fired event name into the handler so match routes to the right arm', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(

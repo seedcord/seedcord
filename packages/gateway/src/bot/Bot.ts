@@ -166,7 +166,26 @@ export class Bot extends Plugin<BotEvents> {
     override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
 
     override emit(event: string, ...args: unknown[]): boolean {
-        // justified, runtime emit forwards to the base emitter; TS cannot correlate the overload generics across super.emit.
+        // justified, TS cannot correlate the overload generics across super.emit.
         return super.emit(event as never, ...(args as never));
+    }
+
+    /** @internal */
+    override emitSafe<TKey extends keyof ClientEvents>(
+        event: 'any:event',
+        name: TKey,
+        ...args: ClientEvents[TKey]
+    ): boolean;
+
+    /** @internal */
+    override emitSafe<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
+
+    override emitSafe(event: string, ...args: unknown[]): boolean {
+        // justified, same forward as emit()
+        return super.emitSafe(event as never, ...(args as never));
+    }
+
+    protected override onListenerError(error: unknown, event: string | symbol): void {
+        this.logger.error(`listener for ${String(event)} threw`, error);
     }
 }

@@ -161,7 +161,11 @@ export abstract class CoordinatedLifecycle<
     // The phase key is interpolated from phaseOrder at runtime and is always a valid no-payload key of
     // the subclass event map, but TS can't correlate a template-literal key with the generic TEvents.
     private emitPhase(phase: TPhase, action: 'start' | 'complete'): void {
-        this.emitRaw(`phase:${phase}:${action}`);
+        this.emitSafeRaw(`phase:${phase}:${action}`);
+    }
+
+    protected override onListenerError(error: unknown, event: string | symbol): void {
+        this.logger.error(`listener for ${String(event)} threw`, error);
     }
 
     // Abstract methods to be implemented by subclasses

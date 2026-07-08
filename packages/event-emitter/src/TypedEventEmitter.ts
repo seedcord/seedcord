@@ -74,13 +74,22 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         return this.dispatch(event, args);
     }
 
-    /**
-     * Emits a dynamically-computed event key past the compile-time key check, for framework subclasses.
-     *
-     * @internal
-     */
-    protected emitRaw(event: string | symbol, ...args: readonly unknown[]): boolean {
-        return this.dispatch(event as EventKey<TEvents>, args);
+    /** @internal */
+    protected emitSafe<TEventKey extends EventKey<TEvents>>(event: TEventKey, ...args: TEvents[TEventKey]): boolean {
+        return this.dispatchSafe(event, args);
+    }
+
+    /** @internal */
+    protected emitSafeRaw(event: string | symbol, ...args: readonly unknown[]): boolean {
+        return this.dispatchSafe(event as EventKey<TEvents>, args);
+    }
+
+    // safe-emit error hook. the default re-throws the error on a microtask. override to log
+    /** @internal */
+    protected onListenerError(error: unknown, _event: string | symbol): void {
+        queueMicrotask(() => {
+            throw error;
+        });
     }
 
     private dispatch(event: EventKey<TEvents>, args: readonly unknown[]): boolean {
@@ -90,6 +99,20 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         const current = [...slot];
         for (const registration of current) {
             registration.call(...args);
+        }
+        return true;
+    }
+
+    private dispatchSafe(event: EventKey<TEvents>, args: readonly unknown[]): boolean {
+        const slot = this.registrations.get(event);
+        if (!slot || slot.size === 0) return false;
+        const current = [...slot];
+        for (const registration of current) {
+            try {
+                registration.call(...args);
+            } catch (error) {
+                this.onListenerError(error, event);
+            }
         }
         return true;
     }

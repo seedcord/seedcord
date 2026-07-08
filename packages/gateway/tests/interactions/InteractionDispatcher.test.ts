@@ -106,6 +106,42 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.slashMap.has('ping')).toBe(true);
     });
 
+    it('a throwing any:interaction observer does not abort the dispatch', async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/Ping.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('ping')
+            export class PingHandler extends SlashHandler<'ping'> {
+                public async execute() {
+                    await this.event.reply('Pong!');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+        seedcord = new Seedcord(config);
+        const testBot = seedcord.bot as unknown as TestBot;
+
+        // capture the interactionCreate handler attachToClient registers on the client
+        const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+        await testBot.interactions.init();
+
+        seedcord.bot.on('any:interaction', () => {
+            throw new Error('observer boom');
+        });
+
+        const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
+            | ((i: unknown) => void)
+            | undefined;
+
+        expect(fire).toBeDefined();
+        expect(() => fire?.(fakeSlash('ping'))).not.toThrow();
+    });
+
     it('throws when two handlers register the same interaction route, naming both', async () => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(

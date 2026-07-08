@@ -359,7 +359,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private attachToClient(): void {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
-            this.core.bot.emit('any:interaction', interaction);
+            this.core.bot.emitSafe('any:interaction', interaction);
             this.handleInteraction(interaction).catch((err: Error) => {
                 this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
                 this.core.bot.emit('error:unhandled:interaction', err);
