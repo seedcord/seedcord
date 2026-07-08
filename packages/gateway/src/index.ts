@@ -46,6 +46,7 @@ export * from './Seedcord';
 // Export other packages
 export * from '@seedcord/core';
 export * from '@seedcord/errors';
+export * from '@seedcord/event-emitter';
 export * from '@seedcord/rate-limiter';
 export * from '@seedcord/services';
 export type * from '@seedcord/types';

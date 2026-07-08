@@ -14,8 +14,8 @@ type PhaseEvents<Prefix extends string, Phases extends number[]> =
     | `${Prefix}:${LifecycleAction}`;
 
 /**
- * Strict-event-emitter payload map for a lifecycle: phase + prefix `start`/`complete` events
- * carry no payload; the `${Prefix}:error` event carries the thrown error.
+ * Event payload map for a lifecycle. The phase and prefix `start`/`complete` events have an empty
+ * payload, and the `${Prefix}:error` event's payload is the thrown error.
  * @typeParam Prefix - The prefix string for lifecycle events
  * @typeParam Phases - Array of phase numbers to generate events for
  */

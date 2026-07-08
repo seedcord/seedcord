@@ -1,4 +1,4 @@
-import { StrictEventEmitter } from '@seedcord/services';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { assertNever } from '@seedcord/utils';
 
 import type { DevPhase } from './devPhase';
@@ -27,7 +27,7 @@ const INITIAL: DevState = {
 // Single source of truth for the dev UI. The runner pushes scalar updates through the setters, and runtime
 // events reduce through `apply`. `getState` returns a stable reference between mutations, which
 // `useSyncExternalStore` requires to avoid render loops.
-export class DevStore extends StrictEventEmitter<{ change: [] }> {
+export class DevStore extends TypedEventEmitter<{ change: [] }> {
     private state: DevState = INITIAL;
 
     public getState(): DevState {

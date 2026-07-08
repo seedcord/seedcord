@@ -53,6 +53,7 @@
         "packages/eslint-utils": {},
         "packages/plugins": {},
         "packages/rate-limiter": {},
+        "packages/event-emitter": {},
         "packages/gateway": {},
         "packages/services": {},
         "packages/tsconfig": {},

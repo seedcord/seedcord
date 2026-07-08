@@ -1,15 +1,15 @@
 {
-    "name": "@seedcord/gateway",
+    "name": "@seedcord/event-emitter",
     "type": "module",
-    "version": "0.1.0-next.0",
+    "version": "0.0.1",
     "engines": {
         "node": ">=24.3"
     },
-    "description": "A Discord bot framework built on top of Discord.js",
+    "description": "Typed, cross-runtime event emitter for Seedcord",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/gateway"
+        "directory": "packages/event-emitter"
     },
     "types": "./dist/index.d.mts",
     "exports": {
@@ -43,54 +43,15 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
-        "discord.js": "catalog:peer",
-        "reflect-metadata": "catalog:peer",
         "typescript": "catalog:peer"
-    },
-    "dependencies": {
-        "@discordjs/builders": "catalog:deps",
-        "@seedcord/core": "workspace:*",
-        "@seedcord/errors": "workspace:*",
-        "@seedcord/event-emitter": "workspace:*",
-        "@seedcord/rate-limiter": "workspace:*",
-        "@seedcord/services": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
-        "chalk": "catalog:deps",
-        "envapt": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "discord.js": "catalog:peer",
-        "reflect-metadata": "catalog:peer",
-        "type-fest": "catalog:deps",
-        "vite": "catalog:deps"
+        "@seedcord/tsdown-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",
         "provenance": true
-    },
-    "keywords": [
-        "discord",
-        "discord-bot",
-        "discord.js",
-        "bot-framework",
-        "typescript",
-        "seedcord",
-        "framework",
-        "discord-bot-framework",
-        "plugin-system",
-        "modular-bot",
-        "decorators",
-        "commands",
-        "discord-api",
-        "typescript-framework",
-        "event-handler",
-        "bot-development",
-        "slash-commands",
-        "middleware",
-        "open-source"
-    ]
+    }
 }

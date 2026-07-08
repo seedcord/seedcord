@@ -811,6 +811,22 @@ importers:
         specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
 
+  packages/event-emitter:
+    dependencies:
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+
   packages/gateway:
     dependencies:
       '@discordjs/builders':
@@ -822,6 +838,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/rate-limiter':
         specifier: workspace:*
         version: link:../rate-limiter
@@ -957,6 +976,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services
@@ -1036,6 +1058,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types

@@ -137,7 +137,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
 
         this.isStartingUp = true;
         this.logger.info(`${chalk.bold.green('Starting')} coordinated startup sequence`);
-        this.emit('startup:start');
+        this.emitSafe('startup:start');
 
         try {
             for (const phase of PHASE_ORDER) {
@@ -151,7 +151,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
 
             this.hasStarted = true;
             this.logger.info(`${chalk.bold.green('Coordinated startup completed')} successfully`);
-            this.emit('startup:complete');
+            this.emitSafe('startup:complete');
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false before this catch runs
             if (!this.isStartingUp) {
@@ -159,7 +159,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
                 return;
             }
             this.logger.error(`${chalk.bold.red('Coordinated startup failed')}`);
-            this.emit('startup:error', error);
+            this.emitSafe('startup:error', error);
             throw error;
         } finally {
             this.isStartingUp = false;

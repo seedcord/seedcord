@@ -1,18 +1,12 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { StrictEventEmitter } from '@seedcord/services';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
 
 import { getDevChannel } from '@hmr/devChannel';
 
 import type { Core } from './Core';
-import type {
-    SENoEvents,
-    CoordinatedShutdown,
-    CoordinatedStartup,
-    Logger,
-    StartupPhase,
-    SEEventMapLike
-} from '@seedcord/services';
+import type { EventMap, NoEvents } from '@seedcord/event-emitter';
+import type { CoordinatedShutdown, CoordinatedStartup, Logger, StartupPhase } from '@seedcord/services';
 import type { Tail } from '@seedcord/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 
@@ -27,8 +21,8 @@ export interface Initializeable {
  * Extend this class to create plugins that integrate with the Seedcord lifecycle.
  * Plugins have access to the core instance and must implement initialization logic.
  */
-export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents> = SENoEvents>
-    extends StrictEventEmitter<TPluginEvents>
+export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoEvents>
+    extends TypedEventEmitter<TPluginEvents>
     implements Initializeable, HmrAware
 {
     /** Logger instance for this plugin. */
@@ -63,11 +57,6 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
     }
 
     /** @internal */
-    override setMaxListeners(n: number): this {
-        return super.setMaxListeners(n);
-    }
-
-    /** @internal */
     override removeListener<TEventKey extends Extract<keyof TPluginEvents, string | symbol>>(
         event: TEventKey,
         listener: (...args: TPluginEvents[TEventKey]) => void
@@ -76,8 +65,8 @@ export abstract class Plugin<TPluginEvents extends SEEventMapLike<TPluginEvents>
     }
 
     /** @internal */
-    override removeAllListeners(eventName?: string | symbol): this {
-        return super.removeAllListeners(eventName);
+    override removeAllListeners(event?: Extract<keyof TPluginEvents, string | symbol>): this {
+        return super.removeAllListeners(event);
     }
 }
 
@@ -104,8 +93,8 @@ export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Cto
  * configuration and initialized during startup. Not constructed directly, the host is a {@link Seedcord}.
  */
 export class Pluggable<
-    TPluggableEvents extends SEEventMapLike<TPluggableEvents> = SENoEvents
-> extends StrictEventEmitter<TPluggableEvents> {
+    TPluggableEvents extends EventMap<TPluggableEvents> = NoEvents
+> extends TypedEventEmitter<TPluggableEvents> {
     protected isInitialized = false;
     protected readonly shutdown: CoordinatedShutdown;
     protected readonly startup: CoordinatedStartup;
@@ -189,11 +178,6 @@ export class Pluggable<
     }
 
     /** @internal */
-    override setMaxListeners(n: number): this {
-        return super.setMaxListeners(n);
-    }
-
-    /** @internal */
     override removeListener<TEventKey extends Extract<keyof TPluggableEvents, string | symbol>>(
         event: TEventKey,
         listener: (...args: TPluggableEvents[TEventKey]) => void
@@ -202,7 +186,7 @@ export class Pluggable<
     }
 
     /** @internal */
-    override removeAllListeners(eventName?: string | symbol): this {
-        return super.removeAllListeners(eventName);
+    override removeAllListeners(event?: Extract<keyof TPluggableEvents, string | symbol>): this {
+        return super.removeAllListeners(event);
     }
 }

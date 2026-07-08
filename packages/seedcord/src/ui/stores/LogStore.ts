@@ -1,4 +1,5 @@
-import { LoggerChannelRegistry, StrictEventEmitter } from '@seedcord/services';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
+import { LoggerChannelRegistry } from '@seedcord/services';
 
 import type { ILoggerSink, ILoggerSinkHandle, LoggerSinkLogEntry } from '@seedcord/services';
 
@@ -19,7 +20,7 @@ const UPDATE_DEBOUNCE_MS = 30;
 // eslint-disable-next-line no-magic-numbers -- 27 is the ESC control code
 const ESC = String.fromCharCode(27);
 
-export class LogStore extends StrictEventEmitter<LogStoreEvents> implements ILoggerSink {
+export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILoggerSink {
     private static _instance: LogStore | null = null;
 
     private entries: LogEntry[] = [];

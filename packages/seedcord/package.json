@@ -3,7 +3,7 @@
     "type": "module",
     "version": "0.16.0-next.5",
     "engines": {
-        "node": ">=24"
+        "node": ">=24.3"
     },
     "description": "The seedcord CLI and dev tooling",
     "bin": {
@@ -57,6 +57,7 @@
         "@discordjs/rest": "^2.6.1",
         "@seedcord/core": "workspace:*",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/event-emitter": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

@@ -284,7 +284,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         );
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
-            this.core.bot.emit('any:event', eventName, ...args);
+            this.core.bot.emitSafe('any:event', eventName, ...args);
             void (async () => {
                 await this.processEvent(eventName, args).catch((err: Error) => {
                     this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);

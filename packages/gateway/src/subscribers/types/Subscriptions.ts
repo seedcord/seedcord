@@ -105,7 +105,7 @@ export type SubscriptionKey = keyof AllSubscriptions;
 export type SubscriptionData<KeyOfSubscribers extends SubscriptionKey> = AllSubscriptions[KeyOfSubscribers];
 
 /**
- * Event map for Bus, compatible with StrictEventEmitter.
+ * Event map for Bus, compatible with TypedEventEmitter.
  *
  * @internal
  */
