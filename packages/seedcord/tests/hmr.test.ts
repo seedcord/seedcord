@@ -24,8 +24,11 @@ vi.mock('@seedcord/services', () => ({
         public warn = loggerSpies.warn;
         public error = loggerSpies.error;
         public debug = loggerSpies.debug;
-    },
-    StrictEventEmitter: EventEmitter
+    }
+}));
+
+vi.mock('@seedcord/event-emitter', () => ({
+    TypedEventEmitter: EventEmitter
 }));
 
 describe('HmrPlugin', () => {

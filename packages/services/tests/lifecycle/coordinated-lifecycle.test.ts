@@ -2,10 +2,10 @@ import { describe, it, expect } from 'vitest';
 
 import { CoordinatedStartup, StartupPhase } from '../../src/Lifecycle/CoordinatedStartup';
 
-// CoordinatedStartup is the safe lifecycle to exercise: unlike CoordinatedShutdown it neither
-// registers process signal handlers nor calls process.exit. These assert that M19's move onto
-// StrictEventEmitter still emits the typed start/phase/complete events and inherits waitFor.
-describe('CoordinatedStartup events (StrictEventEmitter base)', () => {
+// tested through CoordinatedStartup, which registers no process signal handlers and never calls
+// process.exit. these assert the TypedEventEmitter base still emits the typed start/phase/complete
+// events and inherits waitFor.
+describe('CoordinatedStartup events (TypedEventEmitter base)', () => {
     it('emits typed startup and phase events when a phase runs', async () => {
         const startup = new CoordinatedStartup();
         const seen: string[] = [];
@@ -27,7 +27,7 @@ describe('CoordinatedStartup events (StrictEventEmitter base)', () => {
         expect(startup.isReady).toBe(true);
     });
 
-    it('inherits waitFor from the StrictEventEmitter base', async () => {
+    it('inherits waitFor from the TypedEventEmitter base', async () => {
         const startup = new CoordinatedStartup();
         const pending = startup.waitFor('startup:complete');
 

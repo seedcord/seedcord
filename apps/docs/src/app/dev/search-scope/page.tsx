@@ -23,7 +23,7 @@ interface MockResult extends CommandAction {
     pkg: Pkg;
 }
 
-const PACKAGES = ['seedcord', 'services', 'plugins', 'utils', 'types', 'rate-limiter'] as const;
+const PACKAGES = ['seedcord', 'services', 'plugins', 'utils', 'types', 'rate-limiter', 'event-emitter'] as const;
 type Pkg = (typeof PACKAGES)[number];
 
 const PACKAGE_OPTIONS: SegmentedControlOption<Pkg>[] = PACKAGES.map((pkg) => ({ value: pkg, label: pkg }));
@@ -64,7 +64,7 @@ function entry(pkg: Pkg, label: string, kind: SearchResultKind, qualified = labe
 }
 
 // A spread across packages, kinds, and members, with cross-package duplicates (Logger, BotConfig) so the
-// scope + kind filters and the active-first grouping are all exercisable.
+// scope + kind filters and the active-first grouping can all be triggered.
 const MOCK: MockResult[] = [
     entry('seedcord', 'Seedcord', 'class'),
     entry('seedcord', 'Plugin', 'class'),
@@ -83,7 +83,7 @@ const MOCK: MockResult[] = [
     entry('services', 'Logger', 'class'),
     entry('rate-limiter', 'MemoryRateLimiter', 'class'),
     entry('services', 'HealthCheck', 'class'),
-    entry('services', 'StrictEventEmitter', 'class'),
+    entry('event-emitter', 'TypedEventEmitter', 'class'),
     entry('services', 'LogLevel', 'enum'),
     entry('rate-limiter', 'charge', 'method', 'MemoryRateLimiter#charge'),
     entry('plugins', 'Mongo', 'class'),

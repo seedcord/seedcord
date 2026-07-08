@@ -1,6 +1,7 @@
 import { relative, resolve } from 'node:path';
 
-import { Logger, StrictEventEmitter } from '@seedcord/services';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
+import { Logger } from '@seedcord/services';
 import { wrapHot } from '@seedcord/types/internal';
 import chalk from 'chalk';
 import { minimatch } from 'minimatch';
@@ -25,7 +26,7 @@ import type {
 
 const DEBOUNCE_MS = 250;
 
-export class HmrPlugin extends StrictEventEmitter<{ event: [DevEvent] }> {
+export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
     private server: ViteDevServer | null = null;

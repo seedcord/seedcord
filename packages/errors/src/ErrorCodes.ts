@@ -61,11 +61,6 @@ export enum SeedcordErrorCode {
     /** Two different interaction middleware classes share a class name. */
     InteractionDuplicateMiddleware = 1402,
 
-    /** StrictEventEmitter.waitFor was aborted via its AbortSignal. */
-    EventEmitterWaitForAborted = 1501,
-    /** StrictEventEmitter.waitFor exceeded its configured timeout. */
-    EventEmitterWaitForTimeout = 1502,
-
     /** A customId definition prefix contains a reserved character (a colon or a control char). */
     CustomIdInvalidPrefix = 1601,
     /** A customId field name is integer-like, which JS would silently reorder. */

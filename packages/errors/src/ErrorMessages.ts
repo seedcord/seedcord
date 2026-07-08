@@ -52,9 +52,6 @@ const messages = {
     [SeedcordErrorCode.InteractionDuplicateMiddleware]: (name: string) =>
         `Two different interaction middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
 
-    [SeedcordErrorCode.EventEmitterWaitForAborted]: () => 'waitFor was aborted via its AbortSignal.',
-    [SeedcordErrorCode.EventEmitterWaitForTimeout]: (timeout: number) => `waitFor timed out after ${timeout}ms.`,
-
     [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
         `customId prefix ${JSON.stringify(prefix)} must be a non-empty string without a colon or control character.`,
     [SeedcordErrorCode.CustomIdReservedFieldName]: (field: string) =>

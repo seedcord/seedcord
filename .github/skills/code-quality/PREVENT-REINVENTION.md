@@ -2,7 +2,7 @@ name: prevent-reinvention description: Use this before adding code, config, or c
 
 # Prevent Reinvention & Tech-Debt Discipline
 
-Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of shared building blocks (`@seedcord/types`, `@seedcord/utils`, `@seedcord/services`, `@seedcord/cli`, `@seedcord/plugins`, `@seedcord/docs-engine`, `@seedcord/docs-generator`), with Next.js 16 + React 19 apps in `apps/{docs,guide,home}` and a mock bot in `mock/` for exercising the framework end-to-end. There is a unified `tsconfig` package, an `eslint-config` package, a `tsup-config` package, and a workspace catalog (`pnpm-workspace.yaml`) that pins shared versions. Every new piece of code is one of two things:
+Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of shared building blocks (`@seedcord/types`, `@seedcord/utils`, `@seedcord/services`, `@seedcord/cli`, `@seedcord/plugins`, `@seedcord/docs-engine`, `@seedcord/docs-generator`), with Next.js 16 + React 19 apps in `apps/{docs,guide,home}` and a mock bot in `mock/` for end-to-end tests of the framework. There is a unified `tsconfig` package, an `eslint-config` package, a `tsup-config` package, and a workspace catalog (`pnpm-workspace.yaml`) that pins shared versions. Every new piece of code is one of two things:
 
 1. **Reuse** of an existing primitive, helper, type, convention, or pattern.
 2. **A justified, named extension** to that existing surface — added in the right package, exported through the right boundary, then reused.
@@ -17,11 +17,12 @@ Before writing any new code, run the checks below. If the answer to any is "I ha
 
 ### 1. Does the helper already exist in a shared package?
 
-If you're about to write a string utility, number helper, object helper, type-fest-style mapped type, brand utility, logger, cooldown manager, lifecycle hook, strict event emitter, error class, or health check: **read the shared package indexes first.**
+If you're about to write a string utility, number helper, object helper, type-fest-style mapped type, brand utility, logger, cooldown manager, lifecycle hook, typed event emitter, error class, or health check: **read the shared package indexes first.**
 
 - `packages/utils/src/index.ts` — re-exports `misc`, `numbers`, `objects`, `strings`, `brand`. Look here for `cn`-style guards, formatting helpers, set/object operations, and string transforms before writing your own.
 - `packages/types/src/index.ts` — shared TypeScript `Types` and `Interfaces`. Use `import type { … } from '@seedcord/types'` rather than defining the same alias locally.
-- `packages/services/src/index.ts` — `CooldownManager`, the `Errors` family, `HealthCheck`, the `Lifecycle` primitives, the `Logger`, and `StrictEventEmitter`. Compose these — do not parallel-implement them inside a bot or plugin.
+- `packages/services/src/index.ts`, `HealthCheck`, the `Lifecycle` primitives, and the `Logger`. Compose these, do not parallel-implement them inside a bot or plugin.
+- `packages/event-emitter/src/index.ts`, `TypedEventEmitter`, the typed cross-runtime event emitter. Extend it for typed events, do not hand-roll an emitter or add `mitt` / `eventemitter3`.
 - `packages/seedcord/src/{bot,bus,hmr,interfaces,miscellaneous,Seedcord.ts}` — the framework surface. The bus (`core.bus`, `Subscriber<K>`, `@Subscribe(...)`, `BusEvents` augmentation), interfaces, and the `Seedcord` orchestrator are first-class APIs, not internal-only.
 - `packages/plugins/src` — plugin contract and existing first-party plugins. If your "feature" is really a plugin, that's where it goes.
 - `packages/cli/src` — the seedcord CLI built on Commander + Ink. CLI-shaped features extend this, not a new ad-hoc CLI.

@@ -3,25 +3,23 @@
  * and Lewis's implementation in a private repo elsewhere (https://github.com/Yomanz)
  */
 
-import { EventEmitter } from 'node:events';
-
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
 import chalk from 'chalk';
 
 import { Logger } from '../Logger';
-import { StrictEventEmitter } from '../StrictEventEmitter';
 
 import type { LifecycleTask } from './LifecycleTypes';
-import type { SEEventMapLike } from '../StrictEventEmitter';
+import type { EventMap } from '@seedcord/event-emitter';
 
 /**
  * Abstract base class for coordinated lifecycle management (startup/shutdown)
  */
 export abstract class CoordinatedLifecycle<
     TPhase extends number,
-    TEvents extends SEEventMapLike<TEvents>
-> extends StrictEventEmitter<TEvents> {
+    TEvents extends EventMap<TEvents>
+> extends TypedEventEmitter<TEvents> {
     protected readonly logger: Logger;
     protected readonly tasksMap = new Map<TPhase, LifecycleTask[]>();
 
@@ -112,7 +110,7 @@ export abstract class CoordinatedLifecycle<
 
         const failures = results.filter((r) => r.status === 'rejected').length;
         if (failures > 0) {
-            // Pass the raw phase name; chalk's ANSI codes would otherwise leak into the serialized
+            // raw phase name here. chalk's ANSI codes would otherwise leak into the serialized
             // error message (e.g. the unknown-exception webhook payload).
             throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
         }
@@ -160,11 +158,10 @@ export abstract class CoordinatedLifecycle<
         }
     }
 
-    // The phase event key is interpolated from phaseOrder at runtime; the subclass event map derives
-    // its phase keys from the same range, so the key is always valid, but TS can't correlate a
-    // template-literal key with the generic TEvents. Emit the no-payload event via the base emitter.
+    // The phase key is interpolated from phaseOrder at runtime and is always a valid no-payload key of
+    // the subclass event map, but TS can't correlate a template-literal key with the generic TEvents.
     private emitPhase(phase: TPhase, action: 'start' | 'complete'): void {
-        EventEmitter.prototype.emit.call(this, `phase:${phase}:${action}`);
+        this.emitRaw(`phase:${phase}:${action}`);
     }
 
     // Abstract methods to be implemented by subclasses

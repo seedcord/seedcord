@@ -838,6 +838,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/rate-limiter':
         specifier: workspace:*
         version: link:../rate-limiter
@@ -973,6 +976,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services
@@ -1052,6 +1058,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
