@@ -1,5 +1,23 @@
 # @seedcord/plugins
 
+## 0.8.0-next.6
+
+### Patch Changes
+
+- 42fd262: Some smol internal refactors. `seedcord` uses `using` in the `confirm` prompt and an async generator for the codegen directory walk. `@seedcord/plugins` uses `await using` for the pg pool and clients in the database bootstrapper.
+- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
+- Updated dependencies [42fd262]
+- Updated dependencies [d1cb181]
+- Updated dependencies [42fd262]
+- Updated dependencies [42fd262]
+- Updated dependencies [e60fcf7]
+- Updated dependencies [e60fcf7]
+    - @seedcord/gateway@0.1.0-next.1
+    - @seedcord/types@0.8.0-next.4
+    - @seedcord/services@0.9.0-next.5
+    - @seedcord/errors@0.3.0-next.3
+    - @seedcord/utils@0.8.0-next.4
+
 ## 0.8.0-next.5
 
 ### Patch Changes

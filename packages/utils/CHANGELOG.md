@@ -1,5 +1,14 @@
 # @seedcord/utils
 
+## 0.8.0-next.4
+
+### Patch Changes
+
+- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
+- Updated dependencies [d1cb181]
+- Updated dependencies [e60fcf7]
+    - @seedcord/types@0.8.0-next.4
+
 ## 0.8.0-next.3
 
 ### Patch Changes

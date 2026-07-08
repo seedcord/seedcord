@@ -1,5 +1,22 @@
 # @seedcord/core
 
+## 0.1.0-next.3
+
+### Minor Changes
+
+- 42fd262: Codegen captures a slash channel option's declared `addChannelTypes` into `SlashOptionRegistry`. The gateway `getChannel` narrows to the matching channel subtype, so a text-only option returns `TextChannel` with no cast.
+- 42fd262: `Cooldown` keys its window by the handler's route and window settings, so a durable store keeps the same window across restarts and isolates. `GateContextBase` now has a `routeId` that identifies the dispatched handler, for example `slash:daily` or `button:confirm`.
+- 42fd262: `@seedcord/core` adds `DispatchContext` and the augmentable `DispatchState`. The interaction dispatcher allocates one per dispatch and passes it to the handler as an optional third constructor argument. The bag is empty until middleware and i18n merge fields into `DispatchState`.
+
+### Patch Changes
+
+- Updated dependencies [d1cb181]
+- Updated dependencies [e60fcf7]
+- Updated dependencies [e60fcf7]
+    - @seedcord/types@0.8.0-next.4
+    - @seedcord/errors@0.3.0-next.3
+    - @seedcord/utils@0.8.0-next.4
+
 ## 0.1.0-next.2
 
 ### Minor Changes
