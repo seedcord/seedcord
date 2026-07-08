@@ -14,6 +14,7 @@
     "@seedcord/event-emitter": "0.0.1",
     "@seedcord/gateway": "0.0.1",
     "@seedcord/home": "0.0.1",
+    "@seedcord/logger": "0.0.1",
     "@seedcord/mock": "0.2.22",
     "@seedcord/plugins": "0.7.2",
     "@seedcord/rate-limiter": "0.0.1",

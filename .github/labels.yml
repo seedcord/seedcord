@@ -19,6 +19,9 @@
 - name: '📦 event-emitter'
   color: 62bcaa
   description: typed cross-runtime event emitter
+- name: '📦 logger'
+  color: 6a8fbc
+  description: logging core and winston node sink
 - name: '📦 ui'
   color: 62bc9b
 - name: '📦 types'
