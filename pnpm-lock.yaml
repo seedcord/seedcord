@@ -811,6 +811,22 @@ importers:
         specifier: catalog:eslint
         version: 10.6.0(jiti@2.7.0)
 
+  packages/event-emitter:
+    dependencies:
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+
   packages/gateway:
     dependencies:
       '@discordjs/builders':

@@ -53,6 +53,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/rate-limiter': {
         displayName: 'rate-limiter',
         aliases: ['rate-limiter', '@seedcord/rate-limiter']
+    },
+    '@seedcord/event-emitter': {
+        displayName: 'event-emitter',
+        aliases: ['event-emitter', '@seedcord/event-emitter']
     }
 };
 

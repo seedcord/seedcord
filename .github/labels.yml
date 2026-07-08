@@ -16,6 +16,9 @@
 - name: '📦 rate-limiter'
   color: 62bc6a
   description: in-memory rate limiter and key helper
+- name: '📦 event-emitter'
+  color: 62bcaa
+  description: typed cross-runtime event emitter
 - name: '📦 ui'
   color: 62bc9b
 - name: '📦 types'
