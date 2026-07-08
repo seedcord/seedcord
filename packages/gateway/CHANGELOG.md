@@ -1,5 +1,42 @@
 # @seedcord/gateway
 
+## 0.1.0-next.1
+
+### Minor Changes
+
+- 42fd262: Codegen captures a slash channel option's declared `addChannelTypes` into `SlashOptionRegistry`. The gateway `getChannel` narrows to the matching channel subtype, so a text-only option returns `TextChannel` with no cast.
+- 42fd262: `Cooldown` keys its window by the handler's route and window settings, so a durable store keeps the same window across restarts and isolates. `GateContextBase` now has a `routeId` that identifies the dispatched handler, for example `slash:daily` or `button:confirm`.
+- 42fd262: `@seedcord/core` adds `DispatchContext` and the augmentable `DispatchState`. The interaction dispatcher allocates one per dispatch and passes it to the handler as an optional third constructor argument. The bag is empty until middleware and i18n merge fields into `DispatchState`.
+- e60fcf7: New `@seedcord/event-emitter` package, a pure-JS `TypedEventEmitter` with typed per-event tuples and zero runtime dep (no `node:events`). `waitFor(event, { filter, signal, timeoutMs })` resolves on the first matching payload, and rejects with a `WaitForError` whose `reason` is `'aborted'` or `'timeout'`. `EventMap`, `NoEvents`, and `WaitForOptions` are exported. `@seedcord/gateway` re-exports the package.
+
+    `TypedEventEmitter` does not bind `this` to the emitter inside a listener (use an arrow or a bound method), and a bare `error` event with no listener no longer throws.
+
+    An `any:interaction` or `any:event` observer that throws no longer aborts the interaction or event dispatch. The dispatcher passes the error to the emitter's `onListenerError` hook, which logs it.
+
+    **BREAKING:** `@seedcord/services` no longer exports `StrictEventEmitter` or the `SE*` types. Extend `TypedEventEmitter` and use `EventMap` / `NoEvents` for the event-map constraint.
+
+    **BREAKING:** the `Plugin` and `Pluggable` bases extend `TypedEventEmitter`. `setMaxListeners` and the `addListener` alias are removed, use `on`.
+
+    **BREAKING:** `@seedcord/errors` no longer defines the `EventEmitterWaitForAborted` (1501) and `EventEmitterWaitForTimeout` (1502) codes.
+
+### Patch Changes
+
+- d1cb181: Add optional `config.store` to supply a durable rate-limiter backend, replacing the in-memory default.
+- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
+- Updated dependencies [42fd262]
+- Updated dependencies [d1cb181]
+- Updated dependencies [42fd262]
+- Updated dependencies [42fd262]
+- Updated dependencies [e60fcf7]
+- Updated dependencies [e60fcf7]
+    - @seedcord/core@0.1.0-next.3
+    - @seedcord/types@0.8.0-next.4
+    - @seedcord/rate-limiter@0.1.0-next.1
+    - @seedcord/event-emitter@0.1.0-next.0
+    - @seedcord/services@0.9.0-next.5
+    - @seedcord/errors@0.3.0-next.3
+    - @seedcord/utils@0.8.0-next.4
+
 ## 0.1.0-next.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @seedcord/docs
 
+## 0.1.6-next.6
+
+### Patch Changes
+
+- Updated dependencies [d1cb181]
+- Updated dependencies [e60fcf7]
+    - @seedcord/types@0.8.0-next.4
+
 ## 0.1.6-next.5
 
 ### Patch Changes
