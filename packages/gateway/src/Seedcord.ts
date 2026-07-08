@@ -81,7 +81,7 @@ export class Seedcord extends Pluggable implements Core {
         this.hmrManager.init();
         this.bus = new Bus(this);
         this.bot = new Bot(this);
-        this.rateLimiter = new MemoryRateLimiter();
+        this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.healthCheck = new HealthCheck(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();

@@ -12,6 +12,12 @@ describe('MemoryRateLimiter', () => {
         expectTypeOf(new MemoryRateLimiter()).toExtend<IRateLimiter>();
     });
 
+    it('has kind memory and the charge cap', () => {
+        const limiter = new MemoryRateLimiter();
+        expect(limiter.kind).toBe('memory');
+        expect(limiter.caps.has('charge')).toBe(true);
+    });
+
     it('reports not limited on the first charge of a fresh key', async () => {
         const limiter = new MemoryRateLimiter();
 
