@@ -34,9 +34,8 @@ Finish these after generating, none of them are automated.
     npm publish --access public --no-provenance
     # then point next at the same version
     npm dist-tag add @seedcord/<name>@0.0.1 next
-    # deprecate both tags
+    # deprecate both tags in one go (since both are the same version)
     npm deprecate @seedcord/<name>@0.0.1 "This is a bootstrap version, please use the next tag for development."
-    npm deprecate @seedcord/<name>@0.0.1 "This is a bootstrap version, please use the next tag for development." --tag next
     ```
 
 10. Update OIDC trust for the `publish.yml` workflow for the new packages on the npm page. Only `@materwelonDhruv` can do this as well.
