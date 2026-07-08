@@ -30,6 +30,17 @@ describe('TypedEventEmitter core', () => {
         expect(order).toEqual(['a', 'b']);
     });
 
+    it('a throwing listener propagates and stops the remaining listeners', () => {
+        const ee = new TypedEventEmitter<Events>();
+        const after = vi.fn();
+        ee.on('pong', () => {
+            throw new Error('boom');
+        });
+        ee.on('pong', after);
+        expect(() => ee.emit('pong')).toThrow('boom');
+        expect(after).not.toHaveBeenCalled();
+    });
+
     it('once fires only on the first emit', () => {
         const ee = new TypedEventEmitter<Events>();
         const fn = vi.fn();

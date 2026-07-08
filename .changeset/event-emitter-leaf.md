@@ -12,6 +12,6 @@ New `@seedcord/event-emitter` package, a pure-JS `TypedEventEmitter` with typed 
 
 **BREAKING:** `@seedcord/services` no longer exports `StrictEventEmitter` or the `SE*` types. Extend `TypedEventEmitter` and use `EventMap` / `NoEvents` for the event-map constraint.
 
-**BREAKING:** the `Plugin` and `Pluggable` bases extend `TypedEventEmitter`, and `setMaxListeners` is removed from their surface.
+**BREAKING:** the `Plugin` and `Pluggable` bases extend `TypedEventEmitter`. `setMaxListeners` and the `addListener` alias are removed, use `on`.
 
 **BREAKING:** `@seedcord/errors` no longer defines the `EventEmitterWaitForAborted` (1501) and `EventEmitterWaitForTimeout` (1502) codes.
