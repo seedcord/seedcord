@@ -124,6 +124,17 @@ describe('TypedEventEmitter emit-time mutation', () => {
         ee.emit('ping', 1);
         expect(count).toBe(1);
     });
+
+    it('a sibling once fires once when a re-entrant emit drains it mid-snapshot', () => {
+        const ee = new TypedEventEmitter<Events>();
+        const b = vi.fn();
+        ee.once('ping', (n) => {
+            if (n === 1) ee.emit('ping', 2);
+        });
+        ee.once('ping', b);
+        ee.emit('ping', 1);
+        expect(b).toHaveBeenCalledTimes(1);
+    });
 });
 
 describe('TypedEventEmitter introspection', () => {

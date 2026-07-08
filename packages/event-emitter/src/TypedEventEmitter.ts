@@ -36,8 +36,12 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
     ): this {
         // justified: same erase as on().
         const original = listener as BroadListener;
+        let fired = false;
         const registration: Registration = {
+            // fired guards a re-entrant emit that re-invokes this registration from the outer snapshot
             call: (...args) => {
+                if (fired) return;
+                fired = true;
                 this.removeRegistration(event, registration);
                 original(...args);
             },
