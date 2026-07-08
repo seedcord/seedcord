@@ -89,6 +89,23 @@ describe('Cooldown', () => {
         expect(peek.mock.calls[0]?.[0]).not.toBe(peek.mock.calls[1]?.[0]);
     });
 
+    it('keys two off-route Cooldown instances to different keys', async () => {
+        const peek = vi.fn().mockReturnValue({ limited: false });
+        // no route to key on, so unrelated event handlers must not collide on one bucket
+        await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { routeId: null }));
+        await Cooldown(5).check(cdCtx({ peek, charge: vi.fn() }, { routeId: null }));
+        expect(peek.mock.calls[0]?.[0]).not.toBe(peek.mock.calls[1]?.[0]);
+    });
+
+    it('keys one off-route Cooldown instance identically across contexts', async () => {
+        const peek = vi.fn().mockReturnValue({ limited: false });
+        const gate = Cooldown(5);
+        await gate.check(cdCtx({ peek, charge: vi.fn() }, { routeId: null }));
+        await gate.check(cdCtx({ peek, charge: vi.fn() }, { routeId: null }));
+        // one declaration site keys one bucket, so the same off-route gate limits its scope consistently
+        expect(peek.mock.calls[0]?.[0]).toBe(peek.mock.calls[1]?.[0]);
+    });
+
     it('allows `limit` uses within one window, then refuses', async () => {
         const rl = new MemoryRateLimiter();
         const gate = Cooldown(60, { limit: 3 });

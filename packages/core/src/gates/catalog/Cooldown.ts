@@ -54,6 +54,9 @@ export interface CooldownOptions {
     notice?: (resetAt: EpochMs) => Notice;
 }
 
+// off-route ctxs have no route to key on, so each Cooldown() gets its own id to keep unrelated event handlers isolated
+let anonSeq = 0;
+
 function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): string {
     if (per === 'guild') return ctx.guildId ?? 'global';
     if (per === 'channel') return ctx.channelId ?? 'global';
@@ -124,10 +127,10 @@ export function Cooldown(
     const per = options?.per ?? 'user';
     // omit limit when unset so the limiter applies its default of 1, exactOptionalPropertyTypes rejects an explicit undefined
     const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
-    // route + window config keys the slot, so it is stable across restarts and isolates for a durable store,
-    // and two cooldowns with different settings on one handler stay separate
+    const anonId = anonSeq++;
+    // routed keys are stable across restarts, so a durable store rebuilds the same window
     const keyOf = (ctx: GateContextBase): string =>
-        `cooldown:${ctx.routeId ?? 'anon'}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
+        `cooldown:${ctx.routeId ?? `anon${anonId}`}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
 
     return defineEffectGate(
         'Cooldown',
