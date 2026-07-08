@@ -166,7 +166,8 @@ If no existing surface fits and there is no clean shared extension path, stop an
 1. **Add it in the shared package** — not in the consuming app or downstream package.
     - Pure type / interface: `@seedcord/types`
     - Pure helper (string/number/object/brand/misc): `@seedcord/utils`
-    - Runtime service (logger, cooldown, lifecycle, error class, health check, event emitter): `@seedcord/services`
+    - Runtime service (logger, cooldown, lifecycle, error class, health check): `@seedcord/services`
+    - Typed event emitter: `@seedcord/event-emitter`
     - Framework-level bus event, interface, or orchestrator hook: `@seedcord/seedcord`
     - Plugin-shaped behavior: `@seedcord/plugins`
     - CLI command / Ink component for the CLI: `@seedcord/cli`

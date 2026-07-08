@@ -2,6 +2,9 @@
     "name": "@seedcord/event-emitter",
     "type": "module",
     "version": "0.0.1",
+    "engines": {
+        "node": ">=24.3"
+    },
     "description": "Typed, cross-runtime event emitter for Seedcord",
     "repository": {
         "type": "git",

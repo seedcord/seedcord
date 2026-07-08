@@ -86,6 +86,7 @@ describe('EventDispatcher Integration', () => {
 
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
         seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
         const testBot = seedcord.bot as unknown as TestBot;
 
         // capture the messageCreate handler attachListener registers on the client

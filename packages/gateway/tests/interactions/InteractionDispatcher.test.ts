@@ -124,6 +124,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
         seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private interactions controller for assertion
         const testBot = seedcord.bot as unknown as TestBot;
 
         // capture the interactionCreate handler attachToClient registers on the client
