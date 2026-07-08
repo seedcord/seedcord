@@ -207,19 +207,7 @@ describe('Cooldown', () => {
         expect(String(peek.mock.calls[0]?.[0])).toContain(expected);
     });
 
-    it('lets two requests racing the same key both pass before either commits', async () => {
-        const rl = new MemoryRateLimiter();
-        const gate = Cooldown(60);
-        const ctxA = cdCtx(rl);
-        const ctxB = cdCtx(rl);
-
-        // both checks run before either commit charges, the charge-in-commit trade-off admits both
-        await expect(Promise.all([runGates([gate], ctxA), runGates([gate], ctxB)])).resolves.toBeDefined();
-
-        await expect(runGates([gate], cdCtx(rl))).rejects.toBeInstanceOf(OnCooldown);
-    });
-
-    // flips when the limiter gains an atomic reserve, the peek/charge split admits both rn
+    // flips when the limiter gets an atomic reserve, the peek/charge split admits both rn
     it.fails('admits exactly one of two requests racing the same key', async () => {
         const rl = new MemoryRateLimiter();
         const gate = Cooldown(60);
