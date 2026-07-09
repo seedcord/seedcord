@@ -887,9 +887,27 @@ importers:
 
   packages/logger:
     dependencies:
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 6.0.2
+      strip-ansi:
+        specifier: ^7.2.0
+        version: 7.2.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+      winston:
+        specifier: ^3.19.0
+        version: 3.19.0
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*

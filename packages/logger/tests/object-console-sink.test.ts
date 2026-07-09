@@ -1,0 +1,103 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { ObjectConsoleSink } from '../src/ObjectConsoleSink';
+
+import type { LogLevel, LogRecord } from '../src/types';
+
+function record(overrides: Partial<LogRecord>): LogRecord {
+    return { level: 'info', message: '', label: 'X', channel: 'default', timestamp: 1, ...overrides };
+}
+
+const ESC = String.fromCharCode(27);
+
+function capture(level: LogLevel = 'info'): { payload: () => Record<string, unknown> } {
+    const method = level === 'debug' || level === 'trace' ? 'debug' : level;
+    const spy = vi.spyOn(console, method).mockImplementation(() => undefined);
+    return {
+        payload: () => spy.mock.calls[0]?.[0] as Record<string, unknown>
+    };
+}
+
+afterEach(() => vi.restoreAllMocks());
+
+describe('ObjectConsoleSink', () => {
+    it('interpolates %s and %d into the message', () => {
+        const cap = capture();
+        new ObjectConsoleSink().onLog(record({ message: 'user %s scored %d', args: ['bob', 42] }));
+        expect(cap.payload().message).toBe('user bob scored 42');
+    });
+
+    it('merges a trailing object arg into top-level fields', () => {
+        const cap = capture();
+        new ObjectConsoleSink().onLog(record({ message: 'done', args: [{ userId: 5, guildId: 9 }] }));
+        expect(cap.payload()).toMatchObject({ message: 'done', userId: 5, guildId: 9 });
+    });
+
+    it('serializes an Error arg to a plain shape', () => {
+        const cap = capture('error');
+        const err = new Error('boom');
+        new ObjectConsoleSink().onLog(record({ level: 'error', message: 'failed', args: [err] }));
+        const error = cap.payload().error as Record<string, unknown>;
+        expect(error).toMatchObject({ name: 'Error', message: 'boom' });
+        expect(typeof error.stack).toBe('string');
+    });
+
+    it('strips ANSI from the message and error shape (json is machine-read)', () => {
+        const cap = capture('error');
+        const err = new Error('bad request');
+        err.name = `${ESC}[1m${ESC}[31mSeedcordError${ESC}[39m${ESC}[22m[123]`;
+        err.stack = `${err.name}: bad request\n    at handler`;
+        new ObjectConsoleSink().onLog(record({ level: 'error', message: `${ESC}[1mfailed${ESC}[22m`, args: [err] }));
+
+        const payload = cap.payload();
+        expect(JSON.stringify(payload)).not.toContain(ESC);
+        expect(payload.message).toBe('failed');
+        const error = payload.error as Record<string, unknown>;
+        expect(error.name).toBe('SeedcordError[123]');
+    });
+
+    it('keeps leftover primitives in an args field', () => {
+        const cap = capture();
+        new ObjectConsoleSink().onLog(record({ message: 'note', args: ['tail', 7] }));
+        expect(cap.payload().args).toEqual(['tail', 7]);
+    });
+
+    it('carries the base record fields', () => {
+        const cap = capture('warn');
+        new ObjectConsoleSink().onLog(record({ level: 'warn', message: 'hi', label: 'Bot', channel: 'events' }));
+        expect(cap.payload()).toMatchObject({ level: 'warn', label: 'Bot', channel: 'events', timestamp: 1 });
+    });
+
+    it('survives a BigInt without throwing', () => {
+        const cap = capture();
+        expect(() => new ObjectConsoleSink().onLog(record({ message: 'big', args: [{ id: 10n }] }))).not.toThrow();
+        expect(cap.payload().id).toBe('10');
+    });
+
+    it('survives a circular reference without throwing', () => {
+        const cap = capture();
+        const circular: Record<string, unknown> = { name: 'loop' };
+        circular.self = circular;
+        expect(() => new ObjectConsoleSink().onLog(record({ message: 'c', args: [circular] }))).not.toThrow();
+        expect(cap.payload().name).toBe('loop');
+    });
+
+    it('routes each level to the matching console method', () => {
+        const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const info = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+        const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+
+        const sink = new ObjectConsoleSink();
+        sink.onLog(record({ level: 'error' }));
+        sink.onLog(record({ level: 'warn' }));
+        sink.onLog(record({ level: 'info' }));
+        sink.onLog(record({ level: 'debug' }));
+        sink.onLog(record({ level: 'trace' }));
+
+        expect(error).toHaveBeenCalledOnce();
+        expect(warn).toHaveBeenCalledOnce();
+        expect(info).toHaveBeenCalledOnce();
+        expect(debug).toHaveBeenCalledTimes(2);
+    });
+});
