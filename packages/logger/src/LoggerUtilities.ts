@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 
+import { paint } from './palette';
+
 import type { LogLevel } from './types';
 import type { ILogger } from '@seedcord/types';
 
@@ -10,14 +12,35 @@ function formatFilePath(filePath: string): string {
     return filePath;
 }
 
+const COUNT_WRAP_WIDTH = 64;
+const CHIP_SEPARATOR = ' · ';
+
+// pack styled count chips onto lines whose visible width stays under maxWidth
+function wrapChips(chips: readonly { plain: string; styled: string }[], maxWidth: number): string[] {
+    const lines: string[] = [];
+    let current: string[] = [];
+    let width = 0;
+    for (const chip of chips) {
+        if (current.length > 0 && width + CHIP_SEPARATOR.length + chip.plain.length > maxWidth) {
+            lines.push(current.join(CHIP_SEPARATOR));
+            current = [];
+            width = 0;
+        }
+        width += (current.length === 0 ? 0 : CHIP_SEPARATOR.length) + chip.plain.length;
+        current.push(chip.styled);
+    }
+    if (current.length > 0) lines.push(current.join(CHIP_SEPARATOR));
+    return lines;
+}
+
 /**
- * Decorative logging helpers (lists, summaries, registration lines, boxes) shared across the framework.
+ * Decorative logging helpers (lists, summaries, registration lines, blocks) shared across the framework.
  */
 export class LoggerUtilities {
     constructor(private readonly logger: ILogger) {}
 
     private arrow(text: string): string {
-        return `${chalk.gray('→')} ${text}`;
+        return `${paint.mute('→')} ${text}`;
     }
 
     /** Logs a single item with an arrow prefix. */
@@ -33,15 +56,15 @@ export class LoggerUtilities {
 
     /** Logs a title with key-value counts, e.g. "Loaded: 5 handlers, 3 commands". */
     public summary(title: string, items: Record<string, number | string>, level: LogLevel = 'info'): void {
-        const entries = Object.entries(items).map(([key, value]) => `${chalk.magenta.bold(String(value))} ${key}`);
-        this.logger[level](`${chalk.bold.green(title)}: ${entries.join(', ')}`);
+        const entries = Object.entries(items).map(([key, value]) => `${paint.iris.bold(String(value))} ${key}`);
+        this.logger[level](`${paint.mint.bold(title)}: ${entries.join(', ')}`);
     }
 
     /** Logs a component registration line, with an optional type label like 'middleware' or 'handler'. */
     public registration(name: string, from: string, type?: string, level: LogLevel = 'info'): void {
         const scope = type ? `${type} ` : '';
         this.logger[level](
-            `${chalk.italic('Registered')} ${chalk.bold.yellow(scope)}${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(from))}`
+            `${chalk.italic('Registered')} ${paint.amber.bold(scope)}${paint.sky.bold(name)} from ${paint.mute(formatFilePath(from))}`
         );
     }
 
@@ -55,6 +78,32 @@ export class LoggerUtilities {
     public progress(current: number, total: number, item?: string, level: LogLevel = 'info'): void {
         const base = `[${current}/${total}]`;
         const suffix = item ? ` ${item}` : '';
-        this.logger[level](`${chalk.cyan(base)}${suffix}`);
+        this.logger[level](`${paint.sky(base)}${suffix}`);
+    }
+
+    /**
+     * Logs a heading and its lines as one record. The message carries newlines, so the TUI renders the
+     * heading with prefix once and the lines as a block beneath it, and a direct run prints them under the heading.
+     */
+    public block(heading: string, lines: readonly string[], level: LogLevel = 'trace'): void {
+        this.logger[level]([paint.mint.bold(heading), ...lines].join('\n'));
+    }
+
+    /** Formats `name path` block lines, names padded to a column and paths relative and dimmed. */
+    public entries(items: readonly { name: string; from: string }[]): string[] {
+        const width = items.reduce((max, item) => Math.max(max, item.name.length), 0);
+        return items.map(
+            (item) => `${paint.sky.bold(item.name.padEnd(width))} ${paint.mute(formatFilePath(item.from))}`
+        );
+    }
+
+    /** Formats non-zero counts into `N label` chips, wrapped onto lines under `maxWidth`. */
+    public counts(record: Record<string, number>, maxWidth = COUNT_WRAP_WIDTH): string[] {
+        const chips: { plain: string; styled: string }[] = [];
+        for (const [label, value] of Object.entries(record)) {
+            if (value <= 0) continue;
+            chips.push({ plain: `${value} ${label}`, styled: `${paint.iris.bold(String(value))} ${label}` });
+        }
+        return wrapChips(chips, maxWidth);
     }
 }

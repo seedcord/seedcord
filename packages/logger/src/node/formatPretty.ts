@@ -18,7 +18,7 @@ export function formatPretty(record: LogRecord): string {
     return render(pretty, record);
 }
 
-/** Renders the styled message body (interpolation, args, stack), omitting the time/level/label chrome. */
+/** Renders the styled message body (interpolation, args, stack), omitting the time/level/label prefix. */
 export function formatBody(record: LogRecord): string {
     return render(body, record);
 }

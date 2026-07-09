@@ -6,6 +6,7 @@ import winston from 'winston';
 
 import { LogFormatter } from '../src/node/LogFormatter';
 import { NODE_LEVELS } from '../src/node/winston';
+import { LEVEL_COLOR } from '../src/palette';
 
 const ESC = String.fromCharCode(27);
 
@@ -160,6 +161,38 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('Failed Unique error message');
             expect(output[0]).toContain('Error: Unique error message');
             expect((output[0]?.match(/Unique error message/gu) ?? []).length).toBe(2);
+        });
+    });
+
+    describe('level coloring', () => {
+        it('colors the pretty level with the shared truecolor LEVEL_COLOR', () => {
+            const { logger, output } = createTestLogger(formatter);
+            logger.error('boom');
+            expect(output[0]).toContain(chalk.hex(LEVEL_COLOR.error)('error'.padEnd(7)));
+        });
+
+        it('leaves the level plain and padded when extras are stripped', () => {
+            const output: string[] = [];
+            const stream = new Writable({
+                write(chunk: Buffer, _encoding, callback) {
+                    output.push(chunk.toString().trim());
+                    callback();
+                }
+            });
+            const logger = winston.createLogger({
+                levels: NODE_LEVELS,
+                level: 'trace',
+                format: winston.format.combine(formatter.createPreFormat()),
+                transports: [
+                    new winston.transports.Stream({
+                        stream,
+                        format: winston.format.combine(...formatter.pretty({ stripExtras: true }))
+                    })
+                ]
+            });
+            logger.warn('careful');
+            expect(output[0]).toContain('warn'.padEnd(7));
+            expect(output[0]).not.toContain(ESC);
         });
     });
 

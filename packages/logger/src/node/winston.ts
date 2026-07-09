@@ -44,7 +44,7 @@ export function prettyPipeline(): ReturnType<typeof format.combine> {
 }
 
 export function bodyPipeline(): ReturnType<typeof format.combine> {
-    return format.combine(formatter.createPreFormat(), ...formatter.pretty({ chrome: false }));
+    return format.combine(formatter.createPreFormat(), ...formatter.pretty({ prefix: false }));
 }
 
 function firstErrorStack(args?: unknown[]): string | undefined {

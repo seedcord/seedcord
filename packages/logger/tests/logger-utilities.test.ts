@@ -78,4 +78,40 @@ describe('LoggerUtilities', () => {
         new LoggerUtilities(logger).summary('Done', { tasks: 2 }, 'debug');
         expect(logger.calls[0]?.level).toBe('debug');
     });
+
+    it('emits a block as one record, the heading and lines joined by newlines', () => {
+        const logger = new FakeLogger();
+        new LoggerUtilities(logger).block('Loaded handlers', ['alpha', 'beta'], 'trace');
+
+        expect(logger.calls).toHaveLength(1);
+        expect(logger.calls[0]?.level).toBe('trace');
+        const parts = (logger.calls[0]?.text ?? '').split('\n');
+        expect(parts).toHaveLength(3);
+        expect(parts[0]).toContain('Loaded handlers');
+        expect(parts[1]).toContain('alpha');
+        expect(parts[2]).toContain('beta');
+    });
+
+    it('formats block entries with cwd-relative paths', () => {
+        const lines = new LoggerUtilities(new FakeLogger()).entries([
+            { name: 'FeedNav', from: `${process.cwd()}/src/Feed.ts` },
+            { name: 'LongerHandlerName', from: `${process.cwd()}/src/Other.ts` }
+        ]);
+        expect(lines[0]).toContain('FeedNav');
+        expect(lines[0]).toContain('./src/Feed.ts');
+        expect(lines[1]).toContain('LongerHandlerName');
+    });
+
+    it('drops zero counts', () => {
+        const lines = new LoggerUtilities(new FakeLogger()).counts({ slash: 7, modals: 0, buttons: 3 });
+        const joined = lines.join(' ');
+        expect(joined).toContain('7 slash');
+        expect(joined).toContain('3 buttons');
+        expect(joined).not.toContain('modals');
+    });
+
+    it('wraps counts onto multiple lines past the max width', () => {
+        const lines = new LoggerUtilities(new FakeLogger()).counts({ aa: 1, bb: 2, cc: 3, dd: 4 }, 8);
+        expect(lines.length).toBeGreaterThan(1);
+    });
 });

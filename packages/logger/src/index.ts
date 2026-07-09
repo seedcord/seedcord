@@ -1,6 +1,7 @@
 export { Logger } from './Logger';
 export { LoggerChannelRegistry } from './LoggerChannelRegistry';
 export { ObjectConsoleSink } from './ObjectConsoleSink';
+export { LEVEL_COLOR, paint } from './palette';
 
 export type { ILogSink, LogLevel, LogRecord, LogSinkHandle, LoggerConfig } from './types';
 
