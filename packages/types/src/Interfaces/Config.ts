@@ -1,6 +1,7 @@
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
+import type { LoggerConfig } from './LogSink';
 import type { Store } from './Store';
 import type { BotColor } from '../Types/Colors';
 
@@ -161,4 +162,9 @@ export interface Config {
      * to keep framework state across restarts and isolates.
      */
     store?: Store<'charge'>;
+
+    /**
+     * Logging level, sinks, and per-channel overrides. Omitted fields keep the transport's defaults.
+     */
+    logger?: LoggerConfig;
 }
