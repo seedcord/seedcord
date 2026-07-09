@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';

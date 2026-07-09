@@ -1,7 +1,7 @@
 import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';

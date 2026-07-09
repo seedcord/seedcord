@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 
 import type { PreviewContext, PreviewLogLevel } from './scenarios/types';
 import type { DevStore } from '@ui/stores/DevStore';

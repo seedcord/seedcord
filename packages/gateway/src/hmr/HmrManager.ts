@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { wrapHot } from '@seedcord/types/internal';
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';

@@ -2,8 +2,8 @@ import { Envapter } from 'envapt';
 
 import type { LogLevel } from './types';
 
-/** Numeric rank per level, error highest. A record passes when its rank is at or below the floor. */
-export const LEVEL_RANK: Record<LogLevel, number> = {
+// rank per level, error is highest
+const LEVEL_RANK: Record<LogLevel, number> = {
     error: 0,
     warn: 1,
     info: 2,

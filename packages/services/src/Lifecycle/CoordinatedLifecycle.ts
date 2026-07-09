@@ -6,9 +6,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
+import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
-
-import { Logger } from '../Logger';
 
 import type { LifecycleTask } from './LifecycleTypes';
 import type { EventMap } from '@seedcord/event-emitter';

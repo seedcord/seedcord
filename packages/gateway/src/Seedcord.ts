@@ -1,6 +1,8 @@
 import { setBotColor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { LoggerChannelRegistry } from '@seedcord/logger';
+import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import { SeedcordBrand } from '@seedcord/types/internal';
@@ -72,6 +74,7 @@ export class Seedcord extends Pluggable implements Core {
 
         super(shutdown, startup);
 
+        installNodeDefaults(config.logger);
         setBotColor(config.botColor);
 
         this.shutdown = shutdown;
@@ -91,6 +94,7 @@ export class Seedcord extends Pluggable implements Core {
     // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
         Seedcord.isInstantiated = false;
+        LoggerChannelRegistry.instance.reset();
     }
 
     /**

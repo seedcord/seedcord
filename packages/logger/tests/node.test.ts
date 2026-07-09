@@ -123,4 +123,24 @@ describe('installNodeDefaults', () => {
         registry.dispatch(record({ level: 'error', message: 'flows' }));
         expect(captured.map((r) => r.message)).toContain('flows');
     });
+
+    it('applies an override level and keeps the node sinks', () => {
+        installNodeDefaults({ level: 'warn' });
+
+        const captured: LogRecord[] = [];
+        registry.installSink({ kind: 'capture', onLog: (r) => void captured.push(r) }, { muteConsole: true });
+
+        registry.dispatch(record({ level: 'error', message: 'kept' }));
+        registry.dispatch(record({ level: 'debug', message: 'gated' }));
+        expect(captured.map((r) => r.message)).toEqual(['kept']);
+    });
+
+    it('replaces the config sinks when overrides provide them', () => {
+        const seen: LogRecord[] = [];
+        const sink: ILogSink = { kind: 'console', onLog: (r) => void seen.push(r) };
+        installNodeDefaults({ sinks: [sink] });
+
+        registry.dispatch(record({ level: 'error', message: 'to-custom' }));
+        expect(seen.map((r) => r.message)).toContain('to-custom');
+    });
 });

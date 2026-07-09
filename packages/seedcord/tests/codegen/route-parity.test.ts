@@ -3,20 +3,10 @@ import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
 import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
+import { silentLogger } from '@utils/SilentLogger';
 
 import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
-import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
-
-const silentLogger: ILogger = {
-    error: () => undefined,
-    warn: () => undefined,
-    info: () => undefined,
-    http: () => undefined,
-    verbose: () => undefined,
-    debug: () => undefined,
-    silly: () => undefined
-};
 
 // Independently re-derive the route key set from the same toJSON the generator reads, funneling every leaf
 // through buildSlashRoute so the parity assertion fails if the generator's key format ever drifts from it.

@@ -23,7 +23,9 @@ export default defineConfig({
     },
     ssr: {
         target: 'node',
-        external: ['@seedcord/services'],
+        // externalize the logger so the bot shares the CLI's LoggerChannelRegistry singleton, the dev
+        // TUI captures through it
+        external: ['@seedcord/logger', '@seedcord/logger/node', '@seedcord/services'],
         resolve: {
             conditions: ['node', 'import'],
             externalConditions: ['node']

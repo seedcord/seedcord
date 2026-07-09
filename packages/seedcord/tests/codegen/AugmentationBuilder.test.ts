@@ -3,20 +3,11 @@ import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType 
 import { describe, it, expect } from 'vitest';
 
 import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
+import { silentLogger } from '@utils/SilentLogger';
 
 import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
-
-const silentLogger: ILogger = {
-    error: () => undefined,
-    warn: () => undefined,
-    info: () => undefined,
-    http: () => undefined,
-    verbose: () => undefined,
-    debug: () => undefined,
-    silly: () => undefined
-};
 
 function tablesFor(...commands: { toJSON: () => RESTPostAPIApplicationCommandsJSONBody }[]): SlashTables {
     return new AugmentationBuilder(silentLogger).generate(

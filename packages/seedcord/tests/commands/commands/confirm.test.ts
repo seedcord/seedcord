@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
 import { confirmCount } from '@commands/commands/confirm';
-import { SilentLogger } from '@utils/SilentLogger';
+import { silentLogger } from '@utils/SilentLogger';
 
-const logger = new SilentLogger();
+const logger = silentLogger;
 
 describe('confirmCount', () => {
     it('confirms only when the typed answer equals the count', async () => {

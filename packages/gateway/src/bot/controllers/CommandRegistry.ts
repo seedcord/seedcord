@@ -5,7 +5,7 @@ import { BuilderComponent } from '@seedcord/core';
 import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection } from 'discord.js';

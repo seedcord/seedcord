@@ -1,9 +1,9 @@
 import { createServer } from 'node:http';
 
+import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 
 import { ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
-import { Logger } from './Logger';
 
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
 import type { HealthCheckConfig } from '@seedcord/types';

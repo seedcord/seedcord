@@ -48,13 +48,9 @@
     "dependencies": {
         "@seedcord/errors": "workspace:*",
         "@seedcord/event-emitter": "workspace:*",
+        "@seedcord/logger": "workspace:*",
         "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
-        "chalk": "catalog:deps",
-        "envapt": "catalog:deps",
-        "strip-ansi": "^7.2.0",
-        "winston": "^3.19.0",
-        "winston-transport": "^4.9.0"
+        "chalk": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

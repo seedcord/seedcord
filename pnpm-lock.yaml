@@ -841,6 +841,9 @@ importers:
       '@seedcord/event-emitter':
         specifier: workspace:*
         version: link:../event-emitter
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@seedcord/rate-limiter':
         specifier: workspace:*
         version: link:../rate-limiter
@@ -927,6 +930,9 @@ importers:
       '@seedcord/gateway':
         specifier: workspace:*
         version: link:../gateway
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@seedcord/services':
         specifier: workspace:*
         version: link:../services
@@ -1013,9 +1019,9 @@ importers:
       '@seedcord/event-emitter':
         specifier: workspace:*
         version: link:../event-emitter
-      '@seedcord/services':
+      '@seedcord/logger':
         specifier: workspace:*
-        version: link:../services
+        version: link:../logger
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
@@ -1095,30 +1101,18 @@ importers:
       '@seedcord/event-emitter':
         specifier: workspace:*
         version: link:../event-emitter
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
       chalk:
         specifier: catalog:deps
         version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 6.0.2
-      strip-ansi:
-        specifier: ^7.2.0
-        version: 7.2.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
-      winston:
-        specifier: ^3.19.0
-        version: 3.19.0
-      winston-transport:
-        specifier: ^4.9.0
-        version: 4.9.0
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*

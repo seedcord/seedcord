@@ -1,3 +1,4 @@
+import type { LoggerConfig } from '@seedcord/logger';
 import type { BotConfig, Config } from '@seedcord/types';
 import type { ClientOptions } from 'discord.js';
 
@@ -38,4 +39,10 @@ export interface GatewayBotConfig extends BotConfig {
  */
 export interface GatewayConfig extends Config {
     bot: GatewayBotConfig;
+
+    /**
+     * Logging level, sinks, and per-channel overrides. Omitted fields keep the node defaults (a pretty
+     * console plus a combined file in dev, JSON to the console in prod).
+     */
+    logger?: LoggerConfig;
 }

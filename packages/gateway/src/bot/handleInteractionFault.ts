@@ -1,5 +1,5 @@
 import { Notice, Silence } from '@seedcord/core';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';

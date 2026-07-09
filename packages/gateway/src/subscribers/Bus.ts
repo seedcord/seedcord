@@ -1,5 +1,5 @@
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';

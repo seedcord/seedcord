@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { Guild } from 'discord.js';
 
 import { MissingPermissions } from '@bot/notices';

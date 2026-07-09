@@ -1,7 +1,7 @@
 import { relative, resolve } from 'node:path';
 
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { wrapHot } from '@seedcord/types/internal';
 import chalk from 'chalk';
 import { minimatch } from 'minimatch';

@@ -5,15 +5,22 @@ import { LoggerChannelRegistry } from '../LoggerChannelRegistry';
 import { WinstonConsoleSink } from './WinstonConsoleSink';
 import { WinstonFileSink } from './WinstonFileSink';
 
-import type { ILogSink } from '../types';
+import type { ILogSink, LoggerConfig } from '../types';
 
 /**
- * Installs the node default sinks into the registry config layer. Dev is a pretty console plus one
+ * Installs the node defaults into the registry config layer. Dev is a pretty console plus one
  * combined file, prod is JSON to the console. A node bootstrap calls this before any logging.
+ *
+ * @param overrides - A bot's `config.logger`. Level, sinks, or channels the bot sets take precedence,
+ * omitted fields keep the node defaults.
  */
-export function installNodeDefaults(): void {
+export function installNodeDefaults(overrides?: LoggerConfig): void {
     const dev = Envapter.isDevelopment;
     const sinks: ILogSink[] = [new WinstonConsoleSink({ format: dev ? 'pretty' : 'json' })];
     if (dev) sinks.push(new WinstonFileSink());
-    LoggerChannelRegistry.instance.configure({ level: defaultLevel(), sinks });
+    LoggerChannelRegistry.instance.configure({
+        level: overrides?.level ?? defaultLevel(),
+        sinks: overrides?.sinks ?? sinks,
+        channels: overrides?.channels ?? {}
+    });
 }

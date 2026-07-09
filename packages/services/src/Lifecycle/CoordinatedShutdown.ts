@@ -35,7 +35,7 @@ const PHASE_ORDER: ShutdownPhase[] = [
  */
 export type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<ShutdownPhase>>;
 
-// Delay process.exit so winston has a window to flush buffered log lines before the event loop dies.
+// Delay process.exit so the logger's file sink has a window to flush before the event loop dies.
 const LOG_FLUSH_DELAY_MS = 500;
 
 /**

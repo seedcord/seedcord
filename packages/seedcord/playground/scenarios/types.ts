@@ -1,7 +1,8 @@
 import type { DevEvent } from '@commands/dev/runtime/events';
+import type { LogLevel } from '@seedcord/logger';
 import type { DevStore } from '@ui/stores/DevStore';
 
-export type PreviewLogLevel = 'info' | 'warn' | 'error' | 'debug' | 'http' | 'verbose';
+export type PreviewLogLevel = LogLevel;
 
 /**
  * The surface a scenario uses to drive the REAL stores. `log` goes through the real Logger so channels

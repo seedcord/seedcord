@@ -18,7 +18,7 @@ const loggerSpies = {
     debug: vi.fn()
 };
 
-vi.mock('@seedcord/services', () => ({
+vi.mock('@seedcord/logger', () => ({
     Logger: class {
         public info = loggerSpies.info;
         public warn = loggerSpies.warn;

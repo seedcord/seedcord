@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import './logger-bootstrap';
 
 // Bot export
 export type { BotEvents } from '@bot/Bot';
@@ -47,6 +48,7 @@ export * from './Seedcord';
 export * from '@seedcord/core';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
+export * from '@seedcord/logger';
 export * from '@seedcord/rate-limiter';
 export * from '@seedcord/services';
 export type * from '@seedcord/types';

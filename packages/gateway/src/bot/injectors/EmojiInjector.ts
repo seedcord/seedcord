@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 
 import type { Core } from '@interfaces/Core';

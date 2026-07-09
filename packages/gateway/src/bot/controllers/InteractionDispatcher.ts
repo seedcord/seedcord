@@ -11,7 +11,7 @@ import {
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Events } from 'discord.js';

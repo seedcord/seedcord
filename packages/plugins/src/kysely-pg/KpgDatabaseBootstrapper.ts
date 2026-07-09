@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { Pool, type PoolClient, type PoolConfig } from 'pg';
 
-import type { Logger } from '@seedcord/services';
+import type { Logger } from '@seedcord/logger';
 
 function disposableClient(client: PoolClient): PoolClient & Disposable {
     return Object.assign(client, { [Symbol.dispose]: () => client.release() });

@@ -6,7 +6,8 @@ import { getDevChannel } from '@hmr/devChannel';
 
 import type { Core } from './Core';
 import type { EventMap, NoEvents } from '@seedcord/event-emitter';
-import type { CoordinatedShutdown, CoordinatedStartup, Logger, StartupPhase } from '@seedcord/services';
+import type { Logger } from '@seedcord/logger';
+import type { CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
 import type { Tail } from '@seedcord/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 

@@ -2,12 +2,13 @@ import 'reflect-metadata';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger, ShutdownPhase } from '@seedcord/services';
+import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
+import { Logger } from '@seedcord/logger';
+import { ShutdownPhase } from '@seedcord/services';
 import { keepDefined, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
-import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
 
 import { ModelMetadataKey } from './decorators/RegisterMongoModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongoService';
@@ -16,9 +17,9 @@ import { MongoService } from './MongoService';
 import type { MongoServiceConstructor } from './MongoService';
 import type { MongoOptions } from './types/MongoOptions';
 import type { MongoServices } from './types/MongoServices';
+import type { Core } from '@seedcord/gateway';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 import type { Mongoose } from 'mongoose';
-import type { Core } from '@seedcord/gateway';
 
 interface MongoArtifact {
     key?: string;

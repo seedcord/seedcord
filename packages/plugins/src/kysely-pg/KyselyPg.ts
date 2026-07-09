@@ -2,13 +2,14 @@ import 'reflect-metadata';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger, ShutdownPhase } from '@seedcord/services';
+import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
+import { Logger } from '@seedcord/logger';
+import { ShutdownPhase } from '@seedcord/services';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
-import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
 import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
@@ -19,9 +20,9 @@ import type { KyselyServiceConstructor } from './KpgService';
 import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigration';
 import type { KpgOptions } from './types/KpgOptions';
 import type { KpgServices } from './types/KpgServices';
+import type { Core } from '@seedcord/gateway';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 import type { MigrationInfo } from 'kysely/migration';
-import type { Core } from '@seedcord/gateway';
 
 export interface KyselyArtifact {
     key?: string;

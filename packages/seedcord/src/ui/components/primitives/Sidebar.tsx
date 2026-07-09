@@ -1,5 +1,3 @@
-import { LoggerChannelRegistry } from '@seedcord/services';
-import { formatFilePath } from '@seedcord/utils';
 import { Box, Text } from 'ink';
 import React from 'react';
 
@@ -18,12 +16,8 @@ const MAX_RAIL = 40;
 
 const META_LABEL_WIDTH = 5;
 
-// Every channel writes its own per-run file into this directory, so show the directory, not one file.
-function logDir(): string | null {
-    const registry = LoggerChannelRegistry.instance;
-    const path = registry.getLogFilePath(registry.getDefaultChannel());
-    return path ? formatFilePath(path, { onlyDir: true }) : null;
-}
+// the dev default writes one combined file into this folder
+const LOG_DIR = 'logs/';
 
 interface SidebarProps {
     readonly state: DevState;
@@ -47,13 +41,12 @@ function Meta({ label, value }: { label: string; value: string }): ReactElement 
 }
 
 function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
-    const dir = logDir();
     return (
         <Box flexDirection="column">
             <StatusBadge phase={state.phase} />
             {state.status ? <Text>{state.status}</Text> : null}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
-            {dir === null ? null : <Meta label="logs" value={dir} />}
+            <Meta label="logs" value={LOG_DIR} />
         </Box>
     );
 }

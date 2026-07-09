@@ -1,11 +1,9 @@
 import type { ILogger } from '@seedcord/types';
 
-export class SilentLogger implements ILogger {
-    public error(): void {}
-    public warn(): void {}
-    public info(): void {}
-    public http(): void {}
-    public verbose(): void {}
-    public debug(): void {}
-    public silly(): void {}
-}
+export const silentLogger: ILogger = {
+    error: () => undefined,
+    warn: () => undefined,
+    info: () => undefined,
+    debug: () => undefined,
+    trace: () => undefined
+};

@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 
 import type { SubscriptionKey, AllSubscriptions } from './types/Subscriptions';
 import type { Core } from '@interfaces/Core';

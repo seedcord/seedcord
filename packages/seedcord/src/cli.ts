@@ -1,5 +1,6 @@
 import { Command } from '@commander-js/extra-typings';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
+import { installNodeDefaults } from '@seedcord/logger/node';
 
 import { BuildCommand } from '@commands/build/BuildCommand';
 import { CodegenCommand } from '@commands/codegen/CodegenCommand';
@@ -14,6 +15,8 @@ async function main(): Promise<void> {
     if (!process.env.ENV && !process.env.ENVIRONMENT && !process.env.NODE_ENV) {
         process.env.NODE_ENV = 'development';
     }
+
+    installNodeDefaults();
 
     const program = new Command().name('seedcord').description('seedcord CLI').version(version);
 

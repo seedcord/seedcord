@@ -1,5 +1,5 @@
 import type { KpgMigrationsOptions } from './KpgOptions';
-import type { Logger } from '@seedcord/services';
+import type { Logger } from '@seedcord/logger';
 import type { Kysely } from 'kysely';
 import type { Migration, NoMigrations } from 'kysely/migration';
 

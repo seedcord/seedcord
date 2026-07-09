@@ -7,22 +7,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { DevRunner, isSeedcordInstance } from '@commands/dev/DevRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { DevStore } from '@ui/stores/DevStore';
+import { silentLogger } from '@utils/SilentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
 import type { SeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
-import type { ILogger } from '@seedcord/types';
-
-const silentLogger: ILogger = {
-    error: () => undefined,
-    warn: () => undefined,
-    info: () => undefined,
-    http: () => undefined,
-    verbose: () => undefined,
-    debug: () => undefined,
-    silly: () => undefined
-};
 
 describe('ConfigLoader', () => {
     it('resolves paths and build defaults relative to config directory', async () => {

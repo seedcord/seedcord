@@ -58,7 +58,7 @@ function errorShape(error: Error): Record<string, unknown> {
  * The edge default sink. Emits one structured object to the severity-matched `console` method so
  * a Workers drain indexes each field. Trailing object args merge into top-level fields, an Error
  * arg serializes to `{ name, message, stack }`. The message and error strings are ANSI-stripped
- * (the output is machine-read), and every value passes through {@link filterCirculars} so a BigInt
+ * (the output is machine-read), and every value passes through `filterCirculars` so a BigInt
  * or circular reference never throws.
  */
 export class ObjectConsoleSink implements ILogSink {

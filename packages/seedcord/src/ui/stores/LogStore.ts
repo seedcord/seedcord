@@ -1,7 +1,8 @@
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-import { LoggerChannelRegistry } from '@seedcord/services';
+import { LoggerChannelRegistry } from '@seedcord/logger';
+import { formatPretty } from '@seedcord/logger/node';
 
-import type { ILoggerSink, ILoggerSinkHandle, LoggerSinkLogEntry } from '@seedcord/services';
+import type { ILogSink, LogRecord, LogSinkHandle } from '@seedcord/logger';
 
 export interface LogEntry {
     id: number;
@@ -20,13 +21,15 @@ const UPDATE_DEBOUNCE_MS = 30;
 // eslint-disable-next-line no-magic-numbers -- 27 is the ESC control code
 const ESC = String.fromCharCode(27);
 
-export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILoggerSink {
+export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogSink {
     private static _instance: LogStore | null = null;
+
+    public readonly kind = 'capture';
 
     private entries: LogEntry[] = [];
     private buffer: LogEntry[] = [];
     private nextId = 1;
-    private sinkHandle: ILoggerSinkHandle | null = null;
+    private sinkHandle: LogSinkHandle | null = null;
     private pendingUpdate = false;
     private flushTimer: ReturnType<typeof setTimeout> | null = null;
     private readonly MAX_LOGS = 1000;
@@ -53,17 +56,17 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogg
         this.sinkHandle = null;
     }
 
-    public onLog(entry: LoggerSinkLogEntry): void {
+    public onLog(record: LogRecord): void {
         // Split on a lone \r too: a bare carriage return left in a row resets the terminal cursor to column 0
         // on print and overwrites the start of the line. Then drop any other control char (keeping ESC so SGR
         // color sequences still render) for the same corruption reason.
-        const lines = entry.rendered.split(/\r\n|\r|\n/);
+        const lines = formatPretty(record).split(/\r\n|\r|\n/);
         const now = Date.now();
 
         for (const line of lines) {
             this.buffer.push({
                 id: this.nextId++,
-                channel: entry.channel,
+                channel: record.channel,
                 text: line.replaceAll(/\p{Cc}/gu, (char) => (char === ESC ? char : '')),
                 timestamp: now
             });

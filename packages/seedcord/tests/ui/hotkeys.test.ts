@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { dispatchHotkey } from '@ui/hotkeys';
 import { LogStore } from '@ui/stores/LogStore';
 
-import type { LoggerSinkLogEntry } from '@seedcord/services';
+import type { LogRecord } from '@seedcord/logger';
 import type { Key } from 'ink';
 
 type Ctx = Parameters<typeof dispatchHotkey>[0];
@@ -49,7 +49,8 @@ function makeCtx(overrides: Partial<Ctx>): Ctx {
 }
 
 async function seedChannel(channel: string): Promise<void> {
-    LogStore.instance.onLog({ channel, rendered: 'x' } as unknown as LoggerSinkLogEntry);
+    const record: LogRecord = { level: 'info', message: 'x', label: 'Test', channel, timestamp: Date.now() };
+    LogStore.instance.onLog(record);
     await LogStore.instance.flush();
 }
 
