@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { LoggerChannelRegistry } from '../src/LoggerChannelRegistry';
-import { formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '../src/node';
+import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '../src/node';
 
 import type { ILogSink, LogRecord } from '../src/types';
 
@@ -46,6 +46,26 @@ describe('formatPretty', () => {
         expect(line).toContain('failed');
         expect(line).toContain('Error: boom');
         expect(line).toContain('at ');
+    });
+});
+
+describe('formatBody', () => {
+    it('renders only the message body, without the level, label, or timestamp chrome', () => {
+        const line = plain(formatBody(record({ message: 'hello', label: 'Bot', level: 'warn' })));
+        expect(line).toBe('hello');
+    });
+
+    it('interpolates args into the body', () => {
+        const line = plain(formatBody(record({ message: 'user %s scored %d', args: ['bob', 42] })));
+        expect(line).toBe('user bob scored 42');
+    });
+
+    it('appends an Error stack and omits the chrome', () => {
+        const line = plain(formatBody(record({ level: 'error', message: 'failed', args: [new Error('boom')] })));
+        expect(line).toContain('failed');
+        expect(line).toContain('Error: boom');
+        expect(line).toContain('at ');
+        expect(line).not.toContain('[error]');
     });
 });
 

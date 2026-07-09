@@ -43,6 +43,10 @@ export function prettyPipeline(): ReturnType<typeof format.combine> {
     return format.combine(formatter.createPreFormat(), ...formatter.pretty());
 }
 
+export function bodyPipeline(): ReturnType<typeof format.combine> {
+    return format.combine(formatter.createPreFormat(), ...formatter.pretty({ chrome: false }));
+}
+
 function firstErrorStack(args?: unknown[]): string | undefined {
     const error = args?.find((arg): arg is Error => Error.isError(arg));
     return error?.stack;

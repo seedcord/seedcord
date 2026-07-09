@@ -12,6 +12,7 @@ type FormattedError = Error & { __formattedName?: string; __plainName?: string }
 interface PrettyFormatOptions {
     padding?: number; // level column width, default 7
     stripExtras?: boolean;
+    chrome?: boolean; // false emits just the message body, the TUI draws its own time/level/label
 }
 
 interface JsonFormatOptions {
@@ -123,6 +124,10 @@ export class LogFormatter {
         return RegExp.escape(str);
     }
 
+    private assembleBase(chrome: boolean, ts: string, lvl: string, lbl: string, msg: string): string {
+        return chrome ? `${ts} [${lvl}]: ${lbl} - ${msg}` : msg;
+    }
+
     /** The pretty format chain, colored and timestamped for dev. */
     public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
         const padding = options.padding ?? this.DEFAULT_PADDING;
@@ -147,7 +152,7 @@ export class LogFormatter {
                     msg = stripAnsi(msg);
                 }
 
-                const base = `${ts} [${lvl}]: ${lbl} - ${msg}`;
+                const base = this.assembleBase(options.chrome !== false, ts, lvl, lbl, msg);
                 const savedExtras = info[this.SAVED_SPLAT_KEY];
                 // Array.isArray widens to any[] so annotate unknown[] so filter is type safe
                 const extras: unknown[] = Array.isArray(savedExtras) ? savedExtras : this.getExtras(info);
