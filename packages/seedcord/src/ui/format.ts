@@ -18,3 +18,9 @@ export function formatUptime(ms: number): string {
     if (minutes > 0) return `${minutes}m ${pad(seconds)}s`;
     return `${seconds}s`;
 }
+
+// local time
+export function formatClock(ts: number): string {
+    const d = new Date(ts);
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}

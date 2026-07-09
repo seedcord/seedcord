@@ -1,0 +1,41 @@
+import { render } from 'ink-testing-library';
+import React from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
+import { LogStore } from '@ui/stores/LogStore';
+
+import type { LogRecord } from '@seedcord/logger';
+
+function record(over: Partial<LogRecord>): LogRecord {
+    return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: 1_700_000_000_000, ...over };
+}
+
+describe('ScrollableLogView', () => {
+    const store = LogStore.instance;
+    afterEach(() => store.clear());
+
+    it('renders a head line with the label, dot, and message', async () => {
+        store.onLog(record({ label: 'Mongo', message: 'connected' }));
+        await store.flush();
+
+        const { lastFrame } = render(<ScrollableLogView visible={store.getLogs()} viewportHeight={10} measured />);
+        const frame = lastFrame() ?? '';
+        expect(frame).toContain('Mongo');
+        expect(frame).toContain('⏺');
+        expect(frame).toContain('connected');
+    });
+
+    it('rails an error continuation line with the bar', async () => {
+        store.onLog(record({ level: 'error', message: 'boom', args: [new Error('bad')] }));
+        await store.flush();
+
+        const { lastFrame } = render(<ScrollableLogView visible={store.getLogs()} viewportHeight={10} measured />);
+        expect(lastFrame() ?? '').toContain('▌');
+    });
+
+    it('renders nothing until measured', () => {
+        const { lastFrame } = render(<ScrollableLogView visible={[]} viewportHeight={10} measured={false} />);
+        expect((lastFrame() ?? '').trim()).toBe('');
+    });
+});

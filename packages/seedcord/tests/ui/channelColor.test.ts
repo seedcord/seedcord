@@ -1,20 +1,23 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { channelColor, resetChannelColors } from '@ui/channelColor';
+import { channelColor } from '@ui/channelColor';
 
 describe('channelColor', () => {
-    beforeEach(() => resetChannelColors());
-
-    it('assigns distinct palette colors in order of first appearance and keeps them stable', () => {
-        expect(channelColor('a')).toBe('cyan');
-        expect(channelColor('b')).toBe('green');
-        expect(channelColor('a')).toBe('cyan');
+    it('maps a name to a stable hex color', () => {
+        const first = channelColor('db');
+        expect(first).toMatch(/^#[0-9a-f]{6}$/iu);
+        expect(channelColor('db')).toBe(first);
     });
 
-    it('restarts assignment from the first color after a reset', () => {
-        channelColor('a');
-        channelColor('b');
-        resetChannelColors();
-        expect(channelColor('c')).toBe('cyan');
+    it('picks the color from the name, independent of call order', () => {
+        const alpha = channelColor('alpha');
+        channelColor('beta');
+        channelColor('gamma');
+        expect(channelColor('alpha')).toBe(alpha);
+    });
+
+    it('spreads names across more than one palette color', () => {
+        const colors = new Set(['db', 'http', 'core', 'hmr', 'events', 'cache', 'gateway'].map(channelColor));
+        expect(colors.size).toBeGreaterThan(1);
     });
 });

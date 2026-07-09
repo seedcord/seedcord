@@ -2,18 +2,98 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { channelColor } from '@ui/channelColor';
+import { formatClock } from '@ui/format';
 import { LogStore } from '@ui/stores/LogStore';
 
+import type { LogLevel } from '@seedcord/logger';
 import type { LogEntry } from '@ui/stores/LogStore';
 import type { ReactElement } from 'react';
 
 const MIN_LOG_LINES = 3;
-const MAX_TAG = 10;
+const DOT = '⏺';
+const BAR = '▌';
+const ELLIPSIS = '…';
+const CHIP_TEXT = '#1a1a1a';
+
+const LEVEL_COLOR: Record<LogLevel, string> = {
+    error: '#ff6b85',
+    warn: '#ffc061',
+    info: '#66d98a',
+    debug: '#66b3ff',
+    trace: '#b399e6'
+};
+
+const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
+
+// warn and error tint their left chrome (through the channel dot), the message keeps its own color
+const WASH: Partial<Record<LogLevel, string>> = { warn: '#3a2f14', error: '#3d1a20' };
+
+function truncate(label: string, width: number): string {
+    return label.length > width ? `${label.slice(0, width - 1)}${ELLIPSIS}` : label;
+}
+
+function Chip({ level }: { level: LogLevel }): ReactElement {
+    return (
+        <Text backgroundColor={LEVEL_COLOR[level]} color={CHIP_TEXT} bold>
+            {` ${LEVEL_LETTER[level]} `}
+        </Text>
+    );
+}
+
+function Chrome({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
+    const label = truncate(log.label, labelWidth).padStart(labelWidth);
+    return (
+        <>
+            <Chip level={log.level} /> <Text dimColor>{formatClock(log.timestamp)}</Text> <Text>{label}</Text>{' '}
+            <Text color={channelColor(log.channel)}>{DOT}</Text>
+        </>
+    );
+}
+
+function HeadLine({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
+    const wash = WASH[log.level];
+
+    if (wash) {
+        return (
+            <Text wrap="truncate">
+                <Text backgroundColor={wash}>
+                    <Chrome log={log} labelWidth={labelWidth} />
+                </Text>{' '}
+                {log.text}
+            </Text>
+        );
+    }
+
+    return (
+        <Text wrap="truncate">
+            <Chrome log={log} labelWidth={labelWidth} /> {log.text}
+        </Text>
+    );
+}
+
+function ContinuationLine({ log }: { log: LogEntry }): ReactElement {
+    if (log.level === 'error') {
+        return (
+            <Text wrap="truncate">
+                <Text color={LEVEL_COLOR.error} bold>
+                    {BAR}
+                </Text>
+                <Text dimColor>{log.text}</Text>
+            </Text>
+        );
+    }
+
+    return (
+        <Text wrap="truncate" dimColor>
+            {log.text}
+        </Text>
+    );
+}
 
 interface ScrollableLogViewProps {
     readonly visible: readonly LogEntry[];
     readonly viewportHeight: number;
-    // False until the parent box has been measured; avoids a one-frame "too small" flash on mount.
+    // false until the parent box is measured, which avoids a one-frame "too small" flash on mount
     readonly measured: boolean;
 }
 
@@ -28,27 +108,21 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
         );
     }
 
-    // Pad channel tags to a common width so messages line up; cap the width so a long channel name is
-    // truncated rather than the message.
-    const channels = LogStore.instance.getChannels();
-    const tagWidth = Math.min(
-        MAX_TAG,
-        channels.reduce((max, channel) => Math.max(max, channel.length), 0)
-    );
+    const labelWidth = Math.max(1, LogStore.instance.getLabelWidth());
 
     return (
-        // flex-end pins the newest line to the bottom edge (tail -f): the window grows upward, and when the
-        // buffer is sparse the lines sit at the bottom instead of the middle.
+        // flex-end pins the newest line to the bottom edge (tail -f), a sparse buffer stays pinned there too
         <Box flexDirection="column" flexGrow={1} justifyContent="flex-end" overflow="hidden">
             {visible.length === 0 ? (
                 <Text dimColor>Waiting for logs…</Text>
             ) : (
-                visible.map((log) => (
-                    <Text key={log.id} wrap="truncate">
-                        <Text color={channelColor(log.channel)}>{log.channel.slice(0, tagWidth).padEnd(tagWidth)}</Text>{' '}
-                        {log.text}
-                    </Text>
-                ))
+                visible.map((log) =>
+                    log.head ? (
+                        <HeadLine key={log.id} log={log} labelWidth={labelWidth} />
+                    ) : (
+                        <ContinuationLine key={log.id} log={log} />
+                    )
+                )
             )}
         </Box>
     );

@@ -10,7 +10,6 @@ import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
-import { resetChannelColors } from '@ui/channelColor';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
@@ -201,7 +200,6 @@ export class DevRunner {
     }
 
     private async runSession(): Promise<void> {
-        resetChannelColors();
         this.store.setPhase('starting');
         this.store.setBusy(true);
         const config = await this.loadConfig();
