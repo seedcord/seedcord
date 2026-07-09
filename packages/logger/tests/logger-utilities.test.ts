@@ -54,24 +54,6 @@ describe('LoggerUtilities', () => {
         expect(logger.calls[0]?.text).toContain('/elsewhere/Ping.ts');
     });
 
-    it('draws a box around content', () => {
-        const logger = new FakeLogger();
-        new LoggerUtilities(logger).box('Title', ['line one']);
-        const joined = logger.calls.map((c) => c.text).join('\n');
-        expect(joined).toContain('Title');
-        expect(joined).toContain('line one');
-        expect(joined).toContain('╭');
-    });
-
-    it('draws a box with empty content', () => {
-        const logger = new FakeLogger();
-        new LoggerUtilities(logger).box('Solo', []);
-        const joined = logger.calls.map((c) => c.text).join('\n');
-        expect(joined).toContain('Solo');
-        expect(joined).toContain('╭');
-        expect(joined).toContain('╰');
-    });
-
     it('logs initialization start and end', () => {
         const logger = new FakeLogger();
         const utils = new LoggerUtilities(logger);

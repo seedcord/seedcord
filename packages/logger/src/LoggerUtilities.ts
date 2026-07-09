@@ -57,14 +57,4 @@ export class LoggerUtilities {
         const suffix = item ? ` ${item}` : '';
         this.logger[level](`${chalk.cyan(base)}${suffix}`);
     }
-
-    /** Logs content inside a drawn box. */
-    public box(title: string, content: string[], level: LogLevel = 'info'): void {
-        const width = Math.max(title.length, ...content.map((line) => line.length)) + 2;
-        const horizontal = '─'.repeat(width);
-        this.logger[level](`╭${horizontal}╮`);
-        this.logger[level](`│ ${title.padEnd(width - 1, ' ')}│`);
-        for (const line of content) this.logger[level](`│ ${line.padEnd(width - 1, ' ')}│`);
-        this.logger[level](`╰${horizontal}╯`);
-    }
 }
