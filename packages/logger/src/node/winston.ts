@@ -57,6 +57,7 @@ export function toInfo(record: LogRecord): WinstonInfo {
         message: record.message,
         label: record.label,
         channel: record.channel,
+        timestamp: new Date(record.timestamp).toISOString(),
         ...(stack !== undefined && { stack }),
         [LEVEL]: record.level,
         [SPLAT]: record.args ?? []

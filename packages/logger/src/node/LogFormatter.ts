@@ -198,7 +198,7 @@ export class LogFormatter {
 
     /** The JSON format chain for prod, with optional ANSI stripping. */
     public json(options: JsonFormatOptions = {}): Logform.Format[] {
-        const base = [format.timestamp(), format.errors({ stack: true })];
+        const base = [format.errors({ stack: true })];
 
         if (options.stripAnsi) {
             base.push(

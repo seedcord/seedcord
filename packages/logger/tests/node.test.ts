@@ -68,6 +68,19 @@ describe('winston sinks', () => {
         sink.dispose();
     });
 
+    it('the json sink stamps the record timestamp as ISO, not the format-time now', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
+        const filename = join(dir, 'ts.log');
+        const sink = new WinstonFileSink({ filename, format: 'json' });
+
+        const ts = 1_600_000_000_000;
+        sink.onLog(record({ message: 'stamped', timestamp: ts }));
+        const content = await readWhenWritten(filename);
+        const line = content.trim().split('\n')[0] ?? '{}';
+        expect((JSON.parse(line) as { timestamp?: string }).timestamp).toBe(new Date(ts).toISOString());
+        sink.dispose();
+    });
+
     it('expands {timestamp} in the file name', async () => {
         const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
         const sink = new WinstonFileSink({ filename: join(dir, 'run-{timestamp}.log'), format: 'json' });

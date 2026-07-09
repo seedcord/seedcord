@@ -82,7 +82,7 @@ export class ObjectConsoleSink implements ILogSink {
                 message: stripAnsi(text),
                 label: record.label,
                 channel: record.channel,
-                timestamp: record.timestamp,
+                timestamp: new Date(record.timestamp).toISOString(),
                 ...(extras.length > 0 && { args: extras })
             },
             { mode: 'json' }

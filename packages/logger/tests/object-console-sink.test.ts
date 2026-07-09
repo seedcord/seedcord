@@ -65,7 +65,14 @@ describe('ObjectConsoleSink', () => {
     it('carries the base record fields', () => {
         const cap = capture('warn');
         new ObjectConsoleSink().onLog(record({ level: 'warn', message: 'hi', label: 'Bot', channel: 'events' }));
-        expect(cap.payload()).toMatchObject({ level: 'warn', label: 'Bot', channel: 'events', timestamp: 1 });
+        expect(cap.payload()).toMatchObject({ level: 'warn', label: 'Bot', channel: 'events' });
+    });
+
+    it('emits the record timestamp as an ISO string', () => {
+        const cap = capture();
+        const ts = 1_752_090_532_123;
+        new ObjectConsoleSink().onLog(record({ message: 'stamped', timestamp: ts }));
+        expect(cap.payload().timestamp).toBe(new Date(ts).toISOString());
     });
 
     it('survives a BigInt without throwing', () => {
