@@ -34,6 +34,16 @@ describe('ScrollableLogView', () => {
         expect(lastFrame() ?? '').toContain('▌');
     });
 
+    it('renders a non-error continuation as a guided block line', async () => {
+        store.onLog(record({ label: 'Interactions', message: 'Loaded handlers\nFeedNav' }));
+        await store.flush();
+
+        const frame =
+            render(<ScrollableLogView visible={store.getLogs()} viewportHeight={10} measured />).lastFrame() ?? '';
+        expect(frame).toContain('│');
+        expect(frame).toContain('FeedNav');
+    });
+
     it('renders nothing until measured', () => {
         const { lastFrame } = render(<ScrollableLogView visible={[]} viewportHeight={10} measured={false} />);
         expect((lastFrame() ?? '').trim()).toBe('');

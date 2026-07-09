@@ -1,3 +1,4 @@
+import { LEVEL_COLOR } from '@seedcord/logger';
 import { Box, Text } from 'ink';
 import React from 'react';
 
@@ -12,20 +13,19 @@ import type { ReactElement } from 'react';
 const MIN_LOG_LINES = 3;
 const DOT = '⏺';
 const BAR = '▌';
+const GUIDE = '│';
 const ELLIPSIS = '…';
 const CHIP_TEXT = '#1a1a1a';
+const CHIP_WIDTH = 3;
+const TIME_WIDTH = 8;
+const DOT_WIDTH = 1;
 
-const LEVEL_COLOR: Record<LogLevel, string> = {
-    error: '#ff6b85',
-    warn: '#ffc061',
-    info: '#66d98a',
-    debug: '#66b3ff',
-    trace: '#b399e6'
-};
+// column where the head-line message starts: chip, time, label, dot, each followed by a space
+const messageColumn = (labelWidth: number): number => CHIP_WIDTH + 1 + TIME_WIDTH + 1 + labelWidth + 1 + DOT_WIDTH + 1;
 
 const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
 
-// warn and error tint their left chrome (through the channel dot), the message keeps its own color
+// warn and error tint their left prefix (through the channel dot), the message keeps its own color
 const WASH: Partial<Record<LogLevel, string>> = { warn: '#3a2f14', error: '#3d1a20' };
 
 function truncate(label: string, width: number): string {
@@ -40,7 +40,7 @@ function Chip({ level }: { level: LogLevel }): ReactElement {
     );
 }
 
-function Chrome({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
+function Prefix({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
     const label = truncate(log.label, labelWidth).padStart(labelWidth);
     return (
         <>
@@ -57,7 +57,7 @@ function HeadLine({ log, labelWidth }: { log: LogEntry; labelWidth: number }): R
         return (
             <Text wrap="truncate">
                 <Text backgroundColor={wash}>
-                    <Chrome log={log} labelWidth={labelWidth} />
+                    <Prefix log={log} labelWidth={labelWidth} />
                 </Text>{' '}
                 {log.text}
             </Text>
@@ -66,12 +66,12 @@ function HeadLine({ log, labelWidth }: { log: LogEntry; labelWidth: number }): R
 
     return (
         <Text wrap="truncate">
-            <Chrome log={log} labelWidth={labelWidth} /> {log.text}
+            <Prefix log={log} labelWidth={labelWidth} /> {log.text}
         </Text>
     );
 }
 
-function ContinuationLine({ log }: { log: LogEntry }): ReactElement {
+function ContinuationLine({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
     if (log.level === 'error') {
         return (
             <Text wrap="truncate">
@@ -83,9 +83,11 @@ function ContinuationLine({ log }: { log: LogEntry }): ReactElement {
         );
     }
 
+    // block line: a faint guide under the message column, the content keeps its own color
     return (
-        <Text wrap="truncate" dimColor>
-            {log.text}
+        <Text wrap="truncate">
+            {' '.repeat(messageColumn(labelWidth) - 2)}
+            <Text dimColor>{GUIDE}</Text> {log.text}
         </Text>
     );
 }
@@ -111,7 +113,7 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
     const labelWidth = Math.max(1, LogStore.instance.getLabelWidth());
 
     return (
-        // flex-end pins the newest line to the bottom edge (tail -f), a sparse buffer stays pinned there too
+        // flex-end pins the newest line to the bottom edge (tail -f), and a sparse buffer stays pinned there too
         <Box flexDirection="column" flexGrow={1} justifyContent="flex-end" overflow="hidden">
             {visible.length === 0 ? (
                 <Text dimColor>Waiting for logs…</Text>
@@ -120,7 +122,7 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
                     log.head ? (
                         <HeadLine key={log.id} log={log} labelWidth={labelWidth} />
                     ) : (
-                        <ContinuationLine key={log.id} log={log} />
+                        <ContinuationLine key={log.id} log={log} labelWidth={labelWidth} />
                     )
                 )
             )}
