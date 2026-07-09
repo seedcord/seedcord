@@ -53,7 +53,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
     private onSigInt: (() => void) | null = null;
 
     public constructor(enabled = true) {
-        super('CoordinatedShutdown', PHASE_ORDER, ShutdownPhase);
+        super('Shutdown', PHASE_ORDER, ShutdownPhase);
 
         this.isShutdownEnabled = enabled;
         this.registerSignalHandlers();

@@ -56,7 +56,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
     private hasStarted = false;
 
     public constructor() {
-        super('CoordinatedStartup', PHASE_ORDER, StartupPhase);
+        super('Startup', PHASE_ORDER, StartupPhase);
     }
 
     /**
