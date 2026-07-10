@@ -53,7 +53,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
-    // a bulk load accumulates its registrations here, then reportLoad emits them as blocks. an hmr reload logs each on its own.
+    // batched during bulk load, hmr registrations log inline
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
     private readonly loadedMiddlewares: { name: string; from: string }[] = [];
@@ -115,9 +115,12 @@ export class EventDispatcher implements Initializeable, HmrAware {
         this.loading = true;
         this.loadedHandlers.length = 0;
         this.loadedMiddlewares.length = 0;
-        if (middlewareDir) await this.loadMiddlewares(middlewareDir);
-        await this.loadHandlers(handlersDir);
-        this.loading = false;
+        try {
+            if (middlewareDir) await this.loadMiddlewares(middlewareDir);
+            await this.loadHandlers(handlersDir);
+        } finally {
+            this.loading = false;
+        }
 
         this.attachToClient();
         this.reportLoad();
@@ -238,7 +241,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
                 await middleware.execute();
             } catch (caught) {
-                // return false so a throw in middleware stops the event for downstream handlers
+                // a middleware throw stops the event for downstream handlers
                 handleEventFault(caught, String(eventName), ctor.name, args, this.core);
                 return false;
             }
@@ -332,7 +335,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
             (entry) => entry.frequency !== 'once' || !this.executedOnceHandlers.has(entry.ctor)
         );
 
-        // Return before running middlewares when every handler is a spent 'once'.
+        // avoid running middlewares when every handler is a spent 'once'
         if (handlersToExecute.length === 0) return;
 
         const shouldContinue = await this.runMiddlewares(eventName, args);

@@ -88,7 +88,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares: RegisteredMiddleware[] = [];
 
-    // a bulk load accumulates its registrations here, then reportLoad emits them as blocks. an hmr reload logs each on its own.
+    // batched during bulk load, hmr registrations log inline
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
     private readonly loadedMiddlewares: { name: string; from: string }[] = [];
@@ -216,9 +216,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.loading = true;
         this.loadedHandlers.length = 0;
         this.loadedMiddlewares.length = 0;
-        if (middlewareDir) await this.loadMiddlewares(middlewareDir);
-        await this.loadHandlers(handlersDir);
-        this.loading = false;
+        try {
+            if (middlewareDir) await this.loadMiddlewares(middlewareDir);
+            await this.loadHandlers(handlersDir);
+        } finally {
+            this.loading = false;
+        }
 
         this.attachToClient();
         this.reportLoad();
@@ -290,7 +293,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // same class re-registered (double import or an HMR re-scan) is idempotent, matching event middleware
         if (this.middlewares.some((entry) => entry.ctor === middlewareCtor)) return;
 
-        // a different class sharing the name would silently overwrite the first, so this throws to surface it
+        // a different class sharing the name would run alongside the first, so this throws to surface it
         if (this.middlewares.some((entry) => entry.ctor.name === middlewareCtor.name)) {
             throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateMiddleware, [middlewareCtor.name]);
         }

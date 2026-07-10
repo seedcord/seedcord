@@ -54,7 +54,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
 
-    // a bulk load accumulates its registrations here, then reportLoad emits them as a block. an hmr reload logs each on its own.
+    // batched during bulk load, hmr registrations log inline
     private loading = false;
     private readonly loadedCommands: { name: string; from: string; kind: 'slash command' | 'context menu' }[] = [];
 
@@ -95,8 +95,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         this.loading = true;
         this.loadedCommands.length = 0;
-        await this.loadCommands(commandsDir);
-        this.loading = false;
+        try {
+            await this.loadCommands(commandsDir);
+        } finally {
+            this.loading = false;
+        }
 
         this.reportLoad();
 
