@@ -15,7 +15,8 @@ const readmeMarked = new Marked({
         if (token.type !== 'code') return;
         // Narrow token type from any. Shiki validates language at runtime.
         const { text, lang } = token as Tokens.Code;
-        const html = await highlightToHtml(text, lang as BundledLanguage | undefined);
+        // an untagged fence gives an empty lang, which the || sends to the helper's ts default
+        const html = await highlightToHtml(text, (lang || undefined) as BundledLanguage | undefined);
         if (html) Object.assign(token, { type: 'html', text: html });
     }
 });

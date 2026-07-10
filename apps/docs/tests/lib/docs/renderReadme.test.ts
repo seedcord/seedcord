@@ -51,6 +51,7 @@ describe('renderReadme', () => {
         const html = await renderReadme('```\nconst answer = 42;\n```');
 
         expect(html).toContain('shiki-theme-group');
+        expect(html).toMatch(/color:[^"]*">const/i);
     });
 
     it('falls back to a plain code block for an unsupported language', async () => {
