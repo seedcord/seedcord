@@ -10,7 +10,8 @@ const HEX_RADIX = 16;
 
 export function renderAugmentation(registry: Augmentation, target: string): string {
     return (
-        `${BANNER}\n\ndeclare module '${target}' {\n` +
+        // the ignore comment attaches to the declare-module statement, which is the whole meaningful file
+        `${BANNER}\n\n// prettier-ignore\ndeclare module '${target}' {\n` +
         `    interface SlashOptionRegistry {\n${renderSlashRows(registry.slash)}\n    }\n` +
         `    interface UserContextMenuRegistry {\n${renderContextMenuRows(registry.userContextMenus)}\n    }\n` +
         `    interface MessageContextMenuRegistry {\n${renderContextMenuRows(registry.messageContextMenus)}\n    }\n` +
