@@ -61,6 +61,9 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/logger': {
         displayName: 'logger',
         aliases: ['logger', '@seedcord/logger']
+    },
+    'eslint-plugin-discordjs': {
+        aliases: ['eslint-plugin-discordjs']
     }
 };
 
@@ -110,6 +113,16 @@ export function resolveExternalPackageUrl(packageName?: string | null): string |
 export function formatDisplayPackageName(manifestName: string): string {
     const override = PACKAGE_OVERRIDES[manifestName]?.displayName;
     return override ?? manifestName;
+}
+
+// the R2 index.json is additive, a folder published once stays, so removed and mis-keyed folders linger.
+// a folder is formatDisplayPackageName(name), so a scoped key here needs a displayName matching its folder.
+const DOCUMENTED_PACKAGE_FOLDERS: ReadonlySet<string> = new Set(
+    Object.keys(PACKAGE_OVERRIDES).map((name) => formatDisplayPackageName(name))
+);
+
+export function isDocumentedPackage(folder: string): boolean {
+    return DOCUMENTED_PACKAGE_FOLDERS.has(folder);
 }
 
 function computePackageAliases(available: readonly string[]): Map<string, string> {
