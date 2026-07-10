@@ -2,7 +2,6 @@
 
 import { Button, GithubIcon, Icon, cn, ScrollToTopButton } from '@seedcord/ui';
 import Link from 'next/link';
-import { useLayoutEffect, useRef } from 'react';
 
 import { ClearHistoryRow } from '@components/header/settings/ClearHistoryRow';
 import { Sidebar } from '@components/layout/sidebar/Sidebar';
@@ -46,38 +45,15 @@ export function Container({
     children,
     className
 }: ContainerProps): ReactNode {
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
 
-    useLayoutEffect(() => {
-        const updateNavigationHeight = (): void => {
-            const header = document.querySelector<HTMLElement>('header');
-            const height = header?.getBoundingClientRect().height ?? 0;
-
-            if (containerRef.current && height > 0) {
-                containerRef.current.style.setProperty('--nav-h', `${height}px`);
-            }
-        };
-
-        updateNavigationHeight();
-        window.addEventListener('resize', updateNavigationHeight);
-
-        return () => {
-            window.removeEventListener('resize', updateNavigationHeight);
-        };
-    }, []);
-
-    const containerStyle: CSSProperties & {
-        '--nav-h': string;
-        '--sidebar-width': string;
-    } = {
-        '--nav-h': '64px',
+    const containerStyle: CSSProperties & { '--sidebar-width': string } = {
         '--sidebar-width': `${SIDEBAR_WIDTH}px`
     };
 
     return (
-        <div ref={containerRef} style={containerStyle} className={cn('flex w-full flex-1 flex-col gap-5', className)}>
+        <div style={containerStyle} className={cn('flex w-full flex-1 flex-col gap-5', className)}>
             <MobilePanelDialog
                 open={isMobileNavOpen}
                 onOpenChange={setMobileNavOpen}
