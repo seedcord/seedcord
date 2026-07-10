@@ -3,7 +3,7 @@ import { Logger } from '@seedcord/logger';
 import { ShutdownPhase } from '@seedcord/services';
 import chalk from 'chalk';
 import { Client, ClientEvents, Interaction } from 'discord.js';
-import { Envapt } from 'envapt';
+import { Envapt } from 'envapt/legacy';
 
 import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventDispatcher } from '@bControllers/EventDispatcher';

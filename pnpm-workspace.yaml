@@ -30,7 +30,7 @@ catalogs:
     '@types/node': ^25.9.3
     chalk: ^5.6.2
     discord-api-types: ^0.38.49
-    envapt: ^6.0.2
+    envapt: ^8.0.0
     lodash.merge: ^4.6.2
     lucide-react: ^1.21.0
     motion: ^12.40.0

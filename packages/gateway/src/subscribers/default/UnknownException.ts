@@ -2,7 +2,7 @@ import { BuilderComponent } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { WebhookClient, DiscordAPIError, SnowflakeUtil } from 'discord.js';
-import { Envapt } from 'envapt';
+import { Envapt } from 'envapt/legacy';
 
 import { flagsFor } from '@miscellaneous/flagsFor';
 

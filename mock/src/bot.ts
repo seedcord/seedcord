@@ -5,7 +5,8 @@ import { resolve } from 'node:path';
 import { Seedcord, StartupPhase } from '@seedcord/gateway';
 import { Mongo } from '@seedcord/plugins';
 import { GatewayIntentBits, Partials } from 'discord.js';
-import { Envapt, Envapter } from 'envapt';
+import { Envapter } from 'envapt';
+import { Envapt } from 'envapt/legacy';
 
 Envapter.baseDir = resolve(import.meta.dirname, '..');
 
