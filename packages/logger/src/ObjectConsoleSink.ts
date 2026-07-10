@@ -7,16 +7,14 @@ const SPECIFIER = /%[sdifjoO%]/gu;
 
 function jsonish(value: unknown): string {
     try {
-        // JSON.stringify returns undefined for undefined/function/symbol despite its string type.
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime undefined
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- JSON.stringify returns undefined for undefined/function/symbol
         return JSON.stringify(value) ?? String(value);
     } catch {
         return String(value);
     }
 }
 
-// printf over the winston/util specifiers, edge-safe. Returns the leftover args
-// the specifiers did not consume so the caller can merge them into queryable fields.
+// printf over the winston/util specifiers without node:util. Returns the args the specifiers did not consume.
 function interpolate(message: string, args: readonly unknown[]): { text: string; rest: unknown[] } {
     let consumed = 0;
     const text = message.replaceAll(SPECIFIER, (spec) => {

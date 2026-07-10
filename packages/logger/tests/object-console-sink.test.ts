@@ -62,6 +62,16 @@ describe('ObjectConsoleSink', () => {
         expect(cap.payload().args).toEqual(['tail', 7]);
     });
 
+    it('merges a plain object and serializes an Error from the same call', () => {
+        const cap = capture('error');
+        new ObjectConsoleSink().onLog(
+            record({ level: 'error', message: 'both', args: [{ userId: 5 }, new Error('boom')] })
+        );
+        const payload = cap.payload();
+        expect(payload.userId).toBe(5);
+        expect((payload.error as Record<string, unknown>).message).toBe('boom');
+    });
+
     it('carries the base record fields', () => {
         const cap = capture('warn');
         new ObjectConsoleSink().onLog(record({ level: 'warn', message: 'hi', label: 'Bot', channel: 'events' }));

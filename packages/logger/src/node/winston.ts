@@ -8,12 +8,12 @@ import { LogFormatter } from './LogFormatter';
 import type { LogLevel, LogRecord } from '../types';
 import type { Logform, LogEntry } from 'winston';
 
-// satisfies both winston call sites, Logger.log requires LogEntry (message: string) and a format
+// satisfies both winston call sites. Logger.log requires LogEntry (message: string) and a format
 // transform requires TransformableInfo (symbol index).
 type WinstonInfo = LogEntry & Logform.TransformableInfo;
 
 const SPLAT = Symbol.for('splat');
-// formatPretty runs the pipeline directly, so it sets this. A real winston logger sets it automatically.
+// formatPretty bypasses createLogger, so it must set this manually
 const LEVEL = Symbol.for('level');
 
 /** Winston has no `trace` in its npm levels, so the node sinks pass this scale to createLogger. */
@@ -52,8 +52,8 @@ function firstErrorStack(args?: unknown[]): string | undefined {
     return error?.stack;
 }
 
-// A LogRecord as winston's single info-object form. winston's vararg path pre-sets info.stack from
-// an Error arg before the format chain, the info-object path does not, so lift it here.
+// Convert LogRecord to winston's single info-object form. winston's vararg path pre-sets info.stack from an
+// Error arg before the format chain;. the info-object path does not, so extract it here.
 export function toInfo(record: LogRecord): WinstonInfo {
     const stack = firstErrorStack(record.args);
     return {

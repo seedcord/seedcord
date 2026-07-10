@@ -122,6 +122,15 @@ describe('two layers and muteConsole', () => {
         expect(channelSink.records).toHaveLength(1);
         expect(capture.records).toHaveLength(1);
     });
+
+    it('leaves the console unmuted when muteConsole is not passed', () => {
+        const consoleSink = new FakeSink('console');
+        registry.configure({ level: 'trace', sinks: [consoleSink] });
+        registry.installSink(new FakeSink('capture'));
+
+        new Logger('X').info('shown');
+        expect(consoleSink.records.map((r) => r.message)).toEqual(['shown']);
+    });
 });
 
 describe('configure and reset', () => {
@@ -183,6 +192,19 @@ describe('dispatch re-entrancy', () => {
         new Logger('X').info('first');
 
         expect(late.records).toHaveLength(0);
+    });
+
+    it('reaches a capture a config sink installs mid-dispatch, since the snapshot follows the config loop', () => {
+        const late = new FakeSink('capture');
+        const installer: ILogSink = {
+            kind: 'console',
+            onLog: () => void registry.installSink(late, { muteConsole: false })
+        };
+        registry.configure({ level: 'trace', sinks: [installer] });
+
+        new Logger('X').info('first');
+
+        expect(late.records.map((r) => r.message)).toEqual(['first']);
     });
 });
 

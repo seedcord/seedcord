@@ -8,6 +8,10 @@ interface CaptureEntry {
     readonly muteConsole: boolean;
 }
 
+function defaultSinks(): ILogSink[] {
+    return [new ObjectConsoleSink()];
+}
+
 /**
  * Process-global router for every {@link LogRecord}.
  *
@@ -19,7 +23,7 @@ export class LoggerChannelRegistry {
     private static _instance: LoggerChannelRegistry | null = null;
 
     private level: LogLevel = defaultLevel();
-    private sinks: ILogSink[] = [new ObjectConsoleSink()];
+    private sinks: ILogSink[] = defaultSinks();
     private channels: NonNullable<LoggerConfig['channels']> = {};
 
     private nextCaptureId = 1;
@@ -31,8 +35,10 @@ export class LoggerChannelRegistry {
 
     /** Full-replaces the config layer. Omitted fields reset to their defaults. */
     public configure(config: LoggerConfig): void {
+        const next = config.sinks ?? defaultSinks();
+        for (const sink of this.sinks) if (!next.includes(sink)) sink.dispose?.();
         this.level = config.level ?? defaultLevel();
-        this.sinks = config.sinks ?? [new ObjectConsoleSink()];
+        this.sinks = next;
         this.channels = config.channels ?? {};
     }
 
@@ -45,7 +51,7 @@ export class LoggerChannelRegistry {
             if (muted && sink.kind === 'console') continue;
             sink.onLog(record);
         }
-        // eslint-disable-next-line unicorn/no-useless-spread -- snapshot the live Map, a capture sink may install another mid-dispatch
+        // eslint-disable-next-line unicorn/no-useless-spread -- snapshot so a capture installed mid-dispatch is skipped this pass
         for (const { sink } of [...this.captures.values()]) {
             sink.onLog(record);
         }
@@ -54,7 +60,7 @@ export class LoggerChannelRegistry {
     /** Installs a capture sink (the dev TUI, a remote drain). Survives a `configure` replace. */
     public installSink(sink: ILogSink, options?: { muteConsole?: boolean }): LogSinkHandle {
         const id = this.nextCaptureId++;
-        this.captures.set(id, { sink, muteConsole: options?.muteConsole ?? true });
+        this.captures.set(id, { sink, muteConsole: options?.muteConsole ?? false });
         const handle: LogSinkHandle = {
             dispose: () => void this.captures.delete(id),
             [Symbol.dispose]: () => handle.dispose()
@@ -62,10 +68,10 @@ export class LoggerChannelRegistry {
         return handle;
     }
 
-    /** Resets both layers to defaults, closing cross-instance test bleed. */
+    /** @internal */
     public reset(): void {
         this.level = defaultLevel();
-        this.sinks = [new ObjectConsoleSink()];
+        this.sinks = defaultSinks();
         this.channels = {};
         this.captures.clear();
         this.nextCaptureId = 1;

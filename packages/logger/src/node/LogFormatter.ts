@@ -6,38 +6,34 @@ import { LEVEL_COLOR } from '../palette';
 
 import type { Logform } from 'winston';
 
-/** An Error temporarily annotated with its ANSI-formatted name while pretty-printing stacks. */
-type FormattedError = Error & { __formattedName?: string; __plainName?: string };
+const DEFAULT_PADDING = 7;
+const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
+// local symbols keep this internal state out of the global Symbol.for registry
+const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
+const SAVED_SPLAT_KEY = Symbol('savedSplat');
+// %% takes no arg, keep it out of the specifier count. ObjectConsoleSink's regex differs on purpose.
+const FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
 
 interface PrettyFormatOptions {
     padding?: number; // level column width, default 7
     stripExtras?: boolean;
-    prefix?: boolean; // false emits just the message body, the TUI draws its own time/level/label
+    // false emits the message body only. The TUI renders its own time/level/label
+    prefix?: boolean;
 }
 
 interface JsonFormatOptions {
     stripAnsi?: boolean;
-    minimal?: boolean;
 }
 
 /** Builds the winston format chains, pretty for dev and JSON for prod. @internal */
 export class LogFormatter {
-    private readonly DEFAULT_PADDING = 7;
-    private readonly SPLAT: symbol = Symbol.for('splat');
+    // ansi-formatted error names captured in preserve and read back in restore, keyed off the Error so the
+    // Error object remains free of framework fields.
+    private readonly errorNames = new WeakMap<Error, { formatted: string; plain: string }>();
 
     private safeString(value: unknown): string {
         if (typeof value === 'string') return value;
-        if (value === undefined || value === null) return '';
-        if (typeof (value as { toString?: () => string }).toString === 'function') {
-            return String((value as { toString: () => string }).toString());
-        }
-        if (typeof value === 'object') {
-            try {
-                return JSON.stringify(value);
-            } catch {
-                return '';
-            }
-        }
+        if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') return String(value);
         return '';
     }
 
@@ -54,22 +50,18 @@ export class LogFormatter {
     }
 
     private getExtras(info: Logform.TransformableInfo): unknown[] {
-        const raw = info[this.SPLAT];
+        const raw = info[SPLAT];
         return Array.isArray(raw) ? raw : [];
     }
-
-    private readonly FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
-    private readonly HAD_FORMAT_KEY = Symbol.for('hadFormatSpecifiers');
-    private readonly SAVED_SPLAT_KEY = Symbol.for('savedSplat');
 
     private markFormatSpecifiers(): Logform.Format {
         return format((info) => {
             const msg = typeof info.message === 'string' ? info.message : '';
             const extras = this.getExtras(info);
-            const matches = msg.match(this.FORMAT_SPECIFIERS);
+            const matches = msg.match(FORMAT_SPECIFIERS);
             const formatCount = matches ? matches.length : 0;
-            info[this.HAD_FORMAT_KEY] = formatCount;
-            info[this.SAVED_SPLAT_KEY] = [...extras];
+            info[HAD_FORMAT_KEY] = formatCount;
+            info[SAVED_SPLAT_KEY] = [...extras];
             return info;
         })();
     }
@@ -80,48 +72,26 @@ export class LogFormatter {
 
     private preserveErrorFormatting(): Logform.Format {
         return format((info) => {
-            const extras = this.getExtras(info);
-
-            for (const item of extras) {
-                if (!(Error.isError(item) && /\u001B/u.test(item.name))) continue;
-
-                const originalName = item.name;
-                const plainName = stripAnsi(item.name);
-
-                const formatted = item as FormattedError;
-                formatted.__formattedName = originalName;
-                formatted.__plainName = plainName;
+            for (const item of this.getExtras(info)) {
+                if (!(Error.isError(item) && /\x1B/u.test(item.name))) continue;
+                this.errorNames.set(item, { formatted: item.name, plain: stripAnsi(item.name) });
             }
-
             return info;
         })();
     }
 
     private restoreErrorFormatting(): Logform.Format {
         return format((info) => {
-            if (typeof info.stack === 'string') {
-                const extras = this.getExtras(info);
-
-                for (const item of extras) {
-                    if (!Error.isError(item)) continue;
-
-                    const { __formattedName: formattedName, __plainName: plainName } = item as FormattedError;
-
-                    if (typeof formattedName === 'string' && typeof plainName === 'string') {
-                        info.stack = (info.stack as string).replace(
-                            new RegExp(`^${this.escapeRegex(plainName)}`, 'm'),
-                            formattedName
-                        );
-                    }
-                }
+            if (typeof info.stack !== 'string') return info;
+            let stack = info.stack;
+            for (const item of this.getExtras(info)) {
+                if (!Error.isError(item)) continue;
+                const names = this.errorNames.get(item);
+                if (names) stack = stack.replace(new RegExp(`^${RegExp.escape(names.plain)}`, 'm'), names.formatted);
             }
-
+            info.stack = stack;
             return info;
         })();
-    }
-
-    private escapeRegex(str: string): string {
-        return RegExp.escape(str);
     }
 
     // winston's colorize only maps @colors/colors style names (theme-remapped 16-color), so color the
@@ -141,7 +111,7 @@ export class LogFormatter {
 
     /** The pretty format chain, colored and timestamped for dev. */
     public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
-        const padding = options.padding ?? this.DEFAULT_PADDING;
+        const padding = options.padding ?? DEFAULT_PADDING;
         return [
             this.preserveErrorFormatting(),
             format.errors({ stack: true }),
@@ -163,8 +133,8 @@ export class LogFormatter {
 
                 const lvl = this.renderLevel(levelName, padding, options.stripExtras === true);
                 const base = this.assembleBase(options.prefix !== false, ts, lvl, lbl, msg);
-                const savedExtras = info[this.SAVED_SPLAT_KEY];
-                // Array.isArray widens to any[] so annotate unknown[] so filter is type safe
+                const savedExtras = info[SAVED_SPLAT_KEY];
+                // Array.isArray widens to any[]. The unknown[] annotation keeps filter type-safe.
                 const extras: unknown[] = Array.isArray(savedExtras) ? savedExtras : this.getExtras(info);
 
                 let rendered = base;
@@ -176,13 +146,14 @@ export class LogFormatter {
                 }
 
                 const cleaned = options.stripExtras ? extras.map((entry) => this.sanitizeAnsi(entry)) : extras;
-                const rawFormatCount = info[this.HAD_FORMAT_KEY];
+                const rawFormatCount = info[HAD_FORMAT_KEY];
                 const formatSpecifierCount = typeof rawFormatCount === 'number' ? rawFormatCount : 0;
                 const filtered = cleaned.filter((x, index) => {
                     if (x === null || x === undefined) return false;
                     if (Error.isError(x) && typeof info.stack === 'string') return false;
-                    if (typeof x !== 'object') return index >= formatSpecifierCount;
-
+                    // a value at a format-specifier position was already interpolated into the message
+                    if (index < formatSpecifierCount) return false;
+                    if (typeof x !== 'object') return true;
                     return Object.keys(x).length > 0;
                 });
 
@@ -227,7 +198,7 @@ export class LogFormatter {
             );
         }
 
-        base.push(options.minimal ? format.json({}) : format.json({ bigint: true, space: 0 }));
+        base.push(format.json({ bigint: true, space: 0 }));
 
         return base;
     }

@@ -2,7 +2,8 @@ import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { Envapter } from 'envapt';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoggerChannelRegistry } from '../src/LoggerChannelRegistry';
 import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '../src/node';
@@ -47,6 +48,11 @@ describe('formatPretty', () => {
         expect(line).toContain('Error: boom');
         expect(line).toContain('at ');
     });
+
+    it('indents continuation lines under the prefixed heading', () => {
+        const line = plain(formatPretty(record({ message: 'Loaded\nFeedNav\nProbe' })));
+        expect(line).toContain('Loaded\n  FeedNav\n  Probe');
+    });
 });
 
 describe('formatBody', () => {
@@ -66,6 +72,11 @@ describe('formatBody', () => {
         expect(line).toContain('Error: boom');
         expect(line).toContain('at ');
         expect(line).not.toContain('[error]');
+    });
+
+    it('keeps a multi-line message unindented', () => {
+        const line = plain(formatBody(record({ message: 'Loaded\nFeedNav' })));
+        expect(line).toBe('Loaded\nFeedNav');
     });
 });
 
@@ -111,6 +122,19 @@ describe('winston sinks', () => {
         const written = readdirSync(dir);
         expect(written).toHaveLength(1);
         expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}-\d{6}\.log$/u);
+        sink.dispose();
+    });
+
+    it('expands {date} in the file name', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
+        const sink = new WinstonFileSink({ filename: join(dir, 'run-{date}.log'), format: 'json' });
+
+        sink.onLog(record({ message: 'stamped' }));
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const written = readdirSync(dir);
+        expect(written).toHaveLength(1);
+        expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}\.log$/u);
         sink.dispose();
     });
 
@@ -175,5 +199,19 @@ describe('installNodeDefaults', () => {
 
         registry.dispatch(record({ level: 'error', message: 'to-custom' }));
         expect(seen.map((r) => r.message)).toContain('to-custom');
+    });
+
+    it('skips the default file sink when overrides provide sinks', () => {
+        const devSpy = vi.spyOn(Envapter, 'isDevelopment', 'get').mockReturnValue(true);
+        const cwd = process.cwd();
+        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
+        process.chdir(dir);
+        try {
+            installNodeDefaults({ sinks: [{ kind: 'console', onLog: () => undefined }] });
+            expect(readdirSync(dir)).not.toContain('logs');
+        } finally {
+            process.chdir(cwd);
+            devSpy.mockRestore();
+        }
     });
 });

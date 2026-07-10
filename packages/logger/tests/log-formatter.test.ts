@@ -145,6 +145,13 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('abc123');
         });
 
+        it('renders an object consumed by a format specifier only once', () => {
+            const { logger, output } = createTestLogger(formatter);
+            logger.info('payload %o', { widget: 7 });
+            expect(output[0]).toContain('widget');
+            expect((output[0]?.match(/widget/gu) ?? []).length).toBe(1);
+        });
+
         it('preserves an ANSI-formatted error name', () => {
             const { logger, output } = createTestLogger(formatter);
             const error = new Error('Test error message');

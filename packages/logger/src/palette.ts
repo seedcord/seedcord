@@ -12,7 +12,6 @@ export const LEVEL_COLOR: Record<LogLevel, string> = {
     trace: '#b399e6'
 };
 
-// truecolor chainable chalk methods
 export const paint = {
     sky: chalk.hex('#8fc7ff'),
     iris: chalk.hex('#e29bff'),

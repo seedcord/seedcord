@@ -8,8 +8,8 @@ const body = bodyPipeline();
 
 function render(pipeline: ReturnType<typeof prettyPipeline>, record: LogRecord): string {
     const transformed = pipeline.transform(toInfo(record), {});
-    if (transformed === false) return record.message;
-    const rendered = (transformed as Record<symbol, unknown>)[MESSAGE];
+    if (typeof transformed === 'boolean') return record.message;
+    const rendered = transformed[MESSAGE];
     return typeof rendered === 'string' ? rendered : record.message;
 }
 
