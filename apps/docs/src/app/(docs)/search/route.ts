@@ -296,7 +296,7 @@ async function loadSearchTargets(
 
 export async function GET(request: NextRequest): Promise<NextResponse<SearchPayload | PackagesPayload>> {
     const rateLimit = await checkSearchRateLimit(request);
-    if (rateLimit?.limited) {
+    if (rateLimit.limited) {
         return NextResponse.json(
             { results: [] },
             { status: 429, headers: { 'Retry-After': String(Math.ceil(rateLimit.retryAfterMs / 1000)) } }
