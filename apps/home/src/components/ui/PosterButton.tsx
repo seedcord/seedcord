@@ -1,6 +1,8 @@
 import { cn } from '@seedcord/ui';
 import Link from 'next/link';
 
+import { pressable } from './press';
+
 import type { ReactNode } from 'react';
 
 // the button translates over a fixed socket sibling.
@@ -39,10 +41,9 @@ export function PosterButton({ href, variant = 'solid', className, children }: P
                 {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
                 className={cn(
                     'relative inline-flex items-center justify-center gap-2 rounded-sm font-semibold',
-                    'transition-[translate,background-color] duration-150 ease-out',
                     'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
                     button,
-                    socket && slide,
+                    socket ? cn('transition-[translate,background-color] duration-150 ease-out', slide) : pressable,
                     className
                 )}
             >

@@ -23,6 +23,9 @@ const COMMANDS: readonly SlashCommandDef[] = [
     { name: 'invite', description: 'join the Discord server', href: DISCORD_URL }
 ];
 
+// typed in full these run, the list never shows them
+const HIDDEN_COMMANDS: readonly SlashCommandDef[] = [{ name: 'star', description: 'star the repo', href: REPO_URL }];
+
 const REPLY_DISMISS_MS = 4000;
 
 function isEditable(target: EventTarget | null): boolean {
@@ -49,11 +52,7 @@ interface CommandOptionsProps {
 
 function CommandOptions({ matches, selected, onHover, onRun }: CommandOptionsProps): ReactNode {
     return (
-        <div
-            role="listbox"
-            aria-label="Commands"
-            className={cn('rule blk-sm pointer-events-auto mb-3 overflow-hidden rounded-sm bg-(--cream)')}
-        >
+        <div role="listbox" aria-label="Commands" className={cn('border-b-[3px] border-(--seed-dark)')}>
             {matches.map((command, index) => (
                 <button
                     key={command.name}
@@ -121,6 +120,12 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
             close();
             return;
         }
+        if (event.key === 'Enter') {
+            const typed = (query ?? '').trim().toLowerCase();
+            const command = matches[selected] ?? HIDDEN_COMMANDS.find((hidden) => `/${hidden.name}` === typed);
+            if (command) run(command);
+            return;
+        }
         if (matches.length === 0) return;
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
@@ -131,11 +136,6 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
         if (event.key === 'Tab') {
             event.preventDefault();
             onChange(`/${matches[selected]?.name ?? ''}`);
-            return;
-        }
-        if (event.key === 'Enter') {
-            const command = matches[selected];
-            if (command) run(command);
         }
     };
 
@@ -149,25 +149,23 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
     };
 
     return (
-        <>
+        <div hidden={!open} className={cn('rule blk-sm pointer-events-auto overflow-hidden rounded-sm bg-(--cream)')}>
             {matches.length > 0 && (
                 <CommandOptions matches={matches} selected={selected} onHover={onSelect} onRun={run} />
             )}
-            <div hidden={!open} className={cn('rule blk-sm pointer-events-auto rounded-sm bg-(--cream)')}>
-                <input
-                    ref={inputRef}
-                    value={query ?? '/'}
-                    onChange={(event) => onInput(event.target.value)}
-                    onKeyDown={onKeyDown}
-                    onBlur={() => onChange(null)}
-                    aria-label="Slash command"
-                    placeholder="type a command"
-                    className={cn(
-                        'font-mono-code w-full bg-transparent px-3 py-2.5 text-sm font-medium text-(--seed-dark) outline-hidden placeholder:text-(--seed-dark)/40'
-                    )}
-                />
-            </div>
-        </>
+            <input
+                ref={inputRef}
+                value={query ?? '/'}
+                onChange={(event) => onInput(event.target.value)}
+                onKeyDown={onKeyDown}
+                onBlur={() => onChange(null)}
+                aria-label="Slash command"
+                placeholder="type a command"
+                className={cn(
+                    'font-mono-code w-full bg-transparent px-3 py-2.5 text-sm font-medium text-(--seed-dark) outline-hidden placeholder:text-(--seed-dark)/40'
+                )}
+            />
+        </div>
     );
 }
 
