@@ -17,7 +17,7 @@ const PALETTE = [
     '#c98a5a'
 ] as const;
 
-const HASH_PRIME = 31; // odd prime base for the polynomial string hash, spreads names across the palette
+const HASH_PRIME = 31; // odd prime base so the polynomial hash spreads names across the palette
 
 export function channelColor(channel: string): string {
     let h = 0;

@@ -3,6 +3,7 @@ import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
+import { expandRows } from '@ui/logRows';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { LogRecord } from '@seedcord/logger';
@@ -19,7 +20,9 @@ describe('ScrollableLogView', () => {
         store.onLog(record({ label: 'Mongo', message: 'connected' }));
         await store.flush();
 
-        const { lastFrame } = render(<ScrollableLogView visible={store.getLogs()} viewportHeight={10} measured />);
+        const { lastFrame } = render(
+            <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+        );
         const frame = lastFrame() ?? '';
         expect(frame).toContain('Mongo');
         expect(frame).toContain('⏺');
@@ -30,7 +33,9 @@ describe('ScrollableLogView', () => {
         store.onLog(record({ level: 'error', message: 'boom', args: [new Error('bad')] }));
         await store.flush();
 
-        const { lastFrame } = render(<ScrollableLogView visible={store.getLogs()} viewportHeight={10} measured />);
+        const { lastFrame } = render(
+            <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+        );
         expect(lastFrame() ?? '').toContain('▌');
     });
 
@@ -39,9 +44,48 @@ describe('ScrollableLogView', () => {
         await store.flush();
 
         const frame =
-            render(<ScrollableLogView visible={store.getLogs()} viewportHeight={10} measured />).lastFrame() ?? '';
+            render(
+                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+            ).lastFrame() ?? '';
         expect(frame).toContain('│');
         expect(frame).toContain('FeedNav');
+    });
+
+    it('brackets a non-error block with a full-width rule above and below', async () => {
+        store.onLog(record({ label: 'Interactions', message: 'Loaded handlers\nFeedNav' }));
+        await store.flush();
+
+        const frame =
+            render(
+                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+            ).lastFrame() ?? '';
+        const ruleLines = frame.split('\n').filter((line) => line.includes('─'));
+        expect(ruleLines.length).toBeGreaterThanOrEqual(2);
+        // the top rule stays its own row, never merged onto the head text
+        const merged = frame.split('\n').some((line) => line.includes('Loaded handlers') && line.includes('─'));
+        expect(merged).toBe(false);
+    });
+
+    it('leaves a single-line log unruled', async () => {
+        store.onLog(record({ message: 'connected' }));
+        await store.flush();
+
+        const frame =
+            render(
+                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+            ).lastFrame() ?? '';
+        expect(frame).not.toContain('─');
+    });
+
+    it('leaves an error stack unruled', async () => {
+        store.onLog(record({ level: 'error', message: 'boom', args: [new Error('bad')] }));
+        await store.flush();
+
+        const frame =
+            render(
+                <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
+            ).lastFrame() ?? '';
+        expect(frame).not.toContain('─');
     });
 
     it('renders nothing until measured', () => {

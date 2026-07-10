@@ -7,6 +7,7 @@ import { formatClock } from '@ui/format';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { LogLevel } from '@seedcord/logger';
+import type { LogRow } from '@ui/logRows';
 import type { LogEntry } from '@ui/stores/LogStore';
 import type { ReactElement } from 'react';
 
@@ -92,8 +93,22 @@ function ContinuationLine({ log, labelWidth }: { log: LogEntry; labelWidth: numb
     );
 }
 
+// full-width flex line bracketing a block
+function Rule(): ReactElement {
+    return (
+        <Box
+            borderStyle="single"
+            borderTop
+            borderBottom={false}
+            borderLeft={false}
+            borderRight={false}
+            borderDimColor
+        />
+    );
+}
+
 interface ScrollableLogViewProps {
-    readonly visible: readonly LogEntry[];
+    readonly visible: readonly LogRow[];
     readonly viewportHeight: number;
     // false until the parent box is measured, which avoids a one-frame "too small" flash on mount
     readonly measured: boolean;
@@ -118,11 +133,13 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
             {visible.length === 0 ? (
                 <Text dimColor>Waiting for logs…</Text>
             ) : (
-                visible.map((log) =>
-                    log.head ? (
-                        <HeadLine key={log.id} log={log} labelWidth={labelWidth} />
+                visible.map((row) =>
+                    row.kind === 'rule' ? (
+                        <Rule key={row.key} />
+                    ) : row.entry.head ? (
+                        <HeadLine key={row.key} log={row.entry} labelWidth={labelWidth} />
                     ) : (
-                        <ContinuationLine key={log.id} log={log} labelWidth={labelWidth} />
+                        <ContinuationLine key={row.key} log={row.entry} labelWidth={labelWidth} />
                     )
                 )
             )}

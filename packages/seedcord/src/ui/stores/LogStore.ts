@@ -11,7 +11,7 @@ export interface LogEntry {
     label: string;
     text: string;
     timestamp: number;
-    head: boolean; // true for a record's first line, false for its continuation lines (stack, multiline)
+    head: boolean; // false for continuation lines (stack frames, wrapped text)
 }
 
 interface LogStoreEvents {

@@ -8,8 +8,8 @@ import { Sidebar } from '@ui/components/primitives/Sidebar';
 import { isStreaming } from '@ui/stores/devPhase';
 
 import type { ScrollApi } from '@ui/hooks/useScroll';
+import type { LogRow } from '@ui/logRows';
 import type { DevState } from '@ui/stores/DevStore';
-import type { LogEntry } from '@ui/stores/LogStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
@@ -20,7 +20,7 @@ export interface DevLayoutProps {
     readonly railWidth: number | null;
     // the shell measures this box to size the scroll window. it must be attached or the viewport is empty
     readonly logBoxRef: Ref<DOMElement>;
-    readonly scroll: ScrollApi<LogEntry>;
+    readonly scroll: ScrollApi<LogRow>;
     readonly viewportHeight: number;
     readonly measured: boolean;
     readonly enabled: ReadonlySet<string>;

@@ -2,8 +2,8 @@ import { isSessionLive } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { ScrollApi } from '@ui/hooks/useScroll';
+import type { LogRow } from '@ui/logRows';
 import type { DevState, DevStore } from '@ui/stores/DevStore';
-import type { LogEntry } from '@ui/stores/LogStore';
 import type { Key } from 'ink';
 
 // Toggling a channel materializes the full list on first use, then flips one entry. When the result is "all
@@ -20,7 +20,7 @@ interface HotkeyContext {
     readonly key: Key;
     readonly state: DevState;
     readonly interactive: boolean;
-    readonly scroll: ScrollApi<LogEntry>;
+    readonly scroll: ScrollApi<LogRow>;
     readonly store: DevStore;
     readonly enabled: ReadonlySet<string>;
     readonly setEnabled: (next: ReadonlySet<string>) => void;
@@ -39,7 +39,7 @@ function quit(ctx: HotkeyContext): void {
     void ctx.onQuit?.();
 }
 
-// Ink puts stdin in raw mode, so Ctrl-C arrives as a keypress, not a SIGINT; handle it first so it always quits.
+// Ink puts stdin in raw mode, so Ctrl-C arrives as a plain keypress with no SIGINT. Check it first so it always quits.
 function handleQuitSignal(ctx: HotkeyContext): boolean {
     if (ctx.key.ctrl && ctx.input === 'c') {
         quit(ctx);
@@ -78,9 +78,8 @@ function handleToggleMode(ctx: HotkeyContext): boolean {
 }
 
 function handleScroll(ctx: HotkeyContext): boolean {
-    // Runs before session actions, so scroll capture is unconditional (works even when non-interactive). t/b
-    // mirror Home/End for keyboards lacking them, and like the arrows are reserved here, a future single-letter
-    // action must avoid t and b.
+    // Runs before session actions, so scroll capture works even when non-interactive. t/b mirror Home/End.
+    // The arrows, t, and b are used here, so a future single-letter action must pick something else.
     const { key, input, scroll } = ctx;
     if (key.upArrow) scroll.up();
     else if (key.downArrow) scroll.down();
@@ -92,7 +91,7 @@ function handleScroll(ctx: HotkeyContext): boolean {
     return true;
 }
 
-// Session controls. `q` quits in any state; the rest only apply once the UI is interactive.
+// Session controls. `q` quits in any state. The rest apply once the UI is interactive.
 function handleActions(ctx: HotkeyContext): void {
     const { input, state, store } = ctx;
 

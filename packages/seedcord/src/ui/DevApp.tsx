@@ -1,5 +1,5 @@
 import { Box, measureElement, useInput, useWindowSize } from 'ink';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useDevState } from '@ui/hooks/useDevState';
 import { useLogs } from '@ui/hooks/useLogs';
@@ -8,10 +8,10 @@ import { useScroll } from '@ui/hooks/useScroll';
 import { useUptime } from '@ui/hooks/useUptime';
 import { dispatchHotkey } from '@ui/hotkeys';
 import { DevLayout } from '@ui/layout/DevLayout';
+import { expandRows, rowKey } from '@ui/logRows';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { DevStore } from '@ui/stores/DevStore';
-import type { LogEntry } from '@ui/stores/LogStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 
@@ -22,10 +22,6 @@ interface DevAppProps {
     readonly onDisconnect?: () => Promise<void> | void;
     readonly onRestart?: () => Promise<void> | void;
     readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
-}
-
-function logKey(entry: LogEntry): number {
-    return entry.id;
 }
 
 export function DevApp(props: DevAppProps): ReactElement {
@@ -44,8 +40,9 @@ export function DevApp(props: DevAppProps): ReactElement {
     const railWidth = useRailWidth(railRef, state.phase, rows, columns);
 
     const logs = useLogs(enabled);
+    const logRows = useMemo(() => expandRows(logs), [logs]);
     const viewportHeight = Math.max(1, logBoxHeight);
-    const scroll = useScroll(logs, viewportHeight, logKey);
+    const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state);
 
     const interactive = !state.isBusy || state.restartRequired;
