@@ -11,7 +11,7 @@ import {
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Events } from 'discord.js';
@@ -88,6 +88,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares: RegisteredMiddleware[] = [];
 
+    // a bulk load accumulates its registrations here, then reportLoad emits them as blocks. an hmr reload logs each on its own.
+    private loading = false;
+    private readonly loadedHandlers: { name: string; from: string }[] = [];
+    private readonly loadedMiddlewares: { name: string; from: string }[] = [];
+
     private readonly hmrHandler?: HmrModuleHandler<
         HandlerConstructor,
         InteractionMiddlewareConstructor,
@@ -157,7 +162,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         for (const route of commandLeaves) {
             if (!this.slashMap.has(route)) {
                 this.logger.warn(
-                    `Slash route ${chalk.bold.cyan(route)} has no registered ${chalk.bold('@SlashRoute')} handler.`
+                    `Slash route ${paint.sky.bold(route)} has no registered ${chalk.bold('@SlashRoute')} handler.`
                 );
             }
         }
@@ -173,14 +178,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         for (const name of leaves.user) {
             if (!this.userContextMenuMap.has(name)) {
                 this.logger.warn(
-                    `User context menu ${chalk.bold.cyan(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                    `User context menu ${paint.sky.bold(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
                 );
             }
         }
         for (const name of leaves.message) {
             if (!this.messageContextMenuMap.has(name)) {
                 this.logger.warn(
-                    `Message context menu ${chalk.bold.cyan(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
+                    `Message context menu ${paint.sky.bold(name)} has no registered ${chalk.bold('@ContextMenuRoute')} handler.`
                 );
             }
         }
@@ -204,33 +209,48 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // Already checked in constructor
         if (!handlersDir) return;
 
-        this.logger.info(chalk.bold(handlersDir));
-
         const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
             ? this.core.config.bot.interactions.middlewares
             : undefined;
-        if (middlewareDir) {
-            this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
-            await this.loadMiddlewares(middlewareDir);
+
+        this.loading = true;
+        this.loadedHandlers.length = 0;
+        this.loadedMiddlewares.length = 0;
+        if (middlewareDir) await this.loadMiddlewares(middlewareDir);
+        await this.loadHandlers(handlersDir);
+        this.loading = false;
+
+        this.attachToClient();
+        this.reportLoad();
+    }
+
+    private reportLoad(): void {
+        const { utils } = this.logger;
+
+        utils.summary('Loaded', {
+            'interaction handlers': this.loadedHandlers.length,
+            middlewares: this.loadedMiddlewares.length
+        });
+
+        if (this.loadedMiddlewares.length > 0) {
+            utils.block('Loaded middlewares', utils.entries(this.loadedMiddlewares));
         }
 
-        await this.loadHandlers(handlersDir);
-        this.attachToClient();
-
-        this.logger.info(`${chalk.bold.green('Loaded interaction handlers:')}`);
-        this.logger.utils.list([
-            `${chalk.magenta.bold(this.middlewares.length)} middlewares`,
-            `${chalk.magenta.bold(this.slashMap.size)} slash commands`,
-            `${chalk.magenta.bold(this.buttonMap.size)} buttons`,
-            `${chalk.magenta.bold(this.modalMap.size)} modals`,
-            `${chalk.magenta.bold(this.stringSelectMap.size)} string selects`,
-            `${chalk.magenta.bold(this.userSelectMap.size)} user selects`,
-            `${chalk.magenta.bold(this.roleSelectMap.size)} role selects`,
-            `${chalk.magenta.bold(this.channelSelectMap.size)} channel selects`,
-            `${chalk.magenta.bold(this.mentionableSelectMap.size)} mentionable selects`,
-            `${chalk.magenta.bold(this.messageContextMenuMap.size)} message context menus`,
-            `${chalk.magenta.bold(this.userContextMenuMap.size)} user context menus`,
-            `${chalk.magenta.bold(this.autocompleteMap.size)} autocomplete`
+        utils.block('Loaded interaction handlers', [
+            ...utils.entries(this.loadedHandlers),
+            ...utils.counts({
+                slash: this.slashMap.size,
+                buttons: this.buttonMap.size,
+                modals: this.modalMap.size,
+                'string selects': this.stringSelectMap.size,
+                'user selects': this.userSelectMap.size,
+                'role selects': this.roleSelectMap.size,
+                'channel selects': this.channelSelectMap.size,
+                'mentionable selects': this.mentionableSelectMap.size,
+                'message menus': this.messageContextMenuMap.size,
+                'user menus': this.userContextMenuMap.size,
+                autocomplete: this.autocompleteMap.size
+            })
         ]);
     }
 
@@ -278,8 +298,16 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.middlewares.push({ ctor: middlewareCtor, priority: metadata.priority });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
+        if (this.loading) {
+            this.loadedMiddlewares.push({
+                name: `${middlewareCtor.name} (${metadata.priority})`,
+                from: formatFilePath(relativePath)
+            });
+            return;
+        }
+
         this.logger.utils.registration(
-            `${middlewareCtor.name} ${chalk.gray(`(${metadata.priority})`)}`,
+            `${middlewareCtor.name} ${paint.mute(`(${metadata.priority})`)}`,
             relativePath,
             'middleware'
         );
@@ -318,11 +346,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 }
                 writes.push([map, route]);
             }
-
-            this.logger.utils.registration(handlerClass.name, formatFilePath(relativePath));
         }
 
+        if (writes.length === 0) return;
         for (const [map, route] of writes) map.set(route, handlerClass);
+
+        const from = formatFilePath(relativePath);
+        if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
+        else this.logger.utils.registration(handlerClass.name, from);
     }
 
     /** @internal For use in dev mode */
@@ -361,7 +392,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
             this.core.bot.emitSafe('any:interaction', interaction);
             this.handleInteraction(interaction).catch((err: Error) => {
-                this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
                 this.core.bot.emit('error:unhandled:interaction', err);
             });
         });
@@ -403,11 +434,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
             let HandlerCtor = getHandler(key);
             if (!HandlerCtor) {
-                this.logger.warn(`No handler found for key ${chalk.bold.cyan(key)}. Falling back to UnhandledEvent.`);
+                this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to UnhandledEvent.`);
                 HandlerCtor = UnhandledEvent;
             }
 
-            this.logger.debug(`Processing ${chalk.bold.green(key)} with ${chalk.gray(HandlerCtor.name)}`);
+            this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
             const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
             // @ts-expect-error TS can't infer the type of interaction here
             const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
@@ -531,7 +562,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
 
         if (!this.autocompleteMap.has(route)) {
-            this.logger.warn(`No autocomplete handler for ${chalk.bold.cyan(route)}.`);
+            this.logger.warn(`No autocomplete handler for ${paint.sky.bold(route)}.`);
             await interaction.respond([]);
             return;
         }

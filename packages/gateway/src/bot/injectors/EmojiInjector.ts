@@ -1,7 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import chalk from 'chalk';
 
 import type { Core } from '@interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
@@ -46,7 +45,7 @@ export class EmojiInjector {
         this.clearEmojis();
 
         if (!this.core.config.bot.emojis || Object.keys(this.core.config.bot.emojis).length === 0) {
-            this.logger.debug(chalk.bold.yellow('No emojis configured, skipping emoji injection.'));
+            this.logger.debug('No emojis configured, skipping emoji injection.');
             return;
         }
 
