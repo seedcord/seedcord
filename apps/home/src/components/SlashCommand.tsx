@@ -136,6 +136,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
         if (event.key === 'Tab') {
             event.preventDefault();
             onChange(`/${matches[selected]?.name ?? ''}`);
+            onSelect(0);
         }
     };
 
