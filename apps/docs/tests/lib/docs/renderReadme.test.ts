@@ -46,6 +46,13 @@ describe('renderReadme', () => {
         expect(html).toMatch(/style="[^"]*color:/i);
     });
 
+    it('highlights a fence with no language as the ts default', async () => {
+        // a bare ``` fence gives Marked an empty lang string, which must still use the ts default
+        const html = await renderReadme('```\nconst answer = 42;\n```');
+
+        expect(html).toContain('shiki-theme-group');
+    });
+
     it('falls back to a plain code block for an unsupported language', async () => {
         // python is not in the loaded shiki grammar set
         const html = await renderReadme('```python\nprint("hi")\n```');

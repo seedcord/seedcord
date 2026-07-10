@@ -3,6 +3,9 @@ import { Marked } from 'marked';
 import { sanitizeHtml } from '@lib/sanitizeHtml';
 import { highlightToHtml } from '@lib/shiki';
 
+import type { Tokens } from 'marked';
+import type { BundledLanguage } from 'shiki';
+
 // Isolated instance so README rendering stays independent of the shiki-configured global `marked`
 // used for TSDoc prose (renderParagraphs.ts).
 const readmeMarked = new Marked({
@@ -10,7 +13,9 @@ const readmeMarked = new Marked({
     gfm: true,
     walkTokens: async (token) => {
         if (token.type !== 'code') return;
-        const html = await highlightToHtml(token.text, token.lang);
+        // Narrow token type from any. Shiki validates language at runtime.
+        const { text, lang } = token as Tokens.Code;
+        const html = await highlightToHtml(text, lang as BundledLanguage | undefined);
         if (html) Object.assign(token, { type: 'html', text: html });
     }
 });
