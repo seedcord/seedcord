@@ -3,6 +3,7 @@ import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from 'next/font/google'
 
 import './globals.css';
 
+import { ConsoleGreeting } from '@components/ConsoleGreeting';
 import { DEFAULT_OG_IMAGE, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
 
 import type { Metadata, Viewport } from 'next';
@@ -79,6 +80,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                 >
                     Skip to content
                 </a>
+                <ConsoleGreeting />
                 {children}
             </body>
         </html>
