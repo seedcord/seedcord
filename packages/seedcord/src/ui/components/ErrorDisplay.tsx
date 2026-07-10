@@ -1,6 +1,8 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { ui } from '@ui/palette';
+
 import type { ReactElement } from 'react';
 
 const STACK_PREVIEW_LINES = 6;
@@ -10,15 +12,15 @@ interface ErrorDisplayProps {
 }
 
 export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
-    // stack[0] repeats "Error: message" which we already render, so preview the frames below it.
+    // stack[0] repeats the "Error: message" line already rendered above
     const frames = (error.stack?.split('\n') ?? []).slice(1);
     const preview = frames.slice(0, STACK_PREVIEW_LINES);
     const hidden = frames.length - preview.length;
 
     return (
-        <Box flexDirection="column" borderStyle="round" borderColor="red" padding={1}>
+        <Box flexDirection="column" borderStyle="round" borderColor={ui.bad} padding={1}>
             <Box marginTop={-1}>
-                <Text color="red" bold>
+                <Text color={ui.bad} bold>
                     Error: {error.name}
                 </Text>
             </Box>
@@ -36,7 +38,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
             <Box marginTop={1}>
                 <Text>
                     press{' '}
-                    <Text color="yellow" bold>
+                    <Text color={ui.warn} bold>
                         r
                     </Text>{' '}
                     to restart
