@@ -12,35 +12,35 @@ interface PackageOverride {
 const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/gateway': {
         displayName: 'gateway',
-        aliases: ['gateway', '@seedcord/gateway']
+        aliases: ['gateway']
     },
     '@seedcord/core': {
         displayName: 'core',
-        aliases: ['core', '@seedcord/core']
+        aliases: ['core']
     },
     '@seedcord/plugins': {
         displayName: 'plugins',
-        aliases: ['@seedcord/plugins']
+        aliases: ['plugins']
     },
     '@seedcord/services': {
         displayName: 'services',
-        aliases: ['@seedcord/services']
+        aliases: ['services']
     },
     '@seedcord/types': {
         displayName: 'types',
-        aliases: ['@seedcord/types']
+        aliases: ['types']
     },
     '@seedcord/utils': {
         displayName: 'utils',
-        aliases: ['@seedcord/utils']
+        aliases: ['utils']
     },
     '@seedcord/eslint-config': {
         displayName: 'eslint-config',
-        aliases: ['eslint-config', '@seedcord/eslint-config']
+        aliases: ['eslint-config']
     },
     '@seedcord/eslint-plugin': {
         displayName: 'eslint-plugin',
-        aliases: ['eslint-plugin', '@seedcord/eslint-plugin']
+        aliases: ['eslint-plugin']
     },
     seedcord: {
         displayName: 'seedcord',
@@ -48,22 +48,22 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     },
     '@seedcord/errors': {
         displayName: 'errors',
-        aliases: ['errors', '@seedcord/errors']
+        aliases: ['errors']
     },
     '@seedcord/rate-limiter': {
         displayName: 'rate-limiter',
-        aliases: ['rate-limiter', '@seedcord/rate-limiter']
+        aliases: ['rate-limiter']
     },
     '@seedcord/event-emitter': {
         displayName: 'event-emitter',
-        aliases: ['event-emitter', '@seedcord/event-emitter']
+        aliases: ['event-emitter']
     },
     '@seedcord/logger': {
         displayName: 'logger',
-        aliases: ['logger', '@seedcord/logger']
+        aliases: ['logger']
     },
     'eslint-plugin-discordjs': {
-        aliases: ['eslint-plugin-discordjs']
+        aliases: []
     }
 };
 

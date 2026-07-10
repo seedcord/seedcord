@@ -5,8 +5,7 @@ import {
     formatDisplayPackageName,
     resolvePackageIdentity,
     buildEntityHref,
-    buildPackageBasePath,
-    isDocumentedPackage
+    buildPackageBasePath
 } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
@@ -306,7 +305,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<SearchPayl
 
     const url = request.nextUrl;
     const engine = await getDocsEngine();
-    const packages = (await engine.listPackages()).filter((pkg) => isDocumentedPackage(pkg.folder));
+    const packages = await engine.listPackages();
 
     if (url.searchParams.get('list') === 'packages') {
         return NextResponse.json({

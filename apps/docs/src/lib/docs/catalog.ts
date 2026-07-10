@@ -5,7 +5,6 @@ import {
     buildPackageBasePath,
     formatDisplayPackageName,
     formatVersionLabel,
-    isDocumentedPackage,
     stableLineHeads
 } from '@seedcord/docs-engine';
 import { cache } from 'react';
@@ -141,7 +140,7 @@ const sortCatalogEntries = (entries: PackageCatalogEntry[]): PackageCatalogEntry
 export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     const engine = await getDocsEngine();
     await engine.ready();
-    const packages = (await engine.listPackages()).filter((pkg) => isDocumentedPackage(pkg.folder));
+    const packages = await engine.listPackages();
 
     const entries = await Promise.all(
         packages.map(async ({ folder, fullName }): Promise<PackageCatalogEntry | null> => {

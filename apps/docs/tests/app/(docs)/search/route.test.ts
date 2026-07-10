@@ -218,7 +218,7 @@ describe('GET /search: version and channel selection', () => {
 });
 
 describe('GET /search: package listing', () => {
-    it('returns the documented packages for list=packages without searching', async () => {
+    it('maps listPackages to the packages payload for list=packages without searching', async () => {
         engineStub.listPackages.mockResolvedValue([
             { folder: 'seedcord', fullName: 'seedcord' },
             { folder: 'services', fullName: '@seedcord/services' }
@@ -232,20 +232,6 @@ describe('GET /search: package listing', () => {
             ]
         });
         expect(engineStub.search).not.toHaveBeenCalled();
-    });
-
-    it('drops folders absent from the documented allowlist (removed + mis-keyed)', async () => {
-        engineStub.listPackages.mockResolvedValue([
-            { folder: 'seedcord', fullName: 'seedcord' },
-            { folder: 'cli', fullName: '@seedcord/cli' },
-            { folder: 'kit', fullName: '@seedcord/kit' },
-            { folder: '@seedcord/eslint-plugin', fullName: '@seedcord/eslint-plugin' },
-            { folder: 'eslint-plugin', fullName: '@seedcord/eslint-plugin' }
-        ]);
-
-        const res = await GET(makeRequest('https://example.com/search?list=packages'));
-        const body = (await res.json()) as { packages: { folder: string }[] };
-        expect(body.packages.map((pkg) => pkg.folder)).toEqual(['seedcord', 'eslint-plugin']);
     });
 });
 
