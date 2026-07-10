@@ -5,7 +5,6 @@
  * @example
  * ```ts
  * logger.error('Failed to load %s', url, { code: 404 });
- * // or with various types of args like string, integer, double, float, etc
  * logger.info('User %s has %d points and %f rating', username, points, rating, { extra: 'data' });
  * ```
  * */

@@ -9,8 +9,8 @@ import type { ILogger } from '@seedcord/types';
  * Channel-aware logging service.
  *
  * Builds a plain {@link LogRecord} per call and dispatches it to the process-global
- * {@link LoggerChannelRegistry}. Carries no transport, so it runs unchanged on a gateway server
- * and a Cloudflare Worker.
+ * {@link LoggerChannelRegistry}. No transport is bound, so it runs on a gateway server and a
+ * Cloudflare Worker without changes.
  */
 export class Logger implements ILogger {
     private readonly label: string;

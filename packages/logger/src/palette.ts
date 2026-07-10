@@ -2,8 +2,7 @@ import chalk from 'chalk';
 
 import type { LogLevel } from './types';
 
-// level colors, one source for the TUI chips and any level-tinted text. truecolor renders the same in every
-// terminal theme, and a theme remaps chalk's 16-color names (blue turns orange in monokai).
+// truecolor because a terminal theme remaps chalk's 16-color names (blue turns orange in monokai)
 export const LEVEL_COLOR: Record<LogLevel, string> = {
     error: '#ff6b85',
     warn: '#ffc061',

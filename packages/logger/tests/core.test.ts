@@ -80,6 +80,15 @@ describe('level gate', () => {
 
         expect(sink.records.map((r) => r.message)).toEqual(['verbose']);
     });
+
+    it('dispatches a debug record under a trace floor', () => {
+        const sink = new FakeSink();
+        registry.configure({ level: 'trace', sinks: [sink] });
+
+        new Logger('X').debug('dbg');
+
+        expect(sink.records.map((r) => r.message)).toEqual(['dbg']);
+    });
 });
 
 describe('two layers and muteConsole', () => {
@@ -121,6 +130,19 @@ describe('two layers and muteConsole', () => {
         expect(globalSink.records).toHaveLength(0);
         expect(channelSink.records).toHaveLength(1);
         expect(capture.records).toHaveLength(1);
+    });
+
+    it('does not retro-mute a console sink when a capture installs muting mid-dispatch', () => {
+        const second = new FakeSink('console');
+        const installer: ILogSink = {
+            kind: 'console',
+            onLog: () => void registry.installSink(new FakeSink('capture'), { muteConsole: true })
+        };
+        registry.configure({ level: 'trace', sinks: [installer, second] });
+
+        new Logger('X').info('hi');
+
+        expect(second.records).toHaveLength(1);
     });
 
     it('leaves the console unmuted when muteConsole is not passed', () => {
@@ -177,6 +199,40 @@ describe('configure and reset', () => {
         expect(spy).toHaveBeenCalledOnce();
         spy.mockRestore();
     });
+
+    it('disposes a global sink evicted on reconfigure', () => {
+        const dispose = vi.fn();
+        registry.configure({ level: 'trace', sinks: [{ kind: 'console', onLog: () => undefined, dispose }] });
+        registry.configure({ level: 'trace', sinks: [] });
+
+        expect(dispose).toHaveBeenCalledOnce();
+    });
+
+    it('disposes a channel-override sink dropped on reconfigure', () => {
+        const dispose = vi.fn();
+        const channelSink: ILogSink = { kind: 'file', onLog: () => undefined, dispose };
+        registry.configure({ level: 'trace', sinks: [], channels: { errors: { sinks: [channelSink] } } });
+        registry.configure({ level: 'trace', sinks: [] });
+
+        expect(dispose).toHaveBeenCalledOnce();
+    });
+
+    it('keeps a sink reused across configures open', () => {
+        const dispose = vi.fn();
+        const shared: ILogSink = { kind: 'console', onLog: () => undefined, dispose };
+        registry.configure({ level: 'trace', sinks: [shared] });
+        registry.configure({ level: 'trace', sinks: [shared] });
+
+        expect(dispose).not.toHaveBeenCalled();
+    });
+
+    it('disposes config sinks on reset', () => {
+        const dispose = vi.fn();
+        registry.configure({ level: 'trace', sinks: [{ kind: 'file', onLog: () => undefined, dispose }] });
+        registry.reset();
+
+        expect(dispose).toHaveBeenCalledOnce();
+    });
 });
 
 describe('dispatch re-entrancy', () => {
@@ -194,7 +250,7 @@ describe('dispatch re-entrancy', () => {
         expect(late.records).toHaveLength(0);
     });
 
-    it('reaches a capture a config sink installs mid-dispatch, since the snapshot follows the config loop', () => {
+    it('reaches a capture a config sink installs mid-dispatch', () => {
         const late = new FakeSink('capture');
         const installer: ILogSink = {
             kind: 'console',

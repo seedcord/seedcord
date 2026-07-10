@@ -1,8 +1,9 @@
-import { mkdtempSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { Envapter } from 'envapt';
+import stripAnsi from 'strip-ansi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoggerChannelRegistry } from '../src/LoggerChannelRegistry';
@@ -28,8 +29,7 @@ async function readWhenWritten(file: string, timeoutMs = 2000): Promise<string> 
     return readFileSync(file, 'utf8');
 }
 
-const ANSI = /\[\d+m/gu;
-const plain = (value: string): string => value.replaceAll(ANSI, '');
+const plain = (value: string): string => stripAnsi(value);
 
 const registry = LoggerChannelRegistry.instance;
 afterEach(() => registry.reset());
@@ -47,6 +47,13 @@ describe('formatPretty', () => {
         expect(line).toContain('failed');
         expect(line).toContain('Error: boom');
         expect(line).toContain('at ');
+    });
+
+    it('renders an Error whose stack is undefined', () => {
+        const err = new Error('no stack here');
+        Object.defineProperty(err, 'stack', { value: undefined, configurable: true });
+        const line = plain(formatPretty(record({ level: 'error', message: 'failed', args: [err] })));
+        expect(line).toContain('no stack here');
     });
 
     it('indents continuation lines under the prefixed heading', () => {
@@ -181,6 +188,17 @@ describe('installNodeDefaults', () => {
         expect(captured.map((r) => r.message)).toContain('flows');
     });
 
+    it('applies a channel level override from overrides', () => {
+        installNodeDefaults({ level: 'info', channels: { events: { level: 'error' } } });
+
+        const captured: LogRecord[] = [];
+        registry.installSink({ kind: 'capture', onLog: (r) => void captured.push(r) }, { muteConsole: true });
+
+        registry.dispatch(record({ level: 'warn', channel: 'events', message: 'gated' }));
+        registry.dispatch(record({ level: 'error', channel: 'events', message: 'kept' }));
+        expect(captured.map((r) => r.message)).toEqual(['kept']);
+    });
+
     it('applies an override level and keeps the node sinks', () => {
         installNodeDefaults({ level: 'warn' });
 
@@ -209,6 +227,25 @@ describe('installNodeDefaults', () => {
         try {
             installNodeDefaults({ sinks: [{ kind: 'console', onLog: () => undefined }] });
             expect(readdirSync(dir)).not.toContain('logs');
+        } finally {
+            process.chdir(cwd);
+            devSpy.mockRestore();
+        }
+    });
+
+    it('creates no log file until a record is logged, so repeated bootstraps leave no orphans', async () => {
+        const devSpy = vi.spyOn(Envapter, 'isDevelopment', 'get').mockReturnValue(true);
+        const cwd = process.cwd();
+        const dir = mkdtempSync(join(tmpdir(), 'seedcord-logger-'));
+        process.chdir(dir);
+        try {
+            installNodeDefaults();
+            installNodeDefaults();
+            // the eager File transport opens its stream on the next tick, so wait past it before asserting
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            const logsDir = join(dir, 'logs');
+            const files = existsSync(logsDir) ? readdirSync(logsDir) : [];
+            expect(files).toEqual([]);
         } finally {
             process.chdir(cwd);
             devSpy.mockRestore();

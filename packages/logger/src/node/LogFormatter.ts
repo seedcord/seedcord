@@ -11,13 +11,13 @@ const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
 const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
 const SAVED_SPLAT_KEY = Symbol('savedSplat');
-// %% takes no arg, keep it out of the specifier count. ObjectConsoleSink's regex differs on purpose.
+// %% takes no arg, keep it out of the count. ObjectConsoleSink matches %% because it substitutes it inline.
 const FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
 
 interface PrettyFormatOptions {
-    padding?: number; // level column width, default 7
+    padding?: number; // level column width
     stripExtras?: boolean;
-    // false emits the message body only. The TUI renders its own time/level/label
+    // the TUI renders its own time/level/label
     prefix?: boolean;
 }
 
@@ -25,10 +25,9 @@ interface JsonFormatOptions {
     stripAnsi?: boolean;
 }
 
-/** Builds the winston format chains, pretty for dev and JSON for prod. @internal */
+/** @internal */
 export class LogFormatter {
-    // ansi-formatted error names captured in preserve and read back in restore, keyed off the Error so the
-    // Error object remains free of framework fields.
+    // WeakMap keeps framework state off the Error object
     private readonly errorNames = new WeakMap<Error, { formatted: string; plain: string }>();
 
     private safeString(value: unknown): string {
@@ -61,6 +60,7 @@ export class LogFormatter {
             const matches = msg.match(FORMAT_SPECIFIERS);
             const formatCount = matches ? matches.length : 0;
             info[HAD_FORMAT_KEY] = formatCount;
+            // snapshot before format.splat consumes args, so renderExtras's specifier-index filter stays aligned
             info[SAVED_SPLAT_KEY] = [...extras];
             return info;
         })();
@@ -94,22 +94,20 @@ export class LogFormatter {
         })();
     }
 
-    // winston's colorize only maps @colors/colors style names (theme-remapped 16-color), so color the
-    // level from the shared truecolor LEVEL_COLOR. pad first, as an ansi-wrapped level breaks padEnd.
     private renderLevel(level: string, padding: number, strip: boolean): string {
-        const padded = level.padEnd(padding);
+        const padded = level.padEnd(padding); // pad before colorizing, an ansi-wrapped level breaks padEnd
         if (strip) return padded;
         const palette: Partial<Record<string, string>> = LEVEL_COLOR;
         const hex = palette[level];
+        // truecolor, winston colorize only maps 16-color @colors/colors names
         return hex ? chalk.hex(hex)(padded) : padded;
     }
 
     private assembleBase(prefix: boolean, ts: string, lvl: string, lbl: string, msg: string): string {
-        // indent continuation lines so a multi-line block message nests under the heading in a prefixed run
+        // a multi-line block nests under the heading
         return prefix ? `${ts} [${lvl}]: ${lbl} - ${msg.replaceAll('\n', '\n  ')}` : msg;
     }
 
-    /** The pretty format chain, colored and timestamped for dev. */
     public pretty(options: PrettyFormatOptions = {}): Logform.Format[] {
         const padding = options.padding ?? DEFAULT_PADDING;
         return [
@@ -118,7 +116,7 @@ export class LogFormatter {
             this.restoreErrorFormatting(),
             format.splat(),
             format.timestamp({ format: 'D MMM, hh:mm:ss a' }),
-            // eslint-disable-next-line max-statements -- printf assembles the whole log line in one pass
+
             format.printf((info: Logform.TransformableInfo) => {
                 let ts = this.safeString(info.timestamp);
                 const levelName = this.safeString(info.level);
@@ -132,9 +130,9 @@ export class LogFormatter {
                 }
 
                 const lvl = this.renderLevel(levelName, padding, options.stripExtras === true);
-                const base = this.assembleBase(options.prefix !== false, ts, lvl, lbl, msg);
+                const base = this.assembleBase(options.prefix ?? true, ts, lvl, lbl, msg);
                 const savedExtras = info[SAVED_SPLAT_KEY];
-                // Array.isArray widens to any[]. The unknown[] annotation keeps filter type-safe.
+                // Array.isArray widens to any[]
                 const extras: unknown[] = Array.isArray(savedExtras) ? savedExtras : this.getExtras(info);
 
                 let rendered = base;
@@ -145,44 +143,61 @@ export class LogFormatter {
                     rendered += `\n${stack}`;
                 }
 
-                const cleaned = options.stripExtras ? extras.map((entry) => this.sanitizeAnsi(entry)) : extras;
                 const rawFormatCount = info[HAD_FORMAT_KEY];
                 const formatSpecifierCount = typeof rawFormatCount === 'number' ? rawFormatCount : 0;
-                const filtered = cleaned.filter((x, index) => {
-                    if (x === null || x === undefined) return false;
-                    if (Error.isError(x) && typeof info.stack === 'string') return false;
-                    // a value at a format-specifier position was already interpolated into the message
-                    if (index < formatSpecifierCount) return false;
-                    if (typeof x !== 'object') return true;
-                    return Object.keys(x).length > 0;
-                });
-
-                if (filtered.length > 0) {
-                    const primitives: string[] = [];
-                    const objects: string[] = [];
-
-                    for (const x of filtered) {
-                        if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean') {
-                            primitives.push(String(x));
-                        } else {
-                            try {
-                                objects.push(JSON.stringify(x, null, 2));
-                            } catch {
-                                objects.push(String(x));
-                            }
-                        }
-                    }
-
-                    if (primitives.length > 0) rendered += ` ${primitives.join(' ')}`;
-                    if (objects.length > 0) rendered += `\n${objects.join('\n')}`;
-                }
-
-                return rendered;
+                return (
+                    rendered +
+                    this.renderExtras(
+                        extras,
+                        typeof info.stack === 'string',
+                        formatSpecifierCount,
+                        options.stripExtras === true
+                    )
+                );
             })
         ];
     }
 
-    /** The JSON format chain for prod, with optional ANSI stripping. */
+    private renderExtras(extras: unknown[], hasStack: boolean, formatSpecifierCount: number, strip: boolean): string {
+        const cleaned = strip ? extras.map((entry) => this.sanitizeAnsi(entry)) : extras;
+        let firstErrorDropped = false;
+        const filtered = cleaned.filter((x, index) => {
+            if (x === null || x === undefined || x === '') return false;
+            if (Error.isError(x)) {
+                // the first Error's stack already renders as info.stack, skip it
+                if (hasStack && !firstErrorDropped) {
+                    firstErrorDropped = true;
+                    return false;
+                }
+                return true;
+            }
+            // a value at a format-specifier position was already interpolated into the message
+            if (index < formatSpecifierCount) return false;
+            if (typeof x !== 'object') return true;
+            return Object.keys(x).length > 0;
+        });
+        if (filtered.length === 0) return '';
+
+        const primitives: string[] = [];
+        const objects: string[] = [];
+        for (const x of filtered) {
+            if (Error.isError(x)) objects.push(typeof x.stack === 'string' ? x.stack : `${x.name}: ${x.message}`);
+            else if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean')
+                primitives.push(String(x));
+            else {
+                try {
+                    objects.push(JSON.stringify(x, null, 2));
+                } catch {
+                    objects.push(String(x));
+                }
+            }
+        }
+
+        const inline = primitives.length > 0 ? ` ${primitives.join(' ')}` : '';
+        const block = objects.length > 0 ? `\n${objects.join('\n')}` : '';
+        return inline + block;
+    }
+
     public json(options: JsonFormatOptions = {}): Logform.Format[] {
         const base = [format.errors({ stack: true })];
 

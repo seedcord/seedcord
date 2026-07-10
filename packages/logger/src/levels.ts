@@ -2,7 +2,7 @@ import { Envapter } from 'envapt';
 
 import type { LogLevel } from './types';
 
-// rank per level, error is highest
+// error is the most severe, at rank 0
 const LEVEL_RANK: Record<LogLevel, number> = {
     error: 0,
     warn: 1,

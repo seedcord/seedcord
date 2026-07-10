@@ -12,6 +12,10 @@ function defaultSinks(): ILogSink[] {
     return [new ObjectConsoleSink()];
 }
 
+function channelSinks(channels: NonNullable<LoggerConfig['channels']>): ILogSink[] {
+    return Object.values(channels).flatMap((override) => override.sinks ?? []);
+}
+
 /**
  * Process-global router for every {@link LogRecord}.
  *
@@ -35,11 +39,16 @@ export class LoggerChannelRegistry {
 
     /** Full-replaces the config layer. Omitted fields reset to their defaults. */
     public configure(config: LoggerConfig): void {
-        const next = config.sinks ?? defaultSinks();
-        for (const sink of this.sinks) if (!next.includes(sink)) sink.dispose?.();
+        const nextSinks = config.sinks ?? defaultSinks();
+        const nextChannels = config.channels ?? {};
+        const retained = new Set<ILogSink>([...nextSinks, ...channelSinks(nextChannels)]);
+        // dispose sinks absent from the new config, global or per-channel, so their winston file handles close
+        for (const sink of new Set([...this.sinks, ...channelSinks(this.channels)])) {
+            if (!retained.has(sink)) sink.dispose?.();
+        }
         this.level = config.level ?? defaultLevel();
-        this.sinks = next;
-        this.channels = config.channels ?? {};
+        this.sinks = nextSinks;
+        this.channels = nextChannels;
     }
 
     public dispatch(record: LogRecord): void {
@@ -70,6 +79,8 @@ export class LoggerChannelRegistry {
 
     /** @internal */
     public reset(): void {
+        // dispose the config-layer sinks so a reset after a live install closes winston handles
+        for (const sink of new Set([...this.sinks, ...channelSinks(this.channels)])) sink.dispose?.();
         this.level = defaultLevel();
         this.sinks = defaultSinks();
         this.channels = {};

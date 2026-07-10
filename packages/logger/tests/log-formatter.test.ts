@@ -1,7 +1,7 @@
 import { Writable } from 'node:stream';
 
 import chalk from 'chalk';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import winston from 'winston';
 
 import { LogFormatter } from '../src/node/LogFormatter';
@@ -169,12 +169,30 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('Error: Unique error message');
             expect((output[0]?.match(/Unique error message/gu) ?? []).length).toBe(2);
         });
+
+        it('renders both stacks when a call carries two Errors', () => {
+            const { logger, output } = createTestLogger(formatter);
+            logger.error('both failed', new Error('first boom'), new Error('second boom'));
+            expect(output[0]).toContain('first boom');
+            expect(output[0]).toContain('second boom');
+        });
     });
 
     describe('level coloring', () => {
+        const originalChalkLevel = chalk.level;
+        // vitest workers are non-TTY, so chalk auto-detects level 0 and emits no color, making the assertions
+        // below vacuous. force truecolor so the hex output is real.
+        beforeEach(() => {
+            chalk.level = 3;
+        });
+        afterEach(() => {
+            chalk.level = originalChalkLevel;
+        });
+
         it('colors the pretty level with the shared truecolor LEVEL_COLOR', () => {
             const { logger, output } = createTestLogger(formatter);
             logger.error('boom');
+            expect(output[0]).toContain(ESC);
             expect(output[0]).toContain(chalk.hex(LEVEL_COLOR.error)('error'.padEnd(7)));
         });
 
@@ -204,6 +222,29 @@ describe('LogFormatter', () => {
     });
 
     describe('json format', () => {
+        it('emits parseable json with the message intact on the default path', () => {
+            const output: string[] = [];
+            const stream = new Writable({
+                write(chunk: Buffer, _encoding, callback) {
+                    output.push(chunk.toString());
+                    callback();
+                }
+            });
+            const logger = winston.createLogger({
+                levels: NODE_LEVELS,
+                level: 'trace',
+                format: winston.format.combine(formatter.createPreFormat()),
+                transports: [
+                    new winston.transports.Stream({ stream, format: winston.format.combine(...formatter.json()) })
+                ]
+            });
+
+            logger.info('plain json');
+
+            const parsed = JSON.parse(output.join('')) as { message: string };
+            expect(parsed.message).toBe('plain json');
+        });
+
         it('strips ANSI from the message and a colored error', () => {
             const output: string[] = [];
             const stream = new Writable({

@@ -2,4 +2,4 @@
 '@seedcord/logger': minor
 ---
 
-**BREAKING:** `installSink` defaults `muteConsole` to `false`, so a capture sink no longer mutes the console unless it asks.
+**BREAKING:** `installSink` defaults `muteConsole` to `false`. A capture sink mutes the console only when `muteConsole: true` is passed.

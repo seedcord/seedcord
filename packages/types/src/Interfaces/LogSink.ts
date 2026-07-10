@@ -3,7 +3,7 @@ import type { ILogger } from './ILogger';
 /** Severity of a log record, highest to lowest. */
 export type LogLevel = keyof ILogger;
 
-/** A single log entry the core builds and hands to every sink. */
+/** A single log entry the core builds and passes to every sink. */
 export interface LogRecord {
     level: LogLevel;
     message: string;
@@ -16,7 +16,7 @@ export interface LogRecord {
 
 type LogSinkKind = 'console' | 'file' | 'capture';
 
-/** A destination for log records. `kind` drives dispatch, `node: true` marks a node-only sink. */
+/** A destination for log records. `kind` controls dispatch routing, `node: true` marks a node-only sink. */
 export interface ILogSink {
     readonly kind: LogSinkKind;
     readonly node?: boolean;
@@ -39,7 +39,7 @@ export interface LoggerConfig {
     channels?: Record<string, ChannelOverride>;
 }
 
-/** Handle returned by an installed capture sink. Disposable, so it works with `using`. */
+/** Handle returned by `installSink`. Disposable, so it works with `using`. */
 export interface LogSinkHandle {
     dispose(): void;
     [Symbol.dispose](): void;

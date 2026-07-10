@@ -14,7 +14,7 @@ function jsonish(value: unknown): string {
     }
 }
 
-// printf over the winston/util specifiers without node:util. Returns the args the specifiers did not consume.
+// util.format is node-only, so this reimplements the specifiers for edge runtimes
 function interpolate(message: string, args: readonly unknown[]): { text: string; rest: unknown[] } {
     let consumed = 0;
     const text = message.replaceAll(SPECIFIER, (spec) => {
@@ -68,8 +68,11 @@ export class ObjectConsoleSink implements ILogSink {
         const fields: Record<string, unknown> = {};
         const extras: unknown[] = [];
         for (const value of rest) {
-            if (Error.isError(value)) fields.error = errorShape(value);
-            else if (isPlainObject(value)) Object.assign(fields, value);
+            // a second Error goes to args so neither is lost
+            if (Error.isError(value)) {
+                if (fields.error === undefined) fields.error = errorShape(value);
+                else extras.push(errorShape(value));
+            } else if (isPlainObject(value)) Object.assign(fields, value);
             else extras.push(value);
         }
 

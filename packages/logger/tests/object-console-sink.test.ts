@@ -14,6 +14,7 @@ function capture(level: LogLevel = 'info'): { payload: () => Record<string, unkn
     const method = level === 'debug' || level === 'trace' ? 'debug' : level;
     const spy = vi.spyOn(console, method).mockImplementation(() => undefined);
     return {
+        // fixture cast: the sink makes one console call and passes the payload object as its first arg
         payload: () => spy.mock.calls[0]?.[0] as Record<string, unknown>
     };
 }
@@ -25,6 +26,18 @@ describe('ObjectConsoleSink', () => {
         const cap = capture();
         new ObjectConsoleSink().onLog(record({ message: 'user %s scored %d', args: ['bob', 42] }));
         expect(cap.payload().message).toBe('user bob scored 42');
+    });
+
+    it('interpolates %f, %o, and the no-arg %%', () => {
+        const cap = capture();
+        new ObjectConsoleSink().onLog(record({ message: 'ratio %f obj %o pct %%', args: [0.5, { a: 1 }] }));
+        expect(cap.payload().message).toBe('ratio 0.5 obj {"a":1} pct %');
+    });
+
+    it('keeps an array arg in the args field', () => {
+        const cap = capture();
+        new ObjectConsoleSink().onLog(record({ message: 'list', args: [[1, 2, 3]] }));
+        expect(cap.payload().args).toEqual([[1, 2, 3]]);
     });
 
     it('merges a trailing object arg into top-level fields', () => {
@@ -60,6 +73,17 @@ describe('ObjectConsoleSink', () => {
         const cap = capture();
         new ObjectConsoleSink().onLog(record({ message: 'note', args: ['tail', 7] }));
         expect(cap.payload().args).toEqual(['tail', 7]);
+    });
+
+    it('keeps every Error from a call with two, the first as error and the rest in args', () => {
+        const cap = capture('error');
+        const first = new Error('first boom');
+        const second = new Error('second boom');
+        new ObjectConsoleSink().onLog(record({ level: 'error', message: 'failed', args: [first, second] }));
+
+        const payload = cap.payload();
+        expect((payload.error as Record<string, unknown>).message).toBe('first boom');
+        expect(JSON.stringify(payload)).toContain('second boom');
     });
 
     it('merges a plain object and serializes an Error from the same call', () => {
