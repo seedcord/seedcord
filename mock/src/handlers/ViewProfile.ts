@@ -1,6 +1,6 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { ApplicationCommandType, MessageFlags } from 'discord.js';
 import { ContextMenuHandler, ContextMenuRoute, Cooldown, Gated, Notice } from '@seedcord/gateway';
+import { ApplicationCommandType, MessageFlags } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/gateway';
 

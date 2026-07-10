@@ -1,5 +1,5 @@
-import { ApplicationCommandType } from 'discord.js';
 import { RegisterCommand, BuilderComponent } from '@seedcord/gateway';
+import { ApplicationCommandType } from 'discord.js';
 
 @RegisterCommand('global')
 export class ViewProfileCommand extends BuilderComponent<'context_menu'> {

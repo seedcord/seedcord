@@ -1,6 +1,6 @@
 import { ActionRowBuilder, TextDisplayBuilder } from '@discordjs/builders';
-import { ButtonStyle } from 'discord.js';
 import { BuilderComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
 
 import type { ButtonBuilder } from '@discordjs/builders';
 import type { PageView, PaginatorControls } from '@seedcord/gateway';

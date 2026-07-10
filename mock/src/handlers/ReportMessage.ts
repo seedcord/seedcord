@@ -1,5 +1,5 @@
-import { ApplicationCommandType, MessageFlags } from 'discord.js';
 import { ContextMenuRoute, ContextMenuHandler } from '@seedcord/gateway';
+import { ApplicationCommandType, MessageFlags } from 'discord.js';
 
 @ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
 export class ReportMessage extends ContextMenuHandler<ApplicationCommandType.Message> {

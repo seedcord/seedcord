@@ -1,5 +1,5 @@
-import { PermissionFlagsBits } from 'discord.js';
 import { RegisterCommand, BuilderComponent } from '@seedcord/gateway';
+import { PermissionFlagsBits } from 'discord.js';
 
 @RegisterCommand('global')
 export class TestErrorCommand extends BuilderComponent<'command'> {
