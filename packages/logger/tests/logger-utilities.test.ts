@@ -18,6 +18,9 @@ class FakeLogger implements ILogger {
     }
 }
 
+const plain = (value: string): string =>
+    value.replaceAll(new RegExp(String.raw`${String.fromCharCode(27)}\[[0-9;]*m`, 'gu'), '');
+
 describe('LoggerUtilities', () => {
     it('logs an item at the given level', () => {
         const logger = new FakeLogger();
@@ -92,14 +95,14 @@ describe('LoggerUtilities', () => {
         expect(parts[2]).toContain('beta');
     });
 
-    it('formats block entries with cwd-relative paths', () => {
-        const lines = new LoggerUtilities(new FakeLogger()).entries([
+    it('formats block entries with cwd-relative paths, padding names so the paths align', () => {
+        const [short, long] = new LoggerUtilities(new FakeLogger()).entries([
             { name: 'FeedNav', from: `${process.cwd()}/src/Feed.ts` },
             { name: 'LongerHandlerName', from: `${process.cwd()}/src/Other.ts` }
         ]);
-        expect(lines[0]).toContain('FeedNav');
-        expect(lines[0]).toContain('./src/Feed.ts');
-        expect(lines[1]).toContain('LongerHandlerName');
+        expect(short).toContain('./src/Feed.ts');
+        expect(long).toContain('LongerHandlerName');
+        expect(plain(short ?? '').indexOf('./src/')).toBe(plain(long ?? '').indexOf('./src/'));
     });
 
     it('drops zero counts', () => {
@@ -113,5 +116,21 @@ describe('LoggerUtilities', () => {
     it('wraps counts onto multiple lines past the max width', () => {
         const lines = new LoggerUtilities(new FakeLogger()).counts({ aa: 1, bb: 2, cc: 3, dd: 4 }, 8);
         expect(lines.length).toBeGreaterThan(1);
+    });
+
+    it('wraps labels into lines under the max width', () => {
+        const lines = new LoggerUtilities(new FakeLogger()).wrap(['alpha', 'beta', 'gamma', 'delta'], 14);
+        expect(lines.length).toBeGreaterThan(1);
+        for (const line of lines) expect(plain(line).length).toBeLessThanOrEqual(14);
+    });
+
+    it('logs nothing for an empty list and only the heading when one is given', () => {
+        const empty = new FakeLogger();
+        new LoggerUtilities(empty).list([]);
+        expect(empty.calls).toHaveLength(0);
+
+        const headed = new FakeLogger();
+        new LoggerUtilities(headed).list([], 'Items');
+        expect(headed.calls.map((call) => call.text)).toEqual(['Items']);
     });
 });

@@ -33,9 +33,7 @@ function wrapChips(chips: readonly { plain: string; styled: string }[], maxWidth
     return lines;
 }
 
-/**
- * Decorative logging helpers (lists, summaries, registration lines, blocks) shared across the framework.
- */
+/** Logging helpers for lists, summaries, registration lines, and blocks. */
 export class LoggerUtilities {
     constructor(private readonly logger: ILogger) {}
 
@@ -81,10 +79,7 @@ export class LoggerUtilities {
         this.logger[level](`${paint.sky(base)}${suffix}`);
     }
 
-    /**
-     * Logs a heading and its lines as one record. The message carries newlines, so the TUI renders the
-     * heading with prefix once and the lines as a block beneath it, and a direct run prints them under the heading.
-     */
+    /** Logs a heading and its lines as one record so the TUI renders them as a single block. */
     public block(heading: string, lines: readonly string[], level: LogLevel = 'trace'): void {
         this.logger[level]([paint.mint.bold(heading), ...lines].join('\n'));
     }
@@ -94,6 +89,14 @@ export class LoggerUtilities {
         const width = items.reduce((max, item) => Math.max(max, item.name.length), 0);
         return items.map(
             (item) => `${paint.sky.bold(item.name.padEnd(width))} ${paint.mute(formatFilePath(item.from))}`
+        );
+    }
+
+    /** Packs labels into `·`-separated lines under `maxWidth`, each styled. */
+    public wrap(labels: readonly string[], maxWidth = COUNT_WRAP_WIDTH): string[] {
+        return wrapChips(
+            labels.map((label) => ({ plain: label, styled: paint.sky.bold(label) })),
+            maxWidth
         );
     }
 
