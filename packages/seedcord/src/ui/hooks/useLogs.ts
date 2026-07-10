@@ -5,7 +5,8 @@ import { LogStore } from '@ui/stores/LogStore';
 import type { LogLevel } from '@seedcord/logger';
 import type { LogEntry } from '@ui/stores/LogStore';
 
-const EMPTY_SET: ReadonlySet<never> = new Set();
+const EMPTY_CHANNELS: ReadonlySet<string> = new Set();
+const EMPTY_LEVELS: ReadonlySet<LogLevel> = new Set();
 
 // empty set means all, so a channel or level that appears later stays visible by default
 export function filterLogs(
@@ -38,5 +39,8 @@ export function useLogs(channels?: ReadonlySet<string>, levels?: ReadonlySet<Log
 
     const allLogs = useSyncExternalStore(subscribe, getSnapshot);
 
-    return useMemo(() => filterLogs(allLogs, channels ?? EMPTY_SET, levels ?? EMPTY_SET), [allLogs, channels, levels]);
+    return useMemo(
+        () => filterLogs(allLogs, channels ?? EMPTY_CHANNELS, levels ?? EMPTY_LEVELS),
+        [allLogs, channels, levels]
+    );
 }

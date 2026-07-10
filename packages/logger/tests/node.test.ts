@@ -128,7 +128,7 @@ describe('winston sinks', () => {
 
         const written = readdirSync(dir);
         expect(written).toHaveLength(1);
-        expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}-\d{6}\.log$/u);
+        expect(written[0]).toMatch(/^run-\d{4}-\d{2}-\d{2}-\d{6}-\d{3}\.log$/u);
         sink.dispose();
     });
 

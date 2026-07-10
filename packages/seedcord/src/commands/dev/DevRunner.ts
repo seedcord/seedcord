@@ -5,6 +5,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
+import chalk from 'chalk';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
@@ -88,7 +89,7 @@ class SeedcordDevSession {
             }
 
             this.store.setPhase('running');
-            this.store.setStatus('Seedcord is running.');
+            this.store.setStatus(`${chalk.bold(instance.username ?? 'Bot')} is ready!`);
             onReady?.();
 
             // resolved by stop(). no process-signal handlers here (DevCommand registers the single one), so restarts never accumulate listeners.

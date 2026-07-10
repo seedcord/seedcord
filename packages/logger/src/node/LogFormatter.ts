@@ -6,7 +6,7 @@ import { LEVEL_COLOR } from '../palette';
 
 import type { Logform } from 'winston';
 
-const DEFAULT_PADDING = 7;
+const DEFAULT_PADDING = 5;
 const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
 const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');

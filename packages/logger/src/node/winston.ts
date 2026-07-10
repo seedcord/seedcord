@@ -72,8 +72,10 @@ function pad(value: number): string {
 function buildTimestamp(): { date: string; timestamp: string } {
     const now = new Date();
     const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-    const timestamp = `${date}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-    return { date, timestamp };
+    const clock = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    // milliseconds keep two runs started in the same second on separate files
+    const ms = now.getMilliseconds().toString().padStart(3, '0');
+    return { date, timestamp: `${date}-${clock}-${ms}` };
 }
 
 export function resolveFilename(template: string): string {

@@ -50,13 +50,14 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const interactive = !state.isBusy || state.restartRequired;
 
-    // re-measure only on the things that can change the box height, a resize or a notification card appearing or clearing
+    // re-measure on anything that changes the box height, a resize, a notification card, or the scroll header
+    // toggling between its scroll status and nothing while following
     useLayoutEffect(() => {
         if (!logBoxRef.current) return;
         const measured = measureElement(logBoxRef.current).height;
         // eslint-disable-next-line @eslint-react/set-state-in-effect -- Ink layout is only measurable after render, so this sets the scroll-window height
         setLogBoxHeight((prev) => (prev === measured ? prev : measured));
-    }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt]);
+    }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt, scroll.following]);
 
     useInput((input, key) => {
         dispatchHotkey({

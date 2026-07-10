@@ -5,7 +5,6 @@ import { LogHeader } from '@ui/components/primitives/LogHeader';
 import { NotificationStack } from '@ui/components/primitives/NotificationStack';
 import { ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
 import { Sidebar } from '@ui/components/primitives/Sidebar';
-import { isStreaming } from '@ui/stores/devPhase';
 
 import type { LogLevel } from '@seedcord/logger';
 import type { FilterCursor } from '@ui/filterCursor';
@@ -64,7 +63,7 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 paddingLeft={1}
                 overflow="hidden"
             >
-                <LogHeader following={scroll.following} below={scroll.below} live={isStreaming(state.phase)} />
+                <LogHeader following={scroll.following} below={scroll.below} />
                 <Box ref={logBoxRef} flexGrow={1} overflow="hidden">
                     <ScrollableLogView visible={scroll.visible} viewportHeight={viewportHeight} measured={measured} />
                 </Box>

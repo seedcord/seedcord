@@ -1,7 +1,9 @@
-import { Box, Text } from 'ink';
+import { Box, Text, useAnimation } from 'ink';
 import React from 'react';
 
 import { formatUptime } from '@ui/format';
+import { ui } from '@ui/palette';
+import { isStreaming } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
 import { Banner } from '../Banner';
@@ -21,6 +23,18 @@ const META_LABEL_WIDTH = 5;
 
 // the dev default writes one combined file into this folder
 const LOG_DIR = 'logs/';
+
+const BLINK_MS = 530;
+
+function LiveDot(): ReactElement {
+    const { frame } = useAnimation({ interval: BLINK_MS });
+    return (
+        <Text>
+            <Text color={ui.bad}>{frame % 2 === 0 ? '●' : ' '}</Text>
+            <Text dimColor> live</Text>
+        </Text>
+    );
+}
 
 interface SidebarProps {
     readonly state: DevState;
@@ -99,6 +113,10 @@ export function Sidebar({
                     mode={showToggles ? 'toggles' : 'default'}
                     following={following}
                 />
+            </Box>
+            <Box flexGrow={1} />
+            <Box flexShrink={0} justifyContent="flex-end">
+                {isStreaming(state.phase) ? <LiveDot /> : <Text dimColor>○ idle</Text>}
             </Box>
         </Box>
     );

@@ -193,7 +193,30 @@ describe('LogFormatter', () => {
             const { logger, output } = createTestLogger(formatter);
             logger.error('boom');
             expect(output[0]).toContain(ESC);
-            expect(output[0]).toContain(chalk.hex(LEVEL_COLOR.error)('error'.padEnd(7)));
+            expect(output[0]).toContain(chalk.hex(LEVEL_COLOR.error)('error'.padEnd(5)));
+        });
+
+        it('pads the level to the longest name in the bracket prefix', () => {
+            const output: string[] = [];
+            const stream = new Writable({
+                write(chunk: Buffer, _encoding, callback) {
+                    output.push(chunk.toString().trim());
+                    callback();
+                }
+            });
+            const logger = winston.createLogger({
+                levels: NODE_LEVELS,
+                level: 'trace',
+                format: winston.format.combine(formatter.createPreFormat()),
+                transports: [
+                    new winston.transports.Stream({
+                        stream,
+                        format: winston.format.combine(...formatter.pretty({ stripExtras: true }))
+                    })
+                ]
+            });
+            logger.warn('careful');
+            expect(output[0]).toContain('[warn ]');
         });
 
         it('leaves the level plain and padded when extras are stripped', () => {
@@ -216,7 +239,7 @@ describe('LogFormatter', () => {
                 ]
             });
             logger.warn('careful');
-            expect(output[0]).toContain('warn'.padEnd(7));
+            expect(output[0]).toContain('warn'.padEnd(5));
             expect(output[0]).not.toContain(ESC);
         });
     });

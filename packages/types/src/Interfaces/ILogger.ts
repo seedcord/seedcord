@@ -7,7 +7,7 @@
  * logger.error('Failed to load %s', url, { code: 404 });
  * logger.info('User %s has %d points and %f rating', username, points, rating, { extra: 'data' });
  * ```
- * */
+ */
 export interface ILogger {
     error(msg: string, ...args: unknown[]): void;
     warn(msg: string, ...args: unknown[]): void;

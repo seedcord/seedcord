@@ -90,6 +90,11 @@ export class Seedcord extends Pluggable implements Core {
         this.registerStartupTasks();
     }
 
+    /** The bot's discord username, populated after login. */
+    public get username(): string | undefined {
+        return this.bot.client.user?.username;
+    }
+
     /** @internal */
     // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
