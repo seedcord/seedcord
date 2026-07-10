@@ -7,7 +7,7 @@ import { tw } from './lib/tw';
 
 import type { ButtonHTMLAttributes, ReactElement, Ref } from 'react';
 
-const buttonBaseClassName = [
+const buttonBaseClassName = cn(
     tw`inline-flex items-center justify-center gap-2`,
     tw`border border-transparent font-medium`,
     tw`rounded-md`,
@@ -17,7 +17,7 @@ const buttonBaseClassName = [
     tw`transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-out`,
     tw`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)`,
     tw`disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`
-].join(' ');
+);
 
 const buttonVariantClasses = {
     primary: tw`shadow-soft bg-(--accent-a) text-white hover:bg-(--accent-a-hover)`,

@@ -8,19 +8,19 @@ import { tw } from './lib/tw';
 
 import type { ReactElement, ReactNode } from 'react';
 
-const segmentedControlContainerClassName = [
+const segmentedControlContainerClassName = cn(
     tw`inline-flex items-center border border-(--border) bg-(--surface-subtle)`,
     tw`rounded-md`
-].join(' ');
+);
 
-const segmentedControlOptionBaseClassName = [
+const segmentedControlOptionBaseClassName = cn(
     tw`relative inline-flex items-center justify-center gap-1.5 font-medium`,
     tw`transition-colors duration-150 ease-out`,
     tw`focus-visible:outline-offset-(-2) focus-visible:z-1 focus-visible:outline-2 focus-visible:outline-(--focus-outline-b)`,
     tw`text-(--text-muted) hover:text-(--text)`,
     tw`aria-checked:text-(--text-accent-b-faint)`,
     tw`disabled:cursor-not-allowed disabled:opacity-45 disabled:hover:text-(--text-muted)`
-].join(' ');
+);
 
 const segmentedControlOptionSizeClasses = {
     sm: tw`px-3.5 py-1.5 text-xs`,
