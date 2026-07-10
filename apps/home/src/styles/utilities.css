@@ -11,7 +11,7 @@
         animation: marquee-x 240s linear infinite;
     }
 
-    /* the poster's playful hard offset block shadow + 3px rule (ink = --seed-dark #2d3328) */
+    /* main poster theme */
     .blk {
         box-shadow: 10px 10px 0 0 var(--seed-dark);
     }
