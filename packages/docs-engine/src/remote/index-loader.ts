@@ -1,3 +1,4 @@
+import { isDocumentedPackage } from '@packages/identity';
 import { IndexFetchError } from '@remote/errors';
 import { validateIndex } from '@remote/index-json';
 import { projectBaseFromIndexUrl, resolveIndexUrl } from '@src/constants';
@@ -18,7 +19,10 @@ export class IndexLoader {
 
     constructor(
         private readonly indexUrl: string = resolveIndexUrl(),
-        private readonly fetcher: Fetcher = defaultFetcher
+        private readonly fetcher: Fetcher = defaultFetcher,
+        // the R2 index is additive, a folder published once stays. drop folders the docs no longer
+        // document at the read boundary so removed packages never list, load, or search.
+        private readonly isDocumented: (folder: string) => boolean = isDocumentedPackage
     ) {}
 
     /** `force` re-fetches past the in-memory cache; it does NOT bust the R2/CDN edge cache. */
@@ -32,8 +36,15 @@ export class IndexLoader {
             throw new IndexFetchError(res.status, `index.json fetch failed (${res.status}) at ${this.indexUrl}`);
         }
 
-        this.cache = validateIndex(await res.json());
+        this.cache = this.documentedOnly(validateIndex(await res.json()));
         return this.cache;
+    }
+
+    private documentedOnly(index: IndexJson): IndexJson {
+        const packages = Object.fromEntries(
+            Object.entries(index.packages).filter(([folder]) => this.isDocumented(folder))
+        );
+        return { ...index, packages };
     }
 
     listPackages(index: IndexJson): { folder: string; fullName: string }[] {

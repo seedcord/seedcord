@@ -2,7 +2,7 @@ import { cn, tw } from '@seedcord/ui';
 
 import type { ReactElement } from 'react';
 
-const readmeProseClassName = [
+const readmeProseClassName = cn(
     tw`min-w-0 text-base/relaxed text-(--text-muted)`,
     tw`[&_h1]:mt-0 [&_h1]:mb-4 [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:text-(--text)`,
     tw`[&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:text-(--text)`,
@@ -15,7 +15,7 @@ const readmeProseClassName = [
     tw`[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-6`,
     tw`[&_li]:leading-relaxed`,
     tw`[&_code]:rounded [&_code]:bg-(--surface-subtle) [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[0.85em]`,
-    tw`[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:border-(--border) [&_pre]:bg-(--surface-subtle) [&_pre]:p-4 [&_pre]:text-xs`,
+    tw`[&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-md [&_pre]:border [&_pre]:border-(--border) [&_pre]:bg-(--surface-subtle) [&_pre]:p-4 [&_pre]:text-sm lg:[&_pre]:text-[0.9375rem]`,
     tw`[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit`,
     tw`[&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-(--border) [&_blockquote]:pl-4 [&_blockquote]:italic`,
     tw`[&_hr]:my-6 [&_hr]:border-(--border)`,
@@ -23,7 +23,7 @@ const readmeProseClassName = [
     tw`[&_table]:my-4 [&_table]:w-full [&_table]:text-left`,
     tw`[&_th]:border-b [&_th]:border-(--border) [&_th]:py-1 [&_th]:pr-4 [&_th]:font-semibold [&_th]:text-(--text)`,
     tw`[&_td]:border-b [&_td]:border-(--border) [&_td]:py-1 [&_td]:pr-4`
-].join(' ');
+);
 
 interface ReadmeBlockProps {
     html: string;

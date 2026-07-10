@@ -4,6 +4,7 @@ import {
     DEFAULT_MANIFEST_PACKAGE,
     DEFAULT_VERSION,
     formatDisplayPackageName,
+    isDocumentedPackage,
     resolveExternalPackageUrl,
     resolvePackageIdentity
 } from '@packages/identity';
@@ -34,6 +35,25 @@ describe('formatDisplayPackageName', () => {
     it('returns the input verbatim for unknown manifest names', () => {
         expect(formatDisplayPackageName('@scope/unknown')).toBe('@scope/unknown');
         expect(formatDisplayPackageName('mystery')).toBe('mystery');
+    });
+});
+
+describe('isDocumentedPackage', () => {
+    it('accepts folders of registered packages', () => {
+        for (const folder of ['core', 'gateway', 'seedcord', 'eslint-plugin', 'eslint-plugin-discordjs', 'types']) {
+            expect(isDocumentedPackage(folder)).toBe(true);
+        }
+    });
+
+    it('rejects removed packages that linger in the additive index', () => {
+        expect(isDocumentedPackage('cli')).toBe(false);
+        expect(isDocumentedPackage('kit')).toBe(false);
+    });
+
+    it('rejects the legacy mis-keyed eslint-plugin folder', () => {
+        // the display override makes the correct folder 'eslint-plugin'. '@seedcord/eslint-plugin' is stale
+        expect(isDocumentedPackage('@seedcord/eslint-plugin')).toBe(false);
+        expect(isDocumentedPackage('eslint-plugin')).toBe(true);
     });
 });
 
@@ -107,6 +127,10 @@ describe('resolveExternalPackageUrl', () => {
 
     it('maps the @discordjs scoped helper packages to the discord.js docs (JSONEncodable lives in util)', () => {
         expect(resolveExternalPackageUrl('@discordjs/util')).toBe('https://discord.js.org/docs');
+    });
+
+    it('maps @typescript-eslint/utils (the TSESLint namespace) to the typescript-eslint docs', () => {
+        expect(resolveExternalPackageUrl('@typescript-eslint/utils')).toBe('https://typescript-eslint.io');
     });
 
     it('does not lowercase-match Map (mixed case lookup keys are preserved)', () => {

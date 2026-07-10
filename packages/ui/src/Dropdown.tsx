@@ -9,12 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from './Popover';
 
 import type { ReactElement, ReactNode } from 'react';
 
-const dropdownTriggerBaseClassName = [
+const dropdownTriggerBaseClassName = cn(
     tw`inline-flex items-center font-medium`,
     tw`transition-[transform,background-color,color,border-color,box-shadow] duration-150 ease-out`,
     tw`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)`,
     tw`disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50`
-].join(' ');
+);
 
 const dropdownTriggerVariantClasses = {
     // Bordered field that fills its container.
@@ -34,7 +34,7 @@ export type DropdownSize = keyof typeof dropdownTriggerSizeClasses;
 
 const dropdownContentClassName = tw`w-(--radix-popover-trigger-width) min-w-44 overflow-hidden p-1`;
 
-const dropdownItemBaseClassName = [
+const dropdownItemBaseClassName = cn(
     tw`relative flex w-full cursor-pointer items-center justify-between gap-2 select-none`,
     tw`rounded-md`,
     tw`px-3 py-2 text-sm text-(--text)`,
@@ -42,13 +42,13 @@ const dropdownItemBaseClassName = [
     tw`hover:bg-(--bg-accent-b-moderate)`,
     tw`focus-visible:bg-(--bg-accent-b-moderate) focus-visible:outline-hidden`,
     tw`aria-selected:bg-(--bg-accent-b-strong) aria-selected:font-semibold`
-].join(' ');
+);
 
 // Rendered with role="presentation" so the separator label isn't announced as a listbox option.
-const dropdownGroupSeparatorClassName = [
+const dropdownGroupSeparatorClassName = cn(
     tw`mt-1 mb-0.5 border-t border-(--border) px-3 pt-2 pb-0.5`,
     tw`text-[10px] font-semibold tracking-wide text-(--text-faint) uppercase`
-].join(' ');
+);
 
 export interface DropdownOption {
     value: string;

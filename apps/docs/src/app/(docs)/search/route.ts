@@ -11,6 +11,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 import { MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
 import { getDocsEngine } from '@lib/docs/engine';
+import { checkSearchRateLimit } from '@lib/searchRateLimit';
 
 const MAX_RESULTS = 24;
 
@@ -294,6 +295,14 @@ async function loadSearchTargets(
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse<SearchPayload | PackagesPayload>> {
+    const rateLimit = await checkSearchRateLimit(request);
+    if (rateLimit.limited) {
+        return NextResponse.json(
+            { results: [] },
+            { status: 429, headers: { 'Retry-After': String(Math.ceil(rateLimit.retryAfterMs / 1000)) } }
+        );
+    }
+
     const url = request.nextUrl;
     const engine = await getDocsEngine();
     const packages = await engine.listPackages();
@@ -304,6 +313,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<SearchPayl
         });
     }
 
+    const startedAt = performance.now();
     const query = (url.searchParams.get('q') ?? '').trim();
     const current = resolvePackageIdentity(packages, url.searchParams.get('pkg'));
     if (query.length < MIN_SEARCH_QUERY_LENGTH || !current) {
@@ -324,5 +334,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<SearchPayl
         .map((entry) => mapSearchEntry(engine, entry))
         .filter((entry): entry is CommandActionPayload => entry !== null);
 
-    return NextResponse.json({ results });
+    const response = NextResponse.json({ results });
+    response.headers.set('Server-Timing', `search;dur=${(performance.now() - startedAt).toFixed(1)}`);
+    return response;
 }

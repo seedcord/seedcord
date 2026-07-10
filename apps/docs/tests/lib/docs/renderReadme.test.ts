@@ -31,4 +31,34 @@ describe('renderReadme', () => {
         expect(html).toContain('src="https://cdn.seedcord.org/assets/banner.webp"');
         expect(html).not.toContain('readme-img-');
     });
+
+    it('marks the first image as high fetch priority for the LCP', async () => {
+        const html = await renderReadme('![banner](https://cdn.seedcord.org/assets/banner.webp)');
+
+        expect(html).toContain('fetchpriority="high"');
+    });
+
+    it('highlights fenced code blocks with shiki, like TSDoc prose', async () => {
+        const html = await renderReadme('```ts\nconst answer = 42;\n```');
+
+        // same shiki output as the TSDoc prose renderer (renderParagraphs)
+        expect(html).toContain('shiki-theme-group');
+        expect(html).toMatch(/style="[^"]*color:/i);
+    });
+
+    it('highlights a fence with no language as the ts default', async () => {
+        // a bare ``` fence gives Marked an empty lang string, which must still use the ts default
+        const html = await renderReadme('```\nconst answer = 42;\n```');
+
+        expect(html).toContain('shiki-theme-group');
+        expect(html).toMatch(/color:[^"]*">const/i);
+    });
+
+    it('falls back to a plain code block for an unsupported language', async () => {
+        // python is not in the loaded shiki grammar set
+        const html = await renderReadme('```python\nprint("hi")\n```');
+
+        expect(html).toContain('print("hi")');
+        expect(html).not.toContain('shiki-theme-group');
+    });
 });

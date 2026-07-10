@@ -9,6 +9,7 @@ import { FeatureMarquee } from '@components/home/Marquee';
 import { Nav } from '@components/home/Nav';
 import { ResolvedType } from '@components/home/ResolvedType';
 import { TypedDx } from '@components/home/TypedDx';
+import { SlashCommand } from '@components/SlashCommand';
 import { FEATURES } from '@lib/features';
 
 import type { ReactNode } from 'react';
@@ -29,6 +30,7 @@ function Home(): ReactNode {
                 <GetStarted />
             </main>
             <Footer />
+            <SlashCommand />
         </>
     );
 }

@@ -1,6 +1,7 @@
 import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 
+import { CopyCommand } from '@components/ui/CopyCommand';
 import { PosterButton } from '@components/ui/PosterButton';
 import { DOCS_URL, GUIDE_URL } from '@lib/site';
 
@@ -17,10 +18,10 @@ export function Hero(): ReactNode {
                 <div className={cn('relative z-10')}>
                     <div
                         className={cn(
-                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-3 py-1.5 text-sm font-semibold text-(--cream)'
+                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-2.5 py-1 text-xs font-semibold text-(--cream) sm:px-3 sm:py-1.5 sm:text-sm'
                         )}
                     >
-                        discord.js 14 · class + decorator framework
+                        discord.js 14 · typescript · class + decorator framework
                     </div>
                     <h1
                         className={cn(
@@ -36,7 +37,9 @@ export function Hero(): ReactNode {
                         wired and typed on top of discord.js. A wrong route or option is a compile error, before the bot
                         ever connects.
                     </p>
-                    <div className={cn('mt-8 flex flex-wrap items-center gap-3')}>
+                    {/* ml-1 matches the poster button's 4px rest translate, aligning the chip with the button face */}
+                    <CopyCommand command="pnpm add seedcord" className={cn('mt-7 ml-1')} />
+                    <div className={cn('mt-3 flex flex-wrap items-center gap-3')}>
                         <PosterButton href={GUIDE_URL} variant="solid" className={cn('font-display px-7 py-3 text-lg')}>
                             Get started
                         </PosterButton>
@@ -47,13 +50,6 @@ export function Hero(): ReactNode {
                         >
                             Browse the docs
                         </PosterButton>
-                        <span
-                            className={cn(
-                                'font-mono-code ml-1 rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--cream)'
-                            )}
-                        >
-                            pnpm add seedcord
-                        </span>
                     </div>
                 </div>
 

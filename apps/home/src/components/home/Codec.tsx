@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import { ArrowLeftFromLine, ArrowRightFromLine } from 'lucide-react';
 
 import { CodeCard } from '@components/code/CodeCard';
-import { Eyebrow, Section } from '@components/home/Section';
+import { Section } from '@components/home/Section';
 import { codecComponent, codecHandler } from '@lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -16,7 +16,6 @@ export function Codec(): ReactNode {
     return (
         <Section ground="flesh">
             <div className={cn('max-w-2xl')}>
-                <Eyebrow ground="flesh">03 / TYPED CUSTOMID CODEC</Eyebrow>
                 <h2
                     className={cn(
                         'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'

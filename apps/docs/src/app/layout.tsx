@@ -149,7 +149,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                                 </a>
                                 <div className={cn('flex min-h-screen flex-col')}>
                                     <Navbar />
-                                    <div className={cn('flex-1')}>{children}</div>
+                                    <div className={cn('flex-1 pt-(--nav-h)')}>{children}</div>
                                 </div>
                             </HotkeyProvider>
                         </TooltipProvider>

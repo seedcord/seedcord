@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import { ArrowRight } from 'lucide-react';
 
 import { CodeCard } from '@components/code/CodeCard';
-import { Eyebrow, Section } from '@components/home/Section';
+import { Section } from '@components/home/Section';
 import { afterSeedcord, beforeRawDjs } from '@lib/code/samples';
 
 import type { ReactNode } from 'react';
@@ -12,7 +12,6 @@ export function BeforeAfter(): ReactNode {
         <Section ground="cream">
             <div className={cn('mb-10 flex flex-wrap items-end justify-between gap-4')}>
                 <div>
-                    <Eyebrow ground="cream">02 / LESS BOILERPLATE</Eyebrow>
                     <h2
                         className={cn(
                             'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'

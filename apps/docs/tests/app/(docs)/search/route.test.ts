@@ -46,8 +46,8 @@ vi.mock('@lib/docs/engine', () => ({
 }));
 
 function makeRequest(url: string): NextRequest {
-    // justified: route only reads nextUrl.searchParams; the real NextRequest constructor pulls in Next internals.
-    return { nextUrl: new URL(url) } as unknown as NextRequest;
+    // justified: the real NextRequest constructor pulls in Next internals.
+    return { nextUrl: new URL(url), headers: new Headers() } as unknown as NextRequest;
 }
 
 function makeEntry(overrides: Partial<DocSearchEntry> = {}): DocSearchEntry {
@@ -124,7 +124,7 @@ describe('GET /search: query validation', () => {
         expect(engineStub.search).toHaveBeenCalledWith('Logger');
     });
 
-    it('forwards the query verbatim (case is preserved; engine does its own matching)', async () => {
+    it('forwards the query verbatim, leaving case to the engine', async () => {
         await GET(makeRequest('https://example.com/search?q=LoGgEr'));
         expect(engineStub.search).toHaveBeenCalledWith('LoGgEr');
     });
@@ -141,7 +141,6 @@ describe('GET /search: scope parameter', () => {
     it("defaults to scope 'all', searching every loaded package", async () => {
         await GET(makeRequest('https://example.com/search?q=Logger'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger');
-        // current package loads at its URL version (defaults to latest), other packages load at the stable head.
         expect(engineStub.setVersion).toHaveBeenCalledWith('seedcord', 'latest');
         expect(engineStub.setVersion).toHaveBeenCalledWith('services', '1.0.0');
     });
@@ -219,7 +218,7 @@ describe('GET /search: version and channel selection', () => {
 });
 
 describe('GET /search: package listing', () => {
-    it('returns the documented packages for list=packages without searching', async () => {
+    it('maps listPackages to the packages payload for list=packages without searching', async () => {
         engineStub.listPackages.mockResolvedValue([
             { folder: 'seedcord', fullName: 'seedcord' },
             { folder: 'services', fullName: '@seedcord/services' }
@@ -262,27 +261,27 @@ describe('GET /search: kind filter', () => {
 });
 
 describe('GET /search: KIND_TO_RESULT canonical mapping (H8 regression)', () => {
-    const cases: Array<[number, string, string]> = [
-        [Kind.Class, 'Class', 'class'],
-        [Kind.Interface, 'Interface', 'interface'],
-        [Kind.Enum, 'Enum', 'enum'],
-        [Kind.EnumMember, 'EnumMember', 'enumMember'],
-        [Kind.TypeAlias, 'TypeAlias', 'type'],
-        [Kind.TypeParameter, 'TypeParameter', 'typeParameter'],
-        [Kind.Function, 'Function', 'function'],
-        [Kind.Method, 'Method', 'method'],
-        [Kind.Constructor, 'Constructor', 'constructor'],
-        [Kind.CallSignature, 'CallSignature', 'function'],
-        [Kind.ConstructorSignature, 'ConstructorSignature', 'constructor'],
-        [Kind.GetSignature, 'GetSignature', 'property'],
-        [Kind.SetSignature, 'SetSignature', 'property'],
-        [Kind.Accessor, 'Accessor', 'property'],
-        [Kind.Property, 'Property', 'property'],
-        [Kind.Variable, 'Variable', 'variable'],
-        [Kind.Parameter, 'Parameter', 'parameter']
+    const cases: Array<[string, string, number]> = [
+        ['Class', 'class', Kind.Class],
+        ['Interface', 'interface', Kind.Interface],
+        ['Enum', 'enum', Kind.Enum],
+        ['EnumMember', 'enumMember', Kind.EnumMember],
+        ['TypeAlias', 'type', Kind.TypeAlias],
+        ['TypeParameter', 'typeParameter', Kind.TypeParameter],
+        ['Function', 'function', Kind.Function],
+        ['Method', 'method', Kind.Method],
+        ['Constructor', 'constructor', Kind.Constructor],
+        ['CallSignature', 'function', Kind.CallSignature],
+        ['ConstructorSignature', 'constructor', Kind.ConstructorSignature],
+        ['GetSignature', 'property', Kind.GetSignature],
+        ['SetSignature', 'property', Kind.SetSignature],
+        ['Accessor', 'property', Kind.Accessor],
+        ['Property', 'property', Kind.Property],
+        ['Variable', 'variable', Kind.Variable],
+        ['Parameter', 'parameter', Kind.Parameter]
     ];
 
-    it.each(cases)('maps Kind.%s to "%s"', async (kind, _label, expected) => {
+    it.each(cases)('maps %s to "%s"', async (_label, expected, kind) => {
         engineStub.search.mockReturnValue([makeEntry({ slug: `item-${expected}`, kind })]);
 
         const res = await GET(makeRequest('https://example.com/search?q=item'));
@@ -421,5 +420,30 @@ describe('GET /search: dedupe and limits', () => {
         const res = await GET(makeRequest('https://example.com/search?q=entry'));
         const results = await flatResults(res);
         expect(results).toHaveLength(24);
+    });
+});
+
+describe('GET /search: instrumentation and rate limiting', () => {
+    function makeIpRequest(url: string, ip: string): NextRequest {
+        // justified: route reads nextUrl.searchParams and the cf-connecting-ip header only.
+        return { nextUrl: new URL(url), headers: new Headers({ 'cf-connecting-ip': ip }) } as unknown as NextRequest;
+    }
+
+    it('sets a Server-Timing header on a search response', async () => {
+        const res = await GET(makeRequest('https://example.com/search?q=Logger'));
+        expect(res.headers.get('Server-Timing')).toMatch(/^search;dur=/);
+    });
+
+    it('returns 429 with an empty result set and an integer Retry-After once an ip exceeds its window', async () => {
+        const ip = 'route-ratelimit-test';
+        let limited: Response | null = null;
+        // 200 sits above the default window limit, so the ip hits its cap before the loop ends
+        for (let i = 0; i < 200 && !limited; i += 1) {
+            const res = await GET(makeIpRequest('https://example.com/search?q=Logger', ip));
+            if (res.status === 429) limited = res;
+        }
+        expect(limited).not.toBeNull();
+        await expect(limited?.json()).resolves.toEqual({ results: [] });
+        expect(limited?.headers.get('Retry-After')).toMatch(/^\d+$/);
     });
 });

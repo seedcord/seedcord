@@ -5,6 +5,7 @@
 /* one knob for all docs rounding. chips need to be 2px tighter */
 :root {
     --radius-surface: 0.375rem;
+    --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
 }
 @theme {
     --radius-sm: calc(var(--radius-surface) - 0.125rem);

@@ -12,7 +12,7 @@ export function ThemeProvider({ children }: ThemeProviderProps): ReactElement {
     return (
         <NextThemesProvider
             attribute="data-theme"
-            defaultTheme="system"
+            defaultTheme="light"
             enableSystem
             storageKey="theme"
             disableTransitionOnChange

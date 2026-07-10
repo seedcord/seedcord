@@ -120,5 +120,6 @@ export const rawExternalLinks = {
     logform: 'https://github.com/winstonjs/logform',
     kysely: 'https://kysely.dev/docs/intro',
     pg: 'https://node-postgres.com',
-    eslint: 'https://eslint.org/docs/latest/'
+    eslint: 'https://eslint.org/docs/latest/',
+    '@typescript-eslint/utils': 'https://typescript-eslint.io'
 } as const;

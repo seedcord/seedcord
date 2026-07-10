@@ -7,20 +7,20 @@ import { tw } from './lib/tw';
 
 import type { ComponentPropsWithoutRef, ReactElement, ReactNode, Ref } from 'react';
 
-const tooltipContentBaseClassName = [
+const tooltipContentBaseClassName = cn(
     tw`z-50 max-w-xs`,
     tw`px-2.5 py-1.5`,
     tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`text-xs/snug`,
     tw`shadow-soft-token`,
-    // scale from the radix-injected trigger anchor, not the panel center
+    // scale from the radix-injected trigger anchor
     tw`origin-(--radix-tooltip-content-transform-origin)`,
     tw`data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95`,
     tw`data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95`,
     tw`data-[state=closed]:duration-100 data-[state=delayed-open]:duration-150`,
     tw`data-[state=delayed-open]:ease-(--ease-out-strong)`
-].join(' ');
+);
 
 interface TooltipProviderProps extends ComponentPropsWithoutRef<typeof TooltipPrimitive.Provider> {}
 

@@ -25,7 +25,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 // default to a fresh per-engine cache so tests stay isolated while the model-cache test shares one.
 function makeEngine(fetcher: Fetcher, modelCache = new Map<string, DocPackageModel>()): VersionedDocsEngine {
-    return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher), fetcher, modelCache);
+    return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher, () => true), fetcher, modelCache);
 }
 
 function fixtureFetcher(): Fetcher {

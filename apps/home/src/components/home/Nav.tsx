@@ -2,7 +2,9 @@ import { cn, GithubIcon, Icon } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
+import { GithubStars } from '@components/GithubStars';
 import { PosterButton } from '@components/ui/PosterButton';
+import { pressable } from '@components/ui/press';
 import { DOCS_URL, GUIDE_URL, REPO_URL } from '@lib/site';
 
 import type { ReactNode } from 'react';
@@ -38,7 +40,8 @@ export function Nav(): ReactNode {
                                 target="_blank"
                                 rel="noreferrer"
                                 className={cn(
-                                    'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) transition-colors hover:bg-(--seed-dark) hover:text-(--cream)'
+                                    'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) hover:bg-(--seed-dark) hover:text-(--cream)',
+                                    pressable
                                 )}
                             >
                                 {l.label}
@@ -48,6 +51,7 @@ export function Nav(): ReactNode {
                     <PosterButton href={REPO_URL} variant="ink" className={cn('font-mono-code px-3 py-1.5 text-sm')}>
                         <Icon icon={GithubIcon} size={20} className={cn('md:hidden')} />
                         <span className={cn('sr-only md:not-sr-only')}>GitHub</span>
+                        <GithubStars />
                     </PosterButton>
                 </div>
             </div>

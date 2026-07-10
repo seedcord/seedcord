@@ -2,7 +2,7 @@ import { cn, Icon } from '@seedcord/ui';
 import { Braces, RefreshCw, ShieldCheck } from 'lucide-react';
 
 import { CodeCard } from '@components/code/CodeCard';
-import { Eyebrow, Section } from '@components/home/Section';
+import { Section } from '@components/home/Section';
 import { Code } from '@components/ui/Code';
 import { codegenOutput, typedDxCommand, typedDxHandler } from '@lib/code/samples';
 
@@ -19,7 +19,6 @@ export function TypedDx(): ReactNode {
         <Section ground="cream">
             <div className={cn('grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]')}>
                 <div className={cn('min-w-0')}>
-                    <Eyebrow ground="cream">01 / TYPED DX</Eyebrow>
                     <h2
                         className={cn(
                             'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'

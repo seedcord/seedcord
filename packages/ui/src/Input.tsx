@@ -5,11 +5,11 @@ import { tw } from './lib/tw';
 
 import type { InputHTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 
-const inputWrapperBaseClassName = [
+const inputWrapperBaseClassName = cn(
     tw`flex items-center gap-2 rounded-md`,
     tw`transition-[color,background-color,border-color,box-shadow] duration-150 ease-out`,
     tw`has-[input:disabled]:cursor-not-allowed has-[input:disabled]:opacity-50`
-].join(' ');
+);
 
 const inputVariantClasses = {
     default: tw`border border-(--border) bg-transparent focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-(--focus-outline-b)`,
