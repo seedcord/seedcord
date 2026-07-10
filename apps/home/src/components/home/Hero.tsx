@@ -17,10 +17,10 @@ export function Hero(): ReactNode {
                 <div className={cn('relative z-10')}>
                     <div
                         className={cn(
-                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-3 py-1.5 text-sm font-semibold text-(--cream)'
+                            'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-2.5 py-1 text-xs font-semibold text-(--cream) sm:px-3 sm:py-1.5 sm:text-sm'
                         )}
                     >
-                        discord.js 14 · class + decorator framework
+                        discord.js 14 · typescript · class + decorator framework
                     </div>
                     <h1
                         className={cn(
