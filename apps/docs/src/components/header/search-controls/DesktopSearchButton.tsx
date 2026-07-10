@@ -4,6 +4,7 @@ import { Button, Icon, cn } from '@seedcord/ui';
 import { Search } from 'lucide-react';
 
 import { log } from '@lib/logger';
+import { useIsMac } from '@lib/platform';
 import { useUIStore } from '@store/ui';
 
 import type { ReactElement } from 'react';
@@ -11,6 +12,7 @@ import type { ReactElement } from 'react';
 export function DesktopSearchButton(): ReactElement {
     const open = useUIStore((state) => state.isCommandPaletteOpen);
     const setCommandPaletteOpen = useUIStore((state) => state.setCommandPaletteOpen);
+    const isMac = useIsMac();
 
     const toggleCommandPalette = (): void => {
         log('Search button clicked');
@@ -36,13 +38,13 @@ export function DesktopSearchButton(): ReactElement {
             </span>
             <div className={cn('text-subtle flex items-center gap-2 text-[0.65rem]')}>
                 <kbd
+                    aria-label={isMac ? 'Command K' : 'Control K'}
                     className={cn(
-                        'border-border bg-surface-moderate inline-flex items-center gap-px rounded-md border px-2 py-1 font-sans text-xs leading-none font-semibold tracking-wide uppercase'
+                        'border-border bg-surface-moderate inline-flex items-center rounded-md border px-2 py-1 font-sans text-xs leading-none font-semibold tracking-wide'
                     )}
                 >
-                    {/* U+2318 system-font glyph aligns baseline and cap-height with the adjacent letter; an SVG icon does not */}
-                    <span aria-hidden="true">⌘</span>
-                    <span>K</span>
+                    {/* ⌘ (U+2318) is a system-font glyph that aligns baseline + cap-height with the letter. an SVG icon does not. */}
+                    <span aria-hidden="true">{isMac ? '⌘K' : 'Ctrl+K'}</span>
                 </kbd>
             </div>
         </Button>
