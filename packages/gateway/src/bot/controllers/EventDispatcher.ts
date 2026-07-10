@@ -1,9 +1,8 @@
 import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
-import { hasKeys, traverseDirectory } from '@seedcord/utils';
-import chalk from 'chalk';
+import { Logger, paint } from '@seedcord/logger';
+import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 
 import { MiddlewareType } from '@bDecorators/Middlewares';
@@ -54,6 +53,11 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
 
+    // batched during bulk load, hmr registrations log inline
+    private loading = false;
+    private readonly loadedHandlers: { name: string; from: string }[] = [];
+    private readonly loadedMiddlewares: { name: string; from: string }[] = [];
+
     private readonly hmrHandler?: HmrModuleHandler<
         EventHandlerConstructor,
         EventMiddlewareConstructor,
@@ -103,25 +107,41 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (!handlersDir) {
             return;
         }
-        this.logger.info(chalk.bold(handlersDir));
 
         const middlewareDir = hasKeys(this.core.config.bot.events, ['middlewares'])
             ? this.core.config.bot.events.middlewares
             : undefined;
-        if (middlewareDir) {
-            this.logger.info(`${chalk.bold(middlewareDir)} ${chalk.gray('(middlewares)')}`);
-            await this.loadMiddlewares(middlewareDir);
+
+        this.loading = true;
+        this.loadedHandlers.length = 0;
+        this.loadedMiddlewares.length = 0;
+        try {
+            if (middlewareDir) await this.loadMiddlewares(middlewareDir);
+            await this.loadHandlers(handlersDir);
+        } finally {
+            this.loading = false;
         }
 
-        await this.loadHandlers(handlersDir);
         this.attachToClient();
+        this.reportLoad();
+    }
 
-        this.logger.info(`${chalk.bold.green('Loaded event handlers:')}`);
-        const eventList: string[] = [`${chalk.magenta.bold(this.middlewares.length)} middlewares`];
-        this.eventMap.forEach((handlers, eventName) => {
-            eventList.push(`${chalk.magenta.bold(handlers.length)} ${eventName}`);
+    private reportLoad(): void {
+        const { utils } = this.logger;
+
+        utils.summary('Loaded', {
+            'event handlers': this.loadedHandlers.length,
+            middlewares: this.loadedMiddlewares.length
         });
-        this.logger.utils.list(eventList);
+
+        if (this.loadedMiddlewares.length > 0) {
+            utils.block('Loaded event middlewares', utils.entries(this.loadedMiddlewares));
+        }
+
+        const perEvent: Record<string, number> = {};
+        for (const [event, handlers] of this.eventMap) perEvent[event] = handlers.length;
+
+        utils.block('Loaded event handlers', [...utils.entries(this.loadedHandlers), ...utils.counts(perEvent)]);
     }
 
     private async loadHandlers(dir: string): Promise<void> {
@@ -195,8 +215,16 @@ export class EventDispatcher implements Initializeable, HmrAware {
         });
         this.middlewares.sort((a, b) => a.priority - b.priority);
 
+        if (this.loading) {
+            this.loadedMiddlewares.push({
+                name: `${middlewareCtor.name} (${metadata.priority})`,
+                from: formatFilePath(relativePath)
+            });
+            return;
+        }
+
         this.logger.utils.registration(
-            `${middlewareCtor.name} ${chalk.gray(`(${metadata.priority})`)}`,
+            `${middlewareCtor.name} ${paint.mute(`(${metadata.priority})`)}`,
             relativePath,
             'event middleware'
         );
@@ -213,7 +241,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 const middleware = new ctor(args, this.core, eventName); // event name so a catchall/multi middleware can read this.eventName
                 await middleware.execute();
             } catch (caught) {
-                // return false so a throw in middleware stops the event for downstream handlers
+                // a middleware throw stops the event for downstream handlers
                 handleEventFault(caught, String(eventName), ctor.name, args, this.core);
                 return false;
             }
@@ -265,7 +293,9 @@ export class EventDispatcher implements Initializeable, HmrAware {
             }
         }
 
-        this.logger.utils.registration(handlerClass.name, relativePath);
+        const from = formatFilePath(relativePath);
+        if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
+        else this.logger.utils.registration(handlerClass.name, from);
     }
 
     private attachToClient(): void {
@@ -280,14 +310,14 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         const handlerEntries = this.eventMap.get(eventName);
         this.logger.debug(
-            `Attaching ${chalk.bold.green(eventName)} to the client with ${chalk.gray(handlerEntries?.length ?? 0)} handler(s)`
+            `Attaching ${paint.mint.bold(eventName)} to the client with ${paint.mute(handlerEntries?.length ?? 0)} handler(s)`
         );
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
             this.core.bot.emitSafe('any:event', eventName, ...args);
             void (async () => {
                 await this.processEvent(eventName, args).catch((err: Error) => {
-                    this.logger.error(`[${chalk.bold.red('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                    this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
                     this.core.bot.emit('error:unhandled:event', err);
                 });
             })();
@@ -305,7 +335,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
             (entry) => entry.frequency !== 'once' || !this.executedOnceHandlers.has(entry.ctor)
         );
 
-        // Return before running middlewares when every handler is a spent 'once'.
+        // avoid running middlewares when every handler is a spent 'once'
         if (handlersToExecute.length === 0) return;
 
         const shouldContinue = await this.runMiddlewares(eventName, args);
@@ -329,7 +359,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         args: ClientEvents[KeyOfEvents]
     ): Promise<void> {
         try {
-            this.logger.debug(`Processing ${chalk.bold.green(eventName)} with ${chalk.gray(ctor.name)}`);
+            this.logger.debug(`Processing ${paint.mint.bold(eventName)} with ${paint.mute(ctor.name)}`);
             const handler = new ctor(args, this.core, eventName); // event name so match can route by it
             const eventCtx = eventGateContext(eventName, args, this.core);
             await runHandlerGates(ctor, eventCtx);

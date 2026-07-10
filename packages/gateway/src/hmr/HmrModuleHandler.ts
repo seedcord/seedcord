@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 
-import type { Logger } from '@seedcord/services';
+import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types/internal';
 
 interface HmrStore<THandler, TMiddleware, TArtifacts> {

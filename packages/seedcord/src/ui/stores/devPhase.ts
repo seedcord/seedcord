@@ -1,8 +1,10 @@
+import { ui } from '@ui/palette';
+
 import type { TextProps } from 'ink';
 
 export type DevPhase = 'starting' | 'running' | 'restart-required' | 'disconnected' | 'error' | 'quitting';
 
-// Disconnect only applies while a bot session is actually running; the other phases have nothing to stop.
+// disconnect only applies while a session is running. the other phases have nothing to stop.
 export function isSessionLive(phase: DevPhase): boolean {
     return phase === 'running' || phase === 'restart-required';
 }
@@ -24,13 +26,11 @@ export interface PhaseMeta {
     readonly kind: PhaseGlyph;
 }
 
-// Single source for the status-badge presentation. `satisfies` keeps each entry's literal types while
-// enforcing one entry per DevPhase, so adding a phase is a compile error until its meta is filled in.
 export const PHASE_META = {
-    starting: { label: 'starting', icon: '◐', color: 'cyan', kind: 'spinner' },
-    running: { label: 'running', icon: '●', color: 'green', kind: 'arc' },
-    'restart-required': { label: 'restart required', icon: '◆', color: 'yellow', kind: 'static' },
-    disconnected: { label: 'offline', icon: '○', color: 'gray', kind: 'static' },
-    error: { label: 'error', icon: '✖', color: 'red', kind: 'static' },
-    quitting: { label: 'quitting', icon: '◐', color: 'magenta', kind: 'spinner' }
+    starting: { label: 'starting', icon: '◐', color: ui.accent, kind: 'spinner' },
+    running: { label: 'running', icon: '●', color: ui.good, kind: 'arc' },
+    'restart-required': { label: 'restart required', icon: '◆', color: ui.warn, kind: 'static' },
+    disconnected: { label: 'offline', icon: '○', color: ui.muted, kind: 'static' },
+    error: { label: 'error', icon: '✖', color: ui.bad, kind: 'static' },
+    quitting: { label: 'quitting', icon: '◐', color: ui.muted, kind: 'spinner' }
 } as const satisfies Record<DevPhase, PhaseMeta>;

@@ -62,6 +62,7 @@
     },
     "dependencies": {
         "@seedcord/errors": "workspace:*",
+        "@seedcord/logger": "workspace:*",
         "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

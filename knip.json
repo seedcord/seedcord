@@ -54,6 +54,7 @@
         "packages/plugins": {},
         "packages/rate-limiter": {},
         "packages/event-emitter": {},
+        "packages/logger": {},
         "packages/gateway": {},
         "packages/services": {},
         "packages/tsconfig": {},

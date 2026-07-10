@@ -22,10 +22,8 @@ function silentLogger(overrides: Partial<ILogger> = {}): ILogger {
         error: () => undefined,
         warn: () => undefined,
         info: () => undefined,
-        http: () => undefined,
-        verbose: () => undefined,
         debug: () => undefined,
-        silly: () => undefined,
+        trace: () => undefined,
         ...overrides
     };
 }

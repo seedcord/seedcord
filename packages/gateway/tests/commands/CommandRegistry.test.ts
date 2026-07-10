@@ -58,6 +58,35 @@ describe('CommandRegistry Integration', () => {
         expect(globalCommands[0]?.name).toBe('ping');
     });
 
+    it('resets the loading flag when the bulk load throws', async () => {
+        const commandsDir = 'commands';
+        await testEnv.createFile(
+            `${commandsDir}/PingCommand.ts`,
+            `
+            import { BuilderComponent, RegisterCommand } from '${seedcordPath}';
+
+            @RegisterCommand('global')
+            export class PingCommand extends BuilderComponent<'command'> {
+                constructor() {
+                    super('command');
+                    this.instance.setName('ping').setDescription('Replies with Pong!');
+                }
+            }
+            `
+        );
+        const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
+
+        seedcord = new Seedcord(config);
+        if (!seedcord.bot.commands) throw new Error('Commands not initialized');
+
+        // fixture: access the private load + flag to force a mid-load throw
+        const internal = seedcord.bot.commands as unknown as { loadCommands: () => Promise<void>; loading: boolean };
+        vi.spyOn(internal, 'loadCommands').mockRejectedValue(new Error('load boom'));
+
+        await expect(seedcord.bot.commands.init()).rejects.toThrow('load boom');
+        expect(internal.loading).toBe(false);
+    });
+
     it('should handle HMR updates for commands', async () => {
         const commandsDir = 'commands';
         const filePath = await testEnv.createFile(
@@ -84,7 +113,6 @@ describe('CommandRegistry Integration', () => {
 
         expect(seedcord.bot.commands.globalCommands[0]?.name).toBe('ping');
 
-        // Simulate HMR update: Change name
         await testEnv.createFile(
             `${commandsDir}/PingCommand.ts`,
             `

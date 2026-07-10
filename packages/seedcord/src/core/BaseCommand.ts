@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 
 import type { Command } from '@commander-js/extra-typings';
 import type { ILogger } from '@seedcord/types';

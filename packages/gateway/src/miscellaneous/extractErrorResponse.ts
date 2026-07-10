@@ -2,7 +2,7 @@ import * as crypto from 'node:crypto';
 
 import { Notice, Fault } from '@seedcord/core';
 import { prefixOf } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
 import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';

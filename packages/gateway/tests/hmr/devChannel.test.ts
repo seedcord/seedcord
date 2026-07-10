@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { setDevChannel } from '@hmr/devChannel';

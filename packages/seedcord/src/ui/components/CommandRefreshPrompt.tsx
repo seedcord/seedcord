@@ -1,6 +1,8 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { ui } from '@ui/palette';
+
 import type { ReactElement } from 'react';
 
 interface CommandRefreshPromptProps {
@@ -9,14 +11,14 @@ interface CommandRefreshPromptProps {
 
 export function CommandRefreshPrompt({ files }: CommandRefreshPromptProps): ReactElement {
     return (
-        <Box borderStyle="round" borderColor="yellow" flexDirection="column" paddingX={1}>
+        <Box borderStyle="round" borderColor={ui.warn} flexDirection="column" paddingX={1}>
             <Text>
-                <Text color="yellow" bold>
+                <Text color={ui.warn} bold>
                     Commands updated:
                 </Text>
             </Text>
             {files.map((file) => (
-                <Text key={file} color="cyan">
+                <Text key={file} color={ui.accent}>
                     - {file}
                 </Text>
             ))}

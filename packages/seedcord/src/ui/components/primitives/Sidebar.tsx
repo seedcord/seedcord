@@ -1,15 +1,18 @@
-import { LoggerChannelRegistry } from '@seedcord/services';
-import { formatFilePath } from '@seedcord/utils';
-import { Box, Text } from 'ink';
+import { Box, Text, useAnimation } from 'ink';
 import React from 'react';
 
 import { formatUptime } from '@ui/format';
+import { ui } from '@ui/palette';
+import { isStreaming } from '@ui/stores/devPhase';
+import { LogStore } from '@ui/stores/LogStore';
 
 import { Banner } from '../Banner';
 import { StatusBadge } from '../StatusBadge';
-import { ChannelToggles } from './ChannelToggles';
+import { FilterChips } from './FilterChips';
 import { HotkeyBar } from './HotkeyBar';
 
+import type { LogLevel } from '@seedcord/logger';
+import type { FilterCursor } from '@ui/filterCursor';
 import type { DevState } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
@@ -18,21 +21,30 @@ const MAX_RAIL = 40;
 
 const META_LABEL_WIDTH = 5;
 
-// Every channel writes its own per-run file into this directory, so show the directory, not one file.
-function logDir(): string | null {
-    const registry = LoggerChannelRegistry.instance;
-    const path = registry.getLogFilePath(registry.getDefaultChannel());
-    return path ? formatFilePath(path, { onlyDir: true }) : null;
+// the dev default writes one combined file into this folder
+const LOG_DIR = 'logs/';
+
+const BLINK_MS = 530;
+
+function LiveDot(): ReactElement {
+    const { frame } = useAnimation({ interval: BLINK_MS });
+    return (
+        <Text>
+            <Text color={ui.bad}>{frame % 2 === 0 ? '●' : ' '}</Text>
+            <Text dimColor> live</Text>
+        </Text>
+    );
 }
 
 interface SidebarProps {
     readonly state: DevState;
     readonly enabled: ReadonlySet<string>;
+    readonly enabledLevels: ReadonlySet<LogLevel>;
     readonly uptimeMs: number | null;
     readonly following: boolean;
     readonly interactive: boolean;
     readonly showToggles: boolean;
-    readonly cursor: number;
+    readonly cursor: FilterCursor;
     readonly width: number | null;
     readonly ref?: Ref<DOMElement>;
 }
@@ -47,22 +59,21 @@ function Meta({ label, value }: { label: string; value: string }): ReactElement 
 }
 
 function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
-    const dir = logDir();
     return (
         <Box flexDirection="column">
             <StatusBadge phase={state.phase} />
             {state.status ? <Text>{state.status}</Text> : null}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
-            {dir === null ? null : <Meta label="logs" value={dir} />}
+            <Meta label="logs" value={LOG_DIR} />
         </Box>
     );
 }
 
-// flexShrink={0} on every section keeps each at its natural height, so a short terminal clips from the
-// bottom instead of overlapping rows.
+// flexShrink={0} on every section keeps each at its natural height, without it a short terminal overlaps rows
 export function Sidebar({
     state,
     enabled,
+    enabledLevels,
     uptimeMs,
     following,
     interactive,
@@ -88,10 +99,12 @@ export function Sidebar({
                 <StatusBlock state={state} uptimeMs={uptimeMs} />
             </Box>
             <Box flexShrink={0} marginTop={1} flexDirection="column">
-                <Text bold color="blueBright">
-                    channels
-                </Text>
-                <ChannelToggles enabled={enabled} cursor={showToggles ? cursor : null} />
+                <FilterChips
+                    channels={LogStore.instance.getChannels()}
+                    enabledChannels={enabled}
+                    enabledLevels={enabledLevels}
+                    cursor={showToggles ? cursor : null}
+                />
             </Box>
             <Box flexShrink={0} marginTop={1}>
                 <HotkeyBar
@@ -100,6 +113,10 @@ export function Sidebar({
                     mode={showToggles ? 'toggles' : 'default'}
                     following={following}
                 />
+            </Box>
+            <Box flexGrow={1} />
+            <Box flexShrink={0} justifyContent="flex-end">
+                {isStreaming(state.phase) ? <LiveDot /> : <Text dimColor>○ idle</Text>}
             </Box>
         </Box>
     );

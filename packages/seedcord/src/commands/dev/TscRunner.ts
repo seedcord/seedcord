@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 
 const TSC_GRACEFUL_EXIT_MS = 2000;
 

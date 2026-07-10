@@ -1,5 +1,3 @@
-import { LoggerChannelRegistry } from '@seedcord/services';
-import { formatFilePath } from '@seedcord/utils';
 import { render } from 'ink';
 import React from 'react';
 
@@ -7,7 +5,7 @@ import { BaseCommand } from '@core/BaseCommand';
 import { DevApp } from '@ui/DevApp';
 import { DevStore } from '@ui/stores/DevStore';
 import { LogStore } from '@ui/stores/LogStore';
-import { SilentLogger } from '@utils/SilentLogger';
+import { silentLogger } from '@utils/SilentLogger';
 
 import { DevRunner } from './DevRunner';
 
@@ -20,7 +18,7 @@ export class DevCommand extends BaseCommand {
     constructor() {
         super('dev', 'Run a Seedcord instance from the config file', 'CLI:Dev');
         this.store = new DevStore();
-        this.runner = DevRunner.create(new SilentLogger(), this.store);
+        this.runner = DevRunner.create(silentLogger, this.store);
     }
 
     public register(program: Command): void {
@@ -46,8 +44,8 @@ export class DevCommand extends BaseCommand {
                     process.off('SIGTERM', onSignal);
                 }
 
-                // The alternate screen has been restored by now, so this lands in the normal terminal: a
-                // pointer to the on-disk log file, since the in-UI logs are gone once the UI unmounts.
+                // the alternate screen is restored by now, so this prints to the normal terminal, a pointer
+                // to the log folder since the in-UI logs are gone once the UI unmounts
                 this.printLogLocation();
 
                 // Ink's raw-mode stdin and the Vite dev server keep the event loop alive after teardown;
@@ -57,9 +55,7 @@ export class DevCommand extends BaseCommand {
     }
 
     private printLogLocation(): void {
-        const registry = LoggerChannelRegistry.instance;
-        const path = registry.getLogFilePath(registry.getDefaultChannel());
-        if (path) process.stdout.write(`seedcord dev stopped. logs: ${formatFilePath(path)}\n`);
+        process.stdout.write('seedcord dev stopped. logs: logs/\n');
     }
 
     private async runDevApp(): Promise<void> {

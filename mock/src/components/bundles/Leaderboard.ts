@@ -1,6 +1,6 @@
 import { ButtonBuilder } from '@discordjs/builders';
-import { ButtonStyle } from 'discord.js';
 import { BuilderComponent, RowComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
 
 import type { PageView } from '@seedcord/gateway';
 

@@ -22,6 +22,9 @@
 '📦 event-emitter':
   - changed-files:
       - any-glob-to-any-file: 'packages/event-emitter/**'
+'📦 logger':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/logger/**'
 '📦 ui':
   - changed-files:
       - any-glob-to-any-file: 'packages/ui/**'

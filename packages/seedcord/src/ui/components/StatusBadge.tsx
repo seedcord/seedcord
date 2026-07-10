@@ -4,8 +4,6 @@ import React from 'react';
 
 import { PHASE_META } from '@ui/stores/devPhase';
 
-import { RunningAnimation } from './primitives/RunningAnimation';
-
 import type { DevPhase } from '@ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
@@ -16,7 +14,7 @@ interface StatusBadgeProps {
 function Glyph({ phase }: { phase: DevPhase }): ReactElement {
     const meta = PHASE_META[phase];
     if (meta.kind === 'spinner') return <Spinner type="balloon2" />;
-    if (meta.kind === 'arc') return <RunningAnimation active color={meta.color} />;
+    if (meta.kind === 'arc') return <Spinner type="toggle4" />;
     return <Text>{meta.icon}</Text>;
 }
 

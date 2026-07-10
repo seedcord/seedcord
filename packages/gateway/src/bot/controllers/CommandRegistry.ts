@@ -5,7 +5,7 @@ import { BuilderComponent } from '@seedcord/core';
 import { CommandMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/services';
+import { Logger, paint } from '@seedcord/logger';
 import { formatFilePath, traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Collection } from 'discord.js';
@@ -53,6 +53,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
     public readonly guildCommands = new Collection<string, (SlashCommandBuilder | ContextMenuCommandBuilder)[]>();
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
+
+    // batched during bulk load, hmr registrations log inline
+    private loading = false;
+    private readonly loadedCommands: { name: string; from: string; kind: 'slash command' | 'context menu' }[] = [];
+
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
 
@@ -88,18 +93,40 @@ export class CommandRegistry implements Initializeable, HmrAware {
         const commandsDir = this.core.config.bot.commands.path;
         if (!commandsDir) return;
 
-        this.logger.info(chalk.bold(commandsDir));
+        this.loading = true;
+        this.loadedCommands.length = 0;
+        try {
+            await this.loadCommands(commandsDir);
+        } finally {
+            this.loading = false;
+        }
 
-        await this.loadCommands(commandsDir);
-
-        this.logger.utils.summary('Loaded commands', {
-            global: this.globalCommands.length,
-            'guild groups': this.guildCommands.size
-        });
+        this.reportLoad();
 
         getDevChannel()?.on('seedcord:refresh-commands', (data) => {
             void this.refresh(data.shouldRefresh);
         });
+    }
+
+    private reportLoad(): void {
+        const { utils } = this.logger;
+
+        utils.summary('Loaded commands', {
+            global: this.globalCommands.length,
+            'guild groups': this.guildCommands.size
+        });
+
+        let slash = 0;
+        let menu = 0;
+        for (const command of this.loadedCommands) {
+            if (command.kind === 'slash command') slash++;
+            else menu++;
+        }
+
+        utils.block('Loaded commands', [
+            ...utils.entries(this.loadedCommands),
+            ...utils.counts({ 'slash commands': slash, 'context menus': menu })
+        ]);
     }
 
     /** @internal */
@@ -158,29 +185,30 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         const instance = new ctor();
         const comp = instance.component;
-
-        const commandType = comp instanceof SlashCommandBuilder ? 'slash command' : 'context menu command';
+        const kind = comp instanceof SlashCommandBuilder ? 'slash command' : 'context menu';
 
         if (meta.scope === 'global') {
             this.globalCommands.push(comp);
-            this.logger.utils.registration(ctor.name, rel);
-            this.logger.utils.item(`Global ${commandType}: ${chalk.bold.cyan(comp.name)}`);
         } else {
             for (const g of meta.guilds) {
                 const arr = this.guildCommands.get(g) ?? [];
                 arr.push(comp);
                 this.guildCommands.set(g, arr);
             }
-            this.logger.utils.registration(ctor.name, rel);
-            this.logger.utils.item(
-                `Guild ${commandType}: ${chalk.bold.cyan(comp.name)} for ${chalk.magenta.bold(meta.guilds.length)} guild(s)`
-            );
         }
+
         this.ctorToCommand.set(ctor, {
             name: comp.name,
             scope: meta.scope,
             ...(meta.scope === 'guild' && { guilds: meta.guilds })
         });
+
+        if (this.loading) {
+            this.loadedCommands.push({ name: comp.name, from: formatFilePath(rel), kind });
+            return;
+        }
+
+        this.logger.utils.registration(comp.name, rel, `${meta.scope} ${kind}`);
     }
 
     private unregisterCommand(ctor: CommandCtor, artifacts?: CommandArtifact): void {
@@ -210,10 +238,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
             const deployed = await this.core.bot.client.application?.commands.set(this.globalCommands);
             if (deployed) result.global = deployed;
             const tag = this.globalCommands.length === 1 ? 'command' : 'commands';
-            this.logger.utils.summary('Configured global', {
-                [tag]: this.globalCommands.length
-            });
-            this.logger.utils.item(`${this.globalCommands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
+            this.logger.utils.block(
+                `Deployed ${this.globalCommands.length} global ${tag}`,
+                this.logger.utils.wrap(this.globalCommands.map((command) => command.name)),
+                'info'
+            );
         }
 
         for (const [guildId, commands] of this.guildCommands.entries()) {
@@ -226,10 +255,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
             const deployed = await guild.commands.set(commands);
             result.guilds.set(guildId, deployed);
             const tag = commands.length === 1 ? 'command' : 'commands';
-            this.logger.utils.summary(`Configured commands for ${chalk.bold.yellow(guild.name)}`, {
-                [tag]: commands.length
-            });
-            this.logger.utils.item(`${commands.map((command) => chalk.bold.cyan(command.name)).join(', ')}`);
+            this.logger.utils.block(
+                `Deployed ${commands.length} ${tag} to ${paint.amber.bold(guild.name)}`,
+                this.logger.utils.wrap(commands.map((command) => command.name)),
+                'info'
+            );
         }
 
         this.onDeployed?.(result);

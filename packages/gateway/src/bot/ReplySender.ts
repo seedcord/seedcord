@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, MessageFlags } from 'discord.js';
 
 import { HARMLESS_API_CODES } from '@bot/harmlessApiCodes';

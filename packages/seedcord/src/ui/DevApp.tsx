@@ -1,6 +1,7 @@
 import { Box, measureElement, useInput, useWindowSize } from 'ink';
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { INITIAL_CURSOR } from '@ui/filterCursor';
 import { useDevState } from '@ui/hooks/useDevState';
 import { useLogs } from '@ui/hooks/useLogs';
 import { useRailWidth } from '@ui/hooks/useRailWidth';
@@ -8,10 +9,11 @@ import { useScroll } from '@ui/hooks/useScroll';
 import { useUptime } from '@ui/hooks/useUptime';
 import { dispatchHotkey } from '@ui/hotkeys';
 import { DevLayout } from '@ui/layout/DevLayout';
+import { expandRows, rowKey } from '@ui/logRows';
 import { LogStore } from '@ui/stores/LogStore';
 
+import type { LogLevel } from '@seedcord/logger';
 import type { DevStore } from '@ui/stores/DevStore';
-import type { LogEntry } from '@ui/stores/LogStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 
@@ -24,18 +26,15 @@ interface DevAppProps {
     readonly onRefreshCommands?: (shouldRefresh: boolean) => Promise<void> | void;
 }
 
-function logKey(entry: LogEntry): number {
-    return entry.id;
-}
-
 export function DevApp(props: DevAppProps): ReactElement {
     const { store, onReady } = props;
     const state = useDevState(store);
     const { rows, columns } = useWindowSize();
 
     const [enabled, setEnabled] = useState<ReadonlySet<string>>(() => new Set());
+    const [enabledLevels, setEnabledLevels] = useState<ReadonlySet<LogLevel>>(() => new Set());
     const [showToggles, setShowToggles] = useState(false);
-    const [cursor, setCursor] = useState(0);
+    const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
     const [logBoxHeight, setLogBoxHeight] = useState(0);
@@ -43,21 +42,22 @@ export function DevApp(props: DevAppProps): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const railWidth = useRailWidth(railRef, state.phase, rows, columns);
 
-    const logs = useLogs(enabled);
+    const logs = useLogs(enabled, enabledLevels);
+    const logRows = useMemo(() => expandRows(logs), [logs]);
     const viewportHeight = Math.max(1, logBoxHeight);
-    const scroll = useScroll(logs, viewportHeight, logKey);
+    const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state);
 
     const interactive = !state.isBusy || state.restartRequired;
 
-    // Re-measure only when something can change the box height, a terminal resize or a notification card
-    // appearing/clearing. The measured height is the exact log-line budget for the scroll window.
+    // re-measure on anything that changes the box height, a resize, a notification card, or the scroll header
+    // toggling between its scroll status and nothing while following
     useLayoutEffect(() => {
         if (!logBoxRef.current) return;
         const measured = measureElement(logBoxRef.current).height;
         // eslint-disable-next-line @eslint-react/set-state-in-effect -- Ink layout is only measurable after render, so this sets the scroll-window height
         setLogBoxHeight((prev) => (prev === measured ? prev : measured));
-    }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt]);
+    }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt, scroll.following]);
 
     useInput((input, key) => {
         dispatchHotkey({
@@ -69,6 +69,8 @@ export function DevApp(props: DevAppProps): ReactElement {
             store,
             enabled,
             setEnabled,
+            enabledLevels,
+            setEnabledLevels,
             showToggles,
             setShowToggles,
             cursor,
@@ -105,6 +107,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 viewportHeight={viewportHeight}
                 measured={logBoxHeight > 0}
                 enabled={enabled}
+                enabledLevels={enabledLevels}
                 showToggles={showToggles}
                 cursor={cursor}
                 interactive={interactive}

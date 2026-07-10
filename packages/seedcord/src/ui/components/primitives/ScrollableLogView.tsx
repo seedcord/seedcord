@@ -1,19 +1,118 @@
+import { LEVEL_COLOR } from '@seedcord/logger';
 import { Box, Text } from 'ink';
 import React from 'react';
 
 import { channelColor } from '@ui/channelColor';
+import { formatClock } from '@ui/format';
 import { LogStore } from '@ui/stores/LogStore';
 
+import type { LogLevel } from '@seedcord/logger';
+import type { LogRow } from '@ui/logRows';
 import type { LogEntry } from '@ui/stores/LogStore';
 import type { ReactElement } from 'react';
 
 const MIN_LOG_LINES = 3;
-const MAX_TAG = 10;
+const DOT = '⏺';
+const BAR = '▌';
+const GUIDE = '│';
+const ELLIPSIS = '…';
+const CHIP_TEXT = '#1a1a1a';
+const CHIP_WIDTH = 3;
+const TIME_WIDTH = 8;
+const DOT_WIDTH = 1;
+
+// column where the head-line message starts: chip, time, label, dot, each followed by a space
+const messageColumn = (labelWidth: number): number => CHIP_WIDTH + 1 + TIME_WIDTH + 1 + labelWidth + 1 + DOT_WIDTH + 1;
+
+const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
+
+// warn and error tint their left prefix (through the channel dot), the message keeps its own color
+const WASH: Partial<Record<LogLevel, string>> = { warn: '#3a2f14', error: '#3d1a20' };
+
+function truncate(label: string, width: number): string {
+    return label.length > width ? `${label.slice(0, width - 1)}${ELLIPSIS}` : label;
+}
+
+function Chip({ level }: { level: LogLevel }): ReactElement {
+    return (
+        <Text backgroundColor={LEVEL_COLOR[level]} color={CHIP_TEXT} bold>
+            {` ${LEVEL_LETTER[level]} `}
+        </Text>
+    );
+}
+
+function Prefix({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
+    const label = truncate(log.label, labelWidth).padStart(labelWidth);
+    return (
+        <>
+            <Chip level={log.level} /> <Text dimColor>{formatClock(log.timestamp)}</Text> <Text>{label}</Text>{' '}
+            <Text color={channelColor(log.channel)}>{DOT}</Text>
+        </>
+    );
+}
+
+function HeadLine({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
+    const wash = WASH[log.level];
+
+    if (wash) {
+        return (
+            <Text wrap="truncate">
+                <Text backgroundColor={wash}>
+                    <Prefix log={log} labelWidth={labelWidth} />
+                </Text>{' '}
+                {log.text}
+            </Text>
+        );
+    }
+
+    return (
+        <Text wrap="truncate">
+            <Prefix log={log} labelWidth={labelWidth} /> {log.text}
+        </Text>
+    );
+}
+
+function ContinuationLine({ log, labelWidth }: { log: LogEntry; labelWidth: number }): ReactElement {
+    if (log.level === 'error') {
+        return (
+            <Text wrap="truncate">
+                <Text color={LEVEL_COLOR.error} bold>
+                    {BAR}
+                </Text>
+                <Text dimColor>{log.text}</Text>
+            </Text>
+        );
+    }
+
+    // block line: a faint guide under the message column, the content keeps its own color
+    return (
+        <Text wrap="truncate">
+            {' '.repeat(messageColumn(labelWidth) - 2)}
+            <Text dimColor>{GUIDE}</Text> {log.text}
+        </Text>
+    );
+}
+
+// full-width flex line bracketing a block. flexShrink={0} keeps the border-only box from compressing to
+// zero height under overflow, which would land the rule on the neighbouring text line.
+function Rule(): ReactElement {
+    return (
+        <Box
+            flexShrink={0}
+            borderStyle="single"
+            borderTop
+            borderBottom={false}
+            borderLeft={false}
+            borderRight={false}
+            borderDimColor
+        />
+    );
+}
 
 interface ScrollableLogViewProps {
-    readonly visible: readonly LogEntry[];
+    readonly visible: readonly LogRow[];
     readonly viewportHeight: number;
-    // False until the parent box has been measured; avoids a one-frame "too small" flash on mount.
+    // false until the parent box is measured, which avoids a one-frame "too small" flash on mount
     readonly measured: boolean;
 }
 
@@ -28,27 +127,23 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
         );
     }
 
-    // Pad channel tags to a common width so messages line up; cap the width so a long channel name is
-    // truncated rather than the message.
-    const channels = LogStore.instance.getChannels();
-    const tagWidth = Math.min(
-        MAX_TAG,
-        channels.reduce((max, channel) => Math.max(max, channel.length), 0)
-    );
+    const labelWidth = Math.max(1, LogStore.instance.getLabelWidth());
 
     return (
-        // flex-end pins the newest line to the bottom edge (tail -f): the window grows upward, and when the
-        // buffer is sparse the lines sit at the bottom instead of the middle.
+        // flex-end pins the newest line to the bottom edge (tail -f), and a sparse buffer stays pinned there too
         <Box flexDirection="column" flexGrow={1} justifyContent="flex-end" overflow="hidden">
             {visible.length === 0 ? (
                 <Text dimColor>Waiting for logs…</Text>
             ) : (
-                visible.map((log) => (
-                    <Text key={log.id} wrap="truncate">
-                        <Text color={channelColor(log.channel)}>{log.channel.slice(0, tagWidth).padEnd(tagWidth)}</Text>{' '}
-                        {log.text}
-                    </Text>
-                ))
+                visible.map((row) =>
+                    row.kind === 'rule' ? (
+                        <Rule key={row.key} />
+                    ) : row.entry.head ? (
+                        <HeadLine key={row.key} log={row.entry} labelWidth={labelWidth} />
+                    ) : (
+                        <ContinuationLine key={row.key} log={row.entry} labelWidth={labelWidth} />
+                    )
+                )
             )}
         </Box>
     );

@@ -1,4 +1,4 @@
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 
 import type { Core } from '@interfaces/Core';
 import type { DispatchContext } from '@seedcord/core';

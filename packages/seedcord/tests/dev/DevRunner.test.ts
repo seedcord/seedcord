@@ -1,22 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '@commands/dev/DevRunner';
+import { silentLogger } from '@utils/SilentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import type { ConfigLoader } from '@core/config/ConfigLoader';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
-import type { ILogger } from '@seedcord/types';
 import type { DevStore } from '@ui/stores/DevStore';
-
-const silentLogger: ILogger = {
-    error: () => undefined,
-    warn: () => undefined,
-    info: () => undefined,
-    http: () => undefined,
-    verbose: () => undefined,
-    debug: () => undefined,
-    silly: () => undefined
-};
 
 // justified: refreshCommands only reads the injected codegen and the (null) session, so the locator, config
 // loader, and store are never touched and can be empty stand-ins.

@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { Logger } from '@seedcord/services';
+import { Logger } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { chatInputApplicationCommandMention } from 'discord.js';
 

@@ -6,9 +6,9 @@ import { ServiceMetadataKey } from './decorators/RegisterMongoService';
 
 import type { Mongo } from './Mongo';
 import type { MongoDocument } from './types/MongoDocument';
+import type { Core } from '@seedcord/gateway';
 import type { TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
-import type { Core } from '@seedcord/gateway';
 
 /**
  * Base class for MongoDB service layers

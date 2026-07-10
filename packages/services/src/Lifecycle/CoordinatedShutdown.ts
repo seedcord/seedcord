@@ -35,7 +35,7 @@ const PHASE_ORDER: ShutdownPhase[] = [
  */
 export type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<ShutdownPhase>>;
 
-// Delay process.exit so winston has a window to flush buffered log lines before the event loop dies.
+// Delay process.exit so the logger's file sink has a window to flush before the event loop dies.
 const LOG_FLUSH_DELAY_MS = 500;
 
 /**
@@ -53,7 +53,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
     private onSigInt: (() => void) | null = null;
 
     public constructor(enabled = true) {
-        super('CoordinatedShutdown', PHASE_ORDER, ShutdownPhase);
+        super('Shutdown', PHASE_ORDER, ShutdownPhase);
 
         this.isShutdownEnabled = enabled;
         this.registerSignalHandlers();

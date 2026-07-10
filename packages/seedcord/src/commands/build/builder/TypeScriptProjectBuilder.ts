@@ -113,7 +113,7 @@ export class TypeScriptProjectBuilder {
         }
     }
 
-    private createProjectRequire(projectDir: string): NodeRequire {
+    private createProjectRequire(projectDir: string): NodeJS.Require {
         const candidate = resolve(projectDir, 'package.json');
         if (existsSync(candidate)) return createNodeRequire(candidate);
 

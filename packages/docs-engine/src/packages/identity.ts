@@ -57,6 +57,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/event-emitter': {
         displayName: 'event-emitter',
         aliases: ['event-emitter', '@seedcord/event-emitter']
+    },
+    '@seedcord/logger': {
+        displayName: 'logger',
+        aliases: ['logger', '@seedcord/logger']
     }
 };
 
