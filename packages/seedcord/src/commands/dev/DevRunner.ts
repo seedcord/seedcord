@@ -10,6 +10,7 @@ import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
+import { resetChannelColors } from '@ui/channelColor';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
@@ -46,7 +47,7 @@ class SeedcordDevSession {
             }
         });
 
-        // detect a missing entry by path rather than vite's error message, because that wording changed across a minor and broke detection.
+        // vite's missing-entry message changed across a minor and broke detection, so check the path directly
         if (!existsSync(this.config.instance)) {
             throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.config.instance]);
         }
@@ -90,8 +91,7 @@ class SeedcordDevSession {
             this.store.setStatus('Seedcord is running.');
             onReady?.();
 
-            // Block until stop() is called (by a UI action or the single signal handler in DevCommand). The session
-            // registers no process-signal handlers itself, so restarts never accumulate listeners.
+            // resolved by stop(). no process-signal handlers here (DevCommand registers the single one), so restarts never accumulate listeners.
             await new Promise<void>((resolve) => {
                 this.stopResolve = resolve;
             });
@@ -101,7 +101,7 @@ class SeedcordDevSession {
         }
     }
 
-    // quit(), restart(), and disconnect() all call stop(), and the run loop's finally calls dispose() which calls stop() again, so memoize to run the abort and shutdown sequence exactly once.
+    // quit/restart/disconnect and dispose() all call stop() so it should only run once
     public async stop(): Promise<void> {
         this.stopPromise ??= this.runStop();
         return this.stopPromise;
@@ -113,12 +113,11 @@ class SeedcordDevSession {
         this.instance?.startup.abort();
 
         if (this.startupPromise) {
-            // stop() already triggered startup.abort(), so a rejection here is that abort, not a fresh failure (real
-            // startup failures surface through start()'s own catch). Awaiting drains it so teardown stays ordered.
+            // startup.abort() was triggered above. await the rejection and suppress it to maintain shutdown order
             try {
                 await this.startupPromise;
             } catch {
-                /* drained: see above */
+                /* suppressed */
             }
         }
 
@@ -178,7 +177,7 @@ export class DevRunner {
 
                     await this.runSession();
                 } catch (error: unknown) {
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- quit() flips shouldQuit during the awaited session; TS narrows it to false from the loop guard and can't see the async cross-method mutation
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- quit() flips shouldQuit during the awaited session. TS narrows it to false from the loop guard and can't see the async cross-method mutation
                     if (this.shouldQuit) break;
                     await this.handleError(error);
                 }
@@ -200,6 +199,7 @@ export class DevRunner {
     }
 
     private async runSession(): Promise<void> {
+        resetChannelColors();
         this.store.setPhase('starting');
         this.store.setBusy(true);
         const config = await this.loadConfig();
@@ -253,15 +253,14 @@ export class DevRunner {
         this.currentSession?.refreshCommands(shouldRefresh);
     }
 
-    // an accepted refresh means the command files changed, so regenerate the typed registry alongside the
-    // bot's re-registration, and tsc picks up the new option types when it finishes. codegen throws instead of
-    // logging its own failures, so surface one here and leave the dev session running.
+    // an accepted refresh means command files changed, regenerate the typed registry so tsc picks up the new option types
     private async regenerateRegistry(): Promise<void> {
         if (this.isRegenerating) return;
         this.isRegenerating = true;
         try {
             await this.codegen.run(false);
         } catch (error: unknown) {
+            // codegen throws, log here and keep the dev session running
             this.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
             this.isRegenerating = false;

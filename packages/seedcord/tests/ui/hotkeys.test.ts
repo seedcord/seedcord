@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { INITIAL_CURSOR } from '@ui/filterCursor';
 import { dispatchHotkey } from '@ui/hotkeys';
 import { LogStore } from '@ui/stores/LogStore';
 
-import type { LogRecord } from '@seedcord/logger';
+import type { LogLevel, LogRecord } from '@seedcord/logger';
 import type { Key } from 'ink';
 
 type Ctx = Parameters<typeof dispatchHotkey>[0];
@@ -40,9 +41,11 @@ function makeCtx(overrides: Partial<Ctx>): Ctx {
         store: {},
         enabled: new Set<string>(),
         setEnabled: vi.fn(),
+        enabledLevels: new Set<LogLevel>(),
+        setEnabledLevels: vi.fn(),
         showToggles: false,
         setShowToggles: vi.fn(),
-        cursor: 0,
+        cursor: INITIAL_CURSOR,
         setCursor: vi.fn(),
         ...overrides
     } as unknown as Ctx;
@@ -81,14 +84,45 @@ describe('dispatchHotkey channel toggle mode', () => {
         expect(setEnabled).not.toHaveBeenCalled();
     });
 
-    it('toggles the channel under the cursor on space and stays open', async () => {
+    it('solos the focused channel on space and stays open', async () => {
         await seedChannel('alpha');
+        await seedChannel('beta');
         const setShowToggles = vi.fn();
         const setEnabled = vi.fn();
 
-        dispatchHotkey(makeCtx({ showToggles: true, input: ' ', cursor: 0, setShowToggles, setEnabled }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: ' ', cursor: INITIAL_CURSOR, setShowToggles, setEnabled }));
 
-        expect(setEnabled).toHaveBeenCalledTimes(1);
+        expect(setEnabled).toHaveBeenCalledWith(new Set(['alpha']));
         expect(setShowToggles).not.toHaveBeenCalled();
+    });
+
+    it('restores all on space when the focused channel is already solo', async () => {
+        await seedChannel('alpha');
+        const setEnabled = vi.fn();
+
+        dispatchHotkey(
+            makeCtx({ showToggles: true, input: ' ', cursor: INITIAL_CURSOR, enabled: new Set(['alpha']), setEnabled })
+        );
+
+        expect(setEnabled).toHaveBeenCalledWith(new Set());
+    });
+
+    it('toggles the focused channel off on t, keeping the rest', async () => {
+        await seedChannel('alpha');
+        await seedChannel('beta');
+        const setEnabled = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, input: 't', cursor: INITIAL_CURSOR, setEnabled }));
+
+        expect(setEnabled).toHaveBeenCalledWith(new Set(['beta']));
+    });
+
+    it('does nothing on space or t when no channels exist', () => {
+        const setEnabled = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, input: ' ', cursor: INITIAL_CURSOR, setEnabled }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: 't', cursor: INITIAL_CURSOR, setEnabled }));
+
+        expect(setEnabled).not.toHaveBeenCalled();
     });
 });

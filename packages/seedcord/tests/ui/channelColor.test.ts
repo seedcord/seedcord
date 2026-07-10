@@ -1,23 +1,26 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { channelColor } from '@ui/channelColor';
+import { channelColor, resetChannelColors } from '@ui/channelColor';
 
 describe('channelColor', () => {
-    it('maps a name to a stable hex color', () => {
-        const first = channelColor('db');
-        expect(first).toMatch(/^#[0-9a-f]{6}$/iu);
-        expect(channelColor('db')).toBe(first);
+    beforeEach(() => resetChannelColors());
+
+    it('assigns colors in first-seen order and keeps them stable', () => {
+        const first = channelColor('a');
+        const second = channelColor('b');
+        expect(second).not.toBe(first);
+        expect(channelColor('a')).toBe(first);
     });
 
-    it('picks the color from the name, independent of call order', () => {
-        const alpha = channelColor('alpha');
-        channelColor('beta');
-        channelColor('gamma');
-        expect(channelColor('alpha')).toBe(alpha);
+    it('restarts assignment from the first color after a reset', () => {
+        const first = channelColor('a');
+        channelColor('b');
+        resetChannelColors();
+        expect(channelColor('c')).toBe(first);
     });
 
-    it('spreads names across more than one palette color', () => {
-        const colors = new Set(['db', 'http', 'core', 'hmr', 'events', 'cache', 'gateway'].map(channelColor));
-        expect(colors.size).toBeGreaterThan(1);
+    it('gives 20 channels distinct colors', () => {
+        const colors = new Set(Array.from({ length: 20 }, (_, index) => channelColor(`ch${index}`)));
+        expect(colors.size).toBe(20);
     });
 });

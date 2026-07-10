@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { ui } from '@ui/palette';
 import { isSessionLive } from '@ui/stores/devPhase';
 
 import type { DevPhase } from '@ui/stores/devPhase';
@@ -23,13 +24,15 @@ interface HotkeyProps {
 }
 
 function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyProps): ReactElement {
-    const keyColor = !enabled ? 'gray' : highlight ? 'yellow' : 'cyan';
+    // a disabled row goes faint on both the key and the action, so it recedes as a unit
+    const keyColor = !enabled ? ui.faint : highlight ? ui.warn : ui.accent;
+    const actionColor = enabled ? ui.muted : ui.faint;
     return (
         <Box marginRight={2}>
             <Text color={keyColor} bold>
                 {keyLabel}
             </Text>
-            <Text dimColor> {action}</Text>
+            <Text color={actionColor}> {action}</Text>
         </Box>
     );
 }
@@ -51,7 +54,7 @@ function DefaultKeys({
             <Hotkey keyLabel="q" action="quit" />
             <Hotkey keyLabel="r" action="restart" enabled={interactive} highlight={RESTART_HINT_PHASES.has(phase)} />
             <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isSessionLive(phase)} />
-            <Hotkey keyLabel="c" action="channels" enabled={interactive} />
+            <Hotkey keyLabel="f" action="filters" enabled={interactive} />
             <Hotkey keyLabel="l" action="clear" enabled={interactive} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
@@ -64,8 +67,10 @@ export function HotkeyBar({ phase, interactive, mode, following }: HotkeyBarProp
         <Box flexDirection="column" flexWrap="wrap">
             {mode === 'toggles' && (
                 <>
-                    <Hotkey keyLabel="↑↓" action="move" />
-                    <Hotkey keyLabel="space" action="toggle" />
+                    <Hotkey keyLabel="←→" action="move" />
+                    <Hotkey keyLabel="↑↓" action="group" />
+                    <Hotkey keyLabel="space" action="solo" />
+                    <Hotkey keyLabel="t" action="toggle" />
                     <Hotkey keyLabel="↵/esc" action="done" />
                 </>
             )}

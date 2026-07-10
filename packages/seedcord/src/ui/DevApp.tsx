@@ -1,6 +1,7 @@
 import { Box, measureElement, useInput, useWindowSize } from 'ink';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { INITIAL_CURSOR } from '@ui/filterCursor';
 import { useDevState } from '@ui/hooks/useDevState';
 import { useLogs } from '@ui/hooks/useLogs';
 import { useRailWidth } from '@ui/hooks/useRailWidth';
@@ -11,6 +12,7 @@ import { DevLayout } from '@ui/layout/DevLayout';
 import { expandRows, rowKey } from '@ui/logRows';
 import { LogStore } from '@ui/stores/LogStore';
 
+import type { LogLevel } from '@seedcord/logger';
 import type { DevStore } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
@@ -30,8 +32,9 @@ export function DevApp(props: DevAppProps): ReactElement {
     const { rows, columns } = useWindowSize();
 
     const [enabled, setEnabled] = useState<ReadonlySet<string>>(() => new Set());
+    const [enabledLevels, setEnabledLevels] = useState<ReadonlySet<LogLevel>>(() => new Set());
     const [showToggles, setShowToggles] = useState(false);
-    const [cursor, setCursor] = useState(0);
+    const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
     const [logBoxHeight, setLogBoxHeight] = useState(0);
@@ -39,7 +42,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const railWidth = useRailWidth(railRef, state.phase, rows, columns);
 
-    const logs = useLogs(enabled);
+    const logs = useLogs(enabled, enabledLevels);
     const logRows = useMemo(() => expandRows(logs), [logs]);
     const viewportHeight = Math.max(1, logBoxHeight);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
@@ -47,8 +50,7 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const interactive = !state.isBusy || state.restartRequired;
 
-    // Re-measure only when something can change the box height, a terminal resize or a notification card
-    // appearing/clearing. The measured height is the exact log-line budget for the scroll window.
+    // re-measure only on the things that can change the box height, a resize or a notification card appearing or clearing
     useLayoutEffect(() => {
         if (!logBoxRef.current) return;
         const measured = measureElement(logBoxRef.current).height;
@@ -66,6 +68,8 @@ export function DevApp(props: DevAppProps): ReactElement {
             store,
             enabled,
             setEnabled,
+            enabledLevels,
+            setEnabledLevels,
             showToggles,
             setShowToggles,
             cursor,
@@ -102,6 +106,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 viewportHeight={viewportHeight}
                 measured={logBoxHeight > 0}
                 enabled={enabled}
+                enabledLevels={enabledLevels}
                 showToggles={showToggles}
                 cursor={cursor}
                 interactive={interactive}

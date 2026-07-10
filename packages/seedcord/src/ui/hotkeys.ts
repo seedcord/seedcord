@@ -1,18 +1,37 @@
+import { FILTER_LEVELS } from '@ui/components/primitives/FilterChips';
+import { focusedIn, INITIAL_CURSOR, moveCursor } from '@ui/filterCursor';
 import { isSessionLive } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
+import type { LogLevel } from '@seedcord/logger';
+import type { FilterCursor } from '@ui/filterCursor';
 import type { ScrollApi } from '@ui/hooks/useScroll';
 import type { LogRow } from '@ui/logRows';
 import type { DevState, DevStore } from '@ui/stores/DevStore';
 import type { Key } from 'ink';
 
-// Toggling a channel materializes the full list on first use, then flips one entry. When the result is "all
-// on" again it collapses back to an empty set so channels that appear later stay visible by default.
+// empty set means all, so "all on" collapses back to empty and later channels stay visible by default
 function toggleChannel(prev: ReadonlySet<string>, channel: string, all: readonly string[]): ReadonlySet<string> {
     const base = prev.size === 0 ? new Set(all) : new Set(prev);
     if (base.has(channel)) base.delete(channel);
     else base.add(channel);
     return base.size === all.length ? new Set<string>() : base;
+}
+
+function toggleLevel(prev: ReadonlySet<LogLevel>, level: LogLevel): ReadonlySet<LogLevel> {
+    const base = prev.size === 0 ? new Set(FILTER_LEVELS) : new Set(prev);
+    if (base.has(level)) base.delete(level);
+    else base.add(level);
+    return base.size === FILTER_LEVELS.length ? new Set<LogLevel>() : base;
+}
+
+// re-soloing the soloed item restores all (empty set = all)
+function soloChannel(prev: ReadonlySet<string>, channel: string): ReadonlySet<string> {
+    return prev.size === 1 && prev.has(channel) ? new Set<string>() : new Set([channel]);
+}
+
+function soloLevel(prev: ReadonlySet<LogLevel>, level: LogLevel): ReadonlySet<LogLevel> {
+    return prev.size === 1 && prev.has(level) ? new Set<LogLevel>() : new Set([level]);
 }
 
 interface HotkeyContext {
@@ -24,10 +43,12 @@ interface HotkeyContext {
     readonly store: DevStore;
     readonly enabled: ReadonlySet<string>;
     readonly setEnabled: (next: ReadonlySet<string>) => void;
+    readonly enabledLevels: ReadonlySet<LogLevel>;
+    readonly setEnabledLevels: (next: ReadonlySet<LogLevel>) => void;
     readonly showToggles: boolean;
     readonly setShowToggles: (next: boolean) => void;
-    readonly cursor: number;
-    readonly setCursor: (next: number) => void;
+    readonly cursor: FilterCursor;
+    readonly setCursor: (next: FilterCursor) => void;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
     readonly onDisconnect?: (() => Promise<void> | void) | undefined;
     readonly onRestart?: (() => Promise<void> | void) | undefined;
@@ -39,7 +60,7 @@ function quit(ctx: HotkeyContext): void {
     void ctx.onQuit?.();
 }
 
-// Ink puts stdin in raw mode, so Ctrl-C arrives as a plain keypress with no SIGINT. Check it first so it always quits.
+// Ink puts stdin in raw mode, so Ctrl-C arrives as a plain keypress with no SIGINT.
 function handleQuitSignal(ctx: HotkeyContext): boolean {
     if (ctx.key.ctrl && ctx.input === 'c') {
         quit(ctx);
@@ -60,26 +81,41 @@ function handlePrompt(ctx: HotkeyContext): boolean {
     return true;
 }
 
+function applyAtCursor(
+    ctx: HotkeyContext,
+    channels: readonly string[],
+    onChannel: (prev: ReadonlySet<string>, channel: string, all: readonly string[]) => ReadonlySet<string>,
+    onLevel: (prev: ReadonlySet<LogLevel>, level: LogLevel) => ReadonlySet<LogLevel>
+): void {
+    if (ctx.cursor.group === 'channels') {
+        const index = focusedIn(ctx.cursor, 'channels', channels.length);
+        const channel = index === null ? undefined : channels[index];
+        if (channel !== undefined) ctx.setEnabled(onChannel(ctx.enabled, channel, channels));
+        return;
+    }
+    const index = focusedIn(ctx.cursor, 'levels', FILTER_LEVELS.length);
+    const level = index === null ? undefined : FILTER_LEVELS[index];
+    if (level !== undefined) ctx.setEnabledLevels(onLevel(ctx.enabledLevels, level));
+}
+
 function handleToggleMode(ctx: HotkeyContext): boolean {
     if (!ctx.showToggles) return false;
     const channels = LogStore.instance.getChannels();
+    const move = (dir: 'left' | 'right' | 'up' | 'down'): void =>
+        ctx.setCursor(moveCursor(ctx.cursor, dir, channels.length, FILTER_LEVELS.length));
 
-    if (ctx.key.escape || ctx.key.return || ctx.input === 'c') {
-        ctx.setShowToggles(false);
-    } else if (ctx.key.upArrow && channels.length > 0) {
-        ctx.setCursor((ctx.cursor + channels.length - 1) % channels.length);
-    } else if (ctx.key.downArrow && channels.length > 0) {
-        ctx.setCursor((ctx.cursor + 1) % channels.length);
-    } else if (ctx.input === ' ') {
-        const channel = channels[ctx.cursor];
-        if (channel !== undefined) ctx.setEnabled(toggleChannel(ctx.enabled, channel, channels));
-    }
+    if (ctx.key.escape || ctx.key.return || ctx.input === 'f') ctx.setShowToggles(false);
+    else if (ctx.key.leftArrow) move('left');
+    else if (ctx.key.rightArrow) move('right');
+    else if (ctx.key.upArrow) move('up');
+    else if (ctx.key.downArrow) move('down');
+    else if (ctx.input === ' ') applyAtCursor(ctx, channels, soloChannel, soloLevel);
+    else if (ctx.input === 't') applyAtCursor(ctx, channels, toggleChannel, toggleLevel);
     return true;
 }
 
 function handleScroll(ctx: HotkeyContext): boolean {
-    // Runs before session actions, so scroll capture works even when non-interactive. t/b mirror Home/End.
-    // The arrows, t, and b are used here, so a future single-letter action must pick something else.
+    // runs before session actions so scroll works even when non-interactive. t and b are taken here, a new single-letter action must avoid them.
     const { key, input, scroll } = ctx;
     if (key.upArrow) scroll.up();
     else if (key.downArrow) scroll.down();
@@ -91,7 +127,6 @@ function handleScroll(ctx: HotkeyContext): boolean {
     return true;
 }
 
-// Session controls. `q` quits in any state. The rest apply once the UI is interactive.
 function handleActions(ctx: HotkeyContext): void {
     const { input, state, store } = ctx;
 
@@ -115,8 +150,8 @@ function handleActions(ctx: HotkeyContext): void {
 
             break;
         }
-        case 'c': {
-            ctx.setCursor(0);
+        case 'f': {
+            ctx.setCursor(INITIAL_CURSOR);
             ctx.setShowToggles(true);
 
             break;
@@ -131,9 +166,7 @@ function handleActions(ctx: HotkeyContext): void {
     }
 }
 
-// Single keyboard dispatcher for the dev UI: a keypress runs through these in order and stops at the first
-// that handles it, the quit signal, then the prompt and toggle modes (which capture all input while open),
-// then scroll, then session controls.
+// first stage that returns true captures the keypress. prompt and toggle modes capture all input while open.
 export function dispatchHotkey(ctx: HotkeyContext): void {
     if (handleQuitSignal(ctx)) return;
     if (handlePrompt(ctx)) return;
