@@ -90,6 +90,32 @@ describe('HmrModuleHandler', () => {
         expect(registerMiddleware).not.toHaveBeenCalled();
     });
 
+    it('skips a created directory without logging a failed reload', async () => {
+        const errorSpy = vi.fn();
+        const warnSpy = vi.fn();
+        const logger = {
+            info: vi.fn(),
+            warn: warnSpy,
+            error: errorSpy,
+            inChannel: (): unknown => logger
+        };
+        const withSpies = new HmrModuleHandler<TestHandler>({
+            handlersDir,
+            isHandler,
+            registerHandler,
+            unregisterHandler,
+            // justified: the handler reads only info/warn/error/inChannel, a real Logger would print into test output
+            logger: logger as unknown as Logger
+        });
+        const newDir = join(handlersDir, 'nested');
+        mkdirSync(newDir);
+
+        await withSpies.handle({ file: newDir, type: 'createDir' });
+
+        expect(errorSpy).not.toHaveBeenCalled();
+        expect(warnSpy).not.toHaveBeenCalled();
+    });
+
     it('reloads and registers a handler file inside the handlers dir', async () => {
         const file = join(handlersDir, 'Ping.mjs');
         writeFileSync(file, 'export class Ping {}\n');

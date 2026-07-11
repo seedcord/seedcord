@@ -64,6 +64,9 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             return;
         }
 
+        // a directory is never importable, its files arrive as their own create events
+        if (type === 'createDir') return;
+
         if (type === 'update' && !existsSync(file)) {
             if (this.isTracked(file)) {
                 logger.info(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
