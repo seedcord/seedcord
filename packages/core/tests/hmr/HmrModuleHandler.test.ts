@@ -10,15 +10,11 @@ import type { Logger } from '@seedcord/logger';
 
 type TestHandler = new () => unknown;
 
-function fakeLogger(): Logger {
-    const logger = {
-        info: vi.fn(),
-        warn: vi.fn(),
-        error: vi.fn(),
-        inChannel: (): unknown => logger
-    };
+function fakeLogger(): { logger: Logger; spies: Record<'info' | 'warn' | 'error', ReturnType<typeof vi.fn>> } {
+    const spies = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+    const logger = { ...spies, inChannel: (): unknown => logger };
     // justified: the handler reads only info/warn/error/inChannel, a real Logger would print into test output
-    return logger as unknown as Logger;
+    return { logger: logger as unknown as Logger, spies };
 }
 
 function isHandler(val: unknown): val is TestHandler {
@@ -47,7 +43,7 @@ describe('HmrModuleHandler', () => {
             isHandler,
             registerHandler,
             unregisterHandler,
-            logger: fakeLogger()
+            logger: fakeLogger().logger
         });
     });
 
@@ -82,7 +78,7 @@ describe('HmrModuleHandler', () => {
             registerHandler,
             registerMiddleware,
             unregisterHandler,
-            logger: fakeLogger()
+            logger: fakeLogger().logger
         });
 
         await withMiddlewares.handle({ file: siblingFile, type: 'update' });
@@ -91,29 +87,21 @@ describe('HmrModuleHandler', () => {
     });
 
     it('skips a created directory without logging a failed reload', async () => {
-        const errorSpy = vi.fn();
-        const warnSpy = vi.fn();
-        const logger = {
-            info: vi.fn(),
-            warn: warnSpy,
-            error: errorSpy,
-            inChannel: (): unknown => logger
-        };
+        const { logger, spies } = fakeLogger();
         const withSpies = new HmrModuleHandler<TestHandler>({
             handlersDir,
             isHandler,
             registerHandler,
             unregisterHandler,
-            // justified: the handler reads only info/warn/error/inChannel, a real Logger would print into test output
-            logger: logger as unknown as Logger
+            logger
         });
         const newDir = join(handlersDir, 'nested');
         mkdirSync(newDir);
 
         await withSpies.handle({ file: newDir, type: 'createDir' });
 
-        expect(errorSpy).not.toHaveBeenCalled();
-        expect(warnSpy).not.toHaveBeenCalled();
+        expect(spies.error).not.toHaveBeenCalled();
+        expect(spies.warn).not.toHaveBeenCalled();
     });
 
     it('reloads and registers a handler file inside the handlers dir', async () => {
@@ -167,27 +155,20 @@ describe('HmrModuleHandler', () => {
     });
 
     it('does not log a rollback for a file that had no working version', async () => {
-        const warnSpy = vi.fn();
-        const logger = {
-            info: vi.fn(),
-            warn: warnSpy,
-            error: vi.fn(),
-            inChannel: (): unknown => logger
-        };
+        const { logger, spies } = fakeLogger();
         const withSpies = new HmrModuleHandler<TestHandler>({
             handlersDir,
             isHandler,
             registerHandler,
             unregisterHandler,
-            // justified: the handler reads only info/warn/error/inChannel, a real Logger would print into test output
-            logger: logger as unknown as Logger
+            logger
         });
         const file = join(handlersDir, 'Fresh.mjs');
         writeFileSync(file, "throw new Error('boom');\n");
 
         await withSpies.handle({ file, type: 'create' });
 
-        expect(warnSpy).not.toHaveBeenCalled();
+        expect(spies.warn).not.toHaveBeenCalled();
         expect(registerHandler).not.toHaveBeenCalled();
     });
 
