@@ -73,7 +73,8 @@ jobs:
               uses: ./.github/actions/setup
               with:
                   registry-url: https://registry.npmjs.org
-            - run: npm i -g npm@latest
+            # changesets 2.31.0 misreads npm 12 json output, unpin when changesets supports npm 12
+            - run: npm i -g npm@11
             - run: node -v && npm -v
             - run: npm config get registry && npm ping
 
