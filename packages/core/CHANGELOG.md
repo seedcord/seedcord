@@ -1,5 +1,29 @@
 # @seedcord/core
 
+## 0.1.0-next.4
+
+### Minor Changes
+
+- 93544a8: Add the `./hmr` subpath exporting `HmrModuleHandler`, moved from `@seedcord/gateway`.
+
+### Patch Changes
+
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+- Updated dependencies [93544a8]
+    - @seedcord/types@0.8.0-next.5
+    - @seedcord/logger@0.1.0-next.0
+    - @seedcord/utils@0.8.0-next.5
+
 ## 0.1.0-next.3
 
 ### Minor Changes
