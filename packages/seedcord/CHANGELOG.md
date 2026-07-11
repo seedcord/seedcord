@@ -278,4 +278,3 @@
     - @seedcord/services@0.7.0
     - @seedcord/types@0.4.0
     - @seedcord/utils@0.4.0
-

@@ -232,4 +232,3 @@
 - 8c4ce41: Added eslint for TSDoc
 - 48a8c9b: add LICENSE to all package roots
 - 48a8c9b: add TSDoc to almost everything
-

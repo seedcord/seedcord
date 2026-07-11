@@ -12,22 +12,28 @@ function sectionVersion(section: string): string | undefined {
 }
 
 /**
- * Removes `## X.Y.Z-next.N` sections whose stable `## X.Y.Z` already exists, so a graduated release
- * keeps one changelog entry per version.
+ * Removes a prerelease section once its stable section exists above it, so the changelog keeps
+ * one entry per released version.
  */
 export function pruneSupersededPrereleases(changelog: string): string {
     const sections = changelog.split(/(?=^## )/m);
-    const stable = new Set<string>();
+    // a stable below a prerelease is an older line from before a package rename
+    const stableAbove = new Set<string>();
+    const kept: string[] = [];
     for (const section of sections) {
         const version = sectionVersion(section);
-        if (version && STABLE.test(version)) stable.add(version);
+        if (version && STABLE.test(version)) stableAbove.add(version);
+        const base = PRERELEASE.exec(version ?? '')?.[1];
+        if (base && stableAbove.has(base)) {
+            // a --- block is a hand-authored note, changesets never emits one
+            const note = /^---$/m.exec(section);
+            if (note) kept.push(section.slice(note.index));
+            continue;
+        }
+        kept.push(section);
     }
-    return sections
-        .filter((section) => {
-            const base = PRERELEASE.exec(sectionVersion(section) ?? '')?.[1];
-            return !(base && stable.has(base));
-        })
-        .join('');
+    // dropping the last section leaves a blank line at EOF
+    return kept.join('').replace(/\n*$/, '\n');
 }
 
 function pruneAllPackages(): void {

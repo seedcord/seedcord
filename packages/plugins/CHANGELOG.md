@@ -497,4 +497,3 @@
 - Updated dependencies [48a8c9b]
     - @seedcord/types@0.1.0
     - seedcord@0.1.0
-

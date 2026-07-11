@@ -30,7 +30,77 @@ describe('pruneSupersededPrereleases', () => {
         expect(pruneSupersededPrereleases(input)).toContain('0.3.0-next.0');
     });
 
-    it('drops every -next.N for a graduated version and is idempotent', () => {
+    it('keeps prereleases of a restarted version line whose matching stable is older history below', () => {
+        const input = [
+            '# @seedcord/gateway',
+            '',
+            '## 0.1.0-next.1',
+            '',
+            '- new line pre1',
+            '',
+            '## 0.1.0-next.0',
+            '',
+            '- new line pre0',
+            '',
+            '## 0.1.0',
+            '',
+            '- ancient stable from before the rename',
+            ''
+        ].join('\n');
+        const out = pruneSupersededPrereleases(input);
+        expect(out).toContain('## 0.1.0-next.1');
+        expect(out).toContain('## 0.1.0-next.0');
+        expect(out).toContain('## 0.1.0\n');
+    });
+
+    it('keeps a trailing --- note block when its section is pruned', () => {
+        const input = [
+            '# @seedcord/gateway',
+            '',
+            '## 0.1.0',
+            '',
+            '- stable release',
+            '',
+            '## 0.1.0-next.0',
+            '',
+            '- pre',
+            '',
+            '---',
+            '',
+            '#### Versions below were published as `seedcord`.',
+            '',
+            '---',
+            '',
+            '## 0.16.0-next.4',
+            '',
+            '- old line entry',
+            ''
+        ].join('\n');
+        const out = pruneSupersededPrereleases(input);
+        expect(out).not.toContain('## 0.1.0-next.0');
+        expect(out).toContain('#### Versions below were published as `seedcord`.');
+        expect(out).toContain('## 0.16.0-next.4');
+    });
+
+    it('ends with a single newline when the pruned section was the last in the file', () => {
+        const input = [
+            '# @seedcord/tsconfig',
+            '',
+            '## 1.0.1',
+            '',
+            '- stable',
+            '',
+            '## 1.0.1-alpha.0',
+            '',
+            '- superseded',
+            ''
+        ].join('\n');
+        const out = pruneSupersededPrereleases(input);
+        expect(out.endsWith('\n')).toBe(true);
+        expect(out.endsWith('\n\n')).toBe(false);
+    });
+
+    it('drops every -next.N once the stable version exists and is idempotent', () => {
         const input = [
             '# @seedcord/core',
             '',

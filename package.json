@@ -40,7 +40,7 @@
         "cs:status": "changeset status --output .changeset/status.json",
         "cs:preview": "changeset preview",
         "release": "pnpm run build && pnpm run cs:publish",
-        "release:version": "changeset version && pnpm tsx scripts/release/prune-changelog.ts",
+        "release:version": "changeset version && pnpm tsx scripts/release/prune-changelog.ts && prettier --write '**/CHANGELOG.md'",
         "prepublishOnly": "pnpm run clean && pnpm run build",
         "bump:deps:pkgs": "for dir in packages/*/ mock/; do [ -d \"$dir\" ] || continue; echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
         "bump:deps:apps": "for dir in apps/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",

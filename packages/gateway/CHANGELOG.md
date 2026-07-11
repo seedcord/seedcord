@@ -1,5 +1,88 @@
 # @seedcord/gateway
 
+## 0.1.0-next.2
+
+### Minor Changes
+
+- cd3ee0f: `new Seedcord({ logger })` configures logging (level, sinks, per-channel overrides). Omitted fields keep the node defaults. `@seedcord/gateway` re-exports `@seedcord/logger`.
+- 93544a8: **BREAKING:** `HmrModuleHandler` is no longer exported from `@seedcord/gateway`. Import it from `@seedcord/core/hmr`.
+
+### Patch Changes
+
+- f011978: upgrade envapt to v8
+- cd3ee0f: Rework the interaction, event, and command loader logs to correct levels with one block per load summary, and deploy commands as a wrapped block.
+- cd3ee0f: The file sink opens on first write so repeated setup leaves no empty log files, evicted and reset sinks are disposed to close winston handles, and a log call with two Errors keeps both. The gateway loader flag resets when a bulk load throws. LoggerOptions is exported for typing the Logger constructor.
+- Updated dependencies [93544a8]
+- Updated dependencies [f011978]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+- Updated dependencies [93544a8]
+    - @seedcord/core@0.1.0-next.4
+    - @seedcord/services@0.9.0-next.6
+    - @seedcord/types@0.8.0-next.5
+    - @seedcord/logger@0.1.0-next.0
+    - @seedcord/utils@0.8.0-next.5
+    - @seedcord/rate-limiter@0.1.0-next.2
+
+## 0.1.0-next.1
+
+### Minor Changes
+
+- 42fd262: Codegen captures a slash channel option's declared `addChannelTypes` into `SlashOptionRegistry`. The gateway `getChannel` narrows to the matching channel subtype, so a text-only option returns `TextChannel` with no cast.
+- 42fd262: `Cooldown` keys its window by the handler's route and window settings, so a durable store keeps the same window across restarts and isolates. `GateContextBase` now has a `routeId` that identifies the dispatched handler, for example `slash:daily` or `button:confirm`.
+- 42fd262: `@seedcord/core` adds `DispatchContext` and the augmentable `DispatchState`. The interaction dispatcher allocates one per dispatch and passes it to the handler as an optional third constructor argument. The bag is empty until middleware and i18n merge fields into `DispatchState`.
+- e60fcf7: New `@seedcord/event-emitter` package, a pure-JS `TypedEventEmitter` with typed per-event tuples and zero runtime dep (no `node:events`). `waitFor(event, { filter, signal, timeoutMs })` resolves on the first matching payload, and rejects with a `WaitForError` whose `reason` is `'aborted'` or `'timeout'`. `EventMap`, `NoEvents`, and `WaitForOptions` are exported. `@seedcord/gateway` re-exports the package.
+
+    `TypedEventEmitter` does not bind `this` to the emitter inside a listener (use an arrow or a bound method), and a bare `error` event with no listener no longer throws.
+
+    An `any:interaction` or `any:event` observer that throws no longer aborts the interaction or event dispatch. The dispatcher passes the error to the emitter's `onListenerError` hook, which logs it.
+
+    **BREAKING:** `@seedcord/services` no longer exports `StrictEventEmitter` or the `SE*` types. Extend `TypedEventEmitter` and use `EventMap` / `NoEvents` for the event-map constraint.
+
+    **BREAKING:** the `Plugin` and `Pluggable` bases extend `TypedEventEmitter`. `setMaxListeners` and the `addListener` alias are removed, use `on`.
+
+    **BREAKING:** `@seedcord/errors` no longer defines the `EventEmitterWaitForAborted` (1501) and `EventEmitterWaitForTimeout` (1502) codes.
+
+### Patch Changes
+
+- d1cb181: Add optional `config.store` to supply a durable rate-limiter backend, replacing the in-memory default.
+- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
+- Updated dependencies [42fd262]
+- Updated dependencies [d1cb181]
+- Updated dependencies [42fd262]
+- Updated dependencies [42fd262]
+- Updated dependencies [e60fcf7]
+- Updated dependencies [e60fcf7]
+    - @seedcord/core@0.1.0-next.3
+    - @seedcord/types@0.8.0-next.4
+    - @seedcord/rate-limiter@0.1.0-next.1
+    - @seedcord/event-emitter@0.1.0-next.0
+    - @seedcord/services@0.9.0-next.5
+    - @seedcord/errors@0.3.0-next.3
+    - @seedcord/utils@0.8.0-next.4
+
+## 0.1.0-next.0
+
+### Minor Changes
+
+- 8cb06e1: **BREAKING:** The gateway framework moves from `seedcord` to `@seedcord/gateway`, and the CLI from `@seedcord/cli` to `seedcord`. Import the framework from `@seedcord/gateway`, and `defineConfig` from `seedcord`.
+
+---
+
+#### Versions below were published as `seedcord` before the split into scoped packages.
+
+---
+
 ## 0.16.0-next.4
 
 ### Minor Changes
@@ -641,4 +724,3 @@
 - Updated dependencies [48a8c9b]
 - Updated dependencies [48a8c9b]
     - @seedcord/types@0.1.0
-
