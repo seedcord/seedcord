@@ -2,7 +2,7 @@ import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
@@ -94,7 +94,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
             [...this.webhookProbes].map(async ([url, envKey]) => {
                 const result = await WebhookLog.senderFor(url).verify();
                 if (result === 'missing') throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [envKey]);
-                if (result === 'unreachable') this.logger.warn(`could not verify the webhook behind ${envKey}`);
+                if (result === 'unreachable')
+                    this.logger.warn(`could not verify the webhook behind ${paint.sky.bold(envKey)}`);
             })
         );
     }
@@ -128,7 +129,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
             const envKey = WebhookLog.envKeyOf(handler);
             const url = WebhookLog.urlOf(envKey);
             if (url === null) {
-                this.logger.warn(`${handler.name} disabled, ${envKey} is not set`);
+                this.logger.warn(`${chalk.bold(handler.name)} disabled, ${paint.sky.bold(envKey)} is not set`);
                 return;
             }
             this.webhookProbes.set(url, envKey);

@@ -1,6 +1,7 @@
 import { WebhookUrlMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
 import { flagsFor } from '@miscellaneous/flagsFor';
@@ -42,7 +43,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey> exten
         const url = WebhookLog.urlOf(WebhookLog.envKeyOf(this.constructor));
         if (url === null) {
             // unreachable through the Bus, registration already skips url-less reporters
-            this.logger.warn(`${this.constructor.name} has no webhook url set, dropping the report`);
+            this.logger.warn(`${chalk.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`);
             return;
         }
 
