@@ -20,7 +20,8 @@ export {
     InteractionRouteKeys,
     InteractionRoutes,
     MiddlewareMetadataKey,
-    SubscribeMetadataKey
+    SubscribeMetadataKey,
+    WebhookUrlMetadataKey
 } from '@src/metadataKeys';
 
 export { NoticeCard } from '@stops/NoticeCard';
