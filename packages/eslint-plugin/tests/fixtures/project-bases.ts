@@ -19,6 +19,18 @@ export abstract class EventMiddleware {
     public abstract handle(): void;
 }
 
+export abstract class Subscriber<KeyOfSubscribers extends string> {
+    declare public readonly key: KeyOfSubscribers;
+}
+
+export abstract class WebhookLog<KeyOfSubscribers extends string> extends Subscriber<KeyOfSubscribers> {
+    public abstract report(): unknown;
+}
+
+export abstract class BaseSub extends Subscriber<'unknownException'> {}
+
+export abstract class BaseReporter extends WebhookLog<'unknownException'> {}
+
 export abstract class BaseMw extends EventMiddleware {}
 
 export abstract class BaseCommand extends BuilderComponent<'command'> {

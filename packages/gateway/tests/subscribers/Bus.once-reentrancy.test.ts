@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 
 import { Bus } from '../../src/subscribers/Bus';
+import { Subscribe } from '../../src/subscribers/decorators/Subscribe';
 import { Subscriber } from '../../src/subscribers/Subscriber';
 import '../utils/mock-env';
 
@@ -27,6 +28,7 @@ describe("Bus 'once' re-entrancy", () => {
         };
 
         let runs = 0;
+        @Subscribe('unknownException')
         class ReentrantOnce extends Subscriber<'unknownException'> {
             public execute(): Promise<void> {
                 runs += 1;

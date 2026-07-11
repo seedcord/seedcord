@@ -3,6 +3,7 @@ import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { WebhookLog } from '@subscribers/bases/WebhookLog';
+import { Subscribe } from '@subscribers/decorators/Subscribe';
 import { WebhookUrl } from '@subscribers/decorators/WebhookUrl';
 
 import type { Core } from '@interfaces/Core';
@@ -38,6 +39,7 @@ beforeEach(() => {
 
 describe('WebhookLog', () => {
     it('sends the report to the url from the decorated env key', async () => {
+        @Subscribe('unknownException')
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class CustomReporter extends WebhookLog<'unknownException'> {
             report(): WebhookReport {
@@ -53,6 +55,7 @@ describe('WebhookLog', () => {
     });
 
     it('defaults the username to the class name', async () => {
+        @Subscribe('unknownException')
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class NamedReporter extends WebhookLog<'unknownException'> {
             report(): WebhookReport {
@@ -67,6 +70,7 @@ describe('WebhookLog', () => {
     });
 
     it('reuses one sender per url across instances', async () => {
+        @Subscribe('unknownException')
         @WebhookUrl('REPORTER_REUSE_WEBHOOK_URL')
         class RepeatReporter extends WebhookLog<'unknownException'> {
             report(): WebhookReport {
@@ -84,6 +88,7 @@ describe('WebhookLog', () => {
     });
 
     it('logs a send failure and resolves', async () => {
+        @Subscribe('unknownException')
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class FailingReporter extends WebhookLog<'unknownException'> {
             report(): WebhookReport {
@@ -100,6 +105,7 @@ describe('WebhookLog', () => {
     });
 
     it('warns and drops the report when the env var is unset', async () => {
+        @Subscribe('unknownException')
         @WebhookUrl('NEVER_SET_WEBHOOK_URL')
         class UnsetReporter extends WebhookLog<'unknownException'> {
             report(): WebhookReport {
@@ -116,6 +122,8 @@ describe('WebhookLog', () => {
     });
 
     it('throws at execute when the decorator is missing', async () => {
+        @Subscribe('unknownException')
+        // eslint-disable-next-line @seedcord/subscriber-missing-decorators -- the missing @WebhookUrl is the case under test
         class UndeclaredReporter extends WebhookLog<'unknownException'> {
             report(): WebhookReport {
                 return { components: [] };
