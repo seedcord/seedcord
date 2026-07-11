@@ -1,5 +1,6 @@
 /* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
 import { DispatchContext } from '@seedcord/core';
+import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     InteractionMetadataKey,
     InteractionRouteKeys,
@@ -12,7 +13,8 @@ import {
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, paint } from '@seedcord/logger';
-import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, hasKeys } from '@seedcord/utils';
+import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
@@ -25,7 +27,6 @@ import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
@@ -34,8 +35,7 @@ import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
-import type { CustomIdMatcher } from '@seedcord/types';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
+import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

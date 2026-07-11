@@ -1,20 +1,15 @@
 import { relative, resolve } from 'node:path';
 
+import { wrapHot } from '@seedcord/core/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
-import { wrapHot } from '@seedcord/types/internal';
 import chalk from 'chalk';
 import { minimatch } from 'minimatch';
 
 import type { DevEvent } from './events';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type {
-    DevChannel,
-    HmrEventType,
-    HmrUpdateEvent,
-    SeedcordCliEvents,
-    SeedcordFrameworkEvents
-} from '@seedcord/types/internal';
+import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
+import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type {
     EnvironmentModuleNode,
     HotUpdateOptions,

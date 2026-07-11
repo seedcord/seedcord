@@ -9,7 +9,7 @@ import { TestEnvironment } from '../utils/test-env';
 import '../utils/mock-client';
 import '../utils/mock-env';
 
-import type { HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrUpdateEvent } from '@seedcord/types';
 
 const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 

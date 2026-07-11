@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { wrapHot } from '../src/Hmr';
+import { wrapHot } from '@hmr/wrapHot';
 
-import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '../src/Hmr';
+import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
 describe('wrapHot', () => {
     it('delegates send to the raw hot with the event and payload', () => {

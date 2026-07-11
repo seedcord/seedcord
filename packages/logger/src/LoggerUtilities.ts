@@ -1,16 +1,10 @@
+import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 
 import { paint } from './palette';
 
 import type { LogLevel } from './types';
 import type { ILogger } from '@seedcord/types';
-
-// edge-safe copy of @seedcord/utils formatFilePath, which pulls in node:path + process.cwd().
-function formatFilePath(filePath: string): string {
-    const cwd = typeof process !== 'undefined' && typeof process.cwd === 'function' ? process.cwd() : '';
-    if (cwd && filePath.startsWith(cwd)) return `./${filePath.slice(cwd.length).replace(/^[/\\]+/u, '')}`;
-    return filePath;
-}
 
 const COUNT_WRAP_WIDTH = 64;
 const CHIP_SEPARATOR = ' · ';

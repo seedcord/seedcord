@@ -32,6 +32,16 @@
                 "types": "./dist/internal.index.d.cts",
                 "default": "./dist/internal.index.cjs"
             }
+        },
+        "./node": {
+            "import": {
+                "types": "./dist/node.d.mts",
+                "default": "./dist/node.mjs"
+            },
+            "require": {
+                "types": "./dist/node.d.cts",
+                "default": "./dist/node.cjs"
+            }
         }
     },
     "files": [

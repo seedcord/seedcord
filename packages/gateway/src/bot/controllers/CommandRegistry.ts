@@ -2,26 +2,26 @@ import { resolve } from 'node:path';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { BuilderComponent } from '@seedcord/core';
-import { CommandMetadataKey } from '@seedcord/core/internal';
+import { HmrModuleHandler } from '@seedcord/core/hmr';
+import { CommandMetadataKey, getDevChannel } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, paint } from '@seedcord/logger';
-import { formatFilePath, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath } from '@seedcord/utils';
+import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Collection } from 'discord.js';
 import { Envapter } from 'envapt';
 
 import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
-import { getDevChannel } from '@hmr/devChannel';
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { CommandMeta } from '@seedcord/core/internal';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ApplicationCommand, Snowflake } from 'discord.js';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;

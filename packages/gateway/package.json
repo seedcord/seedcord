@@ -66,8 +66,7 @@
         "@seedcord/tsdown-config": "workspace:*",
         "discord.js": "catalog:peer",
         "reflect-metadata": "catalog:peer",
-        "type-fest": "catalog:deps",
-        "vite": "catalog:deps"
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

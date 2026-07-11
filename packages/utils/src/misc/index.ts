@@ -1,3 +1,3 @@
 export * from './assertNever';
-export * from './directory';
+export * from './formatFilePath';
 export * from './fyShuffle';
