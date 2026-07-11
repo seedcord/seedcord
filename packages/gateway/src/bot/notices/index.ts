@@ -7,7 +7,7 @@ import type { PermSubject } from './utils';
 import type { ReplyResponse } from '@seedcord/types';
 import type { Role } from 'discord.js';
 
-export { NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '@seedcord/core/internal';
+export { NotInGuild } from '@seedcord/core/internal';
 
 // ----- catalog gate refusals -----
 
