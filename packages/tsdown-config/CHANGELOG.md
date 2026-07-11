@@ -55,4 +55,3 @@
 
 - 48a8c9b: fix repository url in package.json
 - 48a8c9b: add LICENSE to all package roots
-
