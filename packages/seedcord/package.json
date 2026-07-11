@@ -54,7 +54,7 @@
     "dependencies": {
         "@clack/prompts": "^1.6.0",
         "@commander-js/extra-typings": "^15.0.0",
-        "@discordjs/rest": "^2.6.1",
+        "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:*",
         "@seedcord/errors": "workspace:*",
         "@seedcord/event-emitter": "workspace:*",

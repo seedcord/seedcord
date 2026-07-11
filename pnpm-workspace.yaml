@@ -26,6 +26,7 @@ allowBuilds:
 catalogs:
     deps:
         '@discordjs/builders': ^1.14.1
+        '@discordjs/rest': ^2.6.1
         '@tailwindcss/postcss': ^4.3.1
         '@types/node': ^25.9.3
         chalk: ^5.6.2
