@@ -166,6 +166,31 @@ describe('HmrModuleHandler', () => {
         expect(registerHandler).toHaveBeenCalledWith(FixtureHandler, file);
     });
 
+    it('does not log a rollback for a file that had no working version', async () => {
+        const warnSpy = vi.fn();
+        const logger = {
+            info: vi.fn(),
+            warn: warnSpy,
+            error: vi.fn(),
+            inChannel: (): unknown => logger
+        };
+        const withSpies = new HmrModuleHandler<TestHandler>({
+            handlersDir,
+            isHandler,
+            registerHandler,
+            unregisterHandler,
+            // justified: the handler reads only info/warn/error/inChannel, a real Logger would print into test output
+            logger: logger as unknown as Logger
+        });
+        const file = join(handlersDir, 'Fresh.mjs');
+        writeFileSync(file, "throw new Error('boom');\n");
+
+        await withSpies.handle({ file, type: 'create' });
+
+        expect(warnSpy).not.toHaveBeenCalled();
+        expect(registerHandler).not.toHaveBeenCalled();
+    });
+
     it('skips the restore when rollback is disabled', async () => {
         const file = join(handlersDir, 'Broken.mjs');
         handler.trackHandler(file, FixtureHandler);

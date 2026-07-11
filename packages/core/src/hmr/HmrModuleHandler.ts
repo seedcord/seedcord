@@ -104,6 +104,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         // a failed reload can leave a partial registration
         this.unload(file);
         if (!rollbackEnabled) return;
+        if (snapshot.handlers.length === 0 && snapshot.middlewares.length === 0) return;
 
         // a typo keeps them live until the next good save
         this.restoreUnits(file, snapshot);
