@@ -14,7 +14,6 @@ export default mergeConfig(
                 '@src': path.resolve(__dirname, './src'),
                 '@bot': path.resolve(__dirname, './src/bot'),
                 '@subscribers': path.resolve(__dirname, './src/subscribers'),
-                '@hmr': path.resolve(__dirname, './src/hmr'),
                 '@interfaces': path.resolve(__dirname, './src/interfaces'),
                 '@handlers': path.resolve(__dirname, './src/handlers'),
                 '@inputs': path.resolve(__dirname, './src/inputs'),

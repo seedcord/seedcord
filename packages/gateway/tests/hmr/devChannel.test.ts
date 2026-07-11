@@ -1,9 +1,9 @@
 import path from 'node:path';
 
+import { setDevChannel } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { setDevChannel } from '@hmr/devChannel';
 import { Plugin } from '@interfaces/Plugin';
 import { Seedcord } from '@src/Seedcord';
 
@@ -57,6 +57,8 @@ describe('dev channel routing', () => {
     let testEnv: TestEnvironment;
 
     beforeEach(async () => {
+        // a beforeEach that throws skips afterEach, this guards the leak
+        setDevChannel(undefined);
         // @ts-expect-error reset the Seedcord singleton between tests
         Seedcord.reset();
         testEnv = new TestEnvironment('hmr-route-');

@@ -1,3 +1,4 @@
+import { HmrManager } from '@seedcord/core/hmr';
 import { setBotColor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -9,7 +10,6 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { HmrManager } from './hmr/HmrManager';
 import { Pluggable } from './interfaces/Plugin';
 import { Bus } from './subscribers/Bus';
 import { version as packageVersion } from './version';
@@ -25,7 +25,7 @@ import type { IRateLimiter } from '@seedcord/types';
  * Manages component lifecycle and provides plugin support.
  */
 export class Seedcord extends Pluggable implements Core {
-    // These 3 variables are used by the CLI
+    // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
     /** @internal */
@@ -34,6 +34,8 @@ export class Seedcord extends Pluggable implements Core {
     public readonly version: string = packageVersion;
 
     private static isInstantiated = false;
+    private readonly healthCheck: HealthCheck;
+    private readonly hmrManager: HmrManager;
 
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;
@@ -49,12 +51,6 @@ export class Seedcord extends Pluggable implements Core {
 
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
-
-    /** @see {@link HealthCheck} */
-    private readonly healthCheck: HealthCheck;
-
-    /** @see {@link HmrManager} */
-    private readonly hmrManager: HmrManager;
 
     /**
      * Creates a new Seedcord instance
@@ -95,17 +91,12 @@ export class Seedcord extends Pluggable implements Core {
         return this.bot.client.user?.username;
     }
 
-    /** @internal */
     // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
         Seedcord.isInstantiated = false;
         LoggerChannelRegistry.instance.reset();
     }
 
-    /**
-     * Registers default startup tasks
-     * @internal
-     */
     private registerStartupTasks(): void {
         if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 

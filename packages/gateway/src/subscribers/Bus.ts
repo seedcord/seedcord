@@ -1,10 +1,10 @@
+import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { Plugin } from '@interfaces/Plugin';
 
 import { HandledException } from './default/HandledException';

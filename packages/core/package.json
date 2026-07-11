@@ -29,6 +29,16 @@
                 "types": "./dist/internal.index.d.cts",
                 "default": "./dist/internal.index.cjs"
             }
+        },
+        "./hmr": {
+            "import": {
+                "types": "./dist/hmr.index.d.mts",
+                "default": "./dist/hmr.index.mjs"
+            },
+            "require": {
+                "types": "./dist/hmr.index.d.cts",
+                "default": "./dist/hmr.index.cjs"
+            }
         }
     },
     "files": [
@@ -56,9 +66,12 @@
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/logger": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
-        "discord-api-types": "catalog:deps"
+        "chalk": "catalog:deps",
+        "discord-api-types": "catalog:deps",
+        "envapt": "catalog:deps"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
@@ -66,7 +79,8 @@
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "reflect-metadata": "catalog:peer",
-        "type-fest": "catalog:deps"
+        "type-fest": "catalog:deps",
+        "vite": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

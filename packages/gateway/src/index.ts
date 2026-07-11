@@ -38,9 +38,6 @@ export type * from '@inputs/index';
 // Pub/Sub exports
 export * from '@subscribers/index';
 
-// HMR exports
-export * from '@hmr/index';
-
 // Export seedcord
 export * from './Seedcord';
 

@@ -1,8 +1,7 @@
+import { getDevChannel } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-
-import { getDevChannel } from '@hmr/devChannel';
 
 import type { Core } from './Core';
 import type { EventMap, NoEvents } from '@seedcord/event-emitter';
@@ -11,7 +10,6 @@ import type { CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@see
 import type { Tail } from '@seedcord/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
 
-/** Interface for objects that can be initialized asynchronously */
 export interface Initializeable {
     init(): Promise<void>;
 }
@@ -26,7 +24,6 @@ export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoE
     extends TypedEventEmitter<TPluginEvents>
     implements Initializeable, HmrAware
 {
-    /** Logger instance for this plugin. */
     public abstract logger: Logger;
 
     public name: string = this.constructor.name;
@@ -35,10 +32,7 @@ export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoE
         super();
     }
 
-    /**
-     * Initialize the plugin.
-     * @virtual
-     */
+    /** @virtual */
     abstract init(): Promise<void>;
 
     /**
@@ -72,16 +66,14 @@ export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoE
 }
 
 /**
- * Constructor type for plugins that can accept additional arguments after Core
- * @typeParam TPlugin - The plugin type being constructed
+ * Constructor type for plugins that can accept extra arguments after Core.
  *
  * @internal
  */
 export type PluginCtor<TPlugin extends Plugin = Plugin> = new (core: Core, ...args: any[]) => TPlugin;
 
 /**
- * Extracts the argument types for a plugin constructor (excluding the Core parameter)
- * @typeParam Ctor - The plugin constructor to extract arguments from
+ * Extracts the argument types for a plugin constructor, excluding the Core parameter.
  *
  * @internal
  */

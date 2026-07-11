@@ -1,5 +1,6 @@
 /* eslint-disable max-lines -- one handler method per interaction type keeps the router in one file */
 import { DispatchContext } from '@seedcord/core';
+import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     InteractionMetadataKey,
     InteractionRouteKeys,
@@ -25,7 +26,6 @@ import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';

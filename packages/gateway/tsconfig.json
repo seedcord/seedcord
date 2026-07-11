@@ -8,7 +8,6 @@
             "@src/*": ["./src/*"],
             "@bot/*": ["./src/bot/*"],
             "@subscribers/*": ["./src/subscribers/*"],
-            "@hmr/*": ["./src/hmr/*"],
             "@interfaces/*": ["./src/interfaces/*"],
             "@handlers/*": ["./src/handlers/*"],
             "@inputs/*": ["./src/inputs/*"],
@@ -19,9 +18,8 @@
             "@bUtilities/*": ["./src/bot/utilities/*"],
             "@bControllers/*": ["./src/bot/controllers/*"],
             "@bDecorators/*": ["./src/bot/decorators/*"]
-        },
-        "types": ["vite/client"]
+        }
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts", "vitest.config.ts"],
+    "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],
     "exclude": ["node_modules", "dist"]
 }

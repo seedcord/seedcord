@@ -1,3 +1,4 @@
+import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -9,7 +10,6 @@ import { MiddlewareType } from '@bDecorators/Middlewares';
 import { eventGateContext } from '@bot/gates/runGates';
 import { handleEventFault } from '@bot/handleEventFault';
 import { EventHandler, EventMiddleware } from '@handlers/event';
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
 import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';

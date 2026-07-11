@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 
+import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
+import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { ShutdownPhase } from '@seedcord/services';
 import { keepDefined, traverseDirectory } from '@seedcord/utils';

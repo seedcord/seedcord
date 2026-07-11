@@ -480,15 +480,24 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
       '@seedcord/utils':
         specifier: workspace:*
         version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
       discord-api-types:
         specifier: ^0.38.49
         version: 0.38.49
+      envapt:
+        specifier: catalog:deps
+        version: 8.0.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -511,6 +520,9 @@ importers:
       type-fest:
         specifier: catalog:deps
         version: 5.7.0
+      vite:
+        specifier: catalog:deps
+        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
 
   packages/docs-engine:
     dependencies:
@@ -890,9 +902,6 @@ importers:
       type-fest:
         specifier: catalog:deps
         version: 5.7.0
-      vite:
-        specifier: catalog:deps
-        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
 
   packages/logger:
     dependencies:
@@ -930,6 +939,9 @@ importers:
 
   packages/plugins:
     dependencies:
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../core
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors

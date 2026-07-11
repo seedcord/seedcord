@@ -1,7 +1,5 @@
-/** Type of HMR event. */
 export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'deleteDir';
 
-/** Payload for an HMR update event. */
 export interface HmrUpdateEvent {
     file: string;
     type: HmrEventType;
@@ -11,11 +9,9 @@ export interface HmrUpdateEvent {
     rollback?: boolean;
 }
 
-/** A module that processes hot updates. */
 export interface HmrAware {
-    /** Identifies the module in HMR logs. */
+    /** Names the module in HMR logs. */
     readonly name: string;
-    /** Called on an HMR update with the full event. */
     onHmr(event: HmrUpdateEvent): Promise<void>;
 }
 
@@ -48,24 +44,4 @@ export interface SeedcordCliEvents {
 export interface DevChannel<TSend, TRecv> {
     send<Key extends keyof TSend & string>(event: Key, data: TSend[Key]): void;
     on<Key extends keyof TRecv & string>(event: Key, cb: (data: TRecv[Key]) => void): void;
-}
-
-// the minimal raw-hot shape, satisfied by both vite's `import.meta.hot` and the CLI's `NormalizedHotChannel`.
-// vite types our `seedcord:*` payloads as `any` (they sit outside its CustomEventMap).
-interface RawHot {
-    send(event: string, data?: unknown): void;
-    on(event: string, cb: (data: unknown) => void): void;
-}
-
-/**
- * Wraps a raw vite hot object as a typed {@link DevChannel}.
- *
- * @internal
- */
-export function wrapHot<TSend, TRecv>(hot: RawHot): DevChannel<TSend, TRecv> {
-    return {
-        send: (event, data) => hot.send(event, data),
-        // justified: RawHot types every payload as unknown, the wire contract guarantees it matches TRecv[Key]
-        on: (event, cb) => hot.on(event, cb as (data: unknown) => void)
-    };
 }

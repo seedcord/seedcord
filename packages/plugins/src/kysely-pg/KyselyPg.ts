@@ -1,8 +1,9 @@
 import 'reflect-metadata';
 
+import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { HmrModuleHandler, Plugin } from '@seedcord/gateway';
+import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { ShutdownPhase } from '@seedcord/services';
 import { keepDefined } from '@seedcord/utils';
@@ -121,10 +122,7 @@ export class KyselyPg<Database extends object> extends Plugin {
         this.servicesReady = true;
     }
 
-    /**
-     * Tears down the connection pool and clears the migration manager reference.
-     * @internal
-     */
+    /** @internal */
     public async stop(): Promise<void> {
         await this.disconnect();
     }
