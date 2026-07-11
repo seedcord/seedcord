@@ -22,7 +22,7 @@ import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigratio
 import type { KpgOptions } from './types/KpgOptions';
 import type { KpgServices } from './types/KpgServices';
 import type { Core } from '@seedcord/gateway';
-import type { HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrUpdateEvent } from '@seedcord/types';
 import type { MigrationInfo } from 'kysely/migration';
 
 export interface KyselyArtifact {

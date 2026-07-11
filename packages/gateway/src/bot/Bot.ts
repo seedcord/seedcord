@@ -16,7 +16,7 @@ import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 import type { InjectedMentionMap } from './injectors/CommandMentionInjector';
 import type { InjectedEmojiMap } from './injectors/EmojiInjector';
 import type { Core } from '@interfaces/Core';
-import type { HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrUpdateEvent } from '@seedcord/types';
 
 /**
  * Types of events emitted by the {@link Core.bot} instance.

@@ -1,7 +1,7 @@
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
-import { traverseDirectory } from '@seedcord/utils';
+import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
@@ -15,7 +15,7 @@ import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
 import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrUpdateEvent } from '@seedcord/types';
 
 // `data: never` so a concrete subscriber (which takes one subscription's payload) is assignable here
 // for storage. The per-key map restores the precise payload type at dispatch.

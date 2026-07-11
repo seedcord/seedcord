@@ -1,4 +1,4 @@
-import { traverseDirectory } from '@seedcord/utils';
+import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 
 import { PgServiceMetadataKey } from './decorators/RegisterKpgService';

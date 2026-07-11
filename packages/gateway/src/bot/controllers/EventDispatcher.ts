@@ -3,7 +3,8 @@ import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates } from '@seedc
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, paint } from '@seedcord/logger';
-import { formatFilePath, hasKeys, traverseDirectory } from '@seedcord/utils';
+import { formatFilePath, hasKeys } from '@seedcord/utils';
+import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
 import { MiddlewareType } from '@bDecorators/Middlewares';
@@ -19,7 +20,7 @@ import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@handl
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ClientEvents } from 'discord.js';
 
 interface RegisteredEventMiddleware {

@@ -8,9 +8,9 @@ import { Envapter } from 'envapt';
 import { setDevChannel } from './devChannel';
 import { wrapHot } from './wrapHot';
 
-import type { HmrAware, HmrUpdateEvent, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 
-/** @internal */
 export class HmrManager {
     private readonly logger = new Logger('HMR', { channel: 'hmr' });
     private readonly listeners = new Set<HmrAware>();

@@ -7,8 +7,7 @@ import type { Core } from './Core';
 import type { EventMap, NoEvents } from '@seedcord/event-emitter';
 import type { Logger } from '@seedcord/logger';
 import type { CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/services';
-import type { Tail } from '@seedcord/types';
-import type { HmrAware, HmrUpdateEvent } from '@seedcord/types/internal';
+import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 export interface Initializeable {
     init(): Promise<void>;

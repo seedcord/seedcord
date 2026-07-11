@@ -7,6 +7,7 @@ export { pickNotice } from '@gates/catalog/options';
 export type { GateFitsWith } from '@gates/matching';
 
 export { getDevChannel, setDevChannel } from '@hmr/devChannel';
+export { HmrManager } from '@hmr/HmrManager';
 export { wrapHot } from '@hmr/wrapHot';
 
 export { GateNotice, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '@notices/index';

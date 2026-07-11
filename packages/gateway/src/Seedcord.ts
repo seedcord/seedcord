@@ -1,5 +1,4 @@
-import { HmrManager } from '@seedcord/core/hmr';
-import { setBotColor } from '@seedcord/core/internal';
+import { HmrManager, setBotColor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';

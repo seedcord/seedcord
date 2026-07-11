@@ -6,7 +6,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { ShutdownPhase } from '@seedcord/services';
-import { keepDefined, traverseDirectory } from '@seedcord/utils';
+import { keepDefined } from '@seedcord/utils';
+import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
@@ -19,7 +20,7 @@ import type { MongoServiceConstructor } from './MongoService';
 import type { MongoOptions } from './types/MongoOptions';
 import type { MongoServices } from './types/MongoServices';
 import type { Core } from '@seedcord/gateway';
-import type { HmrUpdateEvent } from '@seedcord/types/internal';
+import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Mongoose } from 'mongoose';
 
 interface MongoArtifact {

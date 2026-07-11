@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
-import { isTsOrJsFile } from '@seedcord/utils';
+import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { ConfigLoader } from '@core/config/ConfigLoader';

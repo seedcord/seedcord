@@ -65,6 +65,8 @@ export function toInfo(record: LogRecord): WinstonInfo {
     };
 }
 
+const MS_DIGITS = 3;
+
 function pad(value: number): string {
     return value.toString().padStart(2, '0');
 }
@@ -74,7 +76,7 @@ function buildTimestamp(): { date: string; timestamp: string } {
     const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
     const clock = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
     // milliseconds keep two runs started in the same second on separate files
-    const ms = now.getMilliseconds().toString().padStart(3, '0');
+    const ms = now.getMilliseconds().toString().padStart(MS_DIGITS, '0');
     return { date, timestamp: `${date}-${clock}-${ms}` };
 }
 

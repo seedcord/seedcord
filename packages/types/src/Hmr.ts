@@ -1,19 +1,4 @@
-export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'deleteDir';
-
-export interface HmrUpdateEvent {
-    file: string;
-    type: HmrEventType;
-    /** Files affected by this update, such as importers. Only populated for `update` events. */
-    affectedModules?: string[];
-    /** Whether a failed reload of this file rolls back to the last-good unit. Defaults to true. */
-    rollback?: boolean;
-}
-
-export interface HmrAware {
-    /** Names the module in HMR logs. */
-    readonly name: string;
-    onHmr(event: HmrUpdateEvent): Promise<void>;
-}
+import type { HmrUpdateEvent } from './Types/Hmr';
 
 /**
  * HMR events the framework (client) sends to the CLI (server).
