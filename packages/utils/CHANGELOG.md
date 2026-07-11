@@ -1,5 +1,18 @@
 # @seedcord/utils
 
+## 0.8.0-next.5
+
+### Minor Changes
+
+- 93544a8: **BREAKING:** `traverseDirectory` and `isTsOrJsFile` moved to the new `@seedcord/utils/node` subpath. `formatFilePath` no longer reads `node:path`, and a path outside the working directory is returned unchanged.
+
+### Patch Changes
+
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+    - @seedcord/types@0.8.0-next.5
+
 ## 0.8.0-next.4
 
 ### Patch Changes
@@ -59,26 +72,6 @@
 - Updated dependencies [78377fa]
     - @seedcord/types@0.7.1
 
-## 0.7.0-next.1
-
-### Patch Changes
-
-- 0a19719: Remove unused exports.
-
-## 0.7.0-next.0
-
-### Minor Changes
-
-- 78377fa: Rename `generateAsciiTable` to `renderTable` and fold pagination into it. Passing a `budget` returns one `string` per page (header repeated on each, default 2000) instead of a single string, so the separate `paginateAsciiTable` is gone. Fix `numericAlign` to judge a column by its body rows so a numeric column under a text header now right-aligns. Add `fence` to wrap the output in a triple-backtick block for monospace rendering in Discord messages and embeds, counted against `budget`. Default is now a rounded table. And a lot more customization options!
-
-### Patch Changes
-
-- 78377fa: add examples to some utils that should have them
-- 78377fa: update LICENSE copyright year
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-    - @seedcord/types@0.7.1-next.0
-
 ## 0.6.1
 
 ### Patch Changes
@@ -86,14 +79,6 @@
 - 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
 - Updated dependencies [7121c18]
     - @seedcord/types@0.7.0
-
-## 0.6.1-next.0
-
-### Patch Changes
-
-- 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
-- Updated dependencies [7121c18]
-    - @seedcord/types@0.7.0-next.0
 
 ## 0.6.0
 
@@ -112,24 +97,6 @@
 - Updated dependencies [6e39348]
 - Updated dependencies [6e39348]
     - @seedcord/types@0.6.0
-
-## 0.6.0-next.0
-
-### Minor Changes
-
-- 6e39348: Rename the cooldown store and land the gate leaf prep.
-
-    - In `@seedcord/services`, `CooldownManager` is renamed to `RateLimiter` (`CooldownWindow` and `CooldownResult` become `RateLimitWindow` and `RateLimitResult`), and the `@seedcord/services/internal` subpath is removed. The throw-based `check()` API becomes `hit(key, { delay, limit? })`.
-    - In `seedcord`, the store is reached at `core.rateLimiter`.
-    - In `@seedcord/utils`, add `parseDuration`, the `ValidDuration` template type, and `toEpochSeconds`.
-    - In `@seedcord/types`, add `Config.ownerIds` and the `Epoch` types (`EpochMs` and `EpochSec`).
-
-### Patch Changes
-
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-    - @seedcord/types@0.6.0-next.0
 
 ## 0.5.0
 
@@ -179,37 +146,6 @@
 - Updated dependencies [fe77998]
 - Updated dependencies [7e6d80e]
     - @seedcord/types@0.4.0
-
-## 0.4.0-next.0
-
-### Minor Changes
-
-- 0083461: seedcord instance brand
-- 7e6d80e: most packages were exporting more than what they should be exporting and now have smaller imports as they should
-
-### Patch Changes
-
-- 225977a: export "version" variable with the actual semantic version of each package
-- 0083461: new method to format a file path relative to the root directory
-- 0083461: new fully typed hasKeys function that can check for the existence of a key and narrow the type based on the distributive union the key is coming from. works with nested keys too
-- 5e4bf42: Reclassify singleton runtime dependencies as peer dependencies so a consumer resolves a single shared instance.
-    - `seedcord`: `discord.js` and `reflect-metadata` are now required peer dependencies.
-    - `@seedcord/plugins`: `mongoose`, `pg`, and `kysely` are optional peer dependencies (install only the backend your plugin uses); `reflect-metadata` and `seedcord` are required peers.
-    - `@seedcord/types`: `discord.js` is now an optional peer dependency.
-    - `@seedcord/services` and `@seedcord/utils`: `type-fest` moved to `devDependencies` (its types are inlined into the published declarations).
-
-- 7308d36: `filterCirculars` now returns a serializable `{ '[unserializable]': reason }` placeholder when a value cannot be made JSON-safe, instead of returning the original value (which would re-throw in the caller's own `JSON.stringify`). `traverseDirectory` logs the directory path and cause on a read failure.
-- fe77998: build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.
-- fe77998: bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes.
-- Updated dependencies [225977a]
-- Updated dependencies [a34366b]
-- Updated dependencies [5e4bf42]
-- Updated dependencies [7308d36]
-- Updated dependencies [fe77998]
-- Updated dependencies [a34366b]
-- Updated dependencies [fe77998]
-- Updated dependencies [7e6d80e]
-    - @seedcord/types@0.4.0-next.0
 
 ## 0.3.8
 

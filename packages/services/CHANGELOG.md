@@ -1,5 +1,28 @@
 # @seedcord/services
 
+## 0.9.0-next.6
+
+### Minor Changes
+
+- cd3ee0f: **BREAKING:** `@seedcord/services` no longer exports `Logger`, `LoggerChannelRegistry`, or the sink types. Import them from `@seedcord/logger`. `HealthCheck` and the lifecycle coordinators stay.
+
+### Patch Changes
+
+- f011978: upgrade envapt to v8
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+    - @seedcord/types@0.8.0-next.5
+    - @seedcord/logger@0.1.0-next.0
+
 ## 0.9.0-next.5
 
 ### Minor Changes
@@ -105,34 +128,6 @@
     - @seedcord/errors@0.2.1
     - @seedcord/types@0.7.1
 
-## 0.8.2-next.2
-
-### Patch Changes
-
-- Updated dependencies [0a19719]
-    - @seedcord/utils@0.7.0-next.1
-
-## 0.8.2-next.1
-
-### Patch Changes
-
-- 78377fa: mark some exports as internal so they don't show up in the docs
-- 78377fa: update LICENSE copyright year
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-    - @seedcord/utils@0.7.0-next.0
-    - @seedcord/types@0.7.1-next.0
-    - @seedcord/errors@0.2.1-next.1
-
-## 0.8.2-next.0
-
-### Patch Changes
-
-- Updated dependencies [c3613bd]
-    - @seedcord/errors@0.2.1-next.0
-
 ## 0.8.1
 
 ### Patch Changes
@@ -146,20 +141,6 @@
     - @seedcord/utils@0.6.1
     - @seedcord/errors@0.2.0
     - @seedcord/types@0.7.0
-
-## 0.8.1-next.0
-
-### Patch Changes
-
-- 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
-- Updated dependencies [043e2a1]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-    - @seedcord/utils@0.6.1-next.0
-    - @seedcord/errors@0.2.0-next.0
-    - @seedcord/types@0.7.0-next.0
 
 ## 0.8.0
 
@@ -183,29 +164,6 @@
     - @seedcord/types@0.6.0
     - @seedcord/errors@0.1.0
     - @seedcord/utils@0.6.0
-
-## 0.8.0-next.0
-
-### Minor Changes
-
-- 6e39348: Rename the cooldown store and land the gate leaf prep.
-
-    - In `@seedcord/services`, `CooldownManager` is renamed to `RateLimiter` (`CooldownWindow` and `CooldownResult` become `RateLimitWindow` and `RateLimitResult`), and the `@seedcord/services/internal` subpath is removed. The throw-based `check()` API becomes `hit(key, { delay, limit? })`.
-    - In `seedcord`, the store is reached at `core.rateLimiter`.
-    - In `@seedcord/utils`, add `parseDuration`, the `ValidDuration` template type, and `toEpochSeconds`.
-    - In `@seedcord/types`, add `Config.ownerIds` and the `Epoch` types (`EpochMs` and `EpochSec`).
-
-### Patch Changes
-
-- 6e39348: remove vestigial caching in Logger. forgot to remove them after removing static methods.
-- 180b5a9: Upgrade the envapt runtime dependency to 6.0.0.
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-    - @seedcord/types@0.6.0-next.0
-    - @seedcord/errors@0.1.0-next.0
-    - @seedcord/utils@0.6.0-next.0
 
 ## 0.7.1
 
@@ -288,52 +246,6 @@
 - Updated dependencies [7e6d80e]
     - @seedcord/types@0.4.0
     - @seedcord/utils@0.4.0
-
-## 0.7.0-next.0
-
-### Minor Changes
-
-- 12261b8: new custom winston transport that forwards logs to custom sinks that users can implement
-- 12261b8: better Logger with new utils and better file transports + lots of config options
-- 7308d36: CoordinatedShutdown and CoordinatedStartup now extend StrictEventEmitter, so `on`/`off` are typed per event and the `CoordinatedShutdownEventKey` / `CoordinatedStartupEventKey` types are removed. The static `Logger.Error/Info/Warn/Debug/Silly` helpers are removed; use a `Logger` instance. `StrictEventEmitter.waitFor` rejects with a `SeedcordError` instead of a bare `Error`. Also fixes a HealthCheck shutdown hang, a logger-transport leak on reconfigure, and drops the unused `discord.js` dependency.
-- 7308d36: Move the non-secret startup settings from environment variables into the runtime config. `botColor`, `shutdownEnabled`, `healthCheck` (`port`/`path`/`host`), and `notifications.developerUsername` are now set through `new Seedcord({ ... })` instead of `DEFAULT_BOT_COLOR`, `SHUTDOWN_IS_ENABLED`, `HEALTH_CHECK_PORT`/`PATH`/`HOST`, and `DEVELOPER_DISCORD_USERNAME`. Secrets (bot token, exception webhook URL, Mongo URI) stay in the environment.
-
-    The bot color is applied when a component is used rather than when it is constructed, so a configured color reaches every component regardless of construction order, and any `ColorResolvable` (hex string, number, named color, or RGB tuple) works. The default health-check port is 6967.
-
-    **Breaking:** the framework no longer reads those four environment variables; move their values into the config object passed to `new Seedcord(...)`. The internal `hexToNumber` helper and its `UtilHexInputType` / `UtilHexInvalid` error codes are removed.
-
-- 7e6d80e: most packages were exporting more than what they should be exporting and now have smaller imports as they should
-
-### Patch Changes
-
-- 225977a: export "version" variable with the actual semantic version of each package
-- 2c4201b: Bump envapt to v5. `seedcord` now reads `DISCORD_BOT_TOKEN` at the start of `Bot.init()`, so a missing or invalid token throws (via the existing converter) at the start of boot instead of partway through startup at login.
-- b933d63: fix inconsistent env var name in param tsdoc
-- 80ec3d0: **BREAKING**: seedcord now uses a config.ts file for dev server configuration. new cli as well.
-- 5ab61d1: better generics and type narrowing for SeedcordErrors and the isSeedcordError type-guard (and tests for these changes)
-- d938005: bump deps
-- 5e4bf42: Reclassify singleton runtime dependencies as peer dependencies so a consumer resolves a single shared instance.
-    - `seedcord`: `discord.js` and `reflect-metadata` are now required peer dependencies.
-    - `@seedcord/plugins`: `mongoose`, `pg`, and `kysely` are optional peer dependencies (install only the backend your plugin uses); `reflect-metadata` and `seedcord` are required peers.
-    - `@seedcord/types`: `discord.js` is now an optional peer dependency.
-    - `@seedcord/services` and `@seedcord/utils`: `type-fest` moved to `devDependencies` (its types are inlined into the published declarations).
-
-- fe77998: build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.
-- fe77998: bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes.
-- Updated dependencies [225977a]
-- Updated dependencies [0083461]
-- Updated dependencies [a34366b]
-- Updated dependencies [0083461]
-- Updated dependencies [0083461]
-- Updated dependencies [5e4bf42]
-- Updated dependencies [7308d36]
-- Updated dependencies [7308d36]
-- Updated dependencies [fe77998]
-- Updated dependencies [a34366b]
-- Updated dependencies [fe77998]
-- Updated dependencies [7e6d80e]
-    - @seedcord/types@0.4.0-next.0
-    - @seedcord/utils@0.4.0-next.0
 
 ## 0.6.0
 

@@ -1,5 +1,36 @@
 # @seedcord/plugins
 
+## 0.8.0-next.7
+
+### Patch Changes
+
+- f011978: upgrade envapt to v8
+- 93544a8: `@seedcord/core` is now a runtime dependency.
+- Updated dependencies [93544a8]
+- Updated dependencies [f011978]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+- Updated dependencies [93544a8]
+    - @seedcord/core@0.1.0-next.4
+    - @seedcord/gateway@0.1.0-next.2
+    - @seedcord/services@0.9.0-next.6
+    - @seedcord/types@0.8.0-next.5
+    - @seedcord/logger@0.1.0-next.0
+    - @seedcord/utils@0.8.0-next.5
+
 ## 0.8.0-next.6
 
 ### Patch Changes
@@ -117,55 +148,6 @@
     - @seedcord/services@0.8.2
     - @seedcord/types@0.7.1
 
-## 0.7.2-next.4
-
-### Patch Changes
-
-- Updated dependencies [0a19719]
-    - @seedcord/utils@0.7.0-next.1
-    - seedcord@0.15.0-next.4
-    - @seedcord/services@0.8.2-next.2
-
-## 0.7.2-next.3
-
-### Patch Changes
-
-- 78377fa: mark some exports as internal so they don't show up in the docs
-- 78377fa: update LICENSE copyright year
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-    - @seedcord/utils@0.7.0-next.0
-    - seedcord@0.15.0-next.3
-    - @seedcord/services@0.8.2-next.1
-    - @seedcord/types@0.7.1-next.0
-    - @seedcord/errors@0.2.1-next.1
-
-## 0.7.2-next.2
-
-### Patch Changes
-
-- Updated dependencies [8d8445e]
-    - seedcord@0.15.0-next.2
-
-## 0.7.2-next.1
-
-### Patch Changes
-
-- Updated dependencies [51006e2]
-    - seedcord@0.15.0-next.1
-
-## 0.7.2-next.0
-
-### Patch Changes
-
-- Updated dependencies [c3613bd]
-- Updated dependencies [c3613bd]
-    - seedcord@0.15.0-next.0
-    - @seedcord/errors@0.2.1-next.0
-    - @seedcord/services@0.8.2-next.0
-
 ## 0.7.1
 
 ### Patch Changes
@@ -182,23 +164,6 @@
     - @seedcord/utils@0.6.1
     - @seedcord/errors@0.2.0
     - @seedcord/types@0.7.0
-
-## 0.7.1-next.0
-
-### Patch Changes
-
-- 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
-- Updated dependencies [043e2a1]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-- Updated dependencies [7121c18]
-    - seedcord@0.14.0-next.0
-    - @seedcord/services@0.8.1-next.0
-    - @seedcord/utils@0.6.1-next.0
-    - @seedcord/errors@0.2.0-next.0
-    - @seedcord/types@0.7.0-next.0
 
 ## 0.7.0
 
@@ -236,36 +201,6 @@
     - @seedcord/types@0.6.0
     - @seedcord/errors@0.1.0
     - @seedcord/utils@0.6.0
-
-## 0.7.0-next.0
-
-### Minor Changes
-
-- 6e39348: Replace the database error path with a general `Fault`.
-
-    - `DatabaseError` is removed. `Fault` replaces it, a public `Notice` in `@seedcord/kit` whose `report` defaults true and whose constructor takes `{ cause }`. A service catch rethrows `new Fault({ cause: e })`.
-    - `@WrapDatabaseError` and `throwDatabaseError` are removed.
-
-    To migrate, replace `@WrapDatabaseError` and `throwDatabaseError` with a `try`/`catch` in the service method that rethrows `new Fault({ cause: e })` or write a decorator that does the same.
-
-### Patch Changes
-
-- 180b5a9: Upgrade the envapt runtime dependency to 6.0.0.
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [180b5a9]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [74ea604]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-    - @seedcord/services@0.8.0-next.0
-    - seedcord@0.13.0-next.0
-    - @seedcord/types@0.6.0-next.0
-    - @seedcord/errors@0.1.0-next.0
-    - @seedcord/utils@0.6.0-next.0
 
 ## 0.6.1
 
@@ -347,62 +282,6 @@
     - @seedcord/types@0.4.0
     - @seedcord/utils@0.4.0
     - @seedcord/cli@0.1.0
-
-## 0.6.0-next.0
-
-### Minor Changes
-
-- d14a6b2: remove a handful of imports that don't need to be public
-- 5e4bf42: Reclassify singleton runtime dependencies as peer dependencies so a consumer resolves a single shared instance.
-    - `seedcord`: `discord.js` and `reflect-metadata` are now required peer dependencies.
-    - `@seedcord/plugins`: `mongoose`, `pg`, and `kysely` are optional peer dependencies (install only the backend your plugin uses); `reflect-metadata` and `seedcord` are required peers.
-    - `@seedcord/types`: `discord.js` is now an optional peer dependency.
-    - `@seedcord/services` and `@seedcord/utils`: `type-fest` moved to `devDependencies` (its types are inlined into the published declarations).
-
-- fe77998: bump `kysely` `^0.28.9` → `^0.29.2`. migration helpers now imported from `'kysely/migration'` (root re-exports deprecated). `MigrationTarget` switched from `typeof NO_MIGRATIONS` to the `NoMigrations` interface.
-- 7308d36: Mongo and KyselyPg now rethrow a `SeedcordError` when teardown fails, so a failed disconnect is reported during coordinated shutdown instead of resolving silently. Accessing `db.services` before the plugin finishes initializing throws instead of returning an empty map. The Postgres on-connect listener is wrapped in a catch and detached on teardown.
-- 7e6d80e: most packages were exporting more than what they should be exporting and now have smaller imports as they should
-
-### Patch Changes
-
-- 225977a: export "version" variable with the actual semantic version of each package
-- 2c4201b: Bump envapt to v5. `seedcord` now reads `DISCORD_BOT_TOKEN` at the start of `Bot.init()`, so a missing or invalid token throws (via the existing converter) at the start of boot instead of partway through startup at login.
-- d938005: bump deps
-- 5a529d5: Fix the Mongo plugin crashing during shutdown when the initial connection never succeeded (e.g. a connect timeout). `disconnect()` now no-ops when no connection was established.
-- fe77998: build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.
-- a34366b: **BREAKING**: drop unused utility types from `@seedcord/types` (`AnyFunction`, `AnyAsyncFunction`, `PartialExcept`, `RequiredExcept`, `ReadonlyExcept`, `EnsureUndefinedForOptionalProps`, `StrictUnion`, `ReadonlyRecord`, `PartialRecord`). Migrate in-repo `TypedOmit` consumers to `Except` from `type-fest`.
-- fe77998: bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes.
-- Updated dependencies [225977a]
-- Updated dependencies [2c4201b]
-- Updated dependencies [2c4201b]
-- Updated dependencies [b933d63]
-- Updated dependencies [0083461]
-- Updated dependencies [5a529d5]
-- Updated dependencies [fe77998]
-- Updated dependencies [80ec3d0]
-- Updated dependencies [a34366b]
-- Updated dependencies [0083461]
-- Updated dependencies [12261b8]
-- Updated dependencies [0083461]
-- Updated dependencies [5ab61d1]
-- Updated dependencies [d938005]
-- Updated dependencies [5e4bf42]
-- Updated dependencies [12261b8]
-- Updated dependencies [cf9766d]
-- Updated dependencies [7308d36]
-- Updated dependencies [7308d36]
-- Updated dependencies [7308d36]
-- Updated dependencies [7308d36]
-- Updated dependencies [7308d36]
-- Updated dependencies [fe77998]
-- Updated dependencies [a34366b]
-- Updated dependencies [fe77998]
-- Updated dependencies [7e6d80e]
-    - seedcord@0.11.0-next.0
-    - @seedcord/services@0.7.0-next.0
-    - @seedcord/types@0.4.0-next.0
-    - @seedcord/utils@0.4.0-next.0
-    - @seedcord/cli@0.1.0-next.0
 
 ## 0.5.0
 
@@ -619,15 +498,3 @@
     - @seedcord/types@0.1.0
     - seedcord@0.1.0
 
-## 0.1.0-alpha.2
-
-### Minor Changes
-
-- 2a141ec: Created a new package called @seedcord/plugins and moved mongo there
-
-### Patch Changes
-
-- Updated dependencies [8c4ce41]
-- Updated dependencies [2a141ec]
-    - seedcord@0.1.0-alpha.3
-    - @seedcord/types@0.1.0-alpha.2

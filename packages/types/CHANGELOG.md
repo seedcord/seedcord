@@ -1,5 +1,13 @@
 # @seedcord/types
 
+## 0.8.0-next.5
+
+### Minor Changes
+
+- cd3ee0f: **BREAKING:** `ILogger` no longer has `http`, `verbose`, and `silly` levels. The new levels are `error`, `warn`, `info`, `debug`, and `trace`.
+- cd3ee0f: `Config.logger?: LoggerConfig` configures logging on any transport, the gateway constructor reads it. The logger seam (`LogLevel`, `LogRecord`, `ILogSink`, `LoggerConfig`, `LogSinkHandle`) is exported from `@seedcord/types/internal` and re-exported by `@seedcord/logger`.
+- 93544a8: Export `HmrEventType`, `HmrUpdateEvent`, and `HmrAware` from the package root, for typing `onHmr` implementations.
+
 ## 0.8.0-next.4
 
 ### Patch Changes
@@ -48,52 +56,13 @@
 - 78377fa: mark some exports as internal so they don't show up in the docs
 - 78377fa: update LICENSE copyright year
 
-## 0.7.1-next.0
-
-### Patch Changes
-
-- 78377fa: mark some exports as internal so they don't show up in the docs
-- 78377fa: update LICENSE copyright year
-
 ## 0.7.0
 
 ### Minor Changes
 
 - 7121c18: Type configured emojis precisely. `seedcord codegen` now writes an `EmojiMap` block that tags each key `'application'` or `'guild'`, and `Emojis.X` (and `bot.emojis.X`) resolves to the exact `ApplicationEmoji` or `GuildEmoji` rather than the union. Configure `config.bot.emojis` with the new `EmojiConfig` type and run `seedcord codegen`, you no longer hand-write the `EmojiMap` augmentation. The generated file is renamed from `command-registry.gen.ts` to `seedcord-gen.d.ts`, so delete the old file and re-run `seedcord codegen`.
 
-## 0.7.0-next.0
-
-### Minor Changes
-
-- 7121c18: Type configured emojis precisely. `seedcord codegen` now writes an `EmojiMap` block that tags each key `'application'` or `'guild'`, and `Emojis.X` (and `bot.emojis.X`) resolves to the exact `ApplicationEmoji` or `GuildEmoji` rather than the union. Configure `config.bot.emojis` with the new `EmojiConfig` type and run `seedcord codegen`, you no longer hand-write the `EmojiMap` augmentation. The generated file is renamed from `command-registry.gen.ts` to `seedcord-gen.d.ts`, so delete the old file and re-run `seedcord codegen`.
-
 ## 0.6.0
-
-### Minor Changes
-
-- 6e39348: Move error handling from the per-method `@Catchable`/`@EventCatchable` decorators to one controller boundary that catches every throw across the interaction and event lifecycle (middleware, construct, gate phase, execute).
-
-    - A `Notice` renders through `ReplySender`, a reporting `Notice` and a raw error publish to `handledException`/`unknownException`, and a `Silence` stops silently. Events are report-only and never auto-reply.
-    - Removes `@Catchable`, `@EventCatchable`, and the `setBreak`/`setErrored`/`shouldBreak`/`hasErrors` handler flags. Throw a `Silence` to stop a handler without a reply.
-    - The default handled-exception subscriber requires the `HANDLED_EXCEPTION_WEBHOOK_URL` env var at boot.
-    - `FaultSource` gains an `event` arm. Duplicate faults are throttled to one report per minute per route.
-    - `ignoreCustomIds` is now `CustomIdMatcher[]`, matched against the raw customId. Adds `errors.ignoreApiCodes` and `errors.ignoreEventApiCodes` (both empty by default, so a handler's own discord.js api error reports).
-
-- 6e39348: Rework the error model around one base class and one reply shape.
-
-    - `CustomError` is renamed to `Notice`, the abstract base you extend and throw. The `emit` field is renamed to `report`. The `response` field (a `readonly EmbedBuilder`) is replaced by a `render(ctx)` method that returns a `ReplyResponse`.
-    - `ReplyResponse` is a new public type in `@seedcord/types`, a v2 reply shape of `components` plus optional `allowedMentions` and `files`. Discord's components-v2 flag forbids `content`, `embeds`, `stickers`, and `poll`. `RenderContext` is the new render argument.
-
-    To migrate, rename `CustomError` to `Notice`, rename `emit` to `report`, and replace the `response` field with a `render(ctx)` method returning a `ReplyResponse`.
-
-- 6e39348: Rename the cooldown store and land the gate leaf prep.
-
-    - In `@seedcord/services`, `CooldownManager` is renamed to `RateLimiter` (`CooldownWindow` and `CooldownResult` become `RateLimitWindow` and `RateLimitResult`), and the `@seedcord/services/internal` subpath is removed. The throw-based `check()` API becomes `hit(key, { delay, limit? })`.
-    - In `seedcord`, the store is reached at `core.rateLimiter`.
-    - In `@seedcord/utils`, add `parseDuration`, the `ValidDuration` template type, and `toEpochSeconds`.
-    - In `@seedcord/types`, add `Config.ownerIds` and the `Epoch` types (`EpochMs` and `EpochSec`).
-
-## 0.6.0-next.0
 
 ### Minor Changes
 
@@ -141,32 +110,6 @@
     - **BREAKING**: `AutocompleteHandler` is now generic over its command route(s) and `@AutocompleteRoute` takes command routes only, replacing the previous per-field `(commandRoutes, focusedFields)` registration that registered one handler per field. Branch on the focused field with `this.match` instead.
 
 ## 0.4.0
-
-### Minor Changes
-
-- a34366b: **BREAKING**: rename `Effects` → pub-sub bus. `core.effects.emit` → `core.bus.publish`. `EffectsHandler` → `Subscriber`. `@RegisterEffect` → `@Subscribe`. `Effects` augmentation interface → `Subscriptions`. config key `effects` → `subscribers`. `EffectsConfig` → `SubscribersConfig`.
-- 5e4bf42: Reclassify singleton runtime dependencies as peer dependencies so a consumer resolves a single shared instance.
-    - `seedcord`: `discord.js` and `reflect-metadata` are now required peer dependencies.
-    - `@seedcord/plugins`: `mongoose`, `pg`, and `kysely` are optional peer dependencies (install only the backend your plugin uses); `reflect-metadata` and `seedcord` are required peers.
-    - `@seedcord/types`: `discord.js` is now an optional peer dependency.
-    - `@seedcord/services` and `@seedcord/utils`: `type-fest` moved to `devDependencies` (its types are inlined into the published declarations).
-
-- 7308d36: Move the non-secret startup settings from environment variables into the runtime config. `botColor`, `shutdownEnabled`, `healthCheck` (`port`/`path`/`host`), and `notifications.developerUsername` are now set through `new Seedcord({ ... })` instead of `DEFAULT_BOT_COLOR`, `SHUTDOWN_IS_ENABLED`, `HEALTH_CHECK_PORT`/`PATH`/`HOST`, and `DEVELOPER_DISCORD_USERNAME`. Secrets (bot token, exception webhook URL, Mongo URI) stay in the environment.
-
-    The bot color is applied when a component is used rather than when it is constructed, so a configured color reaches every component regardless of construction order, and any `ColorResolvable` (hex string, number, named color, or RGB tuple) works. The default health-check port is 6967.
-
-    **Breaking:** the framework no longer reads those four environment variables; move their values into the config object passed to `new Seedcord(...)`. The internal `hexToNumber` helper and its `UtilHexInputType` / `UtilHexInvalid` error codes are removed.
-
-- a34366b: **BREAKING**: drop unused utility types from `@seedcord/types` (`AnyFunction`, `AnyAsyncFunction`, `PartialExcept`, `RequiredExcept`, `ReadonlyExcept`, `EnsureUndefinedForOptionalProps`, `StrictUnion`, `ReadonlyRecord`, `PartialRecord`). Migrate in-repo `TypedOmit` consumers to `Except` from `type-fest`.
-- 7e6d80e: most packages were exporting more than what they should be exporting and now have smaller imports as they should
-
-### Patch Changes
-
-- 225977a: export "version" variable with the actual semantic version of each package
-- fe77998: build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.
-- fe77998: bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes.
-
-## 0.4.0-next.0
 
 ### Minor Changes
 
@@ -290,22 +233,3 @@
 - 48a8c9b: add LICENSE to all package roots
 - 48a8c9b: add TSDoc to almost everything
 
-## 0.1.0-alpha.2
-
-### Patch Changes
-
-- 8c4ce41: Added eslint for TSDoc
-
-## 0.1.0-alpha.1
-
-### Patch Changes
-
-- 73a33a5: fix repository url in package.json
-- dad89c6: add LICENSE to all package roots
-- 73a33a5: add TSDoc to almost everything
-
-## 0.1.0-alpha.0
-
-### Minor Changes
-
-- publish types too
