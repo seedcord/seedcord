@@ -1,5 +1,7 @@
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
@@ -7,6 +9,7 @@ import { Envapter } from 'envapt';
 
 import { Plugin } from '@interfaces/Plugin';
 
+import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { Subscriber } from './Subscriber';
@@ -17,8 +20,7 @@ import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { HmrUpdateEvent } from '@seedcord/types';
 
-// `data: never` so a concrete subscriber (which takes one subscription's payload) is assignable here
-// for storage. The per-key map restores the precise payload type at dispatch.
+// `data: never` so a concrete subscriber stays assignable for storage. the per-key map restores the payload type at dispatch.
 type SubscriberConstructor = new (data: never, core: Core) => Subscriber<SubscriptionKey>;
 interface RegisteredSubscriberHandlerEntry {
     ctor: SubscriberConstructor;
@@ -28,12 +30,8 @@ interface RegisteredSubscriberHandlerEntry {
 type SubscriberArtifact = SubscriptionKey[];
 
 /**
- * Manages application subscribers and event handling
- *
- * Provides a centralized system for registering and executing custom subscribers
- * throughout the application lifecycle. Bus subscribers are loaded from configured directories
- * and can be triggered programmatically or by framework events. Accessed via `core.bus`. Do not
- * construct it directly.
+ * Registers and dispatches subscribers. Subscribers load from the configured directories and run
+ * on a programmatic or framework-event publish. Accessed via `core.bus`. Do not construct it directly.
  */
 export class Bus extends Plugin<SubscriptionTuples> {
     public readonly logger = new Logger('Subscribers');
@@ -42,6 +40,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
     private isInitialized = false;
     private readonly subscribersMap = new Map<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();
     private readonly executedOnceHandlers = new Set<SubscriberConstructor>();
+    // url -> env key, read once at boot by verifyWebhooks, an hmr unregister leaves entries behind harmlessly
+    private readonly webhookProbes = new Map<string, string>();
     private readonly hmrHandler?: HmrModuleHandler<SubscriberConstructor, void, SubscriberArtifact>;
 
     constructor(protected core: Core) {
@@ -74,10 +74,6 @@ export class Bus extends Plugin<SubscriptionTuples> {
         this.registerSubscriber(UnknownException);
         this.registerSubscriber(HandledException);
 
-        // require both webhook urls at boot so a missing one stops the boot, never silently dropping fault
-        // reports when the first exception fires.
-        Envapter.require('UNKNOWN_EXCEPTION_WEBHOOK_URL', 'HANDLED_EXCEPTION_WEBHOOK_URL');
-
         const subscribersDir = this.core.config.subscribers.path;
         if (subscribersDir) {
             this.logger.info(chalk.bold(subscribersDir));
@@ -88,9 +84,22 @@ export class Bus extends Plugin<SubscriptionTuples> {
             );
             this.logger.utils.list([`${chalk.bold.magenta(totalSubscribers)} subscribers`], chalk.bold.green('Loaded'));
         }
+
+        if (!Envapter.isTest) await this.verifyWebhooks();
     }
 
-    /** @internal For use in dev mode */
+    /** @internal Exposed for tests. */
+    public async verifyWebhooks(): Promise<void> {
+        await Promise.all(
+            [...this.webhookProbes].map(async ([url, envKey]) => {
+                const result = await WebhookLog.senderFor(url).verify();
+                if (result === 'missing') throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [envKey]);
+                if (result === 'unreachable') this.logger.warn(`could not verify the webhook behind ${envKey}`);
+            })
+        );
+    }
+
+    /** @internal */
     public override async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.hmrHandler) {
             await this.hmrHandler.handle(event);
@@ -115,6 +124,16 @@ export class Bus extends Plugin<SubscriptionTuples> {
     }
 
     private registerSubscriber(handler: SubscriberConstructor): void {
+        if (handler.prototype instanceof WebhookLog) {
+            const envKey = WebhookLog.envKeyOf(handler);
+            const url = WebhookLog.urlOf(envKey);
+            if (url === null) {
+                this.logger.warn(`${handler.name} disabled, ${envKey} is not set`);
+                return;
+            }
+            this.webhookProbes.set(url, envKey);
+        }
+
         const options = Reflect.getMetadata(SubscribeMetadataKey, handler) as SubscribeMetadataEntry;
 
         let handlers = this.subscribersMap.get(options.subscriber);
@@ -177,8 +196,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
             }
 
             try {
-                // Mark before awaiting so a re-entrant publish of the same event can't run a
-                // 'once' subscriber twice while the first invocation is still pending.
+                // mark before awaiting, so a re-entrant publish can't run a 'once' subscriber twice
+                // while the first invocation is still pending
                 if (entry.frequency === 'once') {
                     this.executedOnceHandlers.add(entry.ctor);
                 }

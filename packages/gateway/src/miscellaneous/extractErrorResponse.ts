@@ -11,25 +11,16 @@ import { FaultThrottle } from '@miscellaneous/FaultThrottle';
 import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { RenderContext, ReplyResponse, Nullable } from '@seedcord/types';
-import type { EventFaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
+import type { AllSubscriptions, EventFaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 import type { Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';
 
 const logger = new Logger('ErrorsHandling');
 
-/**
- * The single throttle for every fault publish, so a recurring fault reports once per window across both
- * the interaction and event paths. Exported so tests reset it between cases.
- *
- * @internal
- */
+// one throttle across both report paths, so a recurring fault reports once per window. exported so
+// tests reset the shared window state.
 export const faultThrottle = new FaultThrottle();
 
-/**
- * A fault that came from a client event. The event boundary derives the actor and channel best-effort.
- *
- * @internal
- */
 interface EventOrigin {
     name: string;
     handler: string;
@@ -37,12 +28,6 @@ interface EventOrigin {
     channelId: string | null;
 }
 
-/**
- * Where an error came from. `interaction` sets the interaction `handledException` source, `event` sets
- * the event source. guild/user back the `unknownException` payload on every path.
- *
- * @internal
- */
 export interface ErrorOrigin {
     interaction?: Repliables;
     event?: EventOrigin;
@@ -53,7 +38,6 @@ export interface ErrorOrigin {
     metadata?: unknown;
 }
 
-/** @internal */
 export interface ExtractedErrorResponse {
     uuid: UUID;
     response: ReplyResponse;
@@ -66,8 +50,6 @@ export interface ExtractedErrorResponse {
  * publishes `handledException` on the interaction path. A raw, non-denial throw publishes
  * `unknownException` and renders the configured `defaultError` (or a generic {@link Fault}). One uuid is
  * threaded into both the reply and the bus payload.
- *
- * @internal
  */
 export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrigin): ExtractedErrorResponse {
     const uuid = crypto.randomUUID();
@@ -87,7 +69,7 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
     return { uuid, response };
 }
 
-// the throttle protocol both report paths share: report once per window per key, stamp only on a report
+// stamp only after a publish, so a throttled fault stays reportable next window
 function withThrottle(origin: ErrorOrigin, error: Error, publish: () => void): void {
     const key = faultKey(origin, error);
     if (!faultThrottle.shouldReport(key)) {
@@ -111,8 +93,7 @@ function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID
             core.bus.publish('unknownException', {
                 uuid,
                 error: denial,
-                guild: origin.guild,
-                user: origin.user,
+                ...scalarActors(origin),
                 metadata: metadataFor(origin)
             });
         }
@@ -128,11 +109,18 @@ function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUI
         core.bus.publish('unknownException', {
             uuid,
             error,
-            guild: origin.guild,
-            user: origin.user,
+            ...scalarActors(origin),
             metadata: metadataFor(origin)
         });
     });
+}
+
+// the bus payload must stay djs-free, so map to plain scalars
+function scalarActors(origin: ErrorOrigin): Pick<AllSubscriptions['unknownException'], 'guild' | 'user'> {
+    return {
+        guild: origin.guild ? { id: origin.guild.id, name: origin.guild.name } : undefined,
+        user: origin.user ? { id: origin.user.id, username: origin.user.username } : undefined
+    };
 }
 
 function metadataFor(origin: ErrorOrigin): unknown {
