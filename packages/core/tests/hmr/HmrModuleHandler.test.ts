@@ -66,6 +66,30 @@ describe('HmrModuleHandler', () => {
         expect(registerHandler).not.toHaveBeenCalled();
     });
 
+    it('ignores a sibling directory that shares the middlewares-dir prefix', async () => {
+        const middlewaresDir = join(dir, 'middlewares');
+        mkdirSync(middlewaresDir);
+        const siblingDir = join(dir, 'middlewares-extra');
+        mkdirSync(siblingDir);
+        const siblingFile = join(siblingDir, 'util.mjs');
+        writeFileSync(siblingFile, 'export class UtilThing {}\n');
+        const registerMiddleware = vi.fn<(middleware: TestHandler, file: string) => void>();
+        const withMiddlewares = new HmrModuleHandler<TestHandler, TestHandler>({
+            handlersDir,
+            middlewaresDir,
+            isHandler: (_val): _val is TestHandler => false,
+            isMiddleware: isHandler,
+            registerHandler,
+            registerMiddleware,
+            unregisterHandler,
+            logger: fakeLogger()
+        });
+
+        await withMiddlewares.handle({ file: siblingFile, type: 'update' });
+
+        expect(registerMiddleware).not.toHaveBeenCalled();
+    });
+
     it('reloads and registers a handler file inside the handlers dir', async () => {
         const file = join(handlersDir, 'Ping.mjs');
         writeFileSync(file, 'export class Ping {}\n');
