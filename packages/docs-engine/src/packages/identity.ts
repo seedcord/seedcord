@@ -12,11 +12,15 @@ interface PackageOverride {
 const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
     '@seedcord/gateway': {
         displayName: 'gateway',
-        aliases: ['gateway']
+        aliases: ['gateway', 'ws']
     },
     '@seedcord/core': {
         displayName: 'core',
         aliases: ['core']
+    },
+    '@seedcord/http': {
+        displayName: 'http',
+        aliases: ['http', 'edge']
     },
     '@seedcord/plugins': {
         displayName: 'plugins',
@@ -63,7 +67,7 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         aliases: ['logger']
     },
     'eslint-plugin-discordjs': {
-        aliases: []
+        aliases: ['eslint-plugin-discordjs', 'eslint-plugin-djs']
     }
 };
 

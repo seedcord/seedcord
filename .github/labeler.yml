@@ -4,6 +4,9 @@
 '📦 core':
   - changed-files:
       - any-glob-to-any-file: 'packages/core/**'
+'📦 http':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/http/**'
 '📦 mock':
   - changed-files:
       - any-glob-to-any-file: 'mock/**'
