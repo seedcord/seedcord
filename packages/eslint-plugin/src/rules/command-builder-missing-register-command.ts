@@ -1,8 +1,8 @@
 import {
     classInstanceType,
+    createDecoratorMatcher,
     extendsSeedcordType,
-    forEachSeedcordImport,
-    hasDecoratorNamed
+    forEachSeedcordImport
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
@@ -18,7 +18,7 @@ const KIND_LABEL = {
 
 type CommandKind = keyof typeof KIND_LABEL;
 
-const REGISTER_COMMAND = new Set(['RegisterCommand']);
+const REGISTER_COMMAND = 'RegisterCommand';
 const BUILDER_COMPONENT = 'BuilderComponent';
 
 function isCommandKind(value: string): value is CommandKind {
@@ -65,12 +65,14 @@ export default createRule({
         const checker = services.program.getTypeChecker();
         const builderComponentNames = new Set<string>();
         const intermediateKinds = new Map<string, CommandKind>();
+        const decorators = createDecoratorMatcher(services, checker, [REGISTER_COMMAND]);
 
         return {
             ImportDeclaration(node) {
                 forEachSeedcordImport(node, (imported, local) => {
                     if (imported === BUILDER_COMPONENT) builderComponentNames.add(local);
                 });
+                decorators.collectImports(node);
             },
             ClassDeclaration(node) {
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
@@ -89,7 +91,7 @@ export default createRule({
                     if (node.id) intermediateKinds.set(node.id.name, kind);
                     return;
                 }
-                if (hasDecoratorNamed(node, REGISTER_COMMAND)) return;
+                if (decorators.hasDecorator(node, REGISTER_COMMAND)) return;
 
                 context.report({
                     node: node.id ?? node,

@@ -1,10 +1,72 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { TypeFlags } from 'typescript';
+import { SymbolFlags, TypeFlags } from 'typescript';
 
 import { constructorData, unwrapAssertions } from './utils';
 
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
+
+function decoratorIdentifier(decorator: TSESTree.Decorator): TSESTree.Identifier | undefined {
+    const expr = decorator.expression;
+    if (expr.type === AST_NODE_TYPES.CallExpression && expr.callee.type === AST_NODE_TYPES.Identifier) {
+        return expr.callee;
+    }
+    if (expr.type === AST_NODE_TYPES.Identifier) return expr;
+    return undefined;
+}
+
+// matches class decorators to seedcord decorator names by import origin
+export interface DecoratorMatcher {
+    collectImports(node: TSESTree.ImportDeclaration): void;
+    hasDecorator(node: TSESTree.ClassDeclaration, originalName: string): boolean;
+}
+
+export function createDecoratorMatcher(
+    services: ParserServicesWithTypeInformation,
+    checker: ts.TypeChecker,
+    originalNames: readonly string[]
+): DecoratorMatcher {
+    const wanted = new Set(originalNames);
+    const locals = new Map<string, Set<string>>();
+
+    // a tsconfig-alias import is shaped like a scoped package, only the resolved declaration file tells the two apart
+    function resolvesTo(id: TSESTree.Identifier, originalName: string): boolean {
+        const symbol = checker.getSymbolAtLocation(services.esTreeNodeToTSNodeMap.get(id));
+        if (!symbol) return false;
+        const target = symbol.flags & SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol;
+        if (target.getName() !== originalName) return false;
+        const file = target.declarations?.[0]?.getSourceFile().fileName ?? '';
+        if (!file.includes('node_modules')) return true;
+        return /node_modules[\\/](@seedcord[\\/]|seedcord[\\/])/.test(file);
+    }
+
+    return {
+        collectImports(node) {
+            const source = node.source.value;
+            if (typeof source !== 'string') return;
+            if (source !== 'seedcord' && !source.startsWith('@seedcord/') && !source.startsWith('.')) return;
+            for (const spec of node.specifiers) {
+                if (spec.type !== AST_NODE_TYPES.ImportSpecifier) continue;
+                if (spec.imported.type !== AST_NODE_TYPES.Identifier) continue;
+                if (!wanted.has(spec.imported.name)) continue;
+                let set = locals.get(spec.imported.name);
+                if (!set) {
+                    set = new Set();
+                    locals.set(spec.imported.name, set);
+                }
+                set.add(spec.local.name);
+            }
+        },
+        hasDecorator(node, originalName) {
+            return node.decorators.some((decorator) => {
+                const id = decoratorIdentifier(decorator);
+                if (!id) return false;
+                if (locals.get(originalName)?.has(id.name)) return true;
+                return resolvesTo(id, originalName);
+            });
+        }
+    };
+}
 
 // the symbol is declared inside the discord.js or @discordjs packages, so a same-named local class is excluded
 export function isFromDiscordJs(symbol: ts.Symbol | undefined): boolean {

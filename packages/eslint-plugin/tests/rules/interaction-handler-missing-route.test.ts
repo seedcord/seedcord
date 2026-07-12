@@ -9,34 +9,47 @@ ruleTester.run('interaction-handler-missing-route', rule, {
     valid: [
         // decorated handlers, the real mock shape
         dedent`
-            import { SlashHandler } from 'seedcord';
+            import { SlashHandler, SlashRoute } from 'seedcord';
             @SlashRoute('probe')
             export class Probe extends SlashHandler<'probe'> {
                 async execute() {}
             }
         `,
         dedent`
-            import { ButtonHandler } from 'seedcord';
+            import { ButtonHandler, ButtonRoute } from 'seedcord';
             @ButtonRoute(Board)
             export class Nav extends ButtonHandler<[typeof Board]> {}
         `,
         dedent`
-            import { ContextMenuHandler } from 'seedcord';
+            import { ContextMenuHandler, ContextMenuRoute } from 'seedcord';
             @ContextMenuRoute(ApplicationCommandType.User, 'View Profile')
             export class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User> {}
         `,
         // a route decorator stacked under an unrelated one still counts
         dedent`
-            import { ButtonHandler } from 'seedcord';
+            import { ButtonHandler, ButtonRoute } from 'seedcord';
             @LogUsage()
             @ButtonRoute(Board)
             export class Nav extends ButtonHandler<[typeof Board]> {}
         `,
         // aliased import still resolves to the seedcord base
         dedent`
-            import { SlashHandler as SH } from 'seedcord';
+            import { SlashHandler as SH, SlashRoute } from 'seedcord';
             @SlashRoute('probe')
             export class Probe extends SH<'probe'> {}
+        `,
+        // an aliased route decorator still counts
+        dedent`
+            import { SlashHandler, SlashRoute as SR } from 'seedcord';
+            @SR('probe')
+            export class Probe extends SlashHandler<'probe'> {}
+        `,
+        // a relative decorator import counts, the framework and user barrels resolve this way
+        dedent`
+            import { SlashHandler } from 'seedcord';
+            import { SlashRoute } from './decorators/SlashRoute';
+            @SlashRoute('probe')
+            export class Probe extends SlashHandler<'probe'> {}
         `,
         // abstract intermediate base is not a concrete handler
         dedent`
@@ -50,19 +63,19 @@ ruleTester.run('interaction-handler-missing-route', rule, {
         `,
         // select menu handler with its route
         dedent`
-            import { SelectMenuHandler } from 'seedcord';
+            import { SelectMenuHandler, SelectMenuRoute } from 'seedcord';
             @SelectMenuRoute(Menu)
             export class Picker extends SelectMenuHandler<[typeof Menu]> {}
         `,
         // autocomplete handler with its route
         dedent`
-            import { AutocompleteHandler } from 'seedcord';
+            import { AutocompleteHandler, AutocompleteRoute } from 'seedcord';
             @AutocompleteRoute('search')
             export class Search extends AutocompleteHandler<'search'> {}
         `,
         // modal handler with its route
         dedent`
-            import { ModalHandler } from 'seedcord';
+            import { ModalHandler, ModalRoute } from 'seedcord';
             @ModalRoute(Feedback)
             export class FeedbackModal extends ModalHandler<[typeof Feedback]> {}
         `,
@@ -82,11 +95,21 @@ ruleTester.run('interaction-handler-missing-route', rule, {
         {
             // the wrong route decorator does not register a slash handler
             code: dedent`
-                import { SlashHandler } from 'seedcord';
+                import { SlashHandler, ButtonRoute } from 'seedcord';
                 @ButtonRoute('x')
                 export class Mismatch extends SlashHandler<'ban'> {
                     async execute() {}
                 }
+            `,
+            errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
+        },
+        {
+            // a same-named route decorator from another module satisfies nothing
+            code: dedent`
+                import { SlashHandler } from 'seedcord';
+                import { SlashRoute } from 'some-other-lib';
+                @SlashRoute('ban')
+                export class BanHandler extends SlashHandler<'ban'> {}
             `,
             errors: [{ messageId: 'missingRoute', data: { base: 'SlashHandler', decorator: 'SlashRoute' } }]
         },

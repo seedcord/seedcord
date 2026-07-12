@@ -6,6 +6,8 @@ A class that extends `Subscriber` registers only when it carries `@Subscribe`, a
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package, and an `abstract` intermediate base is skipped.
 
+The decorators match by origin. A seedcord, relative, or tsconfig-alias import counts, an aliased name counts, and a same-named decorator from another package never does.
+
 ## Incorrect
 
 ```ts

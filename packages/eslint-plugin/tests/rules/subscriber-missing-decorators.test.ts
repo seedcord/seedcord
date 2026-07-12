@@ -12,6 +12,19 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             @Subscribe('unknownException')
             export class LogSub extends Subscriber<'unknownException'> {}
         `,
+        // an aliased decorator import still counts
+        dedent`
+            import { Subscriber, Subscribe as Sub } from 'seedcord';
+            @Sub('unknownException')
+            export class LogSub extends Subscriber<'unknownException'> {}
+        `,
+        // a relative decorator import counts, the framework and user barrels resolve this way
+        dedent`
+            import { Subscriber } from 'seedcord';
+            import { Subscribe } from './decorators/Subscribe';
+            @Subscribe('unknownException')
+            export class LogSub extends Subscriber<'unknownException'> {}
+        `,
         dedent`
             import { WebhookLog, Subscribe, WebhookUrl } from 'seedcord';
             @Subscribe('memberBanned')
@@ -61,6 +74,27 @@ ruleTester.run('subscriber-missing-decorators', rule, {
             errors: [{ messageId: 'missingSubscribe' }]
         },
         {
+            // a same-named decorator from another module satisfies nothing
+            code: dedent`
+                import { Subscriber } from 'seedcord';
+                import { Subscribe } from 'some-other-lib';
+                @Subscribe('unknownException')
+                export class LogSub extends Subscriber<'unknownException'> {}
+            `,
+            errors: [{ messageId: 'missingSubscribe' }]
+        },
+        {
+            // both decorators from another module, both reports fire
+            code: dedent`
+                import { WebhookLog } from 'seedcord';
+                import { Subscribe, WebhookUrl } from 'some-other-lib';
+                @Subscribe('memberBanned')
+                @WebhookUrl('BAN_LOG_WEBHOOK_URL')
+                export class BanLog extends WebhookLog<'memberBanned'> {}
+            `,
+            errors: [{ messageId: 'missingSubscribe' }, { messageId: 'missingWebhookUrl' }]
+        },
+        {
             // a concrete subclass of a same-file abstract subscriber base
             code: dedent`
                 import { Subscriber } from 'seedcord';
@@ -72,6 +106,7 @@ ruleTester.run('subscriber-missing-decorators', rule, {
         {
             // a concrete subclass of a cross-file abstract reporter base
             code: dedent`
+                import { Subscribe } from 'seedcord';
                 import { BaseReporter } from './project-bases';
                 @Subscribe('unknownException')
                 export class BanLog extends BaseReporter {}

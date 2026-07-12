@@ -9,24 +9,37 @@ ruleTester.run('command-builder-missing-register-command', rule, {
     valid: [
         // registered commands, the real mock shape
         dedent`
-            import { BuilderComponent } from '@seedcord/core';
+            import { BuilderComponent, RegisterCommand } from '@seedcord/core';
             @RegisterCommand('global')
             export class ProbeCommand extends BuilderComponent<'command'> {}
         `,
         dedent`
-            import { BuilderComponent } from '@seedcord/core';
+            import { BuilderComponent, RegisterCommand } from '@seedcord/core';
             @RegisterCommand('global')
             export class ViewProfileCommand extends BuilderComponent<'context_menu'> {}
         `,
         dedent`
-            import { BuilderComponent } from '@seedcord/core';
+            import { BuilderComponent, RegisterCommand } from '@seedcord/core';
             @RegisterCommand('guild', ['123456789'])
             export class AdminCommand extends BuilderComponent<'command'> {}
         `,
         // a bare @RegisterCommand identifier (no parens) still registers
         dedent`
-            import { BuilderComponent } from '@seedcord/core';
+            import { BuilderComponent, RegisterCommand } from '@seedcord/core';
             @RegisterCommand
+            export class ProbeCommand extends BuilderComponent<'command'> {}
+        `,
+        // an aliased decorator import still counts
+        dedent`
+            import { BuilderComponent, RegisterCommand as RC } from '@seedcord/core';
+            @RC('global')
+            export class ProbeCommand extends BuilderComponent<'command'> {}
+        `,
+        // a relative decorator import counts, the framework and user barrels resolve this way
+        dedent`
+            import { BuilderComponent } from '@seedcord/core';
+            import { RegisterCommand } from './decorators/RegisterCommand';
+            @RegisterCommand('global')
             export class ProbeCommand extends BuilderComponent<'command'> {}
         `,
         // non-command builders are not deployable, never flagged
@@ -83,6 +96,16 @@ ruleTester.run('command-builder-missing-register-command', rule, {
             code: dedent`
                 import { BuilderComponent } from '@seedcord/core';
                 @LogUsage()
+                export class ProbeCommand extends BuilderComponent<'command'> {}
+            `,
+            errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]
+        },
+        {
+            // a same-named decorator from another module satisfies nothing
+            code: dedent`
+                import { BuilderComponent } from '@seedcord/core';
+                import { RegisterCommand } from 'some-other-lib';
+                @RegisterCommand('global')
                 export class ProbeCommand extends BuilderComponent<'command'> {}
             `,
             errors: [{ messageId: 'missingRegister', data: { label: 'slash command' } }]

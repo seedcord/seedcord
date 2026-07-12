@@ -1,8 +1,8 @@
 import {
     classInstanceType,
+    createDecoratorMatcher,
     extendsSeedcordType,
-    forEachSeedcordImport,
-    hasDecoratorNamed
+    forEachSeedcordImport
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
@@ -10,8 +10,8 @@ import { createRule } from '../createRule';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
-const SUBSCRIBE = new Set(['Subscribe']);
-const WEBHOOK_URL = new Set(['WebhookUrl']);
+const SUBSCRIBE = 'Subscribe';
+const WEBHOOK_URL = 'WebhookUrl';
 const SUBSCRIBER = 'Subscriber';
 const WEBHOOK_LOG = 'WebhookLog';
 
@@ -40,6 +40,7 @@ export default createRule({
         const checker = services.program.getTypeChecker();
         const subscriberBases = new Set<string>();
         const webhookBases = new Set<string>();
+        const decorators = createDecoratorMatcher(services, checker, [SUBSCRIBE, WEBHOOK_URL]);
 
         function classify(node: TSESTree.ClassDeclaration, superName: string): Kind {
             // every webhook base is also a subscriber base
@@ -70,6 +71,7 @@ export default createRule({
                         webhookBases.add(local);
                     }
                 });
+                decorators.collectImports(node);
             },
             ClassDeclaration(node) {
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
@@ -81,10 +83,10 @@ export default createRule({
                     return;
                 }
 
-                if (!hasDecoratorNamed(node, SUBSCRIBE)) {
+                if (!decorators.hasDecorator(node, SUBSCRIBE)) {
                     context.report({ node: node.id ?? node, messageId: 'missingSubscribe' });
                 }
-                if (kind.isWebhook && !hasDecoratorNamed(node, WEBHOOK_URL)) {
+                if (kind.isWebhook && !decorators.hasDecorator(node, WEBHOOK_URL)) {
                     context.report({ node: node.id ?? node, messageId: 'missingWebhookUrl' });
                 }
             }

@@ -6,6 +6,8 @@ A class that extends `SlashHandler`, `ButtonHandler`, `ModalHandler`, `SelectMen
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package. A same-named class from another module is not flagged, and an `abstract` intermediate base is skipped.
 
+The route decorators match by origin. A seedcord, relative, or tsconfig-alias import counts, an aliased name counts, and a same-named decorator from another package never does.
+
 ## Incorrect
 
 ```ts
@@ -19,7 +21,7 @@ export class BanHandler extends SlashHandler<'ban'> {
 ## Correct
 
 ```ts
-import { SlashHandler } from 'seedcord';
+import { SlashHandler, SlashRoute } from 'seedcord';
 
 @SlashRoute('ban')
 export class BanHandler extends SlashHandler<'ban'> {

@@ -1,8 +1,8 @@
 import {
     classInstanceType,
+    createDecoratorMatcher,
     extendsSeedcordType,
-    forEachSeedcordImport,
-    hasDecoratorNamed
+    forEachSeedcordImport
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
@@ -43,12 +43,14 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
         const bases = new Map<string, HandlerBase>();
+        const decorators = createDecoratorMatcher(services, checker, Object.values(BASE_TO_DECORATOR));
 
         return {
             ImportDeclaration(node) {
                 forEachSeedcordImport(node, (imported, local) => {
                     if (isHandlerBase(imported)) bases.set(local, imported);
                 });
+                decorators.collectImports(node);
             },
             ClassDeclaration(node) {
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
@@ -67,7 +69,7 @@ export default createRule({
                     return;
                 }
                 // only the decorator matching this handler's base registers it. a wrong-type route still fails
-                if (hasDecoratorNamed(node, new Set([BASE_TO_DECORATOR[base]]))) return;
+                if (decorators.hasDecorator(node, BASE_TO_DECORATOR[base])) return;
 
                 context.report({
                     node: node.id ?? node,
