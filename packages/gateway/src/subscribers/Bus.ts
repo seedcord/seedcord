@@ -40,8 +40,8 @@ export class Bus extends Plugin<SubscriptionTuples> {
     private isInitialized = false;
     private readonly subscribersMap = new Map<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();
     private readonly executedOnceHandlers = new Set<SubscriberConstructor>();
-    // url -> env key, read once at boot by verifyWebhooks, an hmr unregister leaves entries behind harmlessly
-    private readonly webhookProbes = new Map<string, string>();
+    // url -> env keys, read once at boot by verifyWebhooks, an hmr unregister leaves no-op entries which is fine
+    private readonly webhookProbes = new Map<string, string[]>();
     private readonly hmrHandler?: HmrModuleHandler<SubscriberConstructor, void, SubscriberArtifact>;
 
     constructor(protected core: Core) {
@@ -92,14 +92,14 @@ export class Bus extends Plugin<SubscriptionTuples> {
     public async verifyWebhooks(): Promise<void> {
         const missing: string[] = [];
         await Promise.all(
-            [...this.webhookProbes].map(async ([url, envKey]) => {
+            [...this.webhookProbes].map(async ([url, envKeys]) => {
                 const result = await WebhookLog.senderFor(url).verify();
-                if (result === 'missing') missing.push(envKey);
+                if (result === 'missing') missing.push(...envKeys);
                 else if (result === 'unreachable')
-                    this.logger.warn(`could not verify the webhook behind ${paint.sky.bold(envKey)}`);
+                    this.logger.warn(`could not verify webhook at ${paint.sky.bold(envKeys.join(', '))}`);
             })
         );
-        // one boot reports every dead webhook
+        // initial boot reports all missing webhooks
         if (missing.length > 0) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [missing.join(', ')]);
     }
 
@@ -135,7 +135,9 @@ export class Bus extends Plugin<SubscriptionTuples> {
                 this.logger.warn(`${chalk.bold(handler.name)} disabled, ${paint.sky.bold(envKey)} is not set`);
                 return;
             }
-            this.webhookProbes.set(url, envKey);
+            const envKeys = this.webhookProbes.get(url) ?? [];
+            if (!envKeys.includes(envKey)) envKeys.push(envKey);
+            this.webhookProbes.set(url, envKeys);
         }
 
         const options = Reflect.getMetadata(SubscribeMetadataKey, handler) as SubscribeMetadataEntry;
@@ -158,7 +160,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
                 handlers.splice(index, 1);
             }
         }
-        // spent follows the ctor identity, so leaving executedOnceHandlers alone keeps a rollback-restored subscriber spent
+        // ctor identity determines state, so ignoring executedOnceHandlers on rollback preserves state for restored subscribers
     }
 
     private isSubscriber(obj: unknown): obj is SubscriberConstructor {

@@ -10,6 +10,8 @@ import '../utils/mock-client';
 
 const restMocks = vi.hoisted(() => {
     process.env.MALFORMED_REPORTER_WEBHOOK_URL = 'https://example.com/not-a-webhook';
+    process.env.DUPLICATE_A_WEBHOOK_URL = 'https://discord.com/api/webhooks/9/shared-tok';
+    process.env.DUPLICATE_B_WEBHOOK_URL = 'https://discord.com/api/webhooks/9/shared-tok';
     // hard-assign the default reporter urls, a shell exporting garbage would change the suite
     process.env.UNKNOWN_EXCEPTION_WEBHOOK_URL = 'https://discord.com/api/webhooks/1/aaa';
     process.env.HANDLED_EXCEPTION_WEBHOOK_URL = 'https://discord.com/api/webhooks/2/bbb';
@@ -107,6 +109,40 @@ describe('Bus webhook reporter registration', () => {
         await expect(seedcord.bus.verifyWebhooks()).rejects.toThrow(
             /UNKNOWN_EXCEPTION_WEBHOOK_URL.+HANDLED_EXCEPTION_WEBHOOK_URL/
         );
+    });
+
+    it('names every env key behind one dead url at verify', async () => {
+        await testEnv.createFile(
+            'subscribers/SharedUrlReporters.ts',
+            `
+            import { WebhookLog, WebhookUrl, Subscribe } from '${seedcordPath}';
+
+            @Subscribe('unknownException')
+            @WebhookUrl('DUPLICATE_A_WEBHOOK_URL')
+            export class ReporterA extends WebhookLog<'unknownException'> {
+                public report() {
+                    return { components: [] };
+                }
+            }
+
+            @Subscribe('unknownException')
+            @WebhookUrl('DUPLICATE_B_WEBHOOK_URL')
+            export class ReporterB extends WebhookLog<'unknownException'> {
+                public report() {
+                    return { components: [] };
+                }
+            }
+            `
+        );
+
+        seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
+        await seedcord.bus.init();
+
+        const { DiscordAPIError } = await import('@discordjs/rest');
+        restMocks.getMock.mockRejectedValue(
+            new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
+        );
+        await expect(seedcord.bus.verifyWebhooks()).rejects.toThrow(/DUPLICATE_A_WEBHOOK_URL.+DUPLICATE_B_WEBHOOK_URL/);
     });
 
     it('warns and continues when discord is unreachable at verify', async () => {
