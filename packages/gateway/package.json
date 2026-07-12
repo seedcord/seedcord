@@ -49,6 +49,7 @@
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
+        "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:*",
         "@seedcord/errors": "workspace:*",
         "@seedcord/event-emitter": "workspace:*",
@@ -58,6 +59,7 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
+        "discord-api-types": "catalog:deps",
         "envapt": "catalog:deps"
     },
     "devDependencies": {

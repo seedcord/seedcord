@@ -1,15 +1,15 @@
 import {
     classInstanceType,
+    createDecoratorMatcher,
     extendsSeedcordType,
-    forEachSeedcordImport,
-    hasDecoratorNamed
+    forEachSeedcordImport
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
 
 const MIDDLEWARE_BASES = new Set(['InteractionMiddleware', 'EventMiddleware']);
-const MIDDLEWARE_DECORATOR = new Set(['Middleware']);
+const MIDDLEWARE_DECORATOR = 'Middleware';
 
 export default createRule({
     name: 'middleware-missing-register-decorator',
@@ -28,12 +28,14 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
         const bases = new Set<string>();
+        const decorators = createDecoratorMatcher(services, checker, [MIDDLEWARE_DECORATOR]);
 
         return {
             ImportDeclaration(node) {
                 forEachSeedcordImport(node, (imported, local) => {
                     if (MIDDLEWARE_BASES.has(imported)) bases.add(local);
                 });
+                decorators.collectImports(node);
             },
             ClassDeclaration(node) {
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
@@ -49,7 +51,7 @@ export default createRule({
                     if (node.id) bases.add(node.id.name);
                     return;
                 }
-                if (hasDecoratorNamed(node, MIDDLEWARE_DECORATOR)) return;
+                if (decorators.hasDecorator(node, MIDDLEWARE_DECORATOR)) return;
 
                 context.report({ node: node.id ?? node, messageId: 'missingMiddleware' });
             }

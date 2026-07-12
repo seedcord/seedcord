@@ -1,75 +1,35 @@
+import { DiscordAPIError } from '@discordjs/rest';
 import { BuilderComponent } from '@seedcord/core';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
-import { WebhookClient, DiscordAPIError, SnowflakeUtil } from 'discord.js';
-import { Envapt } from 'envapt/legacy';
+import { timestampFromSnowflake } from '@seedcord/utils';
 
-import { flagsFor } from '@miscellaneous/flagsFor';
-
-import { isDiscordWebhookUrl, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
+import { jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
+import { WebhookUrl } from '../decorators/WebhookUrl';
 
+import type { WebhookReport } from '../bases/WebhookLog';
 import type { AllSubscriptions } from '../types/Subscriptions';
 
-function webhookUrlValidator(raw: unknown): string {
-    if (raw !== null && typeof raw !== 'string') {
-        throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid);
-    }
-
-    const value = raw?.trim() ?? '';
-    if (value === '') {
-        throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing);
-    }
-
-    if (!isDiscordWebhookUrl(value)) {
-        throw new SeedcordError(SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid);
-    }
-
-    return value;
-}
-
 /**
- * Default subscriber to log unhandled exceptions via webhook. It provides basic information about the error:
- * - Error stack trace
- * - Guild ID and name (if applicable)
- * - User ID and username (if applicable)
- * - A unique UUID for tracking
- * - Timestamps comparing interaction time and error log time (if applicable)
- * - Metadata associated with the error (if provided)
+ * Default subscriber that reports an unhandled exception to a webhook: the stack trace, the guild
+ * and user, a tracking uuid, interaction timestamps when available, and the error metadata as a
+ * JSON attachment.
  *
- * Developers need to set the UNKNOWN_EXCEPTION_WEBHOOK_URL environment variable in their .env file otherwise this subscriber will throw an error during initialization.
- *
- * @throws A **SeedcordError** if UNKNOWN_EXCEPTION_WEBHOOK_URL is not set or is invalid
+ * Reads its webhook url from UNKNOWN_EXCEPTION_WEBHOOK_URL. Unset, the reporter is disabled with
+ * a boot warning.
  */
 @Subscribe('unknownException')
+@WebhookUrl('UNKNOWN_EXCEPTION_WEBHOOK_URL')
 export class UnknownException extends WebhookLog<'unknownException'> {
-    @Envapt('UNKNOWN_EXCEPTION_WEBHOOK_URL', {
-        converter: (raw) => webhookUrlValidator(raw)
-    })
-    declare static readonly unknownExceptionWebhookUrl: string;
-
-    webhook = new WebhookClient({
-        url: UnknownException.unknownExceptionWebhookUrl
-    });
-
-    async execute(): Promise<void> {
+    report(): WebhookReport {
         const { metadata } = this.data;
-        const metadataFile = metadata
-            ? jsonAttachment('metadata.json', 'Metadata associated with the error', metadata)
-            : null;
-
-        try {
-            await this.webhook.send({
-                flags: flagsFor(false),
-                withComponents: true,
-                username: 'Unknown Exception',
-                components: [new UnhandledErrorContainer(this.data).component],
-                files: metadataFile ? [metadataFile] : []
-            });
-        } catch (error) {
-            this.logger.error('Failed to send unknown exception webhook', error);
-        }
+        return {
+            username: 'Unknown Exception',
+            components: [new UnhandledErrorContainer(this.data).component],
+            files: metadata
+                ? [jsonAttachment('metadata.json', 'Metadata associated with the error', metadata)]
+                : undefined
+        };
     }
 }
 
@@ -101,11 +61,10 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
 
         const now = Date.now();
 
-        // Extract the snowflake ID from `/interactions/{ID}/`
         const snowflake = error.url.match(/\/interactions\/(\d+)\//)?.[1];
         if (!snowflake) return undefined;
 
-        const interactionTs = Number(SnowflakeUtil.deconstruct(snowflake).timestamp);
+        const interactionTs = timestampFromSnowflake(snowflake);
 
         const diff = now - interactionTs;
         const seconds = Math.floor(diff / 1000);

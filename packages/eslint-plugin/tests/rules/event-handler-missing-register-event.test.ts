@@ -9,14 +9,27 @@ ruleTester.run('event-handler-missing-register-event', rule, {
     valid: [
         // decorated event handlers, the real mock shape
         dedent`
-            import { EventHandler } from 'seedcord';
+            import { EventHandler, RegisterEvent } from 'seedcord';
             @RegisterEvent([Events.MessageCreate])
             export class PingPong extends EventHandler<Events.MessageCreate> {}
         `,
         dedent`
-            import { EventHandler } from 'seedcord';
+            import { EventHandler, RegisterEvent } from 'seedcord';
             @RegisterEvent([Events.MessageCreate, { frequency: 'once' }], [Events.MessageUpdate])
             export class PingPong extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {}
+        `,
+        // an aliased decorator import still counts
+        dedent`
+            import { EventHandler, RegisterEvent as RE } from 'seedcord';
+            @RE([Events.MessageCreate])
+            export class PingPong extends EventHandler<Events.MessageCreate> {}
+        `,
+        // a relative decorator import counts, the framework and user barrels resolve this way
+        dedent`
+            import { EventHandler } from 'seedcord';
+            import { RegisterEvent } from './decorators/RegisterEvent';
+            @RegisterEvent([Events.MessageCreate])
+            export class PingPong extends EventHandler<Events.MessageCreate> {}
         `,
         // abstract base is not a concrete handler
         dedent`
@@ -44,6 +57,16 @@ ruleTester.run('event-handler-missing-register-event', rule, {
             code: dedent`
                 import { EventHandler } from 'seedcord';
                 @LogUsage()
+                export class PingPong extends EventHandler<Events.MessageCreate> {}
+            `,
+            errors: [{ messageId: 'missingRegister' }]
+        },
+        {
+            // a same-named decorator from another module satisfies nothing
+            code: dedent`
+                import { EventHandler } from 'seedcord';
+                import { RegisterEvent } from 'some-other-lib';
+                @RegisterEvent([Events.MessageCreate])
                 export class PingPong extends EventHandler<Events.MessageCreate> {}
             `,
             errors: [{ messageId: 'missingRegister' }]

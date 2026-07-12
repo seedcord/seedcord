@@ -7,8 +7,10 @@
  * @packageDocumentation
  */
 
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- deprecated on purpose, the fixture tests deprecation rendering
 export { BaseClass, MockClass } from './class';
 export { MockEnum } from './enum';
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- deprecated on purpose, the fixture tests deprecation rendering
 export { mockFunction, mockFunctionWithRest, asyncMockFunction, LogDecorator } from './function';
 export type { MockInterface, RecursiveInterface, IndexableInterface, ExtendedInterface } from './interface';
 export type {

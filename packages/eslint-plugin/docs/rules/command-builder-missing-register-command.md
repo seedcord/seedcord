@@ -6,6 +6,8 @@ A class that extends `BuilderComponent<'command'>` or `BuilderComponent<'context
 
 Only the `'command'` and `'context_menu'` literal type arguments are targeted. Nested `'group'` and `'subcommand'` builders, other component types, a non-literal type argument, and `abstract` bases are all skipped, and the base must come from `seedcord` or a `@seedcord/*` package.
 
+The decorator matches by origin. A seedcord, relative, or tsconfig-alias import counts, an aliased name counts, and a same-named decorator from another package never does.
+
 ## Incorrect
 
 ```ts
@@ -17,7 +19,7 @@ export class PingCommand extends BuilderComponent<'command'> {}
 ## Correct
 
 ```ts
-import { BuilderComponent } from '@seedcord/core';
+import { BuilderComponent, RegisterCommand } from '@seedcord/core';
 
 @RegisterCommand('global')
 export class PingCommand extends BuilderComponent<'command'> {}

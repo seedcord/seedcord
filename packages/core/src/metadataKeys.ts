@@ -37,3 +37,5 @@ export const CommandMetadataKey = Symbol('seedcord:command:metadata');
 export const GatedMetadataKey = Symbol('seedcord:gated:metadata');
 
 export const SubscribeMetadataKey = Symbol('seedcord:subscribe:metadata');
+
+export const WebhookUrlMetadataKey = Symbol('seedcord:webhookUrl:metadata');

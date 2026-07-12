@@ -1,14 +1,14 @@
 import {
     classInstanceType,
+    createDecoratorMatcher,
     extendsSeedcordType,
-    forEachSeedcordImport,
-    hasDecoratorNamed
+    forEachSeedcordImport
 } from '@seedcord/eslint-utils';
 import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
 
-const REGISTER_EVENT = new Set(['RegisterEvent']);
+const REGISTER_EVENT = 'RegisterEvent';
 const EVENT_HANDLER = 'EventHandler';
 
 export default createRule({
@@ -29,12 +29,14 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
         const bases = new Set<string>();
+        const decorators = createDecoratorMatcher(services, checker, [REGISTER_EVENT]);
 
         return {
             ImportDeclaration(node) {
                 forEachSeedcordImport(node, (imported, local) => {
                     if (imported === EVENT_HANDLER) bases.add(local);
                 });
+                decorators.collectImports(node);
             },
             ClassDeclaration(node) {
                 if (node.superClass?.type !== AST_NODE_TYPES.Identifier) return;
@@ -50,7 +52,7 @@ export default createRule({
                     if (node.id) bases.add(node.id.name);
                     return;
                 }
-                if (hasDecoratorNamed(node, REGISTER_EVENT)) return;
+                if (decorators.hasDecorator(node, REGISTER_EVENT)) return;
 
                 context.report({ node: node.id ?? node, messageId: 'missingRegister' });
             }

@@ -6,6 +6,8 @@ A class that extends `EventHandler` registers only when it carries `@RegisterEve
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package, and an `abstract` intermediate base is skipped.
 
+The decorator matches by origin. A seedcord, relative, or tsconfig-alias import counts, an aliased name counts, and a same-named decorator from another package never does.
+
 ## Incorrect
 
 ```ts
@@ -17,7 +19,7 @@ export class PingPong extends EventHandler<Events.MessageCreate> {}
 ## Correct
 
 ```ts
-import { EventHandler } from 'seedcord';
+import { EventHandler, RegisterEvent } from 'seedcord';
 
 @RegisterEvent([Events.MessageCreate])
 export class PingPong extends EventHandler<Events.MessageCreate> {}

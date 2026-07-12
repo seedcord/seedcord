@@ -8,16 +8,12 @@ export enum SeedcordErrorCode {
     ConfigMissingDiscordToken = 1001,
     /** DISCORD_BOT_TOKEN is present but fails validation. */
     ConfigIncorrectDiscordToken = 1004,
-    /** UNKNOWN_EXCEPTION_WEBHOOK_URL is missing when configuring the reporter. */
-    ConfigUnknownExceptionWebhookMissing = 1002,
-    /** UNKNOWN_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
-    ConfigUnknownExceptionWebhookInvalid = 1003,
-    /** HANDLED_EXCEPTION_WEBHOOK_URL is missing when configuring the reporter. */
-    ConfigHandledExceptionWebhookMissing = 1005,
-    /** HANDLED_EXCEPTION_WEBHOOK_URL is present but fails URL validation. */
-    ConfigHandledExceptionWebhookInvalid = 1006,
     /** One or more configured emojis could not be resolved at startup. */
-    ConfigEmojiUnresolved = 1007,
+    ConfigEmojiUnresolved = 1005,
+    /** A webhook reporter's env var is set but fails webhook URL validation. */
+    ConfigWebhookUrlInvalid = 1006,
+    /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
+    ConfigWebhookNotFound = 1007,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
@@ -55,6 +51,8 @@ export enum SeedcordErrorCode {
     DecoratorCommandGuildWithoutGuilds = 1305,
     /** Middleware priority provided by the decorator was not a finite number. */
     DecoratorInvalidMiddlewarePriority = 1306,
+    /** A WebhookLog subclass is missing its `@WebhookUrl` decorator. */
+    DecoratorWebhookUrlMissing = 1307,
 
     /** Two interaction handlers registered the same route within a scope. */
     InteractionDuplicateRoute = 1401,

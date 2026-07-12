@@ -1,12 +1,15 @@
 import '../utils/mock-env';
 
+import { randomUUID } from 'node:crypto';
+
 import { Notice } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
-import { causeStack, faultSummary } from '@subscribers/default/HandledException';
+import { HandledException } from '@subscribers/default/HandledException';
 
+import type { Core } from '@interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';
-import type { EventFaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
+import type { EventFaultSource, FaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 
 class TestFault extends Notice {
     constructor(message = 'boom', cause?: unknown) {
@@ -39,41 +42,46 @@ const eventSource: EventFaultSource = {
     raw: []
 };
 
-describe('faultSummary', () => {
+// justified: the Subscriber base only stores core
+const core = {} as unknown as Core;
+
+function reportText(denial: Notice, source: FaultSource): string {
+    const report = new HandledException({ denial, uuid: randomUUID(), source }, core).report();
+    return JSON.stringify(report.components.map((component) => component.toJSON()));
+}
+
+describe('HandledException.report', () => {
     it('renders the command and customId for an interaction source', () => {
-        const summary = faultSummary(new TestFault(), interactionSource);
-        expect(summary).toContain('**Command:** ban');
-        expect(summary).toContain('**Interaction ID:** `i1`');
-        expect(summary).not.toContain('**Event:**');
+        const text = reportText(new TestFault(), interactionSource);
+        expect(text).toContain('**Command:** ban');
+        expect(text).toContain('**Interaction ID:** `i1`');
+        expect(text).not.toContain('**Event:**');
     });
 
     it('renders the event name and handler for an event source, with nullable fallbacks', () => {
-        const summary = faultSummary(new TestFault(), eventSource);
-        expect(summary).toContain('**Event:** messageCreate');
-        expect(summary).toContain('**Handler:** Starboard');
-        expect(summary).toContain('**User ID:** `n/a`');
-        expect(summary).toContain('**Channel ID:** `n/a`');
-        expect(summary).not.toContain('**Interaction ID:**');
-    });
-});
-
-describe('causeStack', () => {
-    it('uses an Error cause stack', () => {
-        const cause = new Error('driver down');
-        expect(causeStack(new TestFault('x', cause))).toBe(cause.stack);
+        const text = reportText(new TestFault(), eventSource);
+        expect(text).toContain('**Event:** messageCreate');
+        expect(text).toContain('**Handler:** Starboard');
+        expect(text).toContain('**User ID:** `n/a`');
+        expect(text).toContain('**Channel ID:** `n/a`');
+        expect(text).not.toContain('**Interaction ID:**');
     });
 
-    it('returns a string cause as-is', () => {
-        expect(causeStack(new TestFault('x', 'plain reason'))).toBe('plain reason');
+    it('shows an Error cause stack', () => {
+        expect(reportText(new TestFault('x', new Error('driver down')), interactionSource)).toContain('driver down');
+    });
+
+    it('shows a string cause as-is', () => {
+        expect(reportText(new TestFault('x', 'plain reason'), interactionSource)).toContain('plain reason');
     });
 
     it('does not throw on a bigint cause', () => {
-        expect(causeStack(new TestFault('x', 10n))).toBe('10');
+        expect(reportText(new TestFault('x', 10_987_654_321n), interactionSource)).toContain('10987654321');
     });
 
     it('does not throw on a circular-object cause', () => {
         const circular: Record<string, unknown> = {};
         circular.self = circular;
-        expect(() => causeStack(new TestFault('x', circular))).not.toThrow();
+        expect(() => reportText(new TestFault('x', circular), interactionSource)).not.toThrow();
     });
 });

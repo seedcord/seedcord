@@ -6,6 +6,7 @@ import interactionHandlerMissingRoute from './rules/interaction-handler-missing-
 import middlewareMissingRegisterDecorator from './rules/middleware-missing-register-decorator';
 import noDjsBuilderImport from './rules/no-djs-builder-import';
 import noRawClientEvents from './rules/no-raw-client-events';
+import subscriberMissingDecorators from './rules/subscriber-missing-decorators';
 import useCustomIdCodec from './rules/use-custom-id-codec';
 
 import type { TSESLint } from '@typescript-eslint/utils';
@@ -17,6 +18,7 @@ const rules = {
     'middleware-missing-register-decorator': middlewareMissingRegisterDecorator,
     'no-djs-builder-import': noDjsBuilderImport,
     'no-raw-client-events': noRawClientEvents,
+    'subscriber-missing-decorators': subscriberMissingDecorators,
     'use-custom-id-codec': useCustomIdCodec
 } satisfies Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
 

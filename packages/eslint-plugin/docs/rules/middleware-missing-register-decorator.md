@@ -6,6 +6,8 @@ A class that extends `InteractionMiddleware` or `EventMiddleware` registers only
 
 The base class must be imported from `seedcord` or a `@seedcord/*` package, and an `abstract` intermediate base is skipped.
 
+The decorator matches by origin. A seedcord, relative, or tsconfig-alias import counts, an aliased name counts, and a same-named decorator from another package never does.
+
 ## Incorrect
 
 ```ts
@@ -17,7 +19,7 @@ export class LogMiddleware extends EventMiddleware {}
 ## Correct
 
 ```ts
-import { EventMiddleware } from 'seedcord';
+import { EventMiddleware, Middleware } from 'seedcord';
 
 @Middleware(MiddlewareType.Event, 0)
 export class LogMiddleware extends EventMiddleware {}

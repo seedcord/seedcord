@@ -9,6 +9,9 @@ catalogs:
     '@discordjs/builders':
       specifier: ^1.14.1
       version: 1.14.1
+    '@discordjs/rest':
+      specifier: ^2.6.1
+      version: 2.6.1
     '@tailwindcss/postcss':
       specifier: ^4.3.1
       version: 4.3.1
@@ -850,6 +853,9 @@ importers:
       '@discordjs/builders':
         specifier: catalog:deps
         version: 1.14.1
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.1
       '@seedcord/core':
         specifier: workspace:*
         version: link:../core
@@ -877,6 +883,9 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 5.6.2
+      discord-api-types:
+        specifier: ^0.38.49
+        version: 0.38.49
       envapt:
         specifier: catalog:deps
         version: 8.0.0
@@ -1026,7 +1035,7 @@ importers:
         specifier: ^15.0.0
         version: 15.0.0(commander@15.0.0)
       '@discordjs/rest':
-        specifier: ^2.6.1
+        specifier: catalog:deps
         version: 2.6.1
       '@seedcord/core':
         specifier: workspace:*

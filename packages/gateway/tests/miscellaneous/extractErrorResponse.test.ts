@@ -1,7 +1,7 @@
 import { Fault, CustomId } from '@seedcord/core';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { extractErrorResponse, faultThrottle } from '@miscellaneous/extractErrorResponse';
+import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import { cardJson } from '../utils/cardText';
 import { TestNotice } from '../utils/TestNotice';
@@ -48,11 +48,8 @@ function buttonInteraction(customId: string): Repliables {
     } as unknown as Repliables;
 }
 
+// the module-level throttle persists across tests, so every origin below carries a unique fault key
 describe('extractErrorResponse', () => {
-    beforeEach(() => {
-        faultThrottle.clear();
-    });
-
     it('publishes handledException for a reporting denial with the uuid the reply shows', () => {
         const publish = vi.fn();
         const denial = new Fault({ cause: new Error('write failed') });
@@ -75,9 +72,26 @@ describe('extractErrorResponse', () => {
 
     it('publishes unknownException for a raw, non-denial throw', () => {
         const publish = vi.fn();
-        const result = extractErrorResponse(new Error('a bug'), mockCore(publish), { guild: null, user: null });
+        const result = extractErrorResponse(new Error('a bug'), mockCore(publish), {
+            route: 'raw-probe',
+            guild: null,
+            user: null
+        });
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.objectContaining({ uuid: result.uuid }));
+    });
+
+    it('publishes scalar guild and user fields, never the discord.js objects', () => {
+        const publish = vi.fn();
+        // justified: the fixtures carry the fields the scalar mapping reads plus djs baggage it must drop
+        const guild = { id: 'g1', name: 'Guild One', members: {} } as unknown as import('discord.js').Guild;
+        const user = { id: 'u1', username: 'uname', client: {} } as unknown as import('discord.js').User;
+
+        extractErrorResponse(new Error('a bug'), mockCore(publish), { route: 'scalar-probe', guild, user });
+
+        const [, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
+        expect(payload.guild).toEqual({ id: 'g1', name: 'Guild One' });
+        expect(payload.user).toEqual({ id: 'u1', username: 'uname' });
     });
 
     it('publishes nothing for a non-reporting denial', () => {
@@ -121,8 +135,8 @@ describe('extractErrorResponse', () => {
     });
 
     it('stamps the throttle on publish, not on webhook send success', () => {
-        // the bus is fire-and-forget, so the second fault is suppressed by the first's publish-time stamp
-        // even though no subscriber send has been observed to succeed (separate spy stands in for a retry).
+        // the stamp lands at publish time, so the first fault suppresses the retry (separate spy)
+        // with no subscriber send observed
         const origin = { interaction: slashInteraction('stamp-probe'), guild: null, user: null };
 
         const firstPublish = vi.fn();

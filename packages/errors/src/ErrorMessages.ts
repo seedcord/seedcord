@@ -4,12 +4,10 @@ import { SeedcordErrorCode } from './ErrorCodes';
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
     [SeedcordErrorCode.ConfigIncorrectDiscordToken]: () => 'Invalid DISCORD_BOT_TOKEN value.',
-    [SeedcordErrorCode.ConfigUnknownExceptionWebhookMissing]: () =>
-        'Missing UNKNOWN_EXCEPTION_WEBHOOK_URL environment variable.',
-    [SeedcordErrorCode.ConfigUnknownExceptionWebhookInvalid]: () => 'Invalid UNKNOWN_EXCEPTION_WEBHOOK_URL value.',
-    [SeedcordErrorCode.ConfigHandledExceptionWebhookMissing]: () =>
-        'Missing HANDLED_EXCEPTION_WEBHOOK_URL environment variable.',
-    [SeedcordErrorCode.ConfigHandledExceptionWebhookInvalid]: () => 'Invalid HANDLED_EXCEPTION_WEBHOOK_URL value.',
+    [SeedcordErrorCode.ConfigWebhookUrlInvalid]: (envKey: string) =>
+        `${envKey} is not a well-formed Discord webhook url.`,
+    [SeedcordErrorCode.ConfigWebhookNotFound]: (envKey: string) =>
+        `The webhook behind ${envKey} does not exist on Discord.`,
     [SeedcordErrorCode.ConfigEmojiUnresolved]: (count: number, failures: string) =>
         `Could not resolve ${count} configured emoji${count === 1 ? '' : 's'} at startup.\n${failures}`,
 
@@ -46,6 +44,8 @@ const messages = {
     [SeedcordErrorCode.DecoratorCommandGuildWithoutGuilds]: () =>
         'RegisterCommand("guild") requires a non-empty guilds array.',
     [SeedcordErrorCode.DecoratorInvalidMiddlewarePriority]: () => 'Middleware priority must be a finite number.',
+    [SeedcordErrorCode.DecoratorWebhookUrlMissing]: (className: string) =>
+        `${className} extends WebhookLog and needs a @WebhookUrl decorator naming its env var.`,
 
     [SeedcordErrorCode.InteractionDuplicateRoute]: (route: string, firstClass: string, secondClass: string) =>
         `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${firstClass} and ${secondClass}. Rename one.`,
