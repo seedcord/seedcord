@@ -44,6 +44,8 @@ describe('Bus webhook reporter registration', () => {
     afterEach(async () => {
         await testEnv.teardown();
         vi.clearAllMocks();
+        // clearAllMocks keeps implementations, a rejecting getMock must never leak into the next test
+        restMocks.getMock.mockReset().mockResolvedValue({});
     });
 
     it('warns and skips a reporter whose env var is unset', async () => {
@@ -101,8 +103,10 @@ describe('Bus webhook reporter registration', () => {
         restMocks.getMock.mockRejectedValue(
             new DiscordAPIError({ message: 'Unknown Webhook', code: 10_015 }, 10_015, 404, 'GET', 'url', {})
         );
-        await expect(seedcord.bus.verifyWebhooks()).rejects.toThrow(/does not exist/);
-        restMocks.getMock.mockReset().mockResolvedValue({});
+        // one boot reports every dead webhook, both default urls are mocked dead here
+        await expect(seedcord.bus.verifyWebhooks()).rejects.toThrow(
+            /UNKNOWN_EXCEPTION_WEBHOOK_URL.+HANDLED_EXCEPTION_WEBHOOK_URL/
+        );
     });
 
     it('warns and continues when discord is unreachable at verify', async () => {
@@ -113,7 +117,6 @@ describe('Bus webhook reporter registration', () => {
         const warnSpy = vi.spyOn(seedcord.bus.logger, 'warn');
         await expect(seedcord.bus.verifyWebhooks()).resolves.toBeUndefined();
         expect(warnSpy).toHaveBeenCalled();
-        restMocks.getMock.mockReset().mockResolvedValue({});
     });
 
     it('throws at boot for a WebhookLog subclass without @WebhookUrl', async () => {

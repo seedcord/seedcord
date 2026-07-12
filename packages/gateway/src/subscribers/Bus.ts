@@ -90,14 +90,17 @@ export class Bus extends Plugin<SubscriptionTuples> {
 
     /** @internal Exposed for tests. */
     public async verifyWebhooks(): Promise<void> {
+        const missing: string[] = [];
         await Promise.all(
             [...this.webhookProbes].map(async ([url, envKey]) => {
                 const result = await WebhookLog.senderFor(url).verify();
-                if (result === 'missing') throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [envKey]);
-                if (result === 'unreachable')
+                if (result === 'missing') missing.push(envKey);
+                else if (result === 'unreachable')
                     this.logger.warn(`could not verify the webhook behind ${paint.sky.bold(envKey)}`);
             })
         );
+        // one boot reports every dead webhook
+        if (missing.length > 0) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [missing.join(', ')]);
     }
 
     /** @internal */
