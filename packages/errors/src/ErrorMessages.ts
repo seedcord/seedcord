@@ -4,6 +4,8 @@ import { SeedcordErrorCode } from './ErrorCodes';
 const messages = {
     [SeedcordErrorCode.ConfigMissingDiscordToken]: () => 'Missing DISCORD_BOT_TOKEN environment variable.',
     [SeedcordErrorCode.ConfigIncorrectDiscordToken]: () => 'Invalid DISCORD_BOT_TOKEN value.',
+    [SeedcordErrorCode.ConfigMissingPublicKey]: () => 'Missing DISCORD_PUBLIC_KEY environment variable.',
+    [SeedcordErrorCode.ConfigIncorrectPublicKey]: () => 'Invalid DISCORD_PUBLIC_KEY value. Expected 64 hex characters.',
     [SeedcordErrorCode.ConfigWebhookUrlInvalid]: (envKey: string) =>
         `${envKey} is not a well-formed Discord webhook url.`,
     [SeedcordErrorCode.ConfigWebhookNotFound]: (envKey: string) =>
