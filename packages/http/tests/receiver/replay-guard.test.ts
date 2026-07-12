@@ -85,7 +85,7 @@ describe('ReplayGuard', () => {
     it('sweeps expired entries on access and re-accepts a swept signature', () => {
         const guard = new ReplayGuard();
         // justified: the sweep is unobservable through accepts(), so the test reads the private map
-        const seen = (guard as unknown as { seen: Map<string, number> }).seen;
+        const seen = Reflect.get(guard, 'seen') as Map<string, number>;
 
         expect(guard.accepts('sig-a', seconds(BASE))).toBe(true);
         expect(seen.size).toBe(1);

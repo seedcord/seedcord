@@ -21,7 +21,7 @@ const METHOD_NOT_ALLOWED = 405;
 const decoder = new TextDecoder();
 
 function hasInteractionType(payload: unknown): payload is { type: number } {
-    return typeof payload === 'object' && payload !== null && typeof (payload as { type?: unknown }).type === 'number';
+    return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
 }
 
 /**
