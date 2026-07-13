@@ -21,6 +21,7 @@ export default mergeConfig(
                 '@notices': path.resolve(__dirname, './src/notices'),
                 '@pagination': path.resolve(__dirname, './src/pagination'),
                 '@registries': path.resolve(__dirname, './src/registries'),
+                '@reply': path.resolve(__dirname, './src/reply'),
                 '@stops': path.resolve(__dirname, './src/stops')
             }
         },
