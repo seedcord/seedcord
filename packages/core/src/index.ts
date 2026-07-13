@@ -4,6 +4,7 @@ export type * from '@registries/ContextMenuRegistry';
 export type * from '@registries/SlashOptionRegistry';
 
 export { RegisterCommand } from '@decorators/Command';
+export { SelectMenuKind } from '@decorators/interactionRoutes';
 
 export { DispatchContext } from '@src/dispatch/DispatchContext';
 export type { DispatchState } from '@src/dispatch/DispatchContext';

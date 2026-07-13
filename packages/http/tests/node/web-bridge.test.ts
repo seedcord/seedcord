@@ -8,6 +8,7 @@ import { createSeedcord } from '@src/createSeedcord';
 import { toWebRequest, writeWebResponse } from '@src/node/webBridge';
 
 import { createSigner, type Signer } from '../helpers/ed25519';
+import { emptyManifest, nullPathConfig, VALID_TOKEN } from '../helpers/fixtures';
 
 import type { AddressInfo } from 'node:net';
 
@@ -36,8 +37,8 @@ async function startServer(handle: Handle): Promise<string> {
 
 async function readySeedcord(): Promise<{ signer: Signer; url: string }> {
     const signer = await createSigner();
-    Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex }));
-    return { signer, url: await startServer(createSeedcord()) };
+    Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN }));
+    return { signer, url: await startServer(createSeedcord(nullPathConfig, emptyManifest())) };
 }
 
 async function post(url: string, body: Uint8Array | string, headers: Record<string, string> = {}): Promise<Response> {
@@ -69,9 +70,9 @@ describe('node web bridge', () => {
         await expect(response.json()).resolves.toEqual({ type: 1 });
     });
 
-    it('acks a signed interaction with 202 through the bridge', async () => {
+    it('acks an unrecognized interaction shape with 202 through the bridge', async () => {
         const { signer, url } = await readySeedcord();
-        const body = encoder.encode('{"type":2,"data":{"name":"ban"}}');
+        const body = encoder.encode('{"type":99}');
 
         const response = await post(url, body, await signedHeaders(signer, body));
 

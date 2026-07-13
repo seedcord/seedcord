@@ -1,7 +1,7 @@
-import { CustomId } from '@seedcord/core';
+import { CustomId, SelectMenuKind } from '@seedcord/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { ButtonRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';
+import { ButtonRoute, SelectMenuRoute } from '@bDecorators/Interactions';
 import { ButtonHandler, SelectMenuHandler } from '@handlers/interaction/components';
 
 // each @ts-expect-error fails the typecheck if the mistake it guards stops being a compile error.

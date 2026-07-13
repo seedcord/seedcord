@@ -1,3 +1,5 @@
+import chalk from 'chalk';
+
 import { SeedcordErrorCode } from './ErrorCodes';
 
 /** @internal */
@@ -53,6 +55,20 @@ const messages = {
         `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${firstClass} and ${secondClass}. Rename one.`,
     [SeedcordErrorCode.InteractionDuplicateMiddleware]: (name: string) =>
         `Two different interaction middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
+
+    [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
+        `${chalk.cyan(`${method}()`)} was called when ${reason}.\n${alternative} (route ${chalk.cyan(routeId)})`,
+    [SeedcordErrorCode.ReplyComponentSerialization]: (
+        componentClass: string,
+        index: number,
+        detail: string,
+        routeId: string
+    ) =>
+        `${chalk.cyan(componentClass)} at components[${index}] failed to serialize: ${detail.replace(/\.$/, '')}. (route ${chalk.cyan(routeId)})`,
+    [SeedcordErrorCode.ReplyForeignEditTarget]: (targetId: string, routeId: string) =>
+        `${chalk.cyan('edit()')} was passed message ${targetId}, which this interaction did not send.\nTarget a message returned by reply(), followUp(), edit(), or update(). (route ${chalk.cyan(routeId)})`,
+    [SeedcordErrorCode.ReplyUpdateWithoutSource]: (method: string, routeId: string) =>
+        `${chalk.cyan(`${method}()`)} was called on a modal opened from a command, which has no source message.\nUse reply() or defer() instead. (route ${chalk.cyan(routeId)})`,
 
     [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
         `customId prefix ${JSON.stringify(prefix)} must be a non-empty string without a colon or control character.`,

@@ -15,6 +15,7 @@
             "@notices/*": ["./src/notices/*"],
             "@pagination/*": ["./src/pagination/*"],
             "@registries/*": ["./src/registries/*"],
+            "@reply/*": ["./src/reply/*"],
             "@stops/*": ["./src/stops/*"]
         }
     },

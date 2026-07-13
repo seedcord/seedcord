@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { createSeedcord } from '@src/createSeedcord';
 
 import { createSigner, type Signer } from '../helpers/ed25519';
+import { emptyManifest, nullPathConfig, VALID_TOKEN } from '../helpers/fixtures';
 
 const encoder = new TextEncoder();
 
@@ -16,8 +17,8 @@ function bindEnv(vars: Record<string, string>): void {
 
 async function readySeedcord(): Promise<{ signer: Signer; handle: (request: Request) => Promise<Response> }> {
     const signer = await createSigner();
-    bindEnv({ DISCORD_PUBLIC_KEY: signer.publicKeyHex });
-    return { signer, handle: createSeedcord() };
+    bindEnv({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN });
+    return { signer, handle: createSeedcord(nullPathConfig, emptyManifest()) };
 }
 
 interface SignedRequestInit {
@@ -41,7 +42,8 @@ async function signedRequest(signer: Signer, payload: string, init: SignedReques
 }
 
 const ping = '{"type":1}';
-const command = '{"type":2,"data":{"name":"ban"}}';
+// a type resolve() does not recognize, the one payload class the engine acks without dispatching
+const unrecognized = '{"type":99}';
 
 describe('createSeedcord', () => {
     it('answers a signed PING with an in-body PONG', async () => {
@@ -53,10 +55,10 @@ describe('createSeedcord', () => {
         await expect(response.json()).resolves.toEqual({ type: 1 });
     });
 
-    it('acks a signed interaction with an empty 202', async () => {
+    it('acks an unrecognized interaction shape with an empty 202', async () => {
         const { signer, handle } = await readySeedcord();
 
-        const response = await handle(await signedRequest(signer, command));
+        const response = await handle(await signedRequest(signer, unrecognized));
 
         expect(response.status).toBe(202);
         await expect(response.text()).resolves.toBe('');
@@ -113,8 +115,8 @@ describe('createSeedcord', () => {
         const { signer, handle } = await readySeedcord();
         const timestamp = String(nowSeconds());
 
-        const first = await handle(await signedRequest(signer, command, { timestamp }));
-        const second = await handle(await signedRequest(signer, command, { timestamp }));
+        const first = await handle(await signedRequest(signer, unrecognized, { timestamp }));
+        const second = await handle(await signedRequest(signer, unrecognized, { timestamp }));
 
         expect(first.status).toBe(202);
         expect(second.status).toBe(401);
@@ -146,10 +148,10 @@ describe('createSeedcord', () => {
     });
 
     it('throws ConfigMissingPublicKey when the env var is unset', () => {
-        bindEnv({});
+        bindEnv({ DISCORD_BOT_TOKEN: VALID_TOKEN });
 
         try {
-            createSeedcord();
+            createSeedcord(nullPathConfig, emptyManifest());
             expect.unreachable('createSeedcord should throw');
         } catch (error) {
             expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingPublicKey)).toBe(true);
@@ -157,13 +159,24 @@ describe('createSeedcord', () => {
     });
 
     it('throws ConfigIncorrectPublicKey when the env var is malformed', () => {
-        bindEnv({ DISCORD_PUBLIC_KEY: 'zz'.repeat(32) });
+        bindEnv({ DISCORD_PUBLIC_KEY: 'zz'.repeat(32), DISCORD_BOT_TOKEN: VALID_TOKEN });
 
         try {
-            createSeedcord();
+            createSeedcord(nullPathConfig, emptyManifest());
             expect.unreachable('createSeedcord should throw');
         } catch (error) {
             expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigIncorrectPublicKey)).toBe(true);
+        }
+    });
+
+    it('throws ConfigMissingDiscordToken when the bot token env var is unset', () => {
+        bindEnv({ DISCORD_PUBLIC_KEY: 'ab'.repeat(32) });
+
+        try {
+            createSeedcord(nullPathConfig, emptyManifest());
+            expect.unreachable('createSeedcord should throw');
+        } catch (error) {
+            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingDiscordToken)).toBe(true);
         }
     });
 });

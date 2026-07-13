@@ -1,6 +1,14 @@
 export { setBotColor } from '@components/botColorHolder';
 
 export type { CommandMeta } from '@decorators/Command';
+export {
+    areRoutes,
+    contextMenuRouteOf,
+    selectMenuRouteOf,
+    storeComponentRoute,
+    storeInteractionRoute,
+    type RoutableConstructor
+} from '@decorators/interactionRoutes';
 
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
@@ -31,3 +39,8 @@ export { ComponentDefsKey, type HasComponentDefs } from '@customId/routing';
 export type { DecodedParams } from '@customId/Field';
 
 export { PAGE_MAX, pageCursor, type PageCursor } from '@pagination/cursor';
+
+export { deferFlags, sendFlags } from '@reply/flags';
+export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '@reply/ackLegality';
+export { translateSerializationError } from '@reply/translateSerialization';
+export { serializeReply, type SerializedReply } from '@reply/serializeReply';

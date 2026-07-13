@@ -8,7 +8,8 @@ import {
     MiddlewareMetadataKey,
     prefixOf,
     routeIdOf,
-    runHandlerGates
+    runHandlerGates,
+    areRoutes
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -27,7 +28,6 @@ import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
@@ -447,7 +447,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
             if (!interaction.isAutocomplete()) {
-                await runHandlerGates(HandlerCtor, interactionGateContext(interaction as Repliables, this.core));
+                await runHandlerGates(
+                    HandlerCtor,
+                    interactionGateContext(interaction as Repliables, this.core),
+                    dispatch.routeId ?? undefined
+                );
             }
             await handler.execute();
         } catch (caught) {

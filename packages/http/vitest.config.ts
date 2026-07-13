@@ -7,7 +7,12 @@ import { defineConfig, mergeConfig } from 'vitest/config';
 // @ts-ignore ts is crying because the import isn't from http's src dir
 import rootConfig from '../../vitest.config';
 
-const alias = { '@src': path.resolve(__dirname, './src') };
+const alias = {
+    '@src': path.resolve(__dirname, './src'),
+    '@interfaces': path.resolve(__dirname, './src/interfaces'),
+    '@handlers': path.resolve(__dirname, './src/handlers'),
+    '@reply': path.resolve(__dirname, './src/reply')
+};
 
 export default mergeConfig(
     rootConfig,
@@ -30,7 +35,18 @@ export default mergeConfig(
                         name: 'workerd',
                         testTimeout: 10_000,
                         include: ['tests/**/*.test.ts'],
-                        exclude: ['tests/node/**']
+                        exclude: ['tests/node/**'],
+                        deps: {
+                            optimizer: {
+                                ssr: {
+                                    enabled: true,
+                                    // the pool's cjs interop resolves discord-api-types' runtime enums to
+                                    // undefined, pre-bundling picks the esm arm. builders and shapeshift
+                                    // hit the same interop at module init.
+                                    include: ['discord-api-types/v10', '@discordjs/builders', '@sapphire/shapeshift']
+                                }
+                            }
+                        }
                     }
                 },
                 {

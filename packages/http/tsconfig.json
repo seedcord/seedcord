@@ -5,7 +5,10 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@src/*": ["./src/*"]
+            "@src/*": ["./src/*"],
+            "@interfaces/*": ["./src/interfaces/*"],
+            "@handlers/*": ["./src/handlers/*"],
+            "@reply/*": ["./src/reply/*"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],
