@@ -4,13 +4,12 @@ import { Logger } from '@seedcord/logger';
 import { InteractionResponseType, InteractionType } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
+import { createCore, dispatchInteraction } from './dispatch/dispatchInteraction';
 import { buildRouteMaps, resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
 
-import type * as DispatchModule from './dispatch/dispatchInteraction';
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';
-import type { Core } from '@interfaces/Core';
 import type { Config } from '@seedcord/types';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
@@ -62,23 +61,16 @@ export function createSeedcord(
     const replays = new ReplayGuard();
     const maps = buildRouteMaps(manifest);
     const inFlight = new Set<Promise<void>>();
+    const core = createCore(config, token);
     // constructed here because the logger reads the environment, which binds before this factory runs
     const logger = new Logger('Engine');
 
-    // the dispatch module imports @discordjs/builders, which crashes the vitest workerd pool's
-    // transform at module init (real bundled workerd is fine), so it loads lazily on the first match
-    let dispatchModule: Promise<typeof DispatchModule> | undefined;
-    let core: Core | undefined;
-
     async function dispatchMatched(
-        match: NonNullable<Awaited<ReturnType<typeof resolve>>>,
+        match: NonNullable<ReturnType<typeof resolve>>,
         payload: ValidInteractionTypes,
         ctx: EngineContext | undefined
     ): Promise<void> {
-        dispatchModule ??= import('./dispatch/dispatchInteraction');
-        const dispatcher = await dispatchModule;
-        core ??= dispatcher.createCore(config, token);
-        const start = await dispatcher.dispatchInteraction({ match, payload, core });
+        const start = await dispatchInteraction({ match, payload, core });
         if (!start) return;
 
         const work = start();
@@ -119,10 +111,10 @@ export function createSeedcord(
 
         try {
             // justified: the payload is signed by Discord, the type field anchors the discriminated union
-            const match = await resolve(maps, payload as APIInteraction);
+            const match = resolve(maps, payload as APIInteraction);
             if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
         } catch (caught) {
-            // a failure this early is a deploy-level event. the 202 still goes out so discord does not retry.
+            // a throw here must never eat the ack
             logger.error('dispatch failed, acking anyway', caught);
         }
 

@@ -42,7 +42,8 @@ async function signedRequest(signer: Signer, payload: string, init: SignedReques
 }
 
 const ping = '{"type":1}';
-const command = '{"type":2,"data":{"name":"ban"}}';
+// a type resolve() does not recognize, the one payload class the engine acks without dispatching
+const unrecognized = '{"type":99}';
 
 describe('createSeedcord', () => {
     it('answers a signed PING with an in-body PONG', async () => {
@@ -54,10 +55,10 @@ describe('createSeedcord', () => {
         await expect(response.json()).resolves.toEqual({ type: 1 });
     });
 
-    it('acks a signed interaction with an empty 202', async () => {
+    it('acks an unrecognized interaction shape with an empty 202', async () => {
         const { signer, handle } = await readySeedcord();
 
-        const response = await handle(await signedRequest(signer, command));
+        const response = await handle(await signedRequest(signer, unrecognized));
 
         expect(response.status).toBe(202);
         await expect(response.text()).resolves.toBe('');
@@ -114,8 +115,8 @@ describe('createSeedcord', () => {
         const { signer, handle } = await readySeedcord();
         const timestamp = String(nowSeconds());
 
-        const first = await handle(await signedRequest(signer, command, { timestamp }));
-        const second = await handle(await signedRequest(signer, command, { timestamp }));
+        const first = await handle(await signedRequest(signer, unrecognized, { timestamp }));
+        const second = await handle(await signedRequest(signer, unrecognized, { timestamp }));
 
         expect(first.status).toBe(202);
         expect(second.status).toBe(401);

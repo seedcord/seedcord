@@ -41,8 +41,9 @@ export default mergeConfig(
                                 ssr: {
                                     enabled: true,
                                     // the pool's cjs interop resolves discord-api-types' runtime enums to
-                                    // undefined, pre-bundling picks the esm arm
-                                    include: ['discord-api-types/v10']
+                                    // undefined, pre-bundling picks the esm arm. builders and shapeshift
+                                    // hit the same interop at module init.
+                                    include: ['discord-api-types/v10', '@discordjs/builders', '@sapphire/shapeshift']
                                 }
                             }
                         }

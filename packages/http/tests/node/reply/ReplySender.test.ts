@@ -384,16 +384,30 @@ describe('ReplySender.edit', () => {
         expect(rest.patch).not.toHaveBeenCalled();
     });
 
-    it('accepts the message a deferred update rewrite returned as a later edit target', async () => {
+    it('throws ReplyForeignEditTarget for the source message a deferred update rewrote', async () => {
         const rest = restMock();
         const sender = senderFor(rest);
         await sender.deferUpdate();
         rest.patch.mockResolvedValueOnce({ id: 'orig-7' });
         const filled = await sender.update(reply);
 
-        await sender.edit(filled, 'again');
+        await expect(sender.edit(filled, 'again')).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+        expect(rest.patch).toHaveBeenCalledTimes(1);
+    });
 
-        expect(patchCall(rest, 1).route).toBe(`${WEBHOOK_ROUTE}/messages/orig-7`);
+    it('rejects the source message a bare edit returned after a deferred update', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.deferUpdate();
+        rest.patch.mockResolvedValueOnce({ id: 'orig-8' });
+        const source = await sender.edit('filled');
+
+        await expect(sender.edit(source, 'x')).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+        expect(rest.patch).toHaveBeenCalledTimes(1);
     });
 
     it('accepts the message a bare edit returned as a later target', async () => {

@@ -231,7 +231,9 @@ describe('fault boundary', () => {
 
         expect(response.status).toBe(202);
         expect(ctx.waitUntil).not.toHaveBeenCalled();
-        expect(postedBodies()).toHaveLength(0);
+        const posts = postedBodies();
+        expect(posts).toHaveLength(1);
+        expect(posts[0]?.body.type).toBe(4);
     });
 
     it('normalizes a non-Error throw into the generic fault card', async () => {

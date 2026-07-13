@@ -70,9 +70,9 @@ describe('node web bridge', () => {
         await expect(response.json()).resolves.toEqual({ type: 1 });
     });
 
-    it('acks a signed interaction with 202 through the bridge', async () => {
+    it('acks an unrecognized interaction shape with 202 through the bridge', async () => {
         const { signer, url } = await readySeedcord();
-        const body = encoder.encode('{"type":2,"data":{"name":"ban"}}');
+        const body = encoder.encode('{"type":99}');
 
         const response = await post(url, body, await signedHeaders(signer, body));
 

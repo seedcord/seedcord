@@ -13,9 +13,14 @@ import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { GateContextBase } from '@seedcord/core';
-import type { Config, IRateLimiter, RenderContext } from '@seedcord/types';
+import type { Config, IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
-const logger = new Logger('Dispatcher');
+// lazy because the logger reads the environment, which binds after this module loads
+let dispatchLogger: Logger | undefined;
+function logger(): Logger {
+    dispatchLogger ??= new Logger('Dispatcher');
+    return dispatchLogger;
+}
 
 interface HttpHandler {
     execute(): Promise<void>;
@@ -26,15 +31,17 @@ type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: Dis
 /** Builds the engine's runtime core. */
 export function createCore(config: Config, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    return {
+    // the checked literal keeps every present field honest, the cast adds only the three named absences
+    const core: TypedOmit<Core, 'start' | 'shutdown' | 'startup'> = {
         config,
         rateLimiter,
         rest: new REST().setToken(token),
         version: process.env.PACKAGE_VERSION ?? '0.0.0',
         username: undefined,
         augmentTarget: '@seedcord/http'
-        // justified: start(), shutdown, and startup will be added innabit, dispatch reads none of them
-    } as Core;
+    };
+    // justified: start(), shutdown, and startup will be added innabit, dispatch reads none of them
+    return core as Core;
 }
 
 function isHandlerCtor(value: unknown): value is HandlerCtor {
@@ -49,7 +56,7 @@ function handlerCtorOf(moduleExports: unknown): HandlerCtor | null {
     return null;
 }
 
-function gateContext(payload: ValidInteractionTypes, core: Core, routeId: string): GateContextBase {
+function gateContext(payload: ValidInteractionTypes, core: Core, routeId: string | null): GateContextBase {
     const member = payload.member;
     return {
         core,
@@ -83,10 +90,10 @@ async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promi
         await send();
     } catch (error) {
         if (error instanceof DiscordAPIError && HARMLESS_API_CODES.has(error.code)) {
-            logger.debug(`boundary send hit harmless code ${paint.amber(String(error.code))}`);
+            logger().debug(`boundary send hit harmless code ${paint.amber(String(error.code))}`);
             return;
         }
-        logger.error(`boundary send failed for route ${paint.sky.bold(routeId)}`, error);
+        logger().error(`boundary send failed for route ${paint.sky.bold(routeId)}`, error);
     }
 }
 
@@ -103,7 +110,7 @@ function renderContext(core: Core, uuid: RenderContext['uuid']): RenderContext {
 }
 
 async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
-    if (notice.report) logger.error(`${notice.name}: ${paint.mute(uuid)}`, notice);
+    if (notice.report) logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
     const { sender } = scope;
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
@@ -116,8 +123,8 @@ async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: 
 async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
     const { core, sender } = scope;
 
-    if (core.config.errors?.errorStack ?? false) logger.error(paint.mute(uuid), error);
-    else logger.error(`${paint.mute(uuid)} | ${error.message}`);
+    if (core.config.errors?.errorStack ?? false) logger().error(paint.mute(uuid), error);
+    else logger().error(`${paint.mute(uuid)} | ${error.message}`);
 
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
@@ -132,7 +139,7 @@ async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: 
 
 async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
     if (caught instanceof Silence) {
-        if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
+        if (caught.reason !== undefined) logger().debug(`Silence: ${caught.reason}`);
         return;
     }
 
@@ -147,7 +154,7 @@ async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
     // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(scope.core.config.errors?.ignoreApiCodes ?? []);
     if (error instanceof DiscordAPIError && ignore.has(error.code)) {
-        logger.debug(`swallowed api code ${paint.amber(String(error.code))}`);
+        logger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
         return;
     }
 
@@ -158,6 +165,18 @@ interface DispatchArgs {
     readonly match: ResolvedRoute;
     readonly payload: ValidInteractionTypes;
     readonly core: Core;
+}
+
+// nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card
+function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: Core): FaultScope {
+    const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
+    const routeId = match.routeId ?? 'unhandled';
+    return {
+        core,
+        payload,
+        routeId,
+        sender: match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, routeId)
+    };
 }
 
 /**
@@ -172,13 +191,19 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     try {
         moduleExports = await match.load();
     } catch (caught) {
-        logger.error(`Route ${paint.sky.bold(match.routeId)} failed to load its module.`, caught);
+        logger().error(`Route ${paint.sky.bold(match.routeId ?? 'unhandled')} failed to load its module.`, caught);
+        await handleFault(caught, freshScope(match, payload, core));
         return null;
     }
 
     const ctor = handlerCtorOf(moduleExports);
     if (!ctor) {
-        logger.error(`Route ${paint.sky.bold(match.routeId)} loaded a module with no handler class.`);
+        const routeId = match.routeId ?? 'unhandled';
+        logger().error(`Route ${paint.sky.bold(routeId)} loaded a module with no handler class.`);
+        await handleFault(
+            new Error(`route ${routeId} loaded a module with no handler class`),
+            freshScope(match, payload, core)
+        );
         return null;
     }
 
@@ -187,21 +212,18 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     try {
         handler = new ctor(payload, core, dispatch);
     } catch (caught) {
-        // the ctor threw before any ack, so a fresh sender can reply the card
-        const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-        const sender = match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, match.routeId);
-        await handleFault(caught, { core, payload, routeId: match.routeId, sender });
+        await handleFault(caught, freshScope(match, payload, core));
         return null;
     }
     const scope: FaultScope = {
         core,
         payload,
-        routeId: match.routeId,
+        routeId: match.routeId ?? handler.constructor.name,
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 
     try {
-        await runHandlerGates(ctor, gateContext(payload, core, match.routeId), match.routeId);
+        await runHandlerGates(ctor, gateContext(payload, core, match.routeId), match.routeId ?? undefined);
     } catch (caught) {
         await handleFault(caught, scope);
         return null;

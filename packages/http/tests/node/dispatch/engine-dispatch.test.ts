@@ -164,7 +164,46 @@ describe('createSeedcord dispatch', () => {
         expect(options.body.type).toBe(7);
     });
 
-    it('acks a matched route whose module carries no handler class with a bare 202', async () => {
+    it('dispatches an unmatched slash to the unhandled default, whose reply posts the card', async () => {
+        const { signer, handle } = await readyEngine(emptyManifest());
+        const ctx = capturingCtx();
+
+        const response = await handle(await signedRequest(signer, slashPayload('ghost')), ctx);
+        await ctx.settled();
+
+        expect(response.status).toBe(202);
+        const [route, options] = rest.instances[0]?.post.mock.calls[0] as [
+            string,
+            { body: { type: number; data: { components: { content?: string }[] } } }
+        ];
+        expect(route).toBe('/interactions/int-1/tok/callback');
+        expect(options.body.type).toBe(4);
+        expect(options.body.data.components[0]?.content).toBe('Feature not implemented yet.');
+    });
+
+    it('answers an unmatched autocomplete through the unhandled default with empty choices', async () => {
+        const { signer, handle } = await readyEngine(emptyManifest());
+        const payload = {
+            type: 4,
+            id: 'int-1',
+            application_id: 'app-1',
+            token: 'tok',
+            data: { type: 1, name: 'ghost', options: [{ type: 3, name: 'q', value: 'x', focused: true }] }
+        };
+        const ctx = capturingCtx();
+
+        await handle(await signedRequest(signer, payload), ctx);
+        await ctx.settled();
+
+        const [, options] = rest.instances[0]?.post.mock.calls[0] as [
+            string,
+            { body: { type: number; data: { choices: unknown[] } } }
+        ];
+        expect(options.body.type).toBe(8);
+        expect(options.body.data.choices).toEqual([]);
+    });
+
+    it('sends the fault card when a matched module carries no handler class, still acking 202', async () => {
         const manifest = {
             ...emptyManifest(),
             commands: [{ name: 'ghost', type: 1, load: () => Promise.resolve({ notAHandler: 42 }) }]
@@ -176,6 +215,7 @@ describe('createSeedcord dispatch', () => {
 
         expect(response.status).toBe(202);
         expect(ctx.waitUntil).not.toHaveBeenCalled();
-        expect(rest.instances[0]?.post ?? vi.fn()).not.toHaveBeenCalled();
+        const [, options] = (rest.instances[0]?.post.mock.calls[0] ?? []) as [string, { body: { type: number } }];
+        expect(options.body.type).toBe(4);
     });
 });

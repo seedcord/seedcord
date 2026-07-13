@@ -210,7 +210,10 @@ export class ReplySender {
             ...(reply.files && { files: this.rawFiles(reply.files) })
         });
         // justified: a webhook message PATCH returns the edited message
-        return this.remember(result as SentMessage);
+        const message = result as SentMessage;
+        // after a deferUpdate, @original is the component's source message, which this interaction did not send
+        if (this.state !== 'deferred-update') this.remember(message);
+        return message;
     }
 
     private rawFiles(files: NonNullable<SerializedReply['files']>): RawFile[] {

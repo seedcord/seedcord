@@ -1,4 +1,8 @@
+import { prefixOf } from '@seedcord/core/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
+
+import { UnhandledAutocomplete } from '@handlers/defaults/UnhandledAutocomplete';
+import { UnhandledEvent } from '@handlers/defaults/UnhandledEvent';
 
 import { slashRouteOf } from './slashRouteOf';
 
@@ -22,8 +26,11 @@ type ResolvedKind =
 /** A manifest row matched to an incoming interaction, keyed the way the gateway dispatcher keys. */
 export interface ResolvedRoute {
     readonly kind: ResolvedKind;
-    /** The stable dispatch id, `kind:key` (`slash:ban`), the shape core's `routeIdOf` builds. */
-    readonly routeId: string;
+    /**
+     * The stable dispatch id, `kind:key` (`slash:ban`), the shape core's `routeIdOf` builds. Null for the
+     * unhandled default, which matches no row.
+     */
+    readonly routeId: string | null;
     readonly load: () => Promise<unknown>;
 }
 
@@ -126,41 +133,41 @@ export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
     return maps;
 }
 
-// the core internal barrel imports @discordjs/builders, which crashes the vitest workerd pool's
-// transform at module init (real bundled workerd is fine), so it loads lazily
-let prefixResolver: Promise<(wire: string) => string> | undefined;
-
-async function stablePrefixOf(wire: string): Promise<string> {
-    prefixResolver ??= import('@seedcord/core/internal').then((mod) => mod.prefixOf);
-    return (await prefixResolver)(wire);
+// dispatched through the normal pipeline like the gateway's unhandled default
+function unhandled(kind: ResolvedKind): ResolvedRoute {
+    return {
+        kind,
+        routeId: null,
+        load: () => Promise.resolve(kind === 'autocomplete' ? { UnhandledAutocomplete } : { UnhandledEvent })
+    };
 }
 
 /**
- * Matches a verified non-PING interaction to its manifest row. Null is an unknown interaction (a stale
- * component whose handler was removed, or another app's custom_id), which the engine acks with a 202
- * without dispatching.
+ * Matches a verified non-PING interaction to its manifest row. A known kind with no row resolves to the
+ * unhandled default, whose handler replies "Feature not implemented yet." (empty choices on autocomplete).
+ * Null is an unrecognized payload shape, which the engine acks with a 202 without dispatching.
  * Components and modals route by the stable customId prefix, so a wire whose layout hash drifted still
  * routes to its handler, where decode refuses with `StaleCustomId`.
  */
-export async function resolve(maps: RouteMaps, interaction: APIInteraction): Promise<ResolvedRoute | null> {
+export function resolve(maps: RouteMaps, interaction: APIInteraction): ResolvedRoute | null {
     switch (interaction.type) {
         case InteractionType.ApplicationCommand: {
             if (interaction.data.type === ApplicationCommandType.ChatInput) {
-                return maps.slash.get(slashRouteOf(interaction.data)) ?? null;
+                return maps.slash.get(slashRouteOf(interaction.data)) ?? unhandled('slash');
             }
             const kind = commandKind(interaction.data.type);
-            return kind ? (maps[kind].get(interaction.data.name) ?? null) : null;
+            return kind ? (maps[kind].get(interaction.data.name) ?? unhandled(kind)) : null;
         }
         case InteractionType.ApplicationCommandAutocomplete: {
-            return maps.autocomplete.get(slashRouteOf(interaction.data)) ?? null;
+            return maps.autocomplete.get(slashRouteOf(interaction.data)) ?? unhandled('autocomplete');
         }
         case InteractionType.MessageComponent: {
             const key = componentMapKey(interaction.data.component_type);
             if (!key) return null;
-            return maps.components[key].get(await stablePrefixOf(interaction.data.custom_id)) ?? null;
+            return maps.components[key].get(prefixOf(interaction.data.custom_id)) ?? unhandled(COMPONENT_KIND[key]);
         }
         case InteractionType.ModalSubmit: {
-            return maps.components.modal.get(await stablePrefixOf(interaction.data.custom_id)) ?? null;
+            return maps.components.modal.get(prefixOf(interaction.data.custom_id)) ?? unhandled('modal');
         }
         default: {
             return null;
