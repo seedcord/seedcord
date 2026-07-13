@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-// shapeshift aggregate errors nest, the cap stops a cyclic or deep tree from looping
+// shapeshift aggregate errors nest, the cap bounds the recursion
 const MAX_DEPTH = 8;
 
 interface ShapeshiftLike {
@@ -40,7 +40,7 @@ function firstLine(message: unknown): string {
     return message.split('\n')[0] ?? message;
 }
 
-// longer strings read better as a size than a quoted dump
+// strings over this limit render as a character count
 const GIVEN_PREVIEW_LIMIT = 40;
 
 function gotPhrase(given: unknown): string {
@@ -53,16 +53,17 @@ function gotPhrase(given: unknown): string {
     }
     if (Array.isArray(given)) return given.length === 0 ? 'an empty list' : `${given.length} items`;
     if (typeof given === 'number' || typeof given === 'bigint' || typeof given === 'boolean') return String(given);
-    if (typeof given === 'object') return given.constructor.name;
+    // a null-prototype value has no constructor
+    if (typeof given === 'object') return given.constructor?.name ?? 'an object';
     return typeof given;
 }
 
-// shapeshift phrases bounds as 'expected.length >= 1' or 'expected <= 16777215'
+// shapeshift constraint strings take the form 'expected.length >= 1' or 'expected <= 16777215'
 function needPhrase(expected: string, given: unknown): string | null {
     const bounds = [...expected.matchAll(/expected(\.length)?\s*(<=|>=|<|>)\s*(\d+)/g)];
     if (bounds.length === 0) return null;
     const phrases = bounds.map(([, lengthPart, operator, limit]) => {
-        const word = OPERATOR_WORD[operator ?? ''] ?? operator;
+        const word = OPERATOR_WORD[operator ?? ''] ?? operator ?? '';
         if (!lengthPart) return `${word} ${limit}`;
         const unit = typeof given === 'string' ? 'character' : 'item';
         return `${word} ${limit} ${Number(limit) === 1 ? unit : `${unit}s`}`;
@@ -92,7 +93,7 @@ function describeLeaf(record: ShapeshiftLike): string {
     return firstLine(record.message);
 }
 
-// prefer the branch a dev can act on, a concrete bound or the accepted classes
+// a concrete bound is picked first, then accepted instance classes, then the first branch
 function describeUnion(branches: unknown[], depth: number): string {
     const records: ShapeshiftLike[] = [];
     for (const branch of branches) {
@@ -133,8 +134,8 @@ function detailOf(value: unknown, depth: number): string {
 }
 
 /**
- * A shapeshift throw renders as need-versus-got with its failing property path. Any other throw passes
- * through with its message as the detail. The original error is kept as `cause`.
+ * Translates a shapeshift throw into an actionable message, keeping the original as `cause`. Any other
+ * throw contributes its message as the detail.
  */
 export function translateSerializationError(
     error: unknown,

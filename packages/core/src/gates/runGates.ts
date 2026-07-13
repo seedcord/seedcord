@@ -29,10 +29,11 @@ export async function runGates(gates: readonly Gate<GateContextBase>[], ctx: Gat
     }
 }
 
-// dispatchers call this before execute, inside the boundary, so a refusal renders or drops
-export async function runHandlerGates(handlerCtor: object, ctx: GateContextBase): Promise<void> {
+// dispatchers call this before execute, inside the boundary, so a refusal renders or drops. the
+// explicit routeId overrides the ctor-derived id for manifest-driven handlers with no route metadata.
+export async function runHandlerGates(handlerCtor: object, ctx: GateContextBase, routeId?: string): Promise<void> {
     // justified: getMetadata returns any, and this key only ever stores the @Gated gate array
     const gates = Reflect.getMetadata(GatedMetadataKey, handlerCtor) as readonly Gate<GateContextBase>[] | undefined;
     if (!gates) return;
-    await runGates(gates, { ...ctx, routeId: routeIdOf(handlerCtor) });
+    await runGates(gates, { ...ctx, routeId: routeId ?? routeIdOf(handlerCtor) });
 }

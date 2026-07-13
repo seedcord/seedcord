@@ -181,6 +181,20 @@ describe('runHandlerGates', () => {
         expect(seen).toBe('slash:daily');
     });
 
+    it('prefers an explicit route id over the ctor metadata', async () => {
+        let seen: string | null | undefined;
+        const probe = defineGate('probe', (c: GateContextBase) => {
+            seen = c.routeId;
+        });
+        const dailyHandler = {};
+        Reflect.defineMetadata(InteractionRouteKeys[InteractionRoutes.Slash], ['daily'], dailyHandler);
+        Reflect.defineMetadata(GatedMetadataKey, [probe], dailyHandler);
+
+        await runHandlerGates(dailyHandler, ctx, 'slash:manifest');
+
+        expect(seen).toBe('slash:manifest');
+    });
+
     it('leaves routeId null for a handler with no route metadata', async () => {
         let seen: string | null | undefined = 'unset';
         const probe = defineGate('probe', (c: GateContextBase) => {

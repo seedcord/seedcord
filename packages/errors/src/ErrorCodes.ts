@@ -67,6 +67,10 @@ export enum SeedcordErrorCode {
     ReplyIllegalAckState = 1501,
     /** A reply component failed to serialize to raw API data. */
     ReplyComponentSerialization = 1502,
+    /** edit() was passed a message the interaction did not send. */
+    ReplyForeignEditTarget = 1503,
+    /** update() or deferUpdate() was called on a modal with no source message. */
+    ReplyUpdateWithoutSource = 1504,
 
     /** A customId definition prefix contains a reserved character (a colon or a control char). */
     CustomIdInvalidPrefix = 1601,

@@ -44,4 +44,32 @@ describe('reply surface error codes', () => {
         expect(message).toContain('content: Expected a string primitive');
         expect(message).toContain('route slash:ban');
     });
+
+    it('assigns ReplyForeignEditTarget to 1503', () => {
+        expect(SeedcordErrorCode.ReplyForeignEditTarget).toBe(1503);
+    });
+
+    it('names the foreign id and the accepted sources in a foreign edit message', () => {
+        const error = new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['msg-9', 'slash:ban']);
+
+        const message = stripAnsi(error.message);
+        expect(message).toContain('edit()');
+        expect(message).toContain('msg-9');
+        expect(message).toContain('reply()');
+        expect(message).toContain('route slash:ban');
+    });
+
+    it('assigns ReplyUpdateWithoutSource to 1504', () => {
+        expect(SeedcordErrorCode.ReplyUpdateWithoutSource).toBe(1504);
+    });
+
+    it('points update on a command-opened modal at reply and defer', () => {
+        const error = new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, ['update', 'slash:ban']);
+
+        const message = stripAnsi(error.message);
+        expect(message).toContain('update()');
+        expect(message).toContain('reply()');
+        expect(message).toContain('defer()');
+        expect(message).toContain('route slash:ban');
+    });
 });

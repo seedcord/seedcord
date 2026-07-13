@@ -98,4 +98,17 @@ describe('translateSerializationError', () => {
         const message = messageOf({ errors: ['scalar'], message: 'outer' }, 'OddComponent', 0);
         expect(message).toContain('OddComponent');
     });
+
+    it('prefixes the key for a scalar tuple inner', () => {
+        const message = messageOf({ errors: [['k', 42]] }, 'OddComponent', 0);
+        expect(message).toContain('k: unknown validation failure');
+    });
+
+    it('renders a null-prototype given without crashing', () => {
+        const given = Object.create(null) as object;
+        const thrown = { constraint: 'c', expected: 'no bounds here', given, message: 'Invalid thing' };
+        const message = messageOf(thrown, 'OddComponent', 0);
+        expect(message).toContain('Invalid thing');
+        expect(message).toContain('an object');
+    });
 });

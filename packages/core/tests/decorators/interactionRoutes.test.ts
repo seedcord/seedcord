@@ -57,6 +57,33 @@ describe('storeComponentRoute', () => {
     });
 });
 
+describe('storeComponentRoute multi-def', () => {
+    it('stores each definition prefix for multiple defs', () => {
+        class Handler {
+            execute(): void {}
+        }
+        // justified: only the prefix is read by the writer
+        const a = { prefix: 'inv' } as unknown as AnyCustomId;
+        const b = { prefix: 'shop' } as unknown as AnyCustomId;
+        storeComponentRoute(InteractionRoutes.Button, [a, b], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Button], Handler)).toEqual(['inv', 'shop']);
+        expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([a, b]);
+    });
+
+    it('accumulates prefixes across calls while the defs key holds the last set', () => {
+        class Handler {
+            execute(): void {}
+        }
+        // justified: only the prefix is read by the writer
+        const a = { prefix: 'inv' } as unknown as AnyCustomId;
+        const b = { prefix: 'shop' } as unknown as AnyCustomId;
+        storeComponentRoute(InteractionRoutes.Button, [a], Handler);
+        storeComponentRoute(InteractionRoutes.Button, [b], Handler);
+        expect(Reflect.getMetadata(InteractionRouteKeys[InteractionRoutes.Button], Handler)).toEqual(['inv', 'shop']);
+        expect(Reflect.getMetadata(ComponentDefsKey, Handler)).toEqual([b]);
+    });
+});
+
 describe('route maps', () => {
     it('maps every select menu kind to its route', () => {
         expect(selectMenuRouteOf(SelectMenuKind.String)).toBe(InteractionRoutes.StringMenu);

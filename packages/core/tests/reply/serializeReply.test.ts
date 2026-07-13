@@ -77,6 +77,16 @@ describe('serializeReply', () => {
         expect(message).toContain('need at most 4000 characters, got 5000');
     });
 
+    it('labels a null-prototype component without crashing', () => {
+        const boom = Object.create(null) as { toJSON(): never };
+        boom.toJSON = () => {
+            throw new Error('bad component');
+        };
+        const message = captureMessage(() => serializeReply({ components: [boom] }, ROUTE));
+        expect(message).toContain('component at components[0]');
+        expect(message).toContain('bad component');
+    });
+
     it('labels a plain object component as component, keeping its throw message', () => {
         const boom = {
             toJSON(): never {

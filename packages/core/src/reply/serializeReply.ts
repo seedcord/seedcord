@@ -12,7 +12,7 @@ export interface SerializedReply {
     readonly files?: ReplyResponse['files'];
 }
 
-/** A string input wraps into a TextDisplay. */
+/** Wraps a string in a TextDisplay component. */
 export function serializeReply(response: ReplyResponse | string, routeId: string): SerializedReply {
     if (typeof response === 'string') {
         try {
@@ -26,8 +26,9 @@ export function serializeReply(response: ReplyResponse | string, routeId: string
         try {
             return component.toJSON();
         } catch (error) {
-            const name = component.constructor.name;
-            throw translateSerializationError(error, name === 'Object' ? 'component' : name, index, routeId);
+            // a null-prototype value has no constructor
+            const name = component.constructor?.name;
+            throw translateSerializationError(error, !name || name === 'Object' ? 'component' : name, index, routeId);
         }
     });
 

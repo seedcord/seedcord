@@ -83,9 +83,12 @@ describe('checkAckLegality', () => {
 
     it('suggests only the universal ack methods when followUp is called before any ack', () => {
         const message = captureMessage('followUp', 'unacked');
-        expect(message).toContain('reply()');
-        expect(message).toContain('defer()');
-        expect(message).not.toContain('update()');
+        expect(message).toContain('Ack first with reply() or defer().');
+    });
+
+    it('names the deferral rule for the whole defer family', () => {
+        const message = captureMessage('defer', 'replied');
+        expect(message).toContain('A deferral can only be the initial response.');
     });
 
     it('says nothing was sent when edit is called before any ack', () => {
