@@ -1,4 +1,4 @@
-export { RegisterCommand } from '@seedcord/core';
+export { RegisterCommand, SelectMenuKind } from '@seedcord/core';
 export { RegisterEvent, type EventSpec, type RegisterEventOptions } from './Events';
 export { Gated } from './Gated';
 export {
@@ -7,7 +7,6 @@ export {
     ContextMenuRoute,
     ModalRoute,
     SelectMenuRoute,
-    SelectMenuKind,
     SlashRoute
 } from './Interactions';
 export { Middleware, MiddlewareType, type MiddlewareOptions } from './Middlewares';

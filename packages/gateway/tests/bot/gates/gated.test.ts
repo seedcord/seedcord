@@ -1,11 +1,11 @@
-import { and, CustomId, defineGate, or } from '@seedcord/core';
+import { and, CustomId, defineGate, or, SelectMenuKind } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '@bDecorators/Gated';
-import { ButtonRoute, ContextMenuRoute, ModalRoute, SelectMenuRoute, SelectMenuKind } from '@bDecorators/Interactions';
+import { ButtonRoute, ContextMenuRoute, ModalRoute, SelectMenuRoute } from '@bDecorators/Interactions';
 import { EventHandler } from '@handlers/event';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';

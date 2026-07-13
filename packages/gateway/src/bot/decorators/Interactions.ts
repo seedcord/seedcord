@@ -1,22 +1,25 @@
 import {
-    ComponentDefsKey,
-    InteractionMetadataKey,
-    InteractionRouteKeys,
-    InteractionRoutes
+    InteractionRoutes,
+    contextMenuRouteOf,
+    selectMenuRouteOf,
+    storeComponentRoute,
+    storeInteractionRoute
 } from '@seedcord/core/internal';
-import { ApplicationCommandType } from 'discord.js';
-
-import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { BaseHandler, Repliables } from '@handlers/BaseHandler';
-import type { HandlerConstructor } from '@handlers/constructors';
 import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import type { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { SlashHandler } from '@handlers/interaction/SlashHandler';
-import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/core';
+import type {
+    SelectMenuKind,
+    MessageContextMenuRegistry,
+    SlashOptionRegistry,
+    UserContextMenuRegistry
+} from '@seedcord/core';
 import type { HasComponentDefs, AnyCustomId } from '@seedcord/core/internal';
 import type {
+    ApplicationCommandType,
     AutocompleteInteraction,
     ButtonInteraction,
     CacheType,
@@ -28,17 +31,6 @@ import type {
     UserSelectMenuInteraction
 } from 'discord.js';
 import type { Constructor } from 'type-fest';
-
-/**
- * Types of select menus supported for routing
- */
-export enum SelectMenuKind {
-    String = 'string',
-    User = 'user',
-    Role = 'role',
-    Channel = 'channel',
-    Mentionable = 'mentionable'
-}
 
 /** @internal */
 type HandlerEventType<TCtor extends new (...args: any[]) => InteractionHandler<Repliables>> =
@@ -108,8 +100,7 @@ export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...rou
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
         constructor: AssertSlashRoute<Route, TCtor>
     ): void {
-        // justified: AssertSlashRoute has already narrowed the ctor, this erases it to the metadata-store shape.
-        storeMetadata(InteractionRoutes.Slash, routes, constructor as HandlerConstructor);
+        storeInteractionRoute(InteractionRoutes.Slash, routes, constructor);
     };
 }
 
@@ -128,8 +119,7 @@ export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: 
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<ButtonInteraction, TCtor>
     ): void {
-        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
-        storeComponentRoute(InteractionRoutes.Button, defs, constructor as HandlerConstructor);
+        storeComponentRoute(InteractionRoutes.Button, defs, constructor);
     };
 }
 
@@ -148,8 +138,7 @@ export function ModalRoute<const Defs extends readonly AnyCustomId[]>(...defs: D
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<ModalSubmitInteraction, TCtor>
     ): void {
-        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
-        storeComponentRoute(InteractionRoutes.Modal, defs, constructor as HandlerConstructor);
+        storeComponentRoute(InteractionRoutes.Modal, defs, constructor);
     };
 }
 
@@ -221,12 +210,7 @@ export function ContextMenuRoute<const Kind extends ApplicationCommandType.User 
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables>>(
         constructor: AssertContextMenuRoute<Kind, TCtor>
     ): void {
-        const routeType =
-            kind === ApplicationCommandType.User
-                ? InteractionRoutes.UserContextMenu
-                : InteractionRoutes.MessageContextMenu;
-        // justified: AssertContextMenuRoute has already narrowed the ctor, this erases it to the metadata-store shape.
-        storeMetadata(routeType, names, constructor as HandlerConstructor);
+        storeInteractionRoute(contextMenuRouteOf(kind), names, constructor);
     };
 }
 
@@ -281,8 +265,7 @@ export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>
     return function <TCtor extends new (...args: any[]) => BaseHandler<AutocompleteInteraction<CacheType>>>(
         constructor: AssertAutocompleteRoute<Route, TCtor>
     ): void {
-        // justified: AssertAutocompleteRoute has already narrowed the ctor, this erases it to the metadata-store shape.
-        storeMetadata(InteractionRoutes.Autocomplete, routes, constructor as HandlerConstructor);
+        storeInteractionRoute(InteractionRoutes.Autocomplete, routes, constructor);
     };
 }
 
@@ -328,44 +311,6 @@ export function SelectMenuRoute<SelectMenu extends SelectMenuKind, const Defs ex
     return function <TCtor extends new (...args: any[]) => InteractionHandler<Repliables> & HasComponentDefs<Defs>>(
         constructor: AssertHandles<SelectMenuInteractionFor<SelectMenu>, TCtor>
     ): void {
-        const routeMap = {
-            [SelectMenuKind.String]: InteractionRoutes.StringMenu,
-            [SelectMenuKind.User]: InteractionRoutes.UserMenu,
-            [SelectMenuKind.Role]: InteractionRoutes.RoleMenu,
-            [SelectMenuKind.Channel]: InteractionRoutes.ChannelMenu,
-            [SelectMenuKind.Mentionable]: InteractionRoutes.MentionableMenu
-        };
-
-        // justified: AssertHandles has already narrowed the ctor, this erases it to the metadata-store shape.
-        storeComponentRoute(routeMap[type], defs, constructor as HandlerConstructor);
+        storeComponentRoute(selectMenuRouteOf(type), defs, constructor);
     };
-}
-
-// store each definition's stable prefix as a routing key for the controller, and the full defs array on
-// the constructor so the handler base can decode against them.
-function storeComponentRoute(
-    route: InteractionRoutes,
-    defs: readonly AnyCustomId[],
-    constructor: HandlerConstructor
-): void {
-    storeMetadata(
-        route,
-        defs.map((def) => def.prefix),
-        constructor
-    );
-    Reflect.defineMetadata(ComponentDefsKey, defs, constructor);
-}
-
-function storeMetadata(
-    route: InteractionRoutes,
-    routes: string | string[],
-    constructor: Constructor<InteractionHandler<Repliables> | AutocompleteHandler<keyof SlashOptionRegistry, CacheType>>
-): void {
-    const key = InteractionRouteKeys[route];
-    const savedRoutes: unknown = Reflect.getMetadata(key, constructor);
-    const existing: string[] = areRoutes(savedRoutes) ? savedRoutes : [];
-
-    const toStore = Array.isArray(routes) ? routes : [routes];
-    Reflect.defineMetadata(key, [...existing, ...toStore], constructor);
-    Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }

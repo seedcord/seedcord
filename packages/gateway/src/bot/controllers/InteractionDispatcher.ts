@@ -8,7 +8,8 @@ import {
     MiddlewareMetadataKey,
     prefixOf,
     routeIdOf,
-    runHandlerGates
+    runHandlerGates,
+    areRoutes
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -27,7 +28,6 @@ import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import { areRoutes } from '@miscellaneous/areRoutes';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';

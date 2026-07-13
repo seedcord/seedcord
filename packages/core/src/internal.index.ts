@@ -1,6 +1,14 @@
 export { setBotColor } from '@components/botColorHolder';
 
 export type { CommandMeta } from '@decorators/Command';
+export {
+    areRoutes,
+    contextMenuRouteOf,
+    selectMenuRouteOf,
+    storeComponentRoute,
+    storeInteractionRoute,
+    type RoutableConstructor
+} from '@decorators/interactionRoutes';
 
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
