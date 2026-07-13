@@ -74,6 +74,8 @@ export function compute() {
 
 - **No premature optimization.** Don't optimize for performance without a measured bottleneck. Readable, correct code first — profile, then optimize. Adding memoization, caching, or batching "just in case" creates complexity without verified benefit.
 
+- **Style log messages with `@seedcord/logger`.** Interpolated values in a framework log line (routes, class names, ids, paths) get the truecolor tones defined in `paint`, never default chalk colors (`chalk.cyan`, `chalk.red`, and the rest are banned in log lines). Multi-line output goes through `logger.utils` (`summary`, `block`, `entries`). Unstyled interpolation in a framework log line is a bug.
+
 - **Split large files** (~200+ lines or multiple unrelated responsibilities) into focused modules.
 
 ---
@@ -88,6 +90,7 @@ export function compute() {
 - **Use `type-fest` utility types** (available via the workspace catalog) for structural transforms rather than casts. The shared `@seedcord/types` package re-exports project-specific aliases — check there first.
 - **Tests may use pragmatic fixture casts** (`as unknown as Test`) — always include a short justification comment. Tests must not use `as any`; ESLint replaces `any` with `unknown` automatically and that will surface real type errors if the cast wasn't justified.
 - **To disable an ESLint rule inline:** `// eslint-disable-next-line <rule> -- <reason>`. Never file-wide or project-wide.
+- **Never throw a raw error.** Framework code throws `SeedcordError`, `SeedcordTypeError`, or `SeedcordRangeError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw into one of the three before it propagates to the consumer.
 
 ```ts
 // Bad
