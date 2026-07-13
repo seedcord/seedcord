@@ -30,6 +30,11 @@ export async function toWebRequest(request: IncomingMessage): Promise<Request> {
 }
 
 export async function writeWebResponse(response: Response, out: ServerResponse): Promise<void> {
-    out.writeHead(response.status, Object.fromEntries(response.headers));
+    const headers: Record<string, string | string[]> = Object.fromEntries(response.headers);
+    // iterating Headers comma-joins same-name values, which corrupts Set-Cookie (a per-cookie header)
+    const cookies = response.headers.getSetCookie();
+    if (cookies.length > 0) headers['set-cookie'] = cookies;
+
+    out.writeHead(response.status, headers);
     out.end(response.body === null ? undefined : Buffer.from(await response.arrayBuffer()));
 }

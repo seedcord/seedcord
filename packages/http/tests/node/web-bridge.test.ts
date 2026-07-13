@@ -113,4 +113,20 @@ describe('node web bridge', () => {
         expect(response.headers.get('allow')).toBe('POST');
         await expect(response.text()).resolves.toBe('');
     });
+
+    it('preserves multiple set-cookie headers as separate headers', async () => {
+        const url = await startServer(() => {
+            const headers = new Headers();
+            headers.append('set-cookie', 'a=1; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT');
+            headers.append('set-cookie', 'b=2; Path=/');
+            return Promise.resolve(new Response(null, { status: 204, headers }));
+        });
+
+        const response = await fetch(url);
+
+        expect(response.headers.getSetCookie()).toEqual([
+            'a=1; Path=/; Expires=Wed, 09 Jun 2027 10:18:14 GMT',
+            'b=2; Path=/'
+        ]);
+    });
 });
