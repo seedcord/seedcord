@@ -1,6 +1,6 @@
 - name: '📦 gateway'
   color: bc6262
-  description: framework orchestrator and bot host
+  description: Discord gateway transport
 - name: '📦 core'
   color: bc8362
   description: transport-agnostic core
@@ -51,6 +51,7 @@
   color: 8f62bc
 - name: '📦 seedcord'
   color: b062bc
+  description: framework orchestrator and bot host
 - name: '📦 docs-generator'
   color: bc62a5
   description: API model generation
