@@ -59,6 +59,7 @@
         "packages/event-emitter": {},
         "packages/logger": {},
         "packages/gateway": {},
+        "packages/http": {},
         "packages/services": {},
         "packages/tsconfig": {},
         "packages/tsdown-config": {},

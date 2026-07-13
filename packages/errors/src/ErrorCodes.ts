@@ -14,6 +14,10 @@ export enum SeedcordErrorCode {
     ConfigWebhookUrlInvalid = 1006,
     /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
     ConfigWebhookNotFound = 1007,
+    /** DISCORD_PUBLIC_KEY is not present in the environment. */
+    ConfigMissingPublicKey = 1008,
+    /** DISCORD_PUBLIC_KEY is present but fails validation. */
+    ConfigIncorrectPublicKey = 1009,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,

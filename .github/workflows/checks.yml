@@ -59,14 +59,13 @@ jobs:
               run: pnpm tc
 
             - name: Test
-              run: pnpm test
+              run: pnpm turbo test --concurrency=2
 
             - name: Build
               run: pnpm build
               env:
                   SEEDCORD_DOCS_INDEX_URL: https://cdn.seedcord.org/index.json
 
-            # API Extractor reads the built dist/*.d.mts, so this must run after Build.
             - name: Generate docs manifest
               run: pnpm turbo docs:extract
 

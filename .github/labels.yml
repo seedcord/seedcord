@@ -4,6 +4,9 @@
 - name: '📦 core'
   color: bc8362
   description: transport-agnostic core
+- name: '📦 http'
+  color: 62aabc
+  description: HTTP-interactions transport
 - name: '📦 mock'
   color: bca562
 - name: '📦 services'

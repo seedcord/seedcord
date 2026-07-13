@@ -13,6 +13,53 @@
             "inputs": ["scripts/docs/extract-docs.ts", "packages/*/dist/**/*.d.mts", "packages/*/package.json"],
             "outputs": ["generated/**"]
         },
+        "//#check:catalog": {
+            "inputs": ["scripts/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
+        },
+        "//#tc:scripts": {
+            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "inputs": [
+                "scripts/**/*.ts",
+                "scripts/tsconfig.json",
+                "packages/tsconfig/**",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts"
+            ]
+        },
+        "//#tc:root": {
+            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "inputs": [
+                "*.ts",
+                "turbo/**/*.ts",
+                "scripts/**/*.ts",
+                "tsconfig.json",
+                "packages/tsconfig/**",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts"
+            ]
+        },
+        "//#lint:scripts": {
+            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "inputs": [
+                "scripts/**/*.{ts,tsx}",
+                "scripts/tsconfig.json",
+                "eslint.config.*",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts"
+            ]
+        },
+        "//#lint:md": {
+            "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
+        },
+        "//#test:scripts": {
+            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "inputs": [
+                "scripts/**/*.ts",
+                "vitest.config.ts",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts"
+            ]
+        },
         "dev": {
             "cache": false,
             "persistent": true
