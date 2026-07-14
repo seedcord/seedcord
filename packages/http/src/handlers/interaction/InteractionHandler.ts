@@ -4,12 +4,14 @@ import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { ModalLike } from '@reply/ReplySender';
 import type { DispatchContext } from '@seedcord/core';
+import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
 
 /**
- * Shared base the non-modal repliable handlers extend.
+ * Shared base the repliable interaction handlers extend.
  *
  * Not a public entry point. Extend {@link SlashHandler}, {@link ContextMenuHandler}, {@link ButtonHandler},
- * or {@link SelectMenuHandler} instead. This class adds `showModal` on top of the reply members.
+ * {@link SelectMenuHandler}, or {@link ModalHandler} instead. This class adds `showModal` on top of the
+ * reply members.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */
@@ -19,8 +21,14 @@ export abstract class InteractionHandler<Event extends Repliables> extends Repli
         super(event, core, dispatch);
     }
 
-    /** Open a modal. Must be the initial response to this interaction. */
-    protected showModal(modal: ModalLike): Promise<void> {
+    /**
+     * Open a modal. Must be the initial response to this interaction. The modal kind rejects this call at
+     * compile time (Discord forbids a modal in response to a modal).
+     */
+    protected showModal(
+        this: InteractionHandler<Exclude<Repliables, APIModalSubmitInteraction>>,
+        modal: ModalLike
+    ): Promise<void> {
         return this.sender.showModal(modal);
     }
 }

@@ -93,6 +93,35 @@ describe('ButtonHandler base', () => {
     });
 });
 
+describe('showModal kind gating', () => {
+    const modal = {
+        toJSON: (): { title: string; custom_id: string; components: never[] } => ({
+            title: 'x',
+            custom_id: 'y',
+            components: []
+        })
+    };
+
+    it('rejects showModal on the modal kind at compile time', () => {
+        class Blocked extends ModalHandler<never> {
+            async execute(): Promise<void> {
+                // @ts-expect-error a modal cannot open another modal
+                await this.showModal(modal);
+            }
+        }
+        expect(Blocked).toBeDefined();
+    });
+
+    it('keeps showModal on the component kinds', () => {
+        class Opens extends ButtonHandler<never> {
+            async execute(): Promise<void> {
+                await this.showModal(modal);
+            }
+        }
+        expect(Opens).toBeDefined();
+    });
+});
+
 describe('ModalHandler base', () => {
     class Save extends ModalHandler<never> {
         async execute(): Promise<void> {
