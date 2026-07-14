@@ -68,7 +68,7 @@ function startEvent() {
     };
 }
 
-// the handler's sender is built from the virgin component flags, so this.deferUpdate() seeds deferred-update
+// the sender reads the interaction's unacked flags, so this.deferUpdate() sets deferred-update
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function navEvent(customId: string) {
     return {

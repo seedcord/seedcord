@@ -44,6 +44,7 @@ describe('UnhandledRepliable', () => {
 describe('UnhandledAutocomplete', () => {
     it('responds with an empty choice set', async () => {
         const respond = vi.fn().mockResolvedValue(undefined);
+        // justified: the fixture implements only respond, the surface UnhandledAutocomplete reads
         const event = { respond } as unknown as AutocompleteInteraction;
 
         await new UnhandledAutocomplete(event, core).execute();

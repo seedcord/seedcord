@@ -85,17 +85,16 @@ const SEND_TARGET: Record<AckState, 'reply' | 'edit' | 'followUp'> = {
     replied: 'followUp'
 };
 
-/** Throws before any API call. */
-export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string): void {
+/** Throws before any API call. `ackedBy` becomes the throw cause, its stack points at the first ack. */
+export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: Error): void {
     if (method === 'send') return;
     const illegal = ILLEGAL[method][state];
     if (!illegal) return;
-    throw new SeedcordError(SeedcordErrorCode.ReplyIllegalAckState, [
-        method,
-        illegal.reason,
-        illegal.alternative,
-        routeId
-    ]);
+    throw new SeedcordError(
+        SeedcordErrorCode.ReplyIllegalAckState,
+        [method, illegal.reason, illegal.alternative, routeId],
+        { cause: ackedBy }
+    );
 }
 
 export function sendTarget(state: AckState): 'reply' | 'edit' | 'followUp' {

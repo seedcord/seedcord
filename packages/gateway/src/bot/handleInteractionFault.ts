@@ -16,8 +16,9 @@ const logger = new Logger('InteractionBoundary');
 
 /**
  * The interaction controller boundary. Sorts a throw from any handler-lifecycle phase into the right
- * user reply plus the right bus event. The handler's live {@link ReplySender} replies through its exact ack
- * state, and a middleware or pre-construction throw falls back to a fresh seeded sender.
+ * user reply plus the right bus event. When a handler is built its sender is passed in, so the boundary
+ * sends from the current ack state. A middleware or pre-construction throw arrives with no sender, so the
+ * boundary builds one from the interaction flags.
  *
  * @internal
  */

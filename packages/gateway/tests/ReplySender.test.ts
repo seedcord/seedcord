@@ -107,6 +107,20 @@ describe('ReplySender.reply', () => {
         );
         expect(mock.reply).toHaveBeenCalledOnce();
     });
+
+    it('carries the first ack as the cause on a double reply', async () => {
+        const mock = mockInteraction();
+        const sender = senderFor(mock);
+        await sender.reply(reply);
+
+        const caught = await sender.reply(reply).then(
+            () => null,
+            (error: unknown) => error
+        );
+        if (!isSeedcordError(caught)) throw caught;
+        expect(caught.cause).toBeInstanceOf(Error);
+        expect((caught.cause as Error).message).toContain('reply() acknowledged this interaction');
+    });
 });
 
 describe('ReplySender.defer', () => {
@@ -136,6 +150,19 @@ describe('ReplySender.defer', () => {
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyIllegalAckState)
         );
         expect(mock.deferReply).not.toHaveBeenCalled();
+    });
+
+    it('carries the defer as the cause when a reply follows a defer', async () => {
+        const mock = mockInteraction();
+        const sender = senderFor(mock);
+        await sender.defer();
+
+        const caught = await sender.reply(reply).then(
+            () => null,
+            (error: unknown) => error
+        );
+        if (!isSeedcordError(caught)) throw caught;
+        expect((caught.cause as Error | undefined)?.message).toContain('defer() acknowledged this interaction');
     });
 });
 

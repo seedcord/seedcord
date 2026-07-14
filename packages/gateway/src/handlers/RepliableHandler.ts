@@ -55,6 +55,7 @@ export abstract class RepliableHandler<Event extends Repliables> extends BaseHan
         maybeResponse?: ReplyResponse | string
     ): Promise<SentMessage> {
         if (maybeResponse === undefined) return this.sender.edit(targetOrResponse);
+        // justified: the overloads narrow targetOrResponse once maybeResponse is defined
         return this.sender.edit(targetOrResponse as SentMessage, maybeResponse);
     }
 

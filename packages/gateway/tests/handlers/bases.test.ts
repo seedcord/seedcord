@@ -9,7 +9,7 @@ import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
 import { mockInteraction, message } from '../utils/senderMock';
 
-import type { ModalLike } from '@bot/ReplySender';
+import type { ModalLike, SentMessage } from '@bot/ReplySender';
 import type { Core } from '@interfaces/Core';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
@@ -142,5 +142,88 @@ describe('reply returns', () => {
         }
         const mock = mockInteraction(commandFlags);
         await new Ban(mock as unknown as Slash, core).execute();
+    });
+});
+
+describe('base member delegation', () => {
+    it('routes defer through the sender to deferReply', async () => {
+        class Wait extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.defer();
+            }
+        }
+        const mock = mockInteraction(commandFlags);
+        await new Wait(mock as unknown as Slash, core).execute();
+        expect(mock.deferReply).toHaveBeenCalledOnce();
+    });
+
+    it('routes followUp through the sender to followUp once acked', async () => {
+        class After extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.followUp(reply);
+            }
+        }
+        const mock = mockInteraction({ ...commandFlags, replied: true });
+        await new After(mock as unknown as Slash, core).execute();
+        expect(mock.followUp).toHaveBeenCalledOnce();
+    });
+
+    it('routes the bare edit through the sender to editReply', async () => {
+        class Fill extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.edit(reply);
+            }
+        }
+        const mock = mockInteraction({ ...commandFlags, deferred: true, ephemeral: false });
+        await new Fill(mock as unknown as Slash, core).execute();
+        expect(mock.editReply).toHaveBeenCalledOnce();
+    });
+
+    it('routes the targeted edit through the sender to webhook.editMessage', async () => {
+        class Rewrite extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                const sent = await this.followUp('confirm?');
+                await this.edit(sent, 'cancelled');
+            }
+        }
+        const mock = mockInteraction({ ...commandFlags, replied: true });
+        mock.followUp.mockResolvedValueOnce({ id: 'earlier-1' });
+        await new Rewrite(mock as unknown as Slash, core).execute();
+        expect(mock.webhook.editMessage).toHaveBeenCalledWith('earlier-1', expect.anything());
+    });
+
+    it('throws ReplyForeignEditTarget through the base for a message the interaction did not send', async () => {
+        class Rewrite extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.edit({ id: 'foreign-1' } as SentMessage, 'x');
+            }
+        }
+        const mock = mockInteraction({ ...commandFlags, replied: true });
+        await expect(new Rewrite(mock as unknown as Slash, core).execute()).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+        expect(mock.webhook.editMessage).not.toHaveBeenCalled();
+    });
+
+    it('routes send through the sender to reply on an unacked interaction', async () => {
+        class Show extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.send(reply);
+            }
+        }
+        const mock = mockInteraction(commandFlags);
+        await new Show(mock as unknown as Slash, core).execute();
+        expect(mock.reply).toHaveBeenCalledOnce();
+    });
+
+    it('routes deferUpdate through the sender to deferUpdate on a component kind', async () => {
+        class Ack extends ButtonHandler<never> {
+            async execute(): Promise<void> {
+                await this.deferUpdate();
+            }
+        }
+        const mock = mockInteraction();
+        await new Ack(mock as unknown as Button, core).execute();
+        expect(mock.deferUpdate).toHaveBeenCalledOnce();
     });
 });

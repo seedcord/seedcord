@@ -25,7 +25,8 @@ interface PrivateInteractionDispatcher {
     processInteraction(
         interaction: unknown,
         extractKey: (i: unknown) => string,
-        getHandler: (key: string) => unknown
+        getHandler: (key: string) => unknown,
+        fallback?: unknown
     ): Promise<void>;
     handleButton(interaction: unknown): Promise<void>;
     handleAutocomplete(interaction: unknown): Promise<void>;
@@ -35,6 +36,7 @@ interface PrivateInteractionDispatcher {
 function fakeSlash(commandName: string) {
     return {
         reply: vi.fn().mockResolvedValue(undefined),
+        deferReply: vi.fn().mockResolvedValue(undefined),
         editReply: vi.fn().mockResolvedValue(undefined),
         followUp: vi.fn().mockResolvedValue(undefined),
         isAutocomplete: () => false,
@@ -291,6 +293,42 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.reply).toHaveBeenCalledTimes(1);
     });
 
+    it("passes the handler's live sender to the boundary, so a defer-then-throw follows up through its ack state", async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/DeferBoom.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('deferboom')
+            export class DeferBoomHandler extends SlashHandler<'deferboom'> {
+                public async execute() {
+                    await this.defer();
+                    throw new Error('handler exploded after deferring');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeSlash('deferboom');
+        await controller.processInteraction(
+            interaction,
+            () => 'deferboom',
+            () => controller.slashMap.get('deferboom')
+        );
+
+        // the handler acked with a deferReply, so the boundary's live sender is deferred-reply and edits @original
+        expect(interaction.deferReply).toHaveBeenCalledTimes(1);
+        expect(interaction.editReply).toHaveBeenCalledTimes(1);
+        expect(interaction.reply).not.toHaveBeenCalled();
+    });
+
     it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async () => {
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
@@ -302,6 +340,34 @@ describe('InteractionDispatcher Integration', () => {
         await controller.handleAutocomplete(interaction);
 
         expect(interaction.respond).toHaveBeenCalledWith([]);
+    });
+
+    it('routes a registered autocomplete through handleAutocomplete to the handler respond', async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/SearchAutocomplete.ts`,
+            `
+            import { AutocompleteRoute, AutocompleteHandler } from '${seedcordPath}';
+
+            @AutocompleteRoute('search')
+            export class SearchAutocomplete extends AutocompleteHandler<'search'> {
+                public async execute() {
+                    await this.respond([{ name: 'apple', value: 'apple' }]);
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeAutocomplete('search');
+        await controller.handleAutocomplete(interaction);
+
+        expect(interaction.respond).toHaveBeenCalledWith([{ name: 'apple', value: 'apple' }]);
     });
 
     it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {

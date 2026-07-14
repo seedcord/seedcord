@@ -80,7 +80,7 @@ export class Paginator<Item, const Prefix extends string> {
             async execute(): Promise<void> {
                 await this.deferUpdate();
                 const response = await loadPage(contextOf(this.event, this.core), this.params.page);
-                // deferUpdate seeds the sender deferred-update, so update PATCHes @original (the source message)
+                // deferUpdate seeds the sender deferred-update, so update PATCHes @original
                 await this.update(response);
             }
         };

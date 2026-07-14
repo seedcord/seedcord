@@ -53,6 +53,8 @@ export class ReplySender {
     private state: AckState;
     // the only ids a targeted edit accepts
     private readonly sent = new Set<string>();
+    // the cause carries the first ack's stack so a double-ack names both lines
+    private ackedBy?: Error;
 
     public constructor(
         private readonly interaction: Repliables,
@@ -62,41 +64,45 @@ export class ReplySender {
     }
 
     public async reply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
-        checkAckLegality('reply', this.state, this.routeId);
+        checkAckLegality('reply', this.state, this.routeId, this.ackedBy);
         const result = await this.interaction.reply({
             ...this.replyOptions(response, sendFlags(opts)),
             withResponse: true
         });
         this.state = 'replied';
+        this.ackedBy = new Error('reply() acknowledged this interaction');
         return this.createdMessage(result, 'reply');
     }
 
     public async defer(opts?: DeferOpts): Promise<void> {
-        checkAckLegality('defer', this.state, this.routeId);
+        checkAckLegality('defer', this.state, this.routeId, this.ackedBy);
         await this.interaction.deferReply({ flags: deferFlags(opts) });
         this.state = 'deferred-reply';
+        this.ackedBy = new Error('defer() acknowledged this interaction');
     }
 
     public async deferUpdate(): Promise<void> {
-        checkAckLegality('deferUpdate', this.state, this.routeId);
+        checkAckLegality('deferUpdate', this.state, this.routeId, this.ackedBy);
         const source = this.sourceInteraction('deferUpdate');
         await source.deferUpdate();
         this.state = 'deferred-update';
+        this.ackedBy = new Error('deferUpdate() acknowledged this interaction');
     }
 
     /** After a deferUpdate the state stays deferred-update, so the rewrite repeats. */
     public async update(response: ReplyResponse | string): Promise<SentMessage> {
-        checkAckLegality('update', this.state, this.routeId);
+        checkAckLegality('update', this.state, this.routeId, this.ackedBy);
         // in deferred-update, @original is the source message and the ack-legality check above already passed
         if (this.state === 'deferred-update') return await this.editOriginal(response);
         const source = this.sourceInteraction('update');
         const result = await source.update({ ...this.updateOptions(response), withResponse: true });
         this.state = 'replied';
+        this.ackedBy = new Error('update() acknowledged this interaction');
         return this.createdMessage(result, 'update');
     }
 
     public async followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
-        checkAckLegality('followUp', this.state, this.routeId);
+        checkAckLegality('followUp', this.state, this.routeId, this.ackedBy);
         const created = await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
         return this.remember(created);
     }
@@ -107,7 +113,7 @@ export class ReplySender {
         targetOrResponse: SentMessage | ReplyResponse | string,
         maybeResponse?: ReplyResponse | string
     ): Promise<SentMessage> {
-        checkAckLegality('edit', this.state, this.routeId);
+        checkAckLegality('edit', this.state, this.routeId, this.ackedBy);
         if (maybeResponse === undefined) {
             return await this.editOriginal(targetOrResponse);
         }
@@ -130,7 +136,7 @@ export class ReplySender {
 
     /** Must be the initial response. */
     public async showModal(modal: ModalLike): Promise<void> {
-        checkAckLegality('showModal', this.state, this.routeId);
+        checkAckLegality('showModal', this.state, this.routeId, this.ackedBy);
         // runtime backstop for direct sender callers, which a compile-time gate on the bases cannot cover
         const { interaction } = this;
         if (interaction.isModalSubmit()) {
@@ -151,6 +157,7 @@ export class ReplySender {
         }
         await interaction.showModal(data);
         this.state = 'replied';
+        this.ackedBy = new Error('showModal() acknowledged this interaction');
     }
 
     // only component and message-opened-modal kinds carry a source message

@@ -127,7 +127,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;
         const respond = (choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> =>
-            this.event.respond(choices);
+            this.respond(choices);
         // justified: FocusedArms is keyed by field literals, the Record cast indexes it with the runtime field name.
         type Arm = (
             value: string,

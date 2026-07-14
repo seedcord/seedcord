@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- one suite per sender, splitting fragments the shared rest mock and body fixtures */
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
@@ -147,6 +148,20 @@ describe('ReplySender.reply', () => {
             expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ReplyIllegalAckState)).toBe(true);
         }
         expect(rest.post).toHaveBeenCalledTimes(1);
+    });
+
+    it('carries the first ack as the cause on a double reply', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.reply(reply);
+
+        const caught = await sender.reply(reply).then(
+            () => null,
+            (error: unknown) => error
+        );
+        if (!isSeedcordError(caught)) throw caught;
+        expect(caught.cause).toBeInstanceOf(Error);
+        expect((caught.cause as Error).message).toContain('reply() acknowledged this interaction');
     });
 });
 

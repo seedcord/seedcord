@@ -95,6 +95,27 @@ describe('checkAckLegality', () => {
         const message = captureMessage('edit', 'unacked');
         expect(message.toLowerCase()).toContain('nothing');
     });
+
+    it('sets the passed ackedBy error as the throw cause', () => {
+        const ackedBy = new Error('reply() acknowledged this interaction');
+        try {
+            checkAckLegality('reply', 'replied', ROUTE, ackedBy);
+            expect.unreachable('reply in replied should throw');
+        } catch (error) {
+            if (!isSeedcordError(error)) throw error;
+            expect(error.cause).toBe(ackedBy);
+        }
+    });
+
+    it('leaves the cause absent when no ackedBy is passed', () => {
+        try {
+            checkAckLegality('reply', 'replied', ROUTE);
+            expect.unreachable('reply in replied should throw');
+        } catch (error) {
+            if (!isSeedcordError(error)) throw error;
+            expect(error.cause).toBeUndefined();
+        }
+    });
 });
 
 describe('sendTarget', () => {
