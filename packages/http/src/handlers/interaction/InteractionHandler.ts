@@ -2,8 +2,8 @@ import { RepliableHandler } from '@handlers/RepliableHandler';
 
 import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
-import type { ModalLike } from '@reply/ReplySender';
 import type { DispatchContext } from '@seedcord/core';
+import type { ModalLike } from '@seedcord/core/internal';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
 
 /**

@@ -9,8 +9,9 @@ import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
 import { mockInteraction, message } from '../utils/senderMock';
 
-import type { ModalLike, SentMessage } from '@bot/ReplySender';
+import type { SentMessage } from '@bot/ReplySender';
 import type { Core } from '@interfaces/Core';
+import type { ModalLike } from '@seedcord/core/internal';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
 // justified: the fixture implements only the interaction surface the sender reads, cached-cache matches the base generic

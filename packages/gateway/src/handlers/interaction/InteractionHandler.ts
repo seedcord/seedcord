@@ -1,9 +1,9 @@
 import { RepliableHandler } from '@handlers/RepliableHandler';
 
-import type { ModalLike } from '@bot/ReplySender';
 import type { NonModalInteraction, Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { DispatchContext } from '@seedcord/core';
+import type { ModalLike } from '@seedcord/core/internal';
 
 /**
  * Shared base the typed interaction handlers extend.

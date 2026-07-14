@@ -74,17 +74,17 @@ describe('getConfirmation', () => {
         expect(mockMessage.awaitMessageComponent).toHaveBeenCalledTimes(1);
     });
 
-    it('resolves false and removes the prompt when the user cancels', async () => {
+    it('resolves false and removes the prompt through the sender when the user cancels', async () => {
         mockMessage.awaitMessageComponent.mockResolvedValue(winner(cancelWire));
         await expect(run(v2Prompt)).resolves.toBe(false);
-        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage);
+        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage.id);
         expect(event.webhook.editMessage).not.toHaveBeenCalled();
     });
 
-    it('resolves false and removes the prompt on timeout', async () => {
+    it('resolves false and removes the prompt through the sender on timeout', async () => {
         mockMessage.awaitMessageComponent.mockRejectedValue(new Error('timed out'));
         await expect(run(v2Prompt)).resolves.toBe(false);
-        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage);
+        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage.id);
     });
 
     it('filters the collector to the invoking user and the reserved confirm ids', async () => {

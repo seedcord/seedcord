@@ -63,4 +63,9 @@ export abstract class RepliableHandler<Event extends Repliables> extends BaseHan
     protected send(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
         return this.sender.send(response, opts);
     }
+
+    /** Delete the initial reply or deferred placeholder. Pass a target to delete a message a prior send returned. */
+    protected delete(target?: SentMessage): Promise<void> {
+        return target === undefined ? this.sender.delete() : this.sender.delete(target);
+    }
 }

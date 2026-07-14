@@ -5,7 +5,16 @@ import type { AckTrace } from './AckTrace';
 
 export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
-export type ReplyMethod = 'reply' | 'defer' | 'deferUpdate' | 'update' | 'followUp' | 'edit' | 'send' | 'showModal';
+export type ReplyMethod =
+    | 'reply'
+    | 'defer'
+    | 'deferUpdate'
+    | 'update'
+    | 'followUp'
+    | 'edit'
+    | 'delete'
+    | 'send'
+    | 'showModal';
 
 interface Illegal {
     // spliced into the message after "was called when"
@@ -71,6 +80,12 @@ const ILLEGAL: Record<Exclude<ReplyMethod, 'send'>, Partial<Record<AckState, Ill
         unacked: {
             reason: 'nothing has been sent yet',
             alternative: 'Send with reply() or defer() first, then edit() rewrites it.'
+        }
+    },
+    delete: {
+        unacked: {
+            reason: 'nothing has been sent yet',
+            alternative: 'Acknowledge first with reply() or defer(), then delete() removes it.'
         }
     },
     showModal: {

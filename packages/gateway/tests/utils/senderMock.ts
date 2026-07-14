@@ -37,6 +37,7 @@ export function mockInteraction(overrides: FlagOverrides = {}) {
         update: vi.fn().mockResolvedValue(withResponse),
         followUp: vi.fn().mockResolvedValue(message),
         editReply: vi.fn().mockResolvedValue(message),
+        deleteReply: vi.fn().mockResolvedValue(undefined),
         showModal: vi.fn().mockResolvedValue(undefined),
         webhook: { editMessage: vi.fn().mockResolvedValue(message) },
         isMessageComponent: () => isMessageComponent,

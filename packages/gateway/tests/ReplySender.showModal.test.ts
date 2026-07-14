@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { mockInteraction, senderFor } from './utils/senderMock';
 
-import type { ModalLike } from '@bot/ReplySender';
+import type { ModalLike } from '@seedcord/core/internal';
 
 const feedbackModal = (): ModalLike => ({ toJSON: () => ({ title: 'Feedback', custom_id: 'fb', components: [] }) });
 

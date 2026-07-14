@@ -10,6 +10,15 @@ import {
     StringSelectMenuBuilder
 } from 'discord.js';
 
+import type {
+    AnySelectMenuInteraction,
+    AutocompleteInteraction,
+    ButtonInteraction,
+    ChatInputCommandInteraction,
+    ContextMenuCommandInteraction,
+    ModalSubmitInteraction
+} from 'discord.js';
+
 const BuilderTypes = {
     command: SlashCommandBuilder,
     context_menu: ContextMenuCommandBuilder,
@@ -53,3 +62,51 @@ export abstract class RowComponent<Key extends RowType> {
         return this.instance;
     }
 }
+
+// no-raw-interaction-acks reads this.event's djs type, so the stubs type event as the matching interaction.
+// detection never reads the reply members (this.reply and kin), so the stubs omit them.
+
+type Repliable =
+    | ChatInputCommandInteraction
+    | ButtonInteraction
+    | ModalSubmitInteraction
+    | AnySelectMenuInteraction
+    | ContextMenuCommandInteraction;
+
+abstract class BaseHandler<Event> {
+    protected readonly event!: Event;
+    abstract execute(): Promise<void>;
+}
+
+export abstract class InteractionHandler<Event extends Repliable> extends BaseHandler<Event> {}
+
+export abstract class SlashHandler<Route extends string> extends InteractionHandler<ChatInputCommandInteraction> {
+    declare protected readonly route: Route;
+}
+
+export abstract class ContextMenuHandler<Kind> extends InteractionHandler<ContextMenuCommandInteraction> {
+    declare protected readonly kind: Kind;
+}
+
+export abstract class ComponentHandler<Event extends Repliable, Defs> extends InteractionHandler<Event> {
+    declare protected readonly defs: Defs;
+}
+
+export abstract class ButtonHandler<Defs> extends ComponentHandler<ButtonInteraction, Defs> {}
+
+export abstract class ModalHandler<Defs> extends ComponentHandler<ModalSubmitInteraction, Defs> {}
+
+export abstract class SelectMenuHandler<Defs> extends ComponentHandler<AnySelectMenuInteraction, Defs> {}
+
+// AutocompleteHandler extends BaseHandler directly, so it never passes the InteractionHandler gate.
+export abstract class AutocompleteHandler<Route extends string> extends BaseHandler<AutocompleteInteraction> {
+    declare protected readonly route: Route;
+    protected respond(): Promise<void> {
+        return this.event.respond([]);
+    }
+}
+
+// a repliable this.event, but extends BaseHandler directly so it never passes the InteractionHandler gate
+export abstract class InteractionMiddleware<Event extends Repliable> extends BaseHandler<Event> {}
+
+export abstract class EventMiddleware<Event = unknown> extends BaseHandler<Event> {}

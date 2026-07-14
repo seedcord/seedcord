@@ -127,6 +127,14 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return this.editMessage(route, this.serialize(response));
     }
 
+    protected async writeDeleteOriginal(): Promise<void> {
+        await this.rest.delete(Routes.webhookMessage(this.ref.application_id, this.ref.token));
+    }
+
+    protected async writeDeleteTarget(targetId: string): Promise<void> {
+        await this.rest.delete(Routes.webhookMessage(this.ref.application_id, this.ref.token, targetId));
+    }
+
     protected async writeModal(data: APIModalInteractionResponseCallbackData): Promise<void> {
         await this.callback(InteractionResponseType.Modal, data);
     }

@@ -32,6 +32,7 @@ function renderBoard(page: number): { embeds: EmbedBuilder[]; components: Action
 @SlashRoute('leaderboard')
 export class LeaderboardSlash extends SlashHandler<'leaderboard'> {
     public async execute(): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- ReplyResponse is ComponentsV2-only
         await this.event.reply(renderBoard(0));
     }
 }
@@ -39,6 +40,7 @@ export class LeaderboardSlash extends SlashHandler<'leaderboard'> {
 @ButtonRoute(Board)
 export class LeaderboardNav extends ButtonHandler<[typeof Board]> {
     public async execute(): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- ReplyResponse is ComponentsV2-only
         await this.event.update(renderBoard(this.params.page));
     }
 }

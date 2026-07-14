@@ -7,7 +7,7 @@ import { interactionRoute } from '@miscellaneous/extractErrorResponse';
 
 import { CONFIRM_DEF } from './reserved';
 
-import type { NonModalInteraction, Repliables } from '@handlers/BaseHandler';
+import type { NonModalInteraction } from '@handlers/BaseHandler';
 import type { ReplyResponse } from '@seedcord/types';
 import type { ButtonInteraction, Message } from 'discord.js';
 import type { Promisable } from 'type-fest';
@@ -111,16 +111,11 @@ async function collectChoice(message: Message, userId: string, timeoutMs: number
     }
 }
 
-async function settle(
-    sender: ReplySender,
-    interaction: Repliables,
-    message: Message,
-    outcome: Outcome | undefined
-): Promise<void> {
+async function settle(sender: ReplySender, message: Message, outcome: Outcome | undefined): Promise<void> {
     if (outcome === undefined) {
-        // deleteReply routes through the interaction webhook, so it removes an ephemeral prompt where a
-        // plain message.delete() cannot.
-        await interaction.deleteReply(message).catch(() => undefined);
+        // routes through the interaction webhook, so it removes an ephemeral prompt where a plain
+        // message.delete() cannot
+        await sender.delete(message).catch(() => undefined);
         return;
     }
     await sender.edit(message, typeof outcome === 'function' ? await outcome() : outcome);
@@ -227,13 +222,13 @@ export async function getConfirmation(
 
     const winner = await collectChoice(message, interaction.user.id, timeoutMs);
     if (!winner) {
-        await settle(sender, interaction, message, options?.onTimeout);
+        await settle(sender, message, options?.onTimeout);
         return false;
     }
 
     // discord can expire the 3s ack window between the filter firing and this ack
     await winner.deferUpdate().catch(() => undefined);
     const confirmed = winner.customId === CONFIRM_IDS.confirm;
-    await settle(sender, interaction, message, confirmed ? options?.onConfirm : options?.onCancel);
+    await settle(sender, message, confirmed ? options?.onConfirm : options?.onCancel);
     return confirmed;
 }

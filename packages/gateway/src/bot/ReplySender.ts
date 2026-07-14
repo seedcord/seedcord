@@ -78,6 +78,14 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return await this.interaction.webhook.editMessage(targetId, this.editOptions(response));
     }
 
+    protected async writeDeleteOriginal(): Promise<void> {
+        await this.interaction.deleteReply();
+    }
+
+    protected async writeDeleteTarget(targetId: string): Promise<void> {
+        await this.interaction.deleteReply(targetId);
+    }
+
     protected async writeModal(data: APIModalInteractionResponseCallbackData): Promise<void> {
         const { interaction } = this;
         // unreachable after guardModalSource, the throw re-narrows the union for showModal

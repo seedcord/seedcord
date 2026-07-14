@@ -1,4 +1,4 @@
-import { BuilderComponent } from './seedcord';
+import { BuilderComponent, SlashHandler as SeedcordSlashHandler } from './seedcord';
 
 // Local stand-ins for seedcord's base classes. extendsSeedcordType matches by class name only, so a
 // project abstract base extending one of these reproduces the cross-file case the decorator rules flag.
@@ -14,6 +14,9 @@ export abstract class SlashHandler<HandlerId extends string> {
 }
 
 export abstract class BaseSlash extends SlashHandler<'ban'> {}
+
+// extends the real seedcord base, so a subclass gates in through a cross-file intermediate
+export abstract class IntermediateSlash extends SeedcordSlashHandler<'ban'> {}
 
 export abstract class EventMiddleware {
     public abstract handle(): void;

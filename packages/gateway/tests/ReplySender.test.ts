@@ -387,6 +387,65 @@ describe('ReplySender.edit (targeted)', () => {
     });
 });
 
+describe('ReplySender.delete', () => {
+    it('deletes @original on the bare form', async () => {
+        const mock = mockInteraction({ replied: true });
+        await senderFor(mock).delete();
+        expect(mock.deleteReply).toHaveBeenCalledWith();
+    });
+
+    it('deletes @original with a bare call after a deferred update', async () => {
+        const mock = mockInteraction();
+        const sender = senderFor(mock);
+        await sender.deferUpdate();
+        await sender.delete();
+        expect(mock.deleteReply).toHaveBeenCalledWith();
+    });
+
+    it('deletes the target message id on the targeted form', async () => {
+        const mock = mockInteraction({ replied: true });
+        const sender = senderFor(mock);
+        mock.followUp.mockResolvedValueOnce({ id: 'earlier-42' });
+        const prompt = await sender.followUp('confirm?');
+
+        await sender.delete(prompt);
+
+        expect(mock.deleteReply).toHaveBeenCalledWith('earlier-42');
+    });
+
+    it('evicts the target so a later targeted edit of it throws foreign', async () => {
+        const mock = mockInteraction({ replied: true });
+        const sender = senderFor(mock);
+        mock.followUp.mockResolvedValueOnce({ id: 'earlier-7' });
+        const prompt = await sender.followUp('confirm?');
+
+        await sender.delete(prompt);
+
+        await expect(sender.edit(prompt, 'x')).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+    });
+
+    it('throws ReplyForeignEditTarget before any djs call for a message the interaction did not send', async () => {
+        const mock = mockInteraction({ replied: true });
+        const sender = senderFor(mock);
+        const foreign = { id: 'foreign-1' } as SentMessage;
+
+        await expect(sender.delete(foreign)).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+        expect(mock.deleteReply).not.toHaveBeenCalled();
+    });
+
+    it('throws before any djs call when deleting an unacked interaction', async () => {
+        const mock = mockInteraction();
+        await expect(senderFor(mock).delete()).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyIllegalAckState)
+        );
+        expect(mock.deleteReply).not.toHaveBeenCalled();
+    });
+});
+
 describe('ReplySender.send', () => {
     it('replies on an unacked interaction', async () => {
         const mock = mockInteraction();

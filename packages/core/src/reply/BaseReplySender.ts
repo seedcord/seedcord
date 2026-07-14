@@ -85,9 +85,25 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
         const target = targetOrResponse as TMessage;
         if (!this.sent.has(target.id)) {
-            throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, [target.id, this.routeId]);
+            throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['edit', target.id, this.routeId]);
         }
         return this.remember(await this.writeEditTarget(target.id, maybeResponse));
+    }
+
+    public delete(): Promise<void>;
+    public delete(target: TMessage): Promise<void>;
+    public async delete(target?: TMessage): Promise<void> {
+        this.checkLegality('delete');
+        if (target === undefined) {
+            await this.writeDeleteOriginal();
+            return;
+        }
+        if (!this.sent.has(target.id)) {
+            throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['delete', target.id, this.routeId]);
+        }
+        await this.writeDeleteTarget(target.id);
+        // a deleted message can no longer be edited
+        this.sent.delete(target.id);
     }
 
     /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
@@ -149,5 +165,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
     protected abstract writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage>;
     protected abstract writeEditOriginal(response: ReplyResponse | string): Promise<TMessage>;
     protected abstract writeEditTarget(targetId: string, response: ReplyResponse | string): Promise<TMessage>;
+    protected abstract writeDeleteOriginal(): Promise<void>;
+    protected abstract writeDeleteTarget(targetId: string): Promise<void>;
     protected abstract writeModal(data: APIModalInteractionResponseCallbackData): Promise<void>;
 }
