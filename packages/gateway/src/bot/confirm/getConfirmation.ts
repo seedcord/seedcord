@@ -3,6 +3,7 @@ import { BuilderComponent, RowComponent } from '@seedcord/core';
 import { ButtonStyle, ComponentType } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';
+import { interactionRoute } from '@miscellaneous/extractErrorResponse';
 
 import { CONFIRM_DEF } from './reserved';
 
@@ -13,16 +14,14 @@ import type { Promisable } from 'type-fest';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-// the reserved def's shape and choices never change, so mint the ids once.
+// the reserved def's shape and choices never change, so encode the ids once
 const CONFIRM_IDS = {
     confirm: CONFIRM_DEF.encode({ choice: 'confirm' }),
     cancel: CONFIRM_DEF.encode({ choice: 'cancel' })
 };
 
-/** A confirm outcome to show, the reply itself or a factory for it. */
 type Outcome = ReplyResponse | (() => Promisable<ReplyResponse>);
 
-// the prompt a confirmation shows, a string convenience form or a factory that gets the two minted ids.
 type ConfirmPrompt = string | ((ids: { confirm: string; cancel: string }) => Promisable<ReplyResponse>);
 
 /** Options shared by both confirmation forms. */
@@ -107,12 +106,11 @@ async function collectChoice(message: Message, userId: string, timeoutMs: number
             filter: (click) => click.user.id === userId && CONFIRM_DEF.owns(click.customId)
         });
     } catch {
-        // awaitMessageComponent rejects on timeout, a clean "no decision", not an error.
+        // awaitMessageComponent rejects on timeout, which resolves to no decision here
         return null;
     }
 }
 
-// settle the prompt for an outcome, edit it to the author's reply, or remove it when no hook was given.
 async function settle(
     sender: ReplySender,
     interaction: Repliables,
@@ -131,7 +129,7 @@ async function settle(
 /**
  * Shows a confirm/cancel prompt with built-in Confirm and Cancel buttons and resolves to `true` only if the
  * invoking user clicks confirm. A cancel click or a timeout resolves to `false`. Gate the action behind it
- * with an early return. Never throws, a swallowed send resolves to `false`. Not usable from a
+ * with an early return. A failed prompt send throws into the fault boundary. Not usable from a
  * {@link ModalHandler}, the `interaction` parameter excludes a modal submit at compile time.
  *
  * @param interaction - The repliable interaction to prompt on, `this.event` inside a non-modal handler.
@@ -161,8 +159,9 @@ export function getConfirmation(
 ): Promise<boolean>;
 /**
  * Shows a confirm/cancel prompt you build yourself and resolves to `true` only if the invoking user clicks
- * confirm. The factory receives the two minted button ids, set them on your own buttons. A cancel click or a
- * timeout resolves to `false`. Never throws. Not usable from a {@link ModalHandler}.
+ * confirm. The factory receives the two minted button ids. Set them on your own buttons. A cancel click or a
+ * timeout resolves to `false`. A failed prompt send throws into the fault boundary. Not usable from a
+ * {@link ModalHandler}.
  *
  * @param interaction - The repliable interaction to prompt on, `this.event` inside a non-modal handler.
  * @param prompt - A factory given the minted `{ confirm, cancel }` ids that returns the reply to show. Build
@@ -223,10 +222,8 @@ export async function getConfirmation(
     const { ephemeral = true, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
 
     const response = typeof prompt === 'string' ? defaultPrompt(prompt, options) : await prompt(CONFIRM_IDS);
-    const sender = new ReplySender(interaction);
-    const message = await sender.send(response, ephemeral);
-    // a swallowed send means the prompt never showed, so there is nothing to settle, collect, or run.
-    if (!message) return false;
+    const sender = new ReplySender(interaction, interactionRoute(interaction));
+    const message = await sender.send(response, { ephemeral });
 
     const winner = await collectChoice(message, interaction.user.id, timeoutMs);
     if (!winner) {
@@ -234,6 +231,7 @@ export async function getConfirmation(
         return false;
     }
 
+    // discord can expire the 3s ack window between the filter firing and this ack
     await winner.deferUpdate().catch(() => undefined);
     const confirmed = winner.customId === CONFIRM_IDS.confirm;
     await settle(sender, interaction, message, confirmed ? options?.onConfirm : options?.onCancel);

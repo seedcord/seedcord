@@ -71,6 +71,8 @@ export enum SeedcordErrorCode {
     ReplyForeignEditTarget = 1503,
     /** update() or deferUpdate() was called on a modal with no source message. */
     ReplyUpdateWithoutSource = 1504,
+    /** A withResponse interaction callback returned no created message. */
+    ReplyCallbackMissingMessage = 1505,
 
     /** A customId definition prefix contains a reserved character (a colon or a control char). */
     CustomIdInvalidPrefix = 1601,

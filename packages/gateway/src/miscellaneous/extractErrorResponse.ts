@@ -155,7 +155,8 @@ function faultKey(origin: ErrorOrigin, error: Error): string {
     return `autocomplete:${name}`;
 }
 
-function interactionRoute(interaction: Repliables): string {
+/** The stable route id of a repliable interaction, its slash route path, command name, or customId prefix. */
+export function interactionRoute(interaction: Repliables): string {
     if (interaction.isChatInputCommand()) return slashRouteOf(interaction);
     if (interaction.isContextMenuCommand()) return interaction.commandName;
     if (interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {

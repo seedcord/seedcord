@@ -72,4 +72,17 @@ describe('reply surface error codes', () => {
         expect(message).toContain('defer()');
         expect(message).toContain('route slash:ban');
     });
+
+    it('assigns ReplyCallbackMissingMessage to 1505', () => {
+        expect(SeedcordErrorCode.ReplyCallbackMissingMessage).toBe(1505);
+    });
+
+    it('names the method whose callback carried no message', () => {
+        const error = new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, ['reply', 'slash:ban']);
+
+        const message = stripAnsi(error.message);
+        expect(message).toContain('reply()');
+        expect(message).toContain('no message');
+        expect(message).toContain('route slash:ban');
+    });
 });

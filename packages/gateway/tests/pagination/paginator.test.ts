@@ -48,32 +48,61 @@ class RemindersNav extends Reminders.Handler {}
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function startEvent() {
     return {
-        reply: vi.fn().mockResolvedValue(undefined),
-        fetchReply: vi.fn().mockResolvedValue({ id: 'page-message' }),
+        reply: vi.fn().mockResolvedValue({ resource: { message: { id: 'page-message' } } }),
+        deferReply: vi.fn().mockResolvedValue(undefined),
         followUp: vi.fn().mockResolvedValue({ id: 'page-message' }),
         user: { id: 'u1' },
         guild: null,
         replied: false,
         deferred: false,
+        ephemeral: null as boolean | null,
+        isChatInputCommand: () => true,
+        isContextMenuCommand: () => false,
+        isButton: () => false,
+        isAnySelectMenu: () => false,
         isMessageComponent: () => false,
-        isModalSubmit: () => false
+        isModalSubmit: () => false,
+        isFromMessage: () => false,
+        commandName: 'page',
+        options: { getSubcommand: () => null, getSubcommandGroup: () => null }
     };
 }
 
+// after deferUpdate djs marks the interaction deferred with ephemeral null, so the sender seeds deferred-update
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function navEvent(customId: string) {
     return {
         customId,
         deferUpdate: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue({ id: 'paged-message' }),
         message: { id: 'paged-message' },
         webhook: { editMessage: vi.fn().mockResolvedValue(undefined) },
         user: { id: 'u1' },
-        guild: null
+        guild: null,
+        deferred: true,
+        replied: false,
+        ephemeral: null as boolean | null,
+        isChatInputCommand: () => false,
+        isContextMenuCommand: () => false,
+        isButton: () => true,
+        isAnySelectMenu: () => false,
+        isMessageComponent: () => true,
+        isModalSubmit: () => false,
+        isFromMessage: () => false
     };
 }
 
 function containerText(components: { toJSON(): unknown }[]): string {
     const json = components[0]?.toJSON() as APIContainerComponent;
+    return json.components.reduce<string>(
+        (acc, part) => (part.type === ComponentType.TextDisplay ? acc + part.content : acc),
+        ''
+    );
+}
+
+// the sender serializes each component before the wire call, so sent components arrive as raw API data
+function sentContainerText(components: unknown[]): string {
+    const json = components[0] as APIContainerComponent;
     return json.components.reduce<string>(
         (acc, part) => (part.type === ComponentType.TextDisplay ? acc + part.content : acc),
         ''
@@ -88,10 +117,18 @@ describe('Paginator.start', () => {
         await pager.start(event as unknown as Repliables);
 
         expect(event.reply).toHaveBeenCalledOnce();
-        const options = event.reply.mock.calls[0]?.[0] as { components: { toJSON(): unknown }[]; flags: number };
+        const options = event.reply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
         expect(options.flags & MessageFlags.IsComponentsV2).toBeTruthy();
         expect(options.flags & MessageFlags.Ephemeral).toBeFalsy();
-        expect(containerText(options.components)).toBe('a\nb');
+        expect(sentContainerText(options.components)).toBe('a\nb');
+    });
+
+    it('rejects when the page-0 send fails', async () => {
+        const failure = new Error('discord api error');
+        const event = startEvent();
+        event.reply.mockRejectedValue(failure);
+
+        await expect(pager.start(event as unknown as Repliables)).rejects.toBe(failure);
     });
 
     it('honors an ephemeral paginator', async () => {
@@ -119,19 +156,17 @@ describe('Paginator.page', () => {
 describe('Paginator nav handler', () => {
     beforeEach(() => vi.clearAllMocks());
 
-    it('acks, decodes the target page off the wire, and edits the message in place', async () => {
+    it('acks, decodes the target page off the wire, and edits @original in place', async () => {
         const event = navEvent(pager.cursor.encode({ page: 2, slot: 0 }));
         await new BansNav(event as unknown as ButtonInteraction<'cached'>, core).execute();
 
         expect(event.deferUpdate).toHaveBeenCalledOnce();
-        expect(event.webhook.editMessage).toHaveBeenCalledOnce();
-        const [message, body] = event.webhook.editMessage.mock.calls[0] as [
-            unknown,
-            { components: { toJSON(): unknown }[]; flags: number }
-        ];
-        expect(message).toBe(event.message);
+        // the bare edit rewrites @original (the source message) via editReply in the deferred-update state
+        expect(event.editReply).toHaveBeenCalledOnce();
+        expect(event.webhook.editMessage).not.toHaveBeenCalled();
+        const body = event.editReply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
         expect(body.flags).toBe(MessageFlags.IsComponentsV2);
-        expect(containerText(body.components)).toBe('e'); // page 2 of 5 items at perPage 2
+        expect(sentContainerText(body.components)).toBe('e'); // page 2 of 5 items at perPage 2
     });
 });
 

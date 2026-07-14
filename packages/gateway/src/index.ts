@@ -16,9 +16,6 @@ export * from '@bot/injectors/index';
 // Bot Utilities exports
 export * from '@bUtilities/index';
 
-// Reply delivery
-export { ReplySender } from '@bot/ReplySender';
-
 // Confirmation prompts
 export { getConfirmation } from '@bot/confirm';
 export type { ConfirmOptions, DefaultConfirmOptions } from '@bot/confirm';

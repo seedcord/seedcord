@@ -1,98 +1,218 @@
-import { Logger } from '@seedcord/logger';
-import { DiscordAPIError, MessageFlags } from 'discord.js';
-
-import { HARMLESS_API_CODES } from '@bot/harmlessApiCodes';
-import { flagsFor } from '@miscellaneous/flagsFor';
+import {
+    checkAckLegality,
+    deferFlags,
+    sendFlags,
+    sendTarget,
+    serializeReply,
+    translateSerializationError
+} from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { MessageFlags } from 'discord.js';
 
 import type { Repliables } from '@handlers/BaseHandler';
-import type { ReplyResponse } from '@seedcord/types';
-import type { InteractionReplyOptions, Message, WebhookMessageEditOptions } from 'discord.js';
+import type { AckState, SerializedReply } from '@seedcord/core/internal';
+import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type {
+    APIModalInteractionResponseCallbackData,
+    InteractionCallbackResponse,
+    InteractionReplyOptions,
+    InteractionUpdateOptions,
+    MessageComponentInteraction,
+    ModalMessageModalSubmitInteraction,
+    Message,
+    WebhookMessageEditOptions
+} from 'discord.js';
+
+// the two djs kinds carrying a source message, so update / deferUpdate have a target
+type SourceInteraction = MessageComponentInteraction | ModalMessageModalSubmitInteraction;
+
+/** The shape djs modal builders emit from `toJSON()`. */
+export interface ModalLike {
+    toJSON(): APIModalInteractionResponseCallbackData;
+}
+
+/** The created message a gateway reply resolves to. */
+export type SentMessage = Message;
+
+// djs flips `replied` on editReply, so per-call derivation would break repeated update() and post-edit
+// send() parity
+function seedState(interaction: Repliables): AckState {
+    if (interaction.deferred && interaction.ephemeral === null) return 'deferred-update';
+    if (interaction.replied) return 'replied';
+    if (interaction.deferred) return 'deferred-reply';
+    return 'unacked';
+}
 
 /**
- * Sends a {@link ReplyResponse} to an interaction, picking reply, editReply, or followUp from the live
- * acknowledgement state. Logs and drops its own send failures so a dead token never escapes into the
- * controller.
+ * Writes interaction responses through the discord.js interaction, tracking its own acknowledgement state
+ * so an illegal verb throws a translated {@link SeedcordError} before any djs call. Construction is internal
+ * to the repliable handler bases and the dispatcher.
  */
 export class ReplySender {
-    private readonly logger = new Logger('ReplySender');
+    private state: AckState;
+    // the only ids a targeted edit accepts
+    private readonly sent = new Set<string>();
 
-    public constructor(private readonly interaction: Repliables) {}
+    public constructor(
+        private readonly interaction: Repliables,
+        private readonly routeId: string
+    ) {
+        this.state = seedState(interaction);
+    }
 
-    /**
-     * Sends the reply and returns the sent message so a caller can attach a collector to it. Never throws,
-     * a failed send is logged and dropped and resolves to `undefined`.
-     *
-     * @param response - The ComponentsV2 reply to show.
-     * @param ephemeral - Whether the reply is ephemeral. {@default `true`}
-     * @returns The sent {@link Message}, or `undefined` when the send was swallowed.
-     */
-    public async send(response: ReplyResponse, ephemeral = true): Promise<Message | undefined> {
+    public async reply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+        checkAckLegality('reply', this.state, this.routeId);
+        const result = await this.interaction.reply({
+            ...this.replyOptions(response, sendFlags(opts)),
+            withResponse: true
+        });
+        this.state = 'replied';
+        return this.createdMessage(result, 'reply');
+    }
+
+    public async defer(opts?: DeferOpts): Promise<void> {
+        checkAckLegality('defer', this.state, this.routeId);
+        await this.interaction.deferReply({ flags: deferFlags(opts) });
+        this.state = 'deferred-reply';
+    }
+
+    public async deferUpdate(): Promise<void> {
+        checkAckLegality('deferUpdate', this.state, this.routeId);
+        const source = this.sourceInteraction('deferUpdate');
+        await source.deferUpdate();
+        this.state = 'deferred-update';
+    }
+
+    /** After a deferUpdate the state stays deferred-update, so the rewrite repeats. */
+    public async update(response: ReplyResponse | string): Promise<SentMessage> {
+        checkAckLegality('update', this.state, this.routeId);
+        // in deferred-update, @original is the source message and the ack-legality check above already passed
+        if (this.state === 'deferred-update') return await this.editOriginal(response);
+        const source = this.sourceInteraction('update');
+        const result = await source.update({ ...this.updateOptions(response), withResponse: true });
+        this.state = 'replied';
+        return this.createdMessage(result, 'update');
+    }
+
+    public async followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+        checkAckLegality('followUp', this.state, this.routeId);
+        const created = await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
+        return this.remember(created);
+    }
+
+    public edit(response: ReplyResponse | string): Promise<SentMessage>;
+    public edit(target: SentMessage, response: ReplyResponse | string): Promise<SentMessage>;
+    public async edit(
+        targetOrResponse: SentMessage | ReplyResponse | string,
+        maybeResponse?: ReplyResponse | string
+    ): Promise<SentMessage> {
+        checkAckLegality('edit', this.state, this.routeId);
+        if (maybeResponse === undefined) {
+            return await this.editOriginal(targetOrResponse);
+        }
+        // justified: the overloads narrow targetOrResponse once maybeResponse is defined
+        const target = targetOrResponse as SentMessage;
+        if (!this.sent.has(target.id)) {
+            throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, [target.id, this.routeId]);
+        }
+        const edited = await this.interaction.webhook.editMessage(target.id, this.editOptions(maybeResponse));
+        return this.remember(edited);
+    }
+
+    /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
+    public async send(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+        const target = sendTarget(this.state);
+        if (target === 'reply') return await this.reply(response, opts);
+        if (target === 'edit') return await this.edit(response);
+        return await this.followUp(response, opts);
+    }
+
+    /** Must be the initial response. */
+    public async showModal(modal: ModalLike): Promise<void> {
+        checkAckLegality('showModal', this.state, this.routeId);
+        // runtime backstop for direct sender callers, which a compile-time gate on the bases cannot cover
+        const { interaction } = this;
+        if (interaction.isModalSubmit()) {
+            throw new SeedcordError(SeedcordErrorCode.ReplyIllegalAckState, [
+                'showModal',
+                'this interaction is a modal submit',
+                'A modal cannot open another modal.',
+                this.routeId
+            ]);
+        }
+        let data: APIModalInteractionResponseCallbackData;
         try {
-            return await this.dispatch(response, ephemeral);
+            data = modal.toJSON();
         } catch (error) {
-            this.logSwallowed('send', error);
-            return undefined;
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a null-prototype modal has no constructor at runtime
+            const name = modal.constructor?.name;
+            throw translateSerializationError(error, !name || name === 'Object' ? 'modal' : name, 0, this.routeId);
         }
+        await interaction.showModal(data);
+        this.state = 'replied';
     }
 
-    /**
-     * Edits an already-sent message to a new {@link ReplyResponse}. Used to swap a confirmation prompt for
-     * its outcome. Never throws, a failed edit is logged and dropped.
-     *
-     * @param message - The message to edit (the handle a prior {@link send} returned).
-     * @param response - The reply to replace it with.
-     */
-    public async edit(message: Message, response: ReplyResponse): Promise<void> {
-        try {
-            await this.interaction.webhook.editMessage(message, this.editBody(response));
-        } catch (error) {
-            this.logSwallowed('edit', error);
-        }
+    // only component and message-opened-modal kinds carry a source message
+    private sourceInteraction(method: 'update' | 'deferUpdate'): SourceInteraction {
+        const { interaction } = this;
+        if (interaction.isMessageComponent()) return interaction;
+        if (interaction.isModalSubmit() && interaction.isFromMessage()) return interaction;
+        throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);
     }
 
-    private async dispatch(response: ReplyResponse, ephemeral: boolean): Promise<Message> {
-        if (this.interaction.replied) {
-            return await this.interaction.followUp(this.replyOptions(response, ephemeral));
-        }
-
-        if (this.interaction.deferred) {
-            // ephemeral is null only after deferUpdate, where @original is the live source message, so follow
-            // up to avoid overwriting it. deferReply set ephemeral to a boolean over a throwaway placeholder,
-            // so editReply upgrades it in place.
-            if (this.interaction.ephemeral === null) {
-                return await this.interaction.followUp(this.replyOptions(response, ephemeral));
-            }
-            return await this.interaction.editReply(this.editBody(response));
-        }
-
-        await this.interaction.reply(this.replyOptions(response, ephemeral));
-        // reply() resolves to an InteractionResponse, fetchReply() is the message the collector attaches to.
-        return await this.interaction.fetchReply();
+    private async editOriginal(response: ReplyResponse | string): Promise<SentMessage> {
+        const edited = await this.interaction.editReply(this.editOptions(response));
+        // after a deferUpdate, @original is the source message, which this interaction did not send
+        if (this.state !== 'deferred-update') this.remember(edited);
+        return edited;
     }
 
-    private replyOptions(response: ReplyResponse, ephemeral: boolean): InteractionReplyOptions {
+    private replyOptions(response: ReplyResponse | string, flags: number): InteractionReplyOptions {
+        const reply = this.serialize(response);
         return {
-            components: response.components,
-            flags: flagsFor(ephemeral),
-            ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
-            ...(response.files && { files: response.files })
+            components: reply.components,
+            flags,
+            ...(reply.allowedMentions && { allowedMentions: reply.allowedMentions }),
+            ...(reply.files && { files: [...reply.files] })
         };
     }
 
-    private editBody(response: ReplyResponse): WebhookMessageEditOptions {
+    private editOptions(response: ReplyResponse | string): WebhookMessageEditOptions {
+        const reply = this.serialize(response);
         return {
-            components: response.components,
+            components: reply.components,
             flags: MessageFlags.IsComponentsV2,
-            ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
-            ...(response.files && { files: response.files })
+            ...(reply.allowedMentions && { allowedMentions: reply.allowedMentions }),
+            ...(reply.files && { files: [...reply.files] })
         };
     }
 
-    private logSwallowed(action: string, error: unknown): void {
-        if (error instanceof DiscordAPIError && HARMLESS_API_CODES.has(error.code)) {
-            this.logger.debug(`reply ${action} hit harmless code ${error.code}`);
-            return;
+    private updateOptions(response: ReplyResponse | string): InteractionUpdateOptions {
+        const reply = this.serialize(response);
+        return {
+            components: reply.components,
+            flags: MessageFlags.IsComponentsV2,
+            ...(reply.allowedMentions && { allowedMentions: reply.allowedMentions }),
+            ...(reply.files && { files: [...reply.files] })
+        };
+    }
+
+    private serialize(response: ReplyResponse | string): SerializedReply {
+        return serializeReply(response, this.routeId);
+    }
+
+    private createdMessage(result: InteractionCallbackResponse, method: 'reply' | 'update'): SentMessage {
+        // djs types resource.message nullable, a type 4/7 callback with withResponse should always carry it
+        const message = result.resource?.message;
+        if (!message) {
+            throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
         }
-        this.logger.error(`reply ${action} failed`, error);
+        return this.remember(message);
+    }
+
+    private remember(created: SentMessage): SentMessage {
+        this.sent.add(created.id);
+        return created;
     }
 }

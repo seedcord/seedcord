@@ -1,37 +1,31 @@
 import { Silence, Fault } from '@seedcord/core';
-import { DiscordAPIError, MessageFlags, RESTJSONErrorCodes } from 'discord.js';
+import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
+import { harmlessError } from '../utils/harmlessError';
 import { TestNotice } from '../utils/TestNotice';
 
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
-function harmlessError(): DiscordAPIError {
-    return new DiscordAPIError(
-        { code: RESTJSONErrorCodes.UnknownInteraction, message: 'Unknown interaction' },
-        RESTJSONErrorCodes.UnknownInteraction,
-        404,
-        'POST',
-        'https://discord.com/api/interactions/x/y/callback',
-        { body: undefined, files: [] }
-    );
-}
+const withResponse = { resource: { message: { id: 'sent' } } };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
 function mockInteraction() {
     return {
-        reply: vi.fn().mockResolvedValue(undefined),
-        editReply: vi.fn().mockResolvedValue(undefined),
-        followUp: vi.fn().mockResolvedValue(undefined),
+        reply: vi.fn().mockResolvedValue(withResponse),
+        deferReply: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue({ id: 'sent' }),
+        followUp: vi.fn().mockResolvedValue({ id: 'sent' }),
         deleteReply: vi.fn().mockResolvedValue(undefined),
         isAutocomplete: vi.fn().mockReturnValue(false),
         isMessageComponent: vi.fn().mockReturnValue(false),
         isModalSubmit: vi.fn().mockReturnValue(false),
+        isFromMessage: vi.fn().mockReturnValue(false),
         isChatInputCommand: vi.fn().mockReturnValue(true),
         isContextMenuCommand: vi.fn().mockReturnValue(false),
         isButton: vi.fn().mockReturnValue(false),
@@ -134,7 +128,6 @@ describe('handleInteractionFault', () => {
             mockCore(publish)
         );
 
-        // editReply upgrades the deferReply placeholder in place.
         expect(mock.editReply).toHaveBeenCalledTimes(1);
         expect(mock.followUp).not.toHaveBeenCalled();
         expect(mock.deleteReply).not.toHaveBeenCalled();
@@ -168,6 +161,23 @@ describe('handleInteractionFault', () => {
 
         const options = mock.reply.mock.calls[0]?.[0] as { flags: number };
         expect(options.flags & MessageFlags.Ephemeral).toBe(0);
+    });
+
+    it('swallows a harmless api code thrown by its own fault-card send', async () => {
+        mock.reply.mockRejectedValueOnce(harmlessError());
+
+        await expect(
+            handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish))
+        ).resolves.toBeUndefined();
+        expect(mock.reply).toHaveBeenCalledTimes(1);
+    });
+
+    it('swallows an unexpected failure from its own fault-card send', async () => {
+        mock.reply.mockRejectedValueOnce(new Error('network down'));
+
+        await expect(
+            handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish))
+        ).resolves.toBeUndefined();
     });
 
     describe('autocomplete arm', () => {

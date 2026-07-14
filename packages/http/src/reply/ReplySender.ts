@@ -98,7 +98,7 @@ export class ReplySender {
             reply.files
         );
         this.state = 'replied';
-        return this.remember(this.createdMessage(result));
+        return this.remember(this.createdMessage(result, 'reply'));
     }
 
     public async defer(opts?: DeferOpts): Promise<void> {
@@ -124,7 +124,7 @@ export class ReplySender {
             reply.files
         );
         this.state = 'replied';
-        return this.remember(this.createdMessage(result));
+        return this.remember(this.createdMessage(result, 'update'));
     }
 
     public async followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
@@ -148,6 +148,7 @@ export class ReplySender {
         maybeResponse?: ReplyResponse | string
     ): Promise<SentMessage> {
         checkAckLegality('edit', this.state, this.routeId);
+        // justified: the overloads narrow targetOrResponse by whether maybeResponse is defined
         if (maybeResponse === undefined) {
             return await this.editOriginal(this.serialize(targetOrResponse as ReplyResponse | string));
         }
@@ -159,7 +160,7 @@ export class ReplySender {
         return await this.editMessage(route, this.serialize(maybeResponse));
     }
 
-    /** State-agnostic, routes to the verb the current ack state permits. Safe from any boundary. */
+    /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
     public async send(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
         const target = sendTarget(this.state);
         if (target === 'reply') return await this.reply(response, opts);
@@ -211,7 +212,7 @@ export class ReplySender {
         });
         // justified: a webhook message PATCH returns the edited message
         const message = result as SentMessage;
-        // after a deferUpdate, @original is the component's source message, which this interaction did not send
+        // after a deferUpdate, @original is the source message, which this interaction did not send
         if (this.state !== 'deferred-update') this.remember(message);
         return message;
     }
@@ -220,9 +221,13 @@ export class ReplySender {
         return files.map((file, index) => ({ name: file.name ?? `file-${index}`, data: file.attachment }));
     }
 
-    private createdMessage(result: unknown): SentMessage {
-        // justified: with_response=true on a type 4/7 message callback always carries resource.message
-        return (result as { resource: { message: SentMessage } }).resource.message;
+    private createdMessage(result: unknown, method: 'reply' | 'update'): SentMessage {
+        // justified: the with_response callback wire shape, the guard covers an absent message
+        const message = (result as { resource?: { message?: SentMessage } }).resource?.message;
+        if (!message) {
+            throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
+        }
+        return message;
     }
 
     private remember(created: SentMessage): SentMessage {

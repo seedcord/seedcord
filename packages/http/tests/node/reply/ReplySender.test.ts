@@ -99,6 +99,15 @@ describe('ReplySender.reply', () => {
         await expect(senderFor(rest).reply(reply)).resolves.toBe(message);
     });
 
+    it('throws ReplyCallbackMissingMessage when the callback carries no message', async () => {
+        const rest = restMock();
+        rest.post.mockResolvedValueOnce({ resource: null });
+
+        await expect(senderFor(rest).reply(reply)).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyCallbackMissingMessage)
+        );
+    });
+
     it('drops the ephemeral flag when ephemeral is false, keeping v2', async () => {
         const rest = restMock();
 
