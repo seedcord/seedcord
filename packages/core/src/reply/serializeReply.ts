@@ -26,7 +26,7 @@ export function serializeReply(response: ReplyResponse | string, routeId: string
         try {
             return component.toJSON();
         } catch (error) {
-            // a null-prototype value has no constructor
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a null-prototype value has no constructor at runtime
             const name = component.constructor?.name;
             throw translateSerializationError(error, !name || name === 'Object' ? 'component' : name, index, routeId);
         }

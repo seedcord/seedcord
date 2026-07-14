@@ -42,6 +42,15 @@ ruleTester.run('no-raw-interaction-acks', rule, {
                 }
             }
         `,
+        // an autocomplete handler extends BaseHandler directly, so a banned ack method there is out of scope
+        dedent`
+            import { AutocompleteHandler } from 'seedcord';
+            export class Search extends AutocompleteHandler<'search'> {
+                async execute() {
+                    await this.event.deferReply();
+                }
+            }
+        `,
         // middleware replies through thrown stops, raw acks there are out of scope
         dedent`
             import { InteractionMiddleware } from 'seedcord';
@@ -177,6 +186,28 @@ ruleTester.run('no-raw-interaction-acks', rule, {
                 }
             `,
             errors: [{ messageId: 'deleteReply' }]
+        },
+        {
+            code: dedent`
+                import { ContextMenuHandler } from 'seedcord';
+                export class Info extends ContextMenuHandler<'user'> {
+                    async execute() {
+                        await this.event.reply('info');
+                    }
+                }
+            `,
+            errors: [{ messageId: 'replyMember' }]
+        },
+        {
+            code: dedent`
+                import { SelectMenuHandler } from 'seedcord';
+                export class Pick extends SelectMenuHandler<[]> {
+                    async execute() {
+                        await this.event.reply('picked');
+                    }
+                }
+            `,
+            errors: [{ messageId: 'replyMember' }]
         },
         {
             // the const e = this.event alias form

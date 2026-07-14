@@ -5,8 +5,7 @@ import { createRule } from '../createRule';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
-// the shared base every repliable handler extends. AutocompleteHandler and InteractionMiddleware extend
-// BaseHandler directly, so gating on this excludes both.
+// AutocompleteHandler and InteractionMiddleware extend BaseHandler directly, so this gate excludes both
 const HANDLER_GATE = 'InteractionHandler';
 
 // literal superclass names, matched before falling back to the type checker
@@ -60,17 +59,15 @@ export default createRule({
                 'Disallow raw discord.js ack calls on a handler interaction. Reply through the base-class members.'
         },
         messages: {
-            replyMember: 'Reply through this.reply() so the ack state machine and error translation run.',
-            deferMember: 'Defer through this.defer() so the ack state machine and error translation run.',
-            editMember: 'Edit the reply through this.edit() so the ack state machine and error translation run.',
-            followUpMember: 'Follow up through this.followUp() so the ack state machine and error translation run.',
-            deferUpdateMember:
-                'Defer the update through this.deferUpdate() so the ack state machine and error translation run.',
-            updateMember: 'Update through this.update() so the ack state machine and error translation run.',
-            showModalMember:
-                'Show the modal through this.showModal() so the ack state machine and error translation run.',
-            fetchReply: 'Read the sent message from the return of the reply members instead of a raw fetchReply.',
-            deleteReply: 'Delete through this.delete() so the ack state machine and error translation run.'
+            replyMember: 'Reply through this.reply().',
+            deferMember: 'Defer through this.defer().',
+            editMember: 'Edit the reply through this.edit().',
+            followUpMember: 'Follow up through this.followUp().',
+            deferUpdateMember: 'Defer the update through this.deferUpdate().',
+            updateMember: 'Update through this.update().',
+            showModalMember: 'Show the modal through this.showModal().',
+            fetchReply: 'Read the sent message from the return of the reply members.',
+            deleteReply: 'Delete through this.delete().'
         },
         schema: []
     },
@@ -79,7 +76,7 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
         const bases = new Set<string>();
-        // one flag per enclosing class, the top is the class enclosing a call site
+        // true inside an InteractionHandler subclass
         const classStack: boolean[] = [];
 
         function isHandlerClass(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression): boolean {
@@ -90,7 +87,7 @@ export default createRule({
 
         function enterClass(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression): void {
             const inScope = isHandlerClass(node);
-            // an abstract handler becomes a base for a later same-file subclass
+            // lets a same-file subclass hit the fast bases.has path and skip the type checker
             if (inScope && node.abstract && node.id) bases.add(node.id.name);
             classStack.push(inScope);
         }

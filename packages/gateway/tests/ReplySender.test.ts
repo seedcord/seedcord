@@ -394,6 +394,14 @@ describe('ReplySender.delete', () => {
         expect(mock.deleteReply).toHaveBeenCalledWith();
     });
 
+    it('deletes @original with a bare call after a deferred reply', async () => {
+        const mock = mockInteraction();
+        const sender = senderFor(mock);
+        await sender.defer();
+        await sender.delete();
+        expect(mock.deleteReply).toHaveBeenCalledWith();
+    });
+
     it('deletes @original with a bare call after a deferred update', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);

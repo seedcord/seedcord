@@ -65,6 +65,7 @@ describe('reply surface error codes', () => {
         const message = stripAnsi(error.message);
         expect(message).toContain('delete()');
         expect(message).toContain('msg-3');
+        expect(message).toContain('route slash:ban');
     });
 
     it('assigns ReplyUpdateWithoutSource to 1504', () => {

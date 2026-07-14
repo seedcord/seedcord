@@ -66,7 +66,7 @@ const messages = {
     ) =>
         `${chalk.cyan(componentClass)} at components[${index}] failed to serialize: ${detail.replace(/\.$/, '')}. (route ${chalk.cyan(routeId)})`,
     [SeedcordErrorCode.ReplyForeignEditTarget]: (method: string, targetId: string, routeId: string) =>
-        `${chalk.cyan(`${method}()`)} was passed message ${targetId}, which this interaction did not send.\nTarget a message returned by reply(), followUp(), edit(), or update(). (route ${chalk.cyan(routeId)})`,
+        `${chalk.cyan(`${method}()`)} was passed message ${targetId}, which this interaction did not send.\nPass a message this interaction sent, returned by reply(), followUp(), edit(), or update(). (route ${chalk.cyan(routeId)})`,
     [SeedcordErrorCode.ReplyUpdateWithoutSource]: (method: string, routeId: string) =>
         `${chalk.cyan(`${method}()`)} was called on a modal opened from a command, which has no source message.\nUse reply() or defer() instead. (route ${chalk.cyan(routeId)})`,
     [SeedcordErrorCode.ReplyCallbackMissingMessage]: (method: string, routeId: string) =>

@@ -474,6 +474,16 @@ describe('ReplySender.delete', () => {
         expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
     });
 
+    it('DELETEs @original with a bare call after a deferred reply', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.defer();
+
+        await sender.delete();
+
+        expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
+    });
+
     it('DELETEs @original with a bare call after a deferred update', async () => {
         const rest = restMock();
         const sender = senderFor(rest);

@@ -53,7 +53,7 @@ function gotPhrase(given: unknown): string {
     }
     if (Array.isArray(given)) return given.length === 0 ? 'an empty list' : `${given.length} items`;
     if (typeof given === 'number' || typeof given === 'bigint' || typeof given === 'boolean') return String(given);
-    // a null-prototype value has no constructor
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- a null-prototype value has no constructor at runtime
     if (typeof given === 'object') return given.constructor?.name ?? 'an object';
     return typeof given;
 }

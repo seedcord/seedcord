@@ -227,4 +227,28 @@ describe('base member delegation', () => {
         await new Ack(mock as unknown as Button, core).execute();
         expect(mock.deferUpdate).toHaveBeenCalledOnce();
     });
+
+    it('routes the bare delete through the sender to deleteReply', async () => {
+        class Remove extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await this.delete();
+            }
+        }
+        const mock = mockInteraction({ ...commandFlags, replied: true });
+        await new Remove(mock as unknown as Slash, core).execute();
+        expect(mock.deleteReply).toHaveBeenCalledWith();
+    });
+
+    it('routes the targeted delete through the sender to deleteReply with the target id', async () => {
+        class Remove extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                const sent = await this.followUp('confirm?');
+                await this.delete(sent);
+            }
+        }
+        const mock = mockInteraction({ ...commandFlags, replied: true });
+        mock.followUp.mockResolvedValueOnce({ id: 'earlier-1' });
+        await new Remove(mock as unknown as Slash, core).execute();
+        expect(mock.deleteReply).toHaveBeenCalledWith('earlier-1');
+    });
 });

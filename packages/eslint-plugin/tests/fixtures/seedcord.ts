@@ -63,8 +63,7 @@ export abstract class RowComponent<Key extends RowType> {
     }
 }
 
-// no-raw-interaction-acks reads this.event's djs type, so the stubs type event as the matching interaction.
-// detection never reads the reply members (this.reply and kin), so the stubs omit them.
+// the rule reads this.event's djs type, so event carries the matching interaction
 
 type Repliable =
     | ChatInputCommandInteraction
