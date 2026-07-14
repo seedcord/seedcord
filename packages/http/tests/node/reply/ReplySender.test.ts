@@ -1,5 +1,6 @@
 /* eslint-disable max-lines -- one suite per sender, splitting fragments the shared rest mock and body fixtures */
 import { TextDisplayBuilder } from '@discordjs/builders';
+import { AckTrace } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
@@ -160,8 +161,8 @@ describe('ReplySender.reply', () => {
             (error: unknown) => error
         );
         if (!isSeedcordError(caught)) throw caught;
-        expect(caught.cause).toBeInstanceOf(Error);
-        expect((caught.cause as Error).message).toContain('reply() acknowledged this interaction');
+        expect(caught.cause).toBeInstanceOf(AckTrace);
+        expect((caught.cause as AckTrace).message).toContain('reply() acknowledged this interaction');
     });
 });
 

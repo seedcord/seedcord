@@ -42,5 +42,7 @@ export { PAGE_MAX, pageCursor, type PageCursor } from '@pagination/cursor';
 
 export { deferFlags, sendFlags } from '@reply/flags';
 export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '@reply/ackLegality';
+export { AckTrace } from '@reply/AckTrace';
+export { BaseReplySender, type ModalLike } from '@reply/BaseReplySender';
 export { translateSerializationError } from '@reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '@reply/serializeReply';

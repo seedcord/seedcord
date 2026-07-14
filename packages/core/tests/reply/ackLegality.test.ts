@@ -2,6 +2,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { checkAckLegality, sendTarget } from '@reply/ackLegality';
+import { AckTrace } from '@reply/AckTrace';
 
 import { stripAnsi } from './helpers';
 
@@ -97,7 +98,7 @@ describe('checkAckLegality', () => {
     });
 
     it('sets the passed ackedBy error as the throw cause', () => {
-        const ackedBy = new Error('reply() acknowledged this interaction');
+        const ackedBy = new AckTrace('reply');
         try {
             checkAckLegality('reply', 'replied', ROUTE, ackedBy);
             expect.unreachable('reply in replied should throw');

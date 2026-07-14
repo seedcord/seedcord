@@ -1,6 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import type { AckTrace } from './AckTrace';
+
 export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
 export type ReplyMethod = 'reply' | 'defer' | 'deferUpdate' | 'update' | 'followUp' | 'edit' | 'send' | 'showModal';
@@ -86,7 +88,7 @@ const SEND_TARGET: Record<AckState, 'reply' | 'edit' | 'followUp'> = {
 };
 
 /** Throws before any API call. `ackedBy` becomes the throw cause, its stack points at the first ack. */
-export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: Error): void {
+export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: AckTrace): void {
     if (method === 'send') return;
     const illegal = ILLEGAL[method][state];
     if (!illegal) return;
