@@ -8,7 +8,7 @@ import type { Repliables } from '@handlers/BaseHandler';
  *
  * @internal
  */
-export class UnhandledEvent extends InteractionHandler<Repliables> {
+export class UnhandledRepliable extends InteractionHandler<Repliables> {
     async execute(): Promise<void> {
         await this.reply('Feature not implemented yet.');
     }

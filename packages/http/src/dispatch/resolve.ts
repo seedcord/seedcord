@@ -2,7 +2,7 @@ import { prefixOf, type InteractionRoutes } from '@seedcord/core/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
 import { UnhandledAutocomplete } from '@handlers/defaults/UnhandledAutocomplete';
-import { UnhandledEvent } from '@handlers/defaults/UnhandledEvent';
+import { UnhandledRepliable } from '@handlers/defaults/UnhandledRepliable';
 
 import { slashRouteOf } from './slashRouteOf';
 
@@ -126,7 +126,7 @@ function unhandled(kind: ResolvedKind): ResolvedRoute {
     return {
         kind,
         routeId: null,
-        load: () => Promise.resolve(kind === 'autocomplete' ? { UnhandledAutocomplete } : { UnhandledEvent })
+        load: () => Promise.resolve(kind === 'autocomplete' ? { UnhandledAutocomplete } : { UnhandledRepliable })
     };
 }
 
