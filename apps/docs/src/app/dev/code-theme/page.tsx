@@ -14,7 +14,7 @@ const SNIPPETS: { title: string; code: string }[] = [
 export class SearchHandler extends SlashHandler<'library/search'> {
     public async execute(): Promise<void> {
         const query = this.options.getString('query');
-        await this.event.reply(\`Searching for \${query}\`);
+        await this.reply(\`Searching for \${query}\`);
     }
 }`
     },

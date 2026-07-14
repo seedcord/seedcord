@@ -1,6 +1,6 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { ContextMenuHandler, ContextMenuRoute, Cooldown, Gated, Notice } from '@seedcord/gateway';
-import { ApplicationCommandType, MessageFlags } from 'discord.js';
+import { ApplicationCommandType } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/gateway';
 
@@ -23,9 +23,6 @@ export class ViewProfile extends ContextMenuHandler<ApplicationCommandType.User>
     public async execute(): Promise<void> {
         const user = this.target;
 
-        await this.event.reply({
-            content: `Profile for ${user.tag} (joined Discord <t:${Math.floor(user.createdTimestamp / 1000)}:R>).`,
-            flags: MessageFlags.Ephemeral
-        });
+        await this.reply(`Profile for ${user.tag} (joined Discord <t:${Math.floor(user.createdTimestamp / 1000)}:R>).`);
     }
 }

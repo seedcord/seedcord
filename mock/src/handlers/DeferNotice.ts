@@ -1,6 +1,5 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { Notice, SlashHandler, SlashRoute } from '@seedcord/gateway';
-import { MessageFlags } from 'discord.js';
 
 import type { ReplyResponse } from '@seedcord/gateway';
 
@@ -14,7 +13,7 @@ class ProbeNotice extends Notice {
         return {
             components: [
                 new TextDisplayBuilder().setContent(
-                    'I am a Notice thrown after deferReply(). Watch whether the thinking message turns into this, or a new message appears and the thinking one is removed.'
+                    'I am a Notice thrown after defer(). Watch whether the thinking message turns into this, or a new message appears and the thinking one is removed.'
                 )
             ]
         };
@@ -24,8 +23,7 @@ class ProbeNotice extends Notice {
 @SlashRoute('defernotice')
 export class DeferNoticeProbe extends SlashHandler<'defernotice'> {
     public async execute(): Promise<void> {
-        await this.event.deferReply({ flags: MessageFlags.Ephemeral });
-        // await Promise.resolve();
+        await this.defer();
         throw new ProbeNotice();
     }
 }
