@@ -8,7 +8,8 @@ import type { CacheType, ModalSubmitInteraction } from 'discord.js';
  *
  * Register the customId definitions this handler decodes with `@ModalRoute`, list the same ones in the
  * generic, then read `this.params` for a single route or `this.match` for several. Read the submitted
- * inputs from `this.event.fields`.
+ * inputs from `this.event.fields`, and reply through the handler members. Discord forbids opening a modal in
+ * response to a modal, so `showModal` fails compilation on this kind.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
  * @typeParam Cache - The interaction cache state, `'cached'` by default.
@@ -20,7 +21,7 @@ import type { CacheType, ModalSubmitInteraction } from 'discord.js';
  *     async execute() {
  *         const { guildId } = this.params;
  *         const name = this.event.fields.getTextInputValue('name');
- *         await this.event.reply(`saved ${name} for ${guildId}`);
+ *         await this.reply(`saved ${name} for ${guildId}`);
  *     }
  * }
  * ```

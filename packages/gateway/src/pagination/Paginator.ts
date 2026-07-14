@@ -78,10 +78,10 @@ export class Paginator<Item, const Prefix extends string> {
         const loadPage = (ctx: PageContext, n: number): Promise<ReplyResponse> => this.page(ctx, n);
         this.Handler = class Nav extends ButtonHandler<[PageCursor<Prefix>]> {
             async execute(): Promise<void> {
-                await this.event.deferUpdate();
+                await this.deferUpdate();
                 const response = await loadPage(contextOf(this.event, this.core), this.params.page);
-                // the raw deferUpdate seeds the sender deferred-update, so a bare edit rewrites @original (the source)
-                await new ReplySender(this.event, interactionRoute(this.event)).edit(response);
+                // deferUpdate seeds the sender deferred-update, so update PATCHes @original (the source message)
+                await this.update(response);
             }
         };
     }

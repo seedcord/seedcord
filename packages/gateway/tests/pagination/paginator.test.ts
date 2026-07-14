@@ -68,7 +68,7 @@ function startEvent() {
     };
 }
 
-// after deferUpdate djs marks the interaction deferred with ephemeral null, so the sender seeds deferred-update
+// the handler's sender is built from the virgin component flags, so this.deferUpdate() seeds deferred-update
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function navEvent(customId: string) {
     return {
@@ -79,7 +79,7 @@ function navEvent(customId: string) {
         webhook: { editMessage: vi.fn().mockResolvedValue(undefined) },
         user: { id: 'u1' },
         guild: null,
-        deferred: true,
+        deferred: false,
         replied: false,
         ephemeral: null as boolean | null,
         isChatInputCommand: () => false,

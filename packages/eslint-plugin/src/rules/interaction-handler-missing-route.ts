@@ -34,7 +34,7 @@ export default createRule({
         },
         messages: {
             missingRoute:
-                'This {{base}} has no @{{decorator}} decorator, so it never registers and its interactions fall through to UnhandledEvent.'
+                'This {{base}} has no @{{decorator}} decorator, so it never registers and its interactions fall through to the unhandled default.'
         },
         schema: []
     },

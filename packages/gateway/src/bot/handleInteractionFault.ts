@@ -8,7 +8,7 @@ import { extractErrorResponse, interactionRoute } from '@miscellaneous/extractEr
 
 import { HARMLESS_API_CODES } from './harmlessApiCodes';
 
-import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
+import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';
 
@@ -16,15 +16,16 @@ const logger = new Logger('InteractionBoundary');
 
 /**
  * The interaction controller boundary. Sorts a throw from any handler-lifecycle phase into the right
- * user reply plus the right bus event, building a {@link ReplySender} lazily so it reads the live
- * acknowledgement state at catch time.
+ * user reply plus the right bus event. The handler's live {@link ReplySender} replies through its exact ack
+ * state, and a middleware or pre-construction throw falls back to a fresh seeded sender.
  *
  * @internal
  */
 export async function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
-    core: Core
+    core: Core,
+    sender?: ReplySender
 ): Promise<void> {
     if (caught instanceof Silence) {
         if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
@@ -56,12 +57,12 @@ export async function handleInteractionFault(
         user: interaction.user,
         metadata: interaction
     });
-    await sendGuarded(interaction, response, caught instanceof Notice ? caught.ephemeral : true);
+    const liveSender = sender ?? new ReplySender(interaction, interactionRoute(interaction));
+    await sendGuarded(liveSender, response, caught instanceof Notice ? caught.ephemeral : true);
 }
 
 // the boundary's own send drops the harmless reply-token codes so a dead token never escapes it
-async function sendGuarded(interaction: Repliables, response: ReplyResponse, ephemeral: boolean): Promise<void> {
-    const sender = new ReplySender(interaction, interactionRoute(interaction));
+async function sendGuarded(sender: ReplySender, response: ReplyResponse, ephemeral: boolean): Promise<void> {
     try {
         await sender.send(response, { ephemeral });
     } catch (error) {

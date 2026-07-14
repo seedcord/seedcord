@@ -138,6 +138,11 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
         return await arm(value, respond);
     }
 
+    /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which pins each field's choice type. */
+    protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
+        await this.event.respond(choices);
+    }
+
     /** The firing command route, for a field whose completion differs per registered command. */
     protected get route(): Route {
         return slashRouteOf(this.event) as Route;

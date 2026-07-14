@@ -28,6 +28,7 @@ interface PrivateInteractionDispatcher {
         getHandler: (key: string) => unknown
     ): Promise<void>;
     handleButton(interaction: unknown): Promise<void>;
+    handleAutocomplete(interaction: unknown): Promise<void>;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
@@ -51,6 +52,26 @@ function fakeSlash(commandName: string) {
         id: 'i1',
         deferred: false,
         replied: false
+    };
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
+function fakeAutocomplete(commandName: string) {
+    return {
+        respond: vi.fn().mockResolvedValue(undefined),
+        isAutocomplete: () => true,
+        isChatInputCommand: () => false,
+        isContextMenuCommand: () => false,
+        isButton: () => false,
+        isAnySelectMenu: () => false,
+        isModalSubmit: () => false,
+        commandName,
+        options: { getSubcommand: () => null, getSubcommandGroup: () => null },
+        user: { id: 'u1' },
+        guild: null,
+        guildId: 'g1',
+        channelId: 'c1',
+        id: 'i1'
     };
 }
 
@@ -268,6 +289,19 @@ describe('InteractionDispatcher Integration', () => {
         );
 
         expect(interaction.reply).toHaveBeenCalledTimes(1);
+    });
+
+    it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async () => {
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeAutocomplete('unregistered');
+        await controller.handleAutocomplete(interaction);
+
+        expect(interaction.respond).toHaveBeenCalledWith([]);
     });
 
     it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {

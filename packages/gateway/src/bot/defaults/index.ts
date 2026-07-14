@@ -1,1 +1,2 @@
-export * from './UnhandledEvent';
+export * from './UnhandledRepliable';
+export * from './UnhandledAutocomplete';

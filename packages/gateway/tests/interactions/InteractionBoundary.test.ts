@@ -3,12 +3,13 @@ import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleInteractionFault } from '@bot/handleInteractionFault';
+import { ReplySender } from '@bot/ReplySender';
 import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
 import { harmlessError } from '../utils/harmlessError';
 import { TestNotice } from '../utils/TestNotice';
 
-import type { ValidInteractionTypes } from '@handlers/BaseHandler';
+import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
@@ -223,6 +224,28 @@ describe('handleInteractionFault', () => {
             await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(lookup), core);
 
             expect(publish).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe('live sender', () => {
+        it('sends the fault card through the passed sender, following up after the handler already acked', async () => {
+            // pre-reply puts the live sender in the replied state, so the fault card follows up
+            const sender = new ReplySender(mock as unknown as Repliables, 'slash:boom');
+            await sender.reply('done');
+            mock.reply.mockClear();
+
+            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish), sender);
+
+            expect(mock.followUp).toHaveBeenCalledTimes(1);
+            expect(mock.reply).not.toHaveBeenCalled();
+        });
+
+        it('builds a fresh seeded sender when none is passed, replying on the virgin interaction', async () => {
+            // a middleware or pre-construction throw carries no handler, so the boundary seeds its own sender
+            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+
+            expect(mock.reply).toHaveBeenCalledTimes(1);
+            expect(mock.followUp).not.toHaveBeenCalled();
         });
     });
 });

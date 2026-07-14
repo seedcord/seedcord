@@ -6,7 +6,9 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
+import type { SentMessage } from '@bot/ReplySender';
 import type { AnyCustomId, DecodedParams, HasComponentDefs } from '@seedcord/core/internal';
+import type { ReplyResponse } from '@seedcord/types';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
@@ -40,6 +42,16 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     // different defs to the decorator and the generic fails to compile.
     /** @internal */
     declare readonly __componentDefs?: Defs;
+
+    /** Rewrite the source message the clicked component is attached to. */
+    protected update(response: ReplyResponse | string): Promise<SentMessage> {
+        return this.sender.update(response);
+    }
+
+    /** Silently acknowledge the component, leaving the source message untouched. */
+    protected deferUpdate(): Promise<void> {
+        return this.sender.deferUpdate();
+    }
 
     // the definitions the route decorator stored, read off the concrete handler class.
     private get registeredDefs(): readonly AnyCustomId[] {
@@ -91,8 +103,8 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * class ReviewButtons extends ButtonHandler<[typeof Approve, typeof Reject]> {
      *     async execute() {
      *         await this.match({
-     *             approve: ({ userId }) => this.event.reply(`approved <@${userId}>`),
-     *             reject: ({ userId }) => this.event.reply(`rejected <@${userId}>`)
+     *             approve: ({ userId }) => this.reply(`approved <@${userId}>`),
+     *             reject: ({ userId }) => this.reply(`rejected <@${userId}>`)
      *         });
      *     }
      * }

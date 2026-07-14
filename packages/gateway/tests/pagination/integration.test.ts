@@ -24,7 +24,7 @@ interface TestBot {
     };
 }
 
-// after deferUpdate djs marks the interaction deferred with ephemeral null, so the sender seeds deferred-update
+// the handler's sender is built from the virgin component flags, so this.deferUpdate() seeds deferred-update
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function fakeButton(customId: string) {
     return {
@@ -46,7 +46,7 @@ function fakeButton(customId: string) {
         guildId: 'g1',
         channelId: 'c1',
         id: 'i1',
-        deferred: true,
+        deferred: false,
         replied: false,
         ephemeral: null as boolean | null
     };
