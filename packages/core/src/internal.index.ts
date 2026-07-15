@@ -38,6 +38,10 @@ export { prefixOf, decodeFor, type AnyCustomId } from '@customId/CustomId';
 export { ComponentDefsKey, type HasComponentDefs } from '@customId/routing';
 export type { DecodedParams } from '@customId/Field';
 
+export type { OptionLens } from '@inputs/OptionLens';
+export type { SlashOptions } from '@inputs/SlashOptions';
+export type { AutocompleteOptions } from '@inputs/AutocompleteOptions';
+
 export { PAGE_MAX, pageCursor, type PageCursor } from '@pagination/cursor';
 
 export { deferFlags, sendFlags } from '@reply/flags';
