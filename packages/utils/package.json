@@ -67,7 +67,8 @@
     },
     "dependencies": {
         "@seedcord/types": "workspace:*",
-        "discord-api-types": "catalog:deps"
+        "discord-api-types": "catalog:deps",
+        "strip-ansi": "^7.2.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

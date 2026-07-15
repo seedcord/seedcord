@@ -1,5 +1,5 @@
 import { BuilderComponent } from '@seedcord/core';
-import { filterCirculars } from '@seedcord/utils';
+import { filterCirculars, stripAnsi } from '@seedcord/utils';
 import { SeparatorSpacingSize } from 'discord-api-types/v10';
 
 import type { WebhookFile } from './WebhookSender';
@@ -15,6 +15,18 @@ export function isDiscordWebhookUrl(value: string): boolean {
 export function jsonAttachment(name: string, description: string, data: unknown): WebhookFile {
     const content = filterCirculars(data);
     return { name, description, data: Buffer.from(JSON.stringify(content, undefined, 2), 'utf8') };
+}
+
+/** An error's stack with its direct cause appended (one level), ANSI-stripped for the webhook payload. */
+export function errorReport(error: Error): string {
+    let report = error.stack ?? `${error.name}: ${error.message}`;
+    if (Error.isError(error.cause)) {
+        const cause = error.cause.stack ?? `${error.cause.name}: ${error.cause.message}`;
+        report += `\n\nCaused by:\n${cause}`;
+    }
+    const stripped = stripAnsi(report);
+    // eslint-disable-next-line no-magic-numbers
+    return stripped.length > 1800 ? `${stripped.slice(0, 1799)}…` : stripped;
 }
 
 export class WebhookSeparator extends BuilderComponent<'separator'> {

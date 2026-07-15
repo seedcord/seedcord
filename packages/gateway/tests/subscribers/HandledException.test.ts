@@ -3,6 +3,7 @@ import '../utils/mock-env';
 import { randomUUID } from 'node:crypto';
 
 import { Notice } from '@seedcord/core';
+import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { HandledException } from '@subscribers/default/HandledException';
@@ -10,6 +11,7 @@ import { HandledException } from '@subscribers/default/HandledException';
 import type { Core } from '@interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';
 import type { EventFaultSource, FaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
+import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 
 class TestFault extends Notice {
     constructor(message = 'boom', cause?: unknown) {
@@ -50,6 +52,16 @@ function reportText(denial: Notice, source: FaultSource): string {
     return JSON.stringify(report.components.map((component) => component.toJSON()));
 }
 
+// the raw text-display strings, so an assertion sees the real webhook content before JSON escaping
+function rawText(denial: Notice, source: FaultSource): string {
+    const report = new HandledException({ denial, uuid: randomUUID(), source }, core).report();
+    const container = report.components[0]?.toJSON() as APIContainerComponent;
+    return container.components
+        .filter((child: APIComponentInContainer) => child.type === ComponentType.TextDisplay)
+        .map((child) => child.content)
+        .join('\n');
+}
+
 describe('HandledException.report', () => {
     it('renders the command and customId for an interaction source', () => {
         const text = reportText(new TestFault(), interactionSource);
@@ -83,5 +95,12 @@ describe('HandledException.report', () => {
         const circular: Record<string, unknown> = {};
         circular.self = circular;
         expect(() => reportText(new TestFault('x', circular), interactionSource)).not.toThrow();
+    });
+
+    it('strips ANSI escapes from the denial name, message, and cause stack', () => {
+        const ESC = String.fromCharCode(27);
+        const fault = new TestFault(`${ESC}[1mboom${ESC}[22m`, new Error(`${ESC}[31mdriver down${ESC}[39m`));
+        fault.name = `${ESC}[31mSeedcordError${ESC}[39m`;
+        expect(rawText(fault, interactionSource)).not.toContain(ESC);
     });
 });

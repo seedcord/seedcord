@@ -176,6 +176,14 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('first boom');
             expect(output[0]).toContain('second boom');
         });
+
+        it('renders the direct cause once after the main stack', () => {
+            const { logger, output } = createTestLogger(formatter);
+            const error = new Error('illegal ack', { cause: new Error('reply() acknowledged this interaction') });
+            logger.error('boundary caught', error);
+            expect(output[0]).toContain('reply() acknowledged this interaction');
+            expect((output[0]?.match(/reply\(\) acknowledged this interaction/gu) ?? []).length).toBe(1);
+        });
     });
 
     describe('level coloring', () => {

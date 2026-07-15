@@ -2,7 +2,7 @@ import { DiscordAPIError } from '@discordjs/rest';
 import { BuilderComponent } from '@seedcord/core';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
-import { jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
+import { errorReport, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
 import { WebhookUrl } from '../decorators/WebhookUrl';
@@ -50,7 +50,9 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
                 )
             )
             .addSeparatorComponents(new WebhookSeparator().component)
-            .addTextDisplayComponents((text) => text.setContent(`### UUID \`${uuid}\`\n\`\`\`${error.stack}\`\`\``));
+            .addTextDisplayComponents((text) =>
+                text.setContent(`### UUID \`${uuid}\`\n\`\`\`${errorReport(error)}\`\`\``)
+            );
 
         this.addTimestampsIfAvailable(error);
         this.addMetadataIfAvailable(metadata);

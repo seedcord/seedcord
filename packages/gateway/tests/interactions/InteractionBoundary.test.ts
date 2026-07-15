@@ -64,7 +64,7 @@ describe('handleInteractionFault', () => {
         faultThrottle.clear();
     });
 
-    it('replies the generic and publishes unknownException for a raw error on a virgin interaction', async () => {
+    it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {
         await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
 
         expect(mock.reply).toHaveBeenCalledTimes(1);
@@ -240,7 +240,7 @@ describe('handleInteractionFault', () => {
             expect(mock.reply).not.toHaveBeenCalled();
         });
 
-        it('builds a fresh seeded sender when none is passed, replying on the unacked interaction', async () => {
+        it('builds its own sender from the interaction when none is passed, replying on the unacked interaction', async () => {
             // a middleware or pre-construction throw carries no handler, so the boundary builds its own sender from the interaction
             await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
 

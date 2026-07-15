@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { CustomId } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
@@ -35,9 +36,9 @@ interface PrivateInteractionDispatcher {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
 function fakeSlash(commandName: string) {
     return {
-        reply: vi.fn().mockResolvedValue(undefined),
+        reply: vi.fn().mockResolvedValue({ resource: { message: { id: 'fault-msg' } } }),
         deferReply: vi.fn().mockResolvedValue(undefined),
-        editReply: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue({ id: 'fault-msg' }),
         followUp: vi.fn().mockResolvedValue(undefined),
         isAutocomplete: () => false,
         isChatInputCommand: () => true,
@@ -53,7 +54,8 @@ function fakeSlash(commandName: string) {
         channelId: 'c1',
         id: 'i1',
         deferred: false,
-        replied: false
+        replied: false,
+        ephemeral: null as boolean | null
     };
 }
 
@@ -284,6 +286,7 @@ describe('InteractionDispatcher Integration', () => {
         await controller.init();
 
         const interaction = fakeSlash('boom');
+        const boundaryError = vi.spyOn(Logger.prototype, 'error');
         await controller.processInteraction(
             interaction,
             () => 'boom',
@@ -291,6 +294,7 @@ describe('InteractionDispatcher Integration', () => {
         );
 
         expect(interaction.reply).toHaveBeenCalledTimes(1);
+        expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
     });
 
     it("passes the handler's live sender to the boundary, so a defer-then-throw follows up through its ack state", async () => {
@@ -317,6 +321,7 @@ describe('InteractionDispatcher Integration', () => {
         await controller.init();
 
         const interaction = fakeSlash('deferboom');
+        const boundaryError = vi.spyOn(Logger.prototype, 'error');
         await controller.processInteraction(
             interaction,
             () => 'deferboom',
@@ -327,6 +332,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.deferReply).toHaveBeenCalledTimes(1);
         expect(interaction.editReply).toHaveBeenCalledTimes(1);
         expect(interaction.reply).not.toHaveBeenCalled();
+        expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
     });
 
     it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async () => {

@@ -28,7 +28,7 @@ function replyOptions(mock: ReturnType<typeof mockInteraction>): SentReplyOption
 }
 
 describe('ReplySender state seeding', () => {
-    it('seeds unacked from a virgin interaction, so reply is legal', async () => {
+    it('seeds unacked from an unacked interaction, so reply is legal', async () => {
         const mock = mockInteraction();
         await senderFor(mock).reply(reply);
         expect(mock.reply).toHaveBeenCalledOnce();
@@ -282,6 +282,16 @@ describe('ReplySender.followUp', () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
         await sender.deferUpdate();
+
+        await sender.followUp(reply);
+
+        expect(mock.followUp).toHaveBeenCalledOnce();
+    });
+
+    it('reaches the webhook after a defer', async () => {
+        const mock = mockInteraction();
+        const sender = senderFor(mock);
+        await sender.defer();
 
         await sender.followUp(reply);
 

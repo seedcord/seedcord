@@ -1,5 +1,4 @@
-import { filterCirculars } from '@seedcord/utils';
-import stripAnsi from 'strip-ansi';
+import { filterCirculars, stripAnsi } from '@seedcord/utils';
 
 import type { ILogSink, LogLevel, LogRecord } from './types';
 
@@ -44,11 +43,13 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !Error.isError(value);
 }
 
-function errorShape(error: Error): Record<string, unknown> {
+function errorShape(error: Error, withCause = true): Record<string, unknown> {
     return {
         name: stripAnsi(error.name),
         message: stripAnsi(error.message),
-        ...(error.stack !== undefined && { stack: stripAnsi(error.stack) })
+        ...(error.stack !== undefined && { stack: stripAnsi(error.stack) }),
+        // one level, so a deeper chain never recurses without bound
+        ...(withCause && Error.isError(error.cause) && { cause: errorShape(error.cause, false) })
     };
 }
 

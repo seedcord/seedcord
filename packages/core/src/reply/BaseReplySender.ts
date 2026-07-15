@@ -17,7 +17,7 @@ export interface ModalLike {
 }
 
 /**
- * Manages acknowledgement state to ensure illegal verbs throw a translated `SeedcordError` before any
+ * Tracks acknowledgement state and throws a translated `SeedcordError` on an illegal verb before any
  * transport call. Verbs execute the legality check, control the transport wire writer, then update the
  * state and ack trace. Each transport binds `TMessage` to its created-message lens and supplies the
  * writers.
@@ -102,7 +102,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
             throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['delete', target.id, this.routeId]);
         }
         await this.writeDeleteTarget(target.id);
-        // a deleted message can no longer be edited
+        // evict so a later targeted edit of this id throws foreign
         this.sent.delete(target.id);
     }
 

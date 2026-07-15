@@ -13,7 +13,7 @@ import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
  *
  * Not a public entry point. Extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
  * {@link SelectMenuHandler}, or {@link ContextMenuHandler} instead. This class defines the reply members
- * those bases share.
+ * those bases share, so DO NOT use it directly.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */
@@ -59,7 +59,7 @@ export abstract class RepliableHandler<Event extends Repliables> extends BaseHan
         return this.sender.edit(targetOrResponse as SentMessage, maybeResponse);
     }
 
-    /** Make the user see this regardless of the current ack state. */
+    /** Make the user see this regardless of the current ack state. Routes to reply, followUp, or edit automatically. */
     protected send(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
         return this.sender.send(response, opts);
     }

@@ -15,12 +15,12 @@ import type { APIMessageComponentInteraction, APIModalSubmitInteraction } from '
 export abstract class ComponentHandler<
     Event extends APIMessageComponentInteraction | APIModalSubmitInteraction
 > extends InteractionHandler<Event> {
-    /** Rewrite the source message the clicked component is attached to. */
+    /** Rewrite the source message this component interaction came from. */
     protected update(response: ReplyResponse | string): Promise<SentMessage> {
         return this.sender.update(response);
     }
 
-    /** Silently acknowledge the component, leaving the source message untouched. */
+    /** Acknowledge the component without changing the source message. */
     protected deferUpdate(): Promise<void> {
         return this.sender.deferUpdate();
     }
