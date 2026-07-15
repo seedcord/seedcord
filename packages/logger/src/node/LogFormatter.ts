@@ -7,6 +7,7 @@ import { LEVEL_COLOR, paint } from '../palette';
 import type { Logform } from 'winston';
 
 const DEFAULT_PADDING = 5;
+const CAUSE_DEPTH_CAP = 4;
 const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
 const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
@@ -55,13 +56,19 @@ export class LogFormatter {
         return Array.isArray(raw) ? raw : [];
     }
 
-    // one level, an Error stack already carries its own name and message
+    // an Error stack already carries its own name and message
     private causeBlock(error: Error, strip: boolean): string {
-        const { cause } = error;
-        if (!Error.isError(cause)) return '';
-        const body = typeof cause.stack === 'string' ? cause.stack : `${cause.name}: ${cause.message}`;
         const heading = strip ? 'Caused by:' : paint.mute('Caused by:');
-        return `\n${heading}\n${strip ? stripAnsi(body) : body}`;
+        const seen = new Set<Error>([error]);
+        let blocks = '';
+        let cause = error.cause;
+        for (let depth = 0; depth < CAUSE_DEPTH_CAP && Error.isError(cause) && !seen.has(cause); depth++) {
+            seen.add(cause);
+            const body = typeof cause.stack === 'string' ? cause.stack : `${cause.name}: ${cause.message}`;
+            blocks += `\n${heading}\n${strip ? stripAnsi(body) : body}`;
+            cause = cause.cause;
+        }
+        return blocks;
     }
 
     private markFormatSpecifiers(): Logform.Format {

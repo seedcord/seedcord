@@ -140,6 +140,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which pins each field's choice type. */
     protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base member the rule points subclasses to
         await this.event.respond(choices);
     }
 

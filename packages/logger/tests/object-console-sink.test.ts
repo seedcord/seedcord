@@ -73,9 +73,9 @@ describe('ObjectConsoleSink', () => {
         const cap = capture('error');
         const err = new Error('illegal ack', { cause: new Error('reply() acknowledged this interaction') });
         new ObjectConsoleSink().onLog(record({ level: 'error', message: 'boundary caught', args: [err] }));
-        const error = cap.payload().error as Record<string, unknown>;
-        const cause = error.cause as Record<string, unknown>;
-        expect(cause.message).toBe('reply() acknowledged this interaction');
+        expect(cap.payload()).toMatchObject({
+            error: { cause: { message: 'reply() acknowledged this interaction' } }
+        });
     });
 
     it('keeps leftover primitives in an args field', () => {

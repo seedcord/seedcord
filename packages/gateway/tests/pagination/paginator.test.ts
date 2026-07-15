@@ -19,6 +19,7 @@ import type { Core } from '@interfaces/Core';
 import type { PageContext } from '@pagination/PageContext';
 import type { APIContainerComponent, ButtonInteraction } from 'discord.js';
 
+// justified: the paginator reads only the interaction, the rest of Core is unused here.
 const core = {} as unknown as Core;
 const letters = ['a', 'b', 'c', 'd', 'e'];
 
@@ -92,6 +93,14 @@ function navEvent(customId: string) {
     };
 }
 
+// justified: each fixture implements only the interaction surface the paginator reads
+function asRepliable(event: ReturnType<typeof startEvent>): Repliables {
+    return event as unknown as Repliables;
+}
+function asButton(event: ReturnType<typeof navEvent>): ButtonInteraction<'cached'> {
+    return event as unknown as ButtonInteraction<'cached'>;
+}
+
 function containerText(components: { toJSON(): unknown }[]): string {
     const json = components[0]?.toJSON() as APIContainerComponent;
     return json.components.reduce<string>(
@@ -114,7 +123,7 @@ describe('Paginator.start', () => {
 
     it('renders page 0 and sends it with the components-v2 flag', async () => {
         const event = startEvent();
-        await pager.start(event as unknown as Repliables);
+        await pager.start(asRepliable(event));
 
         expect(event.reply).toHaveBeenCalledOnce();
         const options = event.reply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
@@ -128,7 +137,7 @@ describe('Paginator.start', () => {
         const event = startEvent();
         event.reply.mockRejectedValue(failure);
 
-        await expect(pager.start(event as unknown as Repliables)).rejects.toBe(failure);
+        await expect(pager.start(asRepliable(event))).rejects.toBe(failure);
     });
 
     it('honors an ephemeral paginator', async () => {
@@ -139,7 +148,7 @@ describe('Paginator.start', () => {
             ephemeral: true
         });
         const event = startEvent();
-        await ephemeral.start(event as unknown as Repliables);
+        await ephemeral.start(asRepliable(event));
         const options = event.reply.mock.calls[0]?.[0] as { flags: number };
         expect(options.flags & MessageFlags.Ephemeral).toBeTruthy();
     });
@@ -147,6 +156,7 @@ describe('Paginator.start', () => {
 
 describe('Paginator.page', () => {
     it('renders the requested page as a ReplyResponse', async () => {
+        // justified: page() reads no field off the context, only forwards it to the source loader
         const ctx = { interaction: {}, user: {}, guild: null } as unknown as PageContext;
         const reply = await pager.page(ctx, 1);
         expect(containerText(reply.components)).toBe('c\nd');
@@ -158,7 +168,7 @@ describe('Paginator nav handler', () => {
 
     it('acks, decodes the target page off the wire, and edits @original in place', async () => {
         const event = navEvent(pager.cursor.encode({ page: 2, slot: 0 }));
-        await new BansNav(event as unknown as ButtonInteraction<'cached'>, core).execute();
+        await new BansNav(asButton(event), core).execute();
 
         expect(event.deferUpdate).toHaveBeenCalledOnce();
         // the bare edit rewrites @original (the source message) via editReply in the deferred-update state
@@ -185,7 +195,7 @@ describe('Paginator context', () => {
     it('threads the interaction user and guild (DM null) into the PageContext it builds', async () => {
         seenContexts.length = 0;
         const event = navEvent(Reminders.cursor.encode({ page: 0, slot: 0 }));
-        await new RemindersNav(event as unknown as ButtonInteraction<'cached'>, core).execute();
+        await new RemindersNav(asButton(event), core).execute();
 
         const ctx = seenContexts[0];
         expect(ctx?.interaction).toBe(event);

@@ -55,6 +55,7 @@ function reportText(denial: Notice, source: FaultSource): string {
 // the raw text-display strings, so an assertion sees the real webhook content before JSON escaping
 function rawText(denial: Notice, source: FaultSource): string {
     const report = new HandledException({ denial, uuid: randomUUID(), source }, core).report();
+    // justified: report() emits a single container component, its json shape is APIContainerComponent
     const container = report.components[0]?.toJSON() as APIContainerComponent;
     return container.components
         .filter((child: APIComponentInContainer) => child.type === ComponentType.TextDisplay)
@@ -102,5 +103,12 @@ describe('HandledException.report', () => {
         const fault = new TestFault(`${ESC}[1mboom${ESC}[22m`, new Error(`${ESC}[31mdriver down${ESC}[39m`));
         fault.name = `${ESC}[31mSeedcordError${ESC}[39m`;
         expect(rawText(fault, interactionSource)).not.toContain(ESC);
+    });
+
+    it('neutralizes a triple-backtick fence in the cause so the report code block keeps its two delimiters', () => {
+        const cause = new Error('boom');
+        cause.stack = 'Error: boom ``` still open ``` end';
+        const fences = rawText(new TestFault('x', cause), interactionSource).match(/```/gu) ?? [];
+        expect(fences).toHaveLength(2);
     });
 });

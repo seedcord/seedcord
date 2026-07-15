@@ -33,21 +33,22 @@ ruleTester.run('no-raw-interaction-acks', rule, {
                 }
             }
         `,
-        // respond on an autocomplete handler is its only valid path
+        // respond through the base-class member is the autocomplete path
         dedent`
             import { AutocompleteHandler } from 'seedcord';
             export class Search extends AutocompleteHandler<'search'> {
                 async execute() {
-                    await this.event.respond([]);
+                    await this.respond([]);
                 }
             }
         `,
-        // an autocomplete handler extends BaseHandler directly, so a banned ack method there is out of scope
+        // reading a non-ack property off the autocomplete interaction is untouched
         dedent`
             import { AutocompleteHandler } from 'seedcord';
             export class Search extends AutocompleteHandler<'search'> {
                 async execute() {
-                    await this.event.deferReply();
+                    const name = this.event.commandName;
+                    await this.respond([{ name, value: name }]);
                 }
             }
         `,
@@ -197,6 +198,17 @@ ruleTester.run('no-raw-interaction-acks', rule, {
                 }
             `,
             errors: [{ messageId: 'replyMember' }]
+        },
+        {
+            code: dedent`
+                import { AutocompleteHandler } from 'seedcord';
+                export class Search extends AutocompleteHandler<'search'> {
+                    async execute() {
+                        await this.event.respond([]);
+                    }
+                }
+            `,
+            errors: [{ messageId: 'respondMember' }]
         },
         {
             code: dedent`

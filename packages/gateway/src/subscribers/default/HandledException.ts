@@ -1,7 +1,7 @@
 import { BuilderComponent } from '@seedcord/core';
 import { stripAnsi } from '@seedcord/utils';
 
-import { jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
+import { jsonAttachment, neutralizeFences, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
 import { WebhookUrl } from '../decorators/WebhookUrl';
@@ -40,7 +40,7 @@ class HandledExceptionContainer extends BuilderComponent<'container'> {
             .addTextDisplayComponents((text) => text.setContent(faultSummary(denial, source)))
             .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) =>
-                text.setContent(`### UUID \`${uuid}\`\n\`\`\`${causeStack(denial)}\`\`\``)
+                text.setContent(`### UUID \`${uuid}\`\n\`\`\`${neutralizeFences(causeStack(denial))}\`\`\``)
             )
             .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) => text.setContent('### Source'))

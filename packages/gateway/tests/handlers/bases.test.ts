@@ -14,10 +14,20 @@ import type { Core } from '@interfaces/Core';
 import type { ModalLike } from '@seedcord/core/internal';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 
-// justified: the fixture implements only the interaction surface the sender reads, cached-cache matches the base generic
 type Slash = ChatInputCommandInteraction<'cached'>;
 type Button = ButtonInteraction<'cached'>;
 type Modal = ModalSubmitInteraction<'cached'>;
+
+// justified: the fixture implements only the interaction surface the sender reads, cached-cache matches the base generic
+function asSlash(mock: ReturnType<typeof mockInteraction>): Slash {
+    return mock as unknown as Slash;
+}
+function asButton(mock: ReturnType<typeof mockInteraction>): Button {
+    return mock as unknown as Button;
+}
+function asModal(mock: ReturnType<typeof mockInteraction>): Modal {
+    return mock as unknown as Modal;
+}
 
 // justified: the bases read only the interaction and a Logger name off core, the rest of Core is unused here.
 const core = {} as Core;
@@ -38,7 +48,7 @@ describe('SlashHandler base', () => {
 
     it('routes reply through the sender to a type 4 reply with withResponse', async () => {
         const mock = mockInteraction(commandFlags);
-        await new Ban(mock as unknown as Slash, core).execute();
+        await new Ban(asSlash(mock), core).execute();
 
         const options = mock.reply.mock.calls[0]?.[0] as { withResponse?: boolean; flags?: number };
         expect(mock.reply).toHaveBeenCalledOnce();
@@ -53,7 +63,7 @@ describe('SlashHandler base', () => {
             }
         }
         const mock = mockInteraction(commandFlags);
-        await new Open(mock as unknown as Slash, core).execute();
+        await new Open(asSlash(mock), core).execute();
 
         expect(mock.showModal).toHaveBeenCalledWith({ title: 'x', custom_id: 'y', components: [] });
     });
@@ -68,7 +78,7 @@ describe('ButtonHandler base', () => {
 
     it('routes update through the sender to interaction.update', async () => {
         const mock = mockInteraction();
-        await new Page(mock as unknown as Button, core).execute();
+        await new Page(asButton(mock), core).execute();
 
         const options = mock.update.mock.calls[0]?.[0] as { components?: unknown[]; withResponse?: boolean };
         expect(mock.update).toHaveBeenCalledOnce();
@@ -83,7 +93,7 @@ describe('ButtonHandler base', () => {
             }
         }
         const mock = mockInteraction();
-        await new Opens(mock as unknown as Button, core).execute();
+        await new Opens(asButton(mock), core).execute();
         expect(mock.showModal).toHaveBeenCalledOnce();
     });
 });
@@ -120,7 +130,7 @@ describe('ModalHandler base', () => {
         // a modal opened from a command has no source message, so update throws through the sender's narrowing
         const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: true, isFromMessage: false });
 
-        await expect(new Save(mock as unknown as Modal, core).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(new Save(asModal(mock), core).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyUpdateWithoutSource)
         );
         expect(mock.update).not.toHaveBeenCalled();
@@ -128,7 +138,7 @@ describe('ModalHandler base', () => {
 
     it('updates a message-opened modal through the sender', async () => {
         const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: true, isFromMessage: true });
-        await new Save(mock as unknown as Modal, core).execute();
+        await new Save(asModal(mock), core).execute();
         expect(mock.update).toHaveBeenCalledOnce();
     });
 });
@@ -142,7 +152,7 @@ describe('reply returns', () => {
             }
         }
         const mock = mockInteraction(commandFlags);
-        await new Ban(mock as unknown as Slash, core).execute();
+        await new Ban(asSlash(mock), core).execute();
     });
 });
 
@@ -154,7 +164,7 @@ describe('base member delegation', () => {
             }
         }
         const mock = mockInteraction(commandFlags);
-        await new Wait(mock as unknown as Slash, core).execute();
+        await new Wait(asSlash(mock), core).execute();
         expect(mock.deferReply).toHaveBeenCalledOnce();
     });
 
@@ -165,7 +175,7 @@ describe('base member delegation', () => {
             }
         }
         const mock = mockInteraction({ ...commandFlags, replied: true });
-        await new After(mock as unknown as Slash, core).execute();
+        await new After(asSlash(mock), core).execute();
         expect(mock.followUp).toHaveBeenCalledOnce();
     });
 
@@ -176,7 +186,7 @@ describe('base member delegation', () => {
             }
         }
         const mock = mockInteraction({ ...commandFlags, deferred: true, ephemeral: false });
-        await new Fill(mock as unknown as Slash, core).execute();
+        await new Fill(asSlash(mock), core).execute();
         expect(mock.editReply).toHaveBeenCalledOnce();
     });
 
@@ -189,18 +199,19 @@ describe('base member delegation', () => {
         }
         const mock = mockInteraction({ ...commandFlags, replied: true });
         mock.followUp.mockResolvedValueOnce({ id: 'earlier-1' });
-        await new Rewrite(mock as unknown as Slash, core).execute();
+        await new Rewrite(asSlash(mock), core).execute();
         expect(mock.webhook.editMessage).toHaveBeenCalledWith('earlier-1', expect.anything());
     });
 
     it('throws ReplyForeignEditTarget through the base for a message the interaction did not send', async () => {
         class Rewrite extends SlashHandler<never> {
             async execute(): Promise<void> {
+                // justified: only the id is read from the edit target
                 await this.edit({ id: 'foreign-1' } as SentMessage, 'x');
             }
         }
         const mock = mockInteraction({ ...commandFlags, replied: true });
-        await expect(new Rewrite(mock as unknown as Slash, core).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(new Rewrite(asSlash(mock), core).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
         );
         expect(mock.webhook.editMessage).not.toHaveBeenCalled();
@@ -213,7 +224,7 @@ describe('base member delegation', () => {
             }
         }
         const mock = mockInteraction(commandFlags);
-        await new Show(mock as unknown as Slash, core).execute();
+        await new Show(asSlash(mock), core).execute();
         expect(mock.reply).toHaveBeenCalledOnce();
     });
 
@@ -224,7 +235,7 @@ describe('base member delegation', () => {
             }
         }
         const mock = mockInteraction();
-        await new Ack(mock as unknown as Button, core).execute();
+        await new Ack(asButton(mock), core).execute();
         expect(mock.deferUpdate).toHaveBeenCalledOnce();
     });
 
@@ -235,7 +246,7 @@ describe('base member delegation', () => {
             }
         }
         const mock = mockInteraction({ ...commandFlags, replied: true });
-        await new Remove(mock as unknown as Slash, core).execute();
+        await new Remove(asSlash(mock), core).execute();
         expect(mock.deleteReply).toHaveBeenCalledWith();
     });
 
@@ -248,7 +259,7 @@ describe('base member delegation', () => {
         }
         const mock = mockInteraction({ ...commandFlags, replied: true });
         mock.followUp.mockResolvedValueOnce({ id: 'earlier-1' });
-        await new Remove(mock as unknown as Slash, core).execute();
+        await new Remove(asSlash(mock), core).execute();
         expect(mock.deleteReply).toHaveBeenCalledWith('earlier-1');
     });
 });

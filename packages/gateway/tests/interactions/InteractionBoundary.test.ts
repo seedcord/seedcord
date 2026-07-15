@@ -54,6 +54,11 @@ function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteracti
     return mock as unknown as ValidInteractionTypes;
 }
 
+function senderFor(mock: ReturnType<typeof mockInteraction>, routeId: string): ReplySender {
+    // justified: the fixture implements only the Repliables surface the sender reads.
+    return new ReplySender(mock as unknown as Repliables, routeId);
+}
+
 describe('handleInteractionFault', () => {
     let mock: ReturnType<typeof mockInteraction>;
     let publish: ReturnType<typeof vi.fn>;
@@ -179,6 +184,7 @@ describe('handleInteractionFault', () => {
         await expect(
             handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish))
         ).resolves.toBeUndefined();
+        expect(mock.reply).toHaveBeenCalledTimes(1);
     });
 
     describe('autocomplete arm', () => {
@@ -230,7 +236,7 @@ describe('handleInteractionFault', () => {
     describe('live sender', () => {
         it('sends the fault card through the passed sender, following up after the handler already acked', async () => {
             // pre-reply puts the live sender in the replied state, so the fault card follows up
-            const sender = new ReplySender(mock as unknown as Repliables, 'slash:boom');
+            const sender = senderFor(mock, 'slash:boom');
             await sender.reply('done');
             mock.reply.mockClear();
 

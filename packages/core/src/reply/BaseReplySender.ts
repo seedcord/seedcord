@@ -55,7 +55,11 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         this.transition('deferUpdate', 'deferred-update');
     }
 
-    /** After a deferUpdate the state stays deferred-update, so the rewrite repeats. */
+    /**
+     * After a deferUpdate the state stays deferred-update, so the rewrite repeats. The returned message
+     * is the source message, editable only through a bare `update` or `edit`. A targeted `edit` or `delete`
+     * of it throws the foreign-target error.
+     */
     public async update(response: ReplyResponse | string): Promise<TMessage> {
         this.checkLegality('update');
         // in deferred-update the source message is @original and the ack-legality check above already passed

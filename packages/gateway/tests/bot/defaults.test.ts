@@ -13,15 +13,19 @@ import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'disco
 // justified: the defaults read only the interaction, the rest of Core is unused here.
 const core = {} as Core;
 
-// justified: cached-cache matches the base generic, the fixture implements only the surface read.
 type Slash = ChatInputCommandInteraction<'cached'>;
+
+function asSlash(mock: ReturnType<typeof mockInteraction>): Slash {
+    // justified: the fixture implements only the interaction surface the sender reads, cached-cache matches the base generic
+    return mock as unknown as Slash;
+}
 
 const notImplemented = new TextDisplayBuilder().setContent('Feature not implemented yet.').toJSON();
 
 describe('UnhandledRepliable', () => {
     it('replies the not-implemented text through the sender, v2 and ephemeral', async () => {
         const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: false });
-        await new UnhandledRepliable(mock as unknown as Slash, core).execute();
+        await new UnhandledRepliable(asSlash(mock), core).execute();
 
         const options = mock.reply.mock.calls[0]?.[0] as { components?: unknown[]; flags?: number };
         expect(mock.reply).toHaveBeenCalledOnce();
@@ -32,7 +36,7 @@ describe('UnhandledRepliable', () => {
 
     it('wraps the message in a single TextDisplay component', async () => {
         const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: false });
-        await new UnhandledRepliable(mock as unknown as Slash, core).execute();
+        await new UnhandledRepliable(asSlash(mock), core).execute();
 
         const options = mock.reply.mock.calls[0]?.[0] as { components: { type: number; content: string }[] };
         expect(options.components).toHaveLength(1);

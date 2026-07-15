@@ -54,8 +54,9 @@ export abstract class RepliableHandler<Event extends Repliables> extends BaseHan
         targetOrResponse: SentMessage | ReplyResponse | string,
         maybeResponse?: ReplyResponse | string
     ): Promise<SentMessage> {
+        // a djs Message structurally satisfies ReplyResponse, so the bare arm needs no cast
         if (maybeResponse === undefined) return this.sender.edit(targetOrResponse);
-        // justified: the overloads narrow targetOrResponse once maybeResponse is defined
+        // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
         return this.sender.edit(targetOrResponse as SentMessage, maybeResponse);
     }
 

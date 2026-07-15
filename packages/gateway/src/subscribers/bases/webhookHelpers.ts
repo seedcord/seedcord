@@ -17,6 +17,11 @@ export function jsonAttachment(name: string, description: string, data: unknown)
     return { name, description, data: Buffer.from(JSON.stringify(content, undefined, 2), 'utf8') };
 }
 
+// the report renders inside a ``` fence, break any triple-backtick run to keep it from closing early
+export function neutralizeFences(text: string): string {
+    return text.replaceAll('```', '`​`​`');
+}
+
 /** An error's stack with its direct cause appended (one level), ANSI-stripped for the webhook payload. */
 export function errorReport(error: Error): string {
     let report = error.stack ?? `${error.name}: ${error.message}`;
@@ -24,7 +29,7 @@ export function errorReport(error: Error): string {
         const cause = error.cause.stack ?? `${error.cause.name}: ${error.cause.message}`;
         report += `\n\nCaused by:\n${cause}`;
     }
-    const stripped = stripAnsi(report);
+    const stripped = neutralizeFences(stripAnsi(report));
     // eslint-disable-next-line no-magic-numbers
     return stripped.length > 1800 ? `${stripped.slice(0, 1799)}…` : stripped;
 }

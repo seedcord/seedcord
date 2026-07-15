@@ -71,6 +71,7 @@ interface WebhookOptions {
     files?: { name: string; data: Buffer }[];
 }
 
+// justified: vitest types mock.calls as unknown[], the tuple cast reads the wire route and body the sender passed
 function postCall(rest: RestMock, index = 0): { route: string; options: PostOptions } {
     const [route, options] = rest.post.mock.calls[index] as [string, PostOptions];
     return { route, options };
@@ -168,6 +169,7 @@ describe('ReplySender.reply', () => {
         );
         if (!isSeedcordError(caught)) throw caught;
         expect(caught.cause).toBeInstanceOf(AckTrace);
+        // justified: the instanceof assertion above pins the cause, tsc does not narrow off it
         expect((caught.cause as AckTrace).message).toContain('reply() acknowledged this interaction');
     });
 });

@@ -45,6 +45,17 @@ function baseEvent(): { application_id: string; id: string; token: string; type:
     return { application_id: 'app-1', id: 'int-1', token: 'tok', type: 2 };
 }
 
+// justified: each fixture carries only the app-id, id, and token the sender ref reads
+function slashEvent(): APIChatInputApplicationCommandInteraction {
+    return baseEvent() as unknown as APIChatInputApplicationCommandInteraction;
+}
+function buttonEvent(): APIMessageComponentButtonInteraction {
+    return baseEvent() as unknown as APIMessageComponentButtonInteraction;
+}
+function modalEvent(extra: Record<string, unknown> = {}): APIModalSubmitInteraction {
+    return { ...baseEvent(), ...extra } as unknown as APIModalSubmitInteraction;
+}
+
 const reply = { components: [new TextDisplayBuilder().setContent('hi')] };
 const serialized = reply.components.map((c) => c.toJSON());
 
@@ -57,9 +68,8 @@ describe('SlashHandler base', () => {
 
     it('routes reply through the sender to a type 4 callback', async () => {
         const rest = restMock();
-        const event = baseEvent() as unknown as APIChatInputApplicationCommandInteraction;
 
-        await new Ban(event, coreWith(rest)).execute();
+        await new Ban(slashEvent(), coreWith(rest)).execute();
 
         const [route, options] = rest.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(route).toBe(CALLBACK_ROUTE);
@@ -73,9 +83,8 @@ describe('SlashHandler base', () => {
             }
         }
         const rest = restMock();
-        const event = baseEvent() as unknown as APIChatInputApplicationCommandInteraction;
 
-        await new Open(event, coreWith(rest)).execute();
+        await new Open(slashEvent(), coreWith(rest)).execute();
 
         const [, options] = rest.post.mock.calls[0] as [string, { body: { type: number } }];
         expect(options.body.type).toBe(9);
@@ -91,9 +100,8 @@ describe('ButtonHandler base', () => {
 
     it('routes update through the sender to a type 7 callback', async () => {
         const rest = restMock();
-        const event = baseEvent() as unknown as APIMessageComponentButtonInteraction;
 
-        await new Page(event, coreWith(rest)).execute();
+        await new Page(buttonEvent(), coreWith(rest)).execute();
 
         const [route, options] = rest.post.mock.calls[0] as [
             string,
@@ -144,7 +152,7 @@ describe('ModalHandler base', () => {
 
     it('deferUpdate then update PATCHes @original when the modal was opened from a message', async () => {
         const rest = restMock();
-        const event = { ...baseEvent(), message: { id: 'src-1' } } as unknown as APIModalSubmitInteraction;
+        const event = modalEvent({ message: { id: 'src-1' } });
 
         await new Save(event, coreWith(rest)).execute();
 
@@ -154,9 +162,8 @@ describe('ModalHandler base', () => {
 
     it('throws ReplyUpdateWithoutSource when the modal was opened from a command', async () => {
         const rest = restMock();
-        const event = baseEvent() as unknown as APIModalSubmitInteraction;
 
-        await expect(new Save(event, coreWith(rest)).execute()).rejects.toSatisfy((e: unknown) =>
+        await expect(new Save(modalEvent(), coreWith(rest)).execute()).rejects.toSatisfy((e: unknown) =>
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyUpdateWithoutSource)
         );
         expect(rest.post).not.toHaveBeenCalled();
@@ -164,10 +171,6 @@ describe('ModalHandler base', () => {
 });
 
 describe('base member delegation', () => {
-    function slashEvent(): APIChatInputApplicationCommandInteraction {
-        return baseEvent() as unknown as APIChatInputApplicationCommandInteraction;
-    }
-
     it('routes defer through the sender to a type 5 callback', async () => {
         class Wait extends SlashHandler<never> {
             async execute(): Promise<void> {
@@ -231,6 +234,7 @@ describe('base member delegation', () => {
         class Rewrite extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await this.reply(reply);
+                // justified: only the id is read from the edit target
                 await this.edit({ id: 'foreign-1' } as SentMessage, 'x');
             }
         }

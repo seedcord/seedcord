@@ -5,12 +5,13 @@ import { createRule } from '../createRule';
 
 import type { TSESTree } from '@typescript-eslint/utils';
 
-// AutocompleteHandler and InteractionMiddleware extend BaseHandler directly, so this gate excludes both
-const HANDLER_GATE = 'InteractionHandler';
+// InteractionMiddleware extends BaseHandler directly, so this gate excludes it
+const HANDLER_GATES = ['InteractionHandler', 'AutocompleteHandler'];
 
 // literal superclass names, matched before falling back to the type checker
 const HANDLER_BASE_NAMES = new Set([
     'InteractionHandler',
+    'AutocompleteHandler',
     'ComponentHandler',
     'SlashHandler',
     'ButtonHandler',
@@ -34,6 +35,9 @@ const REPLIABLE_INTERACTIONS = new Set([
     'ChannelSelectMenuInteraction'
 ]);
 
+// autocomplete has no reply/defer, so respond gates on it alone
+const AUTOCOMPLETE_INTERACTIONS = new Set(['AutocompleteInteraction']);
+
 const ACK_MESSAGES = {
     reply: 'replyMember',
     deferReply: 'deferMember',
@@ -43,7 +47,8 @@ const ACK_MESSAGES = {
     update: 'updateMember',
     showModal: 'showModalMember',
     fetchReply: 'fetchReply',
-    deleteReply: 'deleteReply'
+    deleteReply: 'deleteReply',
+    respond: 'respondMember'
 } as const;
 
 function isAckMethod(name: string): name is keyof typeof ACK_MESSAGES {
@@ -67,7 +72,8 @@ export default createRule({
             updateMember: 'Update through this.update().',
             showModalMember: 'Show the modal through this.showModal().',
             fetchReply: 'Read the sent message from the return of the reply members.',
-            deleteReply: 'Delete through this.delete().'
+            deleteReply: 'Delete through this.delete().',
+            respondMember: 'Respond through this.respond().'
         },
         schema: []
     },
@@ -76,13 +82,14 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
         const bases = new Set<string>();
-        // true inside an InteractionHandler subclass
+        // true inside an InteractionHandler or AutocompleteHandler subclass
         const classStack: boolean[] = [];
 
         function isHandlerClass(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression): boolean {
             if (node.superClass?.type === AST_NODE_TYPES.Identifier && bases.has(node.superClass.name)) return true;
             const classType = classInstanceType(node, services, checker);
-            return classType !== undefined && extendsSeedcordType(checker, classType, HANDLER_GATE);
+            if (classType === undefined) return false;
+            return HANDLER_GATES.some((gate) => extendsSeedcordType(checker, classType, gate));
         }
 
         function enterClass(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression): void {
@@ -114,8 +121,9 @@ export default createRule({
                 const method = node.callee.property.name;
                 if (!isAckMethod(method)) return;
 
+                const receivers = method === 'respond' ? AUTOCOMPLETE_INTERACTIONS : REPLIABLE_INTERACTIONS;
                 const receiverType = services.getTypeAtLocation(node.callee.object);
-                if (!extendsDjsType(checker, receiverType, REPLIABLE_INTERACTIONS)) return;
+                if (!extendsDjsType(checker, receiverType, receivers)) return;
 
                 context.report({ node, messageId: ACK_MESSAGES[method] });
             }

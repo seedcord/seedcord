@@ -7,6 +7,7 @@ import type { Repliables } from '@handlers/BaseHandler';
 
 const ROUTE = 'button:page';
 
+// justified: the sender reads only the id off a sent message
 export const message = { id: 'msg-1' } as SentMessage;
 const withResponse = { resource: { message } };
 
@@ -49,8 +50,7 @@ export function mockInteraction(overrides: FlagOverrides = {}) {
     };
 }
 
-// justified: the fixture implements only the Repliables surface ReplySender reads.
 export function senderFor(mock: ReturnType<typeof mockInteraction>): ReplySender {
-    // eslint-disable-next-line no-restricted-syntax -- fixture cast, the mock implements only the surface the sender reads
+    // eslint-disable-next-line no-restricted-syntax -- fixture cast, the mock implements only the Repliables surface the sender reads
     return new ReplySender(mock as unknown as Repliables, ROUTE);
 }
