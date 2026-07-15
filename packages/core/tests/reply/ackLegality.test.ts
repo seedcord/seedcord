@@ -2,6 +2,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { checkAckLegality, sendTarget } from '@reply/ackLegality';
+import { AckTrace } from '@reply/AckTrace';
 
 import { stripAnsi } from './helpers';
 
@@ -11,12 +12,22 @@ const ROUTE = 'slash:ban';
 
 const LEGAL: Record<AckState, ReplyMethod[]> = {
     unacked: ['reply', 'defer', 'deferUpdate', 'update', 'send', 'showModal'],
-    'deferred-reply': ['followUp', 'edit', 'send'],
-    'deferred-update': ['update', 'followUp', 'edit', 'send'],
-    replied: ['followUp', 'edit', 'send']
+    'deferred-reply': ['followUp', 'edit', 'delete', 'send'],
+    'deferred-update': ['update', 'followUp', 'edit', 'delete', 'send'],
+    replied: ['followUp', 'edit', 'delete', 'send']
 };
 
-const ALL_METHODS: ReplyMethod[] = ['reply', 'defer', 'deferUpdate', 'update', 'followUp', 'edit', 'send', 'showModal'];
+const ALL_METHODS: ReplyMethod[] = [
+    'reply',
+    'defer',
+    'deferUpdate',
+    'update',
+    'followUp',
+    'edit',
+    'delete',
+    'send',
+    'showModal'
+];
 
 function captureMessage(method: ReplyMethod, state: AckState): string {
     try {
@@ -94,6 +105,34 @@ describe('checkAckLegality', () => {
     it('says nothing was sent when edit is called before any ack', () => {
         const message = captureMessage('edit', 'unacked');
         expect(message.toLowerCase()).toContain('nothing');
+    });
+
+    it('points delete before any ack at acknowledging first', () => {
+        const message = captureMessage('delete', 'unacked');
+        expect(message).toContain('delete()');
+        expect(message).toContain('reply()');
+        expect(message).toContain('defer()');
+    });
+
+    it('sets the passed ackedBy error as the throw cause', () => {
+        const ackedBy = new AckTrace('reply');
+        try {
+            checkAckLegality('reply', 'replied', ROUTE, ackedBy);
+            expect.unreachable('reply in replied should throw');
+        } catch (error) {
+            if (!isSeedcordError(error)) throw error;
+            expect(error.cause).toBe(ackedBy);
+        }
+    });
+
+    it('leaves the cause absent when no ackedBy is passed', () => {
+        try {
+            checkAckLegality('reply', 'replied', ROUTE);
+            expect.unreachable('reply in replied should throw');
+        } catch (error) {
+            if (!isSeedcordError(error)) throw error;
+            expect(error.cause).toBeUndefined();
+        }
     });
 });
 

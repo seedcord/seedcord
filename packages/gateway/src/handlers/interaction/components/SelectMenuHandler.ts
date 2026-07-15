@@ -10,7 +10,8 @@ import type { CacheType } from 'discord.js';
  *
  * Pass the select kind first and the customId definitions second, the same order as `@SelectMenuRoute`,
  * so `this.event` and `this.event.values` are narrowed to that kind. Read `this.params` for a single
- * route or `this.match` for several.
+ * route or `this.match` for several, and reply through the handler members or rewrite the source message
+ * with `this.update`.
  *
  * @typeParam Kind - The select kind from {@link SelectMenuKind}, e.g. `SelectMenuKind.User`.
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof AssignId]`.
@@ -22,7 +23,7 @@ import type { CacheType } from 'discord.js';
  * class AssignSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof AssignId]> {
  *     async execute() {
  *         const { roleId } = this.params;
- *         await this.event.reply(`assigning ${this.event.values.length} member(s) to <@&${roleId}>`);
+ *         await this.reply(`assigning ${this.event.values.length} member(s) to <@&${roleId}>`);
  *     }
  * }
  * ```

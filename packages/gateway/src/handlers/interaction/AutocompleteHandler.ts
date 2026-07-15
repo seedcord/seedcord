@@ -127,7 +127,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     protected async match<Ret>(arms: FocusedArms<Route, Ret>): Promise<Ret> {
         const { name, value } = this.focused;
         const respond = (choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> =>
-            this.event.respond(choices);
+            this.respond(choices);
         // justified: FocusedArms is keyed by field literals, the Record cast indexes it with the runtime field name.
         type Arm = (
             value: string,
@@ -136,6 +136,12 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
         const arm = (arms as Record<string, Arm>)[name];
         if (!arm) throw new SeedcordError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
         return await arm(value, respond);
+    }
+
+    /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which pins each field's choice type. */
+    protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base member the rule points subclasses to
+        await this.event.respond(choices);
     }
 
     /** The firing command route, for a field whose completion differs per registered command. */

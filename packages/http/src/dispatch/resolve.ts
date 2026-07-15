@@ -1,27 +1,15 @@
-import { prefixOf } from '@seedcord/core/internal';
+import { prefixOf, type InteractionRoutes } from '@seedcord/core/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
 import { UnhandledAutocomplete } from '@handlers/defaults/UnhandledAutocomplete';
-import { UnhandledEvent } from '@handlers/defaults/UnhandledEvent';
+import { UnhandledRepliable } from '@handlers/defaults/UnhandledRepliable';
 
 import { slashRouteOf } from './slashRouteOf';
 
 import type { ComponentRoute, RouteManifest } from '@src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
 
-// mirrors core's InteractionRoutes values so http route ids match the gateway's
-type ResolvedKind =
-    | 'slash'
-    | 'button'
-    | 'modal'
-    | 'stringMenu'
-    | 'userMenu'
-    | 'roleMenu'
-    | 'channelMenu'
-    | 'mentionableMenu'
-    | 'messageContextMenu'
-    | 'userContextMenu'
-    | 'autocomplete';
+type ResolvedKind = `${InteractionRoutes}`;
 
 /** A manifest row matched to an incoming interaction, keyed the way the gateway dispatcher keys. */
 export interface ResolvedRoute {
@@ -138,7 +126,7 @@ function unhandled(kind: ResolvedKind): ResolvedRoute {
     return {
         kind,
         routeId: null,
-        load: () => Promise.resolve(kind === 'autocomplete' ? { UnhandledAutocomplete } : { UnhandledEvent })
+        load: () => Promise.resolve(kind === 'autocomplete' ? { UnhandledAutocomplete } : { UnhandledRepliable })
     };
 }
 

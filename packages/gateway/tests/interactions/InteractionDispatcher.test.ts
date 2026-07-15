@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { CustomId } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
@@ -25,16 +26,19 @@ interface PrivateInteractionDispatcher {
     processInteraction(
         interaction: unknown,
         extractKey: (i: unknown) => string,
-        getHandler: (key: string) => unknown
+        getHandler: (key: string) => unknown,
+        fallback?: unknown
     ): Promise<void>;
     handleButton(interaction: unknown): Promise<void>;
+    handleAutocomplete(interaction: unknown): Promise<void>;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
 function fakeSlash(commandName: string) {
     return {
-        reply: vi.fn().mockResolvedValue(undefined),
-        editReply: vi.fn().mockResolvedValue(undefined),
+        reply: vi.fn().mockResolvedValue({ resource: { message: { id: 'fault-msg' } } }),
+        deferReply: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue({ id: 'fault-msg' }),
         followUp: vi.fn().mockResolvedValue(undefined),
         isAutocomplete: () => false,
         isChatInputCommand: () => true,
@@ -50,7 +54,28 @@ function fakeSlash(commandName: string) {
         channelId: 'c1',
         id: 'i1',
         deferred: false,
-        replied: false
+        replied: false,
+        ephemeral: null as boolean | null
+    };
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
+function fakeAutocomplete(commandName: string) {
+    return {
+        respond: vi.fn().mockResolvedValue(undefined),
+        isAutocomplete: () => true,
+        isChatInputCommand: () => false,
+        isContextMenuCommand: () => false,
+        isButton: () => false,
+        isAnySelectMenu: () => false,
+        isModalSubmit: () => false,
+        commandName,
+        options: { getSubcommand: () => null, getSubcommandGroup: () => null },
+        user: { id: 'u1' },
+        guild: null,
+        guildId: 'g1',
+        channelId: 'c1',
+        id: 'i1'
     };
 }
 
@@ -261,6 +286,7 @@ describe('InteractionDispatcher Integration', () => {
         await controller.init();
 
         const interaction = fakeSlash('boom');
+        const boundaryError = vi.spyOn(Logger.prototype, 'error');
         await controller.processInteraction(
             interaction,
             () => 'boom',
@@ -268,6 +294,86 @@ describe('InteractionDispatcher Integration', () => {
         );
 
         expect(interaction.reply).toHaveBeenCalledTimes(1);
+        expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
+    });
+
+    it("passes the handler's live sender to the boundary, so a defer-then-throw follows up through its ack state", async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/DeferBoom.ts`,
+            `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('deferboom')
+            export class DeferBoomHandler extends SlashHandler<'deferboom'> {
+                public async execute() {
+                    await this.defer();
+                    throw new Error('handler exploded after deferring');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeSlash('deferboom');
+        const boundaryError = vi.spyOn(Logger.prototype, 'error');
+        await controller.processInteraction(
+            interaction,
+            () => 'deferboom',
+            () => controller.slashMap.get('deferboom')
+        );
+
+        // the handler acked with a deferReply, so the boundary's live sender is deferred-reply and edits @original
+        expect(interaction.deferReply).toHaveBeenCalledTimes(1);
+        expect(interaction.editReply).toHaveBeenCalledTimes(1);
+        expect(interaction.reply).not.toHaveBeenCalled();
+        expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
+    });
+
+    it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async () => {
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeAutocomplete('unregistered');
+        await controller.handleAutocomplete(interaction);
+
+        expect(interaction.respond).toHaveBeenCalledWith([]);
+    });
+
+    it('routes a registered autocomplete through handleAutocomplete to the handler respond', async () => {
+        const interactionsDir = 'interactions';
+        await testEnv.createFile(
+            `${interactionsDir}/SearchAutocomplete.ts`,
+            `
+            import { AutocompleteRoute, AutocompleteHandler } from '${seedcordPath}';
+
+            @AutocompleteRoute('search')
+            export class SearchAutocomplete extends AutocompleteHandler<'search'> {
+                public async execute() {
+                    await this.respond([{ name: 'apple', value: 'apple' }]);
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath(interactionsDir) });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const interaction = fakeAutocomplete('search');
+        await controller.handleAutocomplete(interaction);
+
+        expect(interaction.respond).toHaveBeenCalledWith([{ name: 'apple', value: 'apple' }]);
     });
 
     it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {

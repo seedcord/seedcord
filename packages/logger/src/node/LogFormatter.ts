@@ -1,12 +1,13 @@
+import { stripAnsi } from '@seedcord/utils';
 import chalk from 'chalk';
-import stripAnsi from 'strip-ansi';
 import { format } from 'winston';
 
-import { LEVEL_COLOR } from '../palette';
+import { LEVEL_COLOR, paint } from '../palette';
 
 import type { Logform } from 'winston';
 
 const DEFAULT_PADDING = 5;
+const CAUSE_DEPTH_CAP = 4;
 const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
 const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
@@ -43,6 +44,8 @@ export class LogFormatter {
             const sanitized = new Error(stripAnsi(error.message));
             sanitized.name = error.name;
             if (typeof error.stack === 'string') sanitized.stack = stripAnsi(error.stack);
+            // carry the cause so a cause block still renders on the stripped copy
+            if (Error.isError(error.cause)) sanitized.cause = this.sanitizeAnsi(error.cause);
             return sanitized;
         }
         return value;
@@ -51,6 +54,21 @@ export class LogFormatter {
     private getExtras(info: Logform.TransformableInfo): unknown[] {
         const raw = info[SPLAT];
         return Array.isArray(raw) ? raw : [];
+    }
+
+    // an Error stack already carries its own name and message
+    private causeBlock(error: Error, strip: boolean): string {
+        const heading = strip ? 'Caused by:' : paint.mute('Caused by:');
+        const seen = new Set<Error>([error]);
+        let blocks = '';
+        let cause = error.cause;
+        for (let depth = 0; depth < CAUSE_DEPTH_CAP && Error.isError(cause) && !seen.has(cause); depth++) {
+            seen.add(cause);
+            const body = typeof cause.stack === 'string' ? cause.stack : `${cause.name}: ${cause.message}`;
+            blocks += `\n${heading}\n${strip ? stripAnsi(body) : body}`;
+            cause = cause.cause;
+        }
+        return blocks;
     }
 
     private markFormatSpecifiers(): Logform.Format {
@@ -141,6 +159,9 @@ export class LogFormatter {
                     let stack = this.safeString(info.stack);
                     if (options.stripExtras) stack = stripAnsi(stack);
                     rendered += `\n${stack}`;
+                    // the stringified info.stack dropped the cause, re-derive it from the Error
+                    const firstError = extras.find((entry): entry is Error => Error.isError(entry));
+                    if (firstError) rendered += this.causeBlock(firstError, options.stripExtras === true);
                 }
 
                 const rawFormatCount = info[HAD_FORMAT_KEY];
@@ -181,7 +202,10 @@ export class LogFormatter {
         const primitives: string[] = [];
         const objects: string[] = [];
         for (const x of filtered) {
-            if (Error.isError(x)) objects.push(typeof x.stack === 'string' ? x.stack : `${x.name}: ${x.message}`);
+            if (Error.isError(x))
+                objects.push(
+                    (typeof x.stack === 'string' ? x.stack : `${x.name}: ${x.message}`) + this.causeBlock(x, strip)
+                );
             else if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean')
                 primitives.push(String(x));
             else {
@@ -205,8 +229,12 @@ export class LogFormatter {
             base.push(
                 format((info) => {
                     info.message = typeof info.message === 'string' ? stripAnsi(info.message) : info.message;
-                    if (typeof info.stack === 'string') info.stack = stripAnsi(info.stack);
                     const extras = this.getExtras(info);
+                    if (typeof info.stack === 'string') {
+                        // the stringified info.stack dropped the cause, re-derive it from the Error
+                        const firstError = extras.find((entry): entry is Error => Error.isError(entry));
+                        info.stack = stripAnsi(info.stack) + (firstError ? this.causeBlock(firstError, true) : '');
+                    }
                     if (extras.length > 0) info.extras = extras.map((entry) => this.sanitizeAnsi(entry));
                     return info;
                 })()

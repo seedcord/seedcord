@@ -30,7 +30,7 @@ export class SearchHandler extends SlashHandler<'search'> {
         const category = this.options.getString('category');
         //    ^?  'books' | 'films'
 
-        await this.event.reply(\`Searching \${category}\`);
+        await this.reply(\`Searching \${category}\`);
     }
 }`;
 
@@ -70,7 +70,7 @@ export class SearchHandler extends SlashHandler<'library/search'> {
         const query = this.options.getString('query');
         //    ^?  'fiction' | 'nonfiction'
 
-        await this.event.reply(\`Searching for \${query}\`);
+        await this.reply(\`Searching for \${query}\`);
     }
 }
 
@@ -113,7 +113,7 @@ export class RolePickerHandler extends SelectMenuHandler<
         const { memberId, mode } = this.params;
         // memberId: string, mode: 'add' | 'remove'
         const picked = this.event.values;
-        await this.event.reply(
+        await this.reply(
             \`\${mode} \${picked.length} <@\${memberId}>\`
         );
     }

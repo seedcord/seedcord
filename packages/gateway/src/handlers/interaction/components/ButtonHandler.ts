@@ -7,8 +7,9 @@ import type { ButtonInteraction, CacheType } from 'discord.js';
  * Base class for a button interaction handler.
  *
  * Register the customId definitions this handler decodes with `@ButtonRoute`, list the same ones in the
- * generic, then read `this.params` for a single route or `this.match` for several. Passing different
- * definitions to the decorator and the generic is a compile error.
+ * generic, then read `this.params` for a single route or `this.match` for several. Reply through the handler
+ * members, or rewrite the source message with `this.update`. Passing different definitions to the decorator
+ * and the generic is a compile error.
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ApproveId]`.
  * @typeParam Cache - The interaction cache state, `'cached'` by default.
@@ -19,7 +20,7 @@ import type { ButtonInteraction, CacheType } from 'discord.js';
  * class ApproveButton extends ButtonHandler<[typeof ApproveId]> {
  *     async execute() {
  *         const { userId } = this.params;
- *         await this.event.reply(`approved <@${userId}>`);
+ *         await this.reply(`approved <@${userId}>`);
  *     }
  * }
  * ```

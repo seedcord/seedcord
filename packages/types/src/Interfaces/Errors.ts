@@ -23,10 +23,17 @@ export interface ErrorsConfig {
      */
     errorStack?: boolean;
     /**
+     * Whether a `Silence` debug-logs its reason. A per-event silence (a message from a bot) emits this
+     * line once per event, so turn it off to quiet a busy stream.
+     *
+     * @defaultValue `true`
+     */
+    logSilences?: boolean;
+    /**
      * Class the framework constructs to render an unknown, non-denial fault. It receives the fault's
      * tracking uuid.
      *
-     * @defaultValue the framework's generic error
+     * @defaultValue the framework's generic error notice, which renders a generic "An unknown error occurred" message to the user
      */
     defaultError?: new (uuid: UUID) => RenderableNotice;
     /**

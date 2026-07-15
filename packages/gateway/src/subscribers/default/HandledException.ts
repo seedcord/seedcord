@@ -1,6 +1,7 @@
 import { BuilderComponent } from '@seedcord/core';
+import { stripAnsi } from '@seedcord/utils';
 
-import { jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
+import { jsonAttachment, neutralizeFences, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
 import { Subscribe } from '../decorators/Subscribe';
 import { WebhookUrl } from '../decorators/WebhookUrl';
@@ -39,7 +40,7 @@ class HandledExceptionContainer extends BuilderComponent<'container'> {
             .addTextDisplayComponents((text) => text.setContent(faultSummary(denial, source)))
             .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) =>
-                text.setContent(`### UUID \`${uuid}\`\n\`\`\`${causeStack(denial)}\`\`\``)
+                text.setContent(`### UUID \`${uuid}\`\n\`\`\`${neutralizeFences(causeStack(denial))}\`\`\``)
             )
             .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) => text.setContent('### Source'))
@@ -48,7 +49,8 @@ class HandledExceptionContainer extends BuilderComponent<'container'> {
 }
 
 function faultSummary(denial: Notice, source: FaultSource): string {
-    const head = `### A handled fault was reported: \`${denial.name}\`\n**Message:** ${denial.message}\n`;
+    // name and message carry chalk, the webhook payload renders them raw
+    const head = stripAnsi(`### A handled fault was reported: \`${denial.name}\`\n**Message:** ${denial.message}\n`);
     if (source.kind === 'event') {
         return (
             `${head}**Event:** ${source.eventName}\n` +
@@ -72,8 +74,8 @@ function faultSummary(denial: Notice, source: FaultSource): string {
 // every cause shape returns a string, building the report never throws on a bigint or circular cause
 function causeStack(denial: Notice): string {
     const { cause } = denial;
-    if (Error.isError(cause)) return cause.stack ?? cause.message;
-    if (typeof cause === 'string') return cause;
+    if (Error.isError(cause)) return stripAnsi(cause.stack ?? cause.message);
+    if (typeof cause === 'string') return stripAnsi(cause);
     if (typeof cause === 'bigint' || typeof cause === 'symbol' || typeof cause === 'function') return cause.toString();
     if (cause !== undefined) {
         try {
@@ -82,5 +84,5 @@ function causeStack(denial: Notice): string {
             return '[unserializable cause]';
         }
     }
-    return denial.stack ?? 'No cause recorded.';
+    return stripAnsi(denial.stack ?? 'No cause recorded.');
 }

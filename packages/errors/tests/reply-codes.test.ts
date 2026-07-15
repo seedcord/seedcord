@@ -49,12 +49,22 @@ describe('reply surface error codes', () => {
         expect(SeedcordErrorCode.ReplyForeignEditTarget).toBe(1503);
     });
 
-    it('names the foreign id and the accepted sources in a foreign edit message', () => {
-        const error = new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['msg-9', 'slash:ban']);
+    it('names the calling method, the foreign id, and the accepted sources in a foreign target message', () => {
+        const error = new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['edit', 'msg-9', 'slash:ban']);
 
         const message = stripAnsi(error.message);
         expect(message).toContain('edit()');
         expect(message).toContain('msg-9');
+        expect(message).toContain('reply()');
+        expect(message).toContain('route slash:ban');
+    });
+
+    it('renders the calling method name for a delete target', () => {
+        const error = new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['delete', 'msg-3', 'slash:ban']);
+
+        const message = stripAnsi(error.message);
+        expect(message).toContain('delete()');
+        expect(message).toContain('msg-3');
         expect(message).toContain('reply()');
         expect(message).toContain('route slash:ban');
     });
@@ -70,6 +80,19 @@ describe('reply surface error codes', () => {
         expect(message).toContain('update()');
         expect(message).toContain('reply()');
         expect(message).toContain('defer()');
+        expect(message).toContain('route slash:ban');
+    });
+
+    it('assigns ReplyCallbackMissingMessage to 1505', () => {
+        expect(SeedcordErrorCode.ReplyCallbackMissingMessage).toBe(1505);
+    });
+
+    it('names the method whose callback carried no message', () => {
+        const error = new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, ['reply', 'slash:ban']);
+
+        const message = stripAnsi(error.message);
+        expect(message).toContain('reply()');
+        expect(message).toContain('no message');
         expect(message).toContain('route slash:ban');
     });
 });

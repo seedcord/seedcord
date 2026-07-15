@@ -2,6 +2,7 @@ import { pageCursor } from '@seedcord/core/internal';
 
 import { ReplySender } from '@bot/ReplySender';
 import { ButtonHandler } from '@handlers/interaction/components';
+import { interactionRoute } from '@miscellaneous/extractErrorResponse';
 
 import { renderPage } from './render';
 
@@ -23,7 +24,11 @@ interface PaginatorConfig<Item, Prefix extends string> {
     renderItem?: ItemRender<Item>;
     /** Take over the whole page tree. Receives the page data and the controls factory. */
     render?: PageRender<Item>;
-    /** Whether the first page is ephemeral. {@default false} */
+    /**
+     * Whether the first page is ephemeral.
+     *
+     * @defaultValue `false`
+     */
     ephemeral?: boolean;
 }
 
@@ -73,17 +78,20 @@ export class Paginator<Item, const Prefix extends string> {
         const loadPage = (ctx: PageContext, n: number): Promise<ReplyResponse> => this.page(ctx, n);
         this.Handler = class Nav extends ButtonHandler<[PageCursor<Prefix>]> {
             async execute(): Promise<void> {
-                await this.event.deferUpdate();
+                await this.deferUpdate();
                 const response = await loadPage(contextOf(this.event, this.core), this.params.page);
-                await new ReplySender(this.event).edit(this.event.message, response);
+                // deferUpdate seeds the sender deferred-update, so update PATCHes @original
+                await this.update(response);
             }
         };
     }
 
     /** Render page 0 and send it, picking reply or followUp from the interaction's state. */
-    async start(interaction: Repliables, core?: Core): Promise<Message | undefined> {
+    async start(interaction: Repliables, core?: Core): Promise<Message> {
         const response = await this.page(contextOf(interaction, core), 0);
-        return new ReplySender(interaction).send(response, this.config.ephemeral ?? false);
+        return new ReplySender(interaction, interactionRoute(interaction)).send(response, {
+            ephemeral: this.config.ephemeral ?? false
+        });
     }
 
     /** Render a page as a {@link ReplyResponse}. To post it elsewhere, add `flags: MessageFlags.IsComponentsV2`. */

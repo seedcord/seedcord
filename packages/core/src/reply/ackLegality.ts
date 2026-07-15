@@ -1,9 +1,20 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import type { AckTrace } from './AckTrace';
+
 export type AckState = 'unacked' | 'deferred-reply' | 'deferred-update' | 'replied';
 
-export type ReplyMethod = 'reply' | 'defer' | 'deferUpdate' | 'update' | 'followUp' | 'edit' | 'send' | 'showModal';
+export type ReplyMethod =
+    | 'reply'
+    | 'defer'
+    | 'deferUpdate'
+    | 'update'
+    | 'followUp'
+    | 'edit'
+    | 'delete'
+    | 'send'
+    | 'showModal';
 
 interface Illegal {
     // spliced into the message after "was called when"
@@ -71,6 +82,12 @@ const ILLEGAL: Record<Exclude<ReplyMethod, 'send'>, Partial<Record<AckState, Ill
             alternative: 'Send with reply() or defer() first, then edit() rewrites it.'
         }
     },
+    delete: {
+        unacked: {
+            reason: 'nothing has been sent yet',
+            alternative: 'Acknowledge first with reply() or defer(), then delete() removes it.'
+        }
+    },
     showModal: {
         'deferred-reply': showModalReason,
         'deferred-update': showModalReason,
@@ -85,17 +102,16 @@ const SEND_TARGET: Record<AckState, 'reply' | 'edit' | 'followUp'> = {
     replied: 'followUp'
 };
 
-/** Throws before any API call. */
-export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string): void {
+/** Throws before any API call. `ackedBy` becomes the throw cause, its stack points at the first ack. */
+export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: AckTrace): void {
     if (method === 'send') return;
     const illegal = ILLEGAL[method][state];
     if (!illegal) return;
-    throw new SeedcordError(SeedcordErrorCode.ReplyIllegalAckState, [
-        method,
-        illegal.reason,
-        illegal.alternative,
-        routeId
-    ]);
+    throw new SeedcordError(
+        SeedcordErrorCode.ReplyIllegalAckState,
+        [method, illegal.reason, illegal.alternative, routeId],
+        { cause: ackedBy }
+    );
 }
 
 export function sendTarget(state: AckState): 'reply' | 'edit' | 'followUp' {

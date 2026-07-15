@@ -4,33 +4,39 @@ import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
+import { extractErrorResponse, interactionRoute } from '@miscellaneous/extractErrorResponse';
+
+import { HARMLESS_API_CODES } from './harmlessApiCodes';
 
 import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { ReplyResponse } from '@seedcord/types';
 
 const logger = new Logger('InteractionBoundary');
 
 /**
  * The interaction controller boundary. Sorts a throw from any handler-lifecycle phase into the right
- * user reply plus the right bus event, building a {@link ReplySender} lazily so it reads the live
- * acknowledgement state at catch time.
+ * user reply plus the right bus event. When a handler is built its sender is passed in, so the boundary
+ * sends from the current ack state. A middleware or pre-construction throw arrives with no sender, so the
+ * boundary builds one from the interaction flags.
  *
  * @internal
  */
 export async function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
-    core: Core
+    core: Core,
+    sender?: ReplySender
 ): Promise<void> {
     if (caught instanceof Silence) {
-        if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
+        if (caught.reason !== undefined && (core.config.errors?.logSilences ?? true)) {
+            logger.debug(`Silence: ${caught.reason}`);
+        }
         return;
     }
     if (!Error.isError(caught)) throw caught;
 
-    // empty by default, so every api code from the handler's own work reports. the reply sender swallows
-    // the harmless reply-token codes on its own send regardless, see HARMLESS_API_CODES.
+    // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(core.config.errors?.ignoreApiCodes ?? []);
     if (caught instanceof DiscordAPIError && ignore.has(caught.code)) {
         logger.debug(`swallowed api code ${caught.code}`);
@@ -54,5 +60,19 @@ export async function handleInteractionFault(
         user: interaction.user,
         metadata: interaction
     });
-    await new ReplySender(interaction).send(response, caught instanceof Notice ? caught.ephemeral : true);
+    const liveSender = sender ?? new ReplySender(interaction, interactionRoute(interaction));
+    await sendGuarded(liveSender, response, caught instanceof Notice ? caught.ephemeral : true);
+}
+
+// the boundary's own send drops the harmless reply-token codes so a dead token never escapes it
+async function sendGuarded(sender: ReplySender, response: ReplyResponse, ephemeral: boolean): Promise<void> {
+    try {
+        await sender.send(response, { ephemeral });
+    } catch (error) {
+        if (error instanceof DiscordAPIError && HARMLESS_API_CODES.has(error.code)) {
+            logger.debug(`reply send hit harmless code ${error.code}`);
+            return;
+        }
+        logger.error('reply send failed', error);
+    }
 }

@@ -55,12 +55,19 @@ export abstract class RepliableHandler<Event extends Repliables> extends BaseHan
         targetOrResponse: SentMessage | ReplyResponse | string,
         maybeResponse?: ReplyResponse | string
     ): Promise<SentMessage> {
+        // justified: the overloads narrow targetOrResponse to a response once maybeResponse is absent
         if (maybeResponse === undefined) return this.sender.edit(targetOrResponse as ReplyResponse | string);
+        // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
         return this.sender.edit(targetOrResponse as SentMessage, maybeResponse);
     }
 
-    /** Make the user see this regardless of the current ack state. */
+    /** Routes to reply, followUp, or edit for the current ack state. */
     protected send(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
         return this.sender.send(response, opts);
+    }
+
+    /** Delete the initial reply or deferred placeholder. Pass a target to delete a message a prior send returned. */
+    protected delete(target?: SentMessage): Promise<void> {
+        return target === undefined ? this.sender.delete() : this.sender.delete(target);
     }
 }

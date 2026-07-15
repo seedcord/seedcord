@@ -2,8 +2,7 @@ import { RESTJSONErrorCodes } from 'discord.js';
 
 /**
  * Discord API error codes that mean a dead end on an interaction, a dead token, a double ack, or a gone
- * message. There is nothing to show the user and no bug to report. The controller boundary drops them on
- * the original throw, and {@link ReplySender} drops them on its own send.
+ * message. Nothing to show the user and no bug to report, so the boundary's fault-card send drops them.
  *
  * @internal
  */

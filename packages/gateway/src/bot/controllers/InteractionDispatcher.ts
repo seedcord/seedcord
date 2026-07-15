@@ -22,14 +22,16 @@ import { Envapter } from 'envapt';
 
 import { MiddlewareType } from '@bDecorators/Middlewares';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
-import { UnhandledEvent } from '@bot/defaults';
+import { UnhandledAutocomplete, UnhandledRepliable } from '@bot/defaults';
 import { interactionGateContext } from '@bot/gates/runGates';
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+import { RepliableHandler } from '@handlers/RepliableHandler';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
+import type { ReplySender } from '@bot/ReplySender';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
@@ -154,7 +156,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     /**
      * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
-     * UnhandledEvent at runtime. A bot may route commands outside the registry, so this does not throw.
+     * UnhandledRepliable at runtime. A bot may route commands outside the registry, so this does not throw.
      *
      * @internal
      */
@@ -169,7 +171,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     /**
-     * Warns for each context-menu command with no matching handler, which would fall through to UnhandledEvent
+     * Warns for each context-menu command with no matching handler, which would fall through to UnhandledRepliable
      * at runtime. Checked per kind since a user and a message command can share a name.
      *
      * @internal
@@ -423,10 +425,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
         extractKey: (i: TInteraction) => string,
-        getHandler: (key: string) => HandlerConstructor | undefined
+        getHandler: (key: string) => HandlerConstructor | undefined,
+        fallback: HandlerConstructor = UnhandledRepliable
     ): Promise<void> {
         const key = extractKey(interaction);
 
+        // the live sender once the handler is built, so the boundary replies through its exact ack state
+        let sender: ReplySender | undefined;
         try {
             if (!interaction.isAutocomplete()) {
                 for (const { ctor } of this.middlewares) {
@@ -437,14 +442,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
             let HandlerCtor = getHandler(key);
             if (!HandlerCtor) {
-                this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to UnhandledEvent.`);
-                HandlerCtor = UnhandledEvent;
+                this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${fallback.name}.`);
+                HandlerCtor = fallback;
             }
 
             this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
             const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
             // @ts-expect-error TS can't infer the type of interaction here
             const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
+            if (handler instanceof RepliableHandler) sender = handler.getSender();
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
             if (!interaction.isAutocomplete()) {
                 await runHandlerGates(
@@ -455,7 +461,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             }
             await handler.execute();
         } catch (caught) {
-            await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core);
+            await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core, sender);
         }
     }
 
@@ -567,17 +573,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleAutocomplete(interaction: AutocompleteInteraction): Promise<void> {
         const route = slashRouteOf(interaction);
-
-        if (!this.autocompleteMap.has(route)) {
-            this.logger.warn(`No autocomplete handler for ${paint.sky.bold(route)}.`);
-            await interaction.respond([]);
-            return;
-        }
-
         await this.processInteraction(
             interaction,
             () => route,
-            (key) => this.autocompleteMap.get(key)
+            (key) => this.autocompleteMap.get(key),
+            UnhandledAutocomplete
         );
     }
 }

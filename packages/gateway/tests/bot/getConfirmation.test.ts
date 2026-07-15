@@ -19,17 +19,25 @@ const mockMessage = { id: 'prompt-message', awaitMessageComponent: vi.fn() };
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
 function mockEvent() {
     return {
-        reply: vi.fn().mockResolvedValue(undefined),
-        fetchReply: vi.fn().mockResolvedValue(mockMessage),
+        reply: vi.fn().mockResolvedValue({ resource: { message: mockMessage } }),
+        deferReply: vi.fn().mockResolvedValue(undefined),
         editReply: vi.fn().mockResolvedValue(mockMessage),
         followUp: vi.fn().mockResolvedValue(mockMessage),
         deleteReply: vi.fn().mockResolvedValue(undefined),
-        webhook: { editMessage: vi.fn().mockResolvedValue(undefined) },
+        webhook: { editMessage: vi.fn().mockResolvedValue(mockMessage) },
         isMessageComponent: () => false,
         isModalSubmit: () => false,
+        isFromMessage: () => false,
+        isChatInputCommand: () => true,
+        isContextMenuCommand: () => false,
+        isButton: () => false,
+        isAnySelectMenu: () => false,
+        commandName: 'confirm-test',
+        options: { getSubcommand: () => null, getSubcommandGroup: () => null },
         user: { id: 'u1' },
         deferred: false,
-        replied: false
+        replied: false,
+        ephemeral: null as boolean | null
     };
 }
 
@@ -40,6 +48,8 @@ function winner(customId: string, userId = 'u1') {
 
 const v2Prompt = (): ReplyResponse => ({ components: [new ContainerBuilder()] });
 const outcomeCard: ReplyResponse = { components: [new ContainerBuilder()] };
+// the sender serializes each component to raw API data before the wire call
+const outcomeComponents = outcomeCard.components.map((c) => c.toJSON());
 
 describe('getConfirmation', () => {
     let event: ReturnType<typeof mockEvent>;
@@ -64,17 +74,17 @@ describe('getConfirmation', () => {
         expect(mockMessage.awaitMessageComponent).toHaveBeenCalledTimes(1);
     });
 
-    it('resolves false and removes the prompt when the user cancels', async () => {
+    it('resolves false and removes the prompt through the sender when the user cancels', async () => {
         mockMessage.awaitMessageComponent.mockResolvedValue(winner(cancelWire));
         await expect(run(v2Prompt)).resolves.toBe(false);
-        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage);
+        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage.id);
         expect(event.webhook.editMessage).not.toHaveBeenCalled();
     });
 
-    it('resolves false and removes the prompt on timeout', async () => {
+    it('resolves false and removes the prompt through the sender on timeout', async () => {
         mockMessage.awaitMessageComponent.mockRejectedValue(new Error('timed out'));
         await expect(run(v2Prompt)).resolves.toBe(false);
-        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage);
+        expect(event.deleteReply).toHaveBeenCalledWith(mockMessage.id);
     });
 
     it('filters the collector to the invoking user and the reserved confirm ids', async () => {
@@ -87,10 +97,17 @@ describe('getConfirmation', () => {
         expect(filter({ user: { id: 'u1' }, customId: 'foreign:x' })).toBe(false);
     });
 
-    it('resolves false when the prompt send is swallowed', async () => {
-        event.reply.mockRejectedValue(new Error('send failed'));
-        await expect(run(v2Prompt)).resolves.toBe(false);
+    it('rejects when the prompt send fails', async () => {
+        const failure = new Error('discord api error');
+        event.reply.mockRejectedValue(failure);
+        await expect(run(v2Prompt)).rejects.toBe(failure);
         expect(mockMessage.awaitMessageComponent).not.toHaveBeenCalled();
+    });
+
+    it('rejects when the settle edit fails', async () => {
+        const failure = new Error('discord api error');
+        event.webhook.editMessage.mockRejectedValue(failure);
+        await expect(run(v2Prompt, { onConfirm: outcomeCard })).rejects.toBe(failure);
     });
 
     it('builds a default card prompt carrying both reserved buttons for the string form', async () => {
@@ -112,8 +129,8 @@ describe('getConfirmation', () => {
     it('edits the prompt to onConfirm on a confirm click instead of removing it', async () => {
         await run(v2Prompt, { onConfirm: outcomeCard });
         expect(event.webhook.editMessage).toHaveBeenCalledWith(
-            mockMessage,
-            expect.objectContaining({ components: outcomeCard.components })
+            mockMessage.id,
+            expect.objectContaining({ components: outcomeComponents })
         );
         expect(event.deleteReply).not.toHaveBeenCalled();
     });
@@ -122,8 +139,8 @@ describe('getConfirmation', () => {
         mockMessage.awaitMessageComponent.mockResolvedValue(winner(cancelWire));
         await run(v2Prompt, { onCancel: outcomeCard });
         expect(event.webhook.editMessage).toHaveBeenCalledWith(
-            mockMessage,
-            expect.objectContaining({ components: outcomeCard.components })
+            mockMessage.id,
+            expect.objectContaining({ components: outcomeComponents })
         );
     });
 
@@ -131,8 +148,8 @@ describe('getConfirmation', () => {
         mockMessage.awaitMessageComponent.mockRejectedValue(new Error('timed out'));
         await run(v2Prompt, { onTimeout: () => outcomeCard });
         expect(event.webhook.editMessage).toHaveBeenCalledWith(
-            mockMessage,
-            expect.objectContaining({ components: outcomeCard.components })
+            mockMessage.id,
+            expect.objectContaining({ components: outcomeComponents })
         );
     });
 
@@ -142,7 +159,11 @@ describe('getConfirmation', () => {
                 id: `msg-${userId}`,
                 awaitMessageComponent: vi.fn().mockResolvedValue(winner(winnerWire, userId))
             };
-            const ev = { ...mockEvent(), user: { id: userId }, fetchReply: vi.fn().mockResolvedValue(message) };
+            const ev = {
+                ...mockEvent(),
+                user: { id: userId },
+                reply: vi.fn().mockResolvedValue({ resource: { message } })
+            };
             return getConfirmation(ev as unknown as NonModalInteraction, v2Prompt);
         }
         const [a, b] = await Promise.all([flow(confirmWire, 'userA'), flow(cancelWire, 'userB')]);

@@ -1,4 +1,5 @@
 import { Silence, Fault } from '@seedcord/core';
+import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -76,6 +77,50 @@ describe('handleEventFault', () => {
         handleEventFault(new Silence('filtered'), 'guildMemberAdd', 'Welcome', [{}], mockCore(publish));
 
         expect(publish).not.toHaveBeenCalled();
+    });
+
+    it('debug-logs a Silence reason by default', () => {
+        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+
+        handleEventFault(new Silence('actor is a bot'), 'messageCreate', 'PingPong', [{}], mockCore(publish));
+
+        expect(debug).toHaveBeenCalledWith('Silence: actor is a bot');
+        debug.mockRestore();
+    });
+
+    it('omits the Silence debug line when logSilences is false', () => {
+        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+        // justified: the fixture implements only the Core surface the event boundary reads.
+        const core = {
+            bus: { publish },
+            config: { errors: { logSilences: false }, notifications: {} }
+        } as unknown as Core;
+
+        handleEventFault(new Silence('actor is a bot'), 'messageCreate', 'PingPong', [{}], core);
+
+        expect(debug).not.toHaveBeenCalled();
+        debug.mockRestore();
+    });
+
+    it('appends the error cause first line to the compact fault log', () => {
+        const cause = new Error('reply() acknowledged this interaction');
+        cause.name = 'AckTrace';
+        const error = new Error('defer() was called after a reply', { cause });
+        const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+        handleEventFault(error, 'messageCreate', 'PingPong', [{}], mockCore(publish));
+
+        expect(errorLog.mock.calls[0]?.[0]).toContain('caused by AckTrace: reply() acknowledged this interaction');
+        errorLog.mockRestore();
+    });
+
+    it('leaves the compact fault log without a cause line when the error has no Error cause', () => {
+        const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+        handleEventFault(new Error('plain boom'), 'messageCreate', 'PingPong', [{}], mockCore(publish));
+
+        expect(errorLog.mock.calls[0]?.[0]).not.toContain('caused by');
+        errorLog.mockRestore();
     });
 
     it('stays quiet for a non-reporting denial', () => {

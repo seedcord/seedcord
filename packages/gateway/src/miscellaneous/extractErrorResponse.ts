@@ -100,11 +100,18 @@ function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID
     });
 }
 
+function causeLine(error: Error): string {
+    const { cause } = error;
+    if (!Error.isError(cause)) return '';
+    const [first] = cause.message.split('\n');
+    return `\ncaused by ${cause.name}: ${first ?? cause.message}`;
+}
+
 function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUID): void {
     withThrottle(origin, error, () => {
         const showStack = core.config.errors?.errorStack ?? false;
         if (showStack) logger.error(uuid, error);
-        else logger.error(`${uuid} | ${error.message}`);
+        else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
         core.bus.publish('unknownException', {
             uuid,
@@ -155,7 +162,8 @@ function faultKey(origin: ErrorOrigin, error: Error): string {
     return `autocomplete:${name}`;
 }
 
-function interactionRoute(interaction: Repliables): string {
+/** The stable route id of a repliable interaction, its slash route path, command name, or customId prefix. */
+export function interactionRoute(interaction: Repliables): string {
     if (interaction.isChatInputCommand()) return slashRouteOf(interaction);
     if (interaction.isContextMenuCommand()) return interaction.commandName;
     if (interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {

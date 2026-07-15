@@ -24,6 +24,7 @@ interface TestBot {
     };
 }
 
+// the sender reads the interaction's unacked flags, so this.deferUpdate() sets deferred-update
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function fakeButton(customId: string) {
     return {
@@ -33,8 +34,11 @@ function fakeButton(customId: string) {
         isChatInputCommand: () => false,
         isContextMenuCommand: () => false,
         isAnySelectMenu: () => false,
+        isMessageComponent: () => true,
         isModalSubmit: () => false,
+        isFromMessage: () => false,
         deferUpdate: vi.fn().mockResolvedValue(undefined),
+        editReply: vi.fn().mockResolvedValue({ id: 'paged-message' }),
         message: { id: 'paged-message' },
         webhook: { editMessage: vi.fn().mockResolvedValue(undefined) },
         user: { id: 'u1' },
@@ -43,12 +47,14 @@ function fakeButton(customId: string) {
         channelId: 'c1',
         id: 'i1',
         deferred: false,
-        replied: false
+        replied: false,
+        ephemeral: null as boolean | null
     };
 }
 
-function pageText(body: { components: { toJSON(): unknown }[] }): string {
-    const json = body.components[0]?.toJSON() as APIContainerComponent;
+// the sender serializes each component before the wire call, so the sent body carries raw API data
+function pageText(body: { components: unknown[] }): string {
+    const json = body.components[0] as APIContainerComponent;
     return json.components.reduce<string>(
         (acc, part) => (part.type === ComponentType.TextDisplay ? acc + part.content : acc),
         ''
@@ -101,12 +107,10 @@ describe('Paginator end-to-end through the real dispatcher', () => {
         await controller.handleButton(click);
 
         expect(click.deferUpdate).toHaveBeenCalledOnce();
-        expect(click.webhook.editMessage).toHaveBeenCalledOnce();
-        const [message, body] = click.webhook.editMessage.mock.calls[0] as [
-            unknown,
-            { components: { toJSON(): unknown }[] }
-        ];
-        expect(message).toBe(click.message);
+        // the bare edit rewrites @original (the source message) via editReply in the deferred-update state
+        expect(click.editReply).toHaveBeenCalledOnce();
+        expect(click.webhook.editMessage).not.toHaveBeenCalled();
+        const body = click.editReply.mock.calls[0]?.[0] as { components: unknown[] };
         expect(pageText(body)).toBe('e'); // page 2 of 5 items at perPage 2
     });
 });

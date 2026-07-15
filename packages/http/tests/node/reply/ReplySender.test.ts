@@ -1,4 +1,6 @@
+/* eslint-disable max-lines -- one suite per sender, splitting fragments the shared rest mock and body fixtures */
 import { TextDisplayBuilder } from '@discordjs/builders';
+import { AckTrace } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
@@ -27,12 +29,14 @@ const withResponse = { resource: { message } };
 interface RestMock {
     post: ReturnType<typeof vi.fn>;
     patch: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
 }
 
 function restMock(): RestMock {
     return {
         post: vi.fn().mockResolvedValue(withResponse),
-        patch: vi.fn().mockResolvedValue(message)
+        patch: vi.fn().mockResolvedValue(message),
+        delete: vi.fn().mockResolvedValue(undefined)
     };
 }
 
@@ -67,6 +71,7 @@ interface WebhookOptions {
     files?: { name: string; data: Buffer }[];
 }
 
+// justified: vitest types mock.calls as unknown[], the tuple cast reads the wire route and body the sender passed
 function postCall(rest: RestMock, index = 0): { route: string; options: PostOptions } {
     const [route, options] = rest.post.mock.calls[index] as [string, PostOptions];
     return { route, options };
@@ -75,6 +80,10 @@ function postCall(rest: RestMock, index = 0): { route: string; options: PostOpti
 function patchCall(rest: RestMock, index = 0): { route: string; options: WebhookOptions } {
     const [route, options] = rest.patch.mock.calls[index] as [string, WebhookOptions];
     return { route, options };
+}
+
+function deleteRoute(rest: RestMock, index = 0): string {
+    return (rest.delete.mock.calls[index] as [string])[0];
 }
 
 describe('ReplySender.reply', () => {
@@ -97,6 +106,26 @@ describe('ReplySender.reply', () => {
         const rest = restMock();
 
         await expect(senderFor(rest).reply(reply)).resolves.toBe(message);
+    });
+
+    it('throws ReplyCallbackMissingMessage when the callback carries no message', async () => {
+        const rest = restMock();
+        rest.post.mockResolvedValueOnce({ resource: null });
+
+        await expect(senderFor(rest).reply(reply)).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyCallbackMissingMessage)
+        );
+    });
+
+    it('advances to replied when the callback acked but carried no message, so a followUp works', async () => {
+        const rest = restMock();
+        rest.post.mockResolvedValueOnce({ resource: null });
+        const sender = senderFor(rest);
+        await sender.reply(reply).catch(() => undefined);
+
+        await sender.followUp(reply);
+
+        expect(postCall(rest, 1).route).toBe(WEBHOOK_ROUTE);
     });
 
     it('drops the ephemeral flag when ephemeral is false, keeping v2', async () => {
@@ -138,6 +167,21 @@ describe('ReplySender.reply', () => {
             expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ReplyIllegalAckState)).toBe(true);
         }
         expect(rest.post).toHaveBeenCalledTimes(1);
+    });
+
+    it('carries the first ack as the cause on a double reply', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.reply(reply);
+
+        const caught = await sender.reply(reply).then(
+            () => null,
+            (error: unknown) => error
+        );
+        if (!isSeedcordError(caught)) throw caught;
+        expect(caught.cause).toBeInstanceOf(AckTrace);
+        // justified: the instanceof assertion above pins the cause, tsc does not narrow off it
+        expect((caught.cause as AckTrace).message).toContain('reply() acknowledged this interaction');
     });
 });
 
@@ -429,6 +473,86 @@ describe('ReplySender.edit', () => {
             isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyIllegalAckState)
         );
         expect(rest.patch).not.toHaveBeenCalled();
+    });
+});
+
+describe('ReplySender.delete', () => {
+    it('DELETEs @original on the bare form', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.reply(reply);
+
+        await sender.delete();
+
+        expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
+    });
+
+    it('DELETEs @original with a bare call after a deferred reply', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.defer();
+
+        await sender.delete();
+
+        expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
+    });
+
+    it('DELETEs @original with a bare call after a deferred update', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.deferUpdate();
+
+        await sender.delete();
+
+        expect(deleteRoute(rest)).toBe(ORIGINAL_ROUTE);
+    });
+
+    it('DELETEs the target message id on the targeted form', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.reply(reply);
+        rest.post.mockResolvedValueOnce({ id: 'earlier-42' });
+        const prompt = await sender.followUp('confirm?');
+
+        await sender.delete(prompt);
+
+        expect(deleteRoute(rest)).toBe(`${WEBHOOK_ROUTE}/messages/earlier-42`);
+    });
+
+    it('evicts the target so a later targeted edit of it throws foreign', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.reply(reply);
+        rest.post.mockResolvedValueOnce({ id: 'earlier-7' });
+        const prompt = await sender.followUp('confirm?');
+
+        await sender.delete(prompt);
+
+        await expect(sender.edit(prompt, 'x')).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+    });
+
+    it('throws ReplyForeignEditTarget before any API call for a message the interaction did not send', async () => {
+        const rest = restMock();
+        const sender = senderFor(rest);
+        await sender.reply(reply);
+        // justified: only the id is read from the target
+        const foreign = { id: 'foreign-1' } as SentMessage;
+
+        await expect(sender.delete(foreign)).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyForeignEditTarget)
+        );
+        expect(rest.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws before any API call when deleting an unacked interaction', async () => {
+        const rest = restMock();
+
+        await expect(senderFor(rest).delete()).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyIllegalAckState)
+        );
+        expect(rest.delete).not.toHaveBeenCalled();
     });
 });
 

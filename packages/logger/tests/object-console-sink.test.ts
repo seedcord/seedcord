@@ -69,6 +69,15 @@ describe('ObjectConsoleSink', () => {
         expect(error.name).toBe('SeedcordError[123]');
     });
 
+    it('serializes the direct Error cause', () => {
+        const cap = capture('error');
+        const err = new Error('illegal ack', { cause: new Error('reply() acknowledged this interaction') });
+        new ObjectConsoleSink().onLog(record({ level: 'error', message: 'boundary caught', args: [err] }));
+        expect(cap.payload()).toMatchObject({
+            error: { cause: { message: 'reply() acknowledged this interaction' } }
+        });
+    });
+
     it('keeps leftover primitives in an args field', () => {
         const cap = capture();
         new ObjectConsoleSink().onLog(record({ message: 'note', args: ['tail', 7] }));

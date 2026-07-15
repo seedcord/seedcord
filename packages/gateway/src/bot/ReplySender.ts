@@ -1,98 +1,151 @@
-import { Logger } from '@seedcord/logger';
-import { DiscordAPIError, MessageFlags } from 'discord.js';
-
-import { HARMLESS_API_CODES } from '@bot/harmlessApiCodes';
-import { flagsFor } from '@miscellaneous/flagsFor';
+import { BaseReplySender, deferFlags, sendFlags } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+import { MessageFlags } from 'discord.js';
 
 import type { Repliables } from '@handlers/BaseHandler';
-import type { ReplyResponse } from '@seedcord/types';
-import type { InteractionReplyOptions, Message, WebhookMessageEditOptions } from 'discord.js';
+import type { AckState } from '@seedcord/core/internal';
+import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type {
+    APIModalInteractionResponseCallbackData,
+    InteractionCallbackResponse,
+    InteractionReplyOptions,
+    InteractionUpdateOptions,
+    MessageComponentInteraction,
+    ModalMessageModalSubmitInteraction,
+    Message,
+    WebhookMessageEditOptions
+} from 'discord.js';
+
+// the two djs kinds carrying a source message, so update / deferUpdate have a target
+type SourceInteraction = MessageComponentInteraction | ModalMessageModalSubmitInteraction;
+
+/** The created message a gateway reply resolves to. */
+export type SentMessage = Message;
+
+// djs flips `replied` on editReply, so per-call derivation would break repeated update() and post-edit
+// send() parity
+function seedState(interaction: Repliables): AckState {
+    if (interaction.deferred && interaction.ephemeral === null) return 'deferred-update';
+    if (interaction.replied) return 'replied';
+    if (interaction.deferred) return 'deferred-reply';
+    return 'unacked';
+}
 
 /**
- * Sends a {@link ReplyResponse} to an interaction, picking reply, editReply, or followUp from the live
- * acknowledgement state. Logs and drops its own send failures so a dead token never escapes into the
- * controller.
+ * Writes interaction responses through the discord.js interaction. Construction is internal to the repliable
+ * handler bases and the dispatcher.
  */
-export class ReplySender {
-    private readonly logger = new Logger('ReplySender');
-
-    public constructor(private readonly interaction: Repliables) {}
-
-    /**
-     * Sends the reply and returns the sent message so a caller can attach a collector to it. Never throws,
-     * a failed send is logged and dropped and resolves to `undefined`.
-     *
-     * @param response - The ComponentsV2 reply to show.
-     * @param ephemeral - Whether the reply is ephemeral. {@default `true`}
-     * @returns The sent {@link Message}, or `undefined` when the send was swallowed.
-     */
-    public async send(response: ReplyResponse, ephemeral = true): Promise<Message | undefined> {
-        try {
-            return await this.dispatch(response, ephemeral);
-        } catch (error) {
-            this.logSwallowed('send', error);
-            return undefined;
-        }
+export class ReplySender extends BaseReplySender<SentMessage> {
+    public constructor(
+        private readonly interaction: Repliables,
+        routeId: string
+    ) {
+        super(routeId, seedState(interaction));
     }
 
-    /**
-     * Edits an already-sent message to a new {@link ReplyResponse}. Used to swap a confirmation prompt for
-     * its outcome. Never throws, a failed edit is logged and dropped.
-     *
-     * @param message - The message to edit (the handle a prior {@link send} returned).
-     * @param response - The reply to replace it with.
-     */
-    public async edit(message: Message, response: ReplyResponse): Promise<void> {
-        try {
-            await this.interaction.webhook.editMessage(message, this.editBody(response));
-        } catch (error) {
-            this.logSwallowed('edit', error);
-        }
+    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {
+        const result = await this.interaction.reply({
+            ...this.replyOptions(response, sendFlags(opts)),
+            withResponse: true
+        });
+        return this.createdMessage(result);
     }
 
-    private async dispatch(response: ReplyResponse, ephemeral: boolean): Promise<Message> {
-        if (this.interaction.replied) {
-            return await this.interaction.followUp(this.replyOptions(response, ephemeral));
-        }
-
-        if (this.interaction.deferred) {
-            // ephemeral is null only after deferUpdate, where @original is the live source message, so follow
-            // up to avoid overwriting it. deferReply set ephemeral to a boolean over a throwaway placeholder,
-            // so editReply upgrades it in place.
-            if (this.interaction.ephemeral === null) {
-                return await this.interaction.followUp(this.replyOptions(response, ephemeral));
-            }
-            return await this.interaction.editReply(this.editBody(response));
-        }
-
-        await this.interaction.reply(this.replyOptions(response, ephemeral));
-        // reply() resolves to an InteractionResponse, fetchReply() is the message the collector attaches to.
-        return await this.interaction.fetchReply();
+    protected async writeDefer(opts?: DeferOpts): Promise<void> {
+        await this.interaction.deferReply({ flags: deferFlags(opts) });
     }
 
-    private replyOptions(response: ReplyResponse, ephemeral: boolean): InteractionReplyOptions {
+    protected async writeDeferUpdate(): Promise<void> {
+        await this.sourceInteraction('deferUpdate').deferUpdate();
+    }
+
+    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage | undefined> {
+        const source = this.sourceInteraction('update');
+        const result = await source.update({ ...this.updateOptions(response), withResponse: true });
+        return this.createdMessage(result);
+    }
+
+    protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+        return await this.interaction.followUp(this.replyOptions(response, sendFlags(opts)));
+    }
+
+    protected async writeEditOriginal(response: ReplyResponse | string): Promise<SentMessage> {
+        return await this.interaction.editReply(this.editOptions(response));
+    }
+
+    protected async writeEditTarget(targetId: string, response: ReplyResponse | string): Promise<SentMessage> {
+        return await this.interaction.webhook.editMessage(targetId, this.editOptions(response));
+    }
+
+    protected async writeDeleteOriginal(): Promise<void> {
+        await this.interaction.deleteReply();
+    }
+
+    protected async writeDeleteTarget(targetId: string): Promise<void> {
+        await this.interaction.deleteReply(targetId);
+    }
+
+    protected async writeModal(data: APIModalInteractionResponseCallbackData): Promise<void> {
+        const { interaction } = this;
+        // unreachable after guardModalSource, the throw re-narrows the union for showModal
+        if (interaction.isModalSubmit()) this.rejectModalSubmit();
+        await interaction.showModal(data);
+    }
+
+    protected override guardModalSource(): void {
+        // runtime backstop for direct sender callers, which a compile-time gate on the bases cannot cover
+        if (this.interaction.isModalSubmit()) this.rejectModalSubmit();
+    }
+
+    private rejectModalSubmit(): never {
+        throw new SeedcordError(SeedcordErrorCode.ReplyIllegalAckState, [
+            'showModal',
+            'this interaction is a modal submit',
+            'A modal cannot open another modal.',
+            this.routeId
+        ]);
+    }
+
+    // only component and message-opened-modal kinds carry a source message
+    private sourceInteraction(method: 'update' | 'deferUpdate'): SourceInteraction {
+        const { interaction } = this;
+        if (interaction.isMessageComponent()) return interaction;
+        if (interaction.isModalSubmit() && interaction.isFromMessage()) return interaction;
+        throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);
+    }
+
+    private replyOptions(response: ReplyResponse | string, flags: number): InteractionReplyOptions {
+        const reply = this.serialize(response);
         return {
-            components: response.components,
-            flags: flagsFor(ephemeral),
-            ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
-            ...(response.files && { files: response.files })
+            components: reply.components,
+            flags,
+            ...(reply.allowedMentions && { allowedMentions: reply.allowedMentions }),
+            ...(reply.files && { files: [...reply.files] })
         };
     }
 
-    private editBody(response: ReplyResponse): WebhookMessageEditOptions {
+    private editOptions(response: ReplyResponse | string): WebhookMessageEditOptions {
+        const reply = this.serialize(response);
         return {
-            components: response.components,
+            components: reply.components,
             flags: MessageFlags.IsComponentsV2,
-            ...(response.allowedMentions && { allowedMentions: response.allowedMentions }),
-            ...(response.files && { files: response.files })
+            ...(reply.allowedMentions && { allowedMentions: reply.allowedMentions }),
+            ...(reply.files && { files: [...reply.files] })
         };
     }
 
-    private logSwallowed(action: string, error: unknown): void {
-        if (error instanceof DiscordAPIError && HARMLESS_API_CODES.has(error.code)) {
-            this.logger.debug(`reply ${action} hit harmless code ${error.code}`);
-            return;
-        }
-        this.logger.error(`reply ${action} failed`, error);
+    private updateOptions(response: ReplyResponse | string): InteractionUpdateOptions {
+        const reply = this.serialize(response);
+        return {
+            components: reply.components,
+            flags: MessageFlags.IsComponentsV2,
+            ...(reply.allowedMentions && { allowedMentions: reply.allowedMentions }),
+            ...(reply.files && { files: [...reply.files] })
+        };
+    }
+
+    private createdMessage(result: InteractionCallbackResponse): SentMessage | undefined {
+        return result.resource?.message ?? undefined;
     }
 }

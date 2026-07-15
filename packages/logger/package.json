@@ -60,7 +60,6 @@
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "envapt": "catalog:deps",
-        "strip-ansi": "^7.2.0",
         "winston": "^3.19.0"
     },
     "devDependencies": {

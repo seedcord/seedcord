@@ -2,8 +2,8 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { stripAnsi } from '@seedcord/utils';
 import { Envapter } from 'envapt';
-import stripAnsi from 'strip-ansi';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LoggerChannelRegistry } from '../src/LoggerChannelRegistry';
