@@ -117,6 +117,17 @@ describe('ReplySender.reply', () => {
         );
     });
 
+    it('advances to replied when the callback acked but carried no message, so a followUp works', async () => {
+        const rest = restMock();
+        rest.post.mockResolvedValueOnce({ resource: null });
+        const sender = senderFor(rest);
+        await sender.reply(reply).catch(() => undefined);
+
+        await sender.followUp(reply);
+
+        expect(postCall(rest, 1).route).toBe(WEBHOOK_ROUTE);
+    });
+
     it('drops the ephemeral flag when ephemeral is false, keeping v2', async () => {
         const rest = restMock();
 

@@ -39,8 +39,9 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
     public async reply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('reply');
         const created = await this.writeReply(response, opts);
+        // the callback already acked discord, so record replied before the message guard can throw
         this.transition('reply', 'replied');
-        return this.remember(created);
+        return this.remember(this.requireMessage(created, 'reply'));
     }
 
     public async defer(opts?: DeferOpts): Promise<void> {
@@ -66,7 +67,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         if (this.state === 'deferred-update') return await this.editOriginal(response);
         const created = await this.writeUpdate(response);
         this.transition('update', 'replied');
-        return this.remember(created);
+        return this.remember(this.requireMessage(created, 'update'));
     }
 
     public async followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
@@ -143,6 +144,12 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         return created;
     }
 
+    // a with_response callback always returns the created message, this guards a wire-contract gap
+    private requireMessage(created: TMessage | undefined, method: 'reply' | 'update'): TMessage {
+        if (!created) throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
+        return created;
+    }
+
     private async editOriginal(response: ReplyResponse | string): Promise<TMessage> {
         const edited = await this.writeEditOriginal(response);
         // after a deferUpdate the source message is @original, which this interaction did not send
@@ -162,10 +169,10 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
     // the modal-submit backstop, gateway overrides, the base call is a no-op elsewhere
     protected guardModalSource(): void {}
 
-    protected abstract writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage>;
+    protected abstract writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage | undefined>;
     protected abstract writeDefer(opts?: DeferOpts): Promise<void>;
     protected abstract writeDeferUpdate(): Promise<void>;
-    protected abstract writeUpdate(response: ReplyResponse | string): Promise<TMessage>;
+    protected abstract writeUpdate(response: ReplyResponse | string): Promise<TMessage | undefined>;
     protected abstract writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage>;
     protected abstract writeEditOriginal(response: ReplyResponse | string): Promise<TMessage>;
     protected abstract writeEditTarget(targetId: string, response: ReplyResponse | string): Promise<TMessage>;

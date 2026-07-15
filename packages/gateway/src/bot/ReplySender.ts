@@ -44,12 +44,12 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         super(routeId, seedState(interaction));
     }
 
-    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {
         const result = await this.interaction.reply({
             ...this.replyOptions(response, sendFlags(opts)),
             withResponse: true
         });
-        return this.createdMessage(result, 'reply');
+        return this.createdMessage(result);
     }
 
     protected async writeDefer(opts?: DeferOpts): Promise<void> {
@@ -60,10 +60,10 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         await this.sourceInteraction('deferUpdate').deferUpdate();
     }
 
-    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage> {
+    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage | undefined> {
         const source = this.sourceInteraction('update');
         const result = await source.update({ ...this.updateOptions(response), withResponse: true });
-        return this.createdMessage(result, 'update');
+        return this.createdMessage(result);
     }
 
     protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
@@ -145,12 +145,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         };
     }
 
-    private createdMessage(result: InteractionCallbackResponse, method: 'reply' | 'update'): SentMessage {
-        // djs types resource.message nullable, a type 4/7 callback with withResponse should always carry it
-        const message = result.resource?.message;
-        if (!message) {
-            throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
-        }
-        return message;
+    private createdMessage(result: InteractionCallbackResponse): SentMessage | undefined {
+        return result.resource?.message ?? undefined;
     }
 }

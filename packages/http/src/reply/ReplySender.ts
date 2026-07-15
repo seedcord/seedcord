@@ -1,6 +1,4 @@
 import { BaseReplySender, deferFlags, sendFlags } from '@seedcord/core/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types/v10';
 
 import type { REST, RawFile } from '@discordjs/rest';
@@ -74,14 +72,14 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         super(routeId);
     }
 
-    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
+    protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {
         const reply = this.serialize(response);
         const result = await this.callback(
             InteractionResponseType.ChannelMessageWithSource,
             callbackData(reply, sendFlags(opts)),
             reply.files
         );
-        return this.createdMessage(result, 'reply');
+        return this.createdMessage(result);
     }
 
     protected async writeDefer(opts?: DeferOpts): Promise<void> {
@@ -92,14 +90,14 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         await this.callback(InteractionResponseType.DeferredMessageUpdate);
     }
 
-    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage> {
+    protected async writeUpdate(response: ReplyResponse | string): Promise<SentMessage | undefined> {
         const reply = this.serialize(response);
         const result = await this.callback(
             InteractionResponseType.UpdateMessage,
             callbackData(reply, MessageFlags.IsComponentsV2),
             reply.files
         );
-        return this.createdMessage(result, 'update');
+        return this.createdMessage(result);
     }
 
     protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
@@ -166,12 +164,8 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         return files.map((file, index) => ({ name: file.name ?? `file-${index}`, data: file.attachment }));
     }
 
-    private createdMessage(result: unknown, method: 'reply' | 'update'): SentMessage {
-        // justified: the with_response callback wire shape, the guard covers an absent message
-        const message = (result as { resource?: { message?: SentMessage } }).resource?.message;
-        if (!message) {
-            throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
-        }
-        return message;
+    private createdMessage(result: unknown): SentMessage | undefined {
+        // justified: the with_response callback wire shape
+        return (result as { resource?: { message?: SentMessage } }).resource?.message;
     }
 }

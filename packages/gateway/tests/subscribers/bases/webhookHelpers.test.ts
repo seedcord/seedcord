@@ -11,11 +11,10 @@ describe('errorReport', () => {
     });
 
     it('neutralizes a fence carried by the cause', () => {
-        const error = new Error('outer');
-        error.stack = 'Error: outer';
         const cause = new Error('inner');
         cause.stack = 'Error: inner ``` broken';
-        error.cause = cause;
+        const error = new Error('outer', { cause });
+        error.stack = 'Error: outer';
 
         expect(errorReport(error)).not.toContain('```');
     });

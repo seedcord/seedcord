@@ -98,6 +98,17 @@ describe('ReplySender.reply', () => {
         );
     });
 
+    it('advances to replied when the callback acked but carried no message, so a followUp works', async () => {
+        const mock = mockInteraction();
+        mock.reply.mockResolvedValueOnce({ resource: { message: null } });
+        const sender = senderFor(mock);
+        await sender.reply(reply).catch(() => undefined);
+
+        await sender.followUp(reply);
+
+        expect(mock.followUp).toHaveBeenCalledOnce();
+    });
+
     it('throws ReplyIllegalAckState before any djs call on a second reply', async () => {
         const mock = mockInteraction();
         const sender = senderFor(mock);
