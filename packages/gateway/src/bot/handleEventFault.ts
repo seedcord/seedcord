@@ -24,7 +24,9 @@ export function handleEventFault(
     core: Core
 ): void {
     if (caught instanceof Silence) {
-        if (caught.reason !== undefined) logger.debug(`Silence: ${caught.reason}`);
+        if (caught.reason !== undefined && (core.config.errors?.logSilences ?? true)) {
+            logger.debug(`Silence: ${caught.reason}`);
+        }
         return;
     }
     if (!Error.isError(caught)) throw caught;
