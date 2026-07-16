@@ -47,8 +47,9 @@ export abstract class AutocompleteHandler<
         super(event, core, dispatch);
     }
 
-    // anchors the Route generic for the route decorators
-    declare protected readonly __route?: Route;
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __autocompleteRoute?: Route;
 
     private resolver?: HttpSlashOptions;
 

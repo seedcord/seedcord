@@ -1,6 +1,6 @@
+import { SlashRoute } from '@seedcord/core';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { SlashRoute } from '@bDecorators/Interactions';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
 import type { SlashOptions } from '@inputs/SlashOptions';

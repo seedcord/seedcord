@@ -1,7 +1,6 @@
-import { Notice, CustomId, SelectMenuKind } from '@seedcord/core';
+import { Notice, CustomId, SelectMenuKind, ButtonRoute, ModalRoute, SelectMenuRoute } from '@seedcord/core';
 import { describe, expect, it } from 'vitest';
 
-import { ButtonRoute, ModalRoute, SelectMenuRoute } from '@bDecorators/Interactions';
 import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
 
 import type { Core } from '@interfaces/Core';

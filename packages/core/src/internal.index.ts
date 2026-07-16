@@ -35,7 +35,7 @@ export {
 export { NoticeCard } from '@stops/NoticeCard';
 
 export { prefixOf, decodeFor, type AnyCustomId } from '@customId/CustomId';
-export { ComponentDefsKey, type HasComponentDefs } from '@customId/routing';
+export { ComponentDefsKey, type HasComponentDefs, type MatchArms, type SingleParams } from '@customId/routing';
 export type { DecodedParams } from '@customId/Field';
 
 export type { OptionLens } from '@inputs/OptionLens';

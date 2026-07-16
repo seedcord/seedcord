@@ -39,6 +39,10 @@ export abstract class SlashHandler<
     Route extends keyof SlashOptionRegistry,
     Cache extends CacheType = 'cached'
 > extends InteractionHandler<ChatInputCommandInteraction<Cache>> {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __slashRoute?: Route;
+
     /**
      * The typed options for this command's route. Required options drop the null, choices narrow to their
      * literal union, and only the getters for kinds this command actually uses appear. Use `this.event.options`
@@ -51,7 +55,7 @@ export abstract class SlashHandler<
 
     /**
      * Run the arm for whichever command fired. Use this only when the handler is registered for several
-     * routes. A single-route handler reads `this.options` directly instead, match buys nothing there.
+     * routes.
      *
      * Provide one arm per registered route, keyed by its route string, and each arm receives that route's
      * own narrowed options. The arms must cover every route in the generic, a missing route or an unknown

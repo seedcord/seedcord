@@ -55,6 +55,10 @@ export abstract class ContextMenuHandler<
     Kind extends ContextMenuKind,
     Cache extends CacheType = 'cached'
 > extends InteractionHandler<InteractionFor<Kind, Cache>> {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __ctxKind?: Kind;
+
     protected get target(): TargetFor<Kind, Cache> {
         // justified: the Kind generic decides which interaction member is live, both narrow to TargetFor.
         const event = this.event;

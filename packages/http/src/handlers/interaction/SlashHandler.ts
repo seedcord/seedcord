@@ -26,8 +26,9 @@ type SlashMatchArms<Route extends keyof SlashOptionRegistry, Ret> = {
 export abstract class SlashHandler<
     Route extends keyof SlashOptionRegistry
 > extends InteractionHandler<APIChatInputApplicationCommandInteraction> {
-    // anchors the Route generic for the route decorators
-    declare protected readonly __route?: Route;
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __slashRoute?: Route;
 
     private resolver?: HttpSlashOptions;
 

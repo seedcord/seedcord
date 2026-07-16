@@ -7,29 +7,23 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '@bot/ReplySender';
-import type { AnyCustomId, DecodedParams, HasComponentDefs } from '@seedcord/core/internal';
+import type { AnyCustomId, HasComponentDefs, MatchArms, SingleParams } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
 type ComponentInteraction = ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction;
 
-// params for a single-route handler. a multi-route handler must use match(), so its params is never.
-type SingleParams<Defs extends readonly AnyCustomId[]> = Defs extends readonly [infer One extends AnyCustomId]
-    ? DecodedParams<One['shape']>
-    : never;
-
-// one arm per route, keyed by prefix, each receiving that route's decoded params.
-type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
-    [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => Promisable<Ret>;
-};
+interface DecodedRoute {
+    prefix: string;
+    params: Record<string, unknown>;
+}
 
 /**
  * Shared base the customId-routed component handlers extend.
  *
- * Not a public entry point. You should be using {@link ButtonHandler}, {@link SelectMenuHandler}, or
- * {@link ModalHandler} instead. This class only carries the customId decode and route-matching plumbing
- * those bases share, so DO NOT use it directly.
+ * Not a public entry point. Extend {@link ButtonHandler}, {@link SelectMenuHandler}, or {@link ModalHandler}
+ * instead. This class defines the customId decode and the route matching those bases share.
  *
  * @typeParam Event - The component interaction type this handler processes
  * @typeParam Defs - The customId route definitions registered on the concrete handler
@@ -38,8 +32,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     extends InteractionHandler<Event>
     implements HasComponentDefs<Defs>
 {
-    // phantom only, never set at runtime. a route decorator types its argument against this so passing
-    // different defs to the decorator and the generic fails to compile.
+    // phantom, never set at runtime.
     /** @internal */
     declare readonly __componentDefs?: Defs;
 
@@ -53,22 +46,19 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         return this.sender.deferUpdate();
     }
 
-    // the definitions the route decorator stored, read off the concrete handler class.
+    // metadata attaches to the class
     private get registeredDefs(): readonly AnyCustomId[] {
         const defs = Reflect.getMetadata(ComponentDefsKey, this.constructor) as readonly AnyCustomId[] | undefined;
         if (!defs) throw new SeedcordError(SeedcordErrorCode.CustomIdHandlerRouteMissing, [this.constructor.name]);
         return defs;
     }
 
-    private decoded?: { prefix: string; params: Record<string, unknown> };
+    private decoded?: DecodedRoute;
 
-    private get route(): { prefix: string; params: Record<string, unknown> } {
+    private get route(): DecodedRoute {
         if (this.decoded) return this.decoded;
         // justified, decodeFor returns runtime values and the generic Defs fixes their decoded types.
-        const decoded = decodeFor(this.registeredDefs, this.event.customId) as {
-            prefix: string;
-            params: Record<string, unknown>;
-        };
+        const decoded = decodeFor(this.registeredDefs, this.event.customId) as DecodedRoute;
         this.decoded = decoded;
         return decoded;
     }
@@ -91,10 +81,11 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * handler `this.params` is `never`, so match is the only way to read the decoded params.
      *
      * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
-     * decoded params. The arms must cover every registered def, a missing prefix or an unknown key is a
-     * compile error. Decoding runs before any arm, so a stale or corrupt wire throws before an arm body executes.
+     * decoded params. The arms cover every registered route prefix, checked at compile time, and a prefix
+     * unmatched at runtime throws `CustomIdMatchArmMissing`. Decoding runs before any arm, so a stale or
+     * corrupt wire throws before an arm body executes.
      *
-     * @param arms - One handler per registered route, keyed by prefix.
+     * @param arms - One callback per registered route, keyed by prefix.
      * @returns The result of the arm that ran.
      *
      * @example
@@ -112,6 +103,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      */
     protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.route;
+        // justified: MatchArms is keyed by prefix literals, the Record cast indexes it with the runtime prefix.
         const arm = (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix];
         if (!arm) throw new SeedcordError(SeedcordErrorCode.CustomIdMatchArmMissing, [prefix]);
         return await arm(params);

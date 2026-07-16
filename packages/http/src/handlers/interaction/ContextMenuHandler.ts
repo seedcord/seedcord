@@ -35,6 +35,10 @@ type TargetMemberFor<Kind extends ContextMenuKind> = Kind extends ApplicationCom
 export abstract class ContextMenuHandler<Kind extends ContextMenuKind> extends InteractionHandler<
     InteractionFor<Kind>
 > {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __ctxKind?: Kind;
+
     protected get target(): TargetFor<Kind> {
         const data = this.event.data;
         const target =

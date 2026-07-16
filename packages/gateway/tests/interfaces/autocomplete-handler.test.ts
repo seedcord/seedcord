@@ -1,7 +1,7 @@
+import { AutocompleteRoute } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { AutocompleteRoute } from '@bDecorators/Interactions';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 
 import type { Core } from '@interfaces/Core';

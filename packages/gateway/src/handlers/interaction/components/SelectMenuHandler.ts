@@ -1,9 +1,31 @@
 import { ComponentHandler } from './ComponentHandler';
 
-import type { SelectMenuInteractionFor } from '@bDecorators/Interactions';
 import type { SelectMenuKind } from '@seedcord/core';
 import type { AnyCustomId } from '@seedcord/core/internal';
-import type { CacheType } from 'discord.js';
+import type {
+    CacheType,
+    ChannelSelectMenuInteraction,
+    MentionableSelectMenuInteraction,
+    RoleSelectMenuInteraction,
+    StringSelectMenuInteraction,
+    UserSelectMenuInteraction
+} from 'discord.js';
+
+/** @internal */
+export type SelectMenuInteractionFor<
+    SelectMenu extends SelectMenuKind,
+    Cache extends CacheType = CacheType
+> = SelectMenu extends SelectMenuKind.String
+    ? StringSelectMenuInteraction<Cache>
+    : SelectMenu extends SelectMenuKind.User
+      ? UserSelectMenuInteraction<Cache>
+      : SelectMenu extends SelectMenuKind.Role
+        ? RoleSelectMenuInteraction<Cache>
+        : SelectMenu extends SelectMenuKind.Channel
+          ? ChannelSelectMenuInteraction<Cache>
+          : SelectMenu extends SelectMenuKind.Mentionable
+            ? MentionableSelectMenuInteraction<Cache>
+            : never;
 
 /**
  * Base class for a select menu handler.
@@ -32,4 +54,8 @@ export abstract class SelectMenuHandler<
     Kind extends SelectMenuKind,
     Defs extends readonly AnyCustomId[],
     Cache extends CacheType = 'cached'
-> extends ComponentHandler<SelectMenuInteractionFor<Kind, Cache>, Defs> {}
+> extends ComponentHandler<SelectMenuInteractionFor<Kind, Cache>, Defs> {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __component?: Kind;
+}
