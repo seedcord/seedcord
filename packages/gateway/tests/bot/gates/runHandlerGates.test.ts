@@ -1,5 +1,4 @@
 import { Notice, defineGate } from '@seedcord/core';
-import 'reflect-metadata';
 import { runHandlerGates } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 

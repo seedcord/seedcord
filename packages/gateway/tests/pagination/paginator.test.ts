@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { ButtonRoute } from '@seedcord/core';
 import {
     ComponentDefsKey,

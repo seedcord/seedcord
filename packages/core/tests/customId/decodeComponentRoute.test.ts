@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
