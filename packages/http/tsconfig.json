@@ -6,8 +6,9 @@
         "outDir": "./dist",
         "paths": {
             "@src/*": ["./src/*"],
-            "@interfaces/*": ["./src/interfaces/*"],
             "@handlers/*": ["./src/handlers/*"],
+            "@inputs/*": ["./src/inputs/*"],
+            "@interfaces/*": ["./src/interfaces/*"],
             "@reply/*": ["./src/reply/*"]
         }
     },

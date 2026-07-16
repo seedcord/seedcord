@@ -115,13 +115,28 @@ function unknownAndWrongKind(o: SlashOptions<'coreReq', StubLens>): void {
     void o.getString('who');
 }
 
+// a union route is the safe intersection view: only names shared across every route with one kind,
+// required only when required everywhere. per-route getters come from match's per-arm narrowing.
+function unionRouteIntersects(o: SlashOptions<'coreReq' | 'coreOpt', StubLens>): void {
+    // 'who' is a user option on both routes, required on one, nullable on the union
+    expectTypeOf(o.getUser('who')).toEqualTypeOf<StubUser | null>();
+    expectTypeOf(o.getString('label')).toEqualTypeOf<string | null>();
+    // 'count' is on coreReq only, absent from the union view
+    // @ts-expect-error getInteger is absent, no shared integer option
+    void o.getInteger;
+    // @ts-expect-error 'what' is on coreReq only
+    void o.getRole;
+}
+
+// the assertions are type-level, tc is the gate that checks them
 describe('core SlashOptions machinery', () => {
-    it('resolves rich kinds through a lens with no discord.js', () => {
+    it('defines the type-only probes', () => {
         expect(typeof requiredKinds).toBe('function');
         expect(typeof optionalKinds).toBe('function');
         expect(typeof choiceKinds).toBe('function');
         expect(typeof channelNarrowing).toBe('function');
         expect(typeof onlyPresentKinds).toBe('function');
         expect(typeof unknownAndWrongKind).toBe('function');
+        expect(typeof unionRouteIntersects).toBe('function');
     });
 });

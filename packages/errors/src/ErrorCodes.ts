@@ -100,6 +100,8 @@ export enum SeedcordErrorCode {
     EventMatchArmMissing = 1612,
     /** Event middleware read `this.eventName` but was constructed without a fired event name. */
     EventMiddlewareNameUnavailable = 1613,
+    /** An autocomplete payload carried no focused option. */
+    AutocompleteNoFocusedOption = 1614,
 
     /** A Cooldown gate was given a duration string that is not a well-formed positive duration. */
     GateInvalidCooldownDuration = 1701,

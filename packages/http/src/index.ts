@@ -11,6 +11,9 @@ export type {
 
 export type { Core } from '@interfaces/Core';
 
+export type { SlashOptions } from '@inputs/SlashOptions';
+export type { AutocompleteOptions } from '@seedcord/core/internal';
+
 export * from './handlers';
 
 /** Package version */

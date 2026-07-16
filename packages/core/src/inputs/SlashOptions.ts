@@ -5,11 +5,14 @@ import type { IsNever } from 'type-fest';
 
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
 
+// deliberately non-distributive because a union Route intersects to the names shared by every route, since a
+// distributed union would type a required option as non-null while a route without it fired
 type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKind> = {
     [Name in keyof Row<Route>]: Row<Route>[Name] extends { kind: Kind } ? Name : never;
 }[keyof Row<Route>];
 
-// PublicThreadChannel.type is PublicThread | AnnouncementThread, so requesting one alone Extracts to never. widen to both.
+// a djs thread channel's type field is PublicThread | AnnouncementThread, requesting one alone would
+// Extract to never on the gateway lens. widen to both.
 type ChannelWireType<Types extends number> = Types extends ChannelType.PublicThread | ChannelType.AnnouncementThread
     ? ChannelType.PublicThread | ChannelType.AnnouncementThread
     : Types;

@@ -9,8 +9,9 @@ import rootConfig from '../../vitest.config';
 
 const alias = {
     '@src': path.resolve(__dirname, './src'),
-    '@interfaces': path.resolve(__dirname, './src/interfaces'),
     '@handlers': path.resolve(__dirname, './src/handlers'),
+    '@inputs': path.resolve(__dirname, './src/inputs'),
+    '@interfaces': path.resolve(__dirname, './src/interfaces'),
     '@reply': path.resolve(__dirname, './src/reply')
 };
 

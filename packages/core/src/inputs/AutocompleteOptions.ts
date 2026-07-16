@@ -3,11 +3,30 @@ import type { IsNever } from 'type-fest';
 
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];
 
-type EntryFor<Route extends keyof SlashOptionRegistry, Name extends PropertyKey> = Route extends unknown
+// distributes over Route so each command's row resolves independently
+export type EntryFor<Route extends keyof SlashOptionRegistry, Name extends PropertyKey> = Route extends unknown
     ? Name extends keyof Row<Route>
         ? Row<Route>[Name]
         : never
     : never;
+
+export type AutocompletableNames<Route extends keyof SlashOptionRegistry> = Route extends unknown
+    ? {
+          [Name in keyof Row<Route>]: Row<Route>[Name] extends { autocomplete: true } ? Name : never;
+      }[keyof Row<Route>]
+    : never;
+
+export type ChoiceValueOf<Entry> = Entry extends { kind: 'string' }
+    ? string
+    : Entry extends { kind: 'integer' | 'number' }
+      ? number
+      : never;
+
+/** The focused option. `value` is the raw partial Discord delivers mid-type, always a string regardless of kind. */
+export interface FocusedField<Route extends keyof SlashOptionRegistry> {
+    name: AutocompletableNames<Route>;
+    value: string;
+}
 
 type NamesOfKind<Route extends keyof SlashOptionRegistry, Kind extends OptionKind> = Route extends unknown
     ? {
@@ -33,7 +52,7 @@ type Getter<Route extends keyof SlashOptionRegistry, Kind extends OptionKind, Me
               <Name extends NamesOfKind<Route, Kind>>(name: Name) => ResolvedValue<EntryFor<Route, Name>> | null
           >;
 
-// every read is nullable, a sibling option is partial while the focused field is still being typed.
+// a sibling is partial while the user types the focused field, every read is | null
 export type AutocompleteOptions<Route extends keyof SlashOptionRegistry> = Getter<Route, 'string', 'getString'> &
     Getter<Route, 'integer', 'getInteger'> &
     Getter<Route, 'number', 'getNumber'> &

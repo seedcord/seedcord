@@ -1,8 +1,8 @@
 import type { SlashOptionRegistry } from '@seedcord/core';
-import type { OptionLens, SlashOptions as OptionView } from '@seedcord/core/internal';
+import type { SlashOptions as OptionView } from '@seedcord/core/internal';
 import type { CacheType, CommandInteractionOption } from 'discord.js';
 
-interface GatewayLens<Cache extends CacheType> extends OptionLens {
+interface GatewayLens<Cache extends CacheType> {
     user: NonNullable<CommandInteractionOption<Cache>['user']>;
     member: NonNullable<CommandInteractionOption<Cache>['member']>;
     channel: NonNullable<CommandInteractionOption<Cache>['channel']>;
