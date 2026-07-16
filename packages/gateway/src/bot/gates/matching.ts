@@ -1,9 +1,9 @@
 import type { EventGateContext, InteractionGateContext } from './Gate';
-import type { ValidEventTypes } from '@handlers/BaseHandler';
 import type { EventHandler } from '@handlers/event';
 import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import type { Gate, GateContextBase, RequiredOf } from '@seedcord/core';
 import type { GateFitsWith } from '@seedcord/core/internal';
+import type { ValidEventTypes } from '@src/handlers/interactionTypes';
 import type {
     ButtonInteraction,
     ChannelSelectMenuInteraction,

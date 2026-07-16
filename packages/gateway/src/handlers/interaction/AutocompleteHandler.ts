@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { BaseHandler } from '@handlers/BaseHandler';
+import { BaseHandler } from '@src/handlers/BaseHandler';
 
 import type { Core } from '@interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
@@ -111,7 +111,7 @@ export abstract class AutocompleteHandler<
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
     protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
-        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base member the rule points subclasses to
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base respond and calls djs directly
         await this.event.respond(choices);
     }
 

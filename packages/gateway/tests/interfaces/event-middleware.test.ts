@@ -6,8 +6,8 @@ import { Middleware, MiddlewareType } from '@bDecorators/Middlewares';
 import { EventMiddleware } from '@handlers/event';
 import { InteractionMiddleware } from '@handlers/interaction';
 
-import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;

@@ -5,7 +5,7 @@ import { RequireBotPermissions, RequirePermissions, RequireRole } from '@bot/gat
 import { MissingPermissions, MissingRole, NotInGuild } from '@bot/notices';
 
 import type { InteractionGateContext } from '@bot/gates';
-import type { NonModalInteraction } from '@handlers/BaseHandler';
+import type { NonModalInteraction } from '@src/handlers/interactionTypes';
 
 // a Guild instance so checkPermissions takes its `instanceof Guild` branch and reads member.permissions
 function guildFake(extra: object = {}): Guild {

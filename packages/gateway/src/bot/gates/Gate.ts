@@ -1,6 +1,6 @@
-import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { GateContextBase } from '@seedcord/core';
+import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
 
 /**

@@ -1,4 +1,3 @@
-import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventHandler } from '@handlers/event/EventHandler';
 import type { EventMiddleware } from '@handlers/event/EventMiddleware';
 import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
@@ -6,6 +5,7 @@ import type { InteractionHandler } from '@handlers/interaction/InteractionHandle
 import type { InteractionMiddleware } from '@handlers/interaction/InteractionMiddleware';
 import type { Core } from '@interfaces/Core';
 import type { TypedConstructor } from '@seedcord/types';
+import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 /** @internal */

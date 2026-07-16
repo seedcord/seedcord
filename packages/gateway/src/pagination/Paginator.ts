@@ -9,10 +9,10 @@ import { renderPage } from './render';
 import type { PageContext } from './PageContext';
 import type { ItemRender, PageRender } from './render';
 import type { PageSource } from './sources';
-import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
+import type { Repliables } from '@src/handlers/interactionTypes';
 import type { ButtonInteraction, Message } from 'discord.js';
 
 interface PaginatorConfig<Item, Prefix extends string> {

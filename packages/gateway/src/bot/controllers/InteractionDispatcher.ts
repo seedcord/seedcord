@@ -33,11 +33,11 @@ import { RepliableHandler } from '@handlers/RepliableHandler';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { ReplySender } from '@bot/ReplySender';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
-import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

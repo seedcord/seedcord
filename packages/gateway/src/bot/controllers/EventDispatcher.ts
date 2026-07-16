@@ -14,12 +14,12 @@ import { EventHandler, EventMiddleware } from '@handlers/event';
 
 import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
-import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@interfaces/Plugin';
 import type { EventFrequency } from '@miscellaneous/types';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
+import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 interface RegisteredEventMiddleware {

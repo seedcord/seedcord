@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { ReplySender } from '@bot/ReplySender';
 
 import type { SentMessage } from '@bot/ReplySender';
-import type { Repliables } from '@handlers/BaseHandler';
+import type { Repliables } from '@src/handlers/interactionTypes';
 
 const ROUTE = 'button:page';
 

@@ -8,9 +8,9 @@ import { DiscordAPIError } from 'discord.js';
 import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';
 import { FaultThrottle } from '@miscellaneous/FaultThrottle';
 
-import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { RenderContext, ReplyResponse, Nullable } from '@seedcord/types';
+import type { Repliables } from '@src/handlers/interactionTypes';
 import type { AllSubscriptions, EventFaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 import type { Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';

@@ -3,9 +3,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
 
-import type { Repliables } from '@handlers/BaseHandler';
 import type { AckState } from '@seedcord/core/internal';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type { Repliables } from '@src/handlers/interactionTypes';
 import type {
     APIModalInteractionResponseCallbackData,
     InteractionCallbackResponse,
