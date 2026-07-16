@@ -10,8 +10,6 @@ export {
     type RoutableConstructor
 } from '@decorators/interactionRoutes';
 
-export type { Handler } from '@src/handlers/BaseHandler';
-
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
 export type { GateFitsWith } from '@gates/matching';

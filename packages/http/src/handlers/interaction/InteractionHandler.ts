@@ -1,6 +1,6 @@
 import { RepliableHandler } from '@handlers/RepliableHandler';
 
-import type { Repliables } from '@handlers/BaseHandler';
+import type { Repliables } from '@handlers/interactionTypes';
 import type { Core } from '@interfaces/Core';
 import type { DispatchContext } from '@seedcord/core';
 import type { ModalLike } from '@seedcord/core/internal';

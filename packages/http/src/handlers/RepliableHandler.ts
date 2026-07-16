@@ -2,7 +2,7 @@ import { RepliableHandler as CoreRepliableHandler } from '@seedcord/core';
 
 import { ReplySender } from '@reply/ReplySender';
 
-import type { Repliables } from './BaseHandler';
+import type { Repliables } from './interactionTypes';
 import type { Core } from '@interfaces/Core';
 import type { SentMessage } from '@reply/ReplySender';
 

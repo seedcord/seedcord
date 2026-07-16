@@ -17,7 +17,7 @@ function noticeNameFrom(fn: () => unknown): string {
         fn();
     } catch (error) {
         expect(error).toBeInstanceOf(Notice);
-        return (error as Notice).constructor.name;
+        if (error instanceof Notice) return error.constructor.name;
     }
     throw new Error('expected a Notice');
 }

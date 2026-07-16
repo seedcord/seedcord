@@ -1,6 +1,6 @@
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
-import type { Repliables } from '@handlers/BaseHandler';
+import type { Repliables } from '@handlers/interactionTypes';
 
 /**
  * Default handler for interactions no manifest row matches. A reply failure here

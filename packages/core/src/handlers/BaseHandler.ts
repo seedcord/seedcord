@@ -3,11 +3,6 @@ import { Logger } from '@seedcord/logger';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { DispatchContext } from '@src/dispatch/DispatchContext';
 
-/** @internal */
-export interface Handler {
-    execute(): Promise<void>;
-}
-
 /**
  * Base class every transport handler extends. Don't register handlers directly, use the more specific
  * handler subclasses.
@@ -15,7 +10,7 @@ export interface Handler {
  * @typeParam Event - The event or interaction this handler processes
  * @typeParam TCore - The transport's Core
  */
-export abstract class BaseHandler<Event, TCore extends CoreBase> implements Handler {
+export abstract class BaseHandler<Event, TCore extends CoreBase> {
     protected readonly event: Event;
     protected readonly logger: Logger;
     // absent on event handlers

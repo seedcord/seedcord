@@ -9,7 +9,7 @@ import { RepliableHandler } from '@handlers/RepliableHandler';
 import { ReplySender } from '@reply/ReplySender';
 
 import type { ResolvedRoute } from './resolve';
-import type { ValidInteractionTypes } from '@handlers/BaseHandler';
+import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { Core } from '@interfaces/Core';
 import type { GateContextBase } from '@seedcord/core';
 import type { Config, IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';

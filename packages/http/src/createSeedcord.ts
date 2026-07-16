@@ -9,7 +9,7 @@ import { buildRouteMaps, resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
 
-import type { ValidInteractionTypes } from '@handlers/BaseHandler';
+import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { Config } from '@seedcord/types';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
