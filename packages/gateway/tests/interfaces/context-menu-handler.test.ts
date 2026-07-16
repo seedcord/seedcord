@@ -1,7 +1,7 @@
+import { ContextMenuRoute } from '@seedcord/core';
 import { ApplicationCommandType } from 'discord.js';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { ContextMenuRoute } from '@bDecorators/Interactions';
 import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 
 import type { Core } from '@interfaces/Core';

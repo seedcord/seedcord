@@ -1,15 +1,20 @@
 export { createSeedcord } from './createSeedcord';
 export type { EngineContext } from './createSeedcord';
 
-export type {
-    AutocompleteRoute,
-    CommandRoute,
-    ComponentRoute,
-    RouteManifest,
-    SubscriberRoute
-} from './manifest/RouteManifest';
+export type { RouteManifest } from './manifest/RouteManifest';
 
 export type { Core } from '@interfaces/Core';
+
+export type { SlashOptions } from '@inputs/SlashOptions';
+export type { AutocompleteOptions } from '@seedcord/core';
+export {
+    AutocompleteRoute,
+    ButtonRoute,
+    ContextMenuRoute,
+    ModalRoute,
+    SelectMenuRoute,
+    SlashRoute
+} from '@seedcord/core';
 
 export * from './handlers';
 

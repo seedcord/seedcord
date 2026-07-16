@@ -1,10 +1,9 @@
-import { and, Cooldown, CustomId, GuildOnly, or, OwnerOnly } from '@seedcord/core';
+import { and, Cooldown, CustomId, GuildOnly, or, OwnerOnly, ModalRoute } from '@seedcord/core';
 import { PermissionFlagsBits } from 'discord.js';
 import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '@bDecorators/Gated';
-import { ModalRoute } from '@bDecorators/Interactions';
 import { IgnoreBots, Nsfw, RequireBotPermissions, RequirePermissions } from '@bot/gates';
 import { EventHandler } from '@handlers/event';
 import { ModalHandler } from '@handlers/interaction/components';

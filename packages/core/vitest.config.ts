@@ -17,6 +17,7 @@ export default mergeConfig(
                 '@decorators': path.resolve(__dirname, './src/decorators'),
                 '@gates': path.resolve(__dirname, './src/gates'),
                 '@hmr': path.resolve(__dirname, './src/hmr'),
+                '@inputs': path.resolve(__dirname, './src/inputs'),
                 '@interfaces': path.resolve(__dirname, './src/interfaces'),
                 '@notices': path.resolve(__dirname, './src/notices'),
                 '@pagination': path.resolve(__dirname, './src/pagination'),

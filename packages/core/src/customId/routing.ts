@@ -1,4 +1,6 @@
 import type { AnyCustomId } from './CustomId';
+import type { DecodedParams } from './Field';
+import type { Promisable } from 'type-fest';
 
 /**
  * The route decorators store a handler's customId definitions here so the component base can decode
@@ -15,5 +17,16 @@ export const ComponentDefsKey = Symbol('seedcord:customId:componentDefs');
  * @internal
  */
 export interface HasComponentDefs<Defs extends readonly AnyCustomId[]> {
+    /** @internal */
     readonly __componentDefs?: Defs;
 }
+
+/** @internal */
+export type SingleParams<Defs extends readonly AnyCustomId[]> = Defs extends readonly [infer One extends AnyCustomId]
+    ? DecodedParams<One['shape']>
+    : never;
+
+/** @internal */
+export type MatchArms<Defs extends readonly AnyCustomId[], Ret> = {
+    [Def in Defs[number] as Def['prefix']]: (params: DecodedParams<Def['shape']>) => Promisable<Ret>;
+};

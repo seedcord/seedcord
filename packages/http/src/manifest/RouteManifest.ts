@@ -5,7 +5,7 @@ import type { ApplicationCommandType } from 'discord-api-types/v10';
  * chat-input command with subcommands, `name` is the full route path (`'config/set'`), the same key
  * `@SlashRoute` registers.
  */
-export interface CommandRoute {
+interface CommandRoute {
     readonly name: string;
     readonly type: ApplicationCommandType;
     /** Lazy import of the handler module, evaluated on first hit. */
@@ -33,7 +33,7 @@ export interface ComponentRoute {
 /**
  * An autocomplete row, its own route keyed by the command's route path, separate from the slash row.
  */
-export interface AutocompleteRoute {
+interface AutocompleteRoute {
     readonly name: string;
     /** Lazy import of the handler module, evaluated on first hit. */
     readonly load: () => Promise<unknown>;
@@ -43,7 +43,7 @@ export interface AutocompleteRoute {
  * A bus subscriber row. The Bus routes off it without importing the subscriber module. The HTTP engine
  * ignores these rows until the Bus ships on this transport.
  */
-export interface SubscriberRoute {
+interface SubscriberRoute {
     /** The subscription keys this subscriber registers for. */
     readonly keys: readonly string[];
     /** Mirrors the `@Subscribe` frequency metadata. */

@@ -5,6 +5,14 @@ export type * from '@registries/SlashOptionRegistry';
 
 export { RegisterCommand } from '@decorators/Command';
 export { SelectMenuKind } from '@decorators/interactionRoutes';
+export {
+    AutocompleteRoute,
+    ButtonRoute,
+    ContextMenuRoute,
+    ModalRoute,
+    SelectMenuRoute,
+    SlashRoute
+} from '@decorators/routes';
 
 export { DispatchContext } from '@src/dispatch/DispatchContext';
 export type { DispatchState } from '@src/dispatch/DispatchContext';
@@ -26,6 +34,8 @@ export { Fault } from '@stops/Fault';
 export { Silence } from '@stops/Silence';
 
 export { CustomId } from '@customId/CustomId';
+
+export type { AutocompleteOptions } from '@inputs/AutocompleteOptions';
 
 export { paginate } from '@pagination/paginate';
 export { type PageView } from '@pagination/PageView';

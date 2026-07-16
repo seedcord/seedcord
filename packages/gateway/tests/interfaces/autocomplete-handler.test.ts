@@ -1,7 +1,7 @@
+import { AutocompleteRoute } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { AutocompleteRoute } from '@bDecorators/Interactions';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 
 import type { Core } from '@interfaces/Core';
@@ -238,6 +238,13 @@ describe('AutocompleteHandler', () => {
     it('throws AutocompleteMatchArmMissing when the focused field has no arm', async () => {
         // a stale-deployed field arrives that the handler does not branch on
         const handler = new SearchMatch(autocompleteRespond('ghost', 'x', []), core);
+        await expect(handler.execute()).rejects.toMatchObject({
+            code: SeedcordErrorCode.AutocompleteMatchArmMissing
+        });
+    });
+
+    it('throws AutocompleteMatchArmMissing for a prototype-named focused field', async () => {
+        const handler = new SearchMatch(autocompleteRespond('constructor', 'x', []), core);
         await expect(handler.execute()).rejects.toMatchObject({
             code: SeedcordErrorCode.AutocompleteMatchArmMissing
         });

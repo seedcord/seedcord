@@ -29,4 +29,8 @@ import type { CacheType, ModalSubmitInteraction } from 'discord.js';
 export abstract class ModalHandler<
     Defs extends readonly AnyCustomId[],
     Cache extends CacheType = 'cached'
-> extends ComponentHandler<ModalSubmitInteraction<Cache>, Defs> {}
+> extends ComponentHandler<ModalSubmitInteraction<Cache>, Defs> {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __component?: 'modal';
+}

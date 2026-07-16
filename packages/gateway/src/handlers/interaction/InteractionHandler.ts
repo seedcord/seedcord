@@ -8,9 +8,9 @@ import type { ModalLike } from '@seedcord/core/internal';
 /**
  * Shared base the typed interaction handlers extend.
  *
- * Not a public entry point. You should be using {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
+ * Not a public entry point. Extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
  * or {@link SelectMenuHandler} instead. This class adds `showModal` on top of the reply members those bases
- * share, so DO NOT use it directly.
+ * share.
  *
  * @typeParam Repliable - The interaction type this handler processes
  */

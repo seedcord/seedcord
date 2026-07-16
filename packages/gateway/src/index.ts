@@ -38,7 +38,7 @@ export * from '@subscribers/index';
 // Export seedcord
 export * from './Seedcord';
 
-// Export other packages
+// Exports from other packages
 export * from '@seedcord/core';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';

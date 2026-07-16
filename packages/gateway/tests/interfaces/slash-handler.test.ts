@@ -1,10 +1,12 @@
+import { SlashRoute } from '@seedcord/core';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { SlashRoute } from '@bDecorators/Interactions';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
 import type { SlashOptions } from '@inputs/SlashOptions';
-import type { CommandInteractionOption, User } from 'discord.js';
+import type { Core } from '@interfaces/Core';
+import type { ChatInputCommandInteraction, CommandInteractionOption, User } from 'discord.js';
 
 // Compile-time spec for SlashHandler. The execute() bodies are typechecked but never run, so each guarded
 // mistake below fails the build if it stops being a compile error. Distinct routes from typed-options.test.ts
@@ -174,7 +176,31 @@ class UnknownGenericRoute extends SlashHandler<'ghost'> {
     }
 }
 
+// justified: match reads only commandName and the sub getters off the event
+const core = {} as unknown as Core;
+function slashInteraction(commandName: string): ChatInputCommandInteraction<'cached'> {
+    return {
+        commandName,
+        options: { getSubcommandGroup: () => null, getSubcommand: () => null }
+    } as unknown as ChatInputCommandInteraction<'cached'>;
+}
+
 describe('SlashHandler', () => {
+    it('throws SlashMatchArmMissing for a prototype-named route with no arm', async () => {
+        class Mod extends SlashHandler<'kick' | 'warn'> {
+            async execute(): Promise<void> {
+                await this.match({
+                    kick: () => undefined,
+                    warn: () => undefined
+                });
+            }
+        }
+        const handler = new Mod(slashInteraction('constructor'), core);
+        await expect(handler.execute()).rejects.toMatchObject({
+            code: SeedcordErrorCode.SlashMatchArmMissing
+        });
+    });
+
     it('exposes the typed slash handlers', () => {
         expect([KickHandler, ModerationHandler, MissingArm, CrossRoute]).toHaveLength(4);
     });

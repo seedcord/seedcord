@@ -11,6 +11,7 @@
             "@decorators/*": ["./src/decorators/*"],
             "@gates/*": ["./src/gates/*"],
             "@hmr/*": ["./src/hmr/*"],
+            "@inputs/*": ["./src/inputs/*"],
             "@interfaces/*": ["./src/interfaces/*"],
             "@notices/*": ["./src/notices/*"],
             "@pagination/*": ["./src/pagination/*"],

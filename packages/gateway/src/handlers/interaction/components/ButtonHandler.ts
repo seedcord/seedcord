@@ -28,4 +28,8 @@ import type { ButtonInteraction, CacheType } from 'discord.js';
 export abstract class ButtonHandler<
     Defs extends readonly AnyCustomId[],
     Cache extends CacheType = 'cached'
-> extends ComponentHandler<ButtonInteraction<Cache>, Defs> {}
+> extends ComponentHandler<ButtonInteraction<Cache>, Defs> {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __component?: 'button';
+}

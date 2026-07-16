@@ -17,11 +17,13 @@ import type { APIModalSubmitInteraction } from 'discord-api-types/v10';
  *
  * @typeParam Defs - The customId definitions this handler decodes, e.g. `[typeof ConfigId]`.
  */
-export abstract class ModalHandler<
-    Defs extends readonly AnyCustomId[]
-> extends ComponentHandler<APIModalSubmitInteraction> {
-    // anchors the Defs generic until customId decode reads it (this.params / this.match)
-    declare protected readonly __defs?: Defs;
+export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends ComponentHandler<
+    APIModalSubmitInteraction,
+    Defs
+> {
+    // phantom, never set at runtime.
+    /** @internal */
+    declare readonly __component?: 'modal';
 
     /** Rewrite the message this modal was opened from (only when a component opened it). */
     protected override update(response: ReplyResponse | string): Promise<SentMessage> {

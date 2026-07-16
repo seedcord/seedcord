@@ -51,7 +51,8 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "discord-api-types": "catalog:deps",
-        "envapt": "catalog:deps"
+        "envapt": "catalog:deps",
+        "type-fest": "catalog:deps"
     },
     "peerDependencies": {
         "reflect-metadata": "catalog:peer",

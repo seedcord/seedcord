@@ -13,7 +13,7 @@ import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
  *
  * Not a public entry point. Extend {@link SlashHandler}, {@link ButtonHandler}, {@link ModalHandler},
  * {@link SelectMenuHandler}, or {@link ContextMenuHandler} instead. This class defines the reply members
- * those bases share, so DO NOT use it directly.
+ * those bases share.
  *
  * @typeParam Event - The repliable interaction type this handler processes
  */
