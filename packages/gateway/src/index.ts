@@ -40,7 +40,6 @@ export * from './Seedcord';
 
 // Exports from other packages
 export * from '@seedcord/core';
-export type { AutocompleteOptions } from '@seedcord/core/internal';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

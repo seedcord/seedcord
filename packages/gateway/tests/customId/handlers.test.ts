@@ -1,9 +1,11 @@
 import { Notice, CustomId, SelectMenuKind, ButtonRoute, ModalRoute, SelectMenuRoute } from '@seedcord/core';
+import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
 
 import type { Core } from '@interfaces/Core';
+import type { MatchArms } from '@seedcord/core/internal';
 import type { ButtonInteraction, ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';
 
 const USER = '853472916483920128';
@@ -139,6 +141,21 @@ describe('this.params on a single-route handler', () => {
         const wire = Approve.encode({ userId: USER, caseId: 1, urgent: false, action: 'approve', note: '' });
         const handler = new ApproveButton(button(`${wire}\u{1F}JUNK`), core);
         expect(denialNameFrom(() => handler.read())).toBe('InvalidCustomId');
+    });
+
+    it('throws CustomIdMatchArmMissing for a prototype-named prefix with no arm', async () => {
+        const Ctor = new CustomId('constructor').snowflake('userId');
+        @ButtonRoute(Ctor)
+        class WeirdButton extends ButtonHandler<[typeof Ctor]> {
+            async execute(): Promise<void> {
+                // justified: omit the prefix to test the runtime backstop
+                await this.match({} as unknown as MatchArms<[typeof Ctor], undefined>);
+            }
+        }
+        const handler = new WeirdButton(button(Ctor.encode({ userId: USER })), core);
+        await expect(handler.execute()).rejects.toMatchObject({
+            code: SeedcordErrorCode.CustomIdMatchArmMissing
+        });
     });
 
     it('throws when the handler has no route decorator', () => {

@@ -57,7 +57,9 @@ export abstract class SlashHandler<
     protected async match<Ret>(arms: SlashMatchArms<Route, Ret>): Promise<Ret> {
         const route = slashRouteOf(this.event.data);
         // justified: SlashMatchArms is keyed by Route literals, the Record cast indexes it with the runtime route string.
-        const arm = (arms as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route];
+        const arm = Object.hasOwn(arms, route)
+            ? (arms as Record<string, (options: SlashOptions<Route>) => Promisable<Ret>>)[route]
+            : undefined;
         if (!arm) throw new SeedcordError(SeedcordErrorCode.SlashMatchArmMissing, [route]);
         return await arm(this.options);
     }

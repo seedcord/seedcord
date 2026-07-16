@@ -19,7 +19,7 @@ type SlashLikeData = APIChatInputApplicationCommandInteractionData | APIAutocomp
 type AnyOption = APIApplicationCommandInteractionDataOption<InteractionType>;
 type Leaf = APIApplicationCommandInteractionDataBasicOption<InteractionType>;
 
-export interface FocusedOption {
+interface FocusedOption {
     name: string;
     value: string;
 }

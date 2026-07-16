@@ -6,14 +6,8 @@ import { BaseHandler } from '@handlers/BaseHandler';
 
 import type { Handler } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
-import type { DispatchContext, SlashOptionRegistry } from '@seedcord/core';
-import type {
-    AutocompletableNames,
-    AutocompleteOptions,
-    ChoiceValueOf,
-    EntryFor,
-    FocusedField
-} from '@seedcord/core/internal';
+import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
+import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
@@ -111,7 +105,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
             value: string,
             respond: (choices: readonly ApplicationCommandOptionChoiceData[]) => Promise<void>
         ) => Promisable<Ret>;
-        const arm = (arms as Record<string, Arm>)[name];
+        const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
         if (!arm) throw new SeedcordError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
         return await arm(value, respond);
     }

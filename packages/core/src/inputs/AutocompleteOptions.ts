@@ -52,7 +52,14 @@ type Getter<Route extends keyof SlashOptionRegistry, Kind extends OptionKind, Me
               <Name extends NamesOfKind<Route, Kind>>(name: Name) => ResolvedValue<EntryFor<Route, Name>> | null
           >;
 
-// a sibling is partial while the user types the focused field, every read is | null
+/**
+ * The sibling-option view for an autocomplete handler. Only the four kinds Discord resolves during
+ * autocomplete appear (string, integer, number, boolean), every read is `T | null` because a sibling is
+ * partial while the user types the focused field, and a getter appears only when a registered command has
+ * an option of that kind.
+ *
+ * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}.
+ */
 export type AutocompleteOptions<Route extends keyof SlashOptionRegistry> = Getter<Route, 'string', 'getString'> &
     Getter<Route, 'integer', 'getInteger'> &
     Getter<Route, 'number', 'getNumber'> &

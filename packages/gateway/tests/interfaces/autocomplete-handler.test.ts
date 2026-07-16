@@ -243,6 +243,13 @@ describe('AutocompleteHandler', () => {
         });
     });
 
+    it('throws AutocompleteMatchArmMissing for a prototype-named focused field', async () => {
+        const handler = new SearchMatch(autocompleteRespond('constructor', 'x', []), core);
+        await expect(handler.execute()).rejects.toMatchObject({
+            code: SeedcordErrorCode.AutocompleteMatchArmMissing
+        });
+    });
+
     it('exposes the match type specs', () => {
         expect([MissingArm, BadRespond]).toHaveLength(2);
     });

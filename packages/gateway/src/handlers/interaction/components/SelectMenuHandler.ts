@@ -11,8 +11,7 @@ import type {
     UserSelectMenuInteraction
 } from 'discord.js';
 
-/** @internal */
-export type SelectMenuInteractionFor<
+type SelectMenuInteractionFor<
     SelectMenu extends SelectMenuKind,
     Cache extends CacheType = CacheType
 > = SelectMenu extends SelectMenuKind.String

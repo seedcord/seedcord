@@ -106,7 +106,9 @@ export abstract class ComponentHandler<
     protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.route;
         // justified: MatchArms is keyed by prefix literals, the Record cast indexes it with the runtime prefix.
-        const arm = (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix];
+        const arm = Object.hasOwn(arms, prefix)
+            ? (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
+            : undefined;
         if (!arm) throw new SeedcordError(SeedcordErrorCode.CustomIdMatchArmMissing, [prefix]);
         return await arm(params);
     }

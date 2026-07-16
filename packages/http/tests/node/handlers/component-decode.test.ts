@@ -171,6 +171,21 @@ describe('button decode', () => {
         expect(noticeNameFrom(() => new Approve(buttonEvent(wire), core).execute())).toBe('InvalidCustomId');
     });
 
+    it('throws CustomIdMatchArmMissing for a prototype-named prefix with no arm', async () => {
+        const Ctor = new CustomId('constructor').snowflake('userId');
+        @ButtonRoute(Ctor)
+        class Weird extends ButtonHandler<[typeof Ctor]> {
+            async execute(): Promise<void> {
+                // justified: omit the prefix to test the runtime backstop
+                await this.match({} as unknown as MatchArms<[typeof Ctor], undefined>);
+            }
+        }
+
+        await expect(new Weird(buttonEvent(Ctor.encode({ userId: '1' })), core).execute()).rejects.toSatisfy(
+            (e: unknown) => isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.CustomIdMatchArmMissing)
+        );
+    });
+
     it('throws CustomIdHandlerRouteMissing when the handler has no route decorator', () => {
         class Bare extends ButtonHandler<[typeof ApproveId]> {
             execute(): Promise<void> {

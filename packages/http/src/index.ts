@@ -6,7 +6,7 @@ export type { RouteManifest } from './manifest/RouteManifest';
 export type { Core } from '@interfaces/Core';
 
 export type { SlashOptions } from '@inputs/SlashOptions';
-export type { AutocompleteOptions } from '@seedcord/core/internal';
+export type { AutocompleteOptions } from '@seedcord/core';
 export {
     AutocompleteRoute,
     ButtonRoute,

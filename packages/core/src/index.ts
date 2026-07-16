@@ -35,6 +35,8 @@ export { Silence } from '@stops/Silence';
 
 export { CustomId } from '@customId/CustomId';
 
+export type { AutocompleteOptions } from '@inputs/AutocompleteOptions';
+
 export { paginate } from '@pagination/paginate';
 export { type PageView } from '@pagination/PageView';
 

@@ -7,14 +7,8 @@ import { HttpSlashOptions } from '@inputs/HttpSlashOptions';
 import { slashRouteOf } from '@src/dispatch/slashRouteOf';
 
 import type { Core } from '@interfaces/Core';
-import type { SlashOptionRegistry, DispatchContext } from '@seedcord/core';
-import type {
-    AutocompletableNames,
-    AutocompleteOptions,
-    ChoiceValueOf,
-    EntryFor,
-    FocusedField
-} from '@seedcord/core/internal';
+import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
+import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type {
     APIApplicationCommandOptionChoice,
     APIApplicationCommandAutocompleteInteraction
@@ -89,7 +83,7 @@ export abstract class AutocompleteHandler<
             value: string,
             respond: (choices: readonly APIApplicationCommandOptionChoice[]) => Promise<void>
         ) => Promisable<Ret>;
-        const arm = (arms as Record<string, Arm>)[name];
+        const arm = Object.hasOwn(arms, name) ? (arms as Record<string, Arm>)[name] : undefined;
         if (!arm) throw new SeedcordError(SeedcordErrorCode.AutocompleteMatchArmMissing, [name]);
         return await arm(value, respond);
     }

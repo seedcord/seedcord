@@ -40,13 +40,7 @@ export type { DecodedParams } from '@customId/Field';
 
 export type { OptionLens } from '@inputs/OptionLens';
 export type { SlashOptions } from '@inputs/SlashOptions';
-export type {
-    AutocompleteOptions,
-    AutocompletableNames,
-    ChoiceValueOf,
-    EntryFor,
-    FocusedField
-} from '@inputs/AutocompleteOptions';
+export type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@inputs/AutocompleteOptions';
 
 export { PAGE_MAX, pageCursor, type PageCursor } from '@pagination/cursor';
 
