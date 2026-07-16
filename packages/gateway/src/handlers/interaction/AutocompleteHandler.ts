@@ -4,7 +4,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { BaseHandler } from '@handlers/BaseHandler';
 
-import type { Handler } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
@@ -42,10 +41,10 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
  * }
  * ```
  */
-export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistry, Cache extends CacheType = 'cached'>
-    extends BaseHandler<AutocompleteInteraction<Cache>>
-    implements Handler
-{
+export abstract class AutocompleteHandler<
+    Route extends keyof SlashOptionRegistry,
+    Cache extends CacheType = 'cached'
+> extends BaseHandler<AutocompleteInteraction<Cache>> {
     // phantom, never set at runtime.
     /** @internal */
     declare readonly __autocompleteRoute?: Route;

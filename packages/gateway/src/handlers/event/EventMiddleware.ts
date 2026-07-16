@@ -4,7 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { BaseHandler } from '@handlers/BaseHandler';
 
 import type { SingleEventPayload } from './payload';
-import type { Handler, ValidNonInteractionKeys } from '@handlers/BaseHandler';
+import type { ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { ClientEvents } from 'discord.js';
 
@@ -19,10 +19,9 @@ import type { ClientEvents } from 'discord.js';
  *
  * @typeParam EventName - One or more `ClientEvents` keys. Defaults to every event (catchall).
  */
-export abstract class EventMiddleware<in out EventName extends ValidNonInteractionKeys = ValidNonInteractionKeys>
-    extends BaseHandler<ClientEvents[EventName]>
-    implements Handler
-{
+export abstract class EventMiddleware<
+    in out EventName extends ValidNonInteractionKeys = ValidNonInteractionKeys
+> extends BaseHandler<ClientEvents[EventName]> {
     // the fired event name, threaded by the controller. undefined when constructed directly, e.g. in a test.
     private readonly firedEvent: EventName | undefined;
 

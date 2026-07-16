@@ -10,6 +10,8 @@ export {
     type RoutableConstructor
 } from '@decorators/interactionRoutes';
 
+export type { Handler } from '@src/handlers/BaseHandler';
+
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
 export type { GateFitsWith } from '@gates/matching';
@@ -35,7 +37,14 @@ export {
 export { NoticeCard } from '@stops/NoticeCard';
 
 export { prefixOf, decodeFor, type AnyCustomId } from '@customId/CustomId';
-export { ComponentDefsKey, type HasComponentDefs, type MatchArms, type SingleParams } from '@customId/routing';
+export {
+    ComponentDefsKey,
+    decodeComponentRoute,
+    type DecodedComponentRoute,
+    type HasComponentDefs,
+    type MatchArms,
+    type SingleParams
+} from '@customId/routing';
 export type { DecodedParams } from '@customId/Field';
 
 export type { OptionLens } from '@inputs/OptionLens';

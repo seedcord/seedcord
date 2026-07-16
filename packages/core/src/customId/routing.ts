@@ -1,3 +1,10 @@
+import 'reflect-metadata';
+
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
+import { decodeFor } from './CustomId';
+
 import type { AnyCustomId } from './CustomId';
 import type { DecodedParams } from './Field';
 import type { Promisable } from 'type-fest';
@@ -19,6 +26,24 @@ export const ComponentDefsKey = Symbol('seedcord:customId:componentDefs');
 export interface HasComponentDefs<Defs extends readonly AnyCustomId[]> {
     /** @internal */
     readonly __componentDefs?: Defs;
+}
+
+/** @internal */
+export interface DecodedComponentRoute {
+    prefix: string;
+    params: Record<string, unknown>;
+}
+
+/**
+ * Throws `CustomIdHandlerRouteMissing` when the class has no stored defs. A drifted or corrupt wire
+ * throws `StaleCustomId` or `InvalidCustomId`.
+ *
+ * @internal
+ */
+export function decodeComponentRoute(handlerClass: { name: string }, wire: string): DecodedComponentRoute {
+    const defs = Reflect.getMetadata(ComponentDefsKey, handlerClass) as readonly AnyCustomId[] | undefined;
+    if (!defs) throw new SeedcordError(SeedcordErrorCode.CustomIdHandlerRouteMissing, [handlerClass.name]);
+    return decodeFor(defs, wire);
 }
 
 /** @internal */

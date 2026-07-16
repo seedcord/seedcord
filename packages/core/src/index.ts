@@ -17,6 +17,9 @@ export {
 export { DispatchContext } from '@src/dispatch/DispatchContext';
 export type { DispatchState } from '@src/dispatch/DispatchContext';
 
+export { BaseHandler } from '@src/handlers/BaseHandler';
+export { RepliableHandler } from '@src/handlers/RepliableHandler';
+
 export type { CoreBase } from '@interfaces/CoreBase';
 
 export { defineEffectGate, defineGate } from '@gates/Gate';
