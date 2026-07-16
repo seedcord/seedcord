@@ -1,23 +1,22 @@
-import 'reflect-metadata';
-
-import { decodeFor, ComponentDefsKey } from '@seedcord/core/internal';
+import { decodeComponentRoute } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '@bot/ReplySender';
-import type { AnyCustomId, HasComponentDefs, MatchArms, SingleParams } from '@seedcord/core/internal';
+import type {
+    AnyCustomId,
+    DecodedComponentRoute,
+    HasComponentDefs,
+    MatchArms,
+    SingleParams
+} from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
 type ComponentInteraction = ButtonInteraction | ModalSubmitInteraction | AnySelectMenuInteraction;
-
-interface DecodedRoute {
-    prefix: string;
-    params: Record<string, unknown>;
-}
 
 /**
  * Shared base the customId-routed component handlers extend.
@@ -46,21 +45,11 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
         return this.sender.deferUpdate();
     }
 
-    // metadata attaches to the class
-    private get registeredDefs(): readonly AnyCustomId[] {
-        const defs = Reflect.getMetadata(ComponentDefsKey, this.constructor) as readonly AnyCustomId[] | undefined;
-        if (!defs) throw new SeedcordError(SeedcordErrorCode.CustomIdHandlerRouteMissing, [this.constructor.name]);
-        return defs;
-    }
+    private decoded?: DecodedComponentRoute;
 
-    private decoded?: DecodedRoute;
-
-    private get route(): DecodedRoute {
-        if (this.decoded) return this.decoded;
-        // justified, decodeFor returns runtime values and the generic Defs fixes their decoded types.
-        const decoded = decodeFor(this.registeredDefs, this.event.customId) as DecodedRoute;
-        this.decoded = decoded;
-        return decoded;
+    private get route(): DecodedComponentRoute {
+        this.decoded ??= decodeComponentRoute(this.constructor, this.event.customId);
+        return this.decoded;
     }
 
     /**

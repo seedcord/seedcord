@@ -1,6 +1,5 @@
 import { and, Cooldown, CustomId, GuildOnly, or, OwnerOnly, ModalRoute } from '@seedcord/core';
 import { PermissionFlagsBits } from 'discord.js';
-import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '@bDecorators/Gated';

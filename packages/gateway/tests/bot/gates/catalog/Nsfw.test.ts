@@ -4,7 +4,7 @@ import { Nsfw } from '@bot/gates/catalog';
 import { NotNsfw } from '@bot/notices';
 
 import type { InteractionGateContext } from '@bot/gates';
-import type { NonModalInteraction } from '@handlers/BaseHandler';
+import type { NonModalInteraction } from '@src/handlers/interactionTypes';
 
 function nsfwCtx(channel: unknown): InteractionGateContext<NonModalInteraction> {
     // the gate reads only interaction.channel, so a minimal cast stands in

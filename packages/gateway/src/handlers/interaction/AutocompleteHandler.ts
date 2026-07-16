@@ -2,9 +2,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { BaseHandler } from '@handlers/BaseHandler';
+import { BaseHandler } from '@src/handlers/BaseHandler';
 
-import type { Handler } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
@@ -42,10 +41,10 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
  * }
  * ```
  */
-export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistry, Cache extends CacheType = 'cached'>
-    extends BaseHandler<AutocompleteInteraction<Cache>>
-    implements Handler
-{
+export abstract class AutocompleteHandler<
+    Route extends keyof SlashOptionRegistry,
+    Cache extends CacheType = 'cached'
+> extends BaseHandler<AutocompleteInteraction<Cache>> {
     // phantom, never set at runtime.
     /** @internal */
     declare readonly __autocompleteRoute?: Route;
@@ -112,7 +111,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
     protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
-        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base member the rule points subclasses to
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base respond and calls djs directly
         await this.event.respond(choices);
     }
 

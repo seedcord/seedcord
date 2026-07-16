@@ -1,7 +1,7 @@
-import { BaseHandler } from '@handlers/BaseHandler';
+import { BaseHandler } from '@src/handlers/BaseHandler';
 
-import type { Handler, Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { Repliables } from '@src/handlers/interactionTypes';
 
 /**
  * Base class for interaction middleware
@@ -11,10 +11,7 @@ import type { Core } from '@interfaces/Core';
  *
  * @typeParam Repliable - The interaction type this middleware processes
  */
-export abstract class InteractionMiddleware<Repliable extends Repliables>
-    extends BaseHandler<Repliable>
-    implements Handler
-{
+export abstract class InteractionMiddleware<Repliable extends Repliables> extends BaseHandler<Repliable> {
     // keep this ctor. it gives typeof InteractionMiddleware a public construct signature that
     // InteractionMiddlewareConstructor needs, and dropping it collapses that type to never.
     constructor(event: Repliable, core: Core) {

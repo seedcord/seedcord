@@ -6,8 +6,8 @@ import { checkPermissions } from '@bUtilities/permissions/checkPermissions';
 
 import type { InteractionGateContext } from '../Gate';
 import type { BotPermissionScope, PermissionErrorCtors } from '@bUtilities/permissions/checkPermissions';
-import type { NonModalInteraction } from '@handlers/BaseHandler';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
+import type { NonModalInteraction } from '@src/handlers/interactionTypes';
 
 // shown to a caller who is in a guild but whose member the cache could not resolve
 const UNCACHED_MEMBER = 'Your server member data could not be resolved. Try again.';

@@ -9,8 +9,8 @@ import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 import { harmlessError } from '../utils/harmlessError';
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Repliables, ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
 const withResponse = { resource: { message: { id: 'sent' } } };

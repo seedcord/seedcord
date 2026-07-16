@@ -11,7 +11,6 @@ import {
 } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
-import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '@bDecorators/Gated';

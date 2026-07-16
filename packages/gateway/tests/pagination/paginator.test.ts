@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { ButtonRoute } from '@seedcord/core';
 import {
     ComponentDefsKey,
@@ -14,9 +12,9 @@ import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { Paginator } from '@pagination/Paginator';
 import { ArraySource } from '@pagination/sources';
 
-import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { PageContext } from '@pagination/PageContext';
+import type { Repliables } from '@src/handlers/interactionTypes';
 import type { APIContainerComponent, ButtonInteraction } from 'discord.js';
 
 // justified: the paginator reads only the interaction, the rest of Core is unused here.

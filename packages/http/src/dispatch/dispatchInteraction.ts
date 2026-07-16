@@ -1,16 +1,15 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
-import { DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
+import { BaseHandler, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
 import { runHandlerGates } from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
-import { BaseHandler } from '@handlers/BaseHandler';
 import { RepliableHandler } from '@handlers/RepliableHandler';
 import { ReplySender } from '@reply/ReplySender';
 
 import type { ResolvedRoute } from './resolve';
-import type { ValidInteractionTypes } from '@handlers/BaseHandler';
+import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { Core } from '@interfaces/Core';
 import type { GateContextBase } from '@seedcord/core';
 import type { Config, IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
@@ -40,7 +39,7 @@ export function createCore(config: Config, token: string): Core {
         username: undefined,
         augmentTarget: '@seedcord/http'
     };
-    // justified: start(), shutdown, and startup will be added innabit, dispatch reads none of them
+    // justified: start, shutdown, and startup get added later, dispatch reads none of them
     return core as Core;
 }
 

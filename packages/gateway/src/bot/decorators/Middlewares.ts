@@ -2,9 +2,9 @@ import { MiddlewareMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordTypeError } from '@seedcord/errors/internal';
 
-import type { Repliables, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { EventMiddleware } from '@handlers/event';
 import type { InteractionMiddleware } from '@handlers/interaction';
+import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { Constructor } from 'type-fest';
 
 /**

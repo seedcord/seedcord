@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 

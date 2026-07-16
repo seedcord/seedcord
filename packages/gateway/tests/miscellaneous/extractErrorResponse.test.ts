@@ -6,8 +6,8 @@ import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 import { cardJson } from '../utils/cardText';
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Repliables } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { Repliables } from '@src/handlers/interactionTypes';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {

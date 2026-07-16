@@ -8,9 +8,9 @@ import { extractErrorResponse, interactionRoute } from '@miscellaneous/extractEr
 
 import { HARMLESS_API_CODES } from './harmlessApiCodes';
 
-import type { ValidInteractionTypes } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';
+import type { ValidInteractionTypes } from '@src/handlers/interactionTypes';
 
 const logger = new Logger('InteractionBoundary');
 

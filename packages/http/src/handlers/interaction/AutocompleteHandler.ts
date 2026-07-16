@@ -1,8 +1,8 @@
+import { BaseHandler } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
-import { BaseHandler } from '@handlers/BaseHandler';
 import { HttpSlashOptions } from '@inputs/HttpSlashOptions';
 import { slashRouteOf } from '@src/dispatch/slashRouteOf';
 
@@ -33,10 +33,12 @@ type FocusedArms<Route extends keyof SlashOptionRegistry, Ret> = {
  *
  * @typeParam Route - One or more route keys from {@link SlashOptionRegistry}, e.g. `'search'`.
  */
-export abstract class AutocompleteHandler<
-    Route extends keyof SlashOptionRegistry
-> extends BaseHandler<APIApplicationCommandAutocompleteInteraction> {
-    // the dispatcher needs a public construct signature, BaseHandler's ctor is protected
+export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistry> extends BaseHandler<
+    APIApplicationCommandAutocompleteInteraction,
+    Core
+> {
+    // keep this ctor. it gives typeof AutocompleteHandler a public construct signature the dispatcher
+    // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses the handler ctor type to never.
     constructor(event: APIApplicationCommandAutocompleteInteraction, core: Core, dispatch?: DispatchContext) {
         super(event, core, dispatch);
     }

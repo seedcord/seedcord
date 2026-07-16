@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 import { GatedMetadataKey, InteractionRouteKeys } from '@src/metadataKeys';
 
 import { discardCommits, runCheck, runCommits } from './effects';

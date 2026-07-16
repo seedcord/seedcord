@@ -1,17 +1,16 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { BaseHandler } from '@handlers/BaseHandler';
+import { BaseHandler } from '@src/handlers/BaseHandler';
 
 import type { SingleEventPayload } from './payload';
-import type { Handler, ValidNonInteractionKeys } from '@handlers/BaseHandler';
 import type { Core } from '@interfaces/Core';
+import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
-// one arm per registered event, keyed by event name, receiving that event's payload as named params. spread,
-// not a single tuple, so the discord.js tuple labels surface as parameter names in editor signature help, e.g.
-// messageUpdate gives (oldMessage, newMessage).
+// spread so the discord.js tuple labels surface as parameter names in editor signature help, e.g.
+// messageUpdate gives (oldMessage, newMessage). a single tuple param would lose the labels.
 type EventMatchArms<Names extends ValidNonInteractionKeys, Ret> = {
     [Name in Names]: (...args: ClientEvents[Name]) => Promisable<Ret>;
 };
@@ -38,10 +37,7 @@ type EventMatchArms<Names extends ValidNonInteractionKeys, Ret> = {
  * }
  * ```
  */
-export abstract class EventHandler<Names extends ValidNonInteractionKeys>
-    extends BaseHandler<ClientEvents[Names]>
-    implements Handler
-{
+export abstract class EventHandler<Names extends ValidNonInteractionKeys> extends BaseHandler<ClientEvents[Names]> {
     // the fired event name, threaded by the controller. undefined when constructed directly, e.g. in a test.
     private readonly firedEvent: Names | undefined;
 

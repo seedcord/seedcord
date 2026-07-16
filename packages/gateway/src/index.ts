@@ -25,6 +25,8 @@ export * from '@interfaces/index';
 
 // Handlers exports
 export * from '@handlers/index';
+// @handlers/index and @seedcord/core both export RepliableHandler so this explicit export is needed
+export { RepliableHandler } from '@handlers/RepliableHandler';
 
 // Pagination exports
 export * from '@pagination/index';

@@ -7,8 +7,8 @@ import { interactionRoute } from '@miscellaneous/extractErrorResponse';
 
 import { CONFIRM_DEF } from './reserved';
 
-import type { NonModalInteraction } from '@handlers/BaseHandler';
 import type { ReplyResponse } from '@seedcord/types';
+import type { NonModalInteraction } from '@src/handlers/interactionTypes';
 import type { ButtonInteraction, Message } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
