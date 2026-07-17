@@ -97,7 +97,7 @@ describe('autocomplete dispatch', () => {
         expect(body.data.choices).toEqual([{ name: 'apple', value: 'apple' }]);
     });
 
-    it('answers a gate refusal with an empty type 8 instead of a Notice card', async () => {
+    it('skips gate metadata on an autocomplete handler and runs execute', async () => {
         let didExecute = false;
         class Search extends AutocompleteHandler<never> {
             async execute(): Promise<void> {
@@ -108,17 +108,18 @@ describe('autocomplete dispatch', () => {
         const refuse = defineGate('refuse', () => {
             throw new TestNotice();
         });
+        // @Gated rejects a gate on an autocomplete handler at compile time, this backstops a metadata-set gate at runtime
         Reflect.defineMetadata(GatedMetadataKey, [refuse], Search);
         const { signer, handle } = await readyEngine(manifestFor(Search, 'search'));
         const ctx = capturingCtx();
 
         const response = await handle(await signedRequest(signer, autocompletePayload('search')), ctx);
+        await ctx.settled();
 
         expect(response.status).toBe(202);
-        expect(didExecute).toBe(false);
-        expect(ctx.waitUntil).not.toHaveBeenCalled();
+        expect(didExecute).toBe(true);
         const { body } = firstPost();
         expect(body.type).toBe(8);
-        expect(body.data.choices).toEqual([]);
+        expect(body.data.choices).toEqual([{ name: 'apple', value: 'apple' }]);
     });
 });

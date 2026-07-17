@@ -1,17 +1,17 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
-import { runHandlerGates } from '@seedcord/core/internal';
+import { runHandlerGates, slowGateObserver } from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
-import { InteractionResponseType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
+import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
 import { RepliableHandler } from '@handlers/RepliableHandler';
 import { ReplySender } from '@reply/ReplySender';
+import { interactionGateContext } from '@src/gates/context';
 
 import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { Core } from '@interfaces/Core';
-import type { GateContextBase } from '@seedcord/core';
 import type { Config, IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
@@ -27,10 +27,9 @@ interface HttpHandler {
 
 type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: DispatchContext) => HttpHandler;
 
-/** Builds the engine's runtime core. */
 export function createCore(config: Config, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    // the checked literal keeps every present field honest, the cast adds only the three named absences
+    // the omit type makes TS check every present field, and the cast below only adds the three named absences
     const core: TypedOmit<Core, 'start' | 'shutdown' | 'startup'> = {
         config,
         rateLimiter,
@@ -55,24 +54,11 @@ function handlerCtorOf(moduleExports: unknown): HandlerCtor | null {
     return null;
 }
 
-function gateContext(payload: ValidInteractionTypes, core: Core, routeId: string | null): GateContextBase {
-    const member = payload.member;
-    return {
-        core,
-        userId: member?.user.id ?? payload.user?.id ?? null,
-        guildId: payload.guild_id ?? null,
-        channelId: payload.channel?.id ?? null,
-        memberRoleIds: member?.roles ?? [],
-        memberPermissions: member ? BigInt(member.permissions) : null,
-        routeId
-    };
-}
-
 interface FaultScope {
     readonly core: Core;
     readonly payload: ValidInteractionTypes;
     readonly routeId: string;
-    /** Null on autocomplete, whose only legal refusal is an empty type 8. */
+    // null on autocomplete, whose only legal refusal is an empty type 8
     readonly sender: ReplySender | null;
 }
 
@@ -179,9 +165,9 @@ function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: 
 }
 
 /**
- * Runs the pre-ack phase for a matched interaction. Loads the row, constructs the handler, and runs
- * its gates, and the sender posts any refusal. Returns the post-ack execute continuation, or null
- * when the interaction refused or nothing can run.
+ * Runs the pre-ack phase for a matched interaction. Loads the route module, constructs the handler, and
+ * runs its gates, and the sender posts any refusal. Returns the post-ack execute continuation, or null
+ * when a gate refuses or nothing can run.
  */
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
@@ -221,12 +207,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 
-    try {
-        await runHandlerGates(ctor, gateContext(payload, core, match.routeId), match.routeId ?? undefined);
-    } catch (caught) {
-        await handleFault(caught, scope);
-        return null;
-    }
+    if (!(await passedGates(ctor, match, payload, core, scope))) return null;
 
     return async () => {
         try {
@@ -235,4 +216,29 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
             await handleFault(caught, scope);
         }
     };
+}
+
+// autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
+async function passedGates(
+    ctor: HandlerCtor,
+    match: ResolvedRoute,
+    payload: ValidInteractionTypes,
+    core: Core,
+    scope: FaultScope
+): Promise<boolean> {
+    // the router derives match.kind from payload.type, so the two would be the same. the payload.type clause narrows
+    // the union to Repliables for interactionGateContext below
+    if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return true;
+    try {
+        await runHandlerGates(
+            ctor,
+            interactionGateContext(payload, core, match.routeId),
+            match.routeId ?? undefined,
+            slowGateObserver()
+        );
+        return true;
+    } catch (caught) {
+        await handleFault(caught, scope);
+        return false;
+    }
 }

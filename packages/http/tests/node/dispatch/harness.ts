@@ -34,7 +34,15 @@ export async function readyEngine(
 }
 
 export function slashPayload(name: string): object {
-    return { type: 2, id: 'int-1', application_id: 'app-1', token: 'tok', data: { type: 1, name } };
+    // app_permissions is on every real interaction, the builder reads it unconditionally like the gateway does
+    return {
+        type: 2,
+        id: 'int-1',
+        application_id: 'app-1',
+        token: 'tok',
+        app_permissions: '0',
+        data: { type: 1, name }
+    };
 }
 
 export interface CapturedCtx {
