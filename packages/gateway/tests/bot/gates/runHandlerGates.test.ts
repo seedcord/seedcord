@@ -19,9 +19,15 @@ declare module '@seedcord/core' {
     }
 }
 
-// minimal repliable, the gate runner reads only these identity fields
+// minimal repliable, the context builder reads only these fields
 const fakeInteraction = (): Repliables =>
-    ({ user: { id: 'u' }, guild: null, guildId: 'g', channelId: 'c' }) as unknown as Repliables;
+    ({
+        user: { id: 'u' },
+        guild: null,
+        guildId: 'g',
+        channelId: 'c',
+        appPermissions: { bitfield: 0n }
+    }) as unknown as Repliables;
 
 describe('runHandlerGates', () => {
     // gates under test never read core

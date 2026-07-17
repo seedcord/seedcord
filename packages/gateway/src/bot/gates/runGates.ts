@@ -29,7 +29,11 @@ export function interactionGateContext(interaction: Repliables, core: Core): Int
         channelId: interaction.channelId,
         memberRoleIds,
         memberPermissions: interaction.memberPermissions?.bitfield ?? null,
-        routeId: null // runHandlerGates fills this from the handler metadata before the gates run
+        // djs types appPermissions non-null on interactions, a ?. here would trip no-unnecessary-condition
+        appPermissions: interaction.appPermissions.bitfield,
+        memberGuildPermissions: rawMember instanceof GuildMember ? rawMember.permissions.bitfield : null,
+        appGuildPermissions: interaction.guild?.members.me?.permissions.bitfield ?? null,
+        routeId: null // runHandlerGates sets routeId from the handler metadata before the gates run
     };
 }
 
@@ -53,6 +57,9 @@ export function eventGateContext(
         // the cache carries the everyone role (id equals the guild id), filtered out to match the interaction shape
         memberRoleIds: actor.member ? [...actor.member.roles.cache.keys()].filter((id) => id !== actor.guild?.id) : [],
         memberPermissions: actor.member?.permissions.bitfield ?? null,
-        routeId: null // runHandlerGates fills this from the handler metadata before the gates run
+        appPermissions: null,
+        memberGuildPermissions: actor.member?.permissions.bitfield ?? null,
+        appGuildPermissions: actor.guild?.members.me?.permissions.bitfield ?? null,
+        routeId: null // runHandlerGates sets routeId from the handler metadata before the gates run
     };
 }

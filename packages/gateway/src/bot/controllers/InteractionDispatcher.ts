@@ -9,6 +9,7 @@ import {
     prefixOf,
     routeIdOf,
     runHandlerGates,
+    slowGateObserver,
     areRoutes
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -456,7 +457,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 await runHandlerGates(
                     HandlerCtor,
                     interactionGateContext(interaction as Repliables, this.core),
-                    dispatch.routeId ?? undefined
+                    dispatch.routeId ?? undefined,
+                    slowGateObserver()
                 );
             }
             await handler.execute();

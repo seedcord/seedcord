@@ -1,11 +1,11 @@
+import { MissingPermissions, PermissionNames } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { Guild } from 'discord.js';
 
-import { MissingPermissions } from '@bot/notices';
+import { checkPermissions } from './checkPermissions';
 
-import { checkPermissions, PermissionNames } from './checkPermissions';
-
-import type { BotPermissionScope, PermissionErrorCtors } from './checkPermissions';
+import type { PermissionErrorNoticeOverrides } from './checkPermissions';
+import type { PermissionScope } from '@seedcord/core';
 import type { TextChannel } from 'discord.js';
 
 /**
@@ -31,16 +31,16 @@ import type { TextChannel } from 'discord.js';
  */
 export function checkBotPermissions(
     target: Guild | TextChannel,
-    scope: BotPermissionScope,
+    scope: PermissionScope,
     inverse = false,
-    errors?: PermissionErrorCtors
+    errors?: PermissionErrorNoticeOverrides
 ): void {
     if (target instanceof Guild) {
         const me = target.members.me;
         if (!me) {
             const names = scope.map((bit) => PermissionNames.get(bit) ?? String(bit));
-            const Missing = errors?.missing ?? MissingPermissions;
-            throw new Missing('Missing Permissions', target, names);
+            const Missing = errors?.missingNotice ?? MissingPermissions;
+            throw new Missing(undefined, 'The bot', names);
         }
         checkPermissions(me, target, scope, inverse, errors);
         return;
@@ -54,8 +54,8 @@ export function checkBotPermissions(
             `Bot member is unavailable in guild ${target.guild.id} while checking permissions in channel ${target.id}`
         );
         const names = scope.map((bit) => PermissionNames.get(bit) ?? String(bit));
-        const Missing = errors?.missing ?? MissingPermissions;
-        throw new Missing('Missing Permissions', target, names);
+        const Missing = errors?.missingNotice ?? MissingPermissions;
+        throw new Missing(undefined, 'The bot', names);
     }
 
     checkPermissions(me, target, scope, inverse, errors);
