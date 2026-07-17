@@ -164,6 +164,75 @@ describe('effect gates', () => {
     });
 });
 
+describe('gate observer', () => {
+    it('reports the name and elapsed ms of each gate', async () => {
+        const seen: { name: string; ms: number }[] = [];
+        const A = defineGate('a', () => {});
+        const B = defineGate('b', () => {});
+
+        await runGates([A, B], ctx, (name, ms) => {
+            seen.push({ name, ms });
+        });
+
+        expect(seen.map((s) => s.name)).toEqual(['a', 'b']);
+        for (const s of seen) expect(s.ms).toBeGreaterThanOrEqual(0);
+    });
+
+    it('reports a gate that throws before the refusal propagates', async () => {
+        const seen: string[] = [];
+        const refuse = defineGate('refuse', () => {
+            throw new TestNotice('no');
+        });
+
+        await expect(
+            runGates([refuse], ctx, (name) => {
+                seen.push(name);
+            })
+        ).rejects.toBeInstanceOf(Notice);
+
+        expect(seen).toEqual(['refuse']);
+    });
+
+    it('times a combinator as one unit under its joined name', async () => {
+        const seen: string[] = [];
+        const A = defineGate('a', () => {});
+        const B = defineGate('b', () => {});
+
+        await runGates([and(A, B)], ctx, (name) => {
+            seen.push(name);
+        });
+
+        expect(seen).toEqual(['a & b']);
+    });
+
+    it('runs the set unchanged when no observer is passed', async () => {
+        const order: string[] = [];
+        const A = defineGate('a', () => {
+            order.push('a');
+        });
+        const B = defineGate('b', () => {
+            order.push('b');
+        });
+
+        await runGates([A, B], ctx);
+
+        expect(order).toEqual(['a', 'b']);
+    });
+
+    it('threads the observer through runHandlerGates', async () => {
+        const seen: string[] = [];
+        const probe = defineGate('probe', () => {});
+        const handler = {};
+        Reflect.defineMetadata(GatedMetadataKey, [probe], handler);
+
+        await runHandlerGates(handler, ctx, undefined, (name) => {
+            seen.push(name);
+        });
+
+        expect(seen).toEqual(['probe']);
+    });
+});
+
 describe('runHandlerGates', () => {
     it('threads the handler route id onto the context as kind:route', async () => {
         let seen: string | null | undefined;
