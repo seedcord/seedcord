@@ -73,9 +73,18 @@ export class LoggerUtilities {
         this.logger[level](`${paint.sky(base)}${suffix}`);
     }
 
-    /** Logs a heading and its lines as one record so the TUI renders them as a single block. */
-    public block(heading: string, lines: readonly string[], level: LogLevel = 'trace'): void {
-        this.logger[level]([paint.mint.bold(heading), ...lines].join('\n'));
+    /**
+     * Logs a heading and its lines as one record so the TUI renders them as a single block.
+     * `styleHeading` replaces the default mint bold, pass an identity function for a heading that
+     * styles its own spans.
+     */
+    public block(
+        heading: string,
+        lines: readonly string[],
+        level: LogLevel = 'trace',
+        styleHeading: (heading: string) => string = paint.mint.bold
+    ): void {
+        this.logger[level]([styleHeading(heading), ...lines].join('\n'));
     }
 
     /** Formats `name path` block lines, names padded to a column and paths relative and dimmed. */
