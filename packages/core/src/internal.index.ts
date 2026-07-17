@@ -11,7 +11,7 @@ export {
 } from '@decorators/interactionRoutes';
 
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
-export { slowGateObserver } from '@gates/slowGate';
+export { slowGateMonitor, type SlowGateMonitor } from '@gates/slowGate';
 export type { GateObserver } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
 export { PermissionNames } from '@gates/catalog/permissions';

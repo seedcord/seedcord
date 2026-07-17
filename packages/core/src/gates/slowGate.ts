@@ -3,7 +3,7 @@ import { Envapter } from 'envapt';
 
 import type { GateObserver } from './runGates';
 
-// a check slower than this cuts into the 3s interaction-ack budget
+// combined check time slower than this cuts into the 3s interaction-ack budget
 const SLOW_GATE_MS = 750;
 
 // lazy because the logger reads the environment, which binds after this module loads
@@ -13,12 +13,30 @@ function logger(): Logger {
     return gateLogger;
 }
 
-function warnSlowGate(name: string, ms: number): void {
-    if (ms < SLOW_GATE_MS) return;
-    logger().warn(`gate ${paint.sky.bold(name)} took ${paint.amber(`${Math.round(ms)}ms`)}, against the 3s ack budget`);
+/**
+ * Collects each gate check's elapsed time for one dispatch. `report` warns once when the checks sum
+ * past the threshold, naming the total, the route, and each gate's share.
+ */
+export interface SlowGateMonitor {
+    readonly observe: GateObserver;
+    report(routeId: string | null): void;
 }
 
-// read per call, the environment binds after this module loads
-export function slowGateObserver(): GateObserver | undefined {
-    return Envapter.isProduction ? undefined : warnSlowGate;
+// undefined in production, so timedCheck skips the clock there. read per call, the environment binds late
+export function slowGateMonitor(): SlowGateMonitor | undefined {
+    if (Envapter.isProduction) return undefined;
+    const readings: { name: string; ms: number }[] = [];
+    return {
+        observe: (name, ms) => readings.push({ name, ms }),
+        report(routeId) {
+            const total = readings.reduce((sum, reading) => sum + reading.ms, 0);
+            if (total < SLOW_GATE_MS) return;
+            const shares = readings
+                .toSorted((a, b) => b.ms - a.ms)
+                .map((reading) => `${paint.sky.bold(reading.name)} ${Math.round(reading.ms)}ms`);
+            const route = routeId === null ? '' : ` for ${paint.sky.bold(routeId)}`;
+            const headline = `gates${route} took ${paint.amber(`${Math.round(total)}ms`)} of the 3s ack budget`;
+            logger().utils.block(headline, shares, 'warn', (text) => text);
+        }
+    };
 }

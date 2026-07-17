@@ -1,6 +1,6 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
-import { runHandlerGates, slowGateObserver } from '@seedcord/core/internal';
+import { runHandlerGates, slowGateMonitor } from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
@@ -229,16 +229,20 @@ async function passedGates(
     // the router derives match.kind from payload.type, so the two would be the same. the payload.type clause narrows
     // the union to Repliables for interactionGateContext below
     if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return true;
+    const monitor = slowGateMonitor();
     try {
         await runHandlerGates(
             ctor,
             interactionGateContext(payload, core, match.routeId),
             match.routeId ?? undefined,
-            slowGateObserver()
+            monitor?.observe
         );
         return true;
     } catch (caught) {
         await handleFault(caught, scope);
         return false;
+    } finally {
+        // a refusing gate ate budget too, report either way
+        monitor?.report(match.routeId);
     }
 }

@@ -108,6 +108,27 @@ describe('slow-gate dev warning', () => {
         expect(slowWarnCount(warn, 'slowgate')).toBe(1);
     });
 
+    it('warns once when several gate checks sum past the threshold together', async () => {
+        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        const first = defineGate('firstgate', () => {
+            /* the stubbed clock reports the elapsed time */
+        });
+        const second = defineGate('secondgate', () => {
+            /* the stubbed clock reports the elapsed time */
+        });
+        const { handle, signer } = await engineFor(guarded([first, second]), false);
+        const request = await signedRequest(signer, slashPayload('guarded'));
+        const ctx = capturingCtx();
+
+        // 400ms per gate, 800ms combined
+        stubClock([0, 400, 400, 800]);
+        await handle(request, ctx);
+        await ctx.settled();
+
+        expect(slowWarnCount(warn, 'firstgate')).toBe(1);
+        expect(slowWarnCount(warn, 'secondgate')).toBe(1);
+    });
+
     it('does not warn when a gate check runs under the threshold', async () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
         const fast = defineGate('fastgate', () => undefined);
