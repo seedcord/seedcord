@@ -2,7 +2,7 @@ import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { ShutdownPhase } from '@seedcord/services';
 import chalk from 'chalk';
-import { Client, ClientEvents, Interaction } from 'discord.js';
+import { Client, ClientEvents, Events, Interaction } from 'discord.js';
 import { Envapt } from 'envapt/legacy';
 
 import { CommandRegistry } from '@bControllers/CommandRegistry';
@@ -30,6 +30,8 @@ export interface BotEvents {
     'any:event': { [K in keyof ClientEvents]: [K, ...ClientEvents[K]] }[keyof ClientEvents];
     /** Emitted for any interaction */
     'any:interaction': [interaction: Interaction];
+    /** @internal */
+    ready: [];
 }
 
 /**
@@ -134,7 +136,9 @@ export class Bot extends Plugin<BotEvents> {
      * Logs the bot into Discord using the configured token
      */
     private async login(token: string): Promise<Bot> {
-        await this._client.login(token);
+        this._client.once(Events.ClientReady, () => this.emit('ready'));
+        void this._client.login(token);
+        await this.waitFor('ready');
         this.logger.info(`Logged in as ${chalk.bold.magenta(this._client.user?.username)}!`);
         return this;
     }
