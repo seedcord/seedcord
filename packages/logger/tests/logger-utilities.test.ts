@@ -95,6 +95,15 @@ describe('LoggerUtilities', () => {
         expect(parts[2]).toContain('beta');
     });
 
+    it('applies a custom heading styler to a block', () => {
+        const logger = new FakeLogger();
+        new LoggerUtilities(logger).block('Head', ['line'], 'warn', (heading) => `<${heading}>`);
+
+        const parts = (logger.calls[0]?.text ?? '').split('\n');
+        expect(parts[0]).toBe('<Head>');
+        expect(parts[1]).toBe('line');
+    });
+
     it('formats block entries with cwd-relative paths, padding names so the paths align', () => {
         const [short, long] = new LoggerUtilities(new FakeLogger()).entries([
             { name: 'FeedNav', from: `${process.cwd()}/src/Feed.ts` },

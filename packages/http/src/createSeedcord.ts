@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { InteractionResponseType, InteractionType } from 'discord-api-types/v10';
-import { Envapter } from 'envapt';
+import { Converters, Envapter } from 'envapt';
 
 import { createCore, dispatchInteraction } from './dispatch/dispatchInteraction';
 import { buildRouteMaps, resolve } from './dispatch/resolve';
@@ -53,8 +53,8 @@ export function createSeedcord(
     config: Config,
     manifest: RouteManifest
 ): (request: Request, ctx?: EngineContext) => Promise<Response> {
-    const publicKey = Envapter.get('DISCORD_PUBLIC_KEY');
-    if (publicKey === undefined) throw new SeedcordError(SeedcordErrorCode.ConfigMissingPublicKey);
+    if (!Envapter.has('DISCORD_PUBLIC_KEY')) throw new SeedcordError(SeedcordErrorCode.ConfigMissingPublicKey);
+    const publicKey = Envapter.getRequired('DISCORD_PUBLIC_KEY', Converters.String);
     const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
 
     const verifier = new Ed25519Verifier(publicKey);

@@ -1,10 +1,23 @@
-import { and, Cooldown, CustomId, GuildOnly, or, OwnerOnly, ModalRoute } from '@seedcord/core';
+import {
+    and,
+    Cooldown,
+    CustomId,
+    GuildOnly,
+    or,
+    OwnerOnly,
+    ModalRoute,
+    RequireBotPermissions,
+    RequirePermissions,
+    RequireRole
+} from '@seedcord/core';
+import { GatedMetadataKey } from '@seedcord/core/internal';
 import { PermissionFlagsBits } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
 import { Gated } from '@bDecorators/Gated';
-import { IgnoreBots, Nsfw, RequireBotPermissions, RequirePermissions } from '@bot/gates';
+import { IgnoreBots, Nsfw } from '@bot/gates';
 import { EventHandler } from '@handlers/event';
+import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { ModalHandler } from '@handlers/interaction/components';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
@@ -46,10 +59,10 @@ describe('@Gated catalog gates', () => {
         }
 
         expect(Handler).toBeDefined();
+        expect((Reflect.getMetadata(GatedMetadataKey, Handler) as unknown[]).length).toBe(1);
     });
 
-    it('rejects RequirePermissions on a modal handler', () => {
-        // @ts-expect-error a permission gate excludes ModalSubmit, which lacks a reliable cached member
+    it('attaches the channel-scoped RequirePermissions to a modal handler', () => {
         @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
         @ModalRoute(ModalProbeId)
         class Handler extends ModalHandler<[typeof ModalProbeId]> {
@@ -61,10 +74,39 @@ describe('@Gated catalog gates', () => {
         expect(Handler).toBeDefined();
     });
 
-    it('rejects RequirePermissions on an event handler', () => {
-        // @ts-expect-error a permission gate is interaction-only
+    it('attaches the channel-scoped RequirePermissions to an event handler', () => {
         @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
         class Handler extends EventHandler<Events.MessageCreate> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+
+        expect(Handler).toBeDefined();
+    });
+
+    it('attaches the guild-scoped RequirePermissions to a slash and an event handler', () => {
+        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
+        class Slash extends SlashHandler<'catalogprobe'> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
+        class Event extends EventHandler<Events.MessageCreate> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+
+        expect(Slash).toBeDefined();
+        expect(Event).toBeDefined();
+    });
+
+    it('rejects RequirePermissions on an autocomplete handler', () => {
+        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
+        class Handler extends AutocompleteHandler<'catalogprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -86,10 +128,29 @@ describe('@Gated catalog gates', () => {
         expect(Handler).toBeDefined();
     });
 
-    it('attaches RequireBotPermissions to a modal handler', () => {
+    it('attaches RequireBotPermissions to a modal and an event handler', () => {
         @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
         @ModalRoute(ModalProbeId)
-        class Handler extends ModalHandler<[typeof ModalProbeId]> {
+        class Modal extends ModalHandler<[typeof ModalProbeId]> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+        @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
+        class Event extends EventHandler<Events.MessageCreate> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+
+        expect(Modal).toBeDefined();
+        expect(Event).toBeDefined();
+    });
+
+    it('rejects RequireBotPermissions on an autocomplete handler', () => {
+        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+        @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
+        class Handler extends AutocompleteHandler<'catalogprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -98,10 +159,29 @@ describe('@Gated catalog gates', () => {
         expect(Handler).toBeDefined();
     });
 
-    it('rejects RequireBotPermissions on an event handler', () => {
-        // @ts-expect-error RequireBotPermissions is interaction-only
-        @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
-        class Handler extends EventHandler<Events.MessageCreate> {
+    it('attaches RequireRole to a modal and an event handler', () => {
+        @Gated(RequireRole('123456789012345678'))
+        @ModalRoute(ModalProbeId)
+        class Modal extends ModalHandler<[typeof ModalProbeId]> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+        @Gated(RequireRole('123456789012345678'))
+        class Event extends EventHandler<Events.MessageCreate> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+
+        expect(Modal).toBeDefined();
+        expect(Event).toBeDefined();
+    });
+
+    it('rejects RequireRole on an autocomplete handler', () => {
+        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+        @Gated(RequireRole('123456789012345678'))
+        class Handler extends AutocompleteHandler<'catalogprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -135,22 +215,29 @@ describe('@Gated catalog gates', () => {
 });
 
 describe('@Gated catalog gate combinators', () => {
-    it('accepts and(agnostic, interaction-only) on a slash handler', () => {
+    it('accepts and(agnostic, RequirePermissions) on a slash and a modal handler', () => {
         @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
-        class Handler extends SlashHandler<'catalogprobe'> {
+        class Slash extends SlashHandler<'catalogprobe'> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+            }
+        }
+        @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
+        @ModalRoute(ModalProbeId)
+        class Modal extends ModalHandler<[typeof ModalProbeId]> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
         }
 
-        expect(Handler).toBeDefined();
+        expect(Slash).toBeDefined();
+        expect(Modal).toBeDefined();
     });
 
-    it('rejects and(agnostic, RequirePermissions) on a modal handler', () => {
-        // @ts-expect-error RequirePermissions in the and excludes ModalSubmit
+    it('rejects and(agnostic, RequirePermissions) on an autocomplete handler', () => {
+        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
         @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
-        @ModalRoute(ModalProbeId)
-        class Handler extends ModalHandler<[typeof ModalProbeId]> {
+        class Handler extends AutocompleteHandler<'catalogprobe'> {
             async execute(): Promise<void> {
                 await Promise.resolve();
             }
@@ -177,8 +264,8 @@ describe('@Gated catalog gate combinators', () => {
         expect(Event).toBeDefined();
     });
 
-    it('rejects and(event-only, interaction-only) as uninhabitable', () => {
-        // @ts-expect-error IgnoreBots is event-only and RequirePermissions interaction-only, the and fits nothing
+    it('rejects and(event-only, agnostic-permission) on a slash handler', () => {
+        // @ts-expect-error IgnoreBots is event-only, so the and fits no interaction handler
         @Gated(and(IgnoreBots, RequirePermissions([PermissionFlagsBits.BanMembers])))
         class Handler extends SlashHandler<'catalogprobe'> {
             async execute(): Promise<void> {

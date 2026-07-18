@@ -3,7 +3,7 @@ import type { CoreBase } from '@interfaces/CoreBase';
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any
  * transport's payload. Every field except `core` is nullable, since an event or DM may carry no
- * guild or member. Each transport extends it with its own rich arm. For e.g., the gateway adds the djs
+ * guild or member. Each transport extends it with its own arm. For example, the gateway adds the djs
  * `user`/`guild`/`member` objects and the live interaction or event payload.
  *
  * @example
@@ -34,11 +34,38 @@ export interface GateContextBase {
      */
     readonly memberPermissions: bigint | null;
     /**
+     * The bot's permissions in the invoked channel, the wire `app_permissions` value. Null on gateway events.
+     */
+    readonly appPermissions: bigint | null;
+    /**
      * The dispatched handler as `kind:route` (`slash:daily`, `button:confirm`), or null off a route (a
-     * plain event handler, or a gate run outside a handler). `runHandlerGates` populates it from the handler's
+     * plain event handler, or a gate run outside a handler). `runHandlerGates` sets it from the handler's
      * metadata. `Cooldown` uses it so its window is stable across restarts and isolates.
      */
     readonly routeId: string | null;
+}
+
+/**
+ * The context the guild-scoped permission gates require. It adds the base permission sets computed from
+ * roles alone, which only the gateway transport can provide from its cache. The http transport's context
+ * does not define these fields.
+ *
+ * @example
+ * ```ts
+ * // in:'guild' returns a Gate<GuildPermissionsContext>, which fits only a gateway handler
+ * \@Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
+ * ```
+ */
+export interface GuildPermissionsContext extends GateContextBase {
+    /**
+     * The member's base permission set, roles only, matching djs `GuildMember.permissions`. Null when the
+     * member is unavailable.
+     */
+    readonly memberGuildPermissions: bigint | null;
+    /**
+     * The bot's base permission set from the transport's cache. Null when the cached member is unavailable.
+     */
+    readonly appGuildPermissions: bigint | null;
 }
 
 // phantom brand, so a bare check function or a plain object is rejected where a Gate is expected

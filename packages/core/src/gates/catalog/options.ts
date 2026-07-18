@@ -1,10 +1,9 @@
 import type { Notice } from '@stops/Notice';
 
 /**
- * The override a catalog gate accepts, a one-line `message` reword or a full `notice` replacement. Accepted by
- * the agnostic gates ({@link OwnerOnly}, {@link GuildOnly}, {@link DmOnly}, {@link Cooldown}) and the gateway's
- * `RequireRole` and `Nsfw`. The gateway's `RequirePermissions` and `RequireBotPermissions` take
- * `RequirePermissionsOptions` instead.
+ * The override a catalog gate accepts. A one-line `message` reword or a full `notice` replacement. Accepted by
+ * the agnostic catalog gates and, nested per refusal, by {@link RequireRole}. {@link RequirePermissions} and
+ * {@link RequireBotPermissions} take `RequirePermissionsOptions` instead.
  *
  * @example
  * ```ts

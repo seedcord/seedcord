@@ -1,151 +1,164 @@
-import { Guild, GuildMember, PermissionFlagsBits } from 'discord.js';
+import { MissingPermissions } from '@seedcord/core/internal';
+import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { RequireBotPermissions, RequirePermissions, RequireRole } from '@bot/gates/catalog';
-import { MissingPermissions, MissingRole, NotInGuild } from '@bot/notices';
-
-import type { InteractionGateContext } from '@bot/gates';
-import type { NonModalInteraction } from '@src/handlers/interactionTypes';
+import { HasDangerousPermissions } from '@bot/notices';
+import { checkBotPermissions } from '@bUtilities/permissions/checkBotPermissions';
+import { checkPermissions } from '@bUtilities/permissions/checkPermissions';
+import { hasPermsToAssign } from '@bUtilities/permissions/hasPermsToAssign';
 
 // a Guild instance so checkPermissions takes its `instanceof Guild` branch and reads member.permissions
 function guildFake(extra: object = {}): Guild {
     return Object.assign(Object.create(Guild.prototype) as Guild, extra);
 }
 
-// a real GuildMember instance so checkPermissions takes its positional form, with permissions and roles
-// defined over the prototype getters
-function memberWith(perms: bigint[], roles: string[] = []): GuildMember {
+// a real GuildMember instance so checkPermissions takes its positional form, with permissions and an id for mentionFor
+function memberWith(perms: bigint[], id = 'm1'): GuildMember {
     const member = Object.create(GuildMember.prototype) as GuildMember;
+    Object.defineProperty(member, 'id', { value: id });
     Object.defineProperty(member, 'permissions', { value: { has: (bit: bigint) => perms.includes(bit) } });
-    Object.defineProperty(member, 'roles', { value: { cache: new Map(roles.map((role) => [role, { id: role }])) } });
     return member;
 }
 
-function ctxOf(member: GuildMember | null, guild: Guild | null): InteractionGateContext<NonModalInteraction> {
-    return { member, guild } as unknown as InteractionGateContext<NonModalInteraction>;
+// a real Role instance so mentionFor and the hierarchy checks resolve
+function roleWith(overrides: Record<string, unknown> & { id: string }): Role {
+    return Object.assign(Object.create(Role.prototype) as Role, overrides);
 }
 
-describe('RequirePermissions', () => {
-    it('passes when the caller holds the permissions', async () => {
-        const ctx = ctxOf(memberWith([PermissionFlagsBits.BanMembers]), guildFake());
-        await expect(RequirePermissions([PermissionFlagsBits.BanMembers]).check(ctx)).resolves.toBeUndefined();
+describe('checkPermissions', () => {
+    it('passes when the member holds every scoped permission in a guild', () => {
+        expect(() =>
+            checkPermissions(memberWith([PermissionFlagsBits.BanMembers]), guildFake(), [
+                PermissionFlagsBits.BanMembers
+            ])
+        ).not.toThrow();
     });
 
-    it('refuses with MissingPermissions when the caller lacks them', async () => {
-        const ctx = ctxOf(memberWith([]), guildFake());
-        await expect(RequirePermissions([PermissionFlagsBits.BanMembers]).check(ctx)).rejects.toBeInstanceOf(
+    it('throws MissingPermissions when a permission is missing', () => {
+        expect(() => checkPermissions(memberWith([]), guildFake(), [PermissionFlagsBits.BanMembers])).toThrow(
             MissingPermissions
         );
     });
 
-    it('names the caller in the refusal, not the guild', async () => {
-        const member = memberWith([]);
+    it('names the checked member as the refusal subject', () => {
         let caught: unknown;
-        await RequirePermissions([PermissionFlagsBits.BanMembers])
-            .check(ctxOf(member, guildFake()))
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        // the member is the one missing the permission, so the refusal subject must be the member, not the guild
-        expect((caught as MissingPermissions).where).toBe(member);
+        try {
+            checkPermissions(memberWith([], 'm7'), guildFake(), [PermissionFlagsBits.BanMembers]);
+        } catch (error) {
+            caught = error;
+        }
+        expect(JSON.stringify((caught as MissingPermissions).render())).toContain('<@m7>');
     });
 
-    it('refuses in a DM with NotInGuild', async () => {
-        await expect(
-            RequirePermissions([PermissionFlagsBits.BanMembers]).check(ctxOf(null, null))
-        ).rejects.toBeInstanceOf(NotInGuild);
+    it('throws HasDangerousPermissions on the inverse check when a permission is present', () => {
+        expect(() =>
+            checkPermissions(
+                memberWith([PermissionFlagsBits.Administrator]),
+                guildFake(),
+                [PermissionFlagsBits.Administrator],
+                true
+            )
+        ).toThrow(HasDangerousPermissions);
     });
 
-    it('refuses an uncached member in a guild with its own message', async () => {
+    it('passes the inverse check when no scoped permission is present', () => {
+        expect(() =>
+            checkPermissions(memberWith([]), guildFake(), [PermissionFlagsBits.Administrator], true)
+        ).not.toThrow();
+    });
+
+    it('leads the dangerous-permissions card with the default lead when no message is passed', () => {
         let caught: unknown;
-        await RequirePermissions([PermissionFlagsBits.BanMembers])
-            .check(ctxOf(null, guildFake()))
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect(caught).toBeInstanceOf(NotInGuild);
-        expect((caught as NotInGuild).message).toBe('Your server member data could not be resolved. Try again.');
-    });
-});
-
-describe('RequireBotPermissions', () => {
-    it('passes when the bot holds the permissions', async () => {
-        const ctx = ctxOf(memberWith([]), guildFake({ members: { me: memberWith([PermissionFlagsBits.BanMembers]) } }));
-        await expect(RequireBotPermissions([PermissionFlagsBits.BanMembers]).check(ctx)).resolves.toBeUndefined();
-    });
-
-    it('refuses with MissingPermissions when the bot lacks them', async () => {
-        const ctx = ctxOf(memberWith([]), guildFake({ members: { me: memberWith([]) } }));
-        await expect(RequireBotPermissions([PermissionFlagsBits.BanMembers]).check(ctx)).rejects.toBeInstanceOf(
-            MissingPermissions
+        try {
+            checkPermissions(
+                memberWith([PermissionFlagsBits.Administrator]),
+                guildFake(),
+                [PermissionFlagsBits.Administrator],
+                true
+            );
+        } catch (error) {
+            caught = error;
+        }
+        expect(JSON.stringify((caught as HasDangerousPermissions).render())).toContain(
+            'has the following permission entries that must not be enabled'
         );
     });
 
-    it('refuses outside a guild with NotInGuild', async () => {
-        await expect(
-            RequireBotPermissions([PermissionFlagsBits.BanMembers]).check(ctxOf(null, null))
-        ).rejects.toBeInstanceOf(NotInGuild);
+    it('leads the dangerous-permissions card with a custom message when passed', () => {
+        const notice = new HasDangerousPermissions('do not touch these', '<@m1>', ['Administrator']);
+        expect(JSON.stringify(notice.render())).toContain('do not touch these');
+    });
+
+    it('uses a custom missing ctor with the subject and names', () => {
+        class Custom extends MissingPermissions {}
+        let caught: unknown;
+        try {
+            checkPermissions(memberWith([]), guildFake(), [PermissionFlagsBits.BanMembers], false, {
+                missingNotice: Custom
+            });
+        } catch (error) {
+            caught = error;
+        }
+        expect(caught).toBeInstanceOf(Custom);
     });
 });
 
-describe('RequireRole', () => {
-    it('passes when the member has the role', async () => {
-        const ctx = ctxOf(memberWith([], ['r1']), guildFake({ roles: { cache: new Map() } }));
-        await expect(RequireRole('r1').check(ctx)).resolves.toBeUndefined();
+describe('checkBotPermissions', () => {
+    it('passes when the bot member holds the permissions', () => {
+        const guild = guildFake({ members: { me: memberWith([PermissionFlagsBits.BanMembers]) } });
+        expect(() => checkBotPermissions(guild, [PermissionFlagsBits.BanMembers])).not.toThrow();
     });
 
-    it('refuses with MissingRole when the member lacks the role', async () => {
-        const ctx = ctxOf(memberWith([], []), guildFake({ roles: { cache: new Map([['r1', { name: 'Mods' }]]) } }));
-        await expect(RequireRole('r1').check(ctx)).rejects.toBeInstanceOf(MissingRole);
+    it('throws MissingPermissions when the bot lacks them', () => {
+        const guild = guildFake({ members: { me: memberWith([]) } });
+        expect(() => checkBotPermissions(guild, [PermissionFlagsBits.BanMembers])).toThrow(MissingPermissions);
     });
 
-    it('carries the looked-up role on the refusal', async () => {
-        const role = { name: 'Mods' };
-        const ctx = ctxOf(memberWith([], []), guildFake({ roles: { cache: new Map([['r1', role]]) } }));
+    it('throws MissingPermissions when the bot member is uncached', () => {
+        const guild = guildFake({ id: 'g1', members: { me: null } });
+        expect(() => checkBotPermissions(guild, [PermissionFlagsBits.BanMembers])).toThrow(MissingPermissions);
+    });
+
+    it('names the bot on the refusal when the bot member is uncached', () => {
+        const guild = guildFake({ id: 'g1', members: { me: null } });
         let caught: unknown;
-        await RequireRole('r1')
-            .check(ctx)
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect((caught as MissingRole).role).toBe(role);
+        try {
+            checkBotPermissions(guild, [PermissionFlagsBits.BanMembers]);
+        } catch (error) {
+            caught = error;
+        }
+        expect(JSON.stringify((caught as MissingPermissions).render())).toContain('The bot is missing');
+    });
+});
+
+describe('hasPermsToAssign', () => {
+    // getBotRole reads guild.roles.botRoleFor(guild.client.user), checkBotPermissions reads guild.members.me
+    function guildWithBot(mePerms: bigint[]): { guild: Guild; botRole: Role } {
+        const botRole = roleWith({ id: 'bot' });
+        const guild = guildFake({
+            id: 'g1',
+            client: { user: {} },
+            members: { me: memberWith(mePerms, 'me') },
+            roles: { botRoleFor: () => botRole }
+        });
+        return { guild, botRole };
+    }
+
+    it('throws when the target role is higher than the bot', () => {
+        const { guild } = guildWithBot([PermissionFlagsBits.ManageRoles]);
+        const target = roleWith({ id: 't1', managed: false, guild, comparePositionTo: () => 1 });
+        expect(() => hasPermsToAssign(target)).toThrow();
     });
 
-    it('falls back to a generic message when the role is not cached', async () => {
-        const ctx = ctxOf(memberWith([], []), guildFake({ roles: { cache: new Map() } }));
-        let caught: unknown;
-        await RequireRole('r1')
-            .check(ctx)
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect((caught as MissingRole).role).toBeNull();
-        expect((caught as MissingRole).message).toBe('You do not have the required role.');
+    it('throws when the target role is managed', () => {
+        const { guild } = guildWithBot([PermissionFlagsBits.ManageRoles]);
+        const target = roleWith({ id: 't1', name: 'Booster', managed: true, guild, comparePositionTo: () => -1 });
+        expect(() => hasPermsToAssign(target)).toThrow();
     });
 
-    it('rewords the refusal with the message override', async () => {
-        const ctx = ctxOf(memberWith([], []), guildFake({ roles: { cache: new Map([['r1', { name: 'Mods' }]]) } }));
-        let caught: unknown;
-        await RequireRole('r1', { missingRole: { message: 'Mods only.' } })
-            .check(ctx)
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect((caught as MissingRole).message).toBe('Mods only.');
-    });
-
-    it('refuses in a DM with NotInGuild', async () => {
-        await expect(RequireRole('r1').check(ctxOf(null, null))).rejects.toBeInstanceOf(NotInGuild);
-    });
-
-    it('refuses an uncached member in a guild with its own message', async () => {
-        let caught: unknown;
-        await RequireRole('r1')
-            .check(ctxOf(null, guildFake()))
-            .catch((error: unknown) => {
-                caught = error;
-            });
-        expect(caught).toBeInstanceOf(NotInGuild);
-        expect((caught as NotInGuild).message).toBe('Your server member data could not be resolved. Try again.');
+    it('throws MissingPermissions when the bot lacks Manage Roles', () => {
+        const { guild } = guildWithBot([]);
+        const target = roleWith({ id: 't1', managed: false, guild, comparePositionTo: () => -1 });
+        expect(() => hasPermsToAssign(target)).toThrow(MissingPermissions);
     });
 });

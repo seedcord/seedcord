@@ -52,6 +52,8 @@ function fakeSlash(commandName: string) {
         guild: null,
         guildId: 'g1',
         channelId: 'c1',
+        memberPermissions: null,
+        appPermissions: { bitfield: 0n },
         id: 'i1',
         deferred: false,
         replied: false,
@@ -101,7 +103,7 @@ describe('InteractionDispatcher Integration', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
-        vi.clearAllMocks();
+        vi.restoreAllMocks();
     });
 
     it('should load interaction handlers from directory', async () => {
@@ -680,6 +682,45 @@ describe('InteractionDispatcher Integration', () => {
         );
 
         expect(interaction.reply).toHaveBeenCalledWith('executed');
+    });
+
+    it('warns on a gate check that crosses the slow-gate threshold', async () => {
+        await testEnv.createFile(
+            'interactions/Sluggish.ts',
+            `
+            import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            const Sluggish = defineGate('Sluggish', () => {});
+
+            @Gated(Sluggish)
+            @SlashRoute('sluggish')
+            export class SluggishHandler extends SlashHandler<'sluggish'> {
+                public async execute() {
+                    await this.event.reply('executed');
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+        // monotonic +800ms per reading, so any check's start-to-end pair crosses the 750ms threshold
+        let reading = 0;
+        vi.spyOn(performance, 'now').mockImplementation(() => (reading += 800));
+
+        const interaction = fakeSlash('sluggish');
+        await controller.processInteraction(
+            interaction,
+            () => 'sluggish',
+            () => controller.slashMap.get('sluggish')
+        );
+
+        expect(warn.mock.calls.some(([message]) => String(message).includes('Sluggish'))).toBe(true);
     });
 
     it('a refusing gate stops the handler before execute', async () => {

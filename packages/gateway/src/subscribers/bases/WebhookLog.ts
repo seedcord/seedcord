@@ -2,7 +2,7 @@ import { WebhookUrlMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import chalk from 'chalk';
-import { Envapter } from 'envapt';
+import { Converters, Envapter } from 'envapt';
 
 import { flagsFor } from '@miscellaneous/flagsFor';
 
@@ -79,8 +79,9 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey> exten
 
     /** @internal Returns null when the env var is unset, throws when set but malformed. */
     static urlOf(envKey: string): string | null {
-        const raw = Envapter.get(envKey)?.trim();
-        if (raw === undefined || raw === '') return null;
+        if (!Envapter.has(envKey)) return null;
+        const raw = Envapter.getRequired(envKey, Converters.String).trim();
+        if (raw === '') return null;
         if (!isDiscordWebhookUrl(raw)) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, [envKey]);
         return raw;
     }

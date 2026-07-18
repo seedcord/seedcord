@@ -1,6 +1,7 @@
-import { PermissionFlagsBits, Role, type Guild, type GuildMember, type TextChannel } from 'discord.js';
+import { MissingPermissions } from '@seedcord/core/internal';
+import { PermissionFlagsBits, Role } from 'discord.js';
 
-import { CannotAssignBotRole, MissingPermissions, RoleHigherThanMe } from '@bot/notices';
+import { CannotAssignBotRole, RoleHigherThanMe } from '@bot/notices';
 
 import { checkBotPermissions } from './checkBotPermissions';
 import { getBotRole } from '../roles/getBotRole';
@@ -10,23 +11,18 @@ import type { Notice } from '@seedcord/core';
 /**
  * Optional custom error constructors for {@link HasPermsToAssignOptions}.
  */
-export interface AssignRoleErrorCtors {
-    /** Custom error for role higher than bot */
-    higher?: new (message: string, role: Role, botRole: Role) => Notice;
-    /** Custom error for managed role assignment */
-    managed?: new (message: string) => Notice;
-    /** Custom error for missing Manage Roles permission */
-    missing?: new (message: string, where: Role | TextChannel | Guild | GuildMember, missingPerms: string[]) => Notice;
+export interface AssignRoleNoticeOverrides {
+    higherNotice?: new (message: string, role: Role, botRole: Role) => Notice;
+    managedNotice?: new (message: string) => Notice;
+    missingNotice?: new (message: string | undefined, subject: string, missingPerms: readonly string[]) => Notice;
 }
 
 /**
  * Options for {@link hasPermsToAssign}.
  */
 export interface HasPermsToAssignOptions {
-    /** Target role to validate for assignment */
     targetRole: Role;
-    /** Optional custom error constructors */
-    errors?: AssignRoleErrorCtors;
+    noticeOverrides?: AssignRoleNoticeOverrides;
 }
 
 /**
@@ -44,31 +40,36 @@ export interface HasPermsToAssignOptions {
  * // Check with custom error handling
  * hasPermsToAssign({
  *   targetRole: role,
- *   errors: {
- *     higher: CustomHigherError,
- *     managed: CustomManagedError,
- *     missing: CustomMissingPermissionsError
+ *   noticeOverrides: {
+ *     higherNotice: CustomHigherNotice,
+ *     managedNotice: CustomManagedNotice,
+ *     missingNotice: CustomMissingPermissionsNotice
  *   }
  * });
  * ```
  */
 export function hasPermsToAssign(roleOrOptions: Role | HasPermsToAssignOptions): void {
-    const { targetRole, errors } =
-        roleOrOptions instanceof Role ? { targetRole: roleOrOptions, errors: undefined } : roleOrOptions;
+    const { targetRole, noticeOverrides: errors } =
+        roleOrOptions instanceof Role
+            ? {
+                  targetRole: roleOrOptions,
+                  noticeOverrides: undefined
+              }
+            : roleOrOptions;
 
-    const HigherErr = errors?.higher ?? RoleHigherThanMe;
-    const ManagedErr = errors?.managed ?? CannotAssignBotRole;
-    const Missing = errors?.missing ?? MissingPermissions;
+    const HigherNotice = errors?.higherNotice ?? RoleHigherThanMe;
+    const ManagedNotice = errors?.managedNotice ?? CannotAssignBotRole;
+    const MissingNotice = errors?.missingNotice ?? MissingPermissions;
 
     const botRole = getBotRole(targetRole.guild);
 
     if (targetRole.comparePositionTo(botRole) >= 0) {
-        throw new HigherErr('Role is higher than me', targetRole, botRole);
+        throw new HigherNotice('Role is higher than me', targetRole, botRole);
     }
 
     if (targetRole.managed) {
-        throw new ManagedErr(`Cannot assign managed role ${targetRole.name}`);
+        throw new ManagedNotice(`Cannot assign managed role ${targetRole.name}`);
     }
 
-    checkBotPermissions(targetRole.guild, [PermissionFlagsBits.ManageRoles], false, { missing: Missing });
+    checkBotPermissions(targetRole.guild, [PermissionFlagsBits.ManageRoles], false, { missingNotice: MissingNotice });
 }

@@ -45,6 +45,8 @@ function fakeButton(customId: string) {
         guild: null,
         guildId: 'g1',
         channelId: 'c1',
+        memberPermissions: null,
+        appPermissions: { bitfield: 0n },
         id: 'i1',
         deferred: false,
         replied: false,

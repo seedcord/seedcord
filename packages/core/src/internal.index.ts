@@ -11,14 +11,27 @@ export {
 } from '@decorators/interactionRoutes';
 
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
+export { slowGateMonitor, type SlowGateMonitor } from '@gates/slowGate';
+export type { GateObserver } from '@gates/runGates';
 export { pickNotice } from '@gates/catalog/options';
+export { PermissionNames } from '@gates/catalog/permissions';
 export type { GateFitsWith } from '@gates/matching';
 
 export { getDevChannel, setDevChannel } from '@hmr/devChannel';
 export { HmrManager } from '@hmr/HmrManager';
 export { wrapHot } from '@hmr/wrapHot';
 
-export { GateNotice, NeedsAny, NotAllowed, NotInDm, NotInGuild, NotOwner, OnCooldown } from '@notices/index';
+export {
+    GateNotice,
+    MissingPermissions,
+    MissingRole,
+    NeedsAny,
+    NotAllowed,
+    NotInDm,
+    NotInGuild,
+    NotOwner,
+    OnCooldown
+} from '@notices/index';
 
 export {
     CommandMetadataKey,

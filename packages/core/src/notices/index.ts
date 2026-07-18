@@ -58,3 +58,34 @@ export class NeedsAny extends Notice {
         return { components: [new NoticeCard(`You need any of:\n${bullets}`).component] };
     }
 }
+
+export class MissingRole extends GateNotice {
+    public constructor(message: string | undefined, roleId: string | null) {
+        super(
+            message ?? (roleId ? `You need the <@&${roleId}> role to use this.` : 'You do not have the required role.')
+        );
+    }
+}
+
+export class MissingPermissions extends Notice {
+    private readonly customLead: string | undefined;
+
+    public constructor(
+        message: string | undefined,
+        private readonly subject: string | null,
+        private readonly missingPerms: readonly string[]
+    ) {
+        super(message ?? 'A required permission is missing.');
+        this.customLead = message;
+    }
+
+    public render(): ReplyResponse {
+        const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
+        const lead =
+            this.customLead ??
+            `${this.subject === null ? 'You are' : `${this.subject} is`} missing the following permission entries:`;
+        return {
+            components: [new NoticeCard(`${lead}\n\n${bullets}`).component]
+        };
+    }
+}

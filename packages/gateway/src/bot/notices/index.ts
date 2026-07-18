@@ -1,28 +1,14 @@
 import { Notice } from '@seedcord/core';
 import { GateNotice, NoticeCard } from '@seedcord/core/internal';
 
-import { labelFor, mentionFor } from './utils';
-
-import type { PermSubject } from './utils';
 import type { ReplyResponse } from '@seedcord/types';
 import type { Role } from 'discord.js';
-
-export { NotInGuild } from '@seedcord/core/internal';
 
 // ----- catalog gate refusals -----
 
 export class NotNsfw extends GateNotice {
     public constructor(message = 'This can only be used in an age-restricted channel.') {
         super(message);
-    }
-}
-
-export class MissingRole extends GateNotice {
-    public constructor(
-        message: string | undefined,
-        public readonly role: Role | null
-    ) {
-        super(message ?? (role ? `You need the ${role.name} role to use this.` : 'You do not have the required role.'));
     }
 }
 
@@ -56,38 +42,23 @@ export class CannotAssignBotRole extends Notice {
     }
 }
 
-export class MissingPermissions extends Notice {
-    public constructor(
-        message: string,
-        public where: PermSubject,
-        public missingPerms: string[]
-    ) {
-        super(message);
-    }
-
-    public render(): ReplyResponse {
-        const bullets = this.missingPerms.map((perm) => `• ${perm}`).join('\n');
-        const card = new NoticeCard(
-            `The ${labelFor(this.where)} ${mentionFor(this.where)} is missing the following permission entries:\n\n${bullets}`
-        );
-        return { components: [card.component] };
-    }
-}
-
 export class HasDangerousPermissions extends Notice {
+    private readonly customLead: string | undefined;
+
     public constructor(
-        message: string,
-        public target: PermSubject,
-        public dangerousPerms: string[]
+        message: string | undefined,
+        public subject: string,
+        public dangerousPerms: readonly string[]
     ) {
-        super(message);
+        super(message ?? 'A dangerous permission is enabled.');
+        this.customLead = message;
     }
 
     public render(): ReplyResponse {
         const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-        const card = new NoticeCard(
-            `The ${labelFor(this.target)} ${mentionFor(this.target)} has the following permission entries that must not be enabled:\n\n${bullets}`
-        );
+        const lead =
+            this.customLead ?? `${this.subject} has the following permission entries that must not be enabled:`;
+        const card = new NoticeCard(`${lead}\n\n${bullets}`);
         return { components: [card.component] };
     }
 }

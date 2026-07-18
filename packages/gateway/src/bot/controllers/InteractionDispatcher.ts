@@ -9,6 +9,7 @@ import {
     prefixOf,
     routeIdOf,
     runHandlerGates,
+    slowGateMonitor,
     areRoutes
 } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -453,11 +454,18 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             if (handler instanceof RepliableHandler) sender = handler.getSender();
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
             if (!interaction.isAutocomplete()) {
-                await runHandlerGates(
-                    HandlerCtor,
-                    interactionGateContext(interaction as Repliables, this.core),
-                    dispatch.routeId ?? undefined
-                );
+                const monitor = slowGateMonitor();
+                try {
+                    await runHandlerGates(
+                        HandlerCtor,
+                        interactionGateContext(interaction as Repliables, this.core),
+                        dispatch.routeId ?? undefined,
+                        monitor?.observe
+                    );
+                } finally {
+                    // a refusing gate ate budget too, report either way
+                    monitor?.report(dispatch.routeId);
+                }
             }
             await handler.execute();
         } catch (caught) {

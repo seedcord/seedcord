@@ -1,11 +1,11 @@
 import type { Core } from '@interfaces/Core';
-import type { GateContextBase } from '@seedcord/core';
+import type { GuildPermissionsContext } from '@seedcord/core';
 import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
 
 /**
- * The interaction arm. It extends the scalar {@link GateContextBase} with the live interaction and
- * the rich djs objects the gateway cache provides. `Repliable` is the interaction type the gate
+ * The interaction arm. It extends {@link GuildPermissionsContext} with the live interaction and
+ * the djs objects resolved from the gateway cache. `Repliable` is the interaction type the gate
  * supports, inferred from the `ctx` annotation, so a gate reading button-specific fields is rejected
  * on a slash handler. `interaction` is the reply target, so `user` is always present. Use
  * {@link NonModalInteraction} to exclude ModalSubmit when the gate needs a reliable caller member or
@@ -23,8 +23,8 @@ import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
  * });
  * ```
  */
-export interface InteractionGateContext<Repliable extends Repliables = Repliables> extends GateContextBase {
-    /** Marks the interaction arm, narrow on it before reading `interaction`. */
+export interface InteractionGateContext<Repliable extends Repliables = Repliables> extends GuildPermissionsContext {
+    /** The literal `'interaction'`. Narrow on it before reading `interaction`. */
     readonly kind: 'interaction';
     /** The running framework, with the gateway's bot and bus. */
     readonly core: Core;
@@ -39,7 +39,7 @@ export interface InteractionGateContext<Repliable extends Repliables = Repliable
 }
 
 /**
- * The event arm. It extends the scalar {@link GateContextBase} with the event payload and the djs
+ * The event arm. It extends {@link GuildPermissionsContext} with the event payload and the djs
  * objects derived from it. `Names` is the event(s) the gate supports, inferred from the `ctx`
  * annotation, so a gate that reads one event's `payload` is rejected on a handler for a different
  * event. The default supports every event.
@@ -58,8 +58,8 @@ export interface InteractionGateContext<Repliable extends Repliables = Repliable
  */
 export interface EventGateContext<
     Names extends ValidNonInteractionKeys = ValidNonInteractionKeys
-> extends GateContextBase {
-    /** Marks the event arm, narrow on it before reading `payload`. */
+> extends GuildPermissionsContext {
+    /** The literal `'event'`, narrow on it before reading `payload`. */
     readonly kind: 'event';
     /** The running framework, with the gateway's bot and bus. */
     readonly core: Core;

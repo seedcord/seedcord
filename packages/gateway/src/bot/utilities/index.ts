@@ -4,9 +4,8 @@ export * from './channels/fetchText';
 // Bot Utilities Permissions exports
 export * from './permissions/checkBotPermissions';
 export {
-    type BotPermissionScope,
     type CheckPermissionOptions,
-    type PermissionErrorCtors,
+    type PermissionErrorNoticeOverrides,
     checkPermissions
 } from './permissions/checkPermissions';
 export * from './permissions/hasPermsToAssign';
