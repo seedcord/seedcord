@@ -26,10 +26,6 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'plugins',
         aliases: ['plugins']
     },
-    '@seedcord/services': {
-        displayName: 'services',
-        aliases: ['services']
-    },
     '@seedcord/types': {
         displayName: 'types',
         aliases: ['types']

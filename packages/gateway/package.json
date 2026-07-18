@@ -55,7 +55,6 @@
         "@seedcord/event-emitter": "workspace:*",
         "@seedcord/logger": "workspace:*",
         "@seedcord/rate-limiter": "workspace:*",
-        "@seedcord/services": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",

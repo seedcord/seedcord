@@ -483,6 +483,9 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/logger':
         specifier: workspace:*
         version: link:../logger
@@ -871,9 +874,6 @@ importers:
       '@seedcord/rate-limiter':
         specifier: workspace:*
         version: link:../rate-limiter
-      '@seedcord/services':
-        specifier: workspace:*
-        version: link:../services
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
@@ -1021,9 +1021,6 @@ importers:
       '@seedcord/logger':
         specifier: workspace:*
         version: link:../logger
-      '@seedcord/services':
-        specifier: workspace:*
-        version: link:../services
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types
@@ -1180,40 +1177,6 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
-
-  packages/services:
-    dependencies:
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/event-emitter':
-        specifier: workspace:*
-        version: link:../event-emitter
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../logger
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
 
   packages/tsconfig: {}
 

@@ -19,7 +19,6 @@
     "@seedcord/mock": "0.2.22",
     "@seedcord/plugins": "0.7.2",
     "@seedcord/rate-limiter": "0.0.1",
-    "@seedcord/services": "0.8.2",
     "@seedcord/tsconfig": "2.0.1",
     "@seedcord/tsdown-config": "2.0.1",
     "@seedcord/types": "0.7.1",
@@ -87,7 +86,6 @@
     "restore-restricted-syntax-bans",
     "scalar-gate-context-core",
     "seedcord-builders-off-djs",
-    "services-drop-logger",
     "types-hmr-public",
     "utils-node-subpath"
   ]

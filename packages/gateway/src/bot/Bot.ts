@@ -1,6 +1,6 @@
+import { ShutdownPhase } from '@seedcord/core/node';
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
-import { ShutdownPhase } from '@seedcord/services';
 import chalk from 'chalk';
 import { Client, ClientEvents, Events, Interaction } from 'discord.js';
 import { Envapt } from 'envapt/legacy';

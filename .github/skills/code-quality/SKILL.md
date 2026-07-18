@@ -273,8 +273,8 @@ Track candidates in a scratch note while you sweep so you fix them in one focuse
 For large sweeps (20+ issues across multiple packages or apps), parallelize across the natural package boundaries:
 
 ```
-Subagent A → packages/seedcord + packages/services + packages/utils
-Subagent B → packages/cli + packages/plugins
+Subagent A → packages/seedcord + packages/core + packages/utils
+Subagent B → packages/gateway + packages/plugins
 Subagent C → packages/docs-engine + packages/docs-generator
 Subagent D → apps/docs (largest app today)
 ```

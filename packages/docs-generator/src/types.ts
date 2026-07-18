@@ -31,7 +31,7 @@ export type PackageSourceIndex = Record<string, SourceEntry[]>;
 export interface ReexportEntry {
     /** Exported name as it appears on this package's surface. */
     name: string;
-    /** Full name of the package that declares it, e.g. `@seedcord/services`. */
+    /** Full name of the package that declares it, e.g. `@seedcord/logger`. */
     owner: string;
 }
 

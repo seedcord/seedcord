@@ -10,9 +10,6 @@
 '📦 mock':
   - changed-files:
       - any-glob-to-any-file: 'mock/**'
-'📦 services':
-  - changed-files:
-      - any-glob-to-any-file: 'packages/services/**'
 '📦 plugins':
   - changed-files:
       - any-glob-to-any-file: 'packages/plugins/**'

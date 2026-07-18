@@ -19,6 +19,7 @@ export default mergeConfig(
                 '@hmr': path.resolve(__dirname, './src/hmr'),
                 '@inputs': path.resolve(__dirname, './src/inputs'),
                 '@interfaces': path.resolve(__dirname, './src/interfaces'),
+                '@node': path.resolve(__dirname, './src/node'),
                 '@notices': path.resolve(__dirname, './src/notices'),
                 '@pagination': path.resolve(__dirname, './src/pagination'),
                 '@registries': path.resolve(__dirname, './src/registries'),

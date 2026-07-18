@@ -15,7 +15,7 @@ export interface SourceIndexOptions {
     ref: string;
     /** Entry module relative to `packageDir`; its directory is the package's source root. Default `src/index.ts`. */
     entry?: string;
-    /** Workspace dir segment (`services`) to npm name (`@seedcord/services`), for re-export owners. */
+    /** Workspace dir segment (`logger`) to npm name (`@seedcord/logger`), for re-export owners. */
     packageNames?: Record<string, string>;
 }
 

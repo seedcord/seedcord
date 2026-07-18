@@ -13,6 +13,7 @@
             "@hmr/*": ["./src/hmr/*"],
             "@inputs/*": ["./src/inputs/*"],
             "@interfaces/*": ["./src/interfaces/*"],
+            "@node/*": ["./src/node/*"],
             "@notices/*": ["./src/notices/*"],
             "@pagination/*": ["./src/pagination/*"],
             "@registries/*": ["./src/registries/*"],

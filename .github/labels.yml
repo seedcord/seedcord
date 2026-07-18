@@ -9,9 +9,6 @@
   description: HTTP-interactions transport
 - name: '📦 mock'
   color: bca562
-- name: '📦 services'
-  color: b0bc62
-  description: shared runtime services
 - name: '📦 plugins'
   color: 8fbc62
 - name: '📦 errors'

@@ -17,12 +17,12 @@ describe('buildEntityHref', () => {
     it('maps scoped manifest names to their display segment', () => {
         expect(
             buildEntityHref({
-                name: '@seedcord/services',
+                name: '@seedcord/logger',
                 slug: 'logger',
                 version: '0.1.0',
                 tone: 'interface'
             })
-        ).toBe('/packages/services/0.1.0/interfaces/logger');
+        ).toBe('/packages/logger/0.1.0/interfaces/logger');
     });
 
     it('falls back to the latest version segment when version is omitted', () => {
@@ -125,7 +125,7 @@ describe('buildPackageBasePath', () => {
     });
 
     it('maps scoped manifest names to their display segment', () => {
-        expect(buildPackageBasePath('@seedcord/services', '0.1.0')).toBe('/packages/services/0.1.0');
+        expect(buildPackageBasePath('@seedcord/logger', '0.1.0')).toBe('/packages/logger/0.1.0');
     });
 
     it('falls back to "latest" when version is null', () => {

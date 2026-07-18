@@ -39,6 +39,16 @@
                 "types": "./dist/hmr.index.d.cts",
                 "default": "./dist/hmr.index.cjs"
             }
+        },
+        "./node": {
+            "import": {
+                "types": "./dist/node.index.d.mts",
+                "default": "./dist/node.index.mjs"
+            },
+            "require": {
+                "types": "./dist/node.index.d.cts",
+                "default": "./dist/node.index.cjs"
+            }
         }
     },
     "files": [
@@ -66,6 +76,7 @@
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/event-emitter": "workspace:*",
         "@seedcord/logger": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",

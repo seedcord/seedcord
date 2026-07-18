@@ -1,6 +1,5 @@
 ---
 '@seedcord/event-emitter': patch
-'@seedcord/services': patch
 '@seedcord/gateway': patch
 '@seedcord/errors': patch
 '@seedcord/plugins': patch

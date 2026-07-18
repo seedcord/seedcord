@@ -134,7 +134,7 @@ describe('GET /search: scope parameter', () => {
     beforeEach(() => {
         engineStub.listPackages.mockResolvedValue([
             { folder: 'seedcord', fullName: 'seedcord' },
-            { folder: 'services', fullName: '@seedcord/services' }
+            { folder: 'logger', fullName: '@seedcord/logger' }
         ]);
     });
 
@@ -142,19 +142,19 @@ describe('GET /search: scope parameter', () => {
         await GET(makeRequest('https://example.com/search?q=Logger'));
         expect(engineStub.search).toHaveBeenCalledWith('Logger');
         expect(engineStub.setVersion).toHaveBeenCalledWith('seedcord', 'latest');
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '1.0.0');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '1.0.0');
     });
 
     it('scopes the search to one package (resolved through resolvePackageIdentity)', async () => {
-        await GET(makeRequest('https://example.com/search?q=Logger&scope=services'));
-        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
+        await GET(makeRequest('https://example.com/search?q=Logger&scope=logger'));
+        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/logger');
         expect(engineStub.setVersion).toHaveBeenCalledTimes(1);
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '1.0.0');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '1.0.0');
     });
 
     it('is case-insensitive on the scope alias', async () => {
-        await GET(makeRequest('https://example.com/search?q=Logger&scope=SERVICES'));
-        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
+        await GET(makeRequest('https://example.com/search?q=Logger&scope=LOGGER'));
+        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/logger');
     });
 });
 
@@ -162,7 +162,7 @@ describe('GET /search: version and channel selection', () => {
     beforeEach(() => {
         engineStub.listPackages.mockResolvedValue([
             { folder: 'seedcord', fullName: 'seedcord' },
-            { folder: 'services', fullName: '@seedcord/services' }
+            { folder: 'logger', fullName: '@seedcord/logger' }
         ]);
         engineStub.getEntry.mockResolvedValue({ stable: { latest: '2.1.0' }, prerelease: { latest: '3.0.0-next.1' } });
     });
@@ -174,24 +174,24 @@ describe('GET /search: version and channel selection', () => {
 
     it('searches other packages at their stable head when the toggle is off', async () => {
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord'));
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '2.1.0');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '2.1.0');
     });
 
     it('searches other packages at their pre-release head when the toggle is on', async () => {
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord&prerelease=1'));
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '3.0.0-next.1');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '3.0.0-next.1');
     });
 
     it('falls back to the pre-release head when a package has no stable and the toggle is off', async () => {
         engineStub.getEntry.mockResolvedValue({ stable: null, prerelease: { latest: '3.0.0-next.1' } });
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord'));
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '3.0.0-next.1');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '3.0.0-next.1');
     });
 
     it('falls back to the stable head when a package has no pre-release and the toggle is on', async () => {
         engineStub.getEntry.mockResolvedValue({ stable: { latest: '2.1.0' }, prerelease: null });
         await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord&prerelease=1'));
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '2.1.0');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '2.1.0');
     });
 
     it('skips another package only when it has nothing in either channel', async () => {
@@ -203,9 +203,9 @@ describe('GET /search: version and channel selection', () => {
 
     it('searches a pre-release-only package scoped from another package with the toggle off', async () => {
         engineStub.getEntry.mockResolvedValue({ stable: null, prerelease: { latest: '3.0.0-next.1' } });
-        await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord&scope=services'));
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', '3.0.0-next.1');
-        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/services');
+        await GET(makeRequest('https://example.com/search?q=Logger&pkg=seedcord&scope=logger'));
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', '3.0.0-next.1');
+        expect(engineStub.search).toHaveBeenCalledWith('Logger', '@seedcord/logger');
     });
 
     it('returns no results when the index has no packages', async () => {
@@ -221,14 +221,14 @@ describe('GET /search: package listing', () => {
     it('maps listPackages to the packages payload for list=packages without searching', async () => {
         engineStub.listPackages.mockResolvedValue([
             { folder: 'seedcord', fullName: 'seedcord' },
-            { folder: 'services', fullName: '@seedcord/services' }
+            { folder: 'logger', fullName: '@seedcord/logger' }
         ]);
 
         const res = await GET(makeRequest('https://example.com/search?list=packages'));
         await expect(res.json()).resolves.toEqual({
             packages: [
                 { folder: 'seedcord', label: 'seedcord' },
-                { folder: 'services', label: 'services' }
+                { folder: 'logger', label: 'logger' }
             ]
         });
         expect(engineStub.search).not.toHaveBeenCalled();
@@ -387,17 +387,17 @@ describe('GET /search: dedupe and limits', () => {
     it('keeps a same-named entity in another package as a distinct result', async () => {
         engineStub.listPackages.mockResolvedValue([
             { folder: 'seedcord', fullName: 'seedcord' },
-            { folder: 'services', fullName: '@seedcord/services' }
+            { folder: 'logger', fullName: '@seedcord/logger' }
         ]);
         engineStub.search.mockReturnValue([
             makeEntry({ slug: 'logger', packageName: 'seedcord', kind: Kind.Class }),
-            makeEntry({ slug: 'logger', packageName: '@seedcord/services', kind: Kind.Class })
+            makeEntry({ slug: 'logger', packageName: '@seedcord/logger', kind: Kind.Class })
         ]);
 
         const res = await GET(makeRequest('https://example.com/search?q=Logger'));
         const results = await flatResults(res);
         expect(results).toHaveLength(2);
-        expect(results.map((r) => r.id)).toEqual(['seedcord:logger:128', '@seedcord/services:logger:128']);
+        expect(results.map((r) => r.id)).toEqual(['seedcord:logger:128', '@seedcord/logger:logger:128']);
     });
 
     it('keeps distinct entries when slug matches but resultKind differs', async () => {

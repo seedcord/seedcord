@@ -35,7 +35,7 @@ beforeEach(() => {
     engineStub.activeVersion.mockReset();
     loadEntityModel.mockReset();
 
-    engineStub.listPackages.mockResolvedValue([{ folder: 'services', fullName: '@seedcord/services' }]);
+    engineStub.listPackages.mockResolvedValue([{ folder: 'logger', fullName: '@seedcord/logger' }]);
     engineStub.setVersion.mockResolvedValue(undefined);
     engineStub.activeVersion.mockReturnValue('0.11.0-next.0');
     loadEntityModel.mockResolvedValue(null);
@@ -44,7 +44,7 @@ beforeEach(() => {
 describe('GET /entity', () => {
     it('bounces to / when the index has no packages', async () => {
         engineStub.listPackages.mockResolvedValue([]);
-        const res = await GET(makeRequest('https://example.com/entity?pkg=services&slug=Thing'));
+        const res = await GET(makeRequest('https://example.com/entity?pkg=logger&slug=Thing'));
         expect(res.status).toBe(307);
         expect(location(res).pathname).toBe('/');
         expect(engineStub.setVersion).not.toHaveBeenCalled();
@@ -52,32 +52,32 @@ describe('GET /entity', () => {
 
     it('bounces to / when setVersion throws', async () => {
         engineStub.setVersion.mockRejectedValue(new Error('no version'));
-        const res = await GET(makeRequest('https://example.com/entity?pkg=services&slug=Thing'));
+        const res = await GET(makeRequest('https://example.com/entity?pkg=logger&slug=Thing'));
         expect(location(res).pathname).toBe('/');
     });
 
     it('lands on the package index with ?moved when the symbol is not found', async () => {
         loadEntityModel.mockResolvedValue(null);
-        const res = await GET(makeRequest('https://example.com/entity?pkg=services&slug=OldThing'));
+        const res = await GET(makeRequest('https://example.com/entity?pkg=logger&slug=OldThing'));
         const url = location(res);
         expect(res.status).toBe(307);
-        expect(url.pathname).toBe('/packages/services/0.11.0-next.0');
+        expect(url.pathname).toBe('/packages/logger/0.11.0-next.0');
         expect(url.searchParams.get('moved')).toBe('OldThing');
-        expect(engineStub.setVersion).toHaveBeenCalledWith('services', 'latest');
+        expect(engineStub.setVersion).toHaveBeenCalledWith('logger', 'latest');
     });
 
     it('redirects to the entity page when the symbol resolves', async () => {
         // justified: the route only reads manifestPackage/slug/version/kind, so a partial literal stands in for EntityModel.
         loadEntityModel.mockResolvedValue({
-            manifestPackage: '@seedcord/services',
+            manifestPackage: '@seedcord/logger',
             slug: 'logger',
             version: '0.11.0-next.0',
             kind: 'class'
         } as unknown as EntityModel);
 
-        const res = await GET(makeRequest('https://example.com/entity?pkg=services&slug=logger'));
+        const res = await GET(makeRequest('https://example.com/entity?pkg=logger&slug=logger'));
         const url = location(res);
-        expect(url.pathname).toBe('/packages/services/0.11.0-next.0/classes/logger');
+        expect(url.pathname).toBe('/packages/logger/0.11.0-next.0/classes/logger');
         expect(url.searchParams.get('moved')).toBeNull();
     });
 });
