@@ -1,5 +1,16 @@
 # @seedcord/eslint-config
 
+## 1.5.0-next.4
+
+### Patch Changes
+
+- Updated dependencies [5ec46ca]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+    - @seedcord/eslint-plugin@0.1.0-next.3
+    - eslint-plugin-discordjs@0.1.0-next.3
+
 ## 1.5.0-next.3
 
 ### Patch Changes

@@ -1,5 +1,23 @@
 # @seedcord/logger
 
+## 0.1.0-next.1
+
+### Minor Changes
+
+- 701b669: `utils.block` takes an optional fourth `styleHeading` parameter replacing the default mint bold.
+- c959e1a: Error output renders the direct `cause` after the main stack.
+
+### Patch Changes
+
+- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c959e1a]
+- Updated dependencies [137e641]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+    - @seedcord/types@0.8.0-next.6
+    - @seedcord/utils@0.8.0-next.6
+
 ## 0.1.0-next.0
 
 ### Minor Changes

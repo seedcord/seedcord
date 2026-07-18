@@ -1,5 +1,16 @@
 # @seedcord/types
 
+## 0.8.0-next.6
+
+### Minor Changes
+
+- c959e1a: Add `errors.logSilences` (default `true`) to turn off the per-`Silence` debug line.
+- 137e641: Add `SendOpts` and `DeferOpts`, the reply-surface per-method options.
+
+### Patch Changes
+
+- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+
 ## 0.8.0-next.5
 
 ### Minor Changes

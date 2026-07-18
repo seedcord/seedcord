@@ -1,5 +1,45 @@
 # @seedcord/core
 
+## 0.1.0-next.5
+
+### Minor Changes
+
+- 137e641: Add `SelectMenuKind`, shared by the transport route decorators.
+- b03c8cd: Adds the shared handler bases `BaseHandler` and `RepliableHandler`. Both transports extend them, the reply members are defined once, and each transport supplies its sender through `buildSender`.
+- c89adde: `@seedcord/core/node` is a new subpath exporting the lifecycle coordinators (`CoordinatedStartup`, `CoordinatedShutdown`) and `HealthCheck`, moved out of the deleted `@seedcord/services`.
+
+    **BREAKING:** the `@seedcord/gateway` barrel no longer re-exports the lifecycle coordinators, `HealthCheck`, or the lifecycle types (`LifecycleTask`, `PhaseEventMap`). `StartupPhase` and `ShutdownPhase` stay exported.
+
+- 701b669: Add `RequirePermissions`, `RequireBotPermissions`, and `RequireRole` to the gate catalog. The permission gates read the payload's effective channel sets by default, and `{ in: 'guild' }` picks the base-set check, which types as `Gate<GuildPermissionsContext>` and fits gateway handlers only. The Administrator bit passes any scope.
+
+    **BREAKING:** `GateContextBase` gains a required `appPermissions` field, so a hand-built gate context must add it.
+
+- 3817214: Adds the six interaction route decorators (`@SlashRoute`, `@AutocompleteRoute`, `@ContextMenuRoute`, `@ButtonRoute`, `@ModalRoute`, `@SelectMenuRoute`), shared by both transports, each cross-checking the handler's generics at compile time.
+
+### Patch Changes
+
+- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
+- 5ec46ca: Adds support for the gateway `@WebhookUrl` decorator.
+- Updated dependencies [3817214]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [e17f818]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [137e641]
+- Updated dependencies [137e641]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+    - @seedcord/errors@0.3.0-next.4
+    - @seedcord/types@0.8.0-next.6
+    - @seedcord/utils@0.8.0-next.6
+    - @seedcord/logger@0.1.0-next.1
+    - @seedcord/event-emitter@0.1.0-next.0
+
 ## 0.1.0-next.4
 
 ### Minor Changes

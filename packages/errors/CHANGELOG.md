@@ -1,5 +1,15 @@
 # @seedcord/errors
 
+## 0.3.0-next.4
+
+### Minor Changes
+
+- 3817214: New code 1614 `AutocompleteNoFocusedOption`, thrown when an autocomplete payload has no focused option.
+- e17f818: New codes `ConfigMissingPublicKey` (1008) and `ConfigIncorrectPublicKey` (1009) for the `DISCORD_PUBLIC_KEY` env var.
+- c959e1a: Add the reply-surface error code `ReplyCallbackMissingMessage`, thrown when a `withResponse` interaction callback returns no created message. The foreign-target message now names the calling method, so `delete()` renders its own name.
+- 5ec46ca: **BREAKING:** `ConfigUnknownExceptionWebhookMissing`, `ConfigUnknownExceptionWebhookInvalid`, `ConfigHandledExceptionWebhookMissing`, and `ConfigHandledExceptionWebhookInvalid` are removed. `ConfigWebhookUrlInvalid` covers a malformed webhook url for any reporter, `ConfigWebhookNotFound` covers a webhook Discord answers 404 or 401 for at boot, `DecoratorWebhookUrlMissing` covers a `WebhookLog` subclass without `@WebhookUrl`, and `ConfigEmojiUnresolved` renumbers to 1005.
+- 137e641: Add the reply-surface error codes `ReplyIllegalAckState`, `ReplyComponentSerialization`, `ReplyForeignEditTarget`, and `ReplyUpdateWithoutSource`.
+
 ## 0.3.0-next.3
 
 ### Minor Changes

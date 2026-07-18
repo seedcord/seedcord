@@ -1,5 +1,64 @@
 # @seedcord/gateway
 
+## 0.1.0-next.3
+
+### Minor Changes
+
+- 701b669: **BREAKING:** `RequirePermissions`, `RequireBotPermissions`, and `RequireRole` now come from `@seedcord/core` and check the payload's effective channel permissions by default. Pass `{ in: 'guild' }` to keep the previous base-set behavior. The gates now fit modal and event handlers too.
+
+    Outside production, the interaction dispatcher now warns when a dispatch's gate checks run past 750ms of the 3s ack budget combined, naming each gate's share.
+
+    **BREAKING:** `BotPermissionScope` is renamed `PermissionScope`. The `missing`/`dangerous` notice overrides on `checkPermissions`, `checkBotPermissions`, and `hasPermsToAssign` now construct with `(message, subject, permissionNames)` where `subject` is a pre-rendered mention string. The gate contexts carry `appPermissions` plus the two guild base sets.
+
+- c959e1a: Handlers reply through members on the base, `this.reply` / `defer` / `followUp` / `edit` / `delete` / `send`, with `update` / `deferUpdate` on component kinds and `showModal` on non-modal kinds (a modal handler rejects it at compile time). `this.delete()` removes the initial reply or a message the interaction sent. The autocomplete base defines `this.respond(choices)`. Unmatched interactions dispatch to unhandled defaults that reply "Feature not implemented yet." as a ComponentsV2 text display (empty choices on autocomplete). Webhook exception logs strip ANSI escapes and render the direct error cause, the compact fault log appends the cause's first line, and a `Silence` respects the new `errors.logSilences` config.
+
+    **BREAKING:** `ReplySender` is removed from the package exports. Reply through the handler members. A failed `getConfirmation` prompt or `Paginator.start` send now throws into the fault boundary (both previously swallowed the failure), and `Paginator.start` returns `Promise<Message>`.
+
+- c89adde: `@seedcord/core/node` is a new subpath exporting the lifecycle coordinators (`CoordinatedStartup`, `CoordinatedShutdown`) and `HealthCheck`, moved out of the deleted `@seedcord/services`.
+
+    **BREAKING:** the `@seedcord/gateway` barrel no longer re-exports the lifecycle coordinators, `HealthCheck`, or the lifecycle types (`LifecycleTask`, `PhaseEventMap`). `StartupPhase` and `ShutdownPhase` stay exported.
+
+- 5ec46ca: **BREAKING:** `AllSubscriptions` is no longer exported. Type a payload with `SubscriptionData<K>` and add keys by augmenting `Subscriptions`.
+- 5ec46ca: **BREAKING:** the `unknownException` payload carries plain `guild` and `user` objects (`{ id, name }` and `{ id, username }`), each key omitted when absent. A subscriber that read other discord.js fields off the payload now fetches them through the client.
+- 5ec46ca: `WebhookLog` now runs the webhook ceremony. A reporter declares its url's env var with the new `@WebhookUrl` decorator and implements `report()` returning `{ username?, components, files? }`. The base resolves and validates the url, reuses one sender per url, posts through `@discordjs/rest`, and logs send failures. `username` defaults to the class name.
+
+    The webhook urls are optional. An unset var disables that reporter with a boot warning. A set but malformed value throws at boot. `UNKNOWN_EXCEPTION_WEBHOOK_URL` and `HANDLED_EXCEPTION_WEBHOOK_URL` keep their names.
+
+    At boot each configured webhook is probed with a GET on the token-bearing webhook route, without a bot token and without sending a message. A webhook that does not exist on Discord stops the boot. An unreachable Discord logs a warning and the boot continues.
+
+    **BREAKING:** a `WebhookLog` subclass implements `report()` and carries `@WebhookUrl`. The abstract `webhook` field is removed.
+
+### Patch Changes
+
+- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
+- Updated dependencies [3817214]
+- Updated dependencies [137e641]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [e17f818]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c89adde]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [701b669]
+- Updated dependencies [137e641]
+- Updated dependencies [137e641]
+- Updated dependencies [3817214]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+    - @seedcord/errors@0.3.0-next.4
+    - @seedcord/core@0.1.0-next.5
+    - @seedcord/types@0.8.0-next.6
+    - @seedcord/utils@0.8.0-next.6
+    - @seedcord/logger@0.1.0-next.1
+    - @seedcord/rate-limiter@0.1.0-next.3
+    - @seedcord/event-emitter@0.1.0-next.0
+
 ## 0.1.0-next.2
 
 ### Minor Changes
