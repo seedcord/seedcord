@@ -157,7 +157,9 @@ export function RequirePermissions(
  *
  * The default `'channel'` scope reads the bot's effective channel set (wire `app_permissions`), what
  * Discord enforces in the invoked channel. The `'guild'` scope reads the bot's base set from roles and
- * requires a {@link GuildPermissionsContext}, so it fits a gateway handler only.
+ * requires a {@link GuildPermissionsContext}, so it fits a gateway handler only. `app_permissions` is
+ * absent on gateway events, the channel scope refuses there as unresolved, use `in: 'guild'` on an
+ * event handler.
  *
  * @param scope - The permission flag bits the bot must all hold.
  * @param options - Pick the scope with `in`, and override each refusal with `notInGuild` or `missing`.

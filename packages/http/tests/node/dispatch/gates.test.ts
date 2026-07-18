@@ -250,6 +250,7 @@ describe('handler gates', () => {
         expect(executed()).toBe(false);
         const first = rest.instances[0];
         expect(first?.post).toHaveBeenCalledTimes(1);
+        // justified: the mock call tuple is untyped, narrowed to the asserted callback shape
         const [, options] = first?.post.mock.calls[0] as [string, { body: { type: number; data: { flags: number } } }];
         expect(options.body.type).toBe(4);
         expect(options.body.data.flags & MessageFlags.Ephemeral).toBe(MessageFlags.Ephemeral);
@@ -292,6 +293,7 @@ describe('handler gates', () => {
         expect(executed()).toBe(false);
         const first = rest.instances[0];
         expect(first?.post).toHaveBeenCalledTimes(1);
+        // justified: the mock call tuple is untyped, narrowed to the asserted callback shape
         const [, options] = first?.post.mock.calls[0] as [
             string,
             { body: { type: number; data: { components: { components: { content: string }[] }[] } } }
