@@ -1,5 +1,20 @@
 # @seedcord/utils
 
+## 0.8.0-next.6
+
+### Minor Changes
+
+- c959e1a: Add `stripAnsi`, removing ANSI escapes from a string.
+- 5ec46ca: New `timestampFromSnowflake(snowflake)` returns the epoch milliseconds encoded in a Discord snowflake.
+
+### Patch Changes
+
+- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c959e1a]
+- Updated dependencies [137e641]
+    - @seedcord/types@0.8.0-next.6
+
 ## 0.8.0-next.5
 
 ### Minor Changes

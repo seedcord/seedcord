@@ -1,5 +1,20 @@
 # @seedcord/mock
 
+## 0.2.23-next.8
+
+### Patch Changes
+
+- Updated dependencies [b03c8cd]
+- Updated dependencies [701b669]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [c89adde]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+    - @seedcord/gateway@0.1.0-next.3
+    - @seedcord/plugins@0.8.0-next.8
+
 ## 0.2.23-next.7
 
 ### Patch Changes

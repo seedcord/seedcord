@@ -1,5 +1,38 @@
 # seedcord
 
+## 0.16.0-next.8
+
+### Patch Changes
+
+- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
+- 48d735c: confirm login on the actual ready event
+- Updated dependencies [3817214]
+- Updated dependencies [137e641]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [e17f818]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c89adde]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [701b669]
+- Updated dependencies [137e641]
+- Updated dependencies [137e641]
+- Updated dependencies [3817214]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+    - @seedcord/errors@0.3.0-next.4
+    - @seedcord/core@0.1.0-next.5
+    - @seedcord/types@0.8.0-next.6
+    - @seedcord/utils@0.8.0-next.6
+    - @seedcord/logger@0.1.0-next.1
+    - @seedcord/event-emitter@0.1.0-next.0
+
 ## 0.16.0-next.7
 
 ### Minor Changes

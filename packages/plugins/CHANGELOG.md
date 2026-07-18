@@ -1,5 +1,41 @@
 # @seedcord/plugins
 
+## 0.8.0-next.8
+
+### Patch Changes
+
+- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
+- Updated dependencies [3817214]
+- Updated dependencies [137e641]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [e17f818]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c89adde]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [701b669]
+- Updated dependencies [137e641]
+- Updated dependencies [137e641]
+- Updated dependencies [3817214]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [c959e1a]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+    - @seedcord/errors@0.3.0-next.4
+    - @seedcord/core@0.1.0-next.5
+    - @seedcord/gateway@0.1.0-next.3
+    - @seedcord/types@0.8.0-next.6
+    - @seedcord/utils@0.8.0-next.6
+    - @seedcord/logger@0.1.0-next.1
+
 ## 0.8.0-next.7
 
 ### Patch Changes
