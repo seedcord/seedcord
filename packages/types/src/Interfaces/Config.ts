@@ -85,6 +85,12 @@ export interface BotConfig {
 }
 
 /**
+ * The transport configs' `healthCheck` field. `false` disables the health server, `true` and
+ * `undefined` run it with the defaults, an object supplies {@link HealthCheckConfig} options.
+ */
+export type HealthCheckOption = boolean | HealthCheckConfig;
+
+/**
  * Health-check HTTP server settings.
  */
 export interface HealthCheckConfig {
@@ -97,7 +103,7 @@ export interface HealthCheckConfig {
     /**
      * Path the health-check server responds on.
      *
-     * @defaultValue `'/healthcheck'`
+     * @defaultValue `'/health'`
      */
     path?: string;
     /**
@@ -134,18 +140,6 @@ export interface Config {
      * Omit for Discord's default color.
      */
     botColor?: BotColor;
-
-    /**
-     * Whether coordinated shutdown registers OS signal handlers and runs teardown tasks.
-     *
-     * @defaultValue `true`
-     */
-    shutdownEnabled?: boolean;
-
-    /**
-     * Health-check HTTP server settings.
-     */
-    healthCheck?: HealthCheckConfig;
 
     /**
      * Settings for framework-sent error notifications.

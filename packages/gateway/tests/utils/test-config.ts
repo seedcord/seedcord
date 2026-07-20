@@ -1,5 +1,5 @@
 import type { GatewayConfig } from '@interfaces/Config';
-import type { CustomIdMatcher } from '@seedcord/types';
+import type { CustomIdMatcher, HealthCheckOption } from '@seedcord/types';
 
 interface TestConfigOverrides {
     interactions?: string;
@@ -10,6 +10,7 @@ interface TestConfigOverrides {
     subscribers?: string;
     ignoreCustomIds?: CustomIdMatcher[];
     ownerIds?: string[];
+    healthCheck?: HealthCheckOption;
 }
 
 export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
@@ -21,7 +22,8 @@ export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
         commands,
         subscribers,
         ignoreCustomIds,
-        ownerIds
+        ownerIds,
+        healthCheck
     } = overrides;
 
     const config: GatewayConfig = {
@@ -45,6 +47,7 @@ export function testConfig(overrides: TestConfigOverrides = {}): GatewayConfig {
     };
 
     if (ownerIds) config.ownerIds = ownerIds;
+    if (healthCheck !== undefined) config.healthCheck = healthCheck;
 
     return config;
 }

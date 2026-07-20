@@ -1,6 +1,6 @@
 import { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
 import { Logger } from '@seedcord/logger';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 
 import { Plugin, Pluggable } from '@interfaces/Plugin';
 
@@ -32,13 +32,19 @@ class TestHost extends Pluggable {
     }
 }
 
+const shutdowns: CoordinatedShutdown[] = [];
+
 function makeHost(): { host: TestHost; startup: CoordinatedStartup } {
     const startup = new CoordinatedStartup();
-    const host = new TestHost(new CoordinatedShutdown(false), startup);
-    return { host, startup };
+    const shutdown = new CoordinatedShutdown();
+    shutdowns.push(shutdown);
+    return { host: new TestHost(shutdown, startup), startup };
 }
 
 describe('Pluggable.attach', () => {
+    afterEach(() => {
+        for (const shutdown of shutdowns.splice(0)) shutdown.removeSignalHandlers();
+    });
     it('attaches without a phase argument and threads ctor args', async () => {
         const { host, startup } = makeHost();
 

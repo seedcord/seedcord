@@ -6,14 +6,14 @@ import chalk from 'chalk';
 import { ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
 
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
-import type { HealthCheckConfig } from '@seedcord/types';
+import type { HealthCheckConfig, HealthCheckOption } from '@seedcord/types';
 import type { IncomingMessage, Server, ServerResponse } from 'node:http';
 
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
 
 const DEFAULT_HEALTH_CHECK_PORT = 6967;
-const DEFAULT_HEALTH_CHECK_PATH = '/healthcheck';
+const DEFAULT_HEALTH_CHECK_PATH = '/health';
 
 /**
  * HTTP health check service for monitoring bot status.
@@ -37,6 +37,15 @@ export class HealthCheck {
         this.host = options?.host;
 
         shutdown.addTask(ShutdownPhase.StopServices, 'stop-healthcheck-server', async () => await this.stop());
+    }
+
+    /**
+     * Resolves the config `healthCheck` option. `false` returns undefined, `true` and `undefined`
+     * return an instance with the defaults, an object applies its options.
+     */
+    public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
+        if (option === false) return undefined;
+        return new HealthCheck(shutdown, typeof option === 'object' ? option : undefined);
     }
 
     /**
