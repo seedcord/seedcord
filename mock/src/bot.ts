@@ -2,7 +2,7 @@ import 'reflect-metadata';
 
 import { resolve } from 'node:path';
 
-import { Seedcord, StartupPhase } from '@seedcord/gateway';
+import { Seedcord } from '@seedcord/gateway';
 import { Mongo } from '@seedcord/plugins';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapter } from 'envapt';
@@ -52,7 +52,7 @@ export const seedcord = new Seedcord({
         path: null
     },
     botColor: '#fe565a'
-}).attach('db', Mongo, StartupPhase.Configuration, {
+}).attach('db', Mongo, {
     dir: resolve(import.meta.dirname, './services'),
     uri: Vars.mongoUri,
     name: Vars.dbName
