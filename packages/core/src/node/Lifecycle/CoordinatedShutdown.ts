@@ -45,22 +45,19 @@ const LOG_FLUSH_DELAY_MS = 500;
  * Tasks can be added or removed dynamically, and each task has an associated timeout.
  */
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, CoordinatedShutdownEvents> {
-    private readonly isShutdownEnabled: boolean;
-
     private isShuttingDown = false;
     private exitCode = 0;
     private onSigTerm: (() => void) | null = null;
     private onSigInt: (() => void) | null = null;
 
-    public constructor(enabled = true) {
+    public constructor() {
         super('Shutdown', PHASE_ORDER, ShutdownPhase);
 
-        this.isShutdownEnabled = enabled;
         this.registerSignalHandlers();
     }
 
     protected canAddTask(): boolean {
-        return this.isShutdownEnabled;
+        return true;
     }
 
     protected canRemoveTask(): boolean {
@@ -80,8 +77,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
     }
 
     private registerSignalHandlers(): void {
-        if (!this.isShutdownEnabled) return;
-
         this.onSigTerm = () => {
             this.logger.info(`Received ${chalk.yellow.bold('SIGTERM')} signal`);
             void this.run(0);
@@ -96,7 +91,8 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         process.on('SIGINT', this.onSigInt);
     }
 
-    private removeSignalHandlers(): void {
+    /** @internal */
+    public removeSignalHandlers(): void {
         if (this.onSigTerm) {
             process.off('SIGTERM', this.onSigTerm);
             this.onSigTerm = null;

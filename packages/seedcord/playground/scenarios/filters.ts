@@ -4,7 +4,7 @@ const FEED: readonly (readonly [string, string, PreviewLogLevel])[] = [
     ['bot', 'Ready. 3 guilds, 142 members.', 'info'],
     ['db', 'Connected to postgres.', 'info'],
     ['db', 'Slow query 820ms on users.', 'warn'],
-    ['http', 'GET /healthcheck 200 1ms', 'debug'],
+    ['http', 'GET /health 200 1ms', 'debug'],
     ['cache', 'miss key session:abc', 'trace'],
     ['events', 'messageCreate from user#1234', 'debug'],
     ['bot', 'Interaction /play failed', 'error'],
