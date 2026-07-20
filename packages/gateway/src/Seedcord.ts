@@ -1,7 +1,11 @@
 import { HmrManager, setBotColor } from '@seedcord/core/internal';
-import { HealthCheck, CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/core/node';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import {
+    HealthCheck,
+    CoordinatedShutdown,
+    CoordinatedStartup,
+    StartupPhase,
+    Pluggable
+} from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -9,7 +13,6 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { Pluggable } from './interfaces/Plugin';
 import { Bus } from './subscribers/Bus';
 import { version as packageVersion } from './version';
 
@@ -32,8 +35,6 @@ export class Seedcord extends Pluggable implements Core {
     /** @internal */
     public readonly version: string = packageVersion;
 
-    private static isInstantiated = false;
-    private static instance?: Seedcord | undefined;
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
 
@@ -59,12 +60,6 @@ export class Seedcord extends Pluggable implements Core {
      * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
      */
     constructor(public readonly config: GatewayConfig) {
-        if (Seedcord.isInstantiated) {
-            throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
-        }
-
-        Seedcord.isInstantiated = true;
-
         const shutdown = new CoordinatedShutdown();
         const startup = new CoordinatedStartup();
 
@@ -84,7 +79,6 @@ export class Seedcord extends Pluggable implements Core {
         this.healthCheck = HealthCheck.fromOption(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();
-        Seedcord.instance = this;
     }
 
     /** The bot's discord username, populated after login. */
@@ -92,11 +86,8 @@ export class Seedcord extends Pluggable implements Core {
         return this.bot.client.user?.username;
     }
 
-    // @ts-expect-error called only by tests, so the source build sees it as unused
-    private static reset(): void {
-        Seedcord.instance?.shutdown.removeSignalHandlers();
-        Seedcord.instance = undefined;
-        Seedcord.isInstantiated = false;
+    protected static override reset(): void {
+        super.reset();
         LoggerChannelRegistry.instance.reset();
     }
 

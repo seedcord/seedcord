@@ -1,89 +1,20 @@
-import { getDevChannel } from '@seedcord/core/internal';
-import { StartupPhase } from '@seedcord/core/node';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 
-import type { Core } from './Core';
-import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
+import { StartupPhase } from '@node/Lifecycle/CoordinatedStartup';
+
+import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import type { EventMap, NoEvents } from '@seedcord/event-emitter';
-import type { Logger } from '@seedcord/logger';
-import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
-
-export interface Initializeable {
-    init(): Promise<void>;
-}
-
-/**
- * Base class for Seedcord plugins
- *
- * Extend this class to create plugins that integrate with the Seedcord lifecycle.
- * Plugins have access to the core instance and must implement initialization logic.
- */
-export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoEvents>
-    extends TypedEventEmitter<TPluginEvents>
-    implements Initializeable, HmrAware
-{
-    public abstract logger: Logger;
-
-    public name: string = this.constructor.name;
-
-    constructor(protected pluggable: Core) {
-        super();
-    }
-
-    /** @virtual */
-    abstract init(): Promise<void>;
-
-    /**
-     * Reloads plugin state on an HMR update. The base implementation is a no-op, override it in your plugin.
-     * @virtual
-     */
-    public onHmr(_event: HmrUpdateEvent): Promise<void> {
-        return Promise.resolve();
-    }
-
-    /**
-     * Registers critical file patterns that should trigger a full restart when changed in Dev HMR.
-     * @param patterns - Glob patterns relative to the project root
-     */
-    protected registerCriticalFiles(patterns: string[]): void {
-        getDevChannel()?.send('seedcord:register-critical-files', { patterns });
-    }
-
-    /** @internal */
-    override removeListener<TEventKey extends Extract<keyof TPluginEvents, string | symbol>>(
-        event: TEventKey,
-        listener: (...args: TPluginEvents[TEventKey]) => void
-    ): this {
-        return super.removeListener(event, listener);
-    }
-
-    /** @internal */
-    override removeAllListeners(event?: Extract<keyof TPluginEvents, string | symbol>): this {
-        return super.removeAllListeners(event);
-    }
-}
-
-/**
- * Constructor type for plugins that can accept extra arguments after Core.
- *
- * @internal
- */
-export type PluginCtor<TPlugin extends Plugin = Plugin> = new (core: Core, ...args: any[]) => TPlugin;
-
-/**
- * Extracts the argument types for a plugin constructor, excluding the Core parameter.
- *
- * @internal
- */
-export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
+import type { PluginArgs, PluginCtor, Plugin } from '@src/plugin/Plugin';
 
 /**
  * Base class for objects that can have plugins attached.
  *
  * Provides plugin attachment capabilities and lifecycle management. Plugins are attached during
- * configuration and initialized during startup. Not constructed directly, the host is a {@link Seedcord}.
+ * configuration and initialized during startup. Not constructed directly, the host is a transport
+ * `Seedcord` class.
  */
 export class Pluggable<
     TPluggableEvents extends EventMap<TPluggableEvents> = NoEvents
@@ -93,10 +24,21 @@ export class Pluggable<
     protected readonly startup: CoordinatedStartup;
     protected readonly plugins: Plugin[] = [];
 
+    private static isInstantiated = false;
+    private static liveShutdown?: CoordinatedShutdown | undefined;
+
     private static readonly PLUGIN_INIT_TIMEOUT_MS = 15_000;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
+        if (Pluggable.isInstantiated) {
+            // the caller constructed this shutdown, release its fresh handler pair before rejecting
+            shutdown.removeSignalHandlers();
+            throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
+        }
+
         super();
+        Pluggable.isInstantiated = true;
+        Pluggable.liveShutdown = shutdown;
         this.shutdown = shutdown;
         this.startup = startup;
     }
@@ -111,13 +53,21 @@ export class Pluggable<
         return this;
     }
 
+    /** @internal releases the signal handlers and clears the singleton so the next host can construct */
+    protected static reset(): void {
+        Pluggable.liveShutdown?.removeSignalHandlers();
+        Pluggable.liveShutdown = undefined;
+        Pluggable.isInstantiated = false;
+    }
+
     /**
      * Attaches a plugin to this instance
      *
      * Plugins provide external functionality and are initialized during startup.
      * The plugin instance becomes available as a property in `core` wherever it's available.
      *
-     * Make sure to augment the {@link Core} interface with the plugin type to ensure TypeScript recognizes it and provides intellisense.
+     * Make sure to augment the transport's `Core` interface with the plugin type to ensure
+     * TypeScript recognizes it and provides intellisense.
      *
      * @typeParam Key - The property name for accessing the plugin
      * @typeParam Ctor - The plugin constructor type
@@ -144,10 +94,7 @@ export class Pluggable<
             throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
         }
 
-        // `Core` is augmented by consumer declaration merging, so `this` only satisfies the augmented type
-        // after every plugin attaches, which is what attach() does. The host is always a Core at runtime.
-        // eslint-disable-next-line no-restricted-syntax -- forced by the declaration-merging note above
-        const instance = new Plugin(this as unknown as Core, ...args);
+        const instance = new Plugin(this, ...args);
         this.plugins.push(instance);
 
         const entry = {
@@ -155,7 +102,7 @@ export class Pluggable<
         } as Record<Key, InstanceType<Ctor>>;
 
         this.startup.addTask(
-            // TEMP: plugins init before the bot logs in at Instantiation
+            // TEMP until the lifecycle rework remaps phases. Configuration precedes Instantiation, where the bot logs in
             StartupPhase.Configuration,
             `Plugin:${key}`,
             async () => {

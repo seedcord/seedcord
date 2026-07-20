@@ -1,8 +1,8 @@
+import { Plugin } from '@seedcord/core';
 import { setDevChannel } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Plugin } from '@interfaces/Plugin';
 import { Seedcord } from '@src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';

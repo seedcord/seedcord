@@ -1,4 +1,4 @@
-import { ShutdownPhase } from '@seedcord/core/node';
+import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';

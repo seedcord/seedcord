@@ -1,4 +1,5 @@
-import { ShutdownPhase } from '@seedcord/core/node';
+import { Plugin } from '@seedcord/core';
+import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
@@ -8,7 +9,6 @@ import { Envapt } from 'envapt/legacy';
 import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventDispatcher } from '@bControllers/EventDispatcher';
 import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
-import { Plugin } from '@interfaces/Plugin';
 
 import { CommandMentionInjector, CommandMentions } from './injectors/CommandMentionInjector';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';

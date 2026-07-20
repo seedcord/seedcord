@@ -53,8 +53,6 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'BotPermissionScopeGroups' },
 
     // Enums
-    { query: 'StartupPhase' },
-    { query: 'ShutdownPhase' },
     { query: 'SelectMenuKind' },
 
     // Functions

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 import { HealthCheck } from '@node/HealthCheck';
+import { ShutdownPhase } from '@node/Lifecycle/CoordinatedShutdown';
 
 import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 
@@ -19,19 +20,26 @@ describe('HealthCheck.fromOption', () => {
         expect(addTask).not.toHaveBeenCalled();
     });
 
-    it('undefined returns the defaults', () => {
-        const { shutdown } = stubShutdown();
+    it('undefined returns the defaults and registers the stop task', () => {
+        const { shutdown, addTask } = stubShutdown();
         const check = HealthCheck.fromOption(shutdown, undefined);
 
         expect(check).toBeInstanceOf(HealthCheck);
         expect(check?.port).toBe(6967);
         expect(check?.path).toBe('/health');
+        expect(addTask).toHaveBeenCalledWith(
+            ShutdownPhase.StopServices,
+            'stop-healthcheck-server',
+            expect.any(Function)
+        );
     });
 
     it('true returns the defaults', () => {
         const { shutdown } = stubShutdown();
+        const check = HealthCheck.fromOption(shutdown, true);
 
-        expect(HealthCheck.fromOption(shutdown, true)?.port).toBe(6967);
+        expect(check?.port).toBe(6967);
+        expect(check?.path).toBe('/health');
     });
 
     it('an options object is applied', () => {

@@ -1,3 +1,4 @@
+import { Plugin } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -6,8 +7,6 @@ import { Logger, paint } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
-
-import { Plugin } from '@interfaces/Plugin';
 
 import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
