@@ -39,6 +39,9 @@ export interface GatewayBotConfig extends BotConfig {
 export interface GatewayConfig extends Config {
     bot: GatewayBotConfig;
 
+    /** A gateway bot holds a websocket connection. `'server'` is its only runtime. */
+    runtime?: 'server';
+
     /**
      * The health-check server. `false` disables it, `true` or omit for the defaults, an object
      * configures it.

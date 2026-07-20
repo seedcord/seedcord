@@ -130,6 +130,14 @@ export interface Config {
     subscribers: SubscribersConfig;
 
     /**
+     * Where the bot runs. `seedcord build` reads it off the constructed instance. `'server'` is a
+     * long-running node process, `'edge'` is a bundled isolate.
+     *
+     * @defaultValue `'server'`
+     */
+    runtime?: 'server' | 'edge';
+
+    /**
      * Settings for how the framework renders errors and reports faults.
      */
     errors?: ErrorsConfig;

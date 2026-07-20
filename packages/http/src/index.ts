@@ -4,6 +4,7 @@ export type { EngineContext } from './createSeedcord';
 export type { RouteManifest } from './manifest/RouteManifest';
 
 export type { Core } from '@interfaces/Core';
+export type { HttpConfig, HttpEdgeConfig, HttpServerConfig } from '@interfaces/Config';
 
 export type { SlashOptions } from '@inputs/SlashOptions';
 
