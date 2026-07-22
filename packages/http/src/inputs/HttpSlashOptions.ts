@@ -1,11 +1,10 @@
 import { ApplicationCommandOptionType } from 'discord-api-types/v10';
 
+import type { SlashLikeData } from '@src/dispatch/slashRouteOf';
 import type {
     APIApplicationCommandInteractionDataBasicOption,
     APIApplicationCommandInteractionDataOption,
     APIAttachment,
-    APIAutocompleteApplicationCommandInteractionData,
-    APIChatInputApplicationCommandInteractionData,
     APIInteractionDataResolved,
     APIInteractionDataResolvedChannel,
     APIInteractionDataResolvedGuildMember,
@@ -13,8 +12,6 @@ import type {
     APIUser,
     InteractionType
 } from 'discord-api-types/v10';
-
-type SlashLikeData = APIChatInputApplicationCommandInteractionData | APIAutocompleteApplicationCommandInteractionData;
 
 type AnyOption = APIApplicationCommandInteractionDataOption<InteractionType>;
 type Leaf = APIApplicationCommandInteractionDataBasicOption<InteractionType>;

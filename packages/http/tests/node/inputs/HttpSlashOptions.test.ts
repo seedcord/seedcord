@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { HttpSlashOptions } from '@inputs/HttpSlashOptions';
 
 import type {
+    APIApplicationCommandAutocompleteInteraction,
     APIApplicationCommandInteractionDataOption,
-    APIAutocompleteApplicationCommandInteractionData,
     APIChatInputApplicationCommandInteractionData,
     APIInteractionDataResolved,
     APIInteractionDataResolvedGuildMember,
@@ -183,7 +183,7 @@ describe('subcommand hoisting', () => {
 describe('autocomplete payloads', () => {
     function autocompleteData(
         options: APIApplicationCommandInteractionDataOption<InteractionType.ApplicationCommandAutocomplete>[]
-    ): APIAutocompleteApplicationCommandInteractionData {
+    ): APIApplicationCommandAutocompleteInteraction['data'] {
         return { id: 'c1', name: 'cmd', type: 1, options };
     }
 
