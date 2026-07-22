@@ -4,8 +4,10 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
 
 import { HttpSlashOptions } from '@inputs/HttpSlashOptions';
+import { apiFor } from '@src/api';
 import { slashRouteOf } from '@src/dispatch/slashRouteOf';
 
+import type { API } from '@discordjs/core/http-only';
 import type { Core } from '@interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
@@ -46,6 +48,13 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     // phantom, never set at runtime.
     /** @internal */
     declare readonly __autocompleteRoute?: Route;
+
+    /**
+     * Typed Discord REST API (`@discordjs/core/http-only`) over `core.rest`, one instance per core.
+     */
+    protected get api(): API {
+        return apiFor(this.core.rest);
+    }
 
     private resolver?: HttpSlashOptions;
 

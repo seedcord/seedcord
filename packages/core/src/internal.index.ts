@@ -6,6 +6,7 @@ export type { CommandMeta } from '@decorators/Command';
 export {
     areRoutes,
     contextMenuRouteOf,
+    interactionRoutesOf,
     selectMenuRouteOf,
     storeComponentRoute,
     storeInteractionRoute,

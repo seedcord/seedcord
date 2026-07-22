@@ -6,7 +6,10 @@ import type {
     APIChatInputApplicationCommandInteraction
 } from 'discord-api-types/v10';
 
-type SlashLikeData = (APIChatInputApplicationCommandInteraction | APIApplicationCommandAutocompleteInteraction)['data'];
+export type SlashLikeData = (
+    | APIChatInputApplicationCommandInteraction
+    | APIApplicationCommandAutocompleteInteraction
+)['data'];
 
 /**
  * Computes the dispatch route for a chat-input or autocomplete payload, the raw-payload port of the

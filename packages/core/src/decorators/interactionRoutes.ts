@@ -23,6 +23,19 @@ export function areRoutes(routes: unknown): routes is string[] {
     return Array.isArray(routes) && routes.every((route) => typeof route === 'string');
 }
 
+/**
+ * Every stored route kind and its route strings on a decorated constructor. The build's manifest
+ * emitter reads the same pairs.
+ */
+export function interactionRoutesOf(constructor: RoutableConstructor): [InteractionRoutes, string[]][] {
+    const pairs: [InteractionRoutes, string[]][] = [];
+    for (const route of Object.values(InteractionRoutes)) {
+        const meta: unknown = Reflect.getMetadata(InteractionRouteKeys[route], constructor);
+        if (areRoutes(meta)) pairs.push([route, meta]);
+    }
+    return pairs;
+}
+
 export function storeInteractionRoute(
     route: InteractionRoutes,
     routes: string | readonly string[],
