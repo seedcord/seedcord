@@ -88,6 +88,7 @@ export function compute() {
 - **Prefer `?.` and `??`** for genuinely optional branches — not to suppress errors or hide broken assumptions. See `.github/skills/code-quality/FAIL-FAST-RULES.md` for when NOT to reach for them.
 - **Prefer `import type { T } from 'pkg'`** for type-only imports. Avoid inline `import('pkg').T`.
 - **Use `type-fest` utility types** (available via the workspace catalog) for structural transforms rather than casts. The shared `@seedcord/types` package re-exports project-specific aliases — check there first.
+- **Derive types from their source, never restate them.** A ctor shape is `TypedConstructor<typeof X>` (see `gateway/src/handlers/constructors.ts`), a member union comes from `keyof`, `TypedExtract`/`TypedExclude`, indexed access, or a template-literal map over the owning enum, a narrowed copy from `Pick`/`TypedOmit`. A hand-written structural duplicate drifts from its source.
 - **Tests may use pragmatic fixture casts** (`as unknown as Test`) — always include a short justification comment. Tests must not use `as any`; ESLint replaces `any` with `unknown` automatically and that will surface real type errors if the cast wasn't justified.
 - **To disable an ESLint rule inline:** `// eslint-disable-next-line <rule> -- <reason>`. Never file-wide or project-wide.
 - **Never throw a raw error.** Framework code throws `SeedcordError`, `SeedcordTypeError`, or `SeedcordRangeError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw into one of the three before it propagates to the consumer.
