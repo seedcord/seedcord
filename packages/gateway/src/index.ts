@@ -42,7 +42,6 @@ export * from './Seedcord';
 
 // Exports from other packages
 export * from '@seedcord/core';
-export { StartupPhase, ShutdownPhase } from '@seedcord/core/node';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';
 export * from '@seedcord/logger';

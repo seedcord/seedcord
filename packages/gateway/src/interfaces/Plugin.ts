@@ -1,10 +1,11 @@
 import { getDevChannel } from '@seedcord/core/internal';
+import { StartupPhase } from '@seedcord/core/node';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 
 import type { Core } from './Core';
-import type { CoordinatedShutdown, CoordinatedStartup, StartupPhase } from '@seedcord/core/node';
+import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node';
 import type { EventMap, NoEvents } from '@seedcord/event-emitter';
 import type { Logger } from '@seedcord/logger';
 import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -113,7 +114,7 @@ export class Pluggable<
     /**
      * Attaches a plugin to this instance
      *
-     * Plugins provide external functionality and are initialized during the specified startup phase.
+     * Plugins provide external functionality and are initialized during startup.
      * The plugin instance becomes available as a property in `core` wherever it's available.
      *
      * Make sure to augment the {@link Core} interface with the plugin type to ensure TypeScript recognizes it and provides intellisense.
@@ -122,20 +123,18 @@ export class Pluggable<
      * @typeParam Ctor - The plugin constructor type
      * @param key - Property name to access the plugin instance
      * @param Plugin - Plugin constructor class
-     * @param startupPhase - When during startup to initialize this plugin ({@link StartupPhase})
      * @param args - Additional arguments to pass to the plugin constructor
      * @returns This instance with the plugin attached as a typed property
      * @throws A **SeedcordError** When called after initialization or if key already exists
      * @example
      * ```typescript
-     * seedcord.attach('db', Mongo, StartupPhase.Configuration, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
+     * seedcord.attach('db', Mongo, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
      * ```
      */
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
         key: Key,
         Plugin: Ctor,
-        startupPhase: StartupPhase,
         ...args: PluginArgs<Ctor>
     ): this & Record<Key, InstanceType<Ctor>> {
         if (this.isInitialized) {
@@ -156,7 +155,8 @@ export class Pluggable<
         } as Record<Key, InstanceType<Ctor>>;
 
         this.startup.addTask(
-            startupPhase,
+            // TEMP: plugins init before the bot logs in at Instantiation
+            StartupPhase.Configuration,
             `Plugin:${key}`,
             async () => {
                 instance.logger.utils.initialization(key, 'start');
