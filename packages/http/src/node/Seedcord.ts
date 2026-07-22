@@ -119,7 +119,13 @@ export class Seedcord extends Pluggable implements Core {
      */
     public async start(port = DEFAULT_PORT): Promise<this> {
         this.requestedPort = port;
-        await super.init();
+        try {
+            await super.init();
+        } catch (caught) {
+            // a later Ready task can reject after the server task bound, release it before rethrowing
+            await this.shutdown.run(1, false);
+            throw caught;
+        }
         return this;
     }
 
