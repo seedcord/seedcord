@@ -18,6 +18,8 @@ export enum SeedcordErrorCode {
     ConfigMissingPublicKey = 1008,
     /** DISCORD_PUBLIC_KEY is present but fails validation. */
     ConfigIncorrectPublicKey = 1009,
+    /** The generated route manifest was imported before `seedcord build` generated it. */
+    ConfigManifestNotGenerated = 1010,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
