@@ -33,6 +33,8 @@ export enum SeedcordErrorCode {
     LifecyclePhaseFailures = 1105,
     /** A lifecycle task exceeded its configured timeout. */
     LifecycleTaskTimeout = 1106,
+    /** A host whose startup failed was started again. */
+    LifecycleRestartAfterFailure = 1107,
 
     /** Multiple Seedcord instances were created simultaneously. */
     CoreSingletonViolation = 1201,

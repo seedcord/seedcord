@@ -11,7 +11,8 @@ import {
     ShutdownPhase,
     StartupPhase
 } from '@seedcord/core/node/internal';
-import { validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry, paint } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -74,6 +75,7 @@ export class Seedcord extends Pluggable implements Core {
     private boundPort?: number;
     private requestedPort = DEFAULT_PORT;
     private fetchedUsername?: string | undefined;
+    private startFailed = false;
 
     constructor(public readonly config: HttpConfig) {
         const shutdown = new CoordinatedShutdown();
@@ -118,10 +120,13 @@ export class Seedcord extends Pluggable implements Core {
      * @param port - The port the interaction server binds. {@default `3000`}
      */
     public async start(port = DEFAULT_PORT): Promise<this> {
+        // the rollback below removed the signal handlers which would cause a rerun to run without them
+        if (this.startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
         this.requestedPort = port;
         try {
             await super.init();
         } catch (caught) {
+            this.startFailed = true;
             // a later Ready task can reject after the server task bound, release it before rethrowing
             await this.shutdown.run(1, false);
             throw caught;

@@ -1,4 +1,4 @@
-import { ShutdownPhase } from '@seedcord/core/node/internal';
+import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
@@ -38,5 +38,13 @@ describe('Seedcord host', () => {
         const seedcord = new Seedcord(testConfig({ healthCheck: false }));
 
         expect(seedcord.shutdown.removeTask(ShutdownPhase.StopServices, 'stop-healthcheck-server')).toBe(false);
+    });
+
+    it('rejects a restart after a failed start', async () => {
+        const seedcord = new Seedcord(testConfig());
+        seedcord.startup.addTask(StartupPhase.Configuration, 'boom', () => Promise.reject(new Error('boom')));
+
+        await expect(seedcord.start()).rejects.toThrow();
+        await expect(seedcord.start()).rejects.toThrow(/new instance/);
     });
 });

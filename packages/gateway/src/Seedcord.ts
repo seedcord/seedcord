@@ -6,6 +6,8 @@ import {
     StartupPhase,
     Pluggable
 } from '@seedcord/core/node/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -37,6 +39,7 @@ export class Seedcord extends Pluggable implements Core {
 
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
+    private startFailed = false;
 
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;
@@ -122,7 +125,14 @@ export class Seedcord extends Pluggable implements Core {
      * @returns This Seedcord instance when fully initialized
      */
     public async start(): Promise<this> {
-        await super.init();
+        // a rerun of the startup tasks would double-init the bot and every plugin
+        if (this.startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
+        try {
+            await super.init();
+        } catch (caught) {
+            this.startFailed = true;
+            throw caught;
+        }
         return this;
     }
 

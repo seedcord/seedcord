@@ -47,7 +47,8 @@ describe('http Seedcord startup failure', () => {
     afterEach(async () => {
         await live?.shutdown.run(0, false);
         live = undefined;
-        await new Promise((resolveClose) => blocker?.close(() => resolveClose(undefined)));
+        const server = blocker;
+        if (server) await new Promise((resolveClose) => server.close(() => resolveClose(undefined)));
         blocker = undefined;
         reset();
     });
@@ -71,5 +72,27 @@ describe('http Seedcord startup failure', () => {
         expect(host.port).toBeDefined();
 
         await expect(fetch(`http://127.0.0.1:${String(host.port)}`, { method: 'POST' })).rejects.toThrow();
+    });
+
+    it('rejects a restart of a failed host, the rollback removed its signal handlers', async () => {
+        const signer = await createSigner();
+        Envapter.useSource(
+            merge(
+                new PortableSource(process.env),
+                new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
+            )
+        );
+        const occupied = await occupyPort();
+        blocker = occupied.server;
+
+        const host = new Seedcord(config(occupied.port));
+        live = host;
+        await expect(host.start(0)).rejects.toThrow();
+
+        // the health port is free now, a restart would bind and run without coordinated shutdown
+        await new Promise((resolveClose) => occupied.server.close(() => resolveClose(undefined)));
+        blocker = undefined;
+
+        await expect(host.start(0)).rejects.toThrow(/new instance/);
     });
 });
