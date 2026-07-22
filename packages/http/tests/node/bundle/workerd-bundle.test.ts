@@ -15,12 +15,13 @@ afterAll(async () => {
 
 describe('workerd bundle', () => {
     // the vitest workerd pool cannot transform @discordjs/builders, so edge viability is proven by
-    // bundling the real entry the way a worker build would
-    it('bundles the package entry with the dispatch path reachable and no node builtins', async () => {
+    // bundling the real entry the way a worker build would. The root entry carries the node class,
+    // an edge build consumes ./edge
+    it('bundles the edge entry with the dispatch path reachable and no node builtins', async () => {
         outDir = await mkdtemp(path.join(tmpdir(), 'seedcord-http-bundle-'));
 
         const result = await build({
-            entryPoints: [path.join(packageRoot, 'src/index.ts')],
+            entryPoints: [path.join(packageRoot, 'src/edge.index.ts')],
             bundle: true,
             format: 'esm',
             platform: 'browser',
@@ -35,5 +36,6 @@ describe('workerd bundle', () => {
         expect(inputs).toContain('src/dispatch/dispatchInteraction.ts');
         expect(inputs).toContain('src/reply/ReplySender.ts');
         expect(inputs.some((input) => input.includes('@discordjs/builders'))).toBe(true);
+        expect(inputs.some((input) => input.startsWith('src/node/'))).toBe(false);
     }, 30_000);
 });
