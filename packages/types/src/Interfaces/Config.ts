@@ -130,7 +130,7 @@ export interface Config {
     subscribers: SubscribersConfig;
 
     /**
-     * Where the bot runs. `seedcord build` reads it off the constructed instance. `'server'` is a
+     * Deployment target. `seedcord build` reads it from the constructed instance. `'server'` is a
      * long-running node process, `'edge'` is a bundled isolate.
      *
      * @defaultValue `'server'`

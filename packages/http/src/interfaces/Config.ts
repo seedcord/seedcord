@@ -1,7 +1,7 @@
 import type { Config, HealthCheckOption } from '@seedcord/types';
 
 /**
- * A long-running node deployment, run with `new Seedcord(config).start(port)`.
+ * Config for a long-running node server. Pass to `new Seedcord(config).start(port)`.
  */
 export interface HttpServerConfig extends Config {
     runtime?: 'server';
@@ -14,8 +14,8 @@ export interface HttpServerConfig extends Config {
 }
 
 /**
- * A bundled isolate deployment. `seedcord build` generates the worker entry around
- * `createSeedcord`, node-server options are compile errors on this arm.
+ * Config for a bundled isolate deployment. `seedcord build` generates a worker entry that calls
+ * `createSeedcord`.
  */
 export interface HttpEdgeConfig extends Config {
     runtime: 'edge';

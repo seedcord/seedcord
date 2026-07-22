@@ -9,8 +9,8 @@ describe('GatewayConfig', () => {
         const config: GatewayConfig = { ...testConfig(), runtime: 'server' };
         expect(config.runtime).toBe('server');
 
-        // @ts-expect-error a gateway bot holds a websocket, it cannot target edge
+        // @ts-expect-error the gateway websocket needs a persistent process, edge does not type-check
         const edge: GatewayConfig = { ...testConfig(), runtime: 'edge' };
-        expect(edge).toBeDefined();
+        expect(edge.runtime).toBe('edge');
     });
 });
