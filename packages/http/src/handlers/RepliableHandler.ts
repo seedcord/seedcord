@@ -1,8 +1,10 @@
 import { RepliableHandler as CoreRepliableHandler } from '@seedcord/core';
 
 import { ReplySender } from '@reply/ReplySender';
+import { apiFor } from '@src/api';
 
 import type { Repliables } from './interactionTypes';
+import type { API } from '@discordjs/core/http-only';
 import type { Core } from '@interfaces/Core';
 import type { SentMessage } from '@reply/ReplySender';
 
@@ -24,5 +26,14 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     protected buildSender(event: Event, core: Core, routeId: string): ReplySender {
         const ref = { application_id: event.application_id, id: event.id, token: event.token };
         return new ReplySender(ref, core.rest, routeId);
+    }
+
+    /**
+     * Typed Discord REST API (`@discordjs/core/http-only`) over `core.rest`, one instance per core.
+     * The interaction callbacks on `api.interactions` bypass the reply surface. The
+     * `no-raw-interaction-acks` rule flags them in handler classes.
+     */
+    protected get api(): API {
+        return apiFor(this.core.rest);
     }
 }
