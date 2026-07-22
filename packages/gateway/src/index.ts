@@ -21,7 +21,7 @@ export { getConfirmation } from '@bot/confirm';
 export type { ConfirmOptions, DefaultConfirmOptions } from '@bot/confirm';
 
 // Interfaces exports
-export * from '@interfaces/index';
+export type * from '@interfaces/index';
 
 // Handlers exports
 export * from '@handlers/index';

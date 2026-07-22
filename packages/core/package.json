@@ -40,14 +40,14 @@
                 "default": "./dist/hmr.index.cjs"
             }
         },
-        "./node": {
+        "./node/internal": {
             "import": {
-                "types": "./dist/node.index.d.mts",
-                "default": "./dist/node.index.mjs"
+                "types": "./dist/node-internal.index.d.mts",
+                "default": "./dist/node-internal.index.mjs"
             },
             "require": {
-                "types": "./dist/node.index.d.cts",
-                "default": "./dist/node.index.cjs"
+                "types": "./dist/node-internal.index.d.cts",
+                "default": "./dist/node-internal.index.cjs"
             }
         }
     },

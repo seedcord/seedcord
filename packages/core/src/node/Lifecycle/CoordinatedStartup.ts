@@ -29,7 +29,6 @@ export enum StartupPhase {
     Ready
 }
 
-/** Define the order of phases */
 const PHASE_ORDER: StartupPhase[] = [
     StartupPhase.Validation,
     StartupPhase.Discovery,

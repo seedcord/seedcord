@@ -36,7 +36,7 @@ import type { ReplySender } from '@bot/ReplySender';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { Initializeable } from '@interfaces/Plugin';
+import type { Initializeable } from '@seedcord/core';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type {

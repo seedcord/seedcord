@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { ShutdownPhase } from '@seedcord/core/node';
+import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Plugin } from '@seedcord/gateway';

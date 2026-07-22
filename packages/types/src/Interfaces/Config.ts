@@ -86,7 +86,7 @@ export interface BotConfig {
 
 /**
  * The transport configs' `healthCheck` field. `false` disables the health server, `true` and
- * `undefined` run it with the defaults, an object supplies {@link HealthCheckConfig} options.
+ * `undefined` use the defaults, an object supplies {@link HealthCheckConfig} options.
  */
 export type HealthCheckOption = boolean | HealthCheckConfig;
 

@@ -19,7 +19,7 @@ import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 import type { Core } from '@interfaces/Core';
-import type { Initializeable } from '@interfaces/Plugin';
+import type { Initializeable } from '@seedcord/core';
 import type { CommandMeta } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ApplicationCommand, Snowflake } from 'discord.js';

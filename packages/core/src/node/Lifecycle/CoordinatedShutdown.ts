@@ -21,7 +21,6 @@ export enum ShutdownPhase {
     FinalCleanup
 }
 
-/** Define the order of phases */
 const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.StopAcceptingRequests,
     ShutdownPhase.StopServices,
@@ -39,10 +38,8 @@ export type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<S
 const LOG_FLUSH_DELAY_MS = 500;
 
 /**
- * CoordinatedShutdown manages graceful application shutdown by executing registered tasks across defined phases.
- *
- * It listens for termination signals (SIGINT, SIGTERM) and runs tasks in parallel within each phase.
- * Tasks can be added or removed dynamically, and each task has an associated timeout.
+ * Runs registered shutdown tasks across `ShutdownPhase` in order. Registers SIGINT and SIGTERM
+ * handlers. Tasks within a phase run in parallel.
  */
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, CoordinatedShutdownEvents> {
     private isShuttingDown = false;
@@ -127,19 +124,15 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
     }
 
     /**
-     * Executes the coordinated shutdown sequence.
-     *
-     * Runs all registered tasks across shutdown phases in reverse order.
-     * Tasks within each phase are executed in parallel for faster shutdown.
-     * Process exits with the specified code when complete.
+     * Runs registered tasks across shutdown phases in `ShutdownPhase` order.
+     * Tasks within each phase run in parallel.
      *
      * @param exitCode - Process exit code. {@default `0`}
      * @param exitProcess - Whether to exit the process after shutdown. {@default `true`}
-     * @returns Promise that resolves when shutdown is complete
      * @example
      * ```typescript
-     * shutdown.addTask(ShutdownPhase.Services, 'database', () => db.disconnect(), 5000);
-     * await shutdown.run(0); // Graceful shutdown
+     * shutdown.addTask(ShutdownPhase.ExternalResources, 'database', () => db.disconnect(), 5000);
+     * await shutdown.run(0);
      * ```
      */
     public async run(exitCode = 0, exitProcess = true): Promise<void> {

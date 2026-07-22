@@ -40,7 +40,8 @@ export interface GatewayConfig extends Config {
     bot: GatewayBotConfig;
 
     /**
-     * The health-check server. `false` disables it, omit for the defaults.
+     * The health-check server. `false` disables it, `true` or omit for the defaults, an object
+     * configures it.
      */
     healthCheck?: HealthCheckOption;
 }

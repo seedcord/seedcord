@@ -1,7 +1,6 @@
 import { createServer } from 'node:http';
 
-import { Logger } from '@seedcord/logger';
-import chalk from 'chalk';
+import { Logger, paint } from '@seedcord/logger';
 
 import { ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
 
@@ -16,10 +15,7 @@ const DEFAULT_HEALTH_CHECK_PORT = 6967;
 const DEFAULT_HEALTH_CHECK_PATH = '/health';
 
 /**
- * HTTP health check service for monitoring bot status.
- *
- * Provides a simple HTTP endpoint that responds with JSON status
- * information, useful for container orchestration and monitoring.
+ * HTTP server answering `GET` on the configured path with a JSON `{ status, timestamp }` body.
  */
 export class HealthCheck {
     /** @internal */
@@ -36,12 +32,11 @@ export class HealthCheck {
         this.path = options?.path ?? DEFAULT_HEALTH_CHECK_PATH;
         this.host = options?.host;
 
-        shutdown.addTask(ShutdownPhase.StopServices, 'stop-healthcheck-server', async () => await this.stop());
+        shutdown.addTask(ShutdownPhase.StopServices, 'stop-healthcheck-server', () => this.stop());
     }
 
     /**
-     * Resolves the config `healthCheck` option. `false` returns undefined, `true` and `undefined`
-     * return an instance with the defaults, an object applies its options.
+     * Resolves the config `healthCheck` option, `undefined` builds the defaults like `true`.
      */
     public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
         if (option === false) return undefined;
@@ -76,9 +71,10 @@ export class HealthCheck {
                 server.removeListener('error', onListenError);
                 server.on('error', (err) => this.logger.error('Health check server error', err));
 
+                // the server binds all interfaces, the log shows an address a browser can open
                 const address = this.host ?? 'localhost';
                 this.logger.info(
-                    `${chalk.green.bold('✓')} Health check server listening on ${chalk.cyan(`http://${address}:${this.port}${this.path}`)}`
+                    `${paint.mint.bold('✓')} Health check server listening on ${paint.sky(`http://${address}:${this.port}${this.path}`)}`
                 );
                 resolve();
             });
@@ -95,8 +91,6 @@ export class HealthCheck {
 
     /**
      * Stops the health check server.
-     *
-     * @returns Promise that resolves when the server is closed
      * @internal
      */
     public stop(): Promise<void> {
@@ -106,13 +100,14 @@ export class HealthCheck {
         if (!server?.listening) return Promise.resolve();
 
         return new Promise((resolve, reject) => {
-            server.once('close', () => resolve());
+            // settle only in the callback, a 'close'-event resolve would swallow the callback's error
             server.close((err) => {
                 if (err) {
                     reject(err);
                     return;
                 }
-                this.logger.info(chalk.bold.red('Health check server stopped'));
+                this.logger.info(paint.coral.bold('Health check server stopped'));
+                resolve();
             });
         });
     }
