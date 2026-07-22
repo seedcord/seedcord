@@ -129,6 +129,7 @@ export class Seedcord extends Pluggable implements Core {
             this.startFailed = true;
             // a later Ready task can reject after the server task bound, release it before rethrowing
             await this.shutdown.run(1, false);
+            Seedcord.reset();
             throw caught;
         }
         return this;

@@ -46,5 +46,6 @@ describe('Seedcord host', () => {
 
         await expect(seedcord.start()).rejects.toThrow();
         await expect(seedcord.start()).rejects.toThrow(/new instance/);
+        expect(() => new Seedcord(testConfig())).not.toThrow();
     });
 });

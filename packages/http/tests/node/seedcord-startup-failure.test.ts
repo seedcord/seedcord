@@ -94,5 +94,10 @@ describe('http Seedcord startup failure', () => {
         blocker = undefined;
 
         await expect(host.start(0)).rejects.toThrow(/new instance/);
+
+        // the failure released the singleton, the replacement the error directs to must construct
+        const fresh = new Seedcord(config(occupied.port));
+        live = fresh;
+        expect(fresh).toBeInstanceOf(Seedcord);
     });
 });

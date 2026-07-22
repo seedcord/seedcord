@@ -131,6 +131,7 @@ export class Seedcord extends Pluggable implements Core {
             await super.init();
         } catch (caught) {
             this.startFailed = true;
+            Seedcord.reset();
             throw caught;
         }
         return this;
