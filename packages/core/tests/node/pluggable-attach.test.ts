@@ -3,7 +3,7 @@ import { Logger } from '@seedcord/logger';
 import { describe, it, expect, expectTypeOf, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
+import { CoordinatedStartup, StartupPhase } from '@node/Lifecycle/CoordinatedStartup';
 import { Pluggable } from '@node/Pluggable';
 import { Plugin } from '@src/plugin/Plugin';
 
@@ -67,14 +67,14 @@ describe('Pluggable', () => {
         const { host, startup } = makeHost();
         const order: string[] = [];
 
-        startup.on('phase:4:start', () => order.push('4:start'));
-        startup.on('phase:4:complete', () => order.push('4:complete'));
+        startup.on(`phase:${StartupPhase.Configuration}:start`, () => order.push('start'));
+        startup.on(`phase:${StartupPhase.Configuration}:complete`, () => order.push('complete'));
 
         const withDb = host.attach('db', TestPlugin, 'x');
         withDb.db.onInit = () => order.push('init');
 
         await host.run();
-        expect(order).toEqual(['4:start', 'init', '4:complete']);
+        expect(order).toEqual(['start', 'init', 'complete']);
     });
 
     it('rejects a duplicate key', () => {
