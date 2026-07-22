@@ -1,4 +1,4 @@
-import type { BotConfig, Config } from '@seedcord/types';
+import type { BotConfig, Config, HealthCheckOption } from '@seedcord/types';
 import type { ClientOptions } from 'discord.js';
 
 /**
@@ -38,4 +38,9 @@ export interface GatewayBotConfig extends BotConfig {
  */
 export interface GatewayConfig extends Config {
     bot: GatewayBotConfig;
+
+    /**
+     * The health-check server. `false` disables it, omit for the defaults.
+     */
+    healthCheck?: HealthCheckOption;
 }

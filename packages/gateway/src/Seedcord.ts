@@ -33,7 +33,8 @@ export class Seedcord extends Pluggable implements Core {
     public readonly version: string = packageVersion;
 
     private static isInstantiated = false;
-    private readonly healthCheck: HealthCheck;
+    private static instance?: Seedcord | undefined;
+    private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
 
     /** @see {@link CoordinatedShutdown} */
@@ -64,7 +65,7 @@ export class Seedcord extends Pluggable implements Core {
 
         Seedcord.isInstantiated = true;
 
-        const shutdown = new CoordinatedShutdown(config.shutdownEnabled);
+        const shutdown = new CoordinatedShutdown();
         const startup = new CoordinatedStartup();
 
         super(shutdown, startup);
@@ -80,9 +81,10 @@ export class Seedcord extends Pluggable implements Core {
         this.bus = new Bus(this);
         this.bot = new Bot(this);
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
-        this.healthCheck = new HealthCheck(this.shutdown, config.healthCheck);
+        this.healthCheck = HealthCheck.fromOption(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();
+        Seedcord.instance = this;
     }
 
     /** The bot's discord username, populated after login. */
@@ -92,6 +94,8 @@ export class Seedcord extends Pluggable implements Core {
 
     // @ts-expect-error called only by tests, so the source build sees it as unused
     private static reset(): void {
+        Seedcord.instance?.shutdown.removeSignalHandlers();
+        Seedcord.instance = undefined;
         Seedcord.isInstantiated = false;
         LoggerChannelRegistry.instance.reset();
     }
@@ -111,11 +115,14 @@ export class Seedcord extends Pluggable implements Core {
             this.bot.logger.utils.initialization('Bot', 'end');
         });
 
-        this.startup.addTask(StartupPhase.Ready, 'Health Check', async () => {
-            this.healthCheck.logger.utils.initialization('HealthCheck', 'start');
-            await this.healthCheck.init();
-            this.healthCheck.logger.utils.initialization('HealthCheck', 'end');
-        });
+        const { healthCheck } = this;
+        if (healthCheck) {
+            this.startup.addTask(StartupPhase.Ready, 'Health Check', async () => {
+                healthCheck.logger.utils.initialization('HealthCheck', 'start');
+                await healthCheck.init();
+                healthCheck.logger.utils.initialization('HealthCheck', 'end');
+            });
+        }
     }
 
     /**
