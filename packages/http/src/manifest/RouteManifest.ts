@@ -1,4 +1,11 @@
+import type { SelectMenuKind } from '@seedcord/core';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
+
+/** The command kinds a manifest row registers, the wire enum's other members have no handler base. */
+type RegistrableCommandType =
+    | ApplicationCommandType.ChatInput
+    | ApplicationCommandType.User
+    | ApplicationCommandType.Message;
 
 /**
  * A slash or context-menu command row. `type` picks the per-kind map, `name` is the lookup key. For a
@@ -7,7 +14,7 @@ import type { ApplicationCommandType } from 'discord-api-types/v10';
  */
 interface CommandRoute {
     readonly name: string;
-    readonly type: ApplicationCommandType;
+    readonly type: RegistrableCommandType;
     /** Lazy import of the handler module, evaluated on first hit. */
     readonly load: () => Promise<unknown>;
 }
@@ -17,14 +24,7 @@ interface CommandRoute {
  * the receiver routes by (the routeKey minus its layout hash).
  */
 export interface ComponentRoute {
-    readonly kind:
-        | 'button'
-        | 'stringSelect'
-        | 'userSelect'
-        | 'roleSelect'
-        | 'channelSelect'
-        | 'mentionableSelect'
-        | 'modal';
+    readonly kind: 'button' | `${SelectMenuKind}Select` | 'modal';
     readonly prefix: string;
     /** Lazy import of the handler module, evaluated on first hit. */
     readonly load: () => Promise<unknown>;
@@ -62,3 +62,6 @@ export interface RouteManifest {
     readonly autocomplete: readonly AutocompleteRoute[];
     readonly subscribers: readonly SubscriberRoute[];
 }
+
+/** @internal */
+export const EMPTY_MANIFEST: RouteManifest = { commands: [], components: [], autocomplete: [], subscribers: [] };

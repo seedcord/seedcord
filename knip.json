@@ -1,30 +1,54 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
-    "ignoreBinaries": ["seedcord", "continue"],
-    "ignoreWorkspaces": ["mock"],
+    "ignoreBinaries": [
+        "seedcord",
+        "continue"
+    ],
+    "ignoreWorkspaces": [
+        "mock"
+    ],
     "rules": {
         "optionalPeerDependencies": "off"
     },
     "workspaces": {
         ".": {
-            "entry": ["scripts/**/*.ts", "turbo/generators/**/*.ts"],
-            "project": ["scripts/**/*.ts", "turbo/generators/**/*.ts"]
+            "entry": [
+                "scripts/**/*.ts",
+                "turbo/generators/**/*.ts"
+            ],
+            "project": [
+                "scripts/**/*.ts",
+                "turbo/generators/**/*.ts"
+            ]
         },
         "apps/docs": {
-            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx}"]
+            "entry": [
+                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
+            ],
+            "project": [
+                "src/**/*.{ts,tsx}"
+            ]
         },
         "apps/home": {
-            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx}"]
+            "entry": [
+                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
+            ],
+            "project": [
+                "src/**/*.{ts,tsx}"
+            ]
         },
         "packages/seedcord": {
-            "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
+            "ignoreDependencies": [
+                "fix-esm-import-path",
+                "@seedcord/tsconfig"
+            ]
         },
         "packages/core": {},
         "packages/docs-engine": {},
         "packages/docs-generator": {
-            "ignore": ["tests/mock/**"]
+            "ignore": [
+                "tests/mock/**"
+            ]
         },
         "packages/errors": {},
         "packages/eslint-config": {
@@ -43,15 +67,25 @@
             ]
         },
         "packages/eslint-config-base": {
-            "ignoreDependencies": ["@typescript-eslint/parser"]
+            "ignoreDependencies": [
+                "@typescript-eslint/parser"
+            ]
         },
         "packages/eslint-plugin": {
-            "ignore": ["tests/fixtures/**"],
-            "ignoreDependencies": ["discord.js"]
+            "ignore": [
+                "tests/fixtures/**"
+            ],
+            "ignoreDependencies": [
+                "discord.js"
+            ]
         },
         "packages/eslint-plugin-discordjs": {
-            "ignore": ["tests/fixtures/**"],
-            "ignoreDependencies": ["discord.js"]
+            "ignore": [
+                "tests/fixtures/**"
+            ],
+            "ignoreDependencies": [
+                "discord.js"
+            ]
         },
         "packages/eslint-utils": {},
         "packages/plugins": {},
@@ -59,7 +93,11 @@
         "packages/event-emitter": {},
         "packages/logger": {},
         "packages/gateway": {},
-        "packages/http": {},
+        "packages/http": {
+            "ignore": [
+                "tests/node/discovery/fixtures/**"
+            ]
+        },
         "packages/tsconfig": {},
         "packages/tsdown-config": {},
         "packages/types": {},

@@ -22,7 +22,8 @@ export interface ResolvedRoute {
     readonly load: () => Promise<unknown>;
 }
 
-type RouteMap = Map<string, ResolvedRoute>;
+/** @internal */
+export type RouteMap = Map<string, ResolvedRoute>;
 
 type ComponentMapKey = ComponentRoute['kind'];
 
@@ -34,7 +35,10 @@ export interface RouteMaps {
     readonly components: Readonly<Record<ComponentMapKey, RouteMap>>;
 }
 
-const COMPONENT_KIND: Record<ComponentMapKey, ResolvedKind> = {
+// the manifest names selects `xSelect`, the resolved kinds name them `xMenu`
+type ResolvedKindOf<Kind extends ComponentMapKey> = Kind extends `${infer Base}Select` ? `${Base}Menu` : Kind;
+
+const COMPONENT_KIND = {
     button: 'button',
     stringSelect: 'stringMenu',
     userSelect: 'userMenu',
@@ -42,9 +46,11 @@ const COMPONENT_KIND: Record<ComponentMapKey, ResolvedKind> = {
     channelSelect: 'channelMenu',
     mentionableSelect: 'mentionableMenu',
     modal: 'modal'
-};
+} satisfies { [Kind in ComponentMapKey]: ResolvedKindOf<Kind> & ResolvedKind };
 
-function commandKind(type: ApplicationCommandType): 'slash' | 'userContextMenu' | 'messageContextMenu' | null {
+type CommandMapKey = Exclude<keyof RouteMaps, 'components' | 'autocomplete'>;
+
+function commandKind(type: ApplicationCommandType): CommandMapKey | null {
     switch (type) {
         case ApplicationCommandType.ChatInput: {
             return 'slash';
