@@ -71,7 +71,8 @@ export class HealthCheck {
                 server.removeListener('error', onListenError);
                 server.on('error', (err) => this.logger.error('Health check server error', err));
 
-                const address = this.host ?? '0.0.0.0';
+                // the server binds all interfaces, the log shows an address a browser can open
+                const address = this.host ?? 'localhost';
                 this.logger.info(
                     `${paint.mint.bold('✓')} Health check server listening on ${paint.sky(`http://${address}:${this.port}${this.path}`)}`
                 );
