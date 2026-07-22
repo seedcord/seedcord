@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { parseDuration } from '../../src/numbers/parseDuration';
+import { parseDuration } from '@src/numbers/parseDuration';
 
 describe('parseDuration', () => {
     it('parses each supported unit into milliseconds', () => {

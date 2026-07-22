@@ -89,6 +89,7 @@
         "@seedcord/rate-limiter": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "reflect-metadata": "catalog:peer",
         "type-fest": "catalog:deps",
         "vite": "catalog:deps"

@@ -1,6 +1,7 @@
 import dedent from 'dedent';
 
-import rule from '../../src/rules/middleware-missing-register-decorator';
+import rule from '@src/rules/middleware-missing-register-decorator';
+
 import { createTypedRuleTester } from '../typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();

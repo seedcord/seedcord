@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { OG } from '../src/og';
+import { OG } from '@/og';
 
 const uiTokens = readFileSync(join(import.meta.dirname, '../src/styles/tokens.css'), 'utf8');
 const homeTokens = readFileSync(join(import.meta.dirname, '../../../apps/home/src/styles/tokens.css'), 'utf8');

@@ -1,6 +1,7 @@
 import dedent from 'dedent';
 
-import rule from '../../src/rules/subscriber-missing-decorators';
+import rule from '@src/rules/subscriber-missing-decorators';
+
 import { createTypedRuleTester } from '../typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();

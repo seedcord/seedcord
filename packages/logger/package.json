@@ -65,7 +65,8 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",

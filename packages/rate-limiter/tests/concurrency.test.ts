@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { MemoryRateLimiter } from '../src/MemoryRateLimiter';
+import { MemoryRateLimiter } from '@src/MemoryRateLimiter';
 
 describe('MemoryRateLimiter concurrent charges', () => {
     beforeEach(() => vi.useFakeTimers());

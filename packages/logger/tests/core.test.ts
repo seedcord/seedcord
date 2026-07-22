@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Logger } from '../src/Logger';
-import { LoggerChannelRegistry } from '../src/LoggerChannelRegistry';
+import { Logger } from '@src/Logger';
+import { LoggerChannelRegistry } from '@src/LoggerChannelRegistry';
 
-import type { ILogSink, LogRecord } from '../src/types';
+import type { ILogSink, LogRecord } from '@src/types';
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];

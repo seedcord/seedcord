@@ -27,7 +27,11 @@
             ]
         },
         "//#tc:root": {
-            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "dependsOn": [
+                "@seedcord/docs-engine#build",
+                "@seedcord/docs-generator#build",
+                "@seedcord/vitest-config#build"
+            ],
             "inputs": [
                 "*.ts",
                 "turbo/**/*.ts",
@@ -35,7 +39,8 @@
                 "tsconfig.json",
                 "packages/tsconfig/**",
                 "packages/docs-engine/dist/**/*.d.mts",
-                "packages/docs-generator/dist/**/*.d.mts"
+                "packages/docs-generator/dist/**/*.d.mts",
+                "packages/vitest-config/dist/**/*.d.mts"
             ]
         },
         "//#lint:scripts": {
@@ -52,12 +57,17 @@
             "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
         },
         "//#test:scripts": {
-            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "dependsOn": [
+                "@seedcord/docs-engine#build",
+                "@seedcord/docs-generator#build",
+                "@seedcord/vitest-config#build"
+            ],
             "inputs": [
                 "scripts/**/*.ts",
                 "vitest.config.ts",
                 "packages/docs-engine/dist/**/*.d.mts",
-                "packages/docs-generator/dist/**/*.d.mts"
+                "packages/docs-generator/dist/**/*.d.mts",
+                "packages/vitest-config/dist/**"
             ]
         },
         "dev": {

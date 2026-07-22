@@ -1,5 +1,4 @@
 /* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
-import path from 'node:path';
 
 import { CustomId } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
@@ -9,13 +8,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
 import { Seedcord } from '@src/Seedcord';
 
+import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-client';
 import '../utils/mock-env';
-
-const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface PrivateInteractionDispatcher {
     slashMap: Map<string, unknown>;

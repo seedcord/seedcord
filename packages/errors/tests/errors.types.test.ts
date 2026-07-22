@@ -1,9 +1,9 @@
 import { assertType, describe, expect, expectTypeOf, it } from 'vitest';
 
-import { SeedcordErrorCode, isSeedcordError } from '../src';
-import { SeedcordError, SeedcordTypeError } from '../src/internal.index';
+import { SeedcordErrorCode, isSeedcordError } from '@src/index';
+import { SeedcordError, SeedcordTypeError } from '@src/internal.index';
 
-import type { SeedcordErrorTypeString } from '../src';
+import type { SeedcordErrorTypeString } from '@src/index';
 
 // never run, the invalid cases would throw, but tc checks the body anyway
 function errorTypeContracts(): void {

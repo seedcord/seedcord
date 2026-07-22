@@ -1,6 +1,7 @@
 import dedent from 'dedent';
 
-import rule from '../../src/rules/required-option-before-optional';
+import rule from '@src/rules/required-option-before-optional';
+
 import { createTypedRuleTester } from '../typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();

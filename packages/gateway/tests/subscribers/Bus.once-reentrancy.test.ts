@@ -2,13 +2,13 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, it, expect } from 'vitest';
 
-import { Bus } from '../../src/subscribers/Bus';
-import { Subscribe } from '../../src/subscribers/decorators/Subscribe';
-import { Subscriber } from '../../src/subscribers/Subscriber';
+import { Bus } from '@subscribers/Bus';
+import { Subscribe } from '@subscribers/decorators/Subscribe';
+import { Subscriber } from '@subscribers/Subscriber';
 import '../utils/mock-env';
 
-import type { Core } from '../../src/interfaces/Core';
-import type { AllSubscriptions } from '../../src/subscribers/types/Subscriptions';
+import type { Core } from '@interfaces/Core';
+import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
 // justified: exposes the private subscribersMap so the test can inject a subscriber without disk I/O.
 interface PrivateBus {

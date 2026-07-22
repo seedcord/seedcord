@@ -52,6 +52,7 @@
         "@seedcord/eslint-utils": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "@typescript-eslint/rule-tester": "catalog:eslint",
         "dedent": "catalog:test",
         "discord.js": "catalog:peer",

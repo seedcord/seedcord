@@ -1,6 +1,7 @@
 import dedent from 'dedent';
 
-import rule from '../../src/rules/prefer-ephemeral-flag';
+import rule from '@src/rules/prefer-ephemeral-flag';
+
 import { createTypedRuleTester } from '../typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();

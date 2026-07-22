@@ -24,6 +24,7 @@
     "@seedcord/types": "0.7.1",
     "@seedcord/ui": "0.2.0",
     "@seedcord/utils": "0.7.0",
+    "@seedcord/vitest-config": "0.0.1",
     "eslint-plugin-discordjs": "0.0.1",
     "seedcord": "0.15.0"
   },

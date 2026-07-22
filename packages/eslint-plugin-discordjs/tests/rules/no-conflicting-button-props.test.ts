@@ -1,6 +1,7 @@
 import dedent from 'dedent';
 
-import rule from '../../src/rules/no-conflicting-button-props';
+import rule from '@src/rules/no-conflicting-button-props';
+
 import { createTypedRuleTester } from '../typed-rule-tester';
 
 const ruleTester = createTypedRuleTester();

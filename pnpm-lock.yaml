@@ -198,6 +198,9 @@ importers:
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:packages/tsconfig
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:packages/vitest-config
       '@turbo/gen':
         specifier: ^2.9.18
         version: 2.9.18(@types/node@25.9.3)
@@ -334,6 +337,9 @@ importers:
       '@seedcord/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../packages/vitest-config
       '@testing-library/jest-dom':
         specifier: catalog:test
         version: 6.9.1
@@ -520,6 +526,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       reflect-metadata:
         specifier: catalog:peer
         version: 0.2.2
@@ -560,6 +569,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@types/semver':
         specifier: ^7.7.1
         version: 7.7.1
@@ -582,6 +594,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
 
   packages/errors:
     dependencies:
@@ -601,6 +616,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
 
   packages/eslint-config:
     dependencies:
@@ -668,6 +686,9 @@ importers:
       '@seedcord/eslint-config-base':
         specifier: workspace:*
         version: link:../eslint-config-base
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@typescript-eslint/utils':
         specifier: catalog:eslint
         version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
@@ -766,6 +787,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@typescript-eslint/rule-tester':
         specifier: catalog:eslint
         version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
@@ -800,6 +824,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@typescript-eslint/rule-tester':
         specifier: catalog:eslint
         version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
@@ -850,6 +877,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
 
   packages/gateway:
     dependencies:
@@ -902,6 +932,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
@@ -963,6 +996,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@vitest/coverage-istanbul':
         specifier: ^4.1.10
         version: 4.1.10(vitest@4.1.10)
@@ -1006,6 +1042,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
 
   packages/plugins:
     dependencies:
@@ -1046,6 +1085,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@types/pg':
         specifier: ^8.20.0
         version: 8.20.0
@@ -1083,6 +1125,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
 
   packages/seedcord:
     dependencies:
@@ -1162,6 +1207,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@types/react':
         specifier: catalog:react
         version: 19.2.17
@@ -1217,6 +1265,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
@@ -1269,6 +1320,9 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       '@testing-library/jest-dom':
         specifier: catalog:test
         version: 6.9.1
@@ -1318,12 +1372,40 @@ importers:
       '@seedcord/tsdown-config':
         specifier: workspace:*
         version: link:../tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
       type-fest:
         specifier: catalog:deps
         version: 5.7.0
+
+  packages/vitest-config:
+    dependencies:
+      get-tsconfig:
+        specifier: ^4.14.0
+        version: 4.14.0
+      vitest:
+        specifier: catalog:test
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(vite@8.1.4(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../eslint-config-base
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../tsdown-config
+      '@types/node':
+        specifier: catalog:deps
+        version: 25.9.3
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
 
 packages:
 

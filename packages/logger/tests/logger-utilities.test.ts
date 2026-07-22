@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { LoggerUtilities } from '../src/LoggerUtilities';
+import { LoggerUtilities } from '@src/LoggerUtilities';
 
-import type { LogLevel } from '../src/types';
 import type { ILogger } from '@seedcord/types';
+import type { LogLevel } from '@src/types';
 
 class FakeLogger implements ILogger {
     public readonly calls: { level: LogLevel; text: string }[] = [];

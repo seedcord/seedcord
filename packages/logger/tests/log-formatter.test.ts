@@ -4,9 +4,9 @@ import chalk from 'chalk';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import winston from 'winston';
 
-import { LogFormatter } from '../src/node/LogFormatter';
-import { NODE_LEVELS } from '../src/node/winston';
-import { LEVEL_COLOR } from '../src/palette';
+import { LogFormatter } from '@src/node/LogFormatter';
+import { NODE_LEVELS } from '@src/node/winston';
+import { LEVEL_COLOR } from '@src/palette';
 
 const ESC = String.fromCharCode(27);
 

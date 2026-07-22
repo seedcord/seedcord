@@ -1,7 +1,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { Badge } from '../src/Badge';
+import { Badge } from '@/Badge';
 
 function getBadge(container: HTMLElement): HTMLSpanElement {
     const el = container.querySelector('span');

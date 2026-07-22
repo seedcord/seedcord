@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { timestampFromSnowflake } from '../../src/numbers/timestampFromSnowflake';
+import { timestampFromSnowflake } from '@src/numbers/timestampFromSnowflake';
 
 describe('timestampFromSnowflake', () => {
     it('decodes the discord docs example snowflake', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildSlashRoute } from '../../src/strings/buildSlashRoute';
+import { buildSlashRoute } from '@src/strings/buildSlashRoute';
 
 describe('buildSlashRoute', () => {
     it('returns the command for a top-level route', () => {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { buildKey } from '../src/buildKey';
+import { buildKey } from '@src/buildKey';
 
 describe('buildKey', () => {
     it('joins the prefix and parts with colons', () => {

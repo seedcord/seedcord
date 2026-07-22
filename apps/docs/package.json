@@ -45,6 +45,7 @@
     },
     "devDependencies": {
         "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",
         "@types/react": "catalog:react",

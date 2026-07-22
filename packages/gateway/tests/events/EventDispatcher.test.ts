@@ -1,15 +1,13 @@
-import path from 'node:path';
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Seedcord } from '../../src/Seedcord';
+import { Seedcord } from '@src/Seedcord';
+
+import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-client';
 import '../utils/mock-env';
-
-const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface PrivateEventDispatcher {
     eventMap: Map<string, unknown[]>;

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '../src/Popover';
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/Popover';
 
 import type { ReactElement } from 'react';
 

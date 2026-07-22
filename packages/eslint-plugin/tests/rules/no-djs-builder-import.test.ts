@@ -1,6 +1,7 @@
 import dedent from 'dedent';
 
-import rule from '../../src/rules/no-djs-builder-import';
+import rule from '@src/rules/no-djs-builder-import';
+
 import { createRuleTester } from '../typed-rule-tester';
 
 const ruleTester = createRuleTester();

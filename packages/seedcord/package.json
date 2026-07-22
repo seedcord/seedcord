@@ -79,6 +79,7 @@
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "@types/react": "catalog:react",
         "discord.js": "catalog:peer",
         "eslint-plugin-react-hooks": "^7.1.1",

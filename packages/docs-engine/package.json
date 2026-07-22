@@ -64,6 +64,7 @@
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "@types/semver": "^7.7.1"
     }
 }

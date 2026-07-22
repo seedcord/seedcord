@@ -1,14 +1,11 @@
-import path from 'node:path';
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Mongo } from '@src/mongo/Mongo';
 
+import { pluginsPath } from '../utils/source-path';
 import { TestEnvironment } from '../utils/test-env';
 
 import type { Core } from '@seedcord/gateway';
-
-const pluginsPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 describe('Mongo Plugin Integration', () => {
     let testEnv: TestEnvironment;

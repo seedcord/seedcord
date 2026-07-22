@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Tooltip, TooltipProvider } from '../src/Tooltip';
+import { Tooltip, TooltipProvider } from '@/Tooltip';
 
 import type { RenderResult } from '@testing-library/react';
 import type { ComponentProps, ReactNode } from 'react';

@@ -1,8 +1,8 @@
-import path from 'node:path';
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Seedcord } from '../../src/Seedcord';
+import { Seedcord } from '@src/Seedcord';
+
+import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
@@ -25,8 +25,6 @@ vi.mock('@discordjs/rest', async (importOriginal) => ({
         post = restMocks.postMock;
     }
 }));
-
-const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 interface PrivateBus {
     subscribersMap: Map<string, { ctor: unknown }[]>;

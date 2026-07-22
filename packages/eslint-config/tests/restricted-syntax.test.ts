@@ -1,7 +1,7 @@
 import { ESLint } from 'eslint';
 import { describe, expect, it } from 'vitest';
 
-import createConfig from '../src/index';
+import createConfig from '@src/index';
 
 import type { Linter } from 'eslint';
 

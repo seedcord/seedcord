@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { currentTime } from '../../src/numbers/currentTime';
-import { toEpochSeconds } from '../../src/numbers/toEpochSeconds';
+import { currentTime } from '@src/numbers/currentTime';
+import { toEpochSeconds } from '@src/numbers/toEpochSeconds';
 
 import type { EpochMs } from '@seedcord/types';
 

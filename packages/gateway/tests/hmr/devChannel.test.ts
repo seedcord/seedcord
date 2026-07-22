@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { setDevChannel } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -7,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Plugin } from '@interfaces/Plugin';
 import { Seedcord } from '@src/Seedcord';
 
+import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
@@ -16,8 +15,6 @@ import '../utils/mock-env';
 import type { Core } from '@interfaces/Core';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vitest';
-
-const seedcordPath = path.resolve(__dirname, '../../src/index').replaceAll('\\', '/');
 
 type FrameworkChannel = DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>;
 type SendMock = Mock<(event: string, data: unknown) => void>;

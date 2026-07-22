@@ -1,22 +1,8 @@
-import path from 'node:path';
+import { createVitestConfig } from '@seedcord/vitest-config';
 
-import { defineConfig, mergeConfig } from 'vitest/config';
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore ts is crying because the import isn't from {{ name }}'s src dir
-import rootConfig from '../../vitest.config';
-
-export default mergeConfig(
-    rootConfig,
-    defineConfig({
-        resolve: {
-            alias: {
-                '@src': path.resolve(__dirname, './src')
-            }
-        },
-        test: {
-            environment: 'node',
-            testTimeout: 10_000
-        }
-    })
-);
+export default createVitestConfig(import.meta.url, {
+    test: {
+        environment: 'node',
+        testTimeout: 10_000
+    }
+});
