@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
-import { CoordinatedStartup, StartupPhase } from '@node/Lifecycle/CoordinatedStartup';
+import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
+import { StartupPhase } from '@src/lifecycle/phases';
 
 // tested through CoordinatedStartup, which registers no process signal handlers and never calls
 // process.exit (CoordinatedShutdown would kill the test process)

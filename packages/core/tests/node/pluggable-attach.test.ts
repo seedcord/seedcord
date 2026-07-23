@@ -3,8 +3,9 @@ import { Logger } from '@seedcord/logger';
 import { describe, it, expect, expectTypeOf, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup, StartupPhase } from '@node/Lifecycle/CoordinatedStartup';
+import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import { Pluggable } from '@node/Pluggable';
+import { StartupPhase } from '@src/lifecycle/phases';
 import { Plugin } from '@src/plugin/Plugin';
 
 import type { CoreBase } from '@interfaces/CoreBase';

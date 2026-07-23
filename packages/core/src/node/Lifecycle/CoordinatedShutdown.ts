@@ -1,25 +1,11 @@
 import chalk from 'chalk';
 
+import { ShutdownPhase } from '@src/lifecycle/phases';
+
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
 import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';
-
-/**
- * Shutdown phases for coordinated application shutdown.
- */
-export enum ShutdownPhase {
-    /** Stop accepting new requests/interactions */
-    StopAcceptingRequests = 1,
-    /** Stop background services (health checks, etc.) */
-    StopServices,
-    /** Disconnect from external resources (database, APIs) */
-    ExternalResources,
-    /** Disconnect from Discord */
-    DiscordCleanup,
-    /** Final cleanup tasks */
-    FinalCleanup
-}
 
 const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.StopAcceptingRequests,

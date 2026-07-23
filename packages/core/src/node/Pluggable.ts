@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 
-import { StartupPhase } from '@node/Lifecycle/CoordinatedStartup';
+import { StartupPhase } from '@src/lifecycle/phases';
 
 import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';

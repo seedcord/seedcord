@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 
 import { Logger, paint } from '@seedcord/logger';
 
-import { ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
+import { ShutdownPhase } from '@src/lifecycle/phases';
 
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
 import type { HealthCheckConfig, HealthCheckOption } from '@seedcord/types';

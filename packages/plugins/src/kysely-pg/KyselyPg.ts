@@ -2,9 +2,9 @@ import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { ShutdownPhase } from '@seedcord/core/node/internal';
+import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';

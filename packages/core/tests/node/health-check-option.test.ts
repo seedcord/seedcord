@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
 import { HealthCheck } from '@node/HealthCheck';
-import { ShutdownPhase } from '@node/Lifecycle/CoordinatedShutdown';
+import { ShutdownPhase } from '@src/lifecycle/phases';
 
 import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 

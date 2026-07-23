@@ -1,8 +1,7 @@
 import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
-import { ShutdownPhase } from '@node/Lifecycle/CoordinatedShutdown';
-import { StartupPhase } from '@node/Lifecycle/CoordinatedStartup';
+import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
 import { Plugin, resolvedLifecycleSpecOf } from '@src/plugin/Plugin';
 
 import type { CoreBase } from '@interfaces/CoreBase';
