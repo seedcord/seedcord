@@ -17,9 +17,8 @@ describe('HmrManager', () => {
     it('a rejecting listener does not stop the other listeners', async () => {
         const manager = new HmrManager();
         const ran: string[] = [];
-        manager.register({ name: 'boom', onHmr: () => Promise.reject(new Error('boom')) });
+        manager.register({ onHmr: () => Promise.reject(new Error('boom')) });
         manager.register({
-            name: 'ok',
             onHmr: () => {
                 ran.push('ok');
                 return Promise.resolve();
@@ -36,7 +35,6 @@ describe('HmrManager', () => {
         const manager = new HmrManager();
         const ran: string[] = [];
         const listener = {
-            name: 'gone',
             onHmr: (): Promise<void> => {
                 ran.push('gone');
                 return Promise.resolve();

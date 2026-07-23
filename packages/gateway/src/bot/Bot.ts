@@ -1,6 +1,6 @@
-import { Plugin } from '@seedcord/core';
 import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { validateDiscordToken } from '@seedcord/errors/internal';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 import { Client, ClientEvents, Events, Interaction } from 'discord.js';
@@ -16,7 +16,8 @@ import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 import type { InjectedMentionMap } from './injectors/CommandMentionInjector';
 import type { InjectedEmojiMap } from './injectors/EmojiInjector';
 import type { Core } from '@interfaces/Core';
-import type { HmrUpdateEvent } from '@seedcord/types';
+import type { Initializeable } from '@seedcord/core';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 /**
  * Types of events emitted by the {@link Core.bot} instance.
@@ -35,11 +36,9 @@ export interface BotEvents {
 }
 
 /**
- * Discord bot implementation that manages client and controllers
- *
- * Don't instantiate this class directly. Use `core.bot` instead.
+ * The Discord client and its controllers. Don't instantiate this class directly. Use `core.bot` instead.
  */
-export class Bot extends Plugin<BotEvents> {
+export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable, HmrAware {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
         converter: (raw) => validateDiscordToken(raw)
     })
@@ -52,13 +51,14 @@ export class Bot extends Plugin<BotEvents> {
     private readonly _client: Client;
     private readonly interactions?: InteractionDispatcher;
     private readonly events?: EventDispatcher;
-    public readonly commands?: CommandRegistry;
     private readonly emojiInjector: EmojiInjector;
+
+    public readonly commands?: CommandRegistry;
     public readonly emojis: InjectedEmojiMap = Emojis;
     public readonly mentions: InjectedMentionMap = CommandMentions;
 
-    /** @internal For use in dev mode */
-    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+    /** @internal */
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.interactions) await this.interactions.onHmr(event);
         if (this.events) await this.events.onHmr(event);
         if (this.commands) await this.commands.onHmr(event);
@@ -66,7 +66,7 @@ export class Bot extends Plugin<BotEvents> {
 
     /** @internal */
     constructor(core: Core) {
-        super(core);
+        super();
 
         this._client = new Client(core.config.bot.clientOptions);
 
@@ -95,10 +95,7 @@ export class Bot extends Plugin<BotEvents> {
         );
     }
 
-    /**
-     * Initializes Discord client and all controllers
-     * @internal
-     */
+    /** @internal */
     public async init(): Promise<void> {
         if (this.isInitialized) {
             return;
@@ -122,19 +119,13 @@ export class Bot extends Plugin<BotEvents> {
         }
     }
 
-    /**
-     * Stops the bot and cleans up connections
-     * @internal
-     */
+    /** @internal */
     public async stop(): Promise<void> {
         this._client.removeAllListeners();
 
         await this.logout();
     }
 
-    /**
-     * Logs the bot into Discord using the configured token
-     */
     private async login(token: string): Promise<Bot> {
         this._client.once(Events.ClientReady, () => this.emit('ready'));
         void this._client.login(token);
@@ -143,9 +134,6 @@ export class Bot extends Plugin<BotEvents> {
         return this;
     }
 
-    /**
-     * Logs out and destroys the Discord client connection
-     */
     private async logout(): Promise<void> {
         await this._client.destroy();
         this.logger.info(chalk.bold.red('Logged out of Discord!'));
@@ -155,12 +143,7 @@ export class Bot extends Plugin<BotEvents> {
         return this._client;
     }
 
-    /**
-     * Emits a Discord event with its argument tuple. The overloads enforce the key/args correlation
-     * at compile time only; at runtime this forwards straight to the underlying EventEmitter.
-     *
-     * @internal
-     */
+    /** @internal */
     override emit<TKey extends keyof ClientEvents>(
         event: 'any:event',
         name: TKey,
@@ -170,6 +153,12 @@ export class Bot extends Plugin<BotEvents> {
     /** @internal */
     override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
 
+    /**
+     * The overloads enforce the key/args correlation at compile time only. At runtime this forwards
+     * straight to the underlying TypedEventEmitter.
+     *
+     * @internal
+     */
     override emit(event: string, ...args: unknown[]): boolean {
         // justified, TS cannot correlate the overload generics across super.emit.
         return super.emit(event as never, ...(args as never));

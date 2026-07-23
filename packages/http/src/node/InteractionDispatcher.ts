@@ -29,7 +29,6 @@ interface RouteTarget {
  * reads `maps` per request. The edge path builds its maps from the generated manifest.
  */
 export class InteractionDispatcher implements Initializeable, HmrAware {
-    public readonly name = 'Interactions';
     public readonly maps: RouteMaps;
     private readonly targets: Record<InteractionRoutes, RouteTarget>;
 

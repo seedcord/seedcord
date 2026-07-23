@@ -46,8 +46,6 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Events');
     private isInitialized = false;
 
-    public readonly name = 'Events';
-
     private readonly eventMap = new Map<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
     private readonly middlewares: RegisteredEventMiddleware[] = [];
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();

@@ -118,6 +118,11 @@ const messages = {
     [SeedcordErrorCode.ColorUnresolvable]: (value: string) => `Cannot convert ${value} into a color.`,
     [SeedcordErrorCode.ColorOutOfRange]: () => 'Color must be within the range 0 to 16777215 (0xffffff).',
 
+    [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
+        `${pluginName} rejected its options, ${reason.replace(/\.$/, '')}.`,
+    [SeedcordErrorCode.PluginContextBeforeInit]: (pluginName: string) =>
+        `${pluginName} read this.ctx before attach finalized it. ctx is available from init() onward.`,
+
     [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongoService on ${className}.`,
     [SeedcordErrorCode.PluginMongoModelDecoratorMissing]: (className: string) =>

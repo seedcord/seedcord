@@ -74,8 +74,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions');
     private isInitialized = false;
 
-    public readonly name: string = 'Interactions';
-
     private readonly slashMap = new Map<string, HandlerConstructor>();
     private readonly buttonMap = new Map<string, HandlerConstructor>();
     private readonly modalMap = new Map<string, HandlerConstructor>();

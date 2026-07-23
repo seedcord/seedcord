@@ -56,7 +56,7 @@ export class HmrManager {
             try {
                 await listener.onHmr(event);
             } catch (error) {
-                this.logger.error(`Error handling HMR update in ${chalk.bold(listener.name)}: `, error);
+                this.logger.error(`Error handling HMR update in ${chalk.bold(listener.constructor.name)}: `, error);
             }
         });
 
