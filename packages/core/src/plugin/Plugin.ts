@@ -91,7 +91,7 @@ export function resolvedLifecycleSpecOf(plugin: Plugin): ResolvedPluginLifecycle
 
 export type { PluginContext, PluginCapabilityTypes } from './context';
 export type { PluginLifecycleSpec } from './lifecycle';
-export type { PluginNeed, PluginOptions } from './options';
+export type { PluginOptions } from './options';
 
 /**
  * Constructor type for plugins that can accept extra arguments after Core.

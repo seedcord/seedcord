@@ -19,6 +19,13 @@ import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@seedcord/core';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
+const DISPATCH_DRAIN_TIMEOUT_MS = 5000;
+// headroom so each dispatcher's own timer settles before the outer task timeout fires
+const DRAIN_HEADROOM_MS = 1000;
+const DRAIN_TASK_TIMEOUT_MS = DISPATCH_DRAIN_TIMEOUT_MS + DRAIN_HEADROOM_MS;
+const UNBIND_TIMEOUT_MS = 2000;
+const LOGOUT_TIMEOUT_MS = 2000;
+
 /**
  * Types of events emitted by the {@link Core.bot} instance.
  */
@@ -36,7 +43,7 @@ export interface BotEvents {
 }
 
 /**
- * The Discord client and its controllers. Don't instantiate this class directly. Use `core.bot` instead.
+ * The Discord client and its controllers. Access it through `core.bot`.
  */
 export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable, HmrAware {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
@@ -86,13 +93,34 @@ export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable,
 
         this.emojiInjector = new EmojiInjector(core);
 
-        const BOT_SHUTDOWN_TIMEOUT = 2000;
+        this.registerShutdownTasks(core);
+    }
+
+    private registerShutdownTasks(core: Core): void {
         core.shutdown.addTask(
-            ShutdownPhase.DiscordCleanup,
-            'stop-bot',
-            async () => await this.stop(),
-            BOT_SHUTDOWN_TIMEOUT
+            ShutdownPhase.Unbind,
+            'stop-dispatch',
+            () => {
+                this.stopAccepting();
+                return Promise.resolve();
+            },
+            UNBIND_TIMEOUT_MS
         );
+        core.shutdown.addTask(ShutdownPhase.Drain, 'drain-dispatch', () => this.drain(), DRAIN_TASK_TIMEOUT_MS);
+        core.shutdown.addTask(ShutdownPhase.Logout, 'stop-bot', async () => await this.stop(), LOGOUT_TIMEOUT_MS);
+    }
+
+    private stopAccepting(): void {
+        this.interactions?.stopAccepting();
+        this.events?.stopAccepting();
+    }
+
+    private async drain(): Promise<void> {
+        // allSettled so a rejecting drain does not abort the other dispatcher's drain
+        await Promise.allSettled([
+            this.interactions?.drain(DISPATCH_DRAIN_TIMEOUT_MS),
+            this.events?.drain(DISPATCH_DRAIN_TIMEOUT_MS)
+        ]);
     }
 
     /** @internal */

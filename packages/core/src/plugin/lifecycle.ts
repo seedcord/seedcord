@@ -54,7 +54,7 @@ export function resolveLifecycleSpec(
             timeout: timeoutOf('ready', spec?.ready?.timeout, DEFAULT_READY_TIMEOUT_MS, pluginName)
         },
         dispose: {
-            phase: spec?.dispose?.phase ?? ShutdownPhase.ExternalResources,
+            phase: spec?.dispose?.phase ?? ShutdownPhase.Disconnect,
             timeout: timeoutOf('dispose', spec?.dispose?.timeout, DEFAULT_DISPOSE_TIMEOUT_MS, pluginName)
         }
     };

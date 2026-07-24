@@ -9,11 +9,15 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 
+import { withTimeout } from './withTimeout';
+
 import type { LifecycleTask } from './LifecycleTypes';
 import type { EventMap } from '@seedcord/event-emitter';
 
 /**
- * Abstract base class for coordinated lifecycle management (startup/shutdown)
+ * Base for the startup and shutdown coordinators. Runs phase-ordered tasks off a per-phase map.
+ *
+ * @internal
  */
 export abstract class CoordinatedLifecycle<
     TPhase extends number,
@@ -33,21 +37,12 @@ export abstract class CoordinatedLifecycle<
     }
 
     /**
-     * Adds a lifecycle task to a specific phase.
-     *
-     * Tasks are executed in phase order during lifecycle operations.
-     * Each task has a timeout to prevent hanging operations.
+     * Adds a task to `phase`. Tasks run in phase order, each bounded by `timeoutMs`.
      *
      * @param phase - The lifecycle phase to add the task to
-     * @param taskName - Unique name for the task (used for logging and removal)
+     * @param taskName - Unique name for the task, used for logging and removal
      * @param task - Async function to execute during the phase
      * @param timeoutMs - Maximum time allowed for task execution in milliseconds
-     * @example
-     * ```typescript
-     * lifecycle.addTask(StartupPhase.Services, 'start-database', async () => {
-     *   await database.connect();
-     * }, 10000);
-     * ```
      */
     public addTask(phase: TPhase, taskName: string, task: () => Promise<void>, timeoutMs: number): void {
         if (!this.canAddTask()) return;
@@ -90,13 +85,10 @@ export abstract class CoordinatedLifecycle<
         return removed;
     }
 
-    /**
-     * Run all tasks in a specific phase
-     */
     protected async runPhase(phase: TPhase): Promise<void> {
         const tasks = this.tasksMap.get(phase) ?? [];
         if (tasks.length === 0) {
-            this.logger.warn(`No tasks to run in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`);
+            this.logger.debug(`No tasks to run in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`);
             return;
         }
 
@@ -121,25 +113,13 @@ export abstract class CoordinatedLifecycle<
         this.emitPhase(phase, 'complete');
     }
 
-    /**
-     * Run a single task with timeout
-     */
     protected async runTaskWithTimeout(phase: TPhase, task: LifecycleTask): Promise<void> {
         this.logger.info(
             `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
         );
 
-        let timeoutId: NodeJS.Timeout | undefined;
-
         try {
-            await Promise.race([
-                task.task(),
-                new Promise<void>((_, reject) => {
-                    timeoutId = setTimeout(() => {
-                        reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [task.name, task.timeout]));
-                    }, task.timeout);
-                })
-            ]);
+            await withTimeout(task.name, task.task, task.timeout);
 
             this.logger.info(
                 `${chalk.italic('Completed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
@@ -150,15 +130,10 @@ export abstract class CoordinatedLifecycle<
                 error
             );
             throw error;
-        } finally {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
         }
     }
 
-    // The phase key is interpolated from phaseOrder at runtime and is always a valid no-payload key of
-    // the subclass event map, but TS can't correlate a template-literal key with the generic TEvents.
+    // TS can't correlate a template-literal key with the generic TEvents
     private emitPhase(phase: TPhase, action: 'start' | 'complete'): void {
         this.emitSafeRaw(`phase:${phase}:${action}`);
     }
@@ -167,7 +142,6 @@ export abstract class CoordinatedLifecycle<
         this.logger.error(`listener for ${String(event)} threw`, error);
     }
 
-    // Abstract methods to be implemented by subclasses
     protected abstract canAddTask(): boolean;
     protected abstract canRemoveTask(): boolean;
     protected abstract getTaskType(): string;

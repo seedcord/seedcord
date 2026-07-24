@@ -27,11 +27,7 @@ describe('HealthCheck.fromOption', () => {
         expect(check).toBeInstanceOf(HealthCheck);
         expect(check?.port).toBe(6967);
         expect(check?.path).toBe('/health');
-        expect(addTask).toHaveBeenCalledWith(
-            ShutdownPhase.StopServices,
-            'stop-healthcheck-server',
-            expect.any(Function)
-        );
+        expect(addTask).toHaveBeenCalledWith(ShutdownPhase.Drain, 'stop-healthcheck-server', expect.any(Function));
     });
 
     it('true returns the defaults', () => {

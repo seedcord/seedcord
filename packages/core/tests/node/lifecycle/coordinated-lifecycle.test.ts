@@ -1,3 +1,4 @@
+import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, it, expect } from 'vitest';
 
 import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
@@ -15,7 +16,7 @@ describe('CoordinatedStartup events (TypedEventEmitter base)', () => {
         startup.on('startup:complete', () => seen.push('startup:complete'));
 
         let ran = false;
-        startup.addTask(StartupPhase.Validation, 'noop', () => {
+        startup.addTask(StartupPhase.Configuration, 'noop', () => {
             ran = true;
             return Promise.resolve();
         });
@@ -34,7 +35,7 @@ describe('CoordinatedStartup events (TypedEventEmitter base)', () => {
         });
 
         let ran = false;
-        startup.addTask(StartupPhase.Validation, 'noop', () => {
+        startup.addTask(StartupPhase.Configuration, 'noop', () => {
             ran = true;
             return Promise.resolve();
         });
@@ -52,7 +53,7 @@ describe('CoordinatedStartup events (TypedEventEmitter base)', () => {
         });
 
         let ran = false;
-        startup.addTask(StartupPhase.Validation, 'noop', () => {
+        startup.addTask(StartupPhase.Configuration, 'noop', () => {
             ran = true;
             return Promise.resolve();
         });
@@ -67,9 +68,79 @@ describe('CoordinatedStartup events (TypedEventEmitter base)', () => {
         const startup = new CoordinatedStartup();
         const pending = startup.waitFor('startup:complete');
 
-        startup.addTask(StartupPhase.Validation, 'noop', () => Promise.resolve());
+        startup.addTask(StartupPhase.Configuration, 'noop', () => Promise.resolve());
         await startup.run();
 
         await expect(pending).resolves.toEqual([]);
+    });
+});
+
+describe('CoordinatedStartup failure and guards', () => {
+    it('emits startup:error and rethrows when a task rejects', async () => {
+        const startup = new CoordinatedStartup();
+        const boom = new Error('boom');
+        let seenError: unknown;
+        startup.on('startup:error', (err) => (seenError = err));
+
+        startup.addTask(StartupPhase.Configuration, 'reject', () => Promise.reject(boom));
+
+        await expect(startup.run()).rejects.toThrow();
+        expect(seenError).toBeInstanceOf(Error);
+        expect(startup.isReady).toBe(false);
+    });
+
+    it('rejects addTask after startup completed', async () => {
+        const startup = new CoordinatedStartup();
+        startup.addTask(StartupPhase.Configuration, 'noop', () => Promise.resolve());
+        await startup.run();
+
+        try {
+            startup.addTask(StartupPhase.Configuration, 'late', () => Promise.resolve());
+            expect.fail('expected a throw');
+        } catch (err) {
+            expect(isSeedcordError(err, undefined, SeedcordErrorCode.LifecycleAddAfterCompletion)).toBe(true);
+        }
+    });
+
+    it('rejects addTask while a run is in progress', async () => {
+        const startup = new CoordinatedStartup();
+        let caught: unknown;
+        startup.addTask(StartupPhase.Configuration, 'racer', () => {
+            try {
+                startup.addTask(StartupPhase.Ready, 'during', () => Promise.resolve());
+            } catch (err) {
+                caught = err;
+            }
+            return Promise.resolve();
+        });
+
+        await startup.run();
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.LifecycleAddDuringRun)).toBe(true);
+    });
+
+    it('times out a never-resolving task', async () => {
+        const startup = new CoordinatedStartup();
+        startup.addTask(StartupPhase.Configuration, 'hang', () => new Promise<void>(() => undefined), 10);
+
+        await expect(startup.run()).rejects.toThrow();
+    });
+
+    it('abort() inside a task stops later phases and keeps isReady false', async () => {
+        const startup = new CoordinatedStartup();
+        let readyRan = false;
+
+        startup.addTask(StartupPhase.Configuration, 'aborter', () => {
+            startup.abort();
+            return Promise.resolve();
+        });
+        startup.addTask(StartupPhase.Ready, 'later', () => {
+            readyRan = true;
+            return Promise.resolve();
+        });
+
+        await startup.run();
+
+        expect(startup.isReady).toBe(false);
+        expect(readyRan).toBe(false);
     });
 });

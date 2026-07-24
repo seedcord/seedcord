@@ -11,8 +11,7 @@ import {
     ShutdownPhase,
     StartupPhase
 } from '@seedcord/core/node/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry, paint } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -30,6 +29,7 @@ import { version as packageVersion } from '../version';
 
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
+import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -75,7 +75,6 @@ export class Seedcord extends Pluggable implements Core {
     private boundPort?: number;
     private requestedPort = DEFAULT_PORT;
     private fetchedUsername?: string | undefined;
-    private startFailed = false;
 
     constructor(public readonly config: HttpConfig) {
         const shutdown = new CoordinatedShutdown();
@@ -114,20 +113,22 @@ export class Seedcord extends Pluggable implements Core {
         return this.boundPort;
     }
 
+    protected override pluginCapabilities(): PluginCapabilities {
+        const token = Envapter.get('DISCORD_BOT_TOKEN');
+        return { rest: this.rest, ...(token !== undefined && { token }) };
+    }
+
     /**
      * Starts the host and runs the startup tasks.
      *
      * @param port - The port the interaction server binds. {@default `3000`}
      */
     public async start(port = DEFAULT_PORT): Promise<this> {
-        // the rollback below removed the signal handlers which would cause a rerun to run without them
-        if (this.startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
         this.requestedPort = port;
         try {
             await super.init();
         } catch (caught) {
-            this.startFailed = true;
-            // a later Ready task can reject after the server task bound, release it before rethrowing
+            // shutdown releases any resource opened before the failure, then rethrow
             await this.shutdown.run(1, false);
             Seedcord.reset();
             throw caught;
@@ -145,7 +146,7 @@ export class Seedcord extends Pluggable implements Core {
 
         const { interactions } = this;
         if (interactions) {
-            this.startup.addTask(StartupPhase.Instantiation, 'Interactions Initialization', async () => {
+            this.startup.addTask(StartupPhase.Configuration, 'Interactions Initialization', async () => {
                 interactions.logger.utils.initialization('Interactions', 'start');
                 await interactions.init();
                 interactions.logger.utils.initialization('Interactions', 'end');
@@ -203,14 +204,14 @@ export class Seedcord extends Pluggable implements Core {
         this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}`);
 
         this.shutdown.addTask(
-            ShutdownPhase.StopAcceptingRequests,
+            ShutdownPhase.Unbind,
             'stop-http-server',
             () => this.stopServer(),
             SERVER_SHUTDOWN_TIMEOUT_MS
         );
-        // StopAcceptingRequests already ran, so every accepted request is in the in-flight set here
+        // Unbind already ran, so every accepted request is in the in-flight set here
         this.shutdown.addTask(
-            ShutdownPhase.StopServices,
+            ShutdownPhase.Drain,
             'drain-inflight',
             async () => {
                 await Promise.allSettled(inFlight);

@@ -8,20 +8,16 @@ import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';
 
 const PHASE_ORDER: ShutdownPhase[] = [
-    ShutdownPhase.StopAcceptingRequests,
-    ShutdownPhase.StopServices,
-    ShutdownPhase.ExternalResources,
-    ShutdownPhase.DiscordCleanup,
-    ShutdownPhase.FinalCleanup
+    ShutdownPhase.Unbind,
+    ShutdownPhase.Drain,
+    ShutdownPhase.Disconnect,
+    ShutdownPhase.Logout
 ];
 
-/**
- * Strict-event-emitter payload map for coordinated shutdown phases.
- */
-export type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<ShutdownPhase>>;
+type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<ShutdownPhase>>;
 
-// Delay process.exit so the logger's file sink has a window to flush before the event loop dies.
-const LOG_FLUSH_DELAY_MS = 500;
+// gives the logger's file sink time to flush before process.exit
+const LOG_FLUSH_DELAY_MS = 3000;
 
 /**
  * Runs registered shutdown tasks across `ShutdownPhase` in order. Registers SIGINT and SIGTERM
@@ -29,6 +25,7 @@ const LOG_FLUSH_DELAY_MS = 500;
  */
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, CoordinatedShutdownEvents> {
     private isShuttingDown = false;
+    private hasShutdown = false;
     private exitCode = 0;
     private onSigTerm: (() => void) | null = null;
     private onSigInt: (() => void) | null = null;
@@ -86,25 +83,12 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         }
     }
 
-    /**
-     * Adds a task to a specific shutdown phase with timeout.
-     *
-     * @param phase - The shutdown phase from {@link ShutdownPhase}
-     * @param taskName - Unique identifier for the task
-     * @param task - Async function to execute
-     * @param timeoutMs - Task timeout in milliseconds. {@default `5000`}
-     */
+    /** Adds a shutdown-phase task. @param timeoutMs - Task timeout in ms. {@default 5000} */
     public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
         super.addTask(phase, taskName, task, timeoutMs);
     }
 
-    /**
-     * Removes a task from a specific shutdown phase.
-     *
-     * @param phase - The shutdown phase to remove from
-     * @param taskName - Name of the task to remove
-     * @returns True if task was found and removed
-     */
+    /** Removes a shutdown-phase task, returning whether one was removed. */
     public override removeTask(phase: ShutdownPhase, taskName: string): boolean {
         return super.removeTask(phase, taskName);
     }
@@ -117,15 +101,16 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
      * @param exitProcess - Whether to exit the process after shutdown. {@default `true`}
      * @example
      * ```typescript
-     * shutdown.addTask(ShutdownPhase.ExternalResources, 'database', () => db.disconnect(), 5000);
+     * shutdown.addTask(ShutdownPhase.Disconnect, 'database', () => db.disconnect(), 5000);
      * await shutdown.run(0);
      * ```
      */
     public async run(exitCode = 0, exitProcess = true): Promise<void> {
         this.removeSignalHandlers();
 
-        if (this.isShuttingDown) {
-            this.logger.warn('Shutdown sequence already in progress');
+        // a dev-mode run leaves the process alive, so guard against a re-run that re-executes tasks
+        if (this.hasShutdown || this.isShuttingDown) {
+            this.logger.warn('Shutdown sequence already ran or is in progress');
             return;
         }
 
@@ -137,16 +122,23 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         this.emitSafe('shutdown:start');
 
         try {
+            const failures: unknown[] = [];
             for (const phase of PHASE_ORDER) {
-                await this.runPhase(phase);
+                // run every phase so a mid-shutdown failure still attempts the later teardowns
+                try {
+                    await this.runPhase(phase);
+                } catch (error) {
+                    failures.push(error);
+                }
             }
 
-            this.logger.info(`${chalk.bold.green('Coordinated shutdown completed')} successfully`);
-            this.emitSafe('shutdown:complete');
-        } catch (error) {
-            this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`);
-            this.emitSafe('shutdown:error', error);
+            if (failures.length > 0) this.emitFailures(failures);
+            else {
+                this.logger.info(`${chalk.bold.green('Coordinated shutdown completed')} successfully`);
+                this.emitSafe('shutdown:complete');
+            }
         } finally {
+            this.hasShutdown = true;
             if (exitProcess) {
                 this.logger.info(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);
                 setTimeout(() => {
@@ -157,5 +149,11 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
                 this.isShuttingDown = false;
             }
         }
+    }
+
+    private emitFailures(failures: unknown[]): void {
+        this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`);
+        const error = failures.length === 1 ? failures[0] : new AggregateError(failures, 'shutdown phase failures');
+        this.emitSafe('shutdown:error', error);
     }
 }

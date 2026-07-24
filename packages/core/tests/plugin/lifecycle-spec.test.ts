@@ -27,25 +27,25 @@ describe('plugin lifecycle spec', () => {
         const spec = resolvedLifecycleSpecOf(new SpecPlugin(host));
         expect(spec.init).toEqual({ phase: StartupPhase.Configuration, timeout: 15_000 });
         expect(spec.ready).toEqual({ timeout: 15_000 });
-        expect(spec.dispose).toEqual({ phase: ShutdownPhase.ExternalResources, timeout: 10_000 });
+        expect(spec.dispose).toEqual({ phase: ShutdownPhase.Disconnect, timeout: 10_000 });
     });
 
     it('overrides only the fields the plugin declares', () => {
         const spec = resolvedLifecycleSpecOf(
             new SpecPlugin(host, {
-                init: { phase: StartupPhase.Activation, timeout: 5000 },
+                init: { phase: StartupPhase.Login, timeout: 5000 },
                 dispose: { timeout: 2000 }
             })
         );
-        expect(spec.init).toEqual({ phase: StartupPhase.Activation, timeout: 5000 });
-        expect(spec.dispose).toEqual({ phase: ShutdownPhase.ExternalResources, timeout: 2000 });
+        expect(spec.init).toEqual({ phase: StartupPhase.Login, timeout: 5000 });
+        expect(spec.dispose).toEqual({ phase: ShutdownPhase.Disconnect, timeout: 2000 });
     });
 
     it('keeps init and dispose defaults on a ready-only override', () => {
         const spec = resolvedLifecycleSpecOf(new SpecPlugin(host, { ready: { timeout: 5000 } }));
         expect(spec.init).toEqual({ phase: StartupPhase.Configuration, timeout: 15_000 });
         expect(spec.ready).toEqual({ timeout: 5000 });
-        expect(spec.dispose).toEqual({ phase: ShutdownPhase.ExternalResources, timeout: 10_000 });
+        expect(spec.dispose).toEqual({ phase: ShutdownPhase.Disconnect, timeout: 10_000 });
     });
 
     it('throws on a non-positive declared timeout', () => {

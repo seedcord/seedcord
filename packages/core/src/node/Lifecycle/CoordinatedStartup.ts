@@ -5,30 +5,17 @@ import chalk from 'chalk';
 import { StartupPhase } from '@src/lifecycle/phases';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
+import { withTimeout } from './withTimeout';
 
 import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
 import type { UnionToTuple } from 'type-fest';
 
-const PHASE_ORDER: StartupPhase[] = [
-    StartupPhase.Validation,
-    StartupPhase.Discovery,
-    StartupPhase.Registration,
-    StartupPhase.Configuration,
-    StartupPhase.Instantiation,
-    StartupPhase.Activation,
-    StartupPhase.Ready
-];
+const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
+
+type CoordinatedStartupEvents = PhaseEventMap<'startup', UnionToTuple<StartupPhase>>;
 
 /**
- * Strict-event-emitter payload map for coordinated startup phases.
- */
-export type CoordinatedStartupEvents = PhaseEventMap<'startup', UnionToTuple<StartupPhase>>;
-
-/**
- * Manages bot startup lifecycle with ordered phases
- *
- * Coordinates initialization of all bot components in a predictable sequence.
- * Tasks are executed within their designated phases to ensure proper dependency order.
+ * Runs registered startup tasks across `StartupPhase` in order. Tasks within a phase run in parallel.
  */
 export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, CoordinatedStartupEvents> {
     private isStartingUp = false;
@@ -38,14 +25,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
         super('Startup', PHASE_ORDER, StartupPhase);
     }
 
-    /**
-     * Adds a task to a specific startup phase with timeout.
-     *
-     * @param phase - The startup phase from {@link StartupPhase}
-     * @param taskName - Unique identifier for the task
-     * @param task - Async function to execute
-     * @param timeoutMs - Task timeout in milliseconds. {@default `10000`}
-     */
+    /** Adds a startup-phase task. @param timeoutMs - Task timeout in ms. {@default 10000} */
     public override addTask(
         phase: StartupPhase,
         taskName: string,
@@ -88,20 +68,10 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
     }
 
     /**
-     * Executes the coordinated startup sequence.
+     * Runs the registered tasks across startup phases in `StartupPhase` order. Each phase completes
+     * before the next begins, and tasks within a phase run concurrently.
      *
-     * Runs all registered tasks across startup phases in the correct order.
-     * Each phase completes before the next phase begins. Tasks within a phase
-     * are executed sequentially to maintain predictable initialization.
-     *
-     * @returns Promise that resolves when startup is complete
-     * @throws An {@link Error} If startup fails or is called multiple times
-     * @example
-     * ```typescript
-     * const startup = new CoordinatedStartup();
-     * startup.addTask(StartupPhase.Services, 'database', () => db.connect(), 10000);
-     * await startup.run();
-     * ```
+     * @throws {@link SeedcordError} if a startup task throws.
      */
     public async run(): Promise<void> {
         if (this.hasStarted) {
@@ -150,17 +120,8 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
             `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}`
         );
 
-        let timeoutId: NodeJS.Timeout | undefined;
-
         try {
-            await Promise.race([
-                task.task(),
-                new Promise<void>((_, reject) => {
-                    timeoutId = setTimeout(() => {
-                        reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [task.name, task.timeout]));
-                    }, task.timeout);
-                })
-            ]);
+            await withTimeout(task.name, task.task, task.timeout);
 
             this.logger.info(
                 `${chalk.italic('Completed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}`
@@ -175,10 +136,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
                 error
             );
             throw error;
-        } finally {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
         }
     }
 
@@ -192,16 +149,10 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
         this.logger.warn('Aborting coordinated startup sequence');
     }
 
-    /**
-     * Check if startup has completed
-     */
     public get isReady(): boolean {
         return this.hasStarted;
     }
 
-    /**
-     * Check if startup is currently running
-     */
     public get isRunning(): boolean {
         return this.isStartingUp;
     }

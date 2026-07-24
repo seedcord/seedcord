@@ -68,7 +68,7 @@ export class KyselyPg<Database extends object> extends Plugin {
         this.serviceRegistry = new KpgServiceRegistry(this, core, this.logger);
         this.databaseBootstrapper = new KpgDatabaseBootstrapper(this.logger);
         this.core.shutdown.addTask(
-            ShutdownPhase.ExternalResources,
+            ShutdownPhase.Disconnect,
             'stop-kyselypg',
             async () => await this.stop(),
             this.options.timeout
@@ -245,8 +245,7 @@ export class KyselyPg<Database extends object> extends Plugin {
     /**
      * Tracks a service file with the HMR handler so dev reloads can swap it. No-op outside dev.
      *
-     * @internal Lets {@link KpgServiceRegistry} reach the dev-only HMR handler without poking a
-     * private field.
+     * @internal Exposes the dev-only HMR handler to {@link KpgServiceRegistry}.
      */
     public trackServiceFile(filePath: string, ctor: KyselyServiceConstructor<Database>): void {
         this.hmrHandler?.trackHandler(filePath, ctor);

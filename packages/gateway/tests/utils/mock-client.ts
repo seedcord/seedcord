@@ -4,6 +4,7 @@ const mockClient = {
     on: vi.fn(),
     once: vi.fn(),
     emit: vi.fn(),
+    removeAllListeners: vi.fn(),
     login: vi.fn().mockResolvedValue('mock-token'),
     destroy: vi.fn().mockResolvedValue(undefined),
     user: {

@@ -1,37 +1,25 @@
 /**
- * Startup phases for coordinated initialization
- *
- * Defines the order in which different components are initialized during bot startup.
+ * Startup phases, in run order.
  */
 export enum StartupPhase {
-    /** Validate environment variables and config files */
-    Validation = 1,
-    /** Discover plugin constructors via decorators or registry */
-    Discovery,
-    /** Register plugin metadata and declared dependencies */
-    Registration,
-    /** Inject and validate plugin-specific configuration */
-    Configuration,
-    /** Instantiate plugin classes with Core and arguments */
-    Instantiation,
-    /** Activate plugins by calling their init/setup methods */
-    Activation,
-    /** Mark seedcord as ready and start handling interactions */
+    /** Nothing connected. Plugin init runs here by default. */
+    Configuration = 1,
+    /** The gateway session opens. Empty on http. */
+    Login,
+    /** Handlers are live and interactions dispatch. */
     Ready
 }
 
 /**
- * Shutdown phases for coordinated application shutdown.
+ * Shutdown phases, in run order.
  */
 export enum ShutdownPhase {
-    /** Stop accepting new requests/interactions */
-    StopAcceptingRequests = 1,
-    /** Stop background services (health checks, etc.) */
-    StopServices,
-    /** Disconnect from external resources (database, APIs) */
-    ExternalResources,
-    /** Disconnect from Discord */
-    DiscordCleanup,
-    /** Final cleanup tasks */
-    FinalCleanup
+    /** Stop taking new interactions and requests. */
+    Unbind = 1,
+    /** Waits for in-flight work to settle and stops internal services. */
+    Drain,
+    /** External resources close. Plugin dispose runs here by default. */
+    Disconnect,
+    /** The client disconnects last so in-flight handlers can still reference it during drain. */
+    Logout
 }

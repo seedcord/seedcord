@@ -69,7 +69,7 @@ export class Mongo extends Plugin {
         this.uri = options.uri;
 
         this.core.shutdown.addTask(
-            ShutdownPhase.ExternalResources,
+            ShutdownPhase.Disconnect,
             'stop-database',
             async () => await this.stop(),
             this.options.timeout

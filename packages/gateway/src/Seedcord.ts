@@ -6,8 +6,6 @@ import {
     StartupPhase,
     Pluggable
 } from '@seedcord/core/node/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -20,13 +18,12 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
+import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
 
 /**
- * Main Seedcord bot framework class
- *
- * Primary entry point for creating Discord bots with Seedcord.
- * Manages component lifecycle and provides plugin support.
+ * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
+ * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
 export class Seedcord extends Pluggable implements Core {
     // the CLI reads these to detect and augment the instance
@@ -39,7 +36,6 @@ export class Seedcord extends Pluggable implements Core {
 
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
-    private startFailed = false;
 
     /** @see {@link CoordinatedShutdown} */
     public override readonly shutdown: CoordinatedShutdown;
@@ -57,8 +53,6 @@ export class Seedcord extends Pluggable implements Core {
     public readonly rateLimiter: IRateLimiter;
 
     /**
-     * Creates a new Seedcord instance
-     *
      * @param config - Bot configuration including paths and Discord client options
      * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
      */
@@ -89,6 +83,10 @@ export class Seedcord extends Pluggable implements Core {
         return this.bot.client.user?.username;
     }
 
+    protected override pluginCapabilities(): PluginCapabilities {
+        return { client: this.bot.client, token: this.bot.botToken, rest: this.bot.client.rest };
+    }
+
     protected static override reset(): void {
         super.reset();
         LoggerChannelRegistry.instance.reset();
@@ -103,7 +101,7 @@ export class Seedcord extends Pluggable implements Core {
             this.bus.logger.utils.initialization('Subscribers', 'end');
         });
 
-        this.startup.addTask(StartupPhase.Instantiation, 'Bot Initialization', async () => {
+        this.startup.addTask(StartupPhase.Login, 'Bot Initialization', async () => {
             this.bot.logger.utils.initialization('Bot', 'start');
             await this.bot.init();
             this.bot.logger.utils.initialization('Bot', 'end');
@@ -122,15 +120,14 @@ export class Seedcord extends Pluggable implements Core {
     /**
      * Starts the bot and runs all initialization tasks
      *
-     * @returns This Seedcord instance when fully initialized
+     * @returns This Seedcord instance when initialized
      */
     public async start(): Promise<this> {
-        // a rerun of the startup tasks would double-init the bot and every plugin
-        if (this.startFailed) throw new SeedcordError(SeedcordErrorCode.LifecycleRestartAfterFailure);
         try {
             await super.init();
         } catch (caught) {
-            this.startFailed = true;
+            // shutdown releases any resource opened before the failure, then rethrow
+            await this.shutdown.run(1, false);
             Seedcord.reset();
             throw caught;
         }

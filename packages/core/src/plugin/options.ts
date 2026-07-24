@@ -18,8 +18,6 @@ export interface PluginOptions {
     runtime?: 'server' | 'edge' | 'both';
     /** Capabilities the plugin requests, each a typed `ctx` field. */
     needs?: PluginNeed;
-    /** Attach keys whose `init` this plugin runs after. */
-    deps?: string[];
 }
 
 /** @internal */
