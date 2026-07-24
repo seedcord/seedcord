@@ -54,7 +54,10 @@ export abstract class Plugin<Opts extends PluginOptions = {}> implements Initial
 
     abstract init(): Promise<void>;
 
-    /** Runs after the bot is online (gateway logged in, or the http server listening). */
+    /**
+     * Runs in the startup Ready phase, after `init()`. The gateway client is logged in by this phase,
+     * and the http host runs its server-bind and health tasks in the same phase.
+     */
     ready?(): Promise<void>;
 
     /** Runs during teardown, only when `init()` resolved. */

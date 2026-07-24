@@ -471,6 +471,7 @@ describe('EventDispatcher Integration', () => {
 
             const config = testConfig({ events: testEnv.resolvePath('events') });
             seedcord = new Seedcord(config);
+            // justified: reaches the private events dispatcher for the drain test
             const controller = (seedcord.bot as unknown as TestBot).events;
 
             const onSpy = vi.spyOn(seedcord.bot.client, 'on');
