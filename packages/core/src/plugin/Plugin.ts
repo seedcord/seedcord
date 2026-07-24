@@ -1,9 +1,15 @@
-import { TypedEventEmitter } from '@seedcord/event-emitter';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { getDevChannel } from '@hmr/devChannel';
 
+import { pluginContextSlot, readPluginContext } from './context';
+import { resolveLifecycleSpec } from './lifecycle';
+
+import type { PluginContext, StoredPluginContext } from './context';
+import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
+import type { TransportOf, NeedsOf, PluginOptions, RuntimeOf } from './options';
 import type { CoreBase } from '@interfaces/CoreBase';
-import type { EventMap, NoEvents } from '@seedcord/event-emitter';
 import type { Logger } from '@seedcord/logger';
 import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
@@ -11,29 +17,63 @@ export interface Initializeable {
     init(): Promise<void>;
 }
 
+/** @internal */
+const resolvedSpecSlot = Symbol('seedcord.plugin.spec');
+
 /**
- * Base class for Seedcord plugins. A subclass redeclares its transport's own `Core` on the
- * constructor and implements `init()`.
+ * Base class for Seedcord plugins. A subclass declares its options as the `Opts` type argument,
+ * implements `init()`, and reads the framework surface through `this.ctx`.
+ *
+ * @typeParam Opts - The plugin's declared {@link PluginOptions}.
  */
-export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoEvents>
-    extends TypedEventEmitter<TPluginEvents>
-    implements Initializeable, HmrAware
-{
+export abstract class Plugin<Opts extends PluginOptions = {}> implements Initializeable, HmrAware {
+    /** @internal phantom, never set at runtime */
+    declare readonly __transport?: TransportOf<Opts>;
+    /** @internal phantom, never set at runtime */
+    declare readonly __runtime?: RuntimeOf<Opts>;
+
+    /** @internal */
+    readonly [resolvedSpecSlot]: ResolvedPluginLifecycleSpec;
+    /** @internal */
+    [pluginContextSlot]?: StoredPluginContext;
+
     public abstract logger: Logger;
 
-    public name: string = this.constructor.name;
-
     // subclasses redeclare the transport's own Core type on their constructor
-    constructor(protected pluggable: CoreBase) {
-        super();
+    constructor(
+        protected pluggable: CoreBase,
+        spec?: PluginLifecycleSpec
+    ) {
+        this[resolvedSpecSlot] = resolveLifecycleSpec(spec, this.constructor.name);
+    }
+
+    /** The framework surface, available from `init()` onward. Throws if read before `attach` finalizes it. */
+    protected get ctx(): PluginContext<NeedsOf<Opts>> {
+        return readPluginContext<NeedsOf<Opts>>(this);
     }
 
     abstract init(): Promise<void>;
 
     /**
-     * Reloads plugin state on an HMR update. The base implementation is a no-op, override it in your plugin.
-     * @virtual
+     * Runs in the startup Ready phase, after `init()`. The gateway client is logged in by this phase,
+     * and the http host runs its server-bind and health tasks in the same phase.
      */
+    ready?(): Promise<void>;
+
+    /** Runs during teardown, only when `init()` resolved. */
+    dispose?(): Promise<void>;
+
+    /**
+     * Rejects the plugin's constructor options with a reason. Throws a `SeedcordError` naming the
+     * plugin class and the reason.
+     *
+     * @param reason - Why the options are invalid.
+     */
+    protected rejectOptions(reason: string): never {
+        throw new SeedcordError(SeedcordErrorCode.PluginOptionsRejected, [this.constructor.name, reason]);
+    }
+
+    /** Override to reload plugin state on an HMR update. */
     public onHmr(_event: HmrUpdateEvent): Promise<void> {
         return Promise.resolve();
     }
@@ -45,20 +85,16 @@ export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoE
     protected registerCriticalFiles(patterns: string[]): void {
         getDevChannel()?.send('seedcord:register-critical-files', { patterns });
     }
-
-    /** @internal */
-    override removeListener<TEventKey extends Extract<keyof TPluginEvents, string | symbol>>(
-        event: TEventKey,
-        listener: (...args: TPluginEvents[TEventKey]) => void
-    ): this {
-        return super.removeListener(event, listener);
-    }
-
-    /** @internal */
-    override removeAllListeners(event?: Extract<keyof TPluginEvents, string | symbol>): this {
-        return super.removeAllListeners(event);
-    }
 }
+
+/** @internal */
+export function resolvedLifecycleSpecOf(plugin: Plugin): ResolvedPluginLifecycleSpec {
+    return plugin[resolvedSpecSlot];
+}
+
+export type { PluginContext, PluginCapabilityTypes } from './context';
+export type { PluginLifecycleSpec } from './lifecycle';
+export type { PluginOptions } from './options';
 
 /**
  * Constructor type for plugins that can accept extra arguments after Core.
@@ -72,9 +108,7 @@ export abstract class Plugin<TPluginEvents extends EventMap<TPluginEvents> = NoE
  */
 export type PluginCtor<TPlugin extends Plugin = Plugin> = new (...args: any[]) => TPlugin;
 
-/**
- * Extracts the argument types for a plugin constructor, excluding the Core parameter.
- *
- * @internal
- */
+/** @internal */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
+
+export { finalizePluginContext } from './context';

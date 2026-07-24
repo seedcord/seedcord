@@ -1,8 +1,8 @@
-import { Plugin } from '@seedcord/core';
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { SubscribeMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger, paint } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
@@ -17,7 +17,8 @@ import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
 import type { Core } from '@interfaces/Core';
 import type { EventFrequency } from '@miscellaneous/types';
-import type { HmrUpdateEvent } from '@seedcord/types';
+import type { Initializeable } from '@seedcord/core';
+import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 // `data: never` so a concrete subscriber stays assignable for storage. the per-key map restores the payload type at dispatch.
 type SubscriberConstructor = new (data: never, core: Core) => Subscriber<SubscriptionKey>;
@@ -32,10 +33,8 @@ type SubscriberArtifact = SubscriptionKey[];
  * Registers and dispatches subscribers. Subscribers load from the configured directories and run
  * on a programmatic or framework-event publish. Accessed via `core.bus`. Do not construct it directly.
  */
-export class Bus extends Plugin<SubscriptionTuples> {
+export class Bus extends TypedEventEmitter<SubscriptionTuples> implements Initializeable, HmrAware {
     public readonly logger = new Logger('Subscribers');
-    /** @internal */
-    public override readonly name = 'Subscribers';
     private isInitialized = false;
     private readonly subscribersMap = new Map<SubscriptionKey, RegisteredSubscriberHandlerEntry[]>();
     private readonly executedOnceHandlers = new Set<SubscriberConstructor>();
@@ -44,7 +43,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
     private readonly hmrHandler?: HmrModuleHandler<SubscriberConstructor, void, SubscriberArtifact>;
 
     constructor(protected core: Core) {
-        super(core);
+        super();
 
         if (this.core.config.subscribers.path) {
             if (!Envapter.isDevelopment && !Envapter.isTest) return;
@@ -103,7 +102,7 @@ export class Bus extends Plugin<SubscriptionTuples> {
     }
 
     /** @internal */
-    public override async onHmr(event: HmrUpdateEvent): Promise<void> {
+    public async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.hmrHandler) {
             await this.hmrHandler.handle(event);
         }

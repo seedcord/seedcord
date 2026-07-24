@@ -1,3 +1,5 @@
+import './plugin-capabilities';
+
 export { createSeedcord } from './createSeedcord';
 export type { EngineContext } from './createSeedcord';
 
@@ -11,8 +13,7 @@ export type { SlashOptions } from '@inputs/SlashOptions';
 export * from '@seedcord/core';
 
 export * from './handlers';
-// es modules omit a name exported by two stars and both stars export a RepliableHandler, this
-// explicit export resolves the name to the http subclass
+// two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass
 export { RepliableHandler } from '@handlers/RepliableHandler';
 
 export { Gated } from '@src/gates/Gated';

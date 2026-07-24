@@ -1,6 +1,6 @@
 /* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 
-import { CustomId } from '@seedcord/core';
+import { CustomId, ShutdownPhase } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -29,6 +29,9 @@ interface PrivateInteractionDispatcher {
     ): Promise<void>;
     handleButton(interaction: unknown): Promise<void>;
     handleAutocomplete(interaction: unknown): Promise<void>;
+    stopAccepting(): void;
+    drain(timeoutMs: number): Promise<void>;
+    handleInteraction(interaction: unknown): Promise<void>;
 }
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
@@ -83,7 +86,7 @@ interface TestBot {
     interactions: PrivateInteractionDispatcher;
 }
 
-// justified: reach the private interactions dispatcher off the bot to assert its routing state
+// justified: access the private interactions dispatcher off the bot to assert its routing state
 function controllerOf(instance: Seedcord): PrivateInteractionDispatcher {
     return (instance.bot as unknown as TestBot).interactions;
 }
@@ -790,6 +793,101 @@ describe('InteractionDispatcher Integration', () => {
         // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner
         expect(interaction.reply).not.toHaveBeenCalledWith('executed');
         expect(interaction.reply).toHaveBeenCalledTimes(1);
+    });
+
+    describe('drain', () => {
+        async function drainHarness(): Promise<{
+            controller: PrivateInteractionDispatcher;
+            fire: ((i: unknown) => void) | undefined;
+        }> {
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+
+            const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+            await controller.init();
+
+            const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
+                | ((i: unknown) => void)
+                | undefined;
+            expect(fire).toBeDefined();
+            return { controller, fire };
+        }
+
+        it('stops dispatching new interactions after stopAccepting, and drain resolves', async () => {
+            const { controller, fire } = await drainHarness();
+            const handleSpy = vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
+
+            fire?.(fakeSlash('ping'));
+            expect(handleSpy).toHaveBeenCalledTimes(1);
+
+            controller.stopAccepting();
+            fire?.(fakeSlash('ping'));
+            // draining, so no new dispatch started
+            expect(handleSpy).toHaveBeenCalledTimes(1);
+
+            await expect(controller.drain(50)).resolves.toBeUndefined();
+        });
+
+        it('drain waits for an in-flight run that settles inside the budget', async () => {
+            const { controller, fire } = await drainHarness();
+
+            let settled = false;
+            vi.spyOn(controller, 'handleInteraction').mockImplementation(
+                () =>
+                    new Promise<void>((resolve) => {
+                        setTimeout(() => {
+                            settled = true;
+                            resolve();
+                        }, 20);
+                    })
+            );
+            fire?.(fakeSlash('ping'));
+            controller.stopAccepting();
+
+            await controller.drain(1000);
+            expect(settled).toBe(true);
+        });
+
+        it('drain returns through the timer when an in-flight run never settles', async () => {
+            const { controller, fire } = await drainHarness();
+
+            vi.spyOn(controller, 'handleInteraction').mockReturnValue(new Promise<void>(() => undefined));
+            fire?.(fakeSlash('ping'));
+            controller.stopAccepting();
+
+            await expect(controller.drain(30)).resolves.toBeUndefined();
+        });
+
+        it('clears the drain timer when the in-flight set settles first', async () => {
+            const { controller, fire } = await drainHarness();
+            vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
+            fire?.(fakeSlash('ping'));
+            controller.stopAccepting();
+
+            vi.useFakeTimers();
+            await controller.drain(5000);
+            expect(vi.getTimerCount()).toBe(0);
+            vi.useRealTimers();
+        });
+
+        it('a full-budget drain completes the Drain phase without a task timeout', async () => {
+            const { controller, fire } = await drainHarness();
+
+            // a run that outlives the drain budget forces the dispatcher timer to settle the race
+            vi.spyOn(controller, 'handleInteraction').mockReturnValue(new Promise<void>(() => undefined));
+            fire?.(fakeSlash('ping'));
+
+            vi.useFakeTimers();
+            const completed: number[] = [];
+            seedcord.shutdown.on(`phase:${ShutdownPhase.Drain}:complete`, () => completed.push(ShutdownPhase.Drain));
+            const run = seedcord.shutdown.run(0, false);
+            await vi.advanceTimersByTimeAsync(10_000);
+            await run;
+            vi.useRealTimers();
+
+            expect(completed).toContain(ShutdownPhase.Drain);
+        });
     });
 
     it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async () => {

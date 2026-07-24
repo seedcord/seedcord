@@ -20,6 +20,16 @@
                 "default": "./dist/index.cjs"
             }
         },
+        "./plugin": {
+            "import": {
+                "types": "./dist/plugin.index.d.mts",
+                "default": "./dist/plugin.index.mjs"
+            },
+            "require": {
+                "types": "./dist/plugin.index.d.cts",
+                "default": "./dist/plugin.index.cjs"
+            }
+        },
         "./internal": {
             "import": {
                 "types": "./dist/internal.index.d.mts",

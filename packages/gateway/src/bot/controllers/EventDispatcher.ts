@@ -1,5 +1,6 @@
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates, areRoutes } from '@seedcord/core/internal';
+import { settleWithin } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, paint } from '@seedcord/logger';
@@ -46,12 +47,13 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Events');
     private isInitialized = false;
 
-    public readonly name = 'Events';
-
     private readonly eventMap = new Map<keyof ClientEvents, RegisteredEventHandlerEntry[]>();
     private readonly middlewares: RegisteredEventMiddleware[] = [];
     private readonly executedOnceHandlers = new Set<EventHandlerConstructor>();
     private readonly attachedEvents = new Set<keyof ClientEvents>();
+
+    private readonly inFlight = new Set<Promise<void>>();
+    private draining = false;
 
     // batched during bulk load, hmr registrations log inline
     private loading = false;
@@ -314,14 +316,24 @@ export class EventDispatcher implements Initializeable, HmrAware {
         );
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
+            // shutdown started, drop new events
+            if (this.draining) return;
             this.core.bot.emitSafe('any:event', eventName, ...args);
-            void (async () => {
-                await this.processEvent(eventName, args).catch((err: Error) => {
-                    this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                    this.core.bot.emit('error:unhandled:event', err);
-                });
-            })();
+            const run = this.processEvent(eventName, args).catch((err: Error) => {
+                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
+                this.core.bot.emit('error:unhandled:event', err);
+            });
+            this.inFlight.add(run);
+            void run.finally(() => this.inFlight.delete(run));
         });
+    }
+
+    public stopAccepting(): void {
+        this.draining = true;
+    }
+
+    public drain(timeoutMs: number): Promise<void> {
+        return settleWithin(Promise.allSettled(this.inFlight), timeoutMs);
     }
 
     private async processEvent<KeyOfEvents extends keyof ClientEvents>(

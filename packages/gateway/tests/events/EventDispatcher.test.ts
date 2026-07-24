@@ -14,6 +14,8 @@ interface PrivateEventDispatcher {
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
     processEvent(eventName: string, args: unknown[]): Promise<void>;
+    stopAccepting(): void;
+    drain(timeoutMs: number): Promise<void>;
 }
 
 interface TestBot {
@@ -356,7 +358,6 @@ describe('EventDispatcher Integration', () => {
         let controller = testBot.events;
         expect(controller.eventMap.get('messageCreate')).toHaveLength(1);
 
-        // Simulate HMR update
         await testEnv.createFile(
             `${eventsDir}/Message.ts`,
             `
@@ -372,7 +373,6 @@ describe('EventDispatcher Integration', () => {
             `
         );
 
-        // Manually trigger onHmr since we don't have a real watcher
         await testBot.events.onHmr({
             file: filePath,
             type: 'update'
@@ -447,5 +447,98 @@ describe('EventDispatcher Integration', () => {
 
         // the gate threw a Silence, so execute never ran and the message was not replied to
         expect(message.reply).not.toHaveBeenCalled();
+    });
+
+    describe('drain', () => {
+        async function drainHarness(): Promise<{
+            controller: PrivateEventDispatcher;
+            fire: ((...args: unknown[]) => void) | undefined;
+        }> {
+            await testEnv.createFile(
+                'events/Ping.ts',
+                `
+                import { EventHandler, RegisterEvent } from '${seedcordPath}';
+                import { Events } from 'discord.js';
+
+                @RegisterEvent(['messageCreate'])
+                export class PingHandler extends EventHandler<Events.MessageCreate> {
+                    public async execute() {
+                        await Promise.resolve();
+                    }
+                }
+                `
+            );
+
+            const config = testConfig({ events: testEnv.resolvePath('events') });
+            seedcord = new Seedcord(config);
+            // justified: reaches the private events dispatcher for the drain test
+            const controller = (seedcord.bot as unknown as TestBot).events;
+
+            const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+            await controller.init();
+
+            const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
+                | ((...args: unknown[]) => void)
+                | undefined;
+            expect(fire).toBeDefined();
+            return { controller, fire };
+        }
+
+        it('stops dispatching new events after stopAccepting, and drain resolves', async () => {
+            const { controller, fire } = await drainHarness();
+            const processSpy = vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
+
+            fire?.({ reply: vi.fn() });
+            expect(processSpy).toHaveBeenCalledTimes(1);
+
+            controller.stopAccepting();
+            fire?.({ reply: vi.fn() });
+            // draining, so no new dispatch started
+            expect(processSpy).toHaveBeenCalledTimes(1);
+
+            await expect(controller.drain(50)).resolves.toBeUndefined();
+        });
+
+        it('drain waits for an in-flight event that settles inside the budget', async () => {
+            const { controller, fire } = await drainHarness();
+
+            let settled = false;
+            vi.spyOn(controller, 'processEvent').mockImplementation(
+                () =>
+                    new Promise<void>((resolve) => {
+                        setTimeout(() => {
+                            settled = true;
+                            resolve();
+                        }, 20);
+                    })
+            );
+            fire?.({ reply: vi.fn() });
+            controller.stopAccepting();
+
+            await controller.drain(1000);
+            expect(settled).toBe(true);
+        });
+
+        it('drain returns through the timer when an event never settles', async () => {
+            const { controller, fire } = await drainHarness();
+
+            vi.spyOn(controller, 'processEvent').mockReturnValue(new Promise<void>(() => undefined));
+            fire?.({ reply: vi.fn() });
+            controller.stopAccepting();
+
+            await expect(controller.drain(30)).resolves.toBeUndefined();
+        });
+
+        it('clears the drain timer when the in-flight set settles first', async () => {
+            const { controller, fire } = await drainHarness();
+            vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
+            fire?.({ reply: vi.fn() });
+            controller.stopAccepting();
+
+            vi.useFakeTimers();
+            await controller.drain(5000);
+            expect(vi.getTimerCount()).toBe(0);
+            vi.useRealTimers();
+        });
     });
 });

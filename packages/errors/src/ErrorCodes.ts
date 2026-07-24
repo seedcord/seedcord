@@ -124,6 +124,11 @@ export enum SeedcordErrorCode {
     /** A resolved color fell outside Discord's 0x000000 to 0xffffff range. */
     ColorOutOfRange = 1902,
 
+    /** A plugin's constructor rejected its options through `rejectOptions`. */
+    PluginOptionsRejected = 2001,
+    /** A plugin read `this.ctx` before `attach` finalized it. */
+    PluginContextBeforeInit = 2002,
+
     /** Mongo service class is missing the `@RegisterMongoService` decorator. */
     PluginMongoServiceDecoratorMissing = 2101,
     /** Mongo model class is missing the `@RegisterMongoModel` decorator. */

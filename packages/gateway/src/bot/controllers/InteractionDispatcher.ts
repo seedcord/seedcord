@@ -12,6 +12,7 @@ import {
     slowGateMonitor,
     areRoutes
 } from '@seedcord/core/internal';
+import { settleWithin } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, paint } from '@seedcord/logger';
@@ -74,8 +75,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions');
     private isInitialized = false;
 
-    public readonly name: string = 'Interactions';
-
     private readonly slashMap = new Map<string, HandlerConstructor>();
     private readonly buttonMap = new Map<string, HandlerConstructor>();
     private readonly modalMap = new Map<string, HandlerConstructor>();
@@ -90,6 +89,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares: RegisteredMiddleware[] = [];
+
+    private readonly inFlight = new Set<Promise<void>>();
+    private draining = false;
 
     // batched during bulk load, hmr registrations log inline
     private loading = false;
@@ -396,12 +398,24 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private attachToClient(): void {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
+            // shutdown started, drop new interactions
+            if (this.draining) return;
             this.core.bot.emitSafe('any:interaction', interaction);
-            this.handleInteraction(interaction).catch((err: Error) => {
+            const run = this.handleInteraction(interaction).catch((err: Error) => {
                 this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
                 this.core.bot.emit('error:unhandled:interaction', err);
             });
+            this.inFlight.add(run);
+            void run.finally(() => this.inFlight.delete(run));
         });
+    }
+
+    public stopAccepting(): void {
+        this.draining = true;
+    }
+
+    public drain(timeoutMs: number): Promise<void> {
+        return settleWithin(Promise.allSettled(this.inFlight), timeoutMs);
     }
 
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(

@@ -100,7 +100,7 @@ describe('http Seedcord class', () => {
     it('skips the health server on healthCheck: false', async () => {
         const { host } = await readyHost();
 
-        expect(host.shutdown.removeTask(ShutdownPhase.StopServices, 'stop-healthcheck-server')).toBe(false);
+        expect(host.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
     });
 
     it('username stays undefined before the ready fetch', async () => {

@@ -1,5 +1,5 @@
-import { Plugin } from '@seedcord/core';
 import { setDevChannel } from '@seedcord/core/internal';
+import { Plugin } from '@seedcord/core/plugin';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 

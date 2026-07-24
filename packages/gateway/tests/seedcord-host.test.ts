@@ -1,5 +1,5 @@
 import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
 
@@ -31,13 +31,13 @@ describe('Seedcord host', () => {
     it('registers the health server by default', () => {
         const seedcord = new Seedcord(testConfig());
 
-        expect(seedcord.shutdown.removeTask(ShutdownPhase.StopServices, 'stop-healthcheck-server')).toBe(true);
+        expect(seedcord.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(true);
     });
 
     it('healthCheck: false skips the health server', () => {
         const seedcord = new Seedcord(testConfig({ healthCheck: false }));
 
-        expect(seedcord.shutdown.removeTask(ShutdownPhase.StopServices, 'stop-healthcheck-server')).toBe(false);
+        expect(seedcord.shutdown.removeTask(ShutdownPhase.Drain, 'stop-healthcheck-server')).toBe(false);
     });
 
     it('rejects a restart after a failed start', async () => {
@@ -47,5 +47,18 @@ describe('Seedcord host', () => {
         await expect(seedcord.start()).rejects.toThrow();
         await expect(seedcord.start()).rejects.toThrow(/new instance/);
         expect(() => new Seedcord(testConfig())).not.toThrow();
+    });
+
+    it('a start failure after login destroys the client', async () => {
+        const seedcord = new Seedcord(testConfig());
+        // justified: the mock client cannot complete a real login handshake
+        vi.spyOn(seedcord.bot, 'init').mockResolvedValue(undefined);
+        const destroySpy = vi.spyOn(seedcord.bot.client, 'destroy').mockResolvedValue(undefined);
+        seedcord.startup.addTask(StartupPhase.Ready, 'boom', () => Promise.reject(new Error('boom')));
+
+        await expect(seedcord.start()).rejects.toThrow();
+
+        expect(destroySpy).toHaveBeenCalled();
+        vi.restoreAllMocks();
     });
 });

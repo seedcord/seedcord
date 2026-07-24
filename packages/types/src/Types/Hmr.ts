@@ -1,4 +1,4 @@
-/** File-watcher event kinds carried by an {@link HmrUpdateEvent}. */
+/** File-watcher event kinds used by an {@link HmrUpdateEvent}. */
 export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'deleteDir';
 
 /** A dev-mode file change the framework reloads from. */
@@ -13,7 +13,5 @@ export interface HmrUpdateEvent {
 
 /** A module that receives dev-mode hot updates through `onHmr`. */
 export interface HmrAware {
-    /** Names the module in HMR logs. */
-    readonly name: string;
     onHmr(event: HmrUpdateEvent): Promise<void>;
 }

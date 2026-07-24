@@ -1,43 +1,32 @@
 import 'reflect-metadata';
 import './logger-bootstrap';
+import './plugin-capabilities';
 
-// Bot export
 export type { BotEvents } from '@bot/Bot';
 
-// Bot decorators exports
 export * from '@bDecorators/index';
 
-// Bot gates exports
 export * from '@bot/gates';
 
-// Bot Injectors exports
 export * from '@bot/injectors/index';
 
-// Bot Utilities exports
 export * from '@bUtilities/index';
 
-// Confirmation prompts
 export { getConfirmation } from '@bot/confirm';
 export type { ConfirmOptions, DefaultConfirmOptions } from '@bot/confirm';
 
-// Interfaces exports
 export type * from '@interfaces/index';
 
-// Handlers exports
 export * from '@handlers/index';
 // @handlers/index and @seedcord/core both export RepliableHandler so this explicit export is needed
 export { RepliableHandler } from '@handlers/RepliableHandler';
 
-// Pagination exports
 export * from '@pagination/index';
 
-// Inputs exports
 export type * from '@inputs/index';
 
-// Pub/Sub exports
 export * from '@subscribers/index';
 
-// Export seedcord
 export * from './Seedcord';
 
 // Exports from other packages

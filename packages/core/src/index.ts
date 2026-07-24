@@ -22,8 +22,11 @@ export { RepliableHandler } from '@src/handlers/RepliableHandler';
 
 export type { CoreBase } from '@interfaces/CoreBase';
 
-export { Plugin } from '@src/plugin/Plugin';
 export type { Initializeable } from '@src/plugin/Plugin';
+// root-visible so a transport can augment it through `declare module '@seedcord/core'`
+export type { PluginCapabilityTypes } from '@src/plugin/context';
+
+export { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
 
 export { defineEffectGate, defineGate } from '@gates/Gate';
 export type { EffectGate, Gate, GateContextBase, GuildPermissionsContext, RequiredOf } from '@gates/Gate';

@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 
 import { Logger, paint } from '@seedcord/logger';
 
-import { ShutdownPhase } from './Lifecycle/CoordinatedShutdown';
+import { ShutdownPhase } from '@src/lifecycle/phases';
 
 import type { CoordinatedShutdown } from './Lifecycle/CoordinatedShutdown';
 import type { HealthCheckConfig, HealthCheckOption } from '@seedcord/types';
@@ -32,11 +32,12 @@ export class HealthCheck {
         this.path = options?.path ?? DEFAULT_HEALTH_CHECK_PATH;
         this.host = options?.host;
 
-        shutdown.addTask(ShutdownPhase.StopServices, 'stop-healthcheck-server', () => this.stop());
+        shutdown.addTask(ShutdownPhase.Drain, 'stop-healthcheck-server', () => this.stop());
     }
 
     /**
-     * Resolves the config `healthCheck` option, `undefined` builds the defaults like `true`.
+     * Resolves the `healthCheck` option. `undefined` and `true` build the defaults, an object uses
+     * its config, `false` returns `undefined`.
      */
     public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
         if (option === false) return undefined;
