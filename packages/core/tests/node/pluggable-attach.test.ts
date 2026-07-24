@@ -589,4 +589,18 @@ describe('Pluggable shutdown during startup', () => {
 
         expect(disposed).toHaveBeenCalledTimes(1);
     });
+
+    it('completes a failed-start shutdown without deadlocking on the gate', async () => {
+        class FailInit extends TestPlugin {
+            public override init(): Promise<void> {
+                return Promise.reject(new Error('init boom'));
+            }
+        }
+
+        const { host, shutdown } = makeHost();
+        host.attach('db', FailInit, 'db');
+
+        await expect(host.run()).rejects.toThrow();
+        await expect(shutdown.run(1, false)).resolves.toBeUndefined();
+    });
 });
