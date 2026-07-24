@@ -556,3 +556,37 @@ describe('Pluggable', () => {
         expect(() => makeHost()).not.toThrow();
     });
 });
+
+describe('Pluggable shutdown during startup', () => {
+    afterEach(() => {
+        TestHost.resetHost();
+        vi.restoreAllMocks();
+    });
+
+    it('disposes a plugin that finishes init while a shutdown waits', async () => {
+        const initGate: PromiseWithResolvers<void> = Promise.withResolvers();
+
+        class SlowInit extends TestPlugin {
+            public override async init(): Promise<void> {
+                await initGate.promise;
+                this.initCalls++;
+            }
+        }
+
+        const { host, shutdown } = makeHost();
+        const plugin = host.attach('db', SlowInit, 'db').db;
+        const disposed = vi.fn();
+        plugin.onDispose = disposed;
+
+        const started = host.run();
+        const shuttingDown = shutdown.run(0, false);
+
+        await delay(5);
+        initGate.resolve();
+
+        await started;
+        await shuttingDown;
+
+        expect(disposed).toHaveBeenCalledTimes(1);
+    });
+});

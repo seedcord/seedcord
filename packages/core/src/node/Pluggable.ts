@@ -74,11 +74,16 @@ export abstract class Pluggable<TPluggableEvents extends EventMap<TPluggableEven
 
         this.registerPluginTasks();
 
+        const startupSettled: PromiseWithResolvers<void> = Promise.withResolvers();
+        this.shutdown.gateOnStartup(startupSettled.promise);
+
         try {
             await this.startup.run();
         } catch (caught) {
             await this.rollback();
             throw caught;
+        } finally {
+            startupSettled.resolve();
         }
 
         this.isInitialized = true;

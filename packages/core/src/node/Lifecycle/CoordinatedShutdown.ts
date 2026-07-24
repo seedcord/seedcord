@@ -29,6 +29,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
     private exitCode = 0;
     private onSigTerm: (() => void) | null = null;
     private onSigInt: (() => void) | null = null;
+    private startupGate?: Promise<void>;
 
     public constructor() {
         super('Shutdown', PHASE_ORDER, ShutdownPhase);
@@ -83,6 +84,11 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         }
     }
 
+    /** @internal run() awaits this so a shutdown during startup waits for startup to register its dispose tasks */
+    public gateOnStartup(settled: Promise<void>): void {
+        this.startupGate = settled;
+    }
+
     /** Adds a shutdown-phase task. @param timeoutMs - Task timeout in ms. {@default 5000} */
     public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
         super.addTask(phase, taskName, task, timeoutMs);
@@ -122,6 +128,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         this.emitSafe('shutdown:start');
 
         try {
+            if (this.startupGate) await this.startupGate;
             const failures: unknown[] = [];
             for (const phase of PHASE_ORDER) {
                 // run every phase so a mid-shutdown failure still attempts the later teardowns

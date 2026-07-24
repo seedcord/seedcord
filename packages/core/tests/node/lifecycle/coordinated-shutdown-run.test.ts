@@ -82,3 +82,24 @@ describe('CoordinatedShutdown.run phase resilience', () => {
         expect(messages.some((m) => m.includes('Disconnect'))).toBe(true);
     });
 });
+
+describe('CoordinatedShutdown.run startup gate', () => {
+    it('waits for the startup gate before running its phases', async () => {
+        const shutdown = new CoordinatedShutdown();
+        shutdown.removeSignalHandlers();
+
+        const gate: PromiseWithResolvers<void> = Promise.withResolvers();
+        shutdown.gateOnStartup(gate.promise);
+
+        let done = false;
+        const run = shutdown.run(0, false).then(() => {
+            done = true;
+        });
+        await new Promise<void>((resolve) => setTimeout(resolve, 10));
+        expect(done).toBe(false);
+
+        gate.resolve();
+        await run;
+        expect(done).toBe(true);
+    });
+});
