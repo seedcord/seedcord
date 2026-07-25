@@ -1,7 +1,7 @@
 packages:
-  - mock
-  - packages/*
-  - apps/*
+- mock
+- packages/*
+- apps/*
 
 embedReadme: true
 
@@ -10,9 +10,19 @@ overrides:
   discord.js>undici: ^6.27.0
   '@discordjs/rest>undici': ^6.27.0
   # forces one api-types copy so the djs-free reply types assign to djs
-  discord-api-types: ^0.38.50
+  discord-api-types: ^0.38.51
   # djs pins 3.5.3, rest needs ^3.5.5, collapse to one (same API)
   '@sapphire/snowflake': 3.5.5
+
+  # need to drop each once its dependents' own ranges clear it
+  brace-expansion: ^5.0.8
+  minimatch: ^10.2.5 # brace-expansion 5 exports `expand` named, minimatch 9 default-imports it
+  'fast-uri@3': ^3.1.4
+  'js-yaml@3': ^3.15.0
+  'js-yaml@4': ^4.3.0
+  'linkify-it@5': ^5.0.2
+  postcss: ^8.5.18
+  sharp: ^0.35.0
 
 allowBuilds:
   '@swc/core': true
@@ -30,12 +40,12 @@ catalogs:
     '@tailwindcss/postcss': ^4.3.1
     '@types/node': ^25.9.3
     chalk: ^5.6.2
-    discord-api-types: ^0.38.50
+    discord-api-types: ^0.38.51
     envapt: ^8.1.0
     lodash.merge: ^4.6.2
     lucide-react: ^1.21.0
     motion: ^12.40.0
-    next: ^16.2.9
+    next: ^16.2.11
     prettier: ^3.8.4
     prettier-plugin-tailwindcss: ^0.8.0
     shiki: ^4.2.0
@@ -50,7 +60,7 @@ catalogs:
     '@types/eslint-plugin-security': ^3.0.1
     '@typescript-eslint/parser': ^8.61.1
     eslint: ^10.7.0
-    eslint-config-next: ^16.2.9
+    eslint-config-next: ^16.2.11
     eslint-config-prettier: ^10.1.8
     eslint-import-resolver-typescript: ^4.4.5
     eslint-plugin-better-tailwindcss: ^4.6.0
@@ -83,4 +93,4 @@ catalogs:
     react-dom: ^19.2.7
 
 minimumReleaseAgeExclude:
-  - envapt@8.1.0
+- discord-api-types@0.38.51

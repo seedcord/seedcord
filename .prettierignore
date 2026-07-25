@@ -13,3 +13,5 @@ turbo/generators/templates
 **/dist/
 **/.turbo/
 **/coverage/
+
+pnpm-lock.yaml

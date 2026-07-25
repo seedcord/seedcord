@@ -29,6 +29,10 @@ max_line_length = 120
 indent_style = space
 indent_size = 4
 
+# pnpm rewrites this at 2-space on any catalog write
+[pnpm-workspace.yaml]
+indent_size = 2
+
 # Markdown files
 [*.md]
 indent_style = space

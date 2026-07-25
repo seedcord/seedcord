@@ -10,7 +10,7 @@ const base = defineConfig({
         testTimeout: 5000,
         exclude: [...configDefaults.exclude, '**/.claude/**'],
         coverage: {
-            enabled: true,
+            enabled: false,
             provider: 'v8',
             reporter: [['lcovonly', { file: 'lcov.info' }], ['html']],
             include: ['src'],
