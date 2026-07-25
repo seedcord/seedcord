@@ -30,7 +30,6 @@
         "@types/react-dom": "catalog:react",
         "eslint": "^9.39.4",
         "eslint-config-next": "catalog:eslint",
-        "eslint-plugin-jsx-a11y": "catalog:eslint",
         "eslint-plugin-react-compiler": "catalog:eslint",
         "prettier": "catalog:deps",
         "prettier-plugin-tailwindcss": "catalog:deps",

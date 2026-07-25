@@ -2,7 +2,6 @@ import path from 'node:path';
 
 import createConfig from '@seedcord/eslint-config';
 import nextVitals from 'eslint-config-next/core-web-vitals';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
 import reactCompiler from 'eslint-plugin-react-compiler';
 
 export default createConfig({
@@ -17,9 +16,9 @@ export default createConfig({
 
         reactCompiler.configs.recommended,
 
+        // react-doctor covers the jsx-a11y strict set, so only next's own a11y rules run here
         {
             rules: {
-                ...jsxA11y.flatConfigs.strict.rules,
                 'jsx-a11y/alt-text': ['error', { elements: ['img'], img: ['Image'] }],
                 'react/jsx-no-target-blank': 'error',
                 'react-hooks/exhaustive-deps': 'error',

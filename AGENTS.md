@@ -30,43 +30,9 @@ const x: NoteForAgentAddedByTheUser = 42; // forces a type error
 
 - **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface leans on classes — extend or compose them rather than re-implementing parallel function pipelines.
 
-```ts
-// Bad
-export function createUser() {}
-export function updateUser() {}
-
-// Good
-export class UserService {
-    create() {}
-    update() {}
-}
-```
-
 - **No static-only classes as namespaces.** Use named exports instead.
 
-```ts
-// Bad
-export class Utils {
-    static foo() {}
-}
-
-// Good
-export function foo() {}
-```
-
 - **Function declarations for complex exported functions.** Arrow expressions for inline callbacks and short utilities only — no block-bodied exported arrows.
-
-```ts
-// Bad
-export const compute = () => {
-    /* large */
-};
-
-// Good
-export function compute() {
-    /* large */
-}
-```
 
 - **DRY and SOLID.** No premature abstractions — three similar lines is better than a wrong abstraction. Wait for the third use before extracting.
 
@@ -138,24 +104,9 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 
 ## Repo Surface (where things live)
 
-A monorepo of focused leaf packages under `packages/`, Next.js docs apps under `apps/`, and a mock bot. Read a package's own barrel and `package.json` for its current surface, not a list here.
+A monorepo of focused leaf packages under `packages/`, Next.js apps under `apps/`, and a mock Discord bot under `mock/` consumed by tests. Read a package's own barrel and `package.json` for its current surface.
 
-- `packages/core`, the transport-agnostic core (registries, the `Notice` stop tree, the customId codec, component builders, gates + machinery, `CoreBase`). Both transports build on it.
-- `packages/gateway`, the gateway transport, the `Seedcord` framework class and bot host (discord.js).
-- `packages/seedcord`, the `seedcord` CLI and dev tooling (`build`, `dev`, `codegen`, `commands`, `defineConfig`).
-- `packages/services`, shared runtime services (logging, lifecycle, health, events).
-- `packages/rate-limiter`, `MemoryRateLimiter` + the key helper. The async `IRateLimiter` contract is in `@seedcord/types`.
-- `packages/types`, shared djs-free types and interfaces. Import from here before redefining locally.
-- `packages/utils`, small stateless helpers.
-- `packages/errors`, the chalk-only `SeedcordError` tree.
-- `packages/plugins`, the plugin contract and first-party plugins.
-- `packages/eslint-plugin`, `packages/eslint-plugin-discordjs`, `packages/eslint-utils`, the published eslint rule packages.
-- `packages/docs-engine`, `packages/docs-generator`, the docs extraction and rendering pipeline.
-- `packages/ui`, shared UI primitives and brand tokens for the apps.
-- the `*-config` packages (`tsconfig`, `tsdown-config`, `eslint-config`, `eslint-config-base`), workspace-internal config (not published).
-- `apps/{docs,guide}`, the documentation surfaces. `apps/home`, the marketing site.
-- `mock/`, a mock Discord bot consumed by tests.
-- `.github/agents`, `.github/prompts`, `.github/skills` — agent prompts, slash prompts, and skill libraries. `.claude/skills` symlinks to `.github/skills`, and `CLAUDE.md` symlinks to this file.
+`.github/skills` holds the skill libraries. `.claude/skills` symlinks to it, and `CLAUDE.md` symlinks to this file.
 
 ---
 
