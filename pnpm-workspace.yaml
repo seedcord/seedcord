@@ -14,15 +14,20 @@ overrides:
   # djs pins 3.5.3, rest needs ^3.5.5, collapse to one (same API)
   '@sapphire/snowflake': 3.5.5
 
-  # need to drop each once its dependents' own ranges clear it
-  brace-expansion: ^5.0.8
-  minimatch: ^10.2.5 # brace-expansion 5 exports `expand` named, minimatch 9 default-imports it
+  # advisory floors, drop each once its dependents' own ranges clear it
   'fast-uri@3': ^3.1.4
   'js-yaml@3': ^3.15.0
   'js-yaml@4': ^4.3.0
   'linkify-it@5': ^5.0.2
   postcss: ^8.5.18
   sharp: ^0.35.0
+
+auditConfig:
+  ignoreGhsas:
+    # brace-expansion DoS. The fix is 5.0.8, which exports `expand` named and needs minimatch 10,
+    # and minimatch 10 breaks eslint-plugin-jsx-a11y's CJS default import. Dev tooling only, and the
+    # glob patterns it expands are authored in this repo.
+    - GHSA-mh99-v99m-4gvg
 
 allowBuilds:
   '@swc/core': true
