@@ -1,5 +1,31 @@
 # @seedcord/gateway
 
+## 0.1.0-next.4
+
+### Minor Changes
+
+- 25b58be: The `Plugin` base and the `attach` host machinery moved to `@seedcord/core`. Plugin authors import the base from `@seedcord/core/plugin`. A host whose startup failed throws on a second `start()`, construct a new instance.
+
+    **BREAKING (`@seedcord/gateway`):** `attach(key, Plugin, ...args)` no longer takes a `startupPhase` argument, plugin init runs during startup. `shutdownEnabled` is removed, coordinated shutdown is always on. `healthCheck` is `false | true | HealthCheckConfig` (omit for the defaults) and the health server's default path is `/health`. `runtime` accepts only `'server'`.
+
+    **BREAKING (`@seedcord/types`):** `Config` removes `shutdownEnabled` and `healthCheck` (each transport config declares its own) and adds `runtime?: 'server' | 'edge'`.
+
+- 8e33bf4: **BREAKING:** the lifecycle phase enums are renamed and trimmed. `StartupPhase` is `Configuration`, `Login`, `Ready`. `ShutdownPhase` is `Unbind`, `Drain`, `Disconnect`, `Logout`. An `addTask` call naming an old member moves to the new name (e.g. `ShutdownPhase.ExternalResources` becomes `ShutdownPhase.Disconnect`, `ShutdownPhase.StopServices` becomes `ShutdownPhase.Drain`).
+
+    `@seedcord/gateway` drains in-flight interaction and event dispatch during shutdown before the client disconnects.
+
+### Patch Changes
+
+- Updated dependencies [25b58be]
+- Updated dependencies [8e33bf4]
+- Updated dependencies [25b58be]
+    - @seedcord/core@0.1.0-next.6
+    - @seedcord/types@0.8.0-next.7
+    - @seedcord/errors@0.3.0-next.5
+    - @seedcord/logger@0.1.0-next.2
+    - @seedcord/rate-limiter@0.1.0-next.4
+    - @seedcord/utils@0.8.0-next.7
+
 ## 0.1.0-next.3
 
 ### Minor Changes
