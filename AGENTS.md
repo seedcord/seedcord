@@ -4,6 +4,24 @@
 
 ---
 
+## Grounding (read this first)
+
+Most of this framework's design is already settled. Unverified claims produce confident-looking but incorrect output that wastes hours to debug.
+
+Common failure mode: **grounding on the immediate context, then inferring how it connects elsewhere.** Examples: asserting that duplicate call sites share identical implementations without checking their bodies; implementing a hot-reload method without reading the dispatcher; labeling something a contradiction when a decision record already resolved it.
+
+1. **Cite or flag every load-bearing sentence.** Each claim must carry a `file:line` reference from this session, or the word "assumption". Nothing unlabeled. Labeled guesses add one line of reading; unlabeled ones waste hours.
+
+2. **Open both ends before designing APIs.** Before writing an interface, method, type, or claim "X must be Y", read the module that implements or consumes it. A design sketch is unverified until you verify the code.
+
+3. **Check decision records first.** Before claiming a gap, contradiction, or unresolved issue, search the project's decision records and checklists (authority, with later entries superseding earlier ones in the same file). Assume the maintainer already decided it.
+
+4. **One hop out.** For claims depending on how two things connect, open both ends, including the one you are not editing.
+
+Same standard applies to delegated work. Reopen any citation yourself before relaying it—a wrong finding reported with confidence is the same defect with an added layer.
+
+---
+
 ## Repository Policy
 
 **Zero Technical Debt.** No workarounds, hacks, or temporary compatibility layers. Choose the cleanest architecture; break things if needed to get it right. After making changes that affect the framework's public surface, regenerate docs (`pnpm docs:extract`, or `pnpm docs:smoke` to extract + run the docs-engine smoke pass).
