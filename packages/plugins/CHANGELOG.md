@@ -1,5 +1,19 @@
 # @seedcord/plugins
 
+## 0.8.0-next.9
+
+### Patch Changes
+
+- Updated dependencies [25b58be]
+- Updated dependencies [8e33bf4]
+- Updated dependencies [25b58be]
+    - @seedcord/core@0.1.0-next.6
+    - @seedcord/gateway@0.1.0-next.4
+    - @seedcord/types@0.8.0-next.7
+    - @seedcord/errors@0.3.0-next.5
+    - @seedcord/logger@0.1.0-next.2
+    - @seedcord/utils@0.8.0-next.7
+
 ## 0.8.0-next.8
 
 ### Patch Changes
