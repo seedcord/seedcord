@@ -34,7 +34,7 @@ interface PrivateInteractionDispatcher {
     handleInteraction(interaction: unknown): Promise<void>;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- the type is the literal below
 function fakeSlash(commandName: string) {
     return {
         reply: vi.fn().mockResolvedValue({ resource: { message: { id: 'fault-msg' } } }),
@@ -62,7 +62,7 @@ function fakeSlash(commandName: string) {
     };
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine here
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- the type is the literal below
 function fakeAutocomplete(commandName: string) {
     return {
         respond: vi.fn().mockResolvedValue(undefined),
@@ -436,7 +436,6 @@ describe('InteractionDispatcher Integration', () => {
         await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
         await controller.onHmr({ file: filePath, type: 'update' });
 
-        // the failed reload restored the last-good handler and kept the route
         expect(controller.slashMap.has('ping')).toBe(true);
     });
 
@@ -590,7 +589,7 @@ describe('InteractionDispatcher Integration', () => {
         await controller.init();
         expect(controller.slashMap.has('ping')).toBe(true);
 
-        // a broken edit with rollback disabled, so the route is dropped
+        // a broken edit with rollback disabled
         await testEnv.createFile(`${interactionsDir}/Ping.ts`, 'export const broken = {{{ not valid');
         await controller.onHmr({ file: filePath, type: 'update', rollback: false });
 
@@ -757,7 +756,7 @@ describe('InteractionDispatcher Integration', () => {
             () => controller.slashMap.get('refused')
         );
 
-        // the gate threw a Silence, so execute never ran and nothing was replied
+        // the gate threw a Silence, so execute never ran
         expect(interaction.reply).not.toHaveBeenCalled();
     });
 
@@ -795,8 +794,8 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.reply).toHaveBeenCalledTimes(1);
     });
 
-    describe('drain', () => {
-        async function drainHarness(): Promise<{
+    describe('client-attached dispatch', () => {
+        async function clientHarness(): Promise<{
             controller: PrivateInteractionDispatcher;
             fire: ((i: unknown) => void) | undefined;
         }> {
@@ -814,8 +813,28 @@ describe('InteractionDispatcher Integration', () => {
             return { controller, fire };
         }
 
+        it('runs later error:unhandled:interaction listeners after an earlier one throws', async () => {
+            const { controller, fire } = await clientHarness();
+            vi.spyOn(controller, 'handleInteraction').mockRejectedValue(new Error('boom'));
+            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+
+            let reached = false;
+            seedcord.bot.on('error:unhandled:interaction', () => {
+                throw new Error('listener blew up');
+            });
+            seedcord.bot.on('error:unhandled:interaction', () => {
+                reached = true;
+            });
+
+            fire?.(fakeSlash('ping'));
+
+            await vi.waitFor(() => {
+                expect(reached).toBe(true);
+            });
+        });
+
         it('stops dispatching new interactions after stopAccepting, and drain resolves', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
             const handleSpy = vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
 
             fire?.(fakeSlash('ping'));
@@ -830,7 +849,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         it('drain waits for an in-flight run that settles inside the budget', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
 
             let settled = false;
             vi.spyOn(controller, 'handleInteraction').mockImplementation(
@@ -850,7 +869,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         it('drain returns through the timer when an in-flight run never settles', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
 
             vi.spyOn(controller, 'handleInteraction').mockReturnValue(new Promise<void>(() => undefined));
             fire?.(fakeSlash('ping'));
@@ -860,7 +879,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         it('clears the drain timer when the in-flight set settles first', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
             fire?.(fakeSlash('ping'));
             controller.stopAccepting();
@@ -872,7 +891,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         it('a full-budget drain completes the Drain phase without a task timeout', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
 
             // a run that outlives the drain budget forces the dispatcher timer to settle the race
             vi.spyOn(controller, 'handleInteraction').mockReturnValue(new Promise<void>(() => undefined));

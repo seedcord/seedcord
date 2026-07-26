@@ -37,9 +37,9 @@ interface RegisteredEventHandlerEntry {
 type EventArtifact = string;
 
 /**
- * Scans event handler directories, registers handlers with Discord client events,
- * and coordinates event execution through the handler system. Does not handle interactions.
- * Multiple handlers can point to one event.
+ * Scans event handler directories, attaches one client listener per registered event, and runs the
+ * handlers for each fire. Interactions route through InteractionDispatcher. Multiple handlers can
+ * point to one event.
  *
  * @internal
  */
@@ -277,7 +277,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 frequency
             });
 
-            // A handler registered post-init (HMR) introduces an event type with no client listener yet.
+            // a post-init (hmr) registration can add an event with no client listener yet
             if (this.isInitialized && !this.attachedEvents.has(key)) {
                 this.attachListener(key);
             }
@@ -316,12 +316,11 @@ export class EventDispatcher implements Initializeable, HmrAware {
         );
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
-            // shutdown started, drop new events
             if (this.draining) return;
             this.core.bot.emitSafe('any:event', eventName, ...args);
             const run = this.processEvent(eventName, args).catch((err: Error) => {
                 this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bot.emit('error:unhandled:event', err);
+                this.core.bot.emitSafe('error:unhandled:event', err);
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));

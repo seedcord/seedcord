@@ -126,8 +126,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             for (const ignoredKey of ignoredKeysFromConfig) this.keysToIgnore.add(ignoredKey);
         }
 
-        // the in-process getConfirmation() collector consumes these clicks, so ignore them here or the global
-        // router double-acks them.
+        // the in-process getConfirmation() collector consumes these clicks, so the global router would double-ack them
         this.keysToIgnore.add(CONFIRM_DEF);
 
         const interactionsDir = this.core.config.bot.interactions.path;
@@ -211,7 +210,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.isInitialized = true;
 
         const handlersDir = this.core.config.bot.interactions.path;
-        // Already checked in constructor
+        // unreachable, the constructor throws when the path is unset
         if (!handlersDir) return;
 
         const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
@@ -298,7 +297,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // same class re-registered (double import or an HMR re-scan) is idempotent, matching event middleware
         if (this.middlewares.some((entry) => entry.ctor === middlewareCtor)) return;
 
-        // a different class sharing the name would run alongside the first, so this throws to surface it
+        // a different class sharing the name would run alongside the first
         if (this.middlewares.some((entry) => entry.ctor.name === middlewareCtor.name)) {
             throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateMiddleware, [middlewareCtor.name]);
         }
@@ -344,7 +343,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
             for (const route of meta) {
                 const existing = map.get(route);
-                // a different class on the same route would silently shadow (last write wins), so this throws
+                // a different class on the same route would silently shadow (last write wins)
                 if (existing && existing !== handlerClass) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         route,
@@ -398,12 +397,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private attachToClient(): void {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
-            // shutdown started, drop new interactions
             if (this.draining) return;
             this.core.bot.emitSafe('any:interaction', interaction);
             const run = this.handleInteraction(interaction).catch((err: Error) => {
                 this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bot.emit('error:unhandled:interaction', err);
+                this.core.bot.emitSafe('error:unhandled:interaction', err);
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));
@@ -445,7 +443,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     ): Promise<void> {
         const key = extractKey(interaction);
 
-        // the live sender once the handler is built, so the boundary replies through its exact ack state
+        // declared outside the try so the fault boundary replies through the handler's exact ack state
         let sender: ReplySender | undefined;
         try {
             if (!interaction.isAutocomplete()) {

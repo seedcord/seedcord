@@ -171,8 +171,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> implements Initia
      *
      * Fire-and-forget, so subscriber handlers run asynchronously and this returns before they
      * complete, and callers must not assume side effects have landed. Errors thrown by a subscriber
-     * are caught and logged, never surfaced here. A `'once'` subscriber is marked as executed when
-     * it starts (even if it throws), so it never runs twice.
+     * or by an `on()` listener are caught and logged, never surfaced here. One throwing listener
+     * does not stop the others. A `'once'` subscriber is marked as executed when it starts (even if
+     * it throws), so it never runs twice.
      *
      * @param event - The subscription key to publish
      * @param data - Payload passed to each subscriber
@@ -184,7 +185,11 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> implements Initia
     ): boolean {
         void this.processSubscriber(event, data);
         // justified: a generic key can't reduce SubscriptionTuples[K], but data is this event's payload by the signature
-        return super.emit(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
+        return this.emitSafe(event, ...([data] as SubscriptionTuples[KeyOfSubscribers]));
+    }
+
+    protected override onListenerError(error: unknown, event: string | symbol): void {
+        this.logger.error(`listener for ${String(event)} threw`, error);
     }
 
     private async processSubscriber<KeyOfSubscribers extends SubscriptionKey>(
@@ -200,8 +205,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> implements Initia
             }
 
             try {
-                // mark before awaiting, so a re-entrant publish can't run a 'once' subscriber twice
-                // while the first invocation is still pending
+                // mark before awaiting, so a re-entrant publish can't run a 'once' subscriber twice mid-flight
                 if (entry.frequency === 'once') {
                     this.executedOnceHandlers.add(entry.ctor);
                 }
