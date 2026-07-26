@@ -197,9 +197,8 @@ describe('EventDispatcher Integration', () => {
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();
 
-        // the non-Error rethrows to the root, but the once handler is now spent
         await expect(testBot.events.processEvent('guildMemberAdd', [{}])).rejects.toBe('raw string');
-        // a second fire must not re-run it, so it resolves with no throw
+        // a second fire must not re-run it
         await expect(testBot.events.processEvent('guildMemberAdd', [{}])).resolves.toBeUndefined();
     });
 
@@ -289,7 +288,6 @@ describe('EventDispatcher Integration', () => {
         await testBot.events.processEvent('messageCreate', [message]);
         expect(message.reply).not.toHaveBeenCalled();
 
-        // the second fire passes middleware, so the once handler still runs
         await testBot.events.processEvent('messageCreate', [message]);
         expect(message.reply).toHaveBeenCalledTimes(1);
     });
@@ -445,12 +443,12 @@ describe('EventDispatcher Integration', () => {
         const message = { reply: vi.fn() };
         await testBot.events.processEvent('messageCreate', [message]);
 
-        // the gate threw a Silence, so execute never ran and the message was not replied to
+        // the gate threw a Silence, so execute never ran
         expect(message.reply).not.toHaveBeenCalled();
     });
 
-    describe('drain', () => {
-        async function drainHarness(): Promise<{
+    describe('client-attached dispatch', () => {
+        async function clientHarness(): Promise<{
             controller: PrivateEventDispatcher;
             fire: ((...args: unknown[]) => void) | undefined;
         }> {
@@ -471,7 +469,7 @@ describe('EventDispatcher Integration', () => {
 
             const config = testConfig({ events: testEnv.resolvePath('events') });
             seedcord = new Seedcord(config);
-            // justified: reaches the private events dispatcher for the drain test
+            // justified: reaches the private events dispatcher for these client-attached tests
             const controller = (seedcord.bot as unknown as TestBot).events;
 
             const onSpy = vi.spyOn(seedcord.bot.client, 'on');
@@ -484,8 +482,28 @@ describe('EventDispatcher Integration', () => {
             return { controller, fire };
         }
 
+        it('runs later error:unhandled:event listeners after an earlier one throws', async () => {
+            const { controller, fire } = await clientHarness();
+            vi.spyOn(controller, 'processEvent').mockRejectedValue(new Error('boom'));
+            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+
+            let reached = false;
+            seedcord.bot.on('error:unhandled:event', () => {
+                throw new Error('listener blew up');
+            });
+            seedcord.bot.on('error:unhandled:event', () => {
+                reached = true;
+            });
+
+            fire?.({ reply: vi.fn() });
+
+            await vi.waitFor(() => {
+                expect(reached).toBe(true);
+            });
+        });
+
         it('stops dispatching new events after stopAccepting, and drain resolves', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
             const processSpy = vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
 
             fire?.({ reply: vi.fn() });
@@ -500,7 +518,7 @@ describe('EventDispatcher Integration', () => {
         });
 
         it('drain waits for an in-flight event that settles inside the budget', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
 
             let settled = false;
             vi.spyOn(controller, 'processEvent').mockImplementation(
@@ -520,7 +538,7 @@ describe('EventDispatcher Integration', () => {
         });
 
         it('drain returns through the timer when an event never settles', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
 
             vi.spyOn(controller, 'processEvent').mockReturnValue(new Promise<void>(() => undefined));
             fire?.({ reply: vi.fn() });
@@ -530,7 +548,7 @@ describe('EventDispatcher Integration', () => {
         });
 
         it('clears the drain timer when the in-flight set settles first', async () => {
-            const { controller, fire } = await drainHarness();
+            const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);
             fire?.({ reply: vi.fn() });
             controller.stopAccepting();
