@@ -1,5 +1,23 @@
 # @seedcord/http
 
+## 0.1.0-next.1
+
+### Minor Changes
+
+- 25b58be: `new Seedcord(config).start(port)` runs an HTTP-interactions bot on a node server: handler discovery from `config.bot.interactions.path`, dev HMR, a health server, coordinated shutdown with an in-flight drain, and plugin `attach`. `HttpConfig` discriminates on `runtime`, node-server options are compile errors on the `'edge'` arm. `this.api` on handlers is the typed Discord API (`@discordjs/core/http-only`) over the shared REST client. Edge builds import from `@seedcord/http/edge`.
+
+### Patch Changes
+
+- Updated dependencies [25b58be]
+- Updated dependencies [8e33bf4]
+- Updated dependencies [25b58be]
+    - @seedcord/core@0.1.0-next.6
+    - @seedcord/types@0.8.0-next.7
+    - @seedcord/errors@0.3.0-next.5
+    - @seedcord/logger@0.1.0-next.2
+    - @seedcord/rate-limiter@0.1.0-next.4
+    - @seedcord/utils@0.8.0-next.7
+
 ## 0.1.0-next.0
 
 ### Minor Changes

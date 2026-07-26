@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/mock",
     "type": "module",
-    "version": "0.2.23-next.8",
+    "version": "0.2.23-next.9",
     "private": true,
     "description": "Mock bot for demonstration and testing purposes",
     "repository": {

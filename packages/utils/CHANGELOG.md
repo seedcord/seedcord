@@ -1,5 +1,12 @@
 # @seedcord/utils
 
+## 0.8.0-next.7
+
+### Patch Changes
+
+- Updated dependencies [25b58be]
+    - @seedcord/types@0.8.0-next.7
+
 ## 0.8.0-next.6
 
 ### Minor Changes

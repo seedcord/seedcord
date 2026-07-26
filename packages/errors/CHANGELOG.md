@@ -1,5 +1,11 @@
 # @seedcord/errors
 
+## 0.3.0-next.5
+
+### Patch Changes
+
+- 25b58be: New `ConfigManifestNotGenerated` code, thrown when the generated route manifest is imported before `seedcord build` emits it. New `LifecycleRestartAfterFailure` code, thrown when a host whose startup failed is started again.
+
 ## 0.3.0-next.4
 
 ### Minor Changes
