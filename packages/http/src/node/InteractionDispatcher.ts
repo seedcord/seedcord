@@ -38,7 +38,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private isInitialized = false;
     private readonly hmrHandler?: HmrModuleHandler<HandlerConstructor, void, string[]>;
     // routeId -> owner row, the duplicate guard and the hmr unregister index
-    private readonly rowOwners = new Map<string, { ctor: HandlerConstructor; target: RouteTarget; key: string }>();
+    private readonly rowOwners = new Map<
+        string,
+        { ctor: HandlerConstructor; target: RouteTarget; key: string; from: string }
+    >();
 
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
@@ -129,19 +132,21 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private registerHandler(ctor: HandlerConstructor, relativePath: string): void {
+        const from = formatFilePath(relativePath);
         // a partial registration would orphan routes and break hmr rollback
         const writes: [RouteTarget, string][] = [];
 
         for (const [route, keys] of interactionRoutesOf(ctor)) {
             const target = this.targetFor(route);
             for (const key of keys) {
-                const existing = this.rowOwners.get(`${target.kind}:${key}`);
+                const routeId = `${target.kind}:${key}`;
+                const existing = this.rowOwners.get(routeId);
                 // a different class on the same route would silently shadow (last write wins), so this throws
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
-                        key,
-                        existing.ctor.name,
-                        ctor.name
+                        routeId,
+                        `${existing.ctor.name} (${existing.from})`,
+                        `${ctor.name} (${from})`
                     ]);
                 }
                 writes.push([target, key]);
@@ -151,12 +156,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (writes.length === 0) return;
         for (const [target, key] of writes) {
             const routeId = `${target.kind}:${key}`;
-            // a one-export module, the dispatch first-handler scan resolves exactly this row's class
-            target.map.set(key, { kind: target.kind, routeId, load: () => Promise.resolve({ [ctor.name]: ctor }) });
-            this.rowOwners.set(routeId, { ctor, target, key });
+            target.map.set(key, { kind: target.kind, routeId, load: () => Promise.resolve(ctor) });
+            this.rowOwners.set(routeId, { ctor, target, key, from });
         }
 
-        const from = formatFilePath(relativePath);
         if (this.loading) this.loadedHandlers.push({ name: ctor.name, from });
         else this.logger.utils.registration(ctor.name, from);
     }

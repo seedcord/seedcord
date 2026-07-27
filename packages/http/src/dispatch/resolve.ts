@@ -1,4 +1,6 @@
 import { prefixOf, type InteractionRoutes } from '@seedcord/core/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
 import { UnhandledAutocomplete } from '@handlers/defaults/UnhandledAutocomplete';
@@ -6,7 +8,7 @@ import { UnhandledRepliable } from '@handlers/defaults/UnhandledRepliable';
 
 import { slashRouteOf } from './slashRouteOf';
 
-import type { ComponentRoute, RouteManifest } from '@src/manifest/RouteManifest';
+import type { ComponentRoute, RouteManifest, RouteModule } from '@src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
 
 type ResolvedKind = `${InteractionRoutes}`;
@@ -19,6 +21,7 @@ export interface ResolvedRoute {
      * unhandled default, which matches no row.
      */
     readonly routeId: string | null;
+    /** Resolves the one export the row registers. */
     readonly load: () => Promise<unknown>;
 }
 
@@ -93,11 +96,29 @@ function componentMapKey(type: ComponentType): Exclude<ComponentMapKey, 'modal'>
     }
 }
 
-function set(map: RouteMap, kind: ResolvedKind, key: string, load: () => Promise<unknown>): void {
-    map.set(key, { kind, routeId: `${kind}:${key}`, load });
+function namedExport(routeId: string, row: RouteModule): () => Promise<unknown> {
+    return async () => {
+        const moduleExports = await row.load();
+        if (!Object.hasOwn(moduleExports, row.exportName)) {
+            throw new SeedcordError(SeedcordErrorCode.InteractionRouteExportMissing, [
+                routeId,
+                row.exportName,
+                row.from
+            ]);
+        }
+        return moduleExports[row.exportName];
+    };
 }
 
-/** Builds the per-kind lookup maps. */
+function describeRow(row: RouteModule): string {
+    return `${row.exportName} (${row.from})`;
+}
+
+/**
+ * Builds the per-kind lookup maps.
+ *
+ * @throws A **SeedcordError** when two rows resolve to the same route.
+ */
 export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
     const maps: RouteMaps = {
         slash: new Map(),
@@ -114,15 +135,32 @@ export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
             modal: new Map()
         }
     };
-    for (const row of manifest.commands) {
+    const owners = new Map<string, RouteModule>();
+
+    function set(map: RouteMap, kind: ResolvedKind, key: string, row: RouteModule): void {
+        const routeId = `${kind}:${key}`;
+        const owner = owners.get(routeId);
+        if (owner) {
+            // a bare map.set would let a later row shadow an earlier one
+            throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
+                routeId,
+                describeRow(owner),
+                describeRow(row)
+            ]);
+        }
+        owners.set(routeId, row);
+        map.set(key, { kind, routeId, load: namedExport(routeId, row) });
+    }
+
+    for (const row of manifest.commandRoutes) {
         const kind = commandKind(row.type);
-        if (kind) set(maps[kind], kind, row.name, row.load);
+        if (kind) set(maps[kind], kind, row.name, row);
     }
-    for (const row of manifest.autocomplete) {
-        set(maps.autocomplete, 'autocomplete', row.name, row.load);
+    for (const row of manifest.autocompleteRoutes) {
+        set(maps.autocomplete, 'autocomplete', row.name, row);
     }
-    for (const row of manifest.components) {
-        set(maps.components[row.kind], COMPONENT_KIND[row.kind], row.prefix, row.load);
+    for (const row of manifest.componentRoutes) {
+        set(maps.components[row.kind], COMPONENT_KIND[row.kind], row.prefix, row);
     }
     return maps;
 }
@@ -132,7 +170,7 @@ function unhandled(kind: ResolvedKind): ResolvedRoute {
     return {
         kind,
         routeId: null,
-        load: () => Promise.resolve(kind === 'autocomplete' ? { UnhandledAutocomplete } : { UnhandledRepliable })
+        load: () => Promise.resolve(kind === 'autocomplete' ? UnhandledAutocomplete : UnhandledRepliable)
     };
 }
 

@@ -211,8 +211,11 @@ describe('InteractionDispatcher Integration', () => {
         );
         expect(error).toMatchObject({ code: SeedcordErrorCode.InteractionDuplicateRoute });
         const message = Error.isError(error) ? error.message : String(error);
-        expect(message).toContain('PingOne');
-        expect(message).toContain('PingTwo');
+        expect(message).toContain('slash:ping');
+        expect(message).toContain('PingOne (');
+        expect(message).toContain('PingOne.ts');
+        expect(message).toContain('PingTwo (');
+        expect(message).toContain('PingTwo.ts');
     });
 
     it('throws when two interaction middleware classes share a name instead of overwriting', async () => {
@@ -339,6 +342,7 @@ describe('InteractionDispatcher Integration', () => {
     });
 
     it('dispatches UnhandledAutocomplete for an autocomplete with no registered handler, responding empty', async () => {
+        await testEnv.createDir('interactions');
         const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
         seedcord = new Seedcord(config);
@@ -799,6 +803,7 @@ describe('InteractionDispatcher Integration', () => {
             controller: PrivateInteractionDispatcher;
             fire: ((i: unknown) => void) | undefined;
         }> {
+            await testEnv.createDir('interactions');
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
             seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);

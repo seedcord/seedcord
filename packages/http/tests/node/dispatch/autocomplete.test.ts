@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 
-import { capturingCtx, emptyManifest, readyEngine, signedRequest } from './harness';
+import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest } from './harness';
 
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
@@ -60,7 +60,10 @@ function autocompletePayload(name: string): object {
 }
 
 function manifestFor(handler: unknown, name: string): RouteManifest {
-    return { ...emptyManifest(), autocomplete: [{ name, load: () => Promise.resolve({ handler }) }] };
+    return {
+        ...emptyManifest(),
+        autocompleteRoutes: [{ name, exportName: 'handler', from: FROM, load: () => Promise.resolve({ handler }) }]
+    };
 }
 
 interface CallbackCall {

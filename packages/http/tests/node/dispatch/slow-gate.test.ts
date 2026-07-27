@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } fr
 
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
-import { capturingCtx, emptyManifest, signedRequest, slashPayload } from './harness';
+import { FROM, capturingCtx, emptyManifest, signedRequest, slashPayload } from './harness';
 import { createSigner } from '../../helpers/ed25519';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
@@ -52,7 +52,9 @@ function guarded(gates: Gate<GateContextBase>[]): ReturnType<typeof emptyManifes
     Reflect.defineMetadata(GatedMetadataKey, gates, Guarded);
     return {
         ...emptyManifest(),
-        commands: [{ name: 'guarded', type: 1, load: () => Promise.resolve({ Guarded }) }]
+        commandRoutes: [
+            { name: 'guarded', type: 1, exportName: 'Guarded', from: FROM, load: () => Promise.resolve({ Guarded }) }
+        ]
     };
 }
 

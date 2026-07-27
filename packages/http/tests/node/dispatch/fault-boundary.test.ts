@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
-import { capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
+import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 
 import type { Config, RenderContext, ReplyResponse } from '@seedcord/types';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
@@ -45,7 +45,10 @@ function apiError(code: number): DiscordAPIError {
 }
 
 function manifestOf(name: string, handler: unknown): RouteManifest {
-    return { ...emptyManifest(), commands: [{ name, type: 1, load: () => Promise.resolve({ handler }) }] };
+    return {
+        ...emptyManifest(),
+        commandRoutes: [{ name, type: 1, exportName: 'handler', from: FROM, load: () => Promise.resolve({ handler }) }]
+    };
 }
 
 interface SentBody {
@@ -222,7 +225,15 @@ describe('fault boundary', () => {
     it('still acks 202 when a manifest row load rejects', async () => {
         const manifest: RouteManifest = {
             ...emptyManifest(),
-            commands: [{ name: 'ghost', type: 1, load: () => Promise.reject(new Error('chunk missing')) }]
+            commandRoutes: [
+                {
+                    name: 'ghost',
+                    type: 1,
+                    exportName: 'Ghost',
+                    from: FROM,
+                    load: () => Promise.reject(new Error('chunk missing'))
+                }
+            ]
         };
         const { signer, handle } = await readyEngine(manifest);
         const ctx = capturingCtx();
@@ -285,7 +296,9 @@ describe('fault boundary', () => {
         }
         const manifest: RouteManifest = {
             ...emptyManifest(),
-            autocomplete: [{ name: 'search', load: () => Promise.resolve({ Search }) }]
+            autocompleteRoutes: [
+                { name: 'search', exportName: 'Search', from: FROM, load: () => Promise.resolve({ Search }) }
+            ]
         };
         const { signer, handle } = await readyEngine(manifest);
         const payload = {

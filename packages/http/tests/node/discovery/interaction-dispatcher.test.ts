@@ -25,9 +25,9 @@ function slashPayload(name: string): APIInteraction {
 async function loadedClassName(dispatcher: InteractionDispatcher, payload: APIInteraction): Promise<string | null> {
     const match = resolve(dispatcher.maps, payload);
     if (!match?.routeId) return null;
-    const moduleExports = (await match.load()) as Record<string, { name: string }>;
-    const names = Object.keys(moduleExports);
-    return names.length === 1 ? (names[0] ?? null) : null;
+    // justified: a discovered row resolves to the handler class it registered
+    const exported = (await match.load()) as { name: string };
+    return exported.name;
 }
 
 describe('http InteractionDispatcher discovery', () => {
