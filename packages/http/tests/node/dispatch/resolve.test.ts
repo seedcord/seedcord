@@ -3,13 +3,26 @@ import { describe, expect, it } from 'vitest';
 
 import { buildRouteMaps, resolve } from '@src/dispatch/resolve';
 
-import type { ComponentRoute, RouteManifest } from '@src/manifest/RouteManifest';
+import { FROM } from './harness';
+
+import type { ComponentRoute, RouteManifest, RouteModule } from '@src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
 
-const noop = (): Promise<unknown> => Promise.resolve({});
+// the module exports an object carrying its own name, so a test can assert which one the route resolved
+function rowFor(exportName: string): RouteModule {
+    const exported = { name: exportName };
+    return { exportName, from: FROM, load: () => Promise.resolve({ [exportName]: exported }) };
+}
 
 function manifestWith(partial: Partial<RouteManifest>): RouteManifest {
-    return { commands: [], components: [], autocomplete: [], subscribers: [], ...partial };
+    return {
+        commandRoutes: [],
+        componentRoutes: [],
+        autocompleteRoutes: [],
+        subscriberRoutes: [],
+        middlewareRoutes: [],
+        ...partial
+    };
 }
 
 // justified: resolve reads only type and data off the payload
@@ -17,38 +30,37 @@ const slash = (name: string, options?: unknown[]): APIInteraction =>
     ({ type: 2, data: { type: 1, name, ...(options && { options }) } }) as unknown as APIInteraction;
 
 describe('resolve', () => {
-    it('resolves a slash command by name with the slash route id', () => {
-        const load = noop;
-        const maps = buildRouteMaps(manifestWith({ commands: [{ name: 'ban', type: 1, load }] }));
+    it('resolves a slash command by name with the slash route id', async () => {
+        const maps = buildRouteMaps(manifestWith({ commandRoutes: [{ name: 'ban', type: 1, ...rowFor('Ban') }] }));
 
         const match = resolve(maps, slash('ban'));
 
         expect(match).toMatchObject({ kind: 'slash', routeId: 'slash:ban' });
-        expect(match?.load).toBe(load);
+        await expect(match?.load()).resolves.toEqual({ name: 'Ban' });
     });
 
     it('resolves the unhandled default for a command name with no row', () => {
-        const maps = buildRouteMaps(manifestWith({ commands: [{ name: 'ban', type: 1, load: noop }] }));
+        const maps = buildRouteMaps(manifestWith({ commandRoutes: [{ name: 'ban', type: 1, ...rowFor('Ban') }] }));
 
         expect(resolve(maps, slash('kick'))).toMatchObject({ kind: 'slash', routeId: null });
     });
 
     it('resolves a subcommand to its full route path', () => {
-        const maps = buildRouteMaps(manifestWith({ commands: [{ name: 'config/set', type: 1, load: noop }] }));
+        const maps = buildRouteMaps(
+            manifestWith({ commandRoutes: [{ name: 'config/set', type: 1, ...rowFor('ConfigSet') }] })
+        );
 
         const match = resolve(maps, slash('config', [{ type: 1, name: 'set' }]));
 
         expect(match?.routeId).toBe('slash:config/set');
     });
 
-    it('resolves context menus by name per kind, so a user and a message command can share a name', () => {
-        const userLoad = noop;
-        const messageLoad = (): Promise<unknown> => Promise.resolve({ different: true });
+    it('resolves context menus by name per kind, so a user and a message command can share a name', async () => {
         const maps = buildRouteMaps(
             manifestWith({
-                commands: [
-                    { name: 'Report', type: 2, load: userLoad },
-                    { name: 'Report', type: 3, load: messageLoad }
+                commandRoutes: [
+                    { name: 'Report', type: 2, ...rowFor('ReportUser') },
+                    { name: 'Report', type: 3, ...rowFor('ReportMessage') }
                 ]
             })
         );
@@ -64,17 +76,16 @@ describe('resolve', () => {
         } as unknown as APIInteraction);
 
         expect(userMatch).toMatchObject({ kind: 'userContextMenu', routeId: 'userContextMenu:Report' });
-        expect(userMatch?.load).toBe(userLoad);
+        await expect(userMatch?.load()).resolves.toEqual({ name: 'ReportUser' });
         expect(messageMatch).toMatchObject({ kind: 'messageContextMenu', routeId: 'messageContextMenu:Report' });
-        expect(messageMatch?.load).toBe(messageLoad);
+        await expect(messageMatch?.load()).resolves.toEqual({ name: 'ReportMessage' });
     });
 
-    it('resolves autocomplete by command route through its own map, separate from the slash row', () => {
-        const autocompleteLoad = noop;
+    it('resolves autocomplete by command route through its own map, separate from the slash row', async () => {
         const maps = buildRouteMaps(
             manifestWith({
-                commands: [{ name: 'search', type: 1, load: noop }],
-                autocomplete: [{ name: 'search', load: autocompleteLoad }]
+                commandRoutes: [{ name: 'search', type: 1, ...rowFor('Search') }],
+                autocompleteRoutes: [{ name: 'search', ...rowFor('SearchAutocomplete') }]
             })
         );
 
@@ -82,15 +93,42 @@ describe('resolve', () => {
         const match = resolve(maps, { type: 4, data: { type: 1, name: 'search' } } as unknown as APIInteraction);
 
         expect(match).toMatchObject({ kind: 'autocomplete', routeId: 'autocomplete:search' });
-        expect(match?.load).toBe(autocompleteLoad);
+        await expect(match?.load()).resolves.toEqual({ name: 'SearchAutocomplete' });
     });
 
     it('resolves a grouped subcommand to its command/group/subcommand path', () => {
-        const maps = buildRouteMaps(manifestWith({ commands: [{ name: 'config/perms/set', type: 1, load: noop }] }));
+        const maps = buildRouteMaps(
+            manifestWith({ commandRoutes: [{ name: 'config/perms/set', type: 1, ...rowFor('PermsSet') }] })
+        );
 
         const match = resolve(maps, slash('config', [{ type: 2, name: 'perms', options: [{ type: 1, name: 'set' }] }]));
 
         expect(match?.routeId).toBe('slash:config/perms/set');
+    });
+
+    it('throws reporting both rows when two rows resolve to the same route', () => {
+        const manifest = manifestWith({
+            commandRoutes: [
+                { name: 'ban', type: 1, ...rowFor('Ban') },
+                { name: 'ban', type: 1, ...rowFor('BanAgain') }
+            ]
+        });
+
+        expect(() => buildRouteMaps(manifest)).toThrow(/slash:ban.*Ban \(handlers\/Test\.ts\).*BanAgain/s);
+    });
+
+    it('throws reporting the route, the export, and the file when the module has no such export', async () => {
+        const maps = buildRouteMaps(
+            manifestWith({
+                commandRoutes: [
+                    { name: 'ban', type: 1, exportName: 'Ban', from: FROM, load: () => Promise.resolve({ Other: 1 }) }
+                ]
+            })
+        );
+
+        const match = resolve(maps, slash('ban'));
+
+        await expect(match?.load()).rejects.toThrow(/slash:ban.*Ban.*handlers\/Test\.ts/s);
     });
 
     // justified: resolve reads only type and data off the payload
@@ -100,12 +138,12 @@ describe('resolve', () => {
     const componentRow = (kind: ComponentRoute['kind'], prefix: string): ComponentRoute => ({
         kind,
         prefix,
-        load: noop
+        ...rowFor(`${prefix}${kind}`)
     });
 
     it('resolves a button by the stable prefix of its minted wire', () => {
         const approve = new CustomId('approve').snowflake('userId');
-        const maps = buildRouteMaps(manifestWith({ components: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
 
         const match = resolve(maps, component(2, approve.encode({ userId: '123' })));
 
@@ -114,7 +152,7 @@ describe('resolve', () => {
 
     it('routes a wire whose layout hash drifted to the same prefix, the handler decode validates later', () => {
         const drifted = new CustomId('approve').snowflake('userId').bool('force');
-        const maps = buildRouteMaps(manifestWith({ components: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
 
         const match = resolve(maps, component(2, drifted.encode({ userId: '123', force: true })));
 
@@ -125,7 +163,7 @@ describe('resolve', () => {
         const feed = new CustomId('feed').snowflake('channelId');
         const maps = buildRouteMaps(
             manifestWith({
-                components: [componentRow('stringSelect', 'feed'), componentRow('channelSelect', 'feed')]
+                componentRoutes: [componentRow('stringSelect', 'feed'), componentRow('channelSelect', 'feed')]
             })
         );
         const wire = feed.encode({ channelId: '5' });
@@ -136,7 +174,7 @@ describe('resolve', () => {
     });
 
     it('resolves null for an unrecognized component type', () => {
-        const maps = buildRouteMaps(manifestWith({ components: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
 
         expect(resolve(maps, component(99, 'approve:1'))).toBeNull();
     });
@@ -145,7 +183,7 @@ describe('resolve', () => {
         const pick = new CustomId('pick').snowflake('guildId');
         const maps = buildRouteMaps(
             manifestWith({
-                components: [
+                componentRoutes: [
                     componentRow('userSelect', 'pick'),
                     componentRow('roleSelect', 'pick'),
                     componentRow('mentionableSelect', 'pick')
@@ -161,7 +199,7 @@ describe('resolve', () => {
 
     it('resolves a modal submit by prefix through the modal map', () => {
         const config = new CustomId('cfg').str('section');
-        const maps = buildRouteMaps(manifestWith({ components: [componentRow('modal', 'cfg')] }));
+        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('modal', 'cfg')] }));
         // justified: resolve reads only type and data off the payload
         const payload = {
             type: 5,
@@ -172,7 +210,7 @@ describe('resolve', () => {
     });
 
     it('resolves the unhandled default for a wire no prefix owns', () => {
-        const maps = buildRouteMaps(manifestWith({ components: [componentRow('button', 'approve')] }));
+        const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
 
         expect(resolve(maps, component(2, 'other-app-id'))).toMatchObject({ kind: 'button', routeId: null });
     });

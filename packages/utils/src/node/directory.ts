@@ -1,14 +1,15 @@
 import { readdir } from 'node:fs/promises';
 import * as path from 'node:path';
 
-import type { ILogger } from '@seedcord/types';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import type * as fs from 'node:fs';
 
 /**
  * Determines if a directory entry is a TypeScript or JavaScript file.
  *
  * @param entry - The directory entry to check.
- * @returns True if the entry is a file ending with .ts or .js.
  */
 export function isTsOrJsFile(entry: fs.Dirent): boolean {
     return (
@@ -25,30 +26,25 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
  * @param dir - The directory path to traverse.
  * @param callback - A function that will be called for each imported module. It receives the full file path, the file's relative path, and the imported module as arguments.
  * @returns A Promise that resolves when the traversal is complete.
+ * @throws A **SeedcordError** when a directory cannot be read or a file throws while importing.
  *
  * @example
  * ```ts
- * await traverseDirectory(
- *   './commands',
- *   (fullPath, relativePath, imported) => {
+ * await traverseDirectory('./commands', (fullPath, relativePath, imported) => {
  *     for (const exported of Object.values(imported)) register(exported);
- *   },
- *   logger
- * );
+ * });
  * ```
  */
 export async function traverseDirectory(
     dir: string,
-    callback: (fullPath: string, relativePath: string, imported: Record<string, unknown>) => Promise<void> | void,
-    logger: ILogger
+    callback: (fullPath: string, relativePath: string, imported: Record<string, unknown>) => Promise<void> | void
 ): Promise<void> {
     let entries: fs.Dirent[];
 
     try {
         entries = await readdir(dir, { withFileTypes: true });
     } catch (err) {
-        logger.error(`Failed to read directory ${dir}`, err);
-        entries = [];
+        throw new SeedcordError(SeedcordErrorCode.CoreDirectoryUnreadable, [dir], { cause: err });
     }
 
     for (const entry of entries) {
@@ -56,9 +52,14 @@ export async function traverseDirectory(
         const relativePath = path.relative(process.cwd(), fullPath);
 
         if (entry.isDirectory()) {
-            await traverseDirectory(fullPath, callback, logger);
+            await traverseDirectory(fullPath, callback);
         } else if (isTsOrJsFile(entry)) {
-            const imported = (await import(fullPath)) as Record<string, unknown>;
+            let imported: Record<string, unknown>;
+            try {
+                imported = (await import(fullPath)) as Record<string, unknown>;
+            } catch (err) {
+                throw new SeedcordError(SeedcordErrorCode.CoreDirectoryImportFailed, [relativePath], { cause: err });
+            }
             await callback(fullPath, relativePath, imported);
         }
     }

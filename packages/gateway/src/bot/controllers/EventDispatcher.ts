@@ -147,32 +147,24 @@ export class EventDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadHandlers(dir: string): Promise<void> {
-        await traverseDirectory(
-            dir,
-            (fullPath, relativePath, imported) => {
-                for (const val of Object.values(imported)) {
-                    if (!this.isEventHandlerClass(val)) continue;
-                    this.registerHandler(val, relativePath);
-                    this.hmrHandler?.trackHandler(fullPath, val);
-                }
-            },
-            this.logger
-        );
+        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+            for (const val of Object.values(imported)) {
+                if (!this.isEventHandlerClass(val)) continue;
+                this.registerHandler(val, relativePath);
+                this.hmrHandler?.trackHandler(fullPath, val);
+            }
+        });
     }
 
     private async loadMiddlewares(dir: string): Promise<void> {
-        await traverseDirectory(
-            dir,
-            (fullPath, relativePath, imported) => {
-                for (const val of Object.values(imported)) {
-                    if (!this.isMiddlewareClass(val)) continue;
+        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+            for (const val of Object.values(imported)) {
+                if (!this.isMiddlewareClass(val)) continue;
 
-                    this.registerMiddleware(val, relativePath);
-                    this.hmrHandler?.trackMiddleware(fullPath, val);
-                }
-            },
-            this.logger
-        );
+                this.registerMiddleware(val, relativePath);
+                this.hmrHandler?.trackMiddleware(fullPath, val);
+            }
+        });
     }
 
     /** @internal For use in dev mode */

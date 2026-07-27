@@ -11,6 +11,8 @@ import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 const encoder = new TextEncoder();
 
+export const FROM = 'handlers/Test.ts';
+
 export async function signedRequest(signer: Signer, payload: unknown): Promise<Request> {
     const timestamp = String(Math.floor(Date.now() / 1000));
     const body = encoder.encode(JSON.stringify(payload));

@@ -31,6 +31,7 @@ import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
 import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 
@@ -45,7 +46,7 @@ const DRAIN_TIMEOUT_MS = 10_000;
  * `start(port)`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
  * `createSeedcord` from a generated entry.
  */
-export class Seedcord extends Pluggable implements Core {
+export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -60,12 +61,6 @@ export class Seedcord extends Pluggable implements Core {
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
 
-    /** @see {@link CoordinatedShutdown} */
-    public override readonly shutdown: CoordinatedShutdown;
-
-    /** @see {@link CoordinatedStartup} */
-    public override readonly startup: CoordinatedStartup;
-
     private readonly interactions?: InteractionDispatcher;
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
@@ -77,16 +72,10 @@ export class Seedcord extends Pluggable implements Core {
     private fetchedUsername?: string | undefined;
 
     constructor(public readonly config: HttpConfig) {
-        const shutdown = new CoordinatedShutdown();
-        const startup = new CoordinatedStartup();
-
-        super(shutdown, startup);
+        super(new CoordinatedShutdown(), new CoordinatedStartup());
 
         installNodeDefaults(config.logger);
         setBotColor(config.botColor);
-
-        this.shutdown = shutdown;
-        this.startup = startup;
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();

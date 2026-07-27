@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
-import { capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
+import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 
 import type { Gate, GateContextBase } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
@@ -67,7 +67,15 @@ function gated(gates: Gate<GateContextBase>[]): {
     return {
         manifest: {
             ...emptyManifest(),
-            commands: [{ name: 'guarded', type: 1, load: () => Promise.resolve({ Guarded }) }]
+            commandRoutes: [
+                {
+                    name: 'guarded',
+                    type: 1,
+                    exportName: 'Guarded',
+                    from: FROM,
+                    load: () => Promise.resolve({ Guarded })
+                }
+            ]
         },
         executed: () => didExecute
     };

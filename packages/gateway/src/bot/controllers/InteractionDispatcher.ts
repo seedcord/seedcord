@@ -87,6 +87,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly userContextMenuMap = new Map<string, HandlerConstructor>();
     private readonly autocompleteMap = new Map<string, HandlerConstructor>();
 
+    // the duplicate-route error reports the file the existing class came from. A stale hmr artifact list can
+    // leave a class in a route map after its entry here is gone, hence the fallback at the read site
+    private readonly handlerFiles = new Map<HandlerConstructor, string>();
+
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
     private readonly middlewares: RegisteredMiddleware[] = [];
 
@@ -262,32 +266,24 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private async loadHandlers(dir: string): Promise<void> {
-        await traverseDirectory(
-            dir,
-            (fullPath, relativePath, imported) => {
-                for (const val of Object.values(imported)) {
-                    if (!this.isHandlerClass(val)) continue;
-                    this.registerHandler(val, relativePath);
-                    this.hmrHandler?.trackHandler(fullPath, val);
-                }
-            },
-            this.logger
-        );
+        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+            for (const val of Object.values(imported)) {
+                if (!this.isHandlerClass(val)) continue;
+                this.registerHandler(val, relativePath);
+                this.hmrHandler?.trackHandler(fullPath, val);
+            }
+        });
     }
 
     private async loadMiddlewares(dir: string): Promise<void> {
-        await traverseDirectory(
-            dir,
-            (fullPath, relativePath, imported) => {
-                for (const val of Object.values(imported)) {
-                    if (!this.isMiddlewareClass(val)) continue;
+        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+            for (const val of Object.values(imported)) {
+                if (!this.isMiddlewareClass(val)) continue;
 
-                    this.registerMiddleware(val, relativePath);
-                    this.hmrHandler?.trackMiddleware(fullPath, val);
-                }
-            },
-            this.logger
-        );
+                this.registerMiddleware(val, relativePath);
+                this.hmrHandler?.trackMiddleware(fullPath, val);
+            }
+        });
     }
 
     private registerMiddleware(middlewareCtor: InteractionMiddlewareConstructor, relativePath: string): void {
@@ -334,6 +330,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private registerHandler(handlerClass: HandlerConstructor, relativePath: string): void {
+        const from = formatFilePath(relativePath);
         // a partial registration would orphan routes and break hmr rollback
         const writes: [Map<string, HandlerConstructor>, string][] = [];
 
@@ -346,9 +343,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 // a different class on the same route would silently shadow (last write wins)
                 if (existing && existing !== handlerClass) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
-                        route,
-                        existing.name,
-                        handlerClass.name
+                        `${routeType}:${route}`,
+                        `${existing.name} (${this.handlerFiles.get(existing) ?? 'unknown file'})`,
+                        `${handlerClass.name} (${from})`
                     ]);
                 }
                 writes.push([map, route]);
@@ -357,8 +354,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         if (writes.length === 0) return;
         for (const [map, route] of writes) map.set(route, handlerClass);
+        this.handlerFiles.set(handlerClass, from);
 
-        const from = formatFilePath(relativePath);
         if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
         else this.logger.utils.registration(handlerClass.name, from);
     }
@@ -369,6 +366,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     }
 
     private unregisterHandler(handlerClass: HandlerConstructor, artifacts?: InteractionArtifact[]): void {
+        this.handlerFiles.delete(handlerClass);
         if (artifacts) {
             for (const { routeType, routes } of artifacts) {
                 const map = this.routeTypes.find(([type]) => type === routeType)?.[1];

@@ -2,7 +2,6 @@ import type { Bot } from '@bot/Bot';
 import type { GatewayConfig } from '@interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node/internal';
-import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Bus } from '@subscribers/Bus';
 
 /**
@@ -22,13 +21,11 @@ import type { Bus } from '@subscribers/Bus';
  * }
  * ```
  * */
-export interface Core extends CoreBase, SeedcordInstance {
-    readonly shutdown: CoordinatedShutdown;
-    readonly startup: CoordinatedStartup;
+export interface Core extends CoreBase {
+    readonly shutdown: Pick<CoordinatedShutdown, 'addTask'>;
+    readonly startup: Pick<CoordinatedStartup, 'addTask'>;
 
     readonly bot: Bot;
     readonly bus: Bus;
     readonly config: GatewayConfig;
-
-    start(): Promise<this>;
 }

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-const distDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../dist');
+const distDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../../dist');
 
 const nodeBuiltins = new Set(builtinModules);
 
@@ -32,10 +32,10 @@ function nodeImportsInClosure(entryFile: string): string[] {
     return hits;
 }
 
-describe('/plugin dist is node-free', () => {
-    it.each(['plugin.index.mjs', 'plugin.index.cjs'])('has no node builtin import in %s', (entry) => {
+describe('the shipped ./edge dist is node-free', () => {
+    it.each(['edge.index.mjs', 'edge.index.cjs'])('has no node builtin import in %s', (entry) => {
         const file = join(distDir, entry);
-        expect(existsSync(file), `${entry} is missing, run pnpm -C packages/core build first`).toBe(true);
+        expect(existsSync(file), `${entry} is missing, run pnpm -C packages/http build first`).toBe(true);
         expect(nodeImportsInClosure(file)).toStrictEqual([]);
     });
 });

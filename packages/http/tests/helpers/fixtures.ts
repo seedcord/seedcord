@@ -9,5 +9,11 @@ export const nullPathConfig: Config = {
 };
 
 export function emptyManifest(): RouteManifest {
-    return { commands: [], components: [], autocomplete: [], subscribers: [] };
+    return {
+        commandRoutes: [],
+        componentRoutes: [],
+        autocompleteRoutes: [],
+        subscriberRoutes: [],
+        middlewareRoutes: []
+    };
 }

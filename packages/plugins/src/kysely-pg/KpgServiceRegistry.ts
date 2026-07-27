@@ -35,18 +35,14 @@ export class KpgServiceRegistry<Database extends object> {
     public async loadFromDirectory(dir: string): Promise<void> {
         this.logger.info(chalk.bold(dir));
 
-        await traverseDirectory(
-            dir,
-            (fullPath, rel, mod) => {
-                for (const Service of Object.values(mod)) {
-                    if (!this.isServiceClass(Service)) continue;
+        await traverseDirectory(dir, (fullPath, rel, mod) => {
+            for (const Service of Object.values(mod)) {
+                if (!this.isServiceClass(Service)) continue;
 
-                    this.initializeService(Service, rel);
-                    this.plugin.trackServiceFile(fullPath, Service);
-                }
-            },
-            this.logger
-        );
+                this.initializeService(Service, rel);
+                this.plugin.trackServiceFile(fullPath, Service);
+            }
+        });
 
         this.logger.utils.list(
             [`${chalk.magenta(Object.keys(this.services).length)} services`],

@@ -21,6 +21,12 @@ export class TestEnvironment {
         return path.resolve(this.rootDir, relativePath);
     }
 
+    public async createDir(relativePath: string): Promise<string> {
+        const dirPath = this.resolvePath(relativePath);
+        await fs.mkdir(dirPath, { recursive: true });
+        return dirPath;
+    }
+
     public async createFile(relativePath: string, content: string): Promise<string> {
         const filePath = this.resolvePath(relativePath);
         await fs.mkdir(path.dirname(filePath), { recursive: true });

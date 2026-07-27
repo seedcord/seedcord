@@ -11,8 +11,9 @@ import { interactionGateContext } from '@src/gates/context';
 
 import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
+import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
-import type { Config, IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
+import type { IRateLimiter, RenderContext } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -27,31 +28,13 @@ interface HttpHandler {
 
 type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: DispatchContext) => HttpHandler;
 
-export function createCore(config: Config, token: string): Core {
+export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    // the omit type makes TS check every present field, and the cast below only adds the three named absences
-    const core: TypedOmit<Core, 'start' | 'shutdown' | 'startup'> = {
-        config,
-        rateLimiter,
-        rest: new REST().setToken(token),
-        version: process.env.PACKAGE_VERSION ?? '0.0.0',
-        username: undefined,
-        augmentTarget: '@seedcord/http'
-    };
-    // justified: start, shutdown, and startup get added later, dispatch reads none of them
-    return core as Core;
+    return { config, rateLimiter, rest: new REST().setToken(token) };
 }
 
 function isHandlerCtor(value: unknown): value is HandlerCtor {
     return typeof value === 'function' && value.prototype instanceof BaseHandler;
-}
-
-function handlerCtorOf(moduleExports: unknown): HandlerCtor | null {
-    if (typeof moduleExports !== 'object' || moduleExports === null) return null;
-    for (const value of Object.values(moduleExports)) {
-        if (isHandlerCtor(value)) return value;
-    }
-    return null;
 }
 
 interface FaultScope {
@@ -165,32 +148,32 @@ function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: 
 }
 
 /**
- * Runs the pre-ack phase for a matched interaction. Loads the route module, constructs the handler, and
+ * Runs the pre-ack phase for a matched interaction. Loads the route's handler class, constructs it, and
  * runs its gates, and the sender posts any refusal. Returns the post-ack execute continuation, or null
  * when a gate refuses or nothing can run.
  */
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
 
-    let moduleExports: unknown;
+    let exported: unknown;
     try {
-        moduleExports = await match.load();
+        exported = await match.load();
     } catch (caught) {
-        logger().error(`Route ${paint.sky.bold(match.routeId ?? 'unhandled')} failed to load its module.`, caught);
+        logger().error(`Route ${paint.sky.bold(match.routeId ?? 'unhandled')} failed to load its handler.`, caught);
         await handleFault(caught, freshScope(match, payload, core));
         return null;
     }
 
-    const ctor = handlerCtorOf(moduleExports);
-    if (!ctor) {
+    if (!isHandlerCtor(exported)) {
         const routeId = match.routeId ?? 'unhandled';
-        logger().error(`Route ${paint.sky.bold(routeId)} loaded a module with no handler class.`);
+        logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
         await handleFault(
-            new Error(`route ${routeId} loaded a module with no handler class`),
+            new Error(`route ${routeId} loaded an export that is not a handler class`),
             freshScope(match, payload, core)
         );
         return null;
     }
+    const ctor = exported;
 
     const dispatch = new DispatchContext(match.routeId);
     let handler: HttpHandler;

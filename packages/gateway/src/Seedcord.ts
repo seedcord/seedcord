@@ -20,12 +20,13 @@ import type { GatewayConfig } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
 import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
+import type { SeedcordInstance } from '@seedcord/types/internal';
 
 /**
  * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
-export class Seedcord extends Pluggable implements Core {
+export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -36,12 +37,6 @@ export class Seedcord extends Pluggable implements Core {
 
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
-
-    /** @see {@link CoordinatedShutdown} */
-    public override readonly shutdown: CoordinatedShutdown;
-
-    /** @see {@link CoordinatedStartup} */
-    public override readonly startup: CoordinatedStartup;
 
     /** @see {@link Bus} */
     public readonly bus: Bus;
@@ -57,16 +52,10 @@ export class Seedcord extends Pluggable implements Core {
      * @throws A **SeedcordError** When attempting to create multiple instances (singleton)
      */
     constructor(public readonly config: GatewayConfig) {
-        const shutdown = new CoordinatedShutdown();
-        const startup = new CoordinatedStartup();
-
-        super(shutdown, startup);
+        super(new CoordinatedShutdown(), new CoordinatedStartup());
 
         installNodeDefaults(config.logger);
         setBotColor(config.botColor);
-
-        this.shutdown = shutdown;
-        this.startup = startup;
 
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
