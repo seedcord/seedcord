@@ -36,10 +36,14 @@ export abstract class Pluggable<TPluggableEvents extends EventMap<TPluggableEven
     public abstract readonly config: Config;
     public abstract readonly rateLimiter: IRateLimiter;
 
+    /** @see {@link CoordinatedShutdown} */
+    public readonly shutdown: CoordinatedShutdown;
+
+    /** @see {@link CoordinatedStartup} */
+    public readonly startup: CoordinatedStartup;
+
     protected isInitialized = false;
     protected startFailed = false;
-    protected readonly shutdown: CoordinatedShutdown;
-    protected readonly startup: CoordinatedStartup;
     protected readonly plugins: Plugin[] = [];
 
     private readonly pluginLogger = new Logger('Plugins');

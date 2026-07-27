@@ -12,7 +12,7 @@ import { interactionGateContext } from '@src/gates/context';
 import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { Core } from '@interfaces/Core';
-import type { Config, IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
+import type { Config, IRateLimiter, RenderContext } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -29,17 +29,7 @@ type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: Dis
 
 export function createCore(config: Config, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    // the omit type makes TS check every present field, and the cast below only adds the three named absences
-    const core: TypedOmit<Core, 'start' | 'shutdown' | 'startup'> = {
-        config,
-        rateLimiter,
-        rest: new REST().setToken(token),
-        version: process.env.PACKAGE_VERSION ?? '0.0.0',
-        username: undefined,
-        augmentTarget: '@seedcord/http'
-    };
-    // justified: start, shutdown, and startup get added later, dispatch reads none of them
-    return core as Core;
+    return { config, rateLimiter, rest: new REST().setToken(token) };
 }
 
 function isHandlerCtor(value: unknown): value is HandlerCtor {
