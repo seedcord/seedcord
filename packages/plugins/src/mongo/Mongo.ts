@@ -160,20 +160,16 @@ export class Mongo extends Plugin {
         const servicesDir = this.options.dir;
         this.logger.info(chalk.bold(servicesDir));
 
-        await traverseDirectory(
-            servicesDir,
-            (fullPath, rel, mod) => {
-                for (const Service of Object.values(mod)) {
-                    if (!this.isServiceClass(Service)) {
-                        continue;
-                    }
-
-                    this.initializeService(Service, rel);
-                    this.hmrHandler?.trackHandler(fullPath, Service);
+        await traverseDirectory(servicesDir, (fullPath, rel, mod) => {
+            for (const Service of Object.values(mod)) {
+                if (!this.isServiceClass(Service)) {
+                    continue;
                 }
-            },
-            this.logger
-        );
+
+                this.initializeService(Service, rel);
+                this.hmrHandler?.trackHandler(fullPath, Service);
+            }
+        });
 
         this.logger.utils.list(
             [`${chalk.magenta(Object.keys(this._services).length)} services`],

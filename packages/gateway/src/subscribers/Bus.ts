@@ -109,20 +109,16 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> implements Initia
     }
 
     private async loadSubscribers(dir: string): Promise<void> {
-        await traverseDirectory(
-            dir,
-            (fullPath, relativePath, imported) => {
-                for (const exportName of Object.keys(imported)) {
-                    const val = imported[exportName];
-                    if (this.isSubscriber(val)) {
-                        this.registerSubscriber(val);
-                        this.hmrHandler?.trackHandler(fullPath, val);
-                        this.logger.utils.registration(val.name, relativePath);
-                    }
+        await traverseDirectory(dir, (fullPath, relativePath, imported) => {
+            for (const exportName of Object.keys(imported)) {
+                const val = imported[exportName];
+                if (this.isSubscriber(val)) {
+                    this.registerSubscriber(val);
+                    this.hmrHandler?.trackHandler(fullPath, val);
+                    this.logger.utils.registration(val.name, relativePath);
                 }
-            },
-            this.logger
-        );
+            }
+        });
     }
 
     private registerSubscriber(handler: SubscriberConstructor): void {

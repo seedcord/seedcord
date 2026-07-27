@@ -66,17 +66,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.loading = true;
         this.loadedHandlers.length = 0;
         try {
-            await traverseDirectory(
-                this.handlersDir,
-                (fullPath, relativePath, imported) => {
-                    for (const value of Object.values(imported)) {
-                        if (!this.isHandler(value)) continue;
-                        this.registerHandler(value, relativePath);
-                        this.hmrHandler?.trackHandler(fullPath, value);
-                    }
-                },
-                this.logger
-            );
+            await traverseDirectory(this.handlersDir, (fullPath, relativePath, imported) => {
+                for (const value of Object.values(imported)) {
+                    if (!this.isHandler(value)) continue;
+                    this.registerHandler(value, relativePath);
+                    this.hmrHandler?.trackHandler(fullPath, value);
+                }
+            });
         } finally {
             this.loading = false;
         }

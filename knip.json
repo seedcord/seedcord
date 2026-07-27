@@ -95,12 +95,17 @@
         "packages/gateway": {},
         "packages/http": {
             "ignore": [
-                "tests/node/discovery/fixtures/**"
+                "tests/node/discovery/fixtures/**",
+                "tests/node/discovery/duplicates/**"
             ]
         },
         "packages/tsconfig": {},
         "packages/tsdown-config": {},
         "packages/types": {},
-        "packages/utils": {}
+        "packages/utils": {
+            "ignore": [
+                "tests/node/fixtures/**"
+            ]
+        }
     }
 }

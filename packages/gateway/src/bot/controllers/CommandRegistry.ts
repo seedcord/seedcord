@@ -159,17 +159,13 @@ export class CommandRegistry implements Initializeable, HmrAware {
     }
 
     private async loadCommands(dir: string): Promise<void> {
-        await traverseDirectory(
-            dir,
-            (fullPath, rel, mod) => {
-                for (const exported of Object.values(mod))
-                    if (this.isCommandClass(exported)) {
-                        this.registerCommand(exported, rel);
-                        this.hmrHandler?.trackHandler(fullPath, exported);
-                    }
-            },
-            this.logger
-        );
+        await traverseDirectory(dir, (fullPath, rel, mod) => {
+            for (const exported of Object.values(mod))
+                if (this.isCommandClass(exported)) {
+                    this.registerCommand(exported, rel);
+                    this.hmrHandler?.trackHandler(fullPath, exported);
+                }
+        });
     }
 
     private isCommandClass(obj: unknown): obj is CommandCtor {
