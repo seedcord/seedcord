@@ -6,7 +6,7 @@ import { buildRouteMaps } from './dispatch/resolve';
 import { buildEngine } from './engine';
 
 import type { EngineContext } from './engine';
-import type { Config } from '@seedcord/types';
+import type { HttpConfig } from '@interfaces/Config';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 export type { EngineContext } from './engine';
@@ -25,7 +25,7 @@ export type { EngineContext } from './engine';
  * `SeedcordError` when either is missing or malformed.
  */
 export function createSeedcord(
-    config: Config,
+    config: HttpConfig,
     manifest: RouteManifest
 ): (request: Request, ctx?: EngineContext) => Promise<Response> {
     const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));

@@ -11,8 +11,9 @@ import { interactionGateContext } from '@src/gates/context';
 
 import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
+import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
-import type { Config, IRateLimiter, RenderContext } from '@seedcord/types';
+import type { IRateLimiter, RenderContext } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -27,7 +28,7 @@ interface HttpHandler {
 
 type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: DispatchContext) => HttpHandler;
 
-export function createCore(config: Config, token: string): Core {
+export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
     return { config, rateLimiter, rest: new REST().setToken(token) };
 }

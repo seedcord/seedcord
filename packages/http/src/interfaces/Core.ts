@@ -1,6 +1,6 @@
 import type { REST } from '@discordjs/rest';
+import type { HttpConfig } from '@interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
-import type { Config } from '@seedcord/types';
 
 /**
  * Main interface for Seedcord core functionality on the HTTP transport.
@@ -20,5 +20,5 @@ import type { Config } from '@seedcord/types';
 export interface Core extends CoreBase {
     /** Workerd-compatible Discord REST client. */
     readonly rest: REST;
-    readonly config: Config;
+    readonly config: HttpConfig;
 }
