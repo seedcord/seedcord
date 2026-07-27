@@ -90,6 +90,14 @@
             "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
         },
+        "@seedcord/core#test": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+        },
+        "@seedcord/http#test": {
+            "dependsOn": ["^build", "@seedcord/http#build"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+        },
         "@seedcord/docs-engine#test": {
             "dependsOn": ["^build", "@seedcord/docs-generator#test"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
