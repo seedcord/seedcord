@@ -9,9 +9,9 @@ const distDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../dist');
 
 const nodeBuiltins = new Set(builtinModules);
 
-// ADR-018 requires /plugin node-free so a browser/edge author can import the base.
 function nodeImportsInClosure(entryFile: string): string[] {
-    const importRe = /(?:import|export)[^'"]*from\s*['"]([^'"]+)['"]|require\(\s*['"]([^'"]+)['"]\s*\)/g;
+    const importRe =
+        /(?:import|export)[^'"]*from\s*['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)|(?<![\w.$])import\s*['"]([^'"]+)['"]|require\(\s*['"]([^'"]+)['"]\s*\)/g;
     const seen = new Set<string>();
     const hits: string[] = [];
 
@@ -21,7 +21,7 @@ function nodeImportsInClosure(entryFile: string): string[] {
 
         const source = readFileSync(file, 'utf8');
         for (const match of source.matchAll(importRe)) {
-            const spec = match[1] ?? match[2];
+            const spec = match[1] ?? match[2] ?? match[3] ?? match[4];
             if (!spec) continue;
             if (spec.startsWith('node:') || nodeBuiltins.has(spec)) hits.push(`${file}: ${spec}`);
             if (spec.startsWith('./') || spec.startsWith('../')) walk(join(dirname(file), spec));
