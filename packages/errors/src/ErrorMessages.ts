@@ -37,6 +37,8 @@ const messages = {
         guildId ? `Bot role not found in guild ${guildId}.` : 'Bot role not found in guild.',
     [SeedcordErrorCode.CoreControllerPathMissing]: (controllerName: string, pathKind: string) =>
         `${controllerName} was instantiated without a ${pathKind} path.`,
+    [SeedcordErrorCode.CoreDirectoryImportFailed]: (file: string) => `${file} threw while importing.`,
+    [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorMethodNotFound]: () =>
@@ -55,10 +57,12 @@ const messages = {
     [SeedcordErrorCode.DecoratorWebhookUrlMissing]: (className: string) =>
         `${className} extends WebhookLog and needs a @WebhookUrl decorator naming its env var.`,
 
-    [SeedcordErrorCode.InteractionDuplicateRoute]: (route: string, firstClass: string, secondClass: string) =>
-        `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${firstClass} and ${secondClass}. Rename one.`,
+    [SeedcordErrorCode.InteractionDuplicateRoute]: (route: string, first: string, second: string) =>
+        `Two interaction handlers resolve to the same route \`${route}\`. Registered by ${first} and ${second}. Rename one.`,
     [SeedcordErrorCode.InteractionDuplicateMiddleware]: (name: string) =>
         `Two different interaction middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
+    [SeedcordErrorCode.InteractionRouteExportMissing]: (route: string, exportName: string, from: string) =>
+        `Route \`${route}\` loads \`${exportName}\` from ${from}, which exports no such name.`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${chalk.cyan(`${method}()`)} was called when ${reason}.\n${alternative} (route ${chalk.cyan(routeId)})`,

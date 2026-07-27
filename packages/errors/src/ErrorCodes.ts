@@ -46,6 +46,10 @@ export enum SeedcordErrorCode {
     CoreBotRoleMissing = 1204,
     /** A bot controller was constructed without its required handlers directory. */
     CoreControllerPathMissing = 1205,
+    /** A file in a scanned directory threw while being imported. */
+    CoreDirectoryImportFailed = 1206,
+    /** A scanned directory could not be read. */
+    CoreDirectoryUnreadable = 1207,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,
@@ -66,6 +70,8 @@ export enum SeedcordErrorCode {
     InteractionDuplicateRoute = 1401,
     /** Two different interaction middleware classes share a class name. */
     InteractionDuplicateMiddleware = 1402,
+    /** A route manifest row gives an export name its module does not have. */
+    InteractionRouteExportMissing = 1403,
 
     /** A reply method was called in an ack state where it is illegal. */
     ReplyIllegalAckState = 1501,

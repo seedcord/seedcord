@@ -86,6 +86,7 @@ This list is illustrative, not exhaustive. When a word isn't on it, apply the ru
 | **drops** ("X drops Y") | anthropomorphizes, a package or type is not an actor that discards | "no longer exports / defines Y", "Y is removed" |
 | **gains** ("X gains Y") | anthropomorphizes, a package or type is not an actor that acquires | "adds Y", "now has Y", "accepts Y" |
 | **exercise / exercised / exercisable** ("the test exercises X") | vague test-jargon for running or calling code | "calls X", "runs X", "tests X" |
+| **names** ("the error names the file", "the row names its export") | anthropomorphizes, a value performs no act of naming | "reports", "includes", "specifies", "contains", "states", or name the mechanism: "the message contains the path" |
 
 <!--prettier-ignore-end-->
 
@@ -107,7 +108,7 @@ The em-dash `—` and en-dash `–` are banned in prose outright, replace them w
 **Do not reflexively replace a `;` or `:` with ", so".** A semicolon often just sets two related facts side by side, and ", so" asserts a cause the original never claimed. It reads wrong when the real link is a design choice or a plain sequence, and stacking two "so"s in one sentence is a tell. Use ", so" only when the second clause genuinely results from the first. Otherwise use a period, or ", and" for a neutral join.
 
 - BAD, invented cause: "meaningless without a filesystem, so it throws" (the throw is a design choice, and ", so" overstates it as a consequence).
-- GOOD: "meaningless without a filesystem, and it throws instead of ignoring it".
+- GOOD: "it throws because it's meaningless without a filesystem".
 - BAD, stacked "so": "binds a source per file, so restore it after any swap so later tests see a clean default".
 - GOOD: "binds a source per file. Tests here swap it, so restore it afterward for a clean default."
 
