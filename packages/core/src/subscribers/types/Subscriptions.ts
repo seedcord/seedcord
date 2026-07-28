@@ -90,14 +90,20 @@ export interface DefaultSubscriptions {
         outcome: DispatchOutcome;
         /** True when no route matched and the unhandled default ran. */
         fallback: boolean;
-        /** Dispatch entry to settle, measured on a monotonic clock. */
+        /** Dispatch entry until the user has a response, replies included. A clock change never affects it. */
         durationMs: number;
-        /** Discord's interaction creation to dispatch entry, read from the snowflake. */
+        /**
+         * Discord's interaction creation until the dispatch picked it up, read from the snowflake. This
+         * covers network transit plus any time your bot was busy before starting, so a rise points at
+         * either Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a
+         * host running behind Discord reports a negative value.
+         */
         queuedMs: number;
     };
     /**
      * Triggered on every write through the reply surface, several times per interaction. A write that
-     * throws reports here too, with `outcome` `failed`.
+     * throws reports here too, with `outcome` `failed`. A write that reaches Discord and then returns an
+     * unexpected shape publishes nothing, since the callback succeeded and carries no message to name.
      */
     responseAttempted: {
         routeId: string;
