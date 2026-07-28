@@ -2,11 +2,10 @@ import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
 import {
     asError,
-    attemptWrite,
     dispatchedPayload,
     outcomeFor,
-    publishResponse,
     queuedMsFor,
+    reportedWrite,
     PublishDefault,
     runHandlerGates,
     slowGateMonitor
@@ -88,19 +87,11 @@ async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promi
 // other write, so a faulted autocomplete still shows its discord round trip
 async function respondEmptyChoices(scope: FaultScope): Promise<void> {
     const telemetry = { bus: scope.core.bus, interactionId: scope.payload.id };
-    const startedAt = performance.now();
-    await attemptWrite(telemetry, scope.routeId, 'respond', startedAt, () =>
+    await reportedWrite(telemetry, scope.routeId, 'respond', () =>
         scope.core.rest.post(Routes.interactionCallback(scope.payload.id, scope.payload.token), {
             body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
         })
     );
-    publishResponse(telemetry, {
-        routeId: scope.routeId,
-        method: 'respond',
-        startedAt,
-        outcome: 'sent',
-        messageId: null
-    });
 }
 
 function renderContext(core: Core, uuid: RenderContext['uuid']): RenderContext {

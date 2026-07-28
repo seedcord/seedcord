@@ -1,5 +1,5 @@
 import { BaseHandler } from '@seedcord/core';
-import { attemptWrite, publishResponse } from '@seedcord/core/internal';
+import { reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionResponseType, Routes } from 'discord-api-types/v10';
@@ -102,16 +102,13 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
     protected async respond(choices: readonly APIApplicationCommandOptionChoice[]): Promise<void> {
-        const telemetry = { bus: this.core.bus, interactionId: this.event.id };
         // a hand-built handler outside a dispatch carries no route id
         const routeId = this.dispatch?.routeId ?? 'autocomplete';
-        const startedAt = performance.now();
-        await attemptWrite(telemetry, routeId, 'respond', startedAt, () =>
+        await reportedWrite({ bus: this.core.bus, interactionId: this.event.id }, routeId, 'respond', () =>
             this.core.rest.post(Routes.interactionCallback(this.event.id, this.event.token), {
                 body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices } }
             })
         );
-        publishResponse(telemetry, { routeId, method: 'respond', startedAt, outcome: 'sent', messageId: null });
     }
 
     /** The firing command route, for a field whose completion differs per registered command. */

@@ -5,7 +5,7 @@ import type { ReplyMethod } from './ackLegality';
 import type { Bus } from '@subscribers/Bus';
 import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 
-/** What a write needs to publish `responseAttempted`. A caller without it stays silent. */
+/** What `publishResponse` requires. Without it the call returns without publishing. */
 export interface ReplyTelemetry {
     readonly bus: Bus;
     readonly interactionId: string;
@@ -40,6 +40,23 @@ export function publishResponse(telemetry: ReplyTelemetry | undefined, report: R
 }
 
 /**
+ * Runs a write that returns no message and publishes whichever arm it takes.
+ *
+ * @internal
+ */
+export async function reportedWrite<Result>(
+    telemetry: ReplyTelemetry | undefined,
+    routeId: string,
+    method: WriteMethod,
+    write: () => Promise<Result>
+): Promise<Result> {
+    const startedAt = performance.now();
+    const result = await attemptWrite(telemetry, routeId, method, startedAt, write);
+    publishResponse(telemetry, { routeId, method, startedAt, outcome: 'sent', messageId: null });
+    return result;
+}
+
+/**
  * Runs a wire write and publishes the `failed` arm when it throws, since the caller's success report
  * sits after the write and a throw skips it.
  *
@@ -57,7 +74,7 @@ export async function attemptWrite<Result>(
     } catch (caught) {
         const error = asError(caught);
         publishResponse(telemetry, { routeId, method, startedAt, outcome: 'failed', messageId: null, error });
-        // raw, so the caller sees what the write actually threw
+        // rethrown raw, so the caller catches the value the write threw
         throw caught;
     }
 }

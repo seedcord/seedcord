@@ -1,5 +1,5 @@
 import { Notice, Silence } from '@seedcord/core';
-import { asError, attemptWrite, publishResponse } from '@seedcord/core/internal';
+import { asError, reportedWrite } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
@@ -72,10 +72,8 @@ export async function handleInteractionFault(
 async function sendEmptyChoices(interaction: AutocompleteInteraction, core: Core): Promise<void> {
     const telemetry = { bus: core.bus, interactionId: interaction.id };
     const routeId = `autocomplete:${slashRouteOf(interaction)}`;
-    const startedAt = performance.now();
     try {
-        await attemptWrite(telemetry, routeId, 'respond', startedAt, () => interaction.respond([]));
-        publishResponse(telemetry, { routeId, method: 'respond', startedAt, outcome: 'sent', messageId: null });
+        await reportedWrite(telemetry, routeId, 'respond', () => interaction.respond([]));
     } catch (error) {
         logger.debug(`autocomplete empty-choices send failed: ${String(error)}`);
     }
