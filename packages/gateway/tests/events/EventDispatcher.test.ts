@@ -546,6 +546,22 @@ describe('EventDispatcher Integration', () => {
             });
         });
 
+        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async () => {
+            const { controller, fire } = await clientHarness();
+            vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
+            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+
+            const seen: SubscriptionData<'unhandledEventError'>[] = [];
+            seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));
+
+            fire?.({ reply: vi.fn() });
+
+            await vi.waitFor(() => {
+                expect(seen).toHaveLength(1);
+            });
+            expect(seen[0]?.error.message).toBe('a bare string');
+        });
+
         it('stops dispatching new events after stopAccepting, and drain resolves', async () => {
             const { controller, fire } = await clientHarness();
             const processSpy = vi.spyOn(controller, 'processEvent').mockResolvedValue(undefined);

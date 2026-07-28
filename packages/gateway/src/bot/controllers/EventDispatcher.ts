@@ -1,6 +1,7 @@
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import {
     areRoutes,
+    asError,
     EventMetadataKey,
     MiddlewareMetadataKey,
     PublishDefault,
@@ -316,9 +317,10 @@ export class EventDispatcher implements Initializeable, HmrAware {
             if (this.draining) return;
             // justified: the per-event tuple erases across the generic key, args matches eventName here
             this.core.bus[PublishDefault]('anyEvent', { name: eventName, args } as SubscriptionData<'anyEvent'>);
-            const run = this.processEvent(eventName, args).catch((err: Error) => {
-                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bus[PublishDefault]('unhandledEventError', { error: err });
+            const run = this.processEvent(eventName, args).catch((caught: unknown) => {
+                const error = asError(caught);
+                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
+                this.core.bus[PublishDefault]('unhandledEventError', { error });
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));
