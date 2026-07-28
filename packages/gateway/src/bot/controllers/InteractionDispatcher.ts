@@ -489,7 +489,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             if (!interaction.isAutocomplete()) await this.runMiddlewares(interaction as Repliables);
 
             const HandlerCtor = matched ?? fallback;
-            const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
+            const dispatch = new DispatchContext(routeIdOf(HandlerCtor) ?? routeId);
             routeId = dispatch.routeId ?? routeId;
             const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
             if (handler instanceof RepliableHandler) sender = handler.getSender();

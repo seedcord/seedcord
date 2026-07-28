@@ -1163,6 +1163,29 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:mwboom', outcome: 'failed' });
         });
 
+        // the unhandled default carries no route decorator, so its own sender has no dispatch route id
+        it('publishes one route id across both keys for the unhandled default', async () => {
+            const controller = await bootWith(`
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('registered')
+                export class RegisteredHandler extends SlashHandler<'registered'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+            `);
+            const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
+            const written: SubscriptionData<'responseAttempted'>[] = [];
+            seedcord.bus.on('interactionDispatched', (payload) => dispatched.push(payload));
+            seedcord.bus.on('responseAttempted', (payload) => written.push(payload));
+
+            await controller.handleSlashCommand(fakeSlash('unregistered'));
+
+            expect(dispatched[0]?.routeId).toBe('slash:unregistered');
+            expect(written[0]?.routeId).toBe('slash:unregistered');
+        });
+
         // a middleware throw leaves no handler sender, so the boundary builds its own and the two keys
         // have to agree on the route a consumer groups by
         it('publishes one route id across both keys when a middleware throws', async () => {

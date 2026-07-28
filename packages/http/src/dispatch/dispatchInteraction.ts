@@ -257,7 +257,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const ctor = await loadHandlerCtor(match, payload, core, report);
     if (!ctor) return null;
 
-    const dispatch = new DispatchContext(match.routeId);
+    const dispatch = new DispatchContext(unhandledRouteId(match));
     let handler: HttpHandler;
     try {
         handler = new ctor(payload, core, dispatch);

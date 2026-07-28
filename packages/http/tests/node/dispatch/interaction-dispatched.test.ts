@@ -141,6 +141,32 @@ describe('interactionDispatched from the http dispatcher', () => {
         });
     });
 
+    // an unmatched route carries no routeId, so the handler's own sender has none from the dispatch
+    it('publishes one route id across both keys for an unmatched route', async () => {
+        Envapter.useSource(new PortableSource({}));
+        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
+        const written: SubscriptionData<'responseAttempted'>[] = [];
+        core.bus.on('interactionDispatched', (payload) => dispatched.push(payload));
+        core.bus.on('responseAttempted', (payload) => written.push(payload));
+
+        const match: ResolvedRoute = {
+            kind: 'slash',
+            routeId: null,
+            attemptedKey: 'unregistered',
+            load: () => Promise.resolve(OkHandler)
+        };
+        const execute = await dispatchInteraction({
+            match,
+            payload: slashPayload('ok') as ValidInteractionTypes,
+            core
+        });
+        await execute?.();
+
+        expect(dispatched[0]?.routeId).toBe('slash:unregistered');
+        expect(written[0]?.routeId).toBe('slash:unregistered');
+    });
+
     it('reports failed when the handler throws', async () => {
         const published = await dispatchedFor(routeFor('slash:boom', () => Promise.resolve(BoomHandler)));
 
