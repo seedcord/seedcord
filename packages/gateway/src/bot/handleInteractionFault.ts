@@ -51,6 +51,12 @@ export async function handleInteractionFault(
             metadata: interaction,
             route: slashRouteOf(interaction)
         });
+        // empty choices are the only legal response, and they clear the client's loading spinner
+        try {
+            await interaction.respond([]);
+        } catch (error) {
+            logger.debug(`autocomplete empty-choices send failed: ${String(error)}`);
+        }
         return;
     }
 

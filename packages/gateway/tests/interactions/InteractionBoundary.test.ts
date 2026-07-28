@@ -25,6 +25,7 @@ function mockInteraction() {
         editReply: vi.fn().mockResolvedValue({ id: 'sent' }),
         followUp: vi.fn().mockResolvedValue({ id: 'sent' }),
         deleteReply: vi.fn().mockResolvedValue(undefined),
+        respond: vi.fn().mockResolvedValue(undefined),
         isAutocomplete: vi.fn().mockReturnValue(false),
         isMessageComponent: vi.fn().mockReturnValue(false),
         isModalSubmit: vi.fn().mockReturnValue(false),
@@ -209,6 +210,13 @@ describe('handleInteractionFault', () => {
     describe('autocomplete arm', () => {
         beforeEach(() => {
             mock.isAutocomplete.mockReturnValue(true);
+        });
+
+        // the only legal autocomplete response, and it clears the client's loading spinner
+        it('responds with empty choices, so the dropdown stops spinning', async () => {
+            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+
+            expect(mock.respond).toHaveBeenCalledWith([]);
         });
 
         it('builds no sender and publishes unknownException with metadata for a raw error', async () => {

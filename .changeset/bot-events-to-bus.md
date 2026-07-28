@@ -8,4 +8,6 @@
 
 A component or modal whose customId carries no route prefix now reaches the unhandled default and gets a reply, matching http. It previously logged a warning and left the interaction with no reply.
 
+A fault during autocomplete now sends empty choices, which clears the client's loading spinner.
+
 A fault log line now writes on every occurrence. The 60s throttle covers the bus publish alone, so the uuid on a user's error card always resolves to a log line.
