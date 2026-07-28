@@ -75,3 +75,6 @@ export { translateSerializationError } from '@reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '@reply/serializeReply';
 
 export { type StoredSubscriberCtor, type SubscriberRegistration } from '@subscribers/Bus';
+export { PublishDefault } from '@subscribers/publishDefault';
+// the transports' augmentation target for their own default keys
+export type { DefaultSubscriptions, DispatchOutcome } from '@subscribers/types/Subscriptions';

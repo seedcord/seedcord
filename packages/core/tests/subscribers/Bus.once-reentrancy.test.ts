@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest';
 
 import { Bus } from '@subscribers/Bus';
 import { Subscribe } from '@subscribers/decorators/Subscribe';
+import { PublishDefault } from '@subscribers/publishDefault';
 import { Subscriber } from '@subscribers/Subscriber';
 
 import type { CoreBase } from '@interfaces/CoreBase';
@@ -27,7 +28,7 @@ describe("Bus 'once' re-entrancy", () => {
             public execute(): Promise<void> {
                 runs += 1;
                 // re-publish while still executing, the old fire-then-mark order ran this twice
-                if (runs === 1) this.core.bus.publish('unknownException', payload);
+                if (runs === 1) this.core.bus[PublishDefault]('unknownException', payload);
                 return Promise.resolve();
             }
         }
@@ -39,7 +40,7 @@ describe("Bus 'once' re-entrancy", () => {
             ctor: ReentrantOnce
         });
 
-        bus.publish('unknownException', payload);
+        bus[PublishDefault]('unknownException', payload);
         await new Promise((resolve) => setTimeout(resolve, 20));
 
         expect(runs).toBe(1);

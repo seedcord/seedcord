@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Bus } from '@subscribers/Bus';
+import { PublishDefault } from '@subscribers/publishDefault';
 
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
@@ -25,7 +26,7 @@ describe('Bus listener isolation', () => {
             throw new Error('listener blew up');
         });
 
-        expect(() => bus.publish('unknownException', faultPayload())).not.toThrow();
+        expect(() => bus[PublishDefault]('unknownException', faultPayload())).not.toThrow();
     });
 
     it('runs later listeners after an earlier one throws', () => {
@@ -40,7 +41,7 @@ describe('Bus listener isolation', () => {
         });
 
         try {
-            bus.publish('unknownException', faultPayload());
+            bus[PublishDefault]('unknownException', faultPayload());
         } catch {
             // the first case covers the escape, this one measures the later listener
         }
@@ -56,7 +57,7 @@ describe('Bus listener isolation', () => {
         bus.on('unknownException', () => {
             throw thrown;
         });
-        bus.publish('unknownException', faultPayload());
+        bus[PublishDefault]('unknownException', faultPayload());
 
         expect(error).toHaveBeenCalledWith('listener for unknownException threw', thrown);
     });

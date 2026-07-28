@@ -1,5 +1,14 @@
+import type { ReplyMethod } from '@reply/ackLegality';
+import type { TypedExclude } from '@seedcord/types';
+import type { InteractionRoutes } from '@src/metadataKeys';
 import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
+
+/**
+ * How a dispatch finished. `refused` is a gate stopping it before the handler ran, `failed` is a
+ * throw the handler let escape.
+ */
+export type DispatchOutcome = 'handled' | 'refused' | 'failed';
 
 /**
  * Where a reported fault came from.
@@ -42,8 +51,14 @@ export interface EventFaultSource {
     raw: unknown;
 }
 
-/** The framework's own subscription keys. */
-interface DefaultSubscriptions {
+/**
+ * The framework's own subscription keys. A transport adds a key whose payload names a type outside
+ * this package through declaration merging on its own module.
+ *
+ * Every key here is publish-protected. Subscribe to them. The framework is the
+ * only publisher.
+ */
+export interface DefaultSubscriptions {
     /** Triggered when an unhandled exception (a raw non-Notice throw) occurs */
     unknownException: {
         uuid: UUID;
@@ -57,6 +72,31 @@ interface DefaultSubscriptions {
         denial: Notice;
         uuid: UUID;
         source: FaultSource;
+    };
+    /** Triggered when an interaction dispatch throws past the fault boundary. */
+    unhandledInteractionError: {
+        error: Error;
+    };
+    /** Triggered once per interaction dispatch, after the handler chain settles. */
+    interactionDispatched: {
+        routeId: string;
+        kind: `${InteractionRoutes}`;
+        outcome: DispatchOutcome;
+        /** True when no route matched and the unhandled default ran. */
+        fallback: boolean;
+        /** Dispatch entry to settle, measured on a monotonic clock. */
+        durationMs: number;
+        /** Discord's interaction creation to dispatch entry, read from the snowflake. */
+        queuedMs: number;
+    };
+    /** Triggered on every successful write through the reply surface, several times per interaction. */
+    responseSent: {
+        routeId: string;
+        /** `send` routes to another verb, so it reports the verb that ran. */
+        method: ReplyMethod;
+        durationMs: number;
+        /** Null for the acks that carry no message (`defer`, `deferUpdate`, `delete`, `showModal`). */
+        messageId: string | null;
     };
 }
 
@@ -79,8 +119,14 @@ export interface Subscriptions {}
 
 export interface AllSubscriptions extends DefaultSubscriptions, Subscriptions {}
 
-/** All subscriber event names available to publish and augment. */
+/** All subscriber event names available to subscribe to and augment. */
 export type SubscriptionKey = keyof AllSubscriptions;
+
+/**
+ * The keys `publish` accepts. The framework's own keys are excluded, since only the framework
+ * produces them.
+ */
+export type PublishableKey = TypedExclude<SubscriptionKey, keyof DefaultSubscriptions>;
 
 /**
  * The payload type for a subscriber event.

@@ -1,3 +1,4 @@
+import { PublishDefault } from '@seedcord/core/internal';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
@@ -162,7 +163,7 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        const publish = vi.spyOn(seedcord.bus, 'publish');
+        const publish = vi.spyOn(seedcord.bus, PublishDefault);
         // justified: TestBot exposes the private events controller for assertion
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();

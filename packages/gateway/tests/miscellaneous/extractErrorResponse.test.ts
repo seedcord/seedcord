@@ -1,4 +1,5 @@
 import { Fault, CustomId } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
@@ -12,7 +13,7 @@ import type { Repliables } from '@src/handlers/interactionTypes';
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface extractErrorResponse reads.
-    return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
 function slashInteraction(commandName = 'ban'): Repliables {

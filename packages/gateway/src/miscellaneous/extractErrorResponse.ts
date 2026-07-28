@@ -1,7 +1,7 @@
 import * as crypto from 'node:crypto';
 
 import { Notice, Fault } from '@seedcord/core';
-import { prefixOf } from '@seedcord/core/internal';
+import { prefixOf, PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
@@ -88,12 +88,20 @@ function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID
         logger.error(`${denial.name}: ${uuid}`, denial);
 
         if (origin.interaction) {
-            core.bus.publish('handledException', { denial, uuid, source: buildInteractionSource(origin.interaction) });
+            core.bus[PublishDefault]('handledException', {
+                denial,
+                uuid,
+                source: buildInteractionSource(origin.interaction)
+            });
         } else if (origin.event) {
-            core.bus.publish('handledException', { denial, uuid, source: buildEventSource(origin.event, origin) });
+            core.bus[PublishDefault]('handledException', {
+                denial,
+                uuid,
+                source: buildEventSource(origin.event, origin)
+            });
         } else {
             // autocomplete has no reply target and no typed source, so report through unknownException
-            core.bus.publish('unknownException', {
+            core.bus[PublishDefault]('unknownException', {
                 uuid,
                 error: denial,
                 ...scalarActors(origin),
@@ -116,7 +124,7 @@ function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUI
         if (showStack) logger.error(uuid, error);
         else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
-        core.bus.publish('unknownException', {
+        core.bus[PublishDefault]('unknownException', {
             uuid,
             error,
             ...scalarActors(origin),

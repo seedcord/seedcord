@@ -1,4 +1,5 @@
 import { Bus } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -53,7 +54,7 @@ describe('registerSubscribers', () => {
 
         const bus = stubBus();
         registerSubscribers(bus, manifestWith(load));
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
         await vi.waitFor(() => {
             expect(ran).toEqual(['reporter']);
         });
@@ -77,7 +78,7 @@ describe('registerSubscribers', () => {
             )
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         await vi.waitFor(() => {
             const cause = loggedCause(error);
@@ -113,7 +114,7 @@ describe('registerSubscribers', () => {
             manifestWith(() => Promise.resolve({}))
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         await vi.waitFor(() => {
             const cause = loggedCause(error);

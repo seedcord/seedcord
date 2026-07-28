@@ -9,10 +9,17 @@ import { SubscribeMetadataKey } from '@src/metadataKeys';
 import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
+import { PublishDefault } from './publishDefault';
 
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { Subscriber } from './Subscriber';
-import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
+import type {
+    AllSubscriptions,
+    DefaultSubscriptions,
+    PublishableKey,
+    SubscriptionKey,
+    SubscriptionTuples
+} from './types/Subscriptions';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { EventFrequency } from '@seedcord/types';
 
@@ -139,11 +146,29 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
      * guarantee. A `'once'` subscriber is marked as executed when it starts (even if it throws), so
      * it never runs twice.
      *
+     * The framework's own keys are excluded. Subscribe to those and listen with `on`, the framework
+     * is their only publisher.
+     *
      * @param event - The subscription key to publish
      * @param data - Payload passed to each subscriber
      * @returns Whether the underlying emitter had native listeners for the event
      */
-    public publish<KeyOfSubscribers extends SubscriptionKey>(
+    public publish<KeyOfSubscribers extends PublishableKey>(
+        event: KeyOfSubscribers,
+        data: AllSubscriptions[KeyOfSubscribers]
+    ): boolean {
+        return this.dispatchKey(event, data);
+    }
+
+    /** @internal the framework's own publish path, keyed by a symbol no public entry exports */
+    public [PublishDefault]<KeyOfSubscribers extends keyof DefaultSubscriptions>(
+        event: KeyOfSubscribers,
+        data: AllSubscriptions[KeyOfSubscribers]
+    ): boolean {
+        return this.dispatchKey(event, data);
+    }
+
+    private dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {

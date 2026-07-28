@@ -1,4 +1,5 @@
 import { Silence, Fault } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -37,7 +38,7 @@ function stringCodedError(): DiscordAPIError {
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface the event boundary reads.
-    return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
 describe('handleEventFault', () => {
@@ -92,7 +93,7 @@ describe('handleEventFault', () => {
         const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { logSilences: false }, notifications: {} }
         } as unknown as Core;
 
@@ -138,7 +139,7 @@ describe('handleEventFault', () => {
     it('swallows an api code listed in ignoreEventApiCodes with no report', () => {
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { ignoreEventApiCodes: [RESTJSONErrorCodes.UnknownMessage] }, notifications: {} }
         } as unknown as Core;
 
@@ -150,7 +151,7 @@ describe('handleEventFault', () => {
     it('swallows a string-coded api error listed in ignoreEventApiCodes', () => {
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { ignoreEventApiCodes: ['SLASH_COMMAND_UNKNOWN'] }, notifications: {} }
         } as unknown as Core;
 

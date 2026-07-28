@@ -1,4 +1,5 @@
 import { Silence, Fault } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -46,7 +47,7 @@ function mockInteraction() {
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface the boundary reads.
-    return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
 // justified: the fixture implements only the interaction surface the boundary reads.
@@ -114,7 +115,7 @@ describe('handleInteractionFault', () => {
     it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
         // justified: the fixture implements only the Core surface the boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] }, notifications: {} }
         } as unknown as Core;
 
