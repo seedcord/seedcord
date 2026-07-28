@@ -65,6 +65,8 @@ const messages = {
         `Route \`${route}\` loads \`${exportName}\` from ${from}, which exports no such name.`,
     [SeedcordErrorCode.SubscriberRouteNotASubscriber]: (keys: string, exportName: string, from: string) =>
         `Subscriber row for \`${keys}\` loads \`${exportName}\` from ${from}, which does not extend Subscriber.`,
+    [SeedcordErrorCode.RouteModuleLoadFailed]: (route: string, from: string) =>
+        `Route \`${route}\` failed to import ${from}.`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${chalk.cyan(`${method}()`)} was called when ${reason}.\n${alternative} (route ${chalk.cyan(routeId)})`,

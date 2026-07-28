@@ -74,6 +74,8 @@ export enum SeedcordErrorCode {
     InteractionRouteExportMissing = 1403,
     /** A subscriber manifest row specifies an export that does not extend `Subscriber`. */
     SubscriberRouteNotASubscriber = 1404,
+    /** A manifest row's module threw while importing. */
+    RouteModuleLoadFailed = 1405,
 
     /** A reply method was called in an ack state where it is illegal. */
     ReplyIllegalAckState = 1501,

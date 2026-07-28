@@ -86,6 +86,25 @@ describe('registerSubscribers', () => {
         });
     });
 
+    it('translates a row whose module throws while importing, keeping the cause', async () => {
+        const bus = stubBus();
+        const error = vi.spyOn(bus.logger, 'error');
+        const boom = new Error('module init exploded');
+        registerSubscribers(
+            bus,
+            manifestWith(() => Promise.reject(boom))
+        );
+
+        bus.publish('unknownException', payload());
+
+        await vi.waitFor(() => {
+            const cause = loggedCause(error);
+            expect(isSeedcordError(cause, undefined, SeedcordErrorCode.RouteModuleLoadFailed)).toBe(true);
+            expect((cause as Error).message).toContain('src/Reporter.ts');
+            expect((cause as Error).cause).toBe(boom);
+        });
+    });
+
     it('logs a row whose named export is missing', async () => {
         const bus = stubBus();
         const error = vi.spyOn(bus.logger, 'error');

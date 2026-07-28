@@ -18,8 +18,15 @@ export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
             keys: row.keys,
             frequency: row.frequency,
             resolve: async () => {
-                const module = await row.load();
                 const keys = row.keys.join(', ');
+                let module: Awaited<ReturnType<typeof row.load>>;
+                try {
+                    module = await row.load();
+                } catch (caught) {
+                    throw new SeedcordError(SeedcordErrorCode.RouteModuleLoadFailed, [keys, row.from], {
+                        cause: caught
+                    });
+                }
                 if (!Object.hasOwn(module, row.exportName)) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionRouteExportMissing, [
                         keys,

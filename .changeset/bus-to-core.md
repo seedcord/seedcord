@@ -1,6 +1,6 @@
 ---
 '@seedcord/core': minor
-'@seedcord/gateway': major
+'@seedcord/gateway': minor
 '@seedcord/http': minor
 ---
 
