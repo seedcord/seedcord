@@ -2,7 +2,6 @@ import { Fault, Notice, Silence } from '@seedcord/core';
 import { dispatchedPayload, InteractionRoutes, outcomeFor } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
-import type { DispatchReport } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 
 // subclassed off the package entry, so this shares the Notice identity outcomeFor reads
@@ -16,7 +15,7 @@ class Refusal extends Notice {
     }
 }
 
-function reportFor(interactionId: string): DispatchReport {
+function reportFor(interactionId: string): Parameters<typeof dispatchedPayload>[0] {
     return {
         routeId: 'slash:ping',
         kind: InteractionRoutes.Slash,

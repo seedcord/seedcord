@@ -1156,6 +1156,66 @@ describe('InteractionDispatcher Integration', () => {
             expect(sent[0]).toMatchObject({ routeId: 'slash:replied', method: 'reply' });
         });
 
+        // the thrown value decides everywhere, so a constructor Silence matches http
+        it('reports refused when the handler constructor throws a Silence', async () => {
+            const published = await dispatchedFor(
+                `
+                import { Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('ctorsilent')
+                export class CtorSilentHandler extends SlashHandler<'ctorsilent'> {
+                    constructor(...args) {
+                        super(...args);
+                        throw new Silence('blocked');
+                    }
+
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `,
+                'ctorsilent'
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:ctorsilent', outcome: 'refused' });
+        });
+
+        // a raw non-Error gate throw is user error, the framework reports it and lets it reach the root
+        it('reports failed once when a gate throws a value that is not an Error', async () => {
+            await testEnv.createFile(
+                'interactions/Route.ts',
+                `
+                import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                const Raw = defineGate('Raw', () => {
+                    throw 'blocked';
+                });
+
+                @Gated(Raw)
+                @SlashRoute('rawgate')
+                export class RawGateHandler extends SlashHandler<'rawgate'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `
+            );
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
+
+            const published: SubscriptionData<'interactionDispatched'>[] = [];
+            seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
+
+            await expect(controller.handleSlashCommand(fakeSlash('rawgate'))).rejects.toBe('blocked');
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:rawgate', outcome: 'failed' });
+        });
+
         it('reports failed when the handler constructor throws', async () => {
             const published = await dispatchedFor(
                 `

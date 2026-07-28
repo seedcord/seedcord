@@ -428,7 +428,8 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies.
         // an empty prefix matches no route, so the unhandled default answers it the way http does
         const prefix = prefixOf(interaction.customId);
-        if (!prefix) this.logger.warn(`${kind} has invalid customId: ${interaction.customId}`);
+        if (!prefix)
+            this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
 
         await this.processInteraction(
             interaction,

@@ -50,6 +50,17 @@ class CtorBoomHandler extends SlashHandler<never> {
     }
 }
 
+class CtorSilentHandler extends SlashHandler<never> {
+    constructor(...args: ConstructorParameters<typeof SlashHandler<never>>) {
+        super(...args);
+        throw new Silence('blocked');
+    }
+
+    async execute(): Promise<void> {
+        await this.reply('done');
+    }
+}
+
 class SilentHandler extends SlashHandler<never> {
     execute(): Promise<void> {
         throw new Silence('blacklisted');
@@ -159,6 +170,14 @@ describe('interactionDispatched from the http dispatcher', () => {
 
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({ routeId: 'slash:wrong', outcome: 'failed' });
+    });
+
+    // the thrown value decides everywhere, so a constructor Silence matches gateway
+    it('reports refused when the handler constructor throws a Silence', async () => {
+        const published = await dispatchedFor(routeFor('slash:ctorsilent', () => Promise.resolve(CtorSilentHandler)));
+
+        expect(published).toHaveLength(1);
+        expect(published[0]).toMatchObject({ routeId: 'slash:ctorsilent', outcome: 'refused' });
     });
 
     it('reports failed when the handler constructor throws', async () => {

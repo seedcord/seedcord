@@ -240,7 +240,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     try {
         handler = new ctor(payload, core, dispatch);
     } catch (caught) {
-        report('failed');
+        report(outcomeFor(caught));
         await handleFault(caught, freshScope(match, payload, core));
         return null;
     }

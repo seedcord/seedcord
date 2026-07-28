@@ -25,8 +25,9 @@ function logger(): Logger {
 export const faultThrottle = new FaultThrottle();
 
 /**
- * Publishes a fault on the bus, the raw-payload port of gateway's `extractErrorResponse` reporting half.
- * A reported {@link Notice} lands on `handledException`, everything else on `unknownException`.
+ * Publishes a fault on the bus, the raw-payload equivalent of the reporting half of gateway's
+ * `extractErrorResponse`. A reported {@link Notice} publishes `handledException`, everything else
+ * publishes `unknownException`.
  *
  * @internal
  */

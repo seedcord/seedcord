@@ -5,8 +5,9 @@ import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
 
 /**
- * How a dispatch finished. `refused` covers every deliberate stop, a gate refusing and a `Silence`
- * thrown anywhere in the chain. `failed` is a throw that reached the fault boundary.
+ * How a dispatch finished. The thrown value decides, wherever it came from. A `Silence` and a
+ * `Notice` with `report` false are `refused`. A `Notice` with `report` true, which includes a default
+ * `Fault`, is `failed`, as is any other throw.
  */
 export type DispatchOutcome = 'handled' | 'refused' | 'failed';
 
@@ -59,7 +60,7 @@ export interface EventFaultSource {
  * only publisher.
  */
 export interface DefaultSubscriptions {
-    /** Triggered when an unhandled exception (a raw non-Notice throw) occurs */
+    /** Triggered when an unhandled exception (a raw non-Notice throw) occurs. */
     unknownException: {
         uuid: UUID;
         error: Error;
@@ -67,7 +68,7 @@ export interface DefaultSubscriptions {
         user?: { id: string; username: string } | undefined;
         metadata?: unknown;
     };
-    /** Triggered when a reported Notice (`report: true`) is caught */
+    /** Triggered when a reported Notice (`report: true`) is caught. */
     handledException: {
         denial: Notice;
         uuid: UUID;

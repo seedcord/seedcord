@@ -19,7 +19,7 @@ export function outcomeFor(caught: unknown): DispatchOutcome {
 }
 
 /** The values a dispatcher has once its handler chain settles. */
-export interface DispatchReport {
+interface DispatchReport {
     readonly routeId: string;
     readonly kind: `${InteractionRoutes}`;
     readonly outcome: DispatchOutcome;
