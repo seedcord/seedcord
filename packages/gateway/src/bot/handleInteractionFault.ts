@@ -1,4 +1,5 @@
 import { Notice, Silence } from '@seedcord/core';
+import { asError, attemptWrite, publishResponse } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
@@ -11,6 +12,7 @@ import { HARMLESS_API_CODES } from './harmlessApiCodes';
 import type { Core } from '@interfaces/Core';
 import type { ReplyResponse } from '@seedcord/types';
 import type { ValidInteractionTypes } from '@src/handlers/interactionTypes';
+import type { AutocompleteInteraction } from 'discord.js';
 
 const logger = new Logger('InteractionBoundary');
 
@@ -34,40 +36,49 @@ export async function handleInteractionFault(
         }
         return;
     }
-    if (!Error.isError(caught)) throw caught;
+    const error = asError(caught);
 
     // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(core.config.errors?.ignoreApiCodes ?? []);
-    if (caught instanceof DiscordAPIError && ignore.has(caught.code)) {
-        logger.debug(`swallowed api code ${caught.code}`);
+    if (error instanceof DiscordAPIError && ignore.has(error.code)) {
+        logger.debug(`swallowed api code ${error.code}`);
         return;
     }
 
     // autocomplete has no reply target, so report through extractErrorResponse and build no sender
     if (interaction.isAutocomplete()) {
-        extractErrorResponse(caught, core, {
+        extractErrorResponse(error, core, {
             guild: interaction.guild,
             user: interaction.user,
             metadata: interaction,
             route: slashRouteOf(interaction)
         });
         // empty choices are the only legal response, and they clear the client's loading spinner
-        try {
-            await interaction.respond([]);
-        } catch (error) {
-            logger.debug(`autocomplete empty-choices send failed: ${String(error)}`);
-        }
+        await sendEmptyChoices(interaction, core);
         return;
     }
 
-    const { response } = extractErrorResponse(caught, core, {
+    const { response } = extractErrorResponse(error, core, {
         interaction,
         guild: interaction.guild,
         user: interaction.user,
         metadata: interaction
     });
     const liveSender = sender ?? new ReplySender(interaction, interactionRoute(interaction), core.bus);
-    await sendGuarded(liveSender, response, caught instanceof Notice ? caught.ephemeral : true);
+    await sendGuarded(liveSender, response, error instanceof Notice ? error.ephemeral : true);
+}
+
+// reports like any other write, so a faulted autocomplete still shows its discord round trip
+async function sendEmptyChoices(interaction: AutocompleteInteraction, core: Core): Promise<void> {
+    const telemetry = { bus: core.bus, interactionId: interaction.id };
+    const routeId = `autocomplete:${slashRouteOf(interaction)}`;
+    const startedAt = performance.now();
+    try {
+        await attemptWrite(telemetry, routeId, 'respond', startedAt, () => interaction.respond([]));
+        publishResponse(telemetry, { routeId, method: 'respond', startedAt, outcome: 'sent', messageId: null });
+    } catch (error) {
+        logger.debug(`autocomplete empty-choices send failed: ${String(error)}`);
+    }
 }
 
 // the boundary's own send drops the harmless reply-token codes so a dead token never escapes it

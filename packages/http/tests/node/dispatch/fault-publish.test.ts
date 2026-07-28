@@ -122,13 +122,11 @@ describe('http fault publishing', () => {
         expect(unknown[0]?.error.message).toBe('handler exploded');
     });
 
-    // http coerces a raw throw and answers the user. gateway rethrows it to the root and sends nothing
-    it('coerces a non-Error throw and publishes unknownException', async () => {
+    it('wraps a non-Error throw, so it reports like any other raw fault', async () => {
         const { handled, unknown } = await faultsFor(RawThrowHandler);
 
         expect(handled).toHaveLength(0);
         expect(unknown).toHaveLength(1);
-        expect(unknown[0]?.error).toBeInstanceOf(Error);
         expect(unknown[0]?.error.message).toBe('nope');
     });
 

@@ -1,3 +1,4 @@
+import { asError } from '@stops/asError';
 import { PublishDefault } from '@subscribers/publishDefault';
 
 import type { ReplyMethod } from './ackLegality';
@@ -26,7 +27,8 @@ export interface ResponseReport {
 
 /** @internal */
 export function publishResponse(telemetry: ReplyTelemetry | undefined, report: ResponseReport): void {
-    telemetry?.bus[PublishDefault]('responseAttempted', {
+    if (!telemetry) return;
+    telemetry.bus[PublishDefault]('responseAttempted', {
         routeId: report.routeId,
         interactionId: telemetry.interactionId,
         method: report.method,
@@ -53,8 +55,9 @@ export async function attemptWrite<Result>(
     try {
         return await write();
     } catch (caught) {
-        const error = Error.isError(caught) ? caught : new Error(String(caught));
+        const error = asError(caught);
         publishResponse(telemetry, { routeId, method, startedAt, outcome: 'failed', messageId: null, error });
+        // raw, so the caller sees what the write actually threw
         throw caught;
     }
 }

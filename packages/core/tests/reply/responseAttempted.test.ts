@@ -97,6 +97,54 @@ describe('responseAttempted', () => {
         expect(sent.map((payload) => payload.method)).toEqual(['reply']);
     });
 
+    // the write advances the clock, so no other performance.now() reader shifts the measurement
+    it('measures the write, from before it starts until it settles', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+        let clock = 500;
+        vi.spyOn(performance, 'now').mockImplementation(() => clock);
+        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockImplementation(
+            async () => {
+                clock += 250;
+                return await Promise.resolve(created);
+            }
+        );
+
+        await sender.reply(response);
+
+        expect(sent[0]?.durationMs).toBe(250);
+        vi.restoreAllMocks();
+    });
+
+    it('wraps a non-Error rejection, so the failed write still reports', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockRejectedValue(
+            'discord said no'
+        );
+
+        // the caller still sees the value that was thrown
+        await expect(sender.reply(response)).rejects.toBe('discord said no');
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', messageId: null });
+        expect(sent[0]?.error?.message).toBe('discord said no');
+    });
+
+    // String() flattens an object to [object Object], so the cause is the only way back to the value
+    it('keeps the thrown value as the cause', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+        const thrown = { code: 500 };
+        vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockRejectedValue(
+            thrown
+        );
+
+        await expect(sender.reply(response)).rejects.toBe(thrown);
+
+        expect(sent[0]?.error?.cause).toBe(thrown);
+    });
+
     it('reports a failed write, carrying the error and no message id', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);

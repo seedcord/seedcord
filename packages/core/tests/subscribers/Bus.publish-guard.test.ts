@@ -14,7 +14,7 @@ describe('publish protection', () => {
     it('does not type-check a framework key through the public publish', () => {
         const bus = stubBus();
 
-        // @ts-expect-error a default key is framework-owned, publish excludes it
+        // @ts-expect-error publish excludes the default keys
         bus.publish('unknownException', { uuid: crypto.randomUUID(), error: new Error('boom') });
         // @ts-expect-error same for a dispatch key
         bus.publish('interactionDispatched', {});

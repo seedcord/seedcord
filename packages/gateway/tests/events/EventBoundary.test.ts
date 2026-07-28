@@ -158,9 +158,12 @@ describe('handleEventFault', () => {
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('rethrows a non-Error value to the root catch', () => {
-        expect(() => handleEventFault('a thrown string', 'ready', 'Boot', [], mockCore(publish))).toThrow();
-        expect(publish).not.toHaveBeenCalled();
+    it('wraps a non-Error value, so a handler that threw a string still reports', () => {
+        handleEventFault('a thrown string', 'ready', 'Boot', [], mockCore(publish));
+
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(event).toBe('unknownException');
+        expect(payload.error.message).toBe('a thrown string');
     });
 
     it('throttles duplicate event faults from the same handler within the window to one report', () => {

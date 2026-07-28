@@ -5,6 +5,7 @@ import {
     InteractionMetadataKey,
     InteractionRouteKeys,
     InteractionRoutes,
+    asError,
     dispatchedPayload,
     outcomeFor,
     queuedMsFor,
@@ -405,9 +406,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
             if (this.draining) return;
             this.core.bus[PublishDefault]('anyInteraction', { interaction });
-            const run = this.handleInteraction(interaction).catch((err: Error) => {
-                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bus[PublishDefault]('unhandledInteractionError', { error: err });
+            const run = this.handleInteraction(interaction).catch((caught: unknown) => {
+                const error = asError(caught);
+                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
+                this.core.bus[PublishDefault]('unhandledInteractionError', { error });
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));
@@ -458,9 +460,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const matched = getHandler(key);
 
         // the handler's own routeId replaces this once the dispatch context is built, and the closure
-        // below reads whichever one is current when it publishes
-        let routeId = `${kind}:${key}`;
-        // the key fires once per dispatch, and a rethrowing fault boundary reaches the catch below
+        // below reads whichever one is current when it publishes. an empty key means a customId
+        // seedcord never minted, since a minted routeKey always outlives its 3-char hash
+        let routeId = `${kind}:${key || 'unrouted'}`;
+        // the key fires once per dispatch, and a throw from the boundary itself reaches the catch below
         // after the refusal already reported
         let reported = false;
         const report = (outcome: DispatchOutcome): void => {
@@ -505,7 +508,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    // reports in a finally, so the boundary's rethrow of a raw value still publishes
+    // reports in a finally, so a throw from the boundary still publishes
     private async answer(
         caught: unknown,
         interaction: ValidInteractionTypes,

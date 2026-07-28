@@ -882,6 +882,22 @@ describe('InteractionDispatcher Integration', () => {
             });
         });
 
+        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async () => {
+            const { controller, fire } = await clientHarness();
+            vi.spyOn(controller, 'handleInteraction').mockRejectedValue('a bare string');
+            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+
+            const seen: SubscriptionData<'unhandledInteractionError'>[] = [];
+            seedcord.bus.on('unhandledInteractionError', (payload) => seen.push(payload));
+
+            fire?.(fakeSlash('ping'));
+
+            await vi.waitFor(() => {
+                expect(seen).toHaveLength(1);
+            });
+            expect(seen[0]?.error.message).toBe('a bare string');
+        });
+
         it('stops dispatching new interactions after stopAccepting, and drain resolves', async () => {
             const { controller, fire } = await clientHarness();
             const handleSpy = vi.spyOn(controller, 'handleInteraction').mockResolvedValue(undefined);
@@ -1160,7 +1176,7 @@ describe('InteractionDispatcher Integration', () => {
 
             expect(interaction.reply).toHaveBeenCalledTimes(1);
             expect(published).toHaveLength(1);
-            expect(published[0]).toMatchObject({ kind: 'button', fallback: true });
+            expect(published[0]).toMatchObject({ routeId: 'button:unrouted', kind: 'button', fallback: true });
         });
 
         // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here
@@ -1252,7 +1268,7 @@ describe('InteractionDispatcher Integration', () => {
             const published: SubscriptionData<'interactionDispatched'>[] = [];
             seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
 
-            await expect(controller.handleSlashCommand(fakeSlash('rawgate'))).rejects.toBe('blocked');
+            await expect(controller.handleSlashCommand(fakeSlash('rawgate'))).resolves.toBeUndefined();
 
             expect(published).toHaveLength(1);
             expect(published[0]).toMatchObject({ routeId: 'slash:rawgate', outcome: 'failed' });

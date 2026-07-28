@@ -5,6 +5,7 @@ import { GatedMetadataKey } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 import { createCore, dispatchInteraction } from '@src/dispatch/dispatchInteraction';
 
@@ -97,6 +98,15 @@ Reflect.defineMetadata(
     BrokenGateHandler
 );
 
+class SearchAutocomplete extends AutocompleteHandler<never> {
+    async execute(): Promise<void> {
+        await this.respond([{ name: 'apple', value: 'apple' }]);
+    }
+}
+
+// type 4 is an autocomplete, and resolve keys it off the same command data a slash carries
+const autocompletePayload = (): object => ({ ...slashPayload('search'), type: 4 });
+
 function routeFor(routeId: string | null, load: () => Promise<unknown>): ResolvedRoute {
     return { kind: 'slash', routeId, load };
 }
@@ -188,6 +198,19 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published[0]).toMatchObject({ routeId: 'slash:ctorboom', outcome: 'failed' });
     });
 
+    // a customId seedcord never minted reads an empty key, which both transports render as unrouted
+    it('names an unmintable customId unrouted', async () => {
+        const match: ResolvedRoute = {
+            kind: 'button',
+            routeId: null,
+            attemptedKey: '',
+            load: () => Promise.resolve(OkHandler)
+        };
+        const published = await dispatchedFor(match);
+
+        expect(published[0]).toMatchObject({ routeId: 'button:unrouted', fallback: true });
+    });
+
     // the same shape gateway emits, so a dashboard can break unmatched routes down by command
     it('flags the unhandled default as a fallback and keeps the attempted key', async () => {
         const match: ResolvedRoute = {
@@ -223,6 +246,35 @@ describe('interactionDispatched from the http dispatcher', () => {
             method: 'reply',
             outcome: 'sent',
             interactionId: 'int-1'
+        });
+    });
+
+    // the choices callback bypasses the reply surface, so it reports through its own path
+    it('publishes responseAttempted for an autocomplete choices response', async () => {
+        Envapter.useSource(new PortableSource({}));
+        const core = createCore(nullPathConfig, VALID_TOKEN);
+        const sent: SubscriptionData<'responseAttempted'>[] = [];
+        core.bus.on('responseAttempted', (payload) => sent.push(payload));
+
+        const match: ResolvedRoute = {
+            kind: 'autocomplete',
+            routeId: 'autocomplete:search',
+            load: () => Promise.resolve(SearchAutocomplete)
+        };
+        const execute = await dispatchInteraction({
+            match,
+            payload: autocompletePayload() as ValidInteractionTypes,
+            core
+        });
+        await execute?.();
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({
+            routeId: 'autocomplete:search',
+            interactionId: 'int-1',
+            method: 'respond',
+            outcome: 'sent',
+            messageId: null
         });
     });
 

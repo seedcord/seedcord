@@ -5,7 +5,7 @@
  * @internal
  */
 export class FaultThrottle {
-    // keyed by core so each bot keeps its own window, and a dropped core takes its entry with it
+    // keyed by core so each bot gets its own window, and the entry is collected with the core
     private static readonly perCore = new WeakMap<object, FaultThrottle>();
 
     /**

@@ -1,8 +1,11 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
 import {
+    asError,
+    attemptWrite,
     dispatchedPayload,
     outcomeFor,
+    publishResponse,
     queuedMsFor,
     PublishDefault,
     runHandlerGates,
@@ -81,10 +84,22 @@ async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promi
     }
 }
 
-// a Notice is illegal on autocomplete, so empty choices clear the pending state
+// a Notice is illegal on autocomplete, so empty choices clear the pending state. reports like any
+// other write, so a faulted autocomplete still shows its discord round trip
 async function respondEmptyChoices(scope: FaultScope): Promise<void> {
-    await scope.core.rest.post(Routes.interactionCallback(scope.payload.id, scope.payload.token), {
-        body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
+    const telemetry = { bus: scope.core.bus, interactionId: scope.payload.id };
+    const startedAt = performance.now();
+    await attemptWrite(telemetry, scope.routeId, 'respond', startedAt, () =>
+        scope.core.rest.post(Routes.interactionCallback(scope.payload.id, scope.payload.token), {
+            body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
+        })
+    );
+    publishResponse(telemetry, {
+        routeId: scope.routeId,
+        method: 'respond',
+        startedAt,
+        outcome: 'sent',
+        messageId: null
     });
 }
 
@@ -138,7 +153,7 @@ async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
         return;
     }
 
-    const error = Error.isError(caught) ? caught : new Error(String(caught));
+    const error = asError(caught);
 
     // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(scope.core.config.errors?.ignoreApiCodes ?? []);
@@ -157,7 +172,10 @@ interface DispatchArgs {
 }
 
 function unhandledRouteId(match: ResolvedRoute): string {
-    return match.routeId ?? `${match.kind}:${match.attemptedKey ?? 'unhandled'}`;
+    if (match.routeId) return match.routeId;
+    // an empty key means a customId seedcord never minted, since a minted routeKey always outlives its 3-char hash
+    const key = match.attemptedKey ?? '';
+    return `${match.kind}:${key.length > 0 ? key : 'unrouted'}`;
 }
 
 // nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card
@@ -197,6 +215,20 @@ function dispatchReporter(
     };
 }
 
+// reports in a finally, so a throw from the boundary still publishes
+async function answer(
+    caught: unknown,
+    scope: FaultScope,
+    report: (outcome: DispatchOutcome) => void,
+    outcome: DispatchOutcome = outcomeFor(caught)
+): Promise<void> {
+    try {
+        await handleFault(caught, scope);
+    } finally {
+        report(outcome);
+    }
+}
+
 // sends a response on either failure, so a null return means nothing can run
 async function loadHandlerCtor(
     match: ResolvedRoute,
@@ -210,25 +242,15 @@ async function loadHandlerCtor(
         exported = await match.load();
     } catch (caught) {
         logger().error(`Route ${paint.sky.bold(routeId)} failed to load its handler.`, caught);
-        try {
-            await handleFault(caught, freshScope(match, payload, core));
-        } finally {
-            report('failed');
-        }
+        await answer(caught, freshScope(match, payload, core), report, 'failed');
         return null;
     }
 
     if (isHandlerCtor(exported)) return exported;
 
     logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
-    try {
-        await handleFault(
-            new Error(`route ${routeId} loaded an export that is not a handler class`),
-            freshScope(match, payload, core)
-        );
-    } finally {
-        report('failed');
-    }
+    const wrong = new Error(`route ${routeId} loaded an export that is not a handler class`);
+    await answer(wrong, freshScope(match, payload, core), report, 'failed');
     return null;
 }
 
@@ -249,11 +271,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     try {
         handler = new ctor(payload, core, dispatch);
     } catch (caught) {
-        try {
-            await handleFault(caught, freshScope(match, payload, core));
-        } finally {
-            report(outcomeFor(caught));
-        }
+        await answer(caught, freshScope(match, payload, core), report);
         return null;
     }
     const scope: FaultScope = {
@@ -265,12 +283,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
 
     const refusal = await gateRefusal(ctor, match, payload, core);
     if (refusal) {
-        // finally, so a throw from the boundary still publishes
-        try {
-            await handleFault(refusal.caught, scope);
-        } finally {
-            report(outcomeFor(refusal.caught));
-        }
+        await answer(refusal.caught, scope, report);
         return null;
     }
 
@@ -279,11 +292,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
             await handler.execute();
             report('handled');
         } catch (caught) {
-            try {
-                await handleFault(caught, scope);
-            } finally {
-                report(outcomeFor(caught));
-            }
+            await answer(caught, scope, report);
         }
     };
 }

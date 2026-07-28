@@ -97,13 +97,15 @@ describe('handleInteractionFault', () => {
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('rethrows a non-Error value to the root catch', async () => {
-        await expect(handleInteractionFault('a thrown string', asInteraction(mock), mockCore(publish))).rejects.toBe(
-            'a thrown string'
-        );
+    it('wraps a non-Error value, so a handler that threw a string still shows the fault card', async () => {
+        await expect(
+            handleInteractionFault('a thrown string', asInteraction(mock), mockCore(publish))
+        ).resolves.toBeUndefined();
 
-        expect(mock.reply).not.toHaveBeenCalled();
-        expect(publish).not.toHaveBeenCalled();
+        expect(mock.reply).toHaveBeenCalledTimes(1);
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(event).toBe('unknownException');
+        expect(payload.error.message).toBe('a thrown string');
     });
 
     // the uuid on the user's error card has to be greppable, so the log runs before the throttle
@@ -254,7 +256,20 @@ describe('handleInteractionFault', () => {
             await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(search), core);
             await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(lookup), core);
 
-            expect(publish).toHaveBeenCalledTimes(2);
+            // the empty-choices send publishes responseAttempted too, so count the fault key alone
+            expect(publish.mock.calls.filter(([event]) => event === 'unknownException')).toHaveLength(2);
+        });
+
+        it('publishes responseAttempted for the empty-choices send', async () => {
+            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+
+            const writes = publish.mock.calls.filter(([key]) => key === 'responseAttempted');
+            expect(writes).toHaveLength(1);
+            expect(writes[0]?.[1] as SubscriptionData<'responseAttempted'>).toMatchObject({
+                method: 'respond',
+                outcome: 'sent',
+                messageId: null
+            });
         });
     });
 

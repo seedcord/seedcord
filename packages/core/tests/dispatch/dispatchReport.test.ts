@@ -41,6 +41,20 @@ describe('dispatchedPayload', () => {
     });
 });
 
+describe('durationMs', () => {
+    it('measures dispatch entry until the publish', () => {
+        let clock = 1000;
+        vi.spyOn(performance, 'now').mockImplementation(() => clock);
+
+        const startedAt = performance.now();
+        clock += 250;
+        const payload = dispatchedPayload({ ...reportFor(), startedAt });
+
+        expect(payload.durationMs).toBe(250);
+        vi.restoreAllMocks();
+    });
+});
+
 describe('queuedMsFor', () => {
     it('reads the queue time at dispatch entry, so a slow handler never inflates it', () => {
         const created = timestampFromSnowflake(SNOWFLAKE);

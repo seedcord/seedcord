@@ -29,29 +29,41 @@ afterEach(() => {
     Envapter.useSource(new PortableSource({}));
 });
 
+// the router is the first thing past the ack guard, so a throw there reaches the root catch
+async function routerThrows(thrown: unknown): Promise<{
+    response: Response;
+    seen: SubscriptionData<'unhandledInteractionError'>[];
+}> {
+    const signer = await createSigner();
+    Envapter.useSource(new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN }));
+
+    const core = createCore(nullPathConfig, VALID_TOKEN);
+    const seen: SubscriptionData<'unhandledInteractionError'>[] = [];
+    core.bus.on('unhandledInteractionError', (payload) => seen.push(payload));
+
+    const maps = buildRouteMaps(emptyManifest());
+    vi.spyOn(maps.slash, 'get').mockImplementation(() => {
+        throw thrown;
+    });
+    const { handle } = buildEngine(core, maps);
+
+    return { response: await handle(await signedRequest(signer, slashPayload('anything'))), seen };
+}
+
 describe('the http root catch', () => {
     it('publishes unhandledInteractionError when routing throws past the boundary', async () => {
-        const signer = await createSigner();
-        Envapter.useSource(
-            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-        );
-
-        const core = createCore(nullPathConfig, VALID_TOKEN);
-        const seen: SubscriptionData<'unhandledInteractionError'>[] = [];
-        core.bus.on('unhandledInteractionError', (payload) => seen.push(payload));
-
-        const maps = buildRouteMaps(emptyManifest());
-        // the router is the first thing past the ack guard, so a throw there reaches the root catch
-        vi.spyOn(maps.slash, 'get').mockImplementation(() => {
-            throw new Error('router exploded');
-        });
-        const { handle } = buildEngine(core, maps);
-
-        const response = await handle(await signedRequest(signer, slashPayload('anything')));
+        const { response, seen } = await routerThrows(new Error('router exploded'));
 
         // the ack still goes out, since a dispatch throw never eats it
         expect(response.status).toBe(202);
         expect(seen).toHaveLength(1);
         expect(seen[0]?.error.message).toBe('router exploded');
+    });
+
+    it('wraps a non-Error throw, so the payload still carries an Error', async () => {
+        const { seen } = await routerThrows('router string');
+
+        expect(seen).toHaveLength(1);
+        expect(seen[0]?.error.message).toBe('router string');
     });
 });

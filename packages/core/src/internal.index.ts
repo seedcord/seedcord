@@ -48,6 +48,7 @@ export {
     WebhookUrlMetadataKey
 } from '@src/metadataKeys';
 
+export { asError } from '@stops/asError';
 export { NoticeCard } from '@stops/NoticeCard';
 
 export { prefixOf, decodeFor, type AnyCustomId } from '@customId/CustomId';

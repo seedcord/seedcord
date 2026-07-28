@@ -1,4 +1,4 @@
-import { PublishDefault } from '@seedcord/core/internal';
+import { asError, PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -62,13 +62,22 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
         const start = await dispatchInteraction({ match, payload, core });
         if (!start) return;
 
-        const work = start();
+        // the post-ack phase runs unawaited, so its own catch is the only thing between a throw and
+        // an unhandled rejection
+        const work = start().catch(rootFault);
         if (ctx) {
             ctx.waitUntil(work);
         } else {
             inFlight.add(work);
             void work.finally(() => inFlight.delete(work));
         }
+    }
+
+    // make sure an escaped error doesn't crash the process
+    function rootFault(caught: unknown): void {
+        const error = asError(caught);
+        logger.error('dispatch failed past the boundary', error);
+        core.bus[PublishDefault]('unhandledInteractionError', { error });
     }
 
     const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
@@ -105,9 +114,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
             if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
         } catch (caught) {
             // a throw here must never eat the ack
-            const error = Error.isError(caught) ? caught : new Error(String(caught));
-            logger.error('dispatch failed, acking anyway', error);
-            core.bus[PublishDefault]('unhandledInteractionError', { error });
+            rootFault(caught);
         }
 
         return new Response(null, { status: ACCEPTED });

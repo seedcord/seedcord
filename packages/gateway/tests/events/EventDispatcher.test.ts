@@ -214,7 +214,7 @@ describe('EventDispatcher Integration', () => {
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
 
-    it('marks a once handler spent even when it rethrows a non-Error, so it does not re-fire', async () => {
+    it('marks a once handler spent even when it throws a non-Error, so it does not re-fire', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/OnceBoom.ts`,
@@ -225,7 +225,7 @@ describe('EventDispatcher Integration', () => {
             @RegisterEvent(['guildMemberAdd', { frequency: 'once' }])
             export class OnceBoom extends EventHandler<Events.GuildMemberAdd> {
                 public async execute() {
-                    await Promise.resolve();
+                    await this.match({ guildMemberAdd: (member) => member.setNickname('ran') });
                     throw 'raw string';
                 }
             }
@@ -239,9 +239,11 @@ describe('EventDispatcher Integration', () => {
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();
 
-        await expect(testBot.events.processEvent('guildMemberAdd', [{}])).rejects.toBe('raw string');
-        // a second fire must not re-run it
-        await expect(testBot.events.processEvent('guildMemberAdd', [{}])).resolves.toBeUndefined();
+        const member = { setNickname: vi.fn() };
+        await testBot.events.processEvent('guildMemberAdd', [member]);
+        await testBot.events.processEvent('guildMemberAdd', [member]);
+
+        expect(member.setNickname).toHaveBeenCalledTimes(1);
     });
 
     it('runs a once handler exactly once when the same event fires concurrently', async () => {
