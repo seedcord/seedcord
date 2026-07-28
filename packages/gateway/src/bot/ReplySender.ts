@@ -3,6 +3,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { MessageFlags } from 'discord.js';
 
+import type { Bus } from '@seedcord/core';
 import type { AckState } from '@seedcord/core/internal';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
 import type { Repliables } from '@src/handlers/interactionTypes';
@@ -39,9 +40,10 @@ function seedState(interaction: Repliables): AckState {
 export class ReplySender extends BaseReplySender<SentMessage> {
     public constructor(
         private readonly interaction: Repliables,
-        routeId: string
+        routeId: string,
+        bus?: Bus
     ) {
-        super(routeId, seedState(interaction));
+        super(routeId, seedState(interaction), bus);
     }
 
     protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {

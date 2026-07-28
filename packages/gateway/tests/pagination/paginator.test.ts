@@ -3,7 +3,8 @@ import {
     ComponentDefsKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
-    InteractionRoutes
+    InteractionRoutes,
+    PublishDefault
 } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -116,12 +117,17 @@ function sentContainerText(components: unknown[]): string {
     );
 }
 
+// justified: start only reads core.bus for telemetry and threads core into the page context
+function stubCore(): Core {
+    return { bus: { [PublishDefault]: () => true } } as unknown as Core;
+}
+
 describe('Paginator.start', () => {
     beforeEach(() => vi.clearAllMocks());
 
     it('renders page 0 and sends it with the components-v2 flag', async () => {
         const event = startEvent();
-        await pager.start(asRepliable(event));
+        await pager.start(asRepliable(event), stubCore());
 
         expect(event.reply).toHaveBeenCalledOnce();
         const options = event.reply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
@@ -135,7 +141,7 @@ describe('Paginator.start', () => {
         const event = startEvent();
         event.reply.mockRejectedValue(failure);
 
-        await expect(pager.start(asRepliable(event))).rejects.toBe(failure);
+        await expect(pager.start(asRepliable(event), stubCore())).rejects.toBe(failure);
     });
 
     it('honors an ephemeral paginator', async () => {
@@ -146,7 +152,7 @@ describe('Paginator.start', () => {
             ephemeral: true
         });
         const event = startEvent();
-        await ephemeral.start(asRepliable(event));
+        await ephemeral.start(asRepliable(event), stubCore());
         const options = event.reply.mock.calls[0]?.[0] as { flags: number };
         expect(options.flags & MessageFlags.Ephemeral).toBeTruthy();
     });

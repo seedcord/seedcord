@@ -60,7 +60,7 @@ export async function handleInteractionFault(
         user: interaction.user,
         metadata: interaction
     });
-    const liveSender = sender ?? new ReplySender(interaction, interactionRoute(interaction));
+    const liveSender = sender ?? new ReplySender(interaction, interactionRoute(interaction), core.bus);
     await sendGuarded(liveSender, response, caught instanceof Notice ? caught.ephemeral : true);
 }
 

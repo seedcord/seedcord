@@ -144,13 +144,16 @@ describe('handleInteractionFault', () => {
         expect(payload.denial).toBeInstanceOf(Fault);
     });
 
-    it('follows up and publishes nothing for a non-reporting denial on a replied interaction', async () => {
+    it('follows up and reports no fault for a non-reporting denial on a replied interaction', async () => {
         mock.replied = true;
 
         await handleInteractionFault(new TestNotice(), asInteraction(mock), mockCore(publish));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
-        expect(publish).not.toHaveBeenCalled();
+        // the boundary's own followUp publishes responseSent, so assert on the fault keys alone
+        const keys = publish.mock.calls.map(([event]) => event as string);
+        expect(keys).not.toContain('handledException');
+        expect(keys).not.toContain('unknownException');
     });
 
     it('replies ephemerally for a refusal by default', async () => {

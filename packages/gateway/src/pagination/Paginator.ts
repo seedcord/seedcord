@@ -87,9 +87,9 @@ export class Paginator<Item, const Prefix extends string> {
     }
 
     /** Render page 0 and send it, picking reply or followUp from the interaction's state. */
-    async start(interaction: Repliables, core?: Core): Promise<Message> {
+    async start(interaction: Repliables, core: Core): Promise<Message> {
         const response = await this.page(contextOf(interaction, core), 0);
-        return new ReplySender(interaction, interactionRoute(interaction)).send(response, {
+        return new ReplySender(interaction, interactionRoute(interaction), core.bus).send(response, {
             ephemeral: this.config.ephemeral ?? false
         });
     }

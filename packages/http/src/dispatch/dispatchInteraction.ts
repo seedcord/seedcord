@@ -149,7 +149,7 @@ function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: 
         core,
         payload,
         routeId,
-        sender: match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, routeId)
+        sender: match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, routeId, core.bus)
     };
 }
 
