@@ -156,9 +156,8 @@ interface DispatchArgs {
     readonly core: Core;
 }
 
-// one id for an unmatched dispatch, so a boundary log, its sender, and its telemetry event correlate
 function unhandledRouteId(match: ResolvedRoute): string {
-    return match.routeId ?? `${match.kind}:unhandled`;
+    return match.routeId ?? `${match.kind}:${match.attemptedKey ?? 'unhandled'}`;
 }
 
 // nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card

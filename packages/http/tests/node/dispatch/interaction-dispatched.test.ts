@@ -188,11 +188,18 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published[0]).toMatchObject({ routeId: 'slash:ctorboom', outcome: 'failed' });
     });
 
-    it('flags the unhandled default as a fallback and keys the route by kind', async () => {
-        const published = await dispatchedFor(routeFor(null, () => Promise.resolve(OkHandler)));
+    // the same shape gateway emits, so a dashboard can break unmatched routes down by command
+    it('flags the unhandled default as a fallback and keeps the attempted key', async () => {
+        const match: ResolvedRoute = {
+            kind: 'slash',
+            routeId: null,
+            attemptedKey: 'unregistered',
+            load: () => Promise.resolve(OkHandler)
+        };
+        const published = await dispatchedFor(match);
 
         expect(published).toHaveLength(1);
-        expect(published[0]).toMatchObject({ routeId: 'slash:unhandled', fallback: true });
+        expect(published[0]).toMatchObject({ routeId: 'slash:unregistered', fallback: true });
     });
 
     // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here

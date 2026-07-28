@@ -61,7 +61,7 @@ describe('resolve', () => {
     it('resolves the unhandled default for a command name with no row', () => {
         const maps = buildRouteMaps(manifestWith({ commandRoutes: [{ name: 'ban', type: 1, ...rowFor('Ban') }] }));
 
-        expect(resolve(maps, slash('kick'))).toMatchObject({ kind: 'slash', routeId: null });
+        expect(resolve(maps, slash('kick'))).toMatchObject({ kind: 'slash', routeId: null, attemptedKey: 'kick' });
     });
 
     it('resolves a subcommand to its full route path', () => {
