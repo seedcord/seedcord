@@ -93,10 +93,10 @@ export interface DefaultSubscriptions {
         /** Dispatch entry until the user has a response, replies included. A clock change never affects it. */
         durationMs: number;
         /**
-         * Discord's interaction creation until the dispatch picked it up, read from the snowflake. This
-         * covers network transit plus any time your bot was busy before starting, so a rise points at
-         * either Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a
-         * host running behind Discord reports a negative value.
+         * Discord's interaction creation until dispatch entry, read from the snowflake. This covers
+         * network transit plus any time your bot was busy before starting, so a rise points at either
+         * Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a host
+         * running behind Discord reports a negative value.
          */
         queuedMs: number;
     };
@@ -113,7 +113,7 @@ export interface DefaultSubscriptions {
         method: WriteMethod;
         outcome: ResponseOutcome;
         durationMs: number;
-        /** Null for the acks that carry no message (`defer`, `deferUpdate`, `delete`, `showModal`) and for a failed write. */
+        /** Null for every ack-only or choice-only verb, and for a failed write. */
         messageId: string | null;
         /** Present when `outcome` is `failed`. */
         error?: Error;

@@ -24,7 +24,7 @@ export * from '@pagination/index';
 
 export type * from '@inputs/index';
 
-// after the core star below, these bind the transport Core into the two subscriber bases
+// these bind the transport Core into the two subscriber bases, shadowing core's unbound pair
 export { Subscriber, WebhookLog } from '@subscribers/index';
 
 export * from './Seedcord';

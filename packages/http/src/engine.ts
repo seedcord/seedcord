@@ -108,7 +108,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
         }
 
         try {
-            // justified: the payload is signed by Discord
+            // justified: the payload is signed by Discord, and the type field anchors the discriminated union
             core.bus[PublishDefault]('anyInteraction', { interaction: payload as APIInteraction });
             const match = resolve(maps, payload as APIInteraction);
             if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
