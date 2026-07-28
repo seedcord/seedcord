@@ -7,6 +7,7 @@ import {
     InteractionRoutes,
     dispatchedPayload,
     outcomeFor,
+    queuedMsFor,
     MiddlewareMetadataKey,
     prefixOf,
     PublishDefault,
@@ -66,6 +67,10 @@ interface InteractionArtifact {
 interface RegisteredMiddleware {
     readonly ctor: InteractionMiddlewareConstructor;
     readonly priority: number;
+}
+
+interface DispatchedHandler {
+    execute(): Promise<void>;
 }
 
 /**
@@ -426,7 +431,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
         // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies.
-        // an empty prefix matches no route, so the unhandled default answers it the way http does
+        // an empty prefix matches no route, so the unhandled default replies to it the way http does
         const prefix = prefixOf(interaction.customId);
         if (!prefix)
             this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
@@ -448,22 +453,22 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     ): Promise<void> {
         const key = extractKey(interaction);
         const startedAt = performance.now();
+        // read here, since a read at publish time would count the handler run into the queue too
+        const queuedMs = queuedMsFor(interaction.id);
         const matched = getHandler(key);
 
         // the handler's own routeId replaces this once the dispatch context is built, and the closure
         // below reads whichever one is current when it publishes
         let routeId = `${kind}:${key}`;
+        // the key fires once per dispatch, and a rethrowing fault boundary reaches the catch below
+        // after the refusal already reported
+        let reported = false;
         const report = (outcome: DispatchOutcome): void => {
+            if (reported) return;
+            reported = true;
             this.core.bus[PublishDefault](
                 'interactionDispatched',
-                dispatchedPayload({
-                    routeId,
-                    kind,
-                    outcome,
-                    startedAt,
-                    fallback: !matched,
-                    interactionId: interaction.id
-                })
+                dispatchedPayload({ routeId, kind, outcome, startedAt, fallback: !matched, queuedMs })
             );
         };
 
@@ -473,30 +478,52 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             if (!interaction.isAutocomplete()) await this.runMiddlewares(interaction as Repliables);
 
             const HandlerCtor = matched ?? fallback;
-            if (!matched) {
-                this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${fallback.name}.`);
-            }
-
-            this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
             const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
             routeId = dispatch.routeId ?? routeId;
-            // @ts-expect-error TS can't infer the type of interaction here
-            const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
+            const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
             if (handler instanceof RepliableHandler) sender = handler.getSender();
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
             const refusal = interaction.isAutocomplete()
                 ? null
-                : await this.gateOutcome(HandlerCtor, interaction as Repliables, dispatch.routeId, sender);
+                : await this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch.routeId);
             if (refusal) {
-                report(refusal);
+                await this.answer(refusal.caught, interaction as ValidInteractionTypes, sender, report);
                 return;
             }
             await handler.execute();
             report('handled');
         } catch (caught) {
-            report(outcomeFor(caught));
-            await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core, sender);
+            await this.answer(caught, interaction as ValidInteractionTypes, sender, report);
         }
+    }
+
+    // reports in a finally, so the boundary's rethrow of a raw value still publishes
+    private async answer(
+        caught: unknown,
+        interaction: ValidInteractionTypes,
+        sender: ReplySender | undefined,
+        report: (outcome: DispatchOutcome) => void
+    ): Promise<void> {
+        try {
+            await handleInteractionFault(caught, interaction, this.core, sender);
+        } finally {
+            report(outcomeFor(caught));
+        }
+    }
+
+    private buildHandler(
+        HandlerCtor: HandlerConstructor,
+        interaction: Repliables,
+        dispatch: DispatchContext,
+        key: string,
+        isFallback: boolean
+    ): DispatchedHandler {
+        if (isFallback) {
+            this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
+        }
+        this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
+        // @ts-expect-error TS can't infer the type of interaction here
+        return new HandlerCtor(interaction, this.core, dispatch);
     }
 
     private async runMiddlewares(interaction: Repliables): Promise<void> {
@@ -506,13 +533,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    // null when the gates passed
-    private async gateOutcome(
+    // null when the gates passed. the caller answers the refusal, so one code path reports and replies
+    private async gateRefusal(
         HandlerCtor: HandlerConstructor,
         interaction: Repliables,
-        routeId: string | null,
-        sender: ReplySender | undefined
-    ): Promise<DispatchOutcome | null> {
+        routeId: string | null
+    ): Promise<{ caught: unknown } | null> {
         const monitor = slowGateMonitor();
         try {
             await runHandlerGates(
@@ -523,8 +549,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             );
             return null;
         } catch (caught) {
-            await handleInteractionFault(caught, interaction, this.core, sender);
-            return outcomeFor(caught);
+            return { caught };
         } finally {
             // a refusing gate ate budget too, report either way
             monitor?.report(routeId);

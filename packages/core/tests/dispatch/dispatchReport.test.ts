@@ -1,8 +1,12 @@
 import { Fault, Notice, Silence } from '@seedcord/core';
-import { dispatchedPayload, InteractionRoutes, outcomeFor } from '@seedcord/core/internal';
-import { describe, expect, it } from 'vitest';
+import { dispatchedPayload, InteractionRoutes, outcomeFor, queuedMsFor } from '@seedcord/core/internal';
+import { timestampFromSnowflake } from '@seedcord/utils';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { ReplyResponse } from '@seedcord/types';
+
+// 2022-01-01, so the gap to now is always positive
+const SNOWFLAKE = '926845371392000000';
 
 // subclassed off the package entry, so this shares the Notice identity outcomeFor reads
 class Refusal extends Notice {
@@ -15,29 +19,44 @@ class Refusal extends Notice {
     }
 }
 
-function reportFor(interactionId: string): Parameters<typeof dispatchedPayload>[0] {
+function reportFor(queuedMs = 0): Parameters<typeof dispatchedPayload>[0] {
     return {
         routeId: 'slash:ping',
         kind: InteractionRoutes.Slash,
         outcome: 'handled',
         fallback: false,
         startedAt: performance.now(),
-        interactionId
+        queuedMs
     };
 }
 
 describe('dispatchedPayload', () => {
-    it('reads the queue time off the interaction snowflake', () => {
-        // 2022-01-01, so the gap to now is always positive
-        const payload = dispatchedPayload(reportFor('926845371392000000'));
+    it('forwards the queue time measured at entry', () => {
+        const payload = dispatchedPayload(reportFor(1234));
 
-        expect(payload.queuedMs).toBeGreaterThan(0);
+        expect(payload.queuedMs).toBe(1234);
         expect(payload.routeId).toBe('slash:ping');
         expect(payload.kind).toBe('slash');
     });
+});
 
-    it('reports a zero queue time for an id that is not a snowflake, rather than throwing', () => {
-        expect(dispatchedPayload(reportFor('int-1')).queuedMs).toBe(0);
+describe('queuedMsFor', () => {
+    it('reads the queue time at dispatch entry, so a slow handler never inflates it', () => {
+        const created = timestampFromSnowflake(SNOWFLAKE);
+        let now = created + 1234;
+        vi.spyOn(Date, 'now').mockImplementation(() => now);
+
+        const queuedMs = queuedMsFor(SNOWFLAKE);
+        // the handler chain runs for five seconds before the report publishes
+        now += 5000;
+        const payload = dispatchedPayload({ ...reportFor(), queuedMs });
+
+        expect(payload.queuedMs).toBe(1234);
+        vi.restoreAllMocks();
+    });
+
+    it('reports a zero queue time for an id that is not a snowflake', () => {
+        expect(queuedMsFor('int-1')).toBe(0);
     });
 });
 

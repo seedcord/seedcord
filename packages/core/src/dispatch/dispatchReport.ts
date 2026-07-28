@@ -27,12 +27,18 @@ interface DispatchReport {
     readonly fallback: boolean;
     /** `performance.now()` captured as the dispatch began. */
     readonly startedAt: number;
-    /** The interaction snowflake, read for the queue time. */
-    readonly interactionId: string;
+    /** {@link queuedMsFor} read at the same moment as `startedAt`. */
+    readonly queuedMs: number;
 }
 
-// telemetry never breaks a dispatch, and BigInt() throws on a malformed id
-function queueTime(interactionId: string): number {
+/**
+ * Discord's interaction creation to now, read from the snowflake. Called at dispatch entry, since
+ * a later read would count the handler run into the queue time as well.
+ *
+ * @internal
+ */
+export function queuedMsFor(interactionId: string): number {
+    // telemetry never breaks a dispatch, and BigInt() throws on a malformed id
     try {
         return Date.now() - timestampFromSnowflake(interactionId);
     } catch {
@@ -53,6 +59,6 @@ export function dispatchedPayload(report: DispatchReport): SubscriptionData<'int
         outcome: report.outcome,
         fallback: report.fallback,
         durationMs: performance.now() - report.startedAt,
-        queuedMs: queueTime(report.interactionId)
+        queuedMs: report.queuedMs
     };
 }

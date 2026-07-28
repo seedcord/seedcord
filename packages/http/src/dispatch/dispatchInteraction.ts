@@ -3,6 +3,7 @@ import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seed
 import {
     dispatchedPayload,
     outcomeFor,
+    queuedMsFor,
     PublishDefault,
     runHandlerGates,
     slowGateMonitor
@@ -156,14 +157,14 @@ interface DispatchArgs {
 }
 
 // one id for an unmatched dispatch, so a boundary log, its sender, and its telemetry event correlate
-function routeIdOf(match: ResolvedRoute): string {
+function unhandledRouteId(match: ResolvedRoute): string {
     return match.routeId ?? `${match.kind}:unhandled`;
 }
 
 // nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card
 function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: Core): FaultScope {
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-    const routeId = routeIdOf(match);
+    const routeId = unhandledRouteId(match);
     return {
         core,
         payload,
@@ -179,47 +180,55 @@ function dispatchReporter(
     core: Core
 ): (outcome: DispatchOutcome) => void {
     const startedAt = performance.now();
+    // read here, since a read at publish time would count the handler run into the queue too
+    const queuedMs = queuedMsFor(payload.id);
     return (outcome) => {
         core.bus[PublishDefault](
             'interactionDispatched',
             dispatchedPayload({
-                routeId: routeIdOf(match),
+                routeId: unhandledRouteId(match),
                 kind: match.kind,
                 outcome,
                 fallback: match.routeId === null,
                 startedAt,
-                interactionId: payload.id
+                queuedMs
             })
         );
     };
 }
 
-// answers the interaction itself on either failure, so a null return means nothing can run
+// sends a response on either failure, so a null return means nothing can run
 async function loadHandlerCtor(
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core,
     report: (outcome: DispatchOutcome) => void
 ): Promise<HandlerCtor | null> {
-    const routeId = routeIdOf(match);
+    const routeId = unhandledRouteId(match);
     let exported: unknown;
     try {
         exported = await match.load();
     } catch (caught) {
         logger().error(`Route ${paint.sky.bold(routeId)} failed to load its handler.`, caught);
-        report('failed');
-        await handleFault(caught, freshScope(match, payload, core));
+        try {
+            await handleFault(caught, freshScope(match, payload, core));
+        } finally {
+            report('failed');
+        }
         return null;
     }
 
     if (isHandlerCtor(exported)) return exported;
 
     logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
-    report('failed');
-    await handleFault(
-        new Error(`route ${routeId} loaded an export that is not a handler class`),
-        freshScope(match, payload, core)
-    );
+    try {
+        await handleFault(
+            new Error(`route ${routeId} loaded an export that is not a handler class`),
+            freshScope(match, payload, core)
+        );
+    } finally {
+        report('failed');
+    }
     return null;
 }
 
@@ -240,20 +249,28 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     try {
         handler = new ctor(payload, core, dispatch);
     } catch (caught) {
-        report(outcomeFor(caught));
-        await handleFault(caught, freshScope(match, payload, core));
+        try {
+            await handleFault(caught, freshScope(match, payload, core));
+        } finally {
+            report(outcomeFor(caught));
+        }
         return null;
     }
     const scope: FaultScope = {
         core,
         payload,
-        routeId: routeIdOf(match),
+        routeId: unhandledRouteId(match),
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 
-    const refusal = await gateOutcome(ctor, match, payload, core, scope);
+    const refusal = await gateRefusal(ctor, match, payload, core);
     if (refusal) {
-        report(refusal);
+        // finally, so a throw from the boundary still publishes
+        try {
+            await handleFault(refusal.caught, scope);
+        } finally {
+            report(outcomeFor(refusal.caught));
+        }
         return null;
     }
 
@@ -262,21 +279,23 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
             await handler.execute();
             report('handled');
         } catch (caught) {
-            report(outcomeFor(caught));
-            await handleFault(caught, scope);
+            try {
+                await handleFault(caught, scope);
+            } finally {
+                report(outcomeFor(caught));
+            }
         }
     };
 }
 
 // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop.
-// null when the gates passed
-async function gateOutcome(
+// null when the gates passed. the caller answers the refusal, so one code path reports and replies
+async function gateRefusal(
     ctor: HandlerCtor,
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
-    core: Core,
-    scope: FaultScope
-): Promise<DispatchOutcome | null> {
+    core: Core
+): Promise<{ caught: unknown } | null> {
     // the router derives match.kind from payload.type, so the two would be the same. the payload.type clause narrows
     // the union to Repliables for interactionGateContext below
     if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return null;
@@ -290,8 +309,7 @@ async function gateOutcome(
         );
         return null;
     } catch (caught) {
-        await handleFault(caught, scope);
-        return outcomeFor(caught);
+        return { caught };
     } finally {
         // a refusing gate ate budget too, report either way
         monitor?.report(match.routeId);
