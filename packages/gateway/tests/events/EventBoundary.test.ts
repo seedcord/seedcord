@@ -5,7 +5,6 @@ import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleEventFault } from '@bot/handleEventFault';
-import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
 import { TestNotice } from '../utils/TestNotice';
 
@@ -46,7 +45,6 @@ describe('handleEventFault', () => {
 
     beforeEach(() => {
         publish = vi.fn();
-        faultThrottle.clear();
     });
 
     it('publishes handledException with an event source for a reporting denial', () => {

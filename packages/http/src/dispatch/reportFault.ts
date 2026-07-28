@@ -20,10 +20,6 @@ function logger(): Logger {
     return faultLogger;
 }
 
-// one throttle across both report paths, so a recurring fault reports once per window. exported so
-// tests reset the shared window state.
-export const faultThrottle = new FaultThrottle();
-
 /**
  * Publishes a fault on the bus, the raw-payload equivalent of the reporting half of gateway's
  * `extractErrorResponse`. A reported {@link Notice} publishes `handledException`, everything else
@@ -37,8 +33,9 @@ export function reportFault(
     payload: ValidInteractionTypes,
     core: Core
 ): void {
+    const throttle = FaultThrottle.for(core);
     const key = `${routeKeyOf(payload)}:${nameOf(error)}`;
-    if (!faultThrottle.shouldReport(key)) {
+    if (!throttle.shouldReport(key)) {
         logger().debug(`throttled duplicate fault ${paint.mute(key)}`);
         return;
     }
@@ -48,7 +45,7 @@ export function reportFault(
         core.bus[PublishDefault]('handledException', { denial: error, uuid, source });
     else core.bus[PublishDefault]('unknownException', { uuid, error, ...actors(payload), metadata: payload });
 
-    faultThrottle.markReported(key);
+    throttle.markReported(key);
 }
 
 // the stable route plus the error name, so a parameterized component collapses to one key

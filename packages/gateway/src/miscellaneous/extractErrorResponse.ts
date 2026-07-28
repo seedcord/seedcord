@@ -19,10 +19,6 @@ type EventFaultSource = Extract<FaultSource, { kind: 'event' }>;
 
 const logger = new Logger('ErrorsHandling');
 
-// one throttle across both report paths, so a recurring fault reports once per window. exported so
-// tests reset the shared window state.
-export const faultThrottle = new FaultThrottle();
-
 interface EventOrigin {
     name: string;
     handler: string;
@@ -72,21 +68,22 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
 }
 
 // stamp only after a publish, so a throttled fault stays reportable next window
-function withThrottle(origin: ErrorOrigin, error: Error, publish: () => void): void {
+function withThrottle(core: Core, origin: ErrorOrigin, error: Error, publish: () => void): void {
+    const throttle = FaultThrottle.for(core);
     const key = faultKey(origin, error);
-    if (!faultThrottle.shouldReport(key)) {
+    if (!throttle.shouldReport(key)) {
         logger.debug(`throttled duplicate fault ${key}`);
         return;
     }
     publish();
-    faultThrottle.markReported(key);
+    throttle.markReported(key);
 }
 
 function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID): void {
     // outside the throttle, so the uuid on the user's card always resolves to a log line
     logger.error(`${denial.name}: ${uuid}`, denial);
 
-    withThrottle(origin, denial, () => {
+    withThrottle(core, origin, denial, () => {
         if (origin.interaction) {
             core.bus[PublishDefault]('handledException', {
                 denial,
@@ -124,7 +121,7 @@ function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUI
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
-    withThrottle(origin, error, () => {
+    withThrottle(core, origin, error, () => {
         core.bus[PublishDefault]('unknownException', {
             uuid,
             error,

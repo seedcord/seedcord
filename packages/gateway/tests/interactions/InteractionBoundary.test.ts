@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleInteractionFault } from '@bot/handleInteractionFault';
 import { ReplySender } from '@bot/ReplySender';
-import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
 import { harmlessError } from '../utils/harmlessError';
 import { TestNotice } from '../utils/TestNotice';
@@ -69,7 +68,6 @@ describe('handleInteractionFault', () => {
     beforeEach(() => {
         mock = mockInteraction();
         publish = vi.fn();
-        faultThrottle.clear();
     });
 
     it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {

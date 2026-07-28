@@ -5,6 +5,23 @@
  * @internal
  */
 export class FaultThrottle {
+    // keyed by core so each bot keeps its own window, and a dropped core takes its entry with it
+    private static readonly perCore = new WeakMap<object, FaultThrottle>();
+
+    /**
+     * The throttle for one bot instance.
+     *
+     * @internal
+     */
+    public static for(core: object): FaultThrottle {
+        let throttle = FaultThrottle.perCore.get(core);
+        if (!throttle) {
+            throttle = new FaultThrottle();
+            FaultThrottle.perCore.set(core, throttle);
+        }
+        return throttle;
+    }
+
     private readonly lastReportedAt = new Map<string, number>();
 
     constructor(
