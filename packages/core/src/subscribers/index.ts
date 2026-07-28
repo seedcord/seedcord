@@ -9,4 +9,10 @@ export { WebhookUrl } from './decorators/WebhookUrl';
 export { WebhookLog, type WebhookReport } from './bases/WebhookLog';
 export type { WebhookFile } from './bases/WebhookSender';
 
-export type { Subscriptions, SubscriptionData, SubscriptionKey, FaultSource } from './types/Subscriptions';
+export type {
+    DispatchOutcome,
+    FaultSource,
+    Subscriptions,
+    SubscriptionData,
+    SubscriptionKey
+} from './types/Subscriptions';

@@ -12,6 +12,8 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
+import type { SubscriptionData } from '@seedcord/core';
+
 import '../utils/mock-client';
 import '../utils/mock-env';
 
@@ -21,12 +23,9 @@ interface PrivateInteractionDispatcher {
     modalMap: Map<string, unknown>;
     init(): Promise<void>;
     onHmr(event: unknown): Promise<void>;
-    processInteraction(
-        interaction: unknown,
-        extractKey: (i: unknown) => string,
-        getHandler: (key: string) => unknown,
-        fallback?: unknown
-    ): Promise<void>;
+    // only ever spied on, so the parameters stay loose
+    processInteraction(...args: unknown[]): Promise<void>;
+    handleSlashCommand(interaction: unknown): Promise<void>;
     handleButton(interaction: unknown): Promise<void>;
     handleAutocomplete(interaction: unknown): Promise<void>;
     stopAccepting(): void;
@@ -293,11 +292,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const interaction = fakeSlash('boom');
         const boundaryError = vi.spyOn(Logger.prototype, 'error');
-        await controller.processInteraction(
-            interaction,
-            () => 'boom',
-            () => controller.slashMap.get('boom')
-        );
+        await controller.handleSlashCommand(interaction);
 
         expect(interaction.reply).toHaveBeenCalledTimes(1);
         expect(boundaryError).not.toHaveBeenCalledWith('reply send failed', expect.anything());
@@ -328,11 +323,7 @@ describe('InteractionDispatcher Integration', () => {
 
         const interaction = fakeSlash('deferboom');
         const boundaryError = vi.spyOn(Logger.prototype, 'error');
-        await controller.processInteraction(
-            interaction,
-            () => 'deferboom',
-            () => controller.slashMap.get('deferboom')
-        );
+        await controller.handleSlashCommand(interaction);
 
         // the handler acked with a deferReply, so the boundary's live sender is deferred-reply and edits @original
         expect(interaction.deferReply).toHaveBeenCalledTimes(1);
@@ -654,148 +645,165 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.buttonMap.has('dont-click-me')).toBe(true);
     });
 
-    it('runs a passing gate, then the handler executes', async () => {
-        await testEnv.createFile(
-            'interactions/Allowed.ts',
-            `
-            import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
+    describe('gates', () => {
+        it('runs a passing gate, then the handler executes', async () => {
+            await testEnv.createFile(
+                'interactions/Allowed.ts',
+                `
+                import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
 
-            const Allow = defineGate('Allow', () => {});
+                const Allow = defineGate('Allow', () => {});
 
-            @Gated(Allow)
-            @SlashRoute('allowed')
-            export class AllowedHandler extends SlashHandler<'allowed'> {
-                public async execute() {
-                    await this.event.reply('executed');
+                @Gated(Allow)
+                @SlashRoute('allowed')
+                export class AllowedHandler extends SlashHandler<'allowed'> {
+                    public async execute() {
+                        await this.event.reply('executed');
+                    }
                 }
-            }
-            `
-        );
+                `
+            );
 
-        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-        seedcord = new Seedcord(config);
-        const controller = controllerOf(seedcord);
-        await controller.init();
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
 
-        const interaction = fakeSlash('allowed');
-        await controller.processInteraction(
-            interaction,
-            () => 'allowed',
-            () => controller.slashMap.get('allowed')
-        );
+            const interaction = fakeSlash('allowed');
+            await controller.handleSlashCommand(interaction);
 
-        expect(interaction.reply).toHaveBeenCalledWith('executed');
-    });
+            expect(interaction.reply).toHaveBeenCalledWith('executed');
+        });
 
-    it('warns on a gate check that crosses the slow-gate threshold', async () => {
-        await testEnv.createFile(
-            'interactions/Sluggish.ts',
-            `
-            import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
+        it('warns on a gate check that crosses the slow-gate threshold', async () => {
+            await testEnv.createFile(
+                'interactions/Sluggish.ts',
+                `
+                import { defineGate, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
 
-            const Sluggish = defineGate('Sluggish', () => {});
+                const Sluggish = defineGate('Sluggish', () => {});
 
-            @Gated(Sluggish)
-            @SlashRoute('sluggish')
-            export class SluggishHandler extends SlashHandler<'sluggish'> {
-                public async execute() {
-                    await this.event.reply('executed');
+                @Gated(Sluggish)
+                @SlashRoute('sluggish')
+                export class SluggishHandler extends SlashHandler<'sluggish'> {
+                    public async execute() {
+                        await this.event.reply('executed');
+                    }
                 }
-            }
-            `
-        );
+                `
+            );
 
-        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
-        seedcord = new Seedcord(config);
-        const controller = controllerOf(seedcord);
-        await controller.init();
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
 
-        const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-        // monotonic +800ms per reading, so any check's start-to-end pair crosses the 750ms threshold
-        let reading = 0;
-        vi.spyOn(performance, 'now').mockImplementation(() => (reading += 800));
+            const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
+            // monotonic +800ms per reading, so any check's start-to-end pair crosses the 750ms threshold
+            let reading = 0;
+            vi.spyOn(performance, 'now').mockImplementation(() => (reading += 800));
 
-        const interaction = fakeSlash('sluggish');
-        await controller.processInteraction(
-            interaction,
-            () => 'sluggish',
-            () => controller.slashMap.get('sluggish')
-        );
+            const interaction = fakeSlash('sluggish');
+            await controller.handleSlashCommand(interaction);
 
-        expect(warn.mock.calls.some(([message]) => String(message).includes('Sluggish'))).toBe(true);
-    });
+            expect(warn.mock.calls.some(([message]) => String(message).includes('Sluggish'))).toBe(true);
+        });
 
-    it('a refusing gate stops the handler before execute', async () => {
-        await testEnv.createFile(
-            'interactions/Refused.ts',
-            `
-            import { defineGate, Gated, Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
+        it('a refusing gate stops the handler before execute', async () => {
+            await testEnv.createFile(
+                'interactions/Refused.ts',
+                `
+                import { defineGate, Gated, Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
 
-            const Block = defineGate('Block', () => {
-                throw new Silence('blocked');
+                const Block = defineGate('Block', () => {
+                    throw new Silence('blocked');
+                });
+
+                @Gated(Block)
+                @SlashRoute('refused')
+                export class RefusedHandler extends SlashHandler<'refused'> {
+                    public async execute() {
+                        await this.event.reply('executed');
+                    }
+                }
+                `
+            );
+
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
+
+            const interaction = fakeSlash('refused');
+            await controller.handleSlashCommand(interaction);
+
+            // the gate threw a Silence, so execute never ran
+            expect(interaction.reply).not.toHaveBeenCalled();
+        });
+
+        it('a real OwnerOnly catalog gate refuses a non-owner through the dispatcher', async () => {
+            await testEnv.createFile(
+                'interactions/Owner.ts',
+                `
+                import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @Gated(OwnerOnly())
+                @SlashRoute('owner')
+                export class OwnerHandler extends SlashHandler<'owner'> {
+                    public async execute() {
+                        await this.event.reply('executed');
+                    }
+                }
+                `
+            );
+
+            const config = testConfig({
+                interactions: testEnv.resolvePath('interactions'),
+                ownerIds: ['someone-else']
             });
 
-            @Gated(Block)
-            @SlashRoute('refused')
-            export class RefusedHandler extends SlashHandler<'refused'> {
-                public async execute() {
-                    await this.event.reply('executed');
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
+
+            const interaction = fakeSlash('owner');
+            await controller.handleSlashCommand(interaction);
+
+            // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner
+            expect(interaction.reply).not.toHaveBeenCalledWith('executed');
+            expect(interaction.reply).toHaveBeenCalledTimes(1);
+        });
+
+        it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async () => {
+            await testEnv.createFile(
+                'interactions/Owner.ts',
+                `
+                import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @Gated(OwnerOnly())
+                @SlashRoute('owner')
+                export class OwnerHandler extends SlashHandler<'owner'> {
+                    public async execute() {
+                        await this.event.reply('executed');
+                    }
                 }
-            }
-            `
-        );
+                `
+            );
 
-        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['u1'] });
 
-        seedcord = new Seedcord(config);
-        const controller = controllerOf(seedcord);
-        await controller.init();
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
 
-        const interaction = fakeSlash('refused');
-        await controller.processInteraction(
-            interaction,
-            () => 'refused',
-            () => controller.slashMap.get('refused')
-        );
+            const interaction = fakeSlash('owner');
+            await controller.handleSlashCommand(interaction);
 
-        // the gate threw a Silence, so execute never ran
-        expect(interaction.reply).not.toHaveBeenCalled();
-    });
-
-    it('a real OwnerOnly catalog gate refuses a non-owner through the dispatcher', async () => {
-        await testEnv.createFile(
-            'interactions/Owner.ts',
-            `
-            import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
-
-            @Gated(OwnerOnly())
-            @SlashRoute('owner')
-            export class OwnerHandler extends SlashHandler<'owner'> {
-                public async execute() {
-                    await this.event.reply('executed');
-                }
-            }
-            `
-        );
-
-        const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['someone-else'] });
-
-        seedcord = new Seedcord(config);
-        const controller = controllerOf(seedcord);
-        await controller.init();
-
-        const interaction = fakeSlash('owner');
-        await controller.processInteraction(
-            interaction,
-            () => 'owner',
-            () => controller.slashMap.get('owner')
-        );
-
-        // the non-owner is refused, so execute never replied 'executed', the boundary rendered NotOwner
-        expect(interaction.reply).not.toHaveBeenCalledWith('executed');
-        expect(interaction.reply).toHaveBeenCalledTimes(1);
+            expect(interaction.reply).toHaveBeenCalledWith('executed');
+        });
     });
 
     describe('client-attached dispatch', () => {
@@ -918,35 +926,165 @@ describe('InteractionDispatcher Integration', () => {
         });
     });
 
-    it('a real OwnerOnly catalog gate passes a configured owner through the dispatcher', async () => {
-        await testEnv.createFile(
-            'interactions/Owner.ts',
-            `
-            import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
+    describe('interactionDispatched', () => {
+        async function dispatchedFor(
+            source: string,
+            commandName: string,
+            middleware?: string
+        ): Promise<SubscriptionData<'interactionDispatched'>[]> {
+            await testEnv.createFile('interactions/Route.ts', source);
+            if (middleware) await testEnv.createFile('middlewares/Mw.ts', middleware);
+            const config = testConfig({
+                interactions: testEnv.resolvePath('interactions'),
+                ownerIds: ['nobody'],
+                ...(middleware && { interactionMiddlewares: testEnv.resolvePath('middlewares') })
+            });
 
-            @Gated(OwnerOnly())
-            @SlashRoute('owner')
-            export class OwnerHandler extends SlashHandler<'owner'> {
-                public async execute() {
-                    await this.event.reply('executed');
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
+
+            const published: SubscriptionData<'interactionDispatched'>[] = [];
+            seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
+
+            await controller.handleSlashCommand(fakeSlash(commandName));
+            return published;
+        }
+
+        it('reports a handled slash dispatch with its route and no fallback', async () => {
+            const published = await dispatchedFor(
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('ok')
+                export class OkHandler extends SlashHandler<'ok'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
                 }
-            }
-            `
-        );
+                `,
+                'ok'
+            );
 
-        const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ownerIds: ['u1'] });
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({
+                routeId: 'slash:ok',
+                kind: 'slash',
+                outcome: 'handled',
+                fallback: false
+            });
+        });
 
-        seedcord = new Seedcord(config);
-        const controller = controllerOf(seedcord);
-        await controller.init();
+        it('reports refused when a gate stops the handler', async () => {
+            const published = await dispatchedFor(
+                `
+                import { Gated, OwnerOnly, SlashHandler, SlashRoute } from '${seedcordPath}';
 
-        const interaction = fakeSlash('owner');
-        await controller.processInteraction(
-            interaction,
-            () => 'owner',
-            () => controller.slashMap.get('owner')
-        );
+                @Gated(OwnerOnly())
+                @SlashRoute('guarded')
+                export class GuardedHandler extends SlashHandler<'guarded'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `,
+                'guarded'
+            );
 
-        expect(interaction.reply).toHaveBeenCalledWith('executed');
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:guarded', outcome: 'refused' });
+        });
+
+        it('reports failed when the handler throws', async () => {
+            const published = await dispatchedFor(
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('boom')
+                export class BoomHandler extends SlashHandler<'boom'> {
+                    public async execute() {
+                        throw new Error('handler exploded');
+                    }
+                }
+                `,
+                'boom'
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:boom', outcome: 'failed' });
+        });
+
+        it('flags the unhandled default as a fallback and keys the route by kind', async () => {
+            const published = await dispatchedFor(
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('registered')
+                export class RegisteredHandler extends SlashHandler<'registered'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `,
+                'unregistered'
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:unregistered', fallback: true });
+        });
+
+        // refused means a gate stopped the dispatch, so every other pre-handler throw reports failed
+        it('reports failed when a middleware throws before the handler is built', async () => {
+            const published = await dispatchedFor(
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('mwboom')
+                export class MwBoomHandler extends SlashHandler<'mwboom'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `,
+                'mwboom',
+                `
+                import { InteractionMiddleware, Middleware, MiddlewareType } from '${seedcordPath}';
+
+                @Middleware(MiddlewareType.Interaction)
+                export class BoomMiddleware extends InteractionMiddleware {
+                    public async execute() {
+                        throw new Error('middleware exploded');
+                    }
+                }
+                `
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:mwboom', outcome: 'failed' });
+        });
+
+        it('reports failed when the handler constructor throws', async () => {
+            const published = await dispatchedFor(
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('ctorboom')
+                export class CtorBoomHandler extends SlashHandler<'ctorboom'> {
+                    constructor(...args) {
+                        super(...args);
+                        throw new Error('ctor exploded');
+                    }
+
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `,
+                'ctorboom'
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:ctorboom', outcome: 'failed' });
+        });
     });
 });

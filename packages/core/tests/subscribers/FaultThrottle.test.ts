@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { FaultThrottle } from '@miscellaneous/FaultThrottle';
+import { FaultThrottle } from '@subscribers/FaultThrottle';
 
 describe('FaultThrottle', () => {
     it('reports a fresh key, then drops a duplicate within the window', () => {

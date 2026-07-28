@@ -5,6 +5,7 @@ import {
     InteractionMetadataKey,
     InteractionRouteKeys,
     InteractionRoutes,
+    dispatchedPayload,
     MiddlewareMetadataKey,
     prefixOf,
     PublishDefault,
@@ -38,7 +39,7 @@ import type { ReplySender } from '@bot/ReplySender';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { Initializeable } from '@seedcord/core';
+import type { DispatchOutcome, Initializeable } from '@seedcord/core';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type {
@@ -417,18 +418,19 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
         interaction: TInteraction,
-        getMap: () => Map<string, HandlerConstructor>,
-        interactionType: string
+        kind: InteractionRoutes,
+        getMap: () => Map<string, HandlerConstructor>
     ): Promise<void> {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
 
         // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
         // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies.
         const prefix = prefixOf(interaction.customId);
-        if (!prefix) return this.logger.warn(`${interactionType} has invalid customId: ${interaction.customId}`);
+        if (!prefix) return this.logger.warn(`${kind} has invalid customId: ${interaction.customId}`);
 
         await this.processInteraction(
             interaction,
+            kind,
             () => prefix,
             (key) => getMap().get(key)
         );
@@ -436,51 +438,91 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
+        kind: InteractionRoutes,
         extractKey: (i: TInteraction) => string,
         getHandler: (key: string) => HandlerConstructor | undefined,
         fallback: HandlerConstructor = UnhandledRepliable
     ): Promise<void> {
         const key = extractKey(interaction);
+        const startedAt = performance.now();
+        const matched = getHandler(key);
+
+        // the handler's own routeId replaces this once the dispatch context is built, and the closure
+        // below reads whichever one is current when it publishes
+        let routeId = `${kind}:${key}`;
+        const report = (outcome: DispatchOutcome): void => {
+            this.core.bus[PublishDefault](
+                'interactionDispatched',
+                dispatchedPayload({
+                    routeId,
+                    kind,
+                    outcome,
+                    startedAt,
+                    fallback: !matched,
+                    interactionId: interaction.id
+                })
+            );
+        };
 
         // declared outside the try so the fault boundary replies through the handler's exact ack state
         let sender: ReplySender | undefined;
         try {
-            if (!interaction.isAutocomplete()) {
-                for (const { ctor } of this.middlewares) {
-                    const middleware = new ctor(interaction as Repliables, this.core);
-                    await middleware.execute();
-                }
-            }
+            if (!interaction.isAutocomplete()) await this.runMiddlewares(interaction as Repliables);
 
-            let HandlerCtor = getHandler(key);
-            if (!HandlerCtor) {
+            const HandlerCtor = matched ?? fallback;
+            if (!matched) {
                 this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${fallback.name}.`);
-                HandlerCtor = fallback;
             }
 
             this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
             const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
+            routeId = dispatch.routeId ?? routeId;
             // @ts-expect-error TS can't infer the type of interaction here
             const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
             if (handler instanceof RepliableHandler) sender = handler.getSender();
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
-            if (!interaction.isAutocomplete()) {
-                const monitor = slowGateMonitor();
-                try {
-                    await runHandlerGates(
-                        HandlerCtor,
-                        interactionGateContext(interaction as Repliables, this.core),
-                        dispatch.routeId ?? undefined,
-                        monitor?.observe
-                    );
-                } finally {
-                    // a refusing gate ate budget too, report either way
-                    monitor?.report(dispatch.routeId);
-                }
+            const gated = !interaction.isAutocomplete();
+            if (gated && !(await this.passedGates(HandlerCtor, interaction as Repliables, dispatch.routeId, sender))) {
+                report('refused');
+                return;
             }
             await handler.execute();
+            report('handled');
         } catch (caught) {
+            report('failed');
             await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core, sender);
+        }
+    }
+
+    private async runMiddlewares(interaction: Repliables): Promise<void> {
+        for (const { ctor } of this.middlewares) {
+            const middleware = new ctor(interaction, this.core);
+            await middleware.execute();
+        }
+    }
+
+    // the refusal is answered here, so the caller only reports the outcome
+    private async passedGates(
+        HandlerCtor: HandlerConstructor,
+        interaction: Repliables,
+        routeId: string | null,
+        sender: ReplySender | undefined
+    ): Promise<boolean> {
+        const monitor = slowGateMonitor();
+        try {
+            await runHandlerGates(
+                HandlerCtor,
+                interactionGateContext(interaction, this.core),
+                routeId ?? undefined,
+                monitor?.observe
+            );
+            return true;
+        } catch (caught) {
+            await handleInteractionFault(caught, interaction, this.core, sender);
+            return false;
+        } finally {
+            // a refusing gate ate budget too, report either way
+            monitor?.report(routeId);
         }
     }
 
@@ -541,42 +583,48 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
+            InteractionRoutes.Slash,
             () => route,
             (key) => this.slashMap.get(key)
         );
     }
 
     private async handleButton(interaction: ButtonInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.buttonMap, 'Button');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.Button, () => this.buttonMap);
     }
 
     private async handleModal(interaction: ModalSubmitInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.modalMap, 'Modal');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.Modal, () => this.modalMap);
     }
 
     private async handleStringSelectMenu(interaction: StringSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.stringSelectMap, 'String select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.StringMenu, () => this.stringSelectMap);
     }
 
     private async handleUserSelectMenu(interaction: UserSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.userSelectMap, 'User select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.UserMenu, () => this.userSelectMap);
     }
 
     private async handleRoleSelectMenu(interaction: RoleSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.roleSelectMap, 'Role select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.RoleMenu, () => this.roleSelectMap);
     }
 
     private async handleChannelSelectMenu(interaction: ChannelSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.channelSelectMap, 'Channel select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.ChannelMenu, () => this.channelSelectMap);
     }
 
     private async handleMentionableSelectMenu(interaction: MentionableSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.mentionableSelectMap, 'Mentionable select menu');
+        await this.handleCustomIdInteraction(
+            interaction,
+            InteractionRoutes.MentionableMenu,
+            () => this.mentionableSelectMap
+        );
     }
 
     private async handleMessageContextMenu(interaction: MessageContextMenuCommandInteraction): Promise<void> {
         await this.processInteraction(
             interaction,
+            InteractionRoutes.MessageContextMenu,
             () => interaction.commandName,
             (key) => this.messageContextMenuMap.get(key)
         );
@@ -585,6 +633,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async handleUserContextMenu(interaction: UserContextMenuCommandInteraction): Promise<void> {
         await this.processInteraction(
             interaction,
+            InteractionRoutes.UserContextMenu,
             () => interaction.commandName,
             (key) => this.userContextMenuMap.get(key)
         );
@@ -594,6 +643,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
+            InteractionRoutes.Autocomplete,
             () => route,
             (key) => this.autocompleteMap.get(key),
             UnhandledAutocomplete

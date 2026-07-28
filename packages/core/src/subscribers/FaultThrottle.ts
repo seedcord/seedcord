@@ -1,7 +1,7 @@
 /**
- * Drops duplicate fault reports inside a fixed window so a recurring fault (a database outage on a
- * hot path) reports once per window instead of flooding the webhook. Keyed on a structural string, so
- * the map stays small, and a stale entry is evicted on the next read of its key.
+ * Suppresses duplicate fault reports within a fixed time window. Reports for the same fault
+ * are dropped if a previous report exists within the window. Stale entries are removed when
+ * accessed.
  *
  * @internal
  */
@@ -13,7 +13,7 @@ export class FaultThrottle {
         private readonly now: () => number = () => Date.now()
     ) {}
 
-    /** Evicts the entry for this key if it has aged out, so the map never holds stale keys forever. */
+    /** Evicts the entry for this key if it has aged out. */
     public shouldReport(key: string): boolean {
         const last = this.lastReportedAt.get(key);
         if (last === undefined) return true;

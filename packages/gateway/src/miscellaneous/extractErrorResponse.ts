@@ -1,12 +1,11 @@
 import * as crypto from 'node:crypto';
 
 import { Notice, Fault } from '@seedcord/core';
-import { prefixOf, PublishDefault } from '@seedcord/core/internal';
+import { prefixOf, PublishDefault, FaultThrottle } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
 import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';
-import { FaultThrottle } from '@miscellaneous/FaultThrottle';
 
 import type { Core } from '@interfaces/Core';
 import type { FaultSource, SubscriptionData } from '@seedcord/core';

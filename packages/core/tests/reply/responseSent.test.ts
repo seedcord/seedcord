@@ -112,4 +112,51 @@ describe('responseSent', () => {
         const sender = new TestSender();
         await expect(sender.reply(response)).resolves.toBe(created);
     });
+
+    it('reports deferUpdate and the update that rewrites through it', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+
+        await sender.deferUpdate();
+        await sender.update(response);
+
+        expect(sent.map((payload) => [payload.method, payload.messageId])).toEqual([
+            ['deferUpdate', null],
+            ['update', 'm1']
+        ]);
+    });
+
+    it('reports a fresh update, the branch that writes its own message', async () => {
+        const { bus, sent } = busWithSpy();
+        await new TestSender(bus).update(response);
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({ method: 'update', messageId: 'm1' });
+    });
+
+    it('reports followUp and an edit of the original', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+
+        await sender.reply(response);
+        await sender.followUp(response);
+        await sender.edit(response);
+
+        expect(sent.map((payload) => payload.method)).toEqual(['reply', 'followUp', 'edit']);
+    });
+
+    it('reports an edit and a delete aimed at a remembered message', async () => {
+        const { bus, sent } = busWithSpy();
+        const sender = new TestSender(bus);
+
+        const message = await sender.reply(response);
+        await sender.edit(message, response);
+        await sender.delete(message);
+
+        expect(sent.map((payload) => [payload.method, payload.messageId])).toEqual([
+            ['reply', 'm1'],
+            ['edit', 'm1'],
+            ['delete', null]
+        ]);
+    });
 });

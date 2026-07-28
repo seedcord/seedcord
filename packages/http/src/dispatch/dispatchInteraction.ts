@@ -1,6 +1,6 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
-import { runHandlerGates, slowGateMonitor } from '@seedcord/core/internal';
+import { dispatchedPayload, PublishDefault, runHandlerGates, slowGateMonitor } from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
@@ -9,10 +9,13 @@ import { RepliableHandler } from '@handlers/RepliableHandler';
 import { ReplySender } from '@reply/ReplySender';
 import { interactionGateContext } from '@src/gates/context';
 
+import { reportFault } from './reportFault';
+
 import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
+import type { DispatchOutcome } from '@seedcord/core';
 import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
@@ -84,7 +87,10 @@ function renderContext(core: Core, uuid: RenderContext['uuid']): RenderContext {
 }
 
 async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
-    if (notice.report) logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
+    if (notice.report) {
+        logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
+        reportFault(notice, uuid, scope.payload, scope.core);
+    }
     const { sender } = scope;
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
@@ -99,6 +105,8 @@ async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: 
 
     if (core.config.errors?.errorStack ?? false) logger().error(paint.mute(uuid), error);
     else logger().error(`${paint.mute(uuid)} | ${error.message}`);
+
+    reportFault(error, uuid, scope.payload, core);
 
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
@@ -141,16 +149,72 @@ interface DispatchArgs {
     readonly core: Core;
 }
 
+// one id for an unmatched dispatch, so a boundary log, its sender, and its telemetry event correlate
+function routeIdOf(match: ResolvedRoute): string {
+    return match.routeId ?? `${match.kind}:unhandled`;
+}
+
 // nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card
 function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: Core): FaultScope {
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-    const routeId = match.routeId ?? 'unhandled';
+    const routeId = routeIdOf(match);
     return {
         core,
         payload,
         routeId,
         sender: match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, routeId, core.bus)
     };
+}
+
+// the clock starts when the reporter is built, which is the first statement of the dispatch
+function dispatchReporter(
+    match: ResolvedRoute,
+    payload: ValidInteractionTypes,
+    core: Core
+): (outcome: DispatchOutcome) => void {
+    const startedAt = performance.now();
+    return (outcome) => {
+        core.bus[PublishDefault](
+            'interactionDispatched',
+            dispatchedPayload({
+                routeId: routeIdOf(match),
+                kind: match.kind,
+                outcome,
+                fallback: match.routeId === null,
+                startedAt,
+                interactionId: payload.id
+            })
+        );
+    };
+}
+
+// answers the interaction itself on either failure, so a null return means nothing can run
+async function loadHandlerCtor(
+    match: ResolvedRoute,
+    payload: ValidInteractionTypes,
+    core: Core,
+    report: (outcome: DispatchOutcome) => void
+): Promise<HandlerCtor | null> {
+    const routeId = routeIdOf(match);
+    let exported: unknown;
+    try {
+        exported = await match.load();
+    } catch (caught) {
+        logger().error(`Route ${paint.sky.bold(routeId)} failed to load its handler.`, caught);
+        report('failed');
+        await handleFault(caught, freshScope(match, payload, core));
+        return null;
+    }
+
+    if (isHandlerCtor(exported)) return exported;
+
+    logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
+    report('failed');
+    await handleFault(
+        new Error(`route ${routeId} loaded an export that is not a handler class`),
+        freshScope(match, payload, core)
+    );
+    return null;
 }
 
 /**
@@ -160,48 +224,38 @@ function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: 
  */
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
+    const report = dispatchReporter(match, payload, core);
 
-    let exported: unknown;
-    try {
-        exported = await match.load();
-    } catch (caught) {
-        logger().error(`Route ${paint.sky.bold(match.routeId ?? 'unhandled')} failed to load its handler.`, caught);
-        await handleFault(caught, freshScope(match, payload, core));
-        return null;
-    }
-
-    if (!isHandlerCtor(exported)) {
-        const routeId = match.routeId ?? 'unhandled';
-        logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
-        await handleFault(
-            new Error(`route ${routeId} loaded an export that is not a handler class`),
-            freshScope(match, payload, core)
-        );
-        return null;
-    }
-    const ctor = exported;
+    const ctor = await loadHandlerCtor(match, payload, core, report);
+    if (!ctor) return null;
 
     const dispatch = new DispatchContext(match.routeId);
     let handler: HttpHandler;
     try {
         handler = new ctor(payload, core, dispatch);
     } catch (caught) {
+        report('failed');
         await handleFault(caught, freshScope(match, payload, core));
         return null;
     }
     const scope: FaultScope = {
         core,
         payload,
-        routeId: match.routeId ?? handler.constructor.name,
+        routeId: routeIdOf(match),
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 
-    if (!(await passedGates(ctor, match, payload, core, scope))) return null;
+    if (!(await passedGates(ctor, match, payload, core, scope))) {
+        report('refused');
+        return null;
+    }
 
     return async () => {
         try {
             await handler.execute();
+            report('handled');
         } catch (caught) {
+            report('failed');
             await handleFault(caught, scope);
         }
     };

@@ -1,3 +1,4 @@
+import { PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -98,7 +99,8 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
         }
 
         try {
-            // justified: the payload is signed by Discord, the type field anchors the discriminated union
+            // justified: the payload is signed by Discord
+            core.bus[PublishDefault]('anyInteraction', { interaction: payload as APIInteraction });
             const match = resolve(maps, payload as APIInteraction);
             if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
         } catch (caught) {

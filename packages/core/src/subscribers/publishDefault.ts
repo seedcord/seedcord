@@ -1,6 +1,6 @@
 /**
- * The key of the Bus method that emits framework-owned subscriptions. It reaches no public entry, so
- * bot code cannot name it even with the runtime object in hand.
+ * The key of the Bus method that emits framework-owned subscriptions. `publish` excludes these keys
+ * through `PublishableKey`, and this symbol is exported only from the internal entry.
  *
  * @internal
  */

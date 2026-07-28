@@ -52,8 +52,8 @@ export interface EventFaultSource {
 }
 
 /**
- * The framework's own subscription keys. A transport adds a key whose payload names a type outside
- * this package through declaration merging on its own module.
+ * The framework's own subscription keys. A transport adds a key whose payload type references a type
+ * outside this package, through declaration merging on its own module.
  *
  * Every key here is publish-protected. Subscribe to them. The framework is the
  * only publisher.
@@ -89,7 +89,9 @@ export interface DefaultSubscriptions {
         /** Discord's interaction creation to dispatch entry, read from the snowflake. */
         queuedMs: number;
     };
-    /** Triggered on every successful write through the reply surface, several times per interaction. */
+    /**
+     * Triggered on every successful write through the reply surface, several times per interaction.
+     */
     responseSent: {
         routeId: string;
         /** `send` routes to another verb, so it reports the verb that ran. */
