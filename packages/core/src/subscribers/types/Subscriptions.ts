@@ -5,8 +5,8 @@ import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
 
 /**
- * How a dispatch finished. `refused` is a gate stopping it before the handler ran, `failed` is a
- * throw the handler let escape.
+ * How a dispatch finished. `refused` covers every deliberate stop, a gate refusing and a `Silence`
+ * thrown anywhere in the chain. `failed` is a throw that reached the fault boundary.
  */
 export type DispatchOutcome = 'handled' | 'refused' | 'failed';
 

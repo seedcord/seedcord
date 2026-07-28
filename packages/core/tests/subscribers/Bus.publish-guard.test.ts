@@ -11,7 +11,7 @@ function stubBus(): Bus {
 }
 
 describe('publish protection', () => {
-    it('rejects a framework key at the public publish', () => {
+    it('does not type-check a framework key through the public publish', () => {
         const bus = stubBus();
 
         // @ts-expect-error a default key is framework-owned, publish excludes it

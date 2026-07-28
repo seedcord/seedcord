@@ -43,7 +43,7 @@ export function slashPayload(name: string): object {
         application_id: 'app-1',
         token: 'tok',
         app_permissions: '0',
-        // discord sends member in a guild and user in a dm, this is the dm shape
+        // discord sends member in a guild and user in a dm
         user: { id: 'u1', username: 'tester' },
         data: { type: 1, name }
     };

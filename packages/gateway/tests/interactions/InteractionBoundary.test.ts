@@ -1,5 +1,6 @@
 import { Silence, Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
+import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -104,6 +105,20 @@ describe('handleInteractionFault', () => {
 
         expect(mock.reply).not.toHaveBeenCalled();
         expect(publish).not.toHaveBeenCalled();
+    });
+
+    // the uuid on the user's error card has to be greppable, so the log runs before the throttle
+    it('logs every occurrence of a throttled fault, publishing only the first', async () => {
+        const core = mockCore(publish);
+        const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+        await handleInteractionFault(new Error('db down'), asInteraction(mock), core);
+        await handleInteractionFault(new Error('db down'), asInteraction(mockInteraction()), core);
+
+        const lines = errorLog.mock.calls.map(([message]) => String(message));
+        expect(lines.filter((line: string) => line.includes('db down'))).toHaveLength(2);
+        expect(publish.mock.calls.filter(([event]) => event === 'unknownException')).toHaveLength(1);
+        errorLog.mockRestore();
     });
 
     it('reports an api code by default, since ignoreApiCodes is empty', async () => {

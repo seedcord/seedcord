@@ -133,7 +133,7 @@ describe('InteractionDispatcher Integration', () => {
         expect(controller.slashMap.has('ping')).toBe(true);
     });
 
-    it('a throwing any:interaction observer does not abort the dispatch', async () => {
+    it('a throwing anyInteraction observer does not abort the dispatch', async () => {
         const interactionsDir = 'interactions';
         await testEnv.createFile(
             `${interactionsDir}/Ping.ts`,
@@ -826,7 +826,7 @@ describe('InteractionDispatcher Integration', () => {
             return { controller, fire };
         }
 
-        it('runs later error:unhandled:interaction listeners after an earlier one throws', async () => {
+        it('runs later unhandledInteractionError listeners after an earlier one throws', async () => {
             const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'handleInteraction').mockRejectedValue(new Error('boom'));
             vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
@@ -995,6 +995,49 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:guarded', outcome: 'refused' });
         });
 
+        it('reports refused when the handler throws a Silence, which is a deliberate stop', async () => {
+            const published = await dispatchedFor(
+                `
+                import { Silence, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('silent')
+                export class SilentHandler extends SlashHandler<'silent'> {
+                    public async execute() {
+                        throw new Silence('blacklisted');
+                    }
+                }
+                `,
+                'silent'
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:silent', outcome: 'refused' });
+        });
+
+        it('reports failed when a gate throws a reporting Fault, since the gate itself broke', async () => {
+            const published = await dispatchedFor(
+                `
+                import { defineGate, Fault, Gated, SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                const Broken = defineGate('Broken', () => {
+                    throw new Fault({ cause: new Error('permission lookup failed') });
+                });
+
+                @Gated(Broken)
+                @SlashRoute('brokengate')
+                export class BrokenGateHandler extends SlashHandler<'brokengate'> {
+                    public async execute() {
+                        await this.event.reply('done');
+                    }
+                }
+                `,
+                'brokengate'
+            );
+
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ routeId: 'slash:brokengate', outcome: 'failed' });
+        });
+
         it('reports failed when the handler throws', async () => {
             const published = await dispatchedFor(
                 `
@@ -1061,6 +1104,56 @@ describe('InteractionDispatcher Integration', () => {
 
             expect(published).toHaveLength(1);
             expect(published[0]).toMatchObject({ routeId: 'slash:mwboom', outcome: 'failed' });
+        });
+
+        // a hand-built customId carries no colon, so prefixOf returns '' and no route can match
+        it('answers a customId that carries no route prefix through the unhandled default', async () => {
+            await testEnv.createDir('interactions');
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
+
+            const published: SubscriptionData<'interactionDispatched'>[] = [];
+            seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
+
+            const interaction = { ...fakeSlash('unused'), customId: 'vote', isChatInputCommand: () => false };
+            await controller.handleButton(interaction);
+
+            expect(interaction.reply).toHaveBeenCalledTimes(1);
+            expect(published).toHaveLength(1);
+            expect(published[0]).toMatchObject({ kind: 'button', fallback: true });
+        });
+
+        // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here
+        it('publishes responseSent from the handler own reply, carrying the route id', async () => {
+            await testEnv.createFile(
+                'interactions/Route.ts',
+                `
+                import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+                @SlashRoute('replied')
+                export class RepliedHandler extends SlashHandler<'replied'> {
+                    public async execute() {
+                        await this.reply('done');
+                    }
+                }
+                `
+            );
+            const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+            seedcord = new Seedcord(config);
+            const controller = controllerOf(seedcord);
+            await controller.init();
+
+            const sent: SubscriptionData<'responseSent'>[] = [];
+            seedcord.bus.on('responseSent', (payload) => sent.push(payload));
+
+            await controller.handleSlashCommand(fakeSlash('replied'));
+
+            expect(sent).toHaveLength(1);
+            expect(sent[0]).toMatchObject({ routeId: 'slash:replied', method: 'reply' });
         });
 
         it('reports failed when the handler constructor throws', async () => {

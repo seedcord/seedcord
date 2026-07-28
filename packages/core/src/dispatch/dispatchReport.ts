@@ -1,9 +1,24 @@
 import { timestampFromSnowflake } from '@seedcord/utils';
 
+import { Notice } from '@stops/Notice';
+import { Silence } from '@stops/Silence';
+
 import type { InteractionRoutes } from '@src/metadataKeys';
 import type { DispatchOutcome, SubscriptionData } from '@subscribers/types/Subscriptions';
 
-/** What a dispatcher knows once its handler chain settles. */
+/**
+ * Classifies a caught stop for `interactionDispatched` so a gate and a
+ * handler label the same stop identically.
+ *
+ * @internal
+ */
+export function outcomeFor(caught: unknown): DispatchOutcome {
+    if (caught instanceof Silence) return 'refused';
+    if (caught instanceof Notice) return caught.report ? 'failed' : 'refused';
+    return 'failed';
+}
+
+/** The values a dispatcher has once its handler chain settles. */
 export interface DispatchReport {
     readonly routeId: string;
     readonly kind: `${InteractionRoutes}`;
@@ -16,7 +31,7 @@ export interface DispatchReport {
     readonly interactionId: string;
 }
 
-// telemetry never breaks a dispatch, and BigInt() throws on a non-digit character
+// telemetry never breaks a dispatch, and BigInt() throws on a malformed id
 function queueTime(interactionId: string): number {
     try {
         return Date.now() - timestampFromSnowflake(interactionId);

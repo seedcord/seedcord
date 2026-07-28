@@ -1,7 +1,6 @@
 /**
- * Suppresses duplicate fault reports within a fixed time window. Reports for the same fault
- * are dropped if a previous report exists within the window. Stale entries are removed when
- * accessed.
+ * Drops duplicate fault reports inside a fixed window, so a recurring fault (a database outage on a
+ * hot path) reports once per window and never floods the webhook.
  *
  * @internal
  */

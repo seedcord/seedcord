@@ -146,7 +146,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
      * guarantee. A `'once'` subscriber is marked as executed when it starts (even if it throws), so
      * it never runs twice.
      *
-     * The framework's own keys are excluded. Subscribe to those and listen with `on`, the framework
+     * The framework's own keys are excluded. Subscribe to those and listen with `on`. The framework
      * is their only publisher.
      *
      * @param event - The subscription key to publish

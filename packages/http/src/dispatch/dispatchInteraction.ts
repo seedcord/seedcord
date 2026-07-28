@@ -1,6 +1,12 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
-import { dispatchedPayload, PublishDefault, runHandlerGates, slowGateMonitor } from '@seedcord/core/internal';
+import {
+    dispatchedPayload,
+    outcomeFor,
+    PublishDefault,
+    runHandlerGates,
+    slowGateMonitor
+} from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
@@ -245,8 +251,9 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 
-    if (!(await passedGates(ctor, match, payload, core, scope))) {
-        report('refused');
+    const refusal = await gateOutcome(ctor, match, payload, core, scope);
+    if (refusal) {
+        report(refusal);
         return null;
     }
 
@@ -255,23 +262,24 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
             await handler.execute();
             report('handled');
         } catch (caught) {
-            report('failed');
+            report(outcomeFor(caught));
             await handleFault(caught, scope);
         }
     };
 }
 
-// autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
-async function passedGates(
+// autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop.
+// null when the gates passed
+async function gateOutcome(
     ctor: HandlerCtor,
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core,
     scope: FaultScope
-): Promise<boolean> {
+): Promise<DispatchOutcome | null> {
     // the router derives match.kind from payload.type, so the two would be the same. the payload.type clause narrows
     // the union to Repliables for interactionGateContext below
-    if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return true;
+    if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return null;
     const monitor = slowGateMonitor();
     try {
         await runHandlerGates(
@@ -280,10 +288,10 @@ async function passedGates(
             match.routeId ?? undefined,
             monitor?.observe
         );
-        return true;
+        return null;
     } catch (caught) {
         await handleFault(caught, scope);
-        return false;
+        return outcomeFor(caught);
     } finally {
         // a refusing gate ate budget too, report either way
         monitor?.report(match.routeId);

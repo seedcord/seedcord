@@ -7,6 +7,8 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
+import type { SubscriptionData } from '@seedcord/core';
+
 import '../utils/mock-client';
 import '../utils/mock-env';
 
@@ -68,7 +70,7 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
 
-    it('a throwing any:event observer does not abort the dispatch', async () => {
+    it('a throwing anyEvent observer does not abort the dispatch', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ping.ts`,
@@ -104,6 +106,45 @@ describe('EventDispatcher Integration', () => {
 
         expect(fire).toBeDefined();
         expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
+    });
+
+    it('publishes anyEvent with the fired name and its args', async () => {
+        const eventsDir = 'events';
+        await testEnv.createFile(
+            `${eventsDir}/Ping.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate'])
+            export class PingHandler extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await Promise.resolve();
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+
+        const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+        await testBot.events.init();
+
+        const seen: SubscriptionData<'anyEvent'>[] = [];
+        seedcord.bus.on('anyEvent', (payload) => seen.push(payload));
+
+        const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
+            | ((...args: unknown[]) => void)
+            | undefined;
+        const message = { id: 'm1', content: 'hi' };
+        fire?.(message);
+
+        expect(seen).toHaveLength(1);
+        expect(seen[0]?.name).toBe('messageCreate');
+        expect(seen[0]?.args[0]).toBe(message);
     });
 
     it('threads the fired event name into the handler so match routes to the right arm', async () => {
@@ -483,7 +524,7 @@ describe('EventDispatcher Integration', () => {
             return { controller, fire };
         }
 
-        it('runs later error:unhandled:event listeners after an earlier one throws', async () => {
+        it('runs later unhandledEventError listeners after an earlier one throws', async () => {
             const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'processEvent').mockRejectedValue(new Error('boom'));
             vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);

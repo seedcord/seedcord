@@ -75,7 +75,7 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
 function withThrottle(origin: ErrorOrigin, error: Error, publish: () => void): void {
     const key = faultKey(origin, error);
     if (!faultThrottle.shouldReport(key)) {
-        logger.info(`throttled duplicate fault ${key}`);
+        logger.debug(`throttled duplicate fault ${key}`);
         return;
     }
     publish();
@@ -83,9 +83,10 @@ function withThrottle(origin: ErrorOrigin, error: Error, publish: () => void): v
 }
 
 function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    withThrottle(origin, denial, () => {
-        logger.error(`${denial.name}: ${uuid}`, denial);
+    // outside the throttle, so the uuid on the user's card always resolves to a log line
+    logger.error(`${denial.name}: ${uuid}`, denial);
 
+    withThrottle(origin, denial, () => {
         if (origin.interaction) {
             core.bus[PublishDefault]('handledException', {
                 denial,
@@ -118,11 +119,12 @@ function causeLine(error: Error): string {
 }
 
 function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    withThrottle(origin, error, () => {
-        const showStack = core.config.errors?.errorStack ?? false;
-        if (showStack) logger.error(uuid, error);
-        else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
+    // outside the throttle, so the uuid on the user's card always resolves to a log line
+    const showStack = core.config.errors?.errorStack ?? false;
+    if (showStack) logger.error(uuid, error);
+    else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
+    withThrottle(origin, error, () => {
         core.bus[PublishDefault]('unknownException', {
             uuid,
             error,
