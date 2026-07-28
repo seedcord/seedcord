@@ -10,6 +10,6 @@ A component or modal whose customId carries no route prefix now reaches the unha
 
 A fault during autocomplete now sends empty choices, which clears the client's loading spinner.
 
-A handler that throws a non-Error value now gets the generic fault card and an `unknownException` report. The value is wrapped with `String(value)` as the message, and it previously escaped the boundary with no reply.
+A handler that throws a non-Error value now gets the generic fault card and an `unknownException` report, where it previously escaped the boundary with no reply. The value is wrapped in an `Error` with `String(value)` as the message and the original as `cause`.
 
 A fault log line now writes on every occurrence. The 60s throttle covers the bus publish alone, so the uuid on a user's error card always resolves to a log line.

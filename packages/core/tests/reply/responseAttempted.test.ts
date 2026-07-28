@@ -131,7 +131,6 @@ describe('responseAttempted', () => {
         expect(sent[0]?.error?.message).toBe('discord said no');
     });
 
-    // String() flattens an object to [object Object], so the cause is the only way back to the value
     it('keeps the thrown value as the cause', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);

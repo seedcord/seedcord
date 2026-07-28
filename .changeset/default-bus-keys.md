@@ -8,6 +8,8 @@ Two keys are new. `interactionDispatched` fires once per dispatch with `routeId`
 
 Autocomplete choices responses publish `responseAttempted` too, with `method` `respond`.
 
+A write that threw a non-Error reports an `Error` wrapping it, with the raw value on `cause`.
+
 Both carry `interactionId`, so a subscriber can join them and split a dispatch into its code time and its Discord round trips. `durationMs` on `interactionDispatched` runs from dispatch entry to the user having a response, replies included.
 
 The thrown value's type sets `outcome`, so a gate and a handler label the same stop identically. A `Silence` and a `Notice` with `report` false are `refused`. A `Notice` with `report` true, which includes a default `Fault`, is `failed`.
