@@ -4,8 +4,7 @@ import { ShutdownPhase } from '@src/lifecycle/phases';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 
-import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
-import type { UnionToTuple } from 'type-fest';
+import type { LifecycleTask } from './LifecycleTypes';
 
 const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.Unbind,
@@ -14,8 +13,6 @@ const PHASE_ORDER: ShutdownPhase[] = [
     ShutdownPhase.Logout
 ];
 
-type CoordinatedShutdownEvents = PhaseEventMap<'shutdown', UnionToTuple<ShutdownPhase>>;
-
 // gives the logger's file sink time to flush before process.exit
 const LOG_FLUSH_DELAY_MS = 3000;
 
@@ -23,7 +20,7 @@ const LOG_FLUSH_DELAY_MS = 3000;
  * Runs registered shutdown tasks across `ShutdownPhase` in order. Registers SIGINT and SIGTERM
  * handlers. Tasks within a phase run in parallel.
  */
-export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, CoordinatedShutdownEvents> {
+export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
     private isShuttingDown = false;
     private hasShutdown = false;
     private exitCode = 0;
@@ -84,7 +81,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         }
     }
 
-    /** @internal run() awaits this so a shutdown during startup waits for startup to register its dispose tasks */
+    /** @internal run() awaits this so boot finishes registering its dispose tasks first */
     public gateOnStartup(settled: Promise<void>): void {
         this.startupGate = settled;
     }
@@ -114,7 +111,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
     public async run(exitCode = 0, exitProcess = true): Promise<void> {
         this.removeSignalHandlers();
 
-        // a dev-mode run leaves the process alive, so guard against a re-run that re-executes tasks
+        // a dev-mode run leaves the process alive, so a second call would re-execute every task
         if (this.hasShutdown || this.isShuttingDown) {
             this.logger.warn('Shutdown sequence already ran or is in progress');
             return;
@@ -125,7 +122,6 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
         this.logger.info(
             `${chalk.bold.yellow('Starting')} coordinated shutdown with exit code ${chalk.bold.cyan(exitCode)}`
         );
-        this.emitSafe('shutdown:start');
 
         try {
             if (this.startupGate) await this.startupGate;
@@ -139,10 +135,10 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
                 }
             }
 
-            if (failures.length > 0) this.emitFailures(failures);
-            else {
+            if (failures.length > 0) {
+                this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`, ...failures);
+            } else {
                 this.logger.info(`${chalk.bold.green('Coordinated shutdown completed')} successfully`);
-                this.emitSafe('shutdown:complete');
             }
         } finally {
             this.hasShutdown = true;
@@ -156,11 +152,5 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase, Coo
                 this.isShuttingDown = false;
             }
         }
-    }
-
-    private emitFailures(failures: unknown[]): void {
-        this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`);
-        const error = failures.length === 1 ? failures[0] : new AggregateError(failures, 'shutdown phase failures');
-        this.emitSafe('shutdown:error', error);
     }
 }

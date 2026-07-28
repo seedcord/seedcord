@@ -1,17 +1,27 @@
-import { describe, it, expect, vi } from 'vitest';
+import { Logger } from '@seedcord/logger';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 import { ShutdownPhase } from '@src/lifecycle/phases';
 
-// run(_, false) leaves the process alive (dev mode). A second call must not re-run tasks that
-// already ran on the first, even when the first failed inside a phase.
+// a second spyOn on an already-spied method returns the existing mock, so an unrestored spy
+// carries the previous test's calls into this one
+afterEach(() => {
+    vi.restoreAllMocks();
+});
+
+function failureReport(errors: { mock: { calls: unknown[][] } }): string {
+    const call = errors.mock.calls.find(([msg]) => String(msg).includes('Coordinated shutdown failed'));
+    return call ? call.slice(1).map(String).join('\n') : '<no shutdown-failed log>';
+}
+
+// run(_, false) leaves the process alive (dev mode)
 describe('CoordinatedShutdown.run re-entrancy', () => {
     it('does not re-run tasks after a failed dev-mode shutdown', async () => {
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
 
-        // survivor runs in the same phase as the rejector, so allSettled runs it before the phase
-        // throws. a re-entrant run would run it a second time.
+        // same phase as the rejector, so allSettled still runs survivor before the phase throws
         const survivor = vi.fn(() => Promise.resolve());
         shutdown.addTask(ShutdownPhase.Unbind, 'reject', () => Promise.reject(new Error('boom')), 1000);
         shutdown.addTask(ShutdownPhase.Unbind, 'survivor', survivor, 1000);
@@ -47,19 +57,19 @@ describe('CoordinatedShutdown.run phase resilience', () => {
         shutdown.addTask(ShutdownPhase.Disconnect, 'disconnect', disconnect, 1000);
         shutdown.addTask(ShutdownPhase.Logout, 'logout', logout, 1000);
 
-        let errored = false;
-        shutdown.on('shutdown:error', () => (errored = true));
+        const errors = vi.spyOn(Logger.prototype, 'error');
 
         await expect(shutdown.run(0, false)).resolves.toBeUndefined();
 
         expect(disconnect).toHaveBeenCalledTimes(1);
         expect(logout).toHaveBeenCalledTimes(1);
-        expect(errored).toBe(true);
+        expect(failureReport(errors)).toContain('Drain');
     });
 
-    it('emits an AggregateError carrying every phase failure', async () => {
+    it('reports every phase failure on the shutdown-failed log line', async () => {
         const shutdown = new CoordinatedShutdown();
         shutdown.removeSignalHandlers();
+        const errors = vi.spyOn(Logger.prototype, 'error');
 
         shutdown.addTask(ShutdownPhase.Drain, 'drain-fail', () => Promise.reject(new Error('drain-boom')), 1000);
         shutdown.addTask(
@@ -69,17 +79,11 @@ describe('CoordinatedShutdown.run phase resilience', () => {
             1000
         );
 
-        let payload: unknown;
-        shutdown.on('shutdown:error', (error) => (payload = error));
-
         await shutdown.run(0, false);
 
-        expect(payload).toBeInstanceOf(AggregateError);
-        const inner = (payload as AggregateError).errors;
-        expect(inner).toHaveLength(2);
-        const messages = inner.map((e) => (e as Error).message);
-        expect(messages.some((m) => m.includes('Drain'))).toBe(true);
-        expect(messages.some((m) => m.includes('Disconnect'))).toBe(true);
+        const reported = failureReport(errors);
+        expect(reported).toContain('Drain');
+        expect(reported).toContain('Disconnect');
     });
 });
 

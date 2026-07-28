@@ -1,6 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '@src/lifecycle/phases';
@@ -12,7 +11,6 @@ import { withTimeout } from './Lifecycle/withTimeout';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import type { EventMap, NoEvents } from '@seedcord/event-emitter';
 import type { Config, IRateLimiter, Store } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
 import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
@@ -29,10 +27,7 @@ interface Attachment {
  * Plugins are attached during configuration and initialized during startup, sequentially in attach
  * order within each phase. Not constructed directly, the host is a transport `Seedcord` class.
  */
-export abstract class Pluggable<TPluggableEvents extends EventMap<TPluggableEvents> = NoEvents>
-    extends TypedEventEmitter<TPluggableEvents>
-    implements CoreBase
-{
+export abstract class Pluggable implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rateLimiter: IRateLimiter;
 
@@ -58,12 +53,11 @@ export abstract class Pluggable<TPluggableEvents extends EventMap<TPluggableEven
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup) {
         if (Pluggable.isInstantiated) {
-            // the caller constructed this shutdown, release its fresh handler pair before rejecting
+            // the caller constructed this shutdown, its signal handlers leak unless dropped here
             shutdown.removeSignalHandlers();
             throw new SeedcordError(SeedcordErrorCode.CoreSingletonViolation);
         }
 
-        super();
         Pluggable.isInstantiated = true;
         Pluggable.liveShutdown = shutdown;
         this.shutdown = shutdown;
@@ -258,7 +252,6 @@ export abstract class Pluggable<TPluggableEvents extends EventMap<TPluggableEven
         if (failures.length > 1) throw new AggregateError(failures, 'plugin dispose failures');
     }
 
-    // reverse attach order
     private async disposeCompleted(
         phase: ShutdownPhase | undefined,
         onError: (caught: unknown) => void
@@ -284,18 +277,5 @@ export abstract class Pluggable<TPluggableEvents extends EventMap<TPluggableEven
         await this.disposeCompleted(undefined, (caught) => this.pluginLogger.warn('rollback dispose failed', caught));
         // prevents re-dispose when shutdown runs after rollback
         this.completedInits.clear();
-    }
-
-    /** @internal */
-    override removeListener<TEventKey extends Extract<keyof TPluggableEvents, string | symbol>>(
-        event: TEventKey,
-        listener: (...args: TPluggableEvents[TEventKey]) => void
-    ): this {
-        return super.removeListener(event, listener);
-    }
-
-    /** @internal */
-    override removeAllListeners(event?: Extract<keyof TPluggableEvents, string | symbol>): this {
-        return super.removeAllListeners(event);
     }
 }

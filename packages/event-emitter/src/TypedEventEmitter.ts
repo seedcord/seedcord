@@ -79,12 +79,7 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         return this.dispatchSafe(event, args);
     }
 
-    /** @internal */
-    protected emitSafeRaw(event: string | symbol, ...args: readonly unknown[]): boolean {
-        return this.dispatchSafe(event as EventKey<TEvents>, args);
-    }
-
-    // safe-emit error hook. the default re-throws the error on a microtask. override to log
+    // only dispatchSafe calls this, override it to log the listener throw
     /** @internal */
     protected onListenerError(error: unknown, _event: string | symbol): void {
         queueMicrotask(() => {

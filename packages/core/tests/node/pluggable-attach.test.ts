@@ -94,16 +94,12 @@ describe('Pluggable', () => {
 
     it('runs plugin init inside the Configuration phase by default', async () => {
         const { host, startup } = makeHost();
-        const order: string[] = [];
-
-        startup.on(`phase:${StartupPhase.Configuration}:start`, () => order.push('start'));
-        startup.on(`phase:${StartupPhase.Configuration}:complete`, () => order.push('complete'));
 
         const withDb = host.attach('db', TestPlugin, 'x');
-        withDb.db.onInit = () => order.push('init');
 
         await host.run();
-        expect(order).toEqual(['start', 'init', 'complete']);
+        expect(withDb.db.initCalls).toBe(1);
+        expect(startup.removeTask(StartupPhase.Configuration, 'Plugins:init')).toBe(true);
     });
 
     it('runs plugin inits sequentially in attach order within a phase', async () => {
@@ -192,7 +188,7 @@ describe('Pluggable', () => {
             expect(order).toEqual(['b', 'a']);
         });
 
-        it('surfaces a dispose failure phase through shutdown:error', async () => {
+        it('surfaces a dispose failure phase on the shutdown-failed log', async () => {
             class FailingDispose extends TestPlugin {
                 public override dispose(): Promise<void> {
                     return Promise.reject(new Error(`dispose-failed-${this.tag}`));
@@ -204,12 +200,13 @@ describe('Pluggable', () => {
             host.attach('b', FailingDispose, 'b');
             await host.run();
 
-            let payload: unknown;
-            shutdown.on('shutdown:error', (error) => (payload = error));
+            const errors = vi.spyOn(Logger.prototype, 'error');
             await shutdown.run(0, false);
 
-            expect(isSeedcordError(payload, undefined, SeedcordErrorCode.LifecyclePhaseFailures)).toBe(true);
-            expect((payload as Error).message).toContain('Disconnect');
+            const call = errors.mock.calls.find(([msg]) => String(msg).includes('Coordinated shutdown failed'));
+            const [failure] = call?.slice(1) ?? [];
+            expect(isSeedcordError(failure, undefined, SeedcordErrorCode.LifecyclePhaseFailures)).toBe(true);
+            expect((failure as Error).message).toContain('Disconnect');
         });
 
         it('a shared non-default dispose phase runs both disposes in reverse attach order', async () => {
@@ -279,14 +276,13 @@ describe('Pluggable', () => {
             }
         }
 
-        const { host, startup } = makeHost();
-        startup.on(`phase:${StartupPhase.Configuration}:complete`, () => order.push('config-done'));
+        const { host } = makeHost();
         host.attach('l', LoginInit);
         const c = host.attach('c', TestPlugin, 'c').c;
         c.onInit = () => order.push('config-init');
 
         await host.run();
-        expect(order).toEqual(['config-init', 'config-done', 'login-init']);
+        expect(order).toEqual(['config-init', 'login-init']);
     });
 
     it('runs each dispose in its declared phase', async () => {
@@ -309,12 +305,11 @@ describe('Pluggable', () => {
         host.attach('ld', LogoutDispose);
         const dd = host.attach('dd', TestPlugin, 'dd').dd;
         dd.onDispose = () => order.push('disconnect-dispose');
-        shutdown.on(`phase:${ShutdownPhase.Logout}:start`, () => order.push('logout-phase'));
 
         await host.run();
         await shutdown.run(0, false);
 
-        expect(order).toEqual(['disconnect-dispose', 'logout-phase', 'logout-dispose']);
+        expect(order).toEqual(['disconnect-dispose', 'logout-dispose']);
     });
 
     it('runs ready hooks sequentially in attach order at Ready', async () => {
@@ -333,7 +328,7 @@ describe('Pluggable', () => {
             }
         }
 
-        const { host, startup } = makeHost();
+        const { host } = makeHost();
         const order: string[] = [];
         const a = host.attach('a', SlowReady, 'a').a;
         const b = host.attach('b', FastReady, 'b').b;
@@ -341,10 +336,9 @@ describe('Pluggable', () => {
         b.onInit = () => order.push('init-b');
         a.onReady = () => order.push('ready-a');
         b.onReady = () => order.push('ready-b');
-        startup.on(`phase:${StartupPhase.Ready}:start`, () => order.push('ready-phase'));
 
         await host.run();
-        expect(order).toEqual(['init-a', 'init-b', 'ready-phase', 'ready-a', 'ready-b']);
+        expect(order).toEqual(['init-a', 'init-b', 'ready-a', 'ready-b']);
     });
 
     it('registers no Ready task when no plugin declares ready or a Ready-phase init', async () => {
@@ -458,7 +452,6 @@ describe('Pluggable', () => {
             throw new Error('startup failed');
         };
 
-        // the rollback dispose rejects, the startup phase error still propagates
         const error: unknown = await host.run().then(
             () => null,
             (caught: unknown) => caught

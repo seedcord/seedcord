@@ -1,6 +1,6 @@
 /* eslint-disable max-lines -- one integration suite per dispatcher, splitting fragments the shared test env */
 
-import { CustomId, ShutdownPhase } from '@seedcord/core';
+import { CustomId } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -903,14 +903,18 @@ describe('InteractionDispatcher Integration', () => {
             fire?.(fakeSlash('ping'));
 
             vi.useFakeTimers();
-            const completed: number[] = [];
-            seedcord.shutdown.on(`phase:${ShutdownPhase.Drain}:complete`, () => completed.push(ShutdownPhase.Drain));
+            const infos = vi.spyOn(Logger.prototype, 'info');
+            const errors = vi.spyOn(Logger.prototype, 'error');
             const run = seedcord.shutdown.run(0, false);
             await vi.advanceTimersByTimeAsync(10_000);
             await run;
             vi.useRealTimers();
 
-            expect(completed).toContain(ShutdownPhase.Drain);
+            const finished = infos.mock.calls.some(
+                ([msg]) => String(msg).includes('Drain') && String(msg).includes('completed successfully')
+            );
+            expect(finished).toBe(true);
+            expect(errors.mock.calls.flat().map(String).join('\n')).not.toContain('Drain');
         });
     });
 

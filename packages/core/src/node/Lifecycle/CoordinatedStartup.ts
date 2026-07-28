@@ -7,17 +7,14 @@ import { StartupPhase } from '@src/lifecycle/phases';
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 import { withTimeout } from './withTimeout';
 
-import type { LifecycleTask, PhaseEventMap } from './LifecycleTypes';
-import type { UnionToTuple } from 'type-fest';
+import type { LifecycleTask } from './LifecycleTypes';
 
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
-
-type CoordinatedStartupEvents = PhaseEventMap<'startup', UnionToTuple<StartupPhase>>;
 
 /**
  * Runs registered startup tasks across `StartupPhase` in order. Tasks within a phase run in parallel.
  */
-export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, CoordinatedStartupEvents> {
+export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     private isStartingUp = false;
     private hasStarted = false;
 
@@ -86,7 +83,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
 
         this.isStartingUp = true;
         this.logger.info(`${chalk.bold.green('Starting')} coordinated startup sequence`);
-        this.emitSafe('startup:start');
 
         try {
             for (const phase of PHASE_ORDER) {
@@ -100,7 +96,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
 
             this.hasStarted = true;
             this.logger.info(`${chalk.bold.green('Coordinated startup completed')} successfully`);
-            this.emitSafe('startup:complete');
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false before this catch runs
             if (!this.isStartingUp) {
@@ -108,7 +103,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase, Coord
                 return;
             }
             this.logger.error(`${chalk.bold.red('Coordinated startup failed')}`);
-            this.emitSafe('startup:error', error);
             throw error;
         } finally {
             this.isStartingUp = false;

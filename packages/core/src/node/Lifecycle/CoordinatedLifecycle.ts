@@ -5,24 +5,19 @@
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 
 import { withTimeout } from './withTimeout';
 
 import type { LifecycleTask } from './LifecycleTypes';
-import type { EventMap } from '@seedcord/event-emitter';
 
 /**
  * Base for the startup and shutdown coordinators. Runs phase-ordered tasks off a per-phase map.
  *
  * @internal
  */
-export abstract class CoordinatedLifecycle<
-    TPhase extends number,
-    TEvents extends EventMap<TEvents>
-> extends TypedEventEmitter<TEvents> {
+export abstract class CoordinatedLifecycle<TPhase extends number> {
     protected readonly logger: Logger;
     protected readonly tasksMap = new Map<TPhase, LifecycleTask[]>();
 
@@ -31,7 +26,6 @@ export abstract class CoordinatedLifecycle<
         protected readonly phaseOrder: TPhase[],
         protected readonly phaseEnum: Record<number, string>
     ) {
-        super();
         this.logger = new Logger(loggerName);
         this.phaseOrder.forEach((phase) => this.tasksMap.set(phase, []));
     }
@@ -95,22 +89,18 @@ export abstract class CoordinatedLifecycle<
         this.logger.info(
             `${chalk.bold.yellow('Running')} ${this.getTaskType()} phase ${chalk.bold.magenta(this.phaseEnum[phase])} with ${chalk.bold.cyan(tasks.length)} tasks`
         );
-        this.emitPhase(phase, 'start');
 
         const results: PromiseSettledResult<void>[] = await this.executeTasksInPhase(phase, tasks);
 
         const failures = results.filter((r) => r.status === 'rejected').length;
         if (failures > 0) {
-            // raw phase name here. chalk's ANSI codes would otherwise leak into the serialized
-            // error message (e.g. the unknown-exception webhook payload).
+            // chalk here would leak ANSI codes into the serialized error message (the unknown-exception webhook)
             throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
         }
 
         this.logger.info(
             `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
         );
-
-        this.emitPhase(phase, 'complete');
     }
 
     protected async runTaskWithTimeout(phase: TPhase, task: LifecycleTask): Promise<void> {
@@ -131,15 +121,6 @@ export abstract class CoordinatedLifecycle<
             );
             throw error;
         }
-    }
-
-    // TS can't correlate a template-literal key with the generic TEvents
-    private emitPhase(phase: TPhase, action: 'start' | 'complete'): void {
-        this.emitSafeRaw(`phase:${phase}:${action}`);
-    }
-
-    protected override onListenerError(error: unknown, event: string | symbol): void {
-        this.logger.error(`listener for ${String(event)} threw`, error);
     }
 
     protected abstract canAddTask(): boolean;

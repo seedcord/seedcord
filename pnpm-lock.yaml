@@ -488,9 +488,6 @@ importers:
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
-      '@seedcord/event-emitter':
-        specifier: workspace:*
-        version: link:../event-emitter
       '@seedcord/logger':
         specifier: workspace:*
         version: link:../logger
