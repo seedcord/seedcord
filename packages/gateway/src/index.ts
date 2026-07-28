@@ -1,8 +1,7 @@
 import 'reflect-metadata';
 import './logger-bootstrap';
 import './plugin-capabilities';
-
-export type { BotEvents } from '@bot/Bot';
+import './subscriptions';
 
 export * from '@bDecorators/index';
 

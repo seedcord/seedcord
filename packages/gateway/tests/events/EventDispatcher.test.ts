@@ -94,7 +94,7 @@ describe('EventDispatcher Integration', () => {
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await testBot.events.init();
 
-        seedcord.bot.on('any:event', () => {
+        seedcord.bus.on('anyEvent', () => {
             throw new Error('observer boom');
         });
 
@@ -489,10 +489,10 @@ describe('EventDispatcher Integration', () => {
             vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
 
             let reached = false;
-            seedcord.bot.on('error:unhandled:event', () => {
+            seedcord.bus.on('unhandledEventError', () => {
                 throw new Error('listener blew up');
             });
-            seedcord.bot.on('error:unhandled:event', () => {
+            seedcord.bus.on('unhandledEventError', () => {
                 reached = true;
             });
 

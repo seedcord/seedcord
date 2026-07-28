@@ -159,7 +159,7 @@ describe('InteractionDispatcher Integration', () => {
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await testBot.interactions.init();
 
-        seedcord.bot.on('any:interaction', () => {
+        seedcord.bus.on('anyInteraction', () => {
             throw new Error('observer boom');
         });
 
@@ -824,10 +824,10 @@ describe('InteractionDispatcher Integration', () => {
             vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
 
             let reached = false;
-            seedcord.bot.on('error:unhandled:interaction', () => {
+            seedcord.bus.on('unhandledInteractionError', () => {
                 throw new Error('listener blew up');
             });
-            seedcord.bot.on('error:unhandled:interaction', () => {
+            seedcord.bus.on('unhandledInteractionError', () => {
                 reached = true;
             });
 

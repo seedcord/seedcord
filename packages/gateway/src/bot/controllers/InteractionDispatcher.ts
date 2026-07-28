@@ -7,6 +7,7 @@ import {
     InteractionRoutes,
     MiddlewareMetadataKey,
     prefixOf,
+    PublishDefault,
     routeIdOf,
     runHandlerGates,
     slowGateMonitor,
@@ -396,10 +397,10 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private attachToClient(): void {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
             if (this.draining) return;
-            this.core.bot.emitSafe('any:interaction', interaction);
+            this.core.bus[PublishDefault]('anyInteraction', { interaction });
             const run = this.handleInteraction(interaction).catch((err: Error) => {
                 this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bot.emitSafe('error:unhandled:interaction', err);
+                this.core.bus[PublishDefault]('unhandledInteractionError', { error: err });
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));
