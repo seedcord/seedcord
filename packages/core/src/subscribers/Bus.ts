@@ -42,8 +42,8 @@ export interface SubscriberRegistration {
     readonly keys: readonly SubscriptionKey[];
     readonly frequency: EventFrequency;
     readonly resolve: () => StoredSubscriberCtor | Promise<StoredSubscriberCtor>;
-    /** Set when the class is already resolved, which every server-host registration is. */
-    readonly ctor?: StoredSubscriberCtor | undefined;
+    /** The resolved class. A server-host registration carries it from the start, a lazy one fills it on first resolve. */
+    ctor?: StoredSubscriberCtor | undefined;
 }
 
 /**
@@ -209,8 +209,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         // named outside the try so the catch can report which subscriber threw, several run per key
         let name = '<unresolved>';
         try {
+            entry.ctor ??= await entry.resolve();
             // the registration keys each subscriber to its subscriptions, so data matches this ctor's payload arm
-            const Ctor = (entry.ctor ?? (await entry.resolve())) as new (
+            const Ctor = entry.ctor as new (
                 data: AllSubscriptions[KeyOfSubscribers],
                 core: CoreBase
             ) => Subscriber<KeyOfSubscribers, CoreBase>;

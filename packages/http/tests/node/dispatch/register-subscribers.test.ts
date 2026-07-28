@@ -42,7 +42,7 @@ describe('registerSubscribers', () => {
         expect(load).not.toHaveBeenCalled();
     });
 
-    it('resolves and runs the row on the first publish of its key', async () => {
+    it('resolves the row once and runs it on every publish of its key', async () => {
         const ran: string[] = [];
         class Reporter extends Subscriber<'unknownException'> {
             execute(): Promise<void> {
@@ -57,6 +57,10 @@ describe('registerSubscribers', () => {
         bus[PublishDefault]('unknownException', payload());
         await vi.waitFor(() => {
             expect(ran).toEqual(['reporter']);
+        });
+        bus[PublishDefault]('unknownException', payload());
+        await vi.waitFor(() => {
+            expect(ran).toEqual(['reporter', 'reporter']);
         });
 
         expect(load).toHaveBeenCalledTimes(1);
