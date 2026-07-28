@@ -105,7 +105,9 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
             if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
         } catch (caught) {
             // a throw here must never eat the ack
-            logger.error('dispatch failed, acking anyway', caught);
+            const error = Error.isError(caught) ? caught : new Error(String(caught));
+            logger.error('dispatch failed, acking anyway', error);
+            core.bus[PublishDefault]('unhandledInteractionError', { error });
         }
 
         return new Response(null, { status: ACCEPTED });
