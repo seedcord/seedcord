@@ -4,7 +4,7 @@ import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { handleInteractionFault } from '@bot/handleInteractionFault';
+import { handleInteractionFault as boundary } from '@bot/handleInteractionFault';
 import { ReplySender } from '@bot/ReplySender';
 
 import { harmlessError } from '../utils/harmlessError';
@@ -54,6 +54,16 @@ function mockCore(publish: ReturnType<typeof vi.fn>): Core {
 // justified: the fixture implements only the interaction surface the boundary reads.
 function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteractionTypes {
     return mock as unknown as ValidInteractionTypes;
+}
+
+// the dispatcher supplies its own route id, these cases pin the boundary's other behavior
+function handleInteractionFault(
+    caught: unknown,
+    interaction: ValidInteractionTypes,
+    core: Core,
+    sender?: ReplySender
+): Promise<void> {
+    return boundary(caught, interaction, core, 'slash:test', sender);
 }
 
 function senderFor(mock: ReturnType<typeof mockInteraction>, routeId: string): ReplySender {

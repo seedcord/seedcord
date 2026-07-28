@@ -4,7 +4,9 @@
 
 **BREAKING:** `core.bot` no longer emits events, and `Bot` no longer extends the event emitter. The four keys move to the bus under new names. `error:unhandled:interaction` becomes `unhandledInteractionError`, `error:unhandled:event` becomes `unhandledEventError`, `any:event` becomes `anyEvent`, and `any:interaction` becomes `anyInteraction`. Register them with `core.bus.on(...)` or a `@Subscribe` subscriber class.
 
-**BREAKING:** `Paginator.start(interaction, core)` requires `core`, which it reads for the bus that publishes `responseAttempted`.
+**BREAKING:** `Paginator.start(handler)` takes the handler, normally `this`, in place of the interaction and core. It sends through that handler's sender, so the page write reports the same `routeId` the dispatch did.
+
+A write from the fault boundary reports the dispatcher's route id. A middleware or constructor throw leaves no handler sender, and the boundary's own sender previously reported an id with no interaction kind on it, so `responseAttempted` and `interactionDispatched` disagreed for one dispatch.
 
 A component or modal whose customId carries no route prefix now reaches the unhandled default and gets a reply, matching http. It previously logged a warning and left the interaction with no reply.
 

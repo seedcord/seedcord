@@ -498,13 +498,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 ? null
                 : await this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch.routeId);
             if (refusal) {
-                await this.answer(refusal.caught, interaction as ValidInteractionTypes, sender, report);
+                await this.answer(refusal.caught, interaction as ValidInteractionTypes, routeId, sender, report);
                 return;
             }
             await handler.execute();
             report('handled');
         } catch (caught) {
-            await this.answer(caught, interaction as ValidInteractionTypes, sender, report);
+            await this.answer(caught, interaction as ValidInteractionTypes, routeId, sender, report);
         }
     }
 
@@ -512,11 +512,12 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async answer(
         caught: unknown,
         interaction: ValidInteractionTypes,
+        routeId: string,
         sender: ReplySender | undefined,
         report: (outcome: DispatchOutcome) => void
     ): Promise<void> {
         try {
-            await handleInteractionFault(caught, interaction, this.core, sender);
+            await handleInteractionFault(caught, interaction, this.core, routeId, sender);
         } finally {
             report(outcomeFor(caught));
         }

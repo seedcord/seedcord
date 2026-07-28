@@ -979,11 +979,7 @@ describe('InteractionDispatcher Integration', () => {
     });
 
     describe('interactionDispatched', () => {
-        async function dispatchedFor(
-            source: string,
-            commandName: string,
-            middleware?: string
-        ): Promise<SubscriptionData<'interactionDispatched'>[]> {
+        async function bootWith(source: string, middleware?: string): Promise<PrivateInteractionDispatcher> {
             await testEnv.createFile('interactions/Route.ts', source);
             if (middleware) await testEnv.createFile('middlewares/Mw.ts', middleware);
             const config = testConfig({
@@ -995,6 +991,15 @@ describe('InteractionDispatcher Integration', () => {
             seedcord = new Seedcord(config);
             const controller = controllerOf(seedcord);
             await controller.init();
+            return controller;
+        }
+
+        async function dispatchedFor(
+            source: string,
+            commandName: string,
+            middleware?: string
+        ): Promise<SubscriptionData<'interactionDispatched'>[]> {
+            const controller = await bootWith(source, middleware);
 
             const published: SubscriptionData<'interactionDispatched'>[] = [];
             seedcord.bus.on('interactionDispatched', (payload) => published.push(payload));
@@ -1129,34 +1134,48 @@ describe('InteractionDispatcher Integration', () => {
             expect(published[0]).toMatchObject({ routeId: 'slash:unregistered', fallback: true });
         });
 
+        const MW_BOOM_ROUTE = `
+            import { SlashHandler, SlashRoute } from '${seedcordPath}';
+
+            @SlashRoute('mwboom')
+            export class MwBoomHandler extends SlashHandler<'mwboom'> {
+                public async execute() {
+                    await this.event.reply('done');
+                }
+            }
+        `;
+        const MW_BOOM_MIDDLEWARE = `
+            import { InteractionMiddleware, Middleware, MiddlewareType } from '${seedcordPath}';
+
+            @Middleware(MiddlewareType.Interaction)
+            export class BoomMiddleware extends InteractionMiddleware {
+                public async execute() {
+                    throw new Error('middleware exploded');
+                }
+            }
+        `;
+
         // refused means a gate stopped the dispatch, so every other pre-handler throw reports failed
         it('reports failed when a middleware throws before the handler is built', async () => {
-            const published = await dispatchedFor(
-                `
-                import { SlashHandler, SlashRoute } from '${seedcordPath}';
-
-                @SlashRoute('mwboom')
-                export class MwBoomHandler extends SlashHandler<'mwboom'> {
-                    public async execute() {
-                        await this.event.reply('done');
-                    }
-                }
-                `,
-                'mwboom',
-                `
-                import { InteractionMiddleware, Middleware, MiddlewareType } from '${seedcordPath}';
-
-                @Middleware(MiddlewareType.Interaction)
-                export class BoomMiddleware extends InteractionMiddleware {
-                    public async execute() {
-                        throw new Error('middleware exploded');
-                    }
-                }
-                `
-            );
+            const published = await dispatchedFor(MW_BOOM_ROUTE, 'mwboom', MW_BOOM_MIDDLEWARE);
 
             expect(published).toHaveLength(1);
             expect(published[0]).toMatchObject({ routeId: 'slash:mwboom', outcome: 'failed' });
+        });
+
+        // a middleware throw leaves no handler sender, so the boundary builds its own and the two keys
+        // have to agree on the route a consumer groups by
+        it('publishes one route id across both keys when a middleware throws', async () => {
+            const controller = await bootWith(MW_BOOM_ROUTE, MW_BOOM_MIDDLEWARE);
+            const dispatched: SubscriptionData<'interactionDispatched'>[] = [];
+            const written: SubscriptionData<'responseAttempted'>[] = [];
+            seedcord.bus.on('interactionDispatched', (payload) => dispatched.push(payload));
+            seedcord.bus.on('responseAttempted', (payload) => written.push(payload));
+
+            await controller.handleSlashCommand(fakeSlash('mwboom'));
+
+            expect(dispatched[0]?.routeId).toBe('slash:mwboom');
+            expect(written[0]?.routeId).toBe('slash:mwboom');
         });
 
         // a hand-built customId carries no colon, so prefixOf returns '' and no route can match

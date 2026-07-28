@@ -5,7 +5,7 @@ import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';
 import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { extractErrorResponse, interactionRoute } from '@miscellaneous/extractErrorResponse';
+import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import { HARMLESS_API_CODES } from './harmlessApiCodes';
 
@@ -28,6 +28,7 @@ export async function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
     core: Core,
+    routeId: string,
     sender?: ReplySender
 ): Promise<void> {
     if (caught instanceof Silence) {
@@ -54,7 +55,7 @@ export async function handleInteractionFault(
             route: slashRouteOf(interaction)
         });
         // empty choices are the only legal response, and they clear the client's loading spinner
-        await sendEmptyChoices(interaction, core);
+        await sendEmptyChoices(interaction, core, routeId);
         return;
     }
 
@@ -64,14 +65,13 @@ export async function handleInteractionFault(
         user: interaction.user,
         metadata: interaction
     });
-    const liveSender = sender ?? new ReplySender(interaction, interactionRoute(interaction), core.bus);
+    const liveSender = sender ?? new ReplySender(interaction, routeId, core.bus);
     await sendGuarded(liveSender, response, error instanceof Notice ? error.ephemeral : true);
 }
 
 // reports like any other write, so a faulted autocomplete still shows its discord round trip
-async function sendEmptyChoices(interaction: AutocompleteInteraction, core: Core): Promise<void> {
+async function sendEmptyChoices(interaction: AutocompleteInteraction, core: Core, routeId: string): Promise<void> {
     const telemetry = { bus: core.bus, interactionId: interaction.id };
-    const routeId = `autocomplete:${slashRouteOf(interaction)}`;
     try {
         await reportedWrite(telemetry, routeId, 'respond', () => interaction.respond([]));
     } catch (error) {

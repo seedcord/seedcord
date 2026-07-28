@@ -16,6 +16,6 @@ export class RosterNav extends Roster.Handler {}
 @SlashRoute('roster')
 export class RosterSlash extends SlashHandler<'roster'> {
     public async execute(): Promise<void> {
-        await Roster.start(this.event, this.core);
+        await Roster.start(this);
     }
 }
