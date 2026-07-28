@@ -21,6 +21,7 @@ export function outcomeFor(caught: unknown): DispatchOutcome {
 /** The values a dispatcher has once its handler chain settles. */
 interface DispatchReport {
     readonly routeId: string;
+    readonly interactionId: string;
     readonly kind: `${InteractionRoutes}`;
     readonly outcome: DispatchOutcome;
     /** True when no route matched and the unhandled default ran. */
@@ -55,6 +56,7 @@ export function queuedMsFor(interactionId: string): number {
 export function dispatchedPayload(report: DispatchReport): SubscriptionData<'interactionDispatched'> {
     return {
         routeId: report.routeId,
+        interactionId: report.interactionId,
         kind: report.kind,
         outcome: report.outcome,
         fallback: report.fallback,

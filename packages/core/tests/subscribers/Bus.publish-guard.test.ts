@@ -41,6 +41,7 @@ describe('publish protection', () => {
 
         bus[PublishDefault]('interactionDispatched', {
             routeId: 'slash:ping',
+            interactionId: 'i1',
             kind: 'slash',
             outcome: 'handled',
             fallback: false,

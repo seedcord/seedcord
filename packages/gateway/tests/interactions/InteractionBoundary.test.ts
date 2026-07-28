@@ -165,7 +165,7 @@ describe('handleInteractionFault', () => {
         await handleInteractionFault(new TestNotice(), asInteraction(mock), mockCore(publish));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
-        // the boundary's own followUp publishes responseSent, so assert on the fault keys alone
+        // the boundary's own followUp publishes responseAttempted, so assert on the fault keys alone
         const keys = publish.mock.calls.map(([event]) => event as string);
         expect(keys).not.toContain('handledException');
         expect(keys).not.toContain('unknownException');

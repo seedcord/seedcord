@@ -5,11 +5,14 @@ import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
 
 /**
- * How a dispatch finished. The thrown value decides, wherever it came from. A `Silence` and a
+ * How a dispatch finished. The thrown value's type sets this, wherever it was thrown. A `Silence` and a
  * `Notice` with `report` false are `refused`. A `Notice` with `report` true, which includes a default
  * `Fault`, is `failed`, as is any other throw.
  */
 export type DispatchOutcome = 'handled' | 'refused' | 'failed';
+
+/** Whether a write through the reply surface reached Discord. */
+export type ResponseOutcome = 'sent' | 'failed';
 
 /**
  * Where a reported fault came from.
@@ -81,6 +84,8 @@ export interface DefaultSubscriptions {
     /** Triggered once per interaction dispatch, after the handler chain settles. */
     interactionDispatched: {
         routeId: string;
+        /** The interaction this dispatch ran, for joining against `responseAttempted`. */
+        interactionId: string;
         kind: `${InteractionRoutes}`;
         outcome: DispatchOutcome;
         /** True when no route matched and the unhandled default ran. */
@@ -91,15 +96,21 @@ export interface DefaultSubscriptions {
         queuedMs: number;
     };
     /**
-     * Triggered on every successful write through the reply surface, several times per interaction.
+     * Triggered on every write through the reply surface, several times per interaction. A write that
+     * throws reports here too, with `outcome` `failed`.
      */
-    responseSent: {
+    responseAttempted: {
         routeId: string;
+        /** The interaction this write belongs to, for joining against `interactionDispatched`. */
+        interactionId: string;
         /** `send` routes to another verb, so it reports the verb that ran. */
         method: ReplyMethod;
+        outcome: ResponseOutcome;
         durationMs: number;
-        /** Null for the acks that carry no message (`defer`, `deferUpdate`, `delete`, `showModal`). */
+        /** Null for the acks that carry no message (`defer`, `deferUpdate`, `delete`, `showModal`) and for a failed write. */
         messageId: string | null;
+        /** Present when `outcome` is `failed`. */
+        error?: Error;
     };
 }
 

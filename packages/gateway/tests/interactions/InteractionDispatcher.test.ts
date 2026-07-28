@@ -969,6 +969,7 @@ describe('InteractionDispatcher Integration', () => {
             expect(published).toHaveLength(1);
             expect(published[0]).toMatchObject({
                 routeId: 'slash:ok',
+                interactionId: 'i1',
                 kind: 'slash',
                 outcome: 'handled',
                 fallback: false
@@ -1107,7 +1108,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // a hand-built customId carries no colon, so prefixOf returns '' and no route can match
-        it('answers a customId that carries no route prefix through the unhandled default', async () => {
+        it('replies to a customId that carries no route prefix through the unhandled default', async () => {
             await testEnv.createDir('interactions');
             const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
 
@@ -1127,7 +1128,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here
-        it('publishes responseSent from the handler own reply, carrying the route id', async () => {
+        it('publishes responseAttempted from the handler own reply, carrying the route id', async () => {
             await testEnv.createFile(
                 'interactions/Route.ts',
                 `
@@ -1147,16 +1148,21 @@ describe('InteractionDispatcher Integration', () => {
             const controller = controllerOf(seedcord);
             await controller.init();
 
-            const sent: SubscriptionData<'responseSent'>[] = [];
-            seedcord.bus.on('responseSent', (payload) => sent.push(payload));
+            const sent: SubscriptionData<'responseAttempted'>[] = [];
+            seedcord.bus.on('responseAttempted', (payload) => sent.push(payload));
 
             await controller.handleSlashCommand(fakeSlash('replied'));
 
             expect(sent).toHaveLength(1);
-            expect(sent[0]).toMatchObject({ routeId: 'slash:replied', method: 'reply' });
+            expect(sent[0]).toMatchObject({
+                routeId: 'slash:replied',
+                method: 'reply',
+                outcome: 'sent',
+                interactionId: 'i1'
+            });
         });
 
-        // the thrown value decides everywhere, so a constructor Silence matches http
+        // the type-based rule is the same on both transports, so a constructor Silence matches http
         it('reports refused when the handler constructor throws a Silence', async () => {
             const published = await dispatchedFor(
                 `

@@ -187,6 +187,7 @@ function dispatchReporter(
             'interactionDispatched',
             dispatchedPayload({
                 routeId: unhandledRouteId(match),
+                interactionId: payload.id,
                 kind: match.kind,
                 outcome,
                 fallback: match.routeId === null,

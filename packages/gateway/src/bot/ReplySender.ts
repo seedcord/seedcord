@@ -43,7 +43,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         routeId: string,
         bus?: Bus
     ) {
-        super(routeId, seedState(interaction), bus);
+        super(routeId, seedState(interaction), bus && { bus, interactionId: interaction.id });
     }
 
     protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {

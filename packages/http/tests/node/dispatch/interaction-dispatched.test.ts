@@ -124,6 +124,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published).toHaveLength(1);
         expect(published[0]).toMatchObject({
             routeId: 'slash:ok',
+            interactionId: 'int-1',
             kind: 'slash',
             outcome: 'handled',
             fallback: false
@@ -172,7 +173,7 @@ describe('interactionDispatched from the http dispatcher', () => {
         expect(published[0]).toMatchObject({ routeId: 'slash:wrong', outcome: 'failed' });
     });
 
-    // the thrown value decides everywhere, so a constructor Silence matches gateway
+    // the type-based rule is the same on both transports, so a constructor Silence matches gateway
     it('reports refused when the handler constructor throws a Silence', async () => {
         const published = await dispatchedFor(routeFor('slash:ctorsilent', () => Promise.resolve(CtorSilentHandler)));
 
@@ -195,11 +196,11 @@ describe('interactionDispatched from the http dispatcher', () => {
     });
 
     // the production buildSender wiring, so dropping core.bus from RepliableHandler fails here
-    it('publishes responseSent from the handler own reply, carrying the route id', async () => {
+    it('publishes responseAttempted from the handler own reply, carrying the route id', async () => {
         Envapter.useSource(new PortableSource({}));
         const core = createCore(nullPathConfig, VALID_TOKEN);
-        const sent: SubscriptionData<'responseSent'>[] = [];
-        core.bus.on('responseSent', (payload) => sent.push(payload));
+        const sent: SubscriptionData<'responseAttempted'>[] = [];
+        core.bus.on('responseAttempted', (payload) => sent.push(payload));
 
         const match = routeFor('slash:ok', () => Promise.resolve(OkHandler));
         const execute = await dispatchInteraction({
@@ -210,7 +211,12 @@ describe('interactionDispatched from the http dispatcher', () => {
         await execute?.();
 
         expect(sent).toHaveLength(1);
-        expect(sent[0]).toMatchObject({ routeId: 'slash:ok', method: 'reply' });
+        expect(sent[0]).toMatchObject({
+            routeId: 'slash:ok',
+            method: 'reply',
+            outcome: 'sent',
+            interactionId: 'int-1'
+        });
     });
 
     it('reports a zero queue time for an id that is not a snowflake', async () => {

@@ -16,7 +16,7 @@ const created: TestMessage = { id: 'm1' };
 
 class TestSender extends BaseReplySender<TestMessage> {
     public constructor(bus?: Bus) {
-        super('slash:ping', 'unacked', bus);
+        super('slash:ping', 'unacked', bus && { bus, interactionId: 'i1' });
     }
 
     protected writeReply(): Promise<TestMessage> {
@@ -52,16 +52,16 @@ class TestSender extends BaseReplySender<TestMessage> {
 }
 
 // justified: the Bus only stores core, no member is read during publish
-function busWithSpy(): { bus: Bus; sent: SubscriptionData<'responseSent'>[] } {
+function busWithSpy(): { bus: Bus; sent: SubscriptionData<'responseAttempted'>[] } {
     const bus = new Bus({} as unknown as CoreBase);
-    const sent: SubscriptionData<'responseSent'>[] = [];
-    bus.on('responseSent', (payload) => sent.push(payload));
+    const sent: SubscriptionData<'responseAttempted'>[] = [];
+    bus.on('responseAttempted', (payload) => sent.push(payload));
     return { bus, sent };
 }
 
 const response: ReplyResponse = { components: [] };
 
-describe('responseSent', () => {
+describe('responseAttempted', () => {
     it('reports the created message id for a reply', async () => {
         const { bus, sent } = busWithSpy();
         await new TestSender(bus).reply(response);
@@ -97,15 +97,18 @@ describe('responseSent', () => {
         expect(sent.map((payload) => payload.method)).toEqual(['reply']);
     });
 
-    it('publishes nothing when the write throws', async () => {
+    it('reports a failed write, carrying the error and no message id', async () => {
         const { bus, sent } = busWithSpy();
         const sender = new TestSender(bus);
         vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockRejectedValue(
             new Error('discord said no')
         );
 
-        await expect(sender.reply(response)).rejects.toThrow();
-        expect(sent).toHaveLength(0);
+        await expect(sender.reply(response)).rejects.toThrow('discord said no');
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', messageId: null });
+        expect(sent[0]?.error?.message).toBe('discord said no');
     });
 
     it('stays silent with no bus, the getConfirmation path', async () => {

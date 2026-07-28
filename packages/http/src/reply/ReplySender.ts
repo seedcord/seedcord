@@ -71,7 +71,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
         routeId: string,
         bus?: Bus
     ) {
-        super(routeId, 'unacked', bus);
+        super(routeId, 'unacked', bus && { bus, interactionId: ref.id });
     }
 
     protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {

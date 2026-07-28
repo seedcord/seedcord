@@ -468,7 +468,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             reported = true;
             this.core.bus[PublishDefault](
                 'interactionDispatched',
-                dispatchedPayload({ routeId, kind, outcome, startedAt, fallback: !matched, queuedMs })
+                dispatchedPayload({
+                    routeId,
+                    interactionId: interaction.id,
+                    kind,
+                    outcome,
+                    startedAt,
+                    fallback: !matched,
+                    queuedMs
+                })
             );
         };
 

@@ -6,6 +6,6 @@
 
 **BREAKING:** `Paginator.start(interaction, core)` requires `core`, which it reads for the bus that publishes `responseSent`.
 
-A component or modal whose customId carries no route prefix now reaches the unhandled default and gets a reply, matching http. It previously logged a warning and left the interaction unanswered.
+A component or modal whose customId carries no route prefix now reaches the unhandled default and gets a reply, matching http. It previously logged a warning and left the interaction with no reply.
 
 A fault log line now writes on every occurrence. The 60s throttle covers the bus publish alone, so the uuid on a user's error card always resolves to a log line.
