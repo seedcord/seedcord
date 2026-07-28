@@ -9,3 +9,8 @@
  * ```
  */
 export type Nullable<Value = null> = Value extends null ? null | undefined : Value | null | undefined;
+
+/**
+ * How often a registered handler runs, once for the first matching dispatch or on every one.
+ */
+export type EventFrequency = 'once' | 'on';
