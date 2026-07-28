@@ -1,29 +1,22 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { PublishDefault } from '@subscribers/publishDefault';
-
 import { checkAckLegality, sendTarget } from './ackLegality';
 import { AckTrace } from './AckTrace';
+import { attemptWrite, publishResponse } from './responseReport';
 import { serializeReply } from './serializeReply';
 import { translateSerializationError } from './translateSerialization';
 
 import type { AckState, ReplyMethod } from './ackLegality';
+import type { ReplyTelemetry } from './responseReport';
 import type { SerializedReply } from './serializeReply';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
-import type { Bus } from '@subscribers/Bus';
 import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 import type { APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 
 /** The shape djs modal builders emit from `toJSON()`. */
 export interface ModalLike {
     toJSON(): APIModalInteractionResponseCallbackData;
-}
-
-/** What a sender needs to publish `responseAttempted`. A sender built without it no-ops. */
-export interface ReplyTelemetry {
-    readonly bus: Bus;
-    readonly interactionId: string;
 }
 
 /**
@@ -48,37 +41,16 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         this.state = initialState;
     }
 
-    private report(
-        method: ReplyMethod,
-        startedAt: number,
-        outcome: ResponseOutcome,
-        messageId: string | null,
-        error?: Error
-    ): void {
-        this.telemetry?.bus[PublishDefault]('responseAttempted', {
-            routeId: this.routeId,
-            interactionId: this.telemetry.interactionId,
-            method,
-            outcome,
-            durationMs: performance.now() - startedAt,
-            messageId,
-            ...(error && { error })
-        });
+    private report(method: ReplyMethod, startedAt: number, outcome: ResponseOutcome, messageId: string | null): void {
+        publishResponse(this.telemetry, { routeId: this.routeId, method, startedAt, outcome, messageId });
     }
 
-    // the write's own throw skips the success report below it, so the failure arm publishes here
     private async attempt<Result>(
         method: ReplyMethod,
         startedAt: number,
         write: () => Promise<Result>
     ): Promise<Result> {
-        try {
-            return await write();
-        } catch (caught) {
-            const error = Error.isError(caught) ? caught : new Error(String(caught));
-            this.report(method, startedAt, 'failed', null, error);
-            throw caught;
-        }
+        return await attemptWrite(this.telemetry, this.routeId, method, startedAt, write);
     }
 
     public async reply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {

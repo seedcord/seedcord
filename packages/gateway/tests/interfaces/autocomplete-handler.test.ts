@@ -1,4 +1,5 @@
 import { AutocompleteRoute } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
@@ -23,7 +24,8 @@ declare module '@seedcord/core' {
     }
 }
 
-const core = {} as unknown as Core;
+// justified: a real Core always carries a bus, respond publishes through it
+const core = { bus: { [PublishDefault]: () => undefined } } as unknown as Core;
 
 // the focused getter reads only options.getFocused(true), so a minimal fake is enough.
 function autocomplete(name: string, value: string): AutocompleteInteraction<'cached'> {

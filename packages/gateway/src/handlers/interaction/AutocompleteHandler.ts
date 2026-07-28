@@ -1,3 +1,4 @@
+import { attemptWrite, publishResponse } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
@@ -111,8 +112,15 @@ export abstract class AutocompleteHandler<
 
     /** Send autocomplete suggestions, callback type 8. Prefer {@link match}, which restricts each field's choices to its declared type. */
     protected async respond(choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> {
-        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base respond and calls djs directly
-        await this.event.respond(choices);
+        const telemetry = { bus: this.core.bus, interactionId: this.event.id };
+        // a hand-built handler outside a dispatch carries no route id
+        const routeId = this.dispatch?.routeId ?? 'autocomplete';
+        const startedAt = performance.now();
+        await attemptWrite(telemetry, routeId, 'respond', startedAt, () =>
+            // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- this is the base respond and calls djs directly
+            this.event.respond(choices)
+        );
+        publishResponse(telemetry, { routeId, method: 'respond', startedAt, outcome: 'sent', messageId: null });
     }
 
     /** The firing command route, for a field whose completion differs per registered command. */

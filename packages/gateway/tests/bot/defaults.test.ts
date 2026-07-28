@@ -1,4 +1,5 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
+import { PublishDefault } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -11,7 +12,8 @@ import type { Core } from '@interfaces/Core';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
 
 // justified: the defaults read only the interaction, the rest of Core is unused here.
-const core = {} as Core;
+// justified: a real Core always carries a bus, the handlers publish through it
+const core = { bus: { [PublishDefault]: () => undefined } } as unknown as Core;
 
 type Slash = ChatInputCommandInteraction<'cached'>;
 

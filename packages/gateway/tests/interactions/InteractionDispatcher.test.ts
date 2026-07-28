@@ -374,6 +374,42 @@ describe('InteractionDispatcher Integration', () => {
         expect(interaction.respond).toHaveBeenCalledWith([{ name: 'apple', value: 'apple' }]);
     });
 
+    // the choices callback bypasses the reply surface, so it reports through its own path
+    it('publishes responseAttempted for an autocomplete choices response', async () => {
+        await testEnv.createFile(
+            'interactions/SearchAutocomplete.ts',
+            `
+            import { AutocompleteRoute, AutocompleteHandler } from '${seedcordPath}';
+
+            @AutocompleteRoute('search')
+            export class SearchAutocomplete extends AutocompleteHandler<'search'> {
+                public async execute() {
+                    await this.respond([{ name: 'apple', value: 'apple' }]);
+                }
+            }
+            `
+        );
+        const config = testConfig({ interactions: testEnv.resolvePath('interactions') });
+
+        seedcord = new Seedcord(config);
+        const controller = controllerOf(seedcord);
+        await controller.init();
+
+        const sent: SubscriptionData<'responseAttempted'>[] = [];
+        seedcord.bus.on('responseAttempted', (payload) => sent.push(payload));
+
+        await controller.handleAutocomplete(fakeAutocomplete('search'));
+
+        expect(sent).toHaveLength(1);
+        expect(sent[0]).toMatchObject({
+            routeId: 'autocomplete:search',
+            interactionId: 'i1',
+            method: 'respond',
+            outcome: 'sent',
+            messageId: null
+        });
+    });
+
     it('skips a component interaction whose customId is owned by an ignoreCustomIds matcher', async () => {
         const ClickId = new CustomId('clickme');
         const config = testConfig({ interactions: testEnv.resolvePath('interactions'), ignoreCustomIds: [ClickId] });

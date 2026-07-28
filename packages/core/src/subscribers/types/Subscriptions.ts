@@ -1,4 +1,4 @@
-import type { ReplyMethod } from '@reply/ackLegality';
+import type { WriteMethod } from '@reply/responseReport';
 import type { TypedExclude } from '@seedcord/types';
 import type { InteractionRoutes } from '@src/metadataKeys';
 import type { Notice } from '@stops/Notice';
@@ -104,7 +104,7 @@ export interface DefaultSubscriptions {
         /** The interaction this write belongs to, for joining against `interactionDispatched`. */
         interactionId: string;
         /** `send` routes to another verb, so it reports the verb that ran. */
-        method: ReplyMethod;
+        method: WriteMethod;
         outcome: ResponseOutcome;
         durationMs: number;
         /** Null for the acks that carry no message (`defer`, `deferUpdate`, `delete`, `showModal`) and for a failed write. */
