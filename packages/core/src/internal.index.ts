@@ -73,3 +73,5 @@ export { AckTrace } from '@reply/AckTrace';
 export { BaseReplySender, type ModalLike } from '@reply/BaseReplySender';
 export { translateSerializationError } from '@reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '@reply/serializeReply';
+
+export { type StoredSubscriberCtor, type SubscriberRegistration } from '@subscribers/Bus';

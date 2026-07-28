@@ -1,10 +1,10 @@
-import { WebhookUrlMetadataKey } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 import { Converters, Envapter } from 'envapt';
 
-import { flagsFor } from '@miscellaneous/flagsFor';
+import { sendFlags } from '@reply/flags';
+import { WebhookUrlMetadataKey } from '@src/metadataKeys';
 
 import { Subscriber } from '../Subscriber';
 import { isDiscordWebhookUrl } from './webhookHelpers';
@@ -12,6 +12,7 @@ import { WebhookSender } from './WebhookSender';
 
 import type { WebhookFile } from './WebhookSender';
 import type { SubscriptionKey } from '../types/Subscriptions';
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 /**
@@ -32,8 +33,12 @@ export interface WebhookReport {
  * the reporter is skipped at registration with a boot warning.
  *
  * @typeParam KeyOfSubscribers - The subscription key this reporter receives
+ * @typeParam TCore - The transport's Core
  */
-export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey> extends Subscriber<KeyOfSubscribers> {
+export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore extends CoreBase> extends Subscriber<
+    KeyOfSubscribers,
+    TCore
+> {
     private static readonly senders = new Map<string, WebhookSender>();
 
     /** Builds the message for one published event. */
@@ -42,7 +47,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey> exten
     async execute(): Promise<void> {
         const url = WebhookLog.urlOf(WebhookLog.envKeyOf(this.constructor));
         if (url === null) {
-            // unreachable through the Bus, registration already skips url-less reporters
+            // a server host skips url-less reporters at registration, an edge host registers lazily and lands here
             this.logger.warn(`${chalk.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`);
             return;
         }
@@ -50,7 +55,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey> exten
         const { username, components, files } = await this.report();
         try {
             await WebhookLog.senderFor(url).send({
-                flags: flagsFor(false),
+                flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
                 components,
                 files

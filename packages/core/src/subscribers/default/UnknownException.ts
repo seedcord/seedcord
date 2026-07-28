@@ -1,6 +1,7 @@
 import { DiscordAPIError } from '@discordjs/rest';
-import { BuilderComponent } from '@seedcord/core';
 import { timestampFromSnowflake } from '@seedcord/utils';
+
+import { BuilderComponent } from '@components/Component';
 
 import { errorReport, jsonAttachment, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
@@ -9,6 +10,7 @@ import { WebhookUrl } from '../decorators/WebhookUrl';
 
 import type { WebhookReport } from '../bases/WebhookLog';
 import type { AllSubscriptions } from '../types/Subscriptions';
+import type { CoreBase } from '@interfaces/CoreBase';
 
 /**
  * Default subscriber that reports an unhandled exception to a webhook: the stack trace, the guild
@@ -20,7 +22,7 @@ import type { AllSubscriptions } from '../types/Subscriptions';
  */
 @Subscribe('unknownException')
 @WebhookUrl('UNKNOWN_EXCEPTION_WEBHOOK_URL')
-export class UnknownException extends WebhookLog<'unknownException'> {
+export class UnknownException extends WebhookLog<'unknownException', CoreBase> {
     report(): WebhookReport {
         const { metadata } = this.data;
         return {

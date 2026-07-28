@@ -9,6 +9,7 @@ import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import { Pluggable } from '@node/Pluggable';
 import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
 import { Plugin } from '@src/plugin/Plugin';
+import { Bus } from '@subscribers/Bus';
 
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { Config, IRateLimiter } from '@seedcord/types';
@@ -52,10 +53,12 @@ class TestPlugin extends Plugin {
 class TestHost extends Pluggable {
     public readonly config: Config;
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
+    public readonly bus: Bus;
 
     constructor(shutdown: CoordinatedShutdown, startup: CoordinatedStartup, config: Config = {} as Config) {
         super(shutdown, startup);
         this.config = config;
+        this.bus = new Bus(this);
     }
 
     public run(): Promise<this> {

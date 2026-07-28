@@ -63,6 +63,8 @@ const messages = {
         `Two different interaction middleware classes share the name \`${name}\`. Rename one so they do not collide.`,
     [SeedcordErrorCode.InteractionRouteExportMissing]: (route: string, exportName: string, from: string) =>
         `Route \`${route}\` loads \`${exportName}\` from ${from}, which exports no such name.`,
+    [SeedcordErrorCode.SubscriberRouteNotASubscriber]: (keys: string, exportName: string, from: string) =>
+        `Subscriber row for \`${keys}\` loads \`${exportName}\` from ${from}, which does not extend Subscriber.`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
         `${chalk.cyan(`${method}()`)} was called when ${reason}.\n${alternative} (route ${chalk.cyan(routeId)})`,

@@ -18,7 +18,8 @@
             "@pagination/*": ["./src/pagination/*"],
             "@registries/*": ["./src/registries/*"],
             "@reply/*": ["./src/reply/*"],
-            "@stops/*": ["./src/stops/*"]
+            "@stops/*": ["./src/stops/*"],
+            "@subscribers/*": ["./src/subscribers/*"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],

@@ -1,4 +1,5 @@
-import type { SelectMenuKind } from '@seedcord/core';
+import type { SelectMenuKind, SubscriptionKey } from '@seedcord/core';
+import type { EventFrequency } from '@seedcord/types';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 
 /** The command kinds a manifest row registers, the wire enum's other members have no handler base. */
@@ -44,14 +45,14 @@ interface AutocompleteRoute extends RouteModule {
 }
 
 /**
- * A bus subscriber row. The Bus routes off it without importing the subscriber module. The HTTP engine
- * ignores these rows until the Bus ships on this transport.
+ * A bus subscriber row. The Bus registers it without importing the subscriber module, and resolves the
+ * class on the first publish of one of its keys.
  */
 interface SubscriberRoute extends RouteModule {
     /** The subscription keys this subscriber registers for. */
-    readonly keys: readonly string[];
+    readonly keys: readonly SubscriptionKey[];
     /** Mirrors the `@Subscribe` frequency metadata. */
-    readonly frequency: 'on' | 'once';
+    readonly frequency: EventFrequency;
 }
 
 /** A middleware row. Middleware runs on every dispatch, so it carries no lookup key. */

@@ -32,10 +32,38 @@ function nodeImportsInClosure(entryFile: string): string[] {
     return hits;
 }
 
-describe('/plugin dist is node-free', () => {
-    it.each(['plugin.index.mjs', 'plugin.index.cjs'])('has no node builtin import in %s', (entry) => {
+// Buffer is a global, so the import walk above never sees it, and it is undefined on workerd
+function bufferUsesInClosure(entryFile: string): string[] {
+    const seen = new Set<string>();
+    const hits: string[] = [];
+
+    const walk = (file: string): void => {
+        if (seen.has(file)) return;
+        seen.add(file);
+
+        const source = readFileSync(file, 'utf8');
+        if (/(?<![\w.$])Buffer\s*\./u.test(source)) hits.push(file);
+        for (const match of source.matchAll(/(?:import|export)[^'"]*from\s*['"](\.[^'"]+)['"]/g)) {
+            const spec = match[1];
+            if (spec) walk(join(dirname(file), spec));
+        }
+    };
+
+    walk(entryFile);
+    return hits;
+}
+
+describe.each([
+    ['/plugin', ['plugin.index.mjs', 'plugin.index.cjs']],
+    ['root', ['index.mjs', 'index.cjs']]
+])('%s dist is node-free', (_entryName, entries) => {
+    it.each(entries)('has no node builtin import in %s', (entry) => {
         const file = join(distDir, entry);
         expect(existsSync(file), `${entry} is missing, run pnpm -C packages/core build first`).toBe(true);
         expect(nodeImportsInClosure(file)).toStrictEqual([]);
+    });
+
+    it.each(entries)('reaches no Buffer global in %s', (entry) => {
+        expect(bufferUsesInClosure(join(distDir, entry))).toStrictEqual([]);
     });
 });

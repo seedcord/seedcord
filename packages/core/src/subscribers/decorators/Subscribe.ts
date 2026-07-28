@@ -1,8 +1,12 @@
-import { SubscribeMetadataKey } from '@seedcord/core/internal';
+// the default reporters are decorated at Bus module load, before any entry's own polyfill import runs
+import 'reflect-metadata';
+
+import { SubscribeMetadataKey } from '@src/metadataKeys';
 
 import type { Subscriber } from '../Subscriber';
 import type { SubscriptionKey } from '../types/Subscriptions';
-import type { EventFrequency } from '@miscellaneous/types';
+import type { CoreBase } from '@interfaces/CoreBase';
+import type { EventFrequency } from '@seedcord/types';
 import type { Constructor } from 'type-fest';
 
 /**
@@ -50,7 +54,9 @@ export interface SubscribeMetadataEntry {
  * ```
  */
 export function Subscribe<TSubscriber extends SubscriptionKey>(subscriber: TSubscriber, options?: SubscribeOptions) {
-    return function <HandlerCtor extends Constructor<Subscriber<TSubscriber>>>(constructor: HandlerCtor): void {
+    return function <HandlerCtor extends Constructor<Subscriber<TSubscriber, CoreBase>>>(
+        constructor: HandlerCtor
+    ): void {
         const meta: SubscribeMetadataEntry = {
             subscriber,
             frequency: options?.frequency

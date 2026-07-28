@@ -485,9 +485,15 @@ importers:
       '@discordjs/builders':
         specifier: catalog:deps
         version: 1.14.1
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.2
       '@seedcord/errors':
         specifier: workspace:*
         version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
       '@seedcord/logger':
         specifier: workspace:*
         version: link:../logger
@@ -909,9 +915,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 5.6.2
-      discord-api-types:
-        specifier: ^0.38.51
-        version: 0.38.51
       envapt:
         specifier: catalog:deps
         version: 8.1.0
@@ -1989,10 +1992,6 @@ packages:
   '@discordjs/formatters@0.6.2':
     resolution: {integrity: sha512-y4UPwWhH6vChKRkGdMB4odasUbHOUwy7KL+OVwF86PvT6QVOwElx+TiI1/6kcmcEe+g5YRXJFiXSXUdabqZOvQ==}
     engines: {node: '>=16.11.0'}
-
-  '@discordjs/rest@2.6.1':
-    resolution: {integrity: sha512-wwQdgjeaoYFiaG+atbqx6aJDpqW7JHAo0HrQkBTbYzM3/PJ3GweQIpgElNcGZ26DCUOXMyawYd0YF7vtr+fZXg==}
-    engines: {node: '>=18'}
 
   '@discordjs/rest@2.6.2':
     resolution: {integrity: sha512-c5HI3hJuRWWrnpyCZAUYfIUTAEv9weX4tE2UfDqtM3ztizdKE9RFEf3G5IWhPyO+kPldUDpGv02XJAQzdUTC9Q==}
@@ -10000,18 +9999,6 @@ snapshots:
     dependencies:
       discord-api-types: 0.38.51
 
-  '@discordjs/rest@2.6.1':
-    dependencies:
-      '@discordjs/collection': 2.1.1
-      '@discordjs/util': 1.2.0
-      '@sapphire/async-queue': 1.5.5
-      '@sapphire/snowflake': 3.5.5
-      '@vladfrangu/async_event_emitter': 2.4.7
-      discord-api-types: 0.38.51
-      magic-bytes.js: 1.13.0
-      tslib: 2.8.1
-      undici: 6.27.0
-
   '@discordjs/rest@2.6.2':
     dependencies:
       '@discordjs/collection': 2.1.1
@@ -10031,7 +10018,7 @@ snapshots:
   '@discordjs/ws@1.2.3':
     dependencies:
       '@discordjs/collection': 2.1.1
-      '@discordjs/rest': 2.6.1
+      '@discordjs/rest': 2.6.2
       '@discordjs/util': 1.2.0
       '@sapphire/async-queue': 1.5.5
       '@types/ws': 8.18.1

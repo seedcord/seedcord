@@ -2,6 +2,7 @@ import { once } from 'node:events';
 import { createServer } from 'node:http';
 
 import { REST } from '@discordjs/rest';
+import { Bus } from '@seedcord/core';
 import { HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     CoordinatedShutdown,
@@ -9,7 +10,8 @@ import {
     HealthCheck,
     Pluggable,
     ShutdownPhase,
-    StartupPhase
+    StartupPhase,
+    SubscriberLoader
 } from '@seedcord/core/node/internal';
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry, paint } from '@seedcord/logger';
@@ -61,6 +63,11 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
 
+    /** @see {@link Bus} */
+    public readonly bus: Bus;
+
+    private readonly subscribers: SubscriberLoader;
+
     private readonly interactions?: InteractionDispatcher;
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
@@ -85,6 +92,8 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
         }
 
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
+        this.bus = new Bus(this);
+        this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         // the edge arm types healthCheck never, and a dev run of an edge config needs no health server
         this.healthCheck =
             config.runtime === 'edge' ? undefined : HealthCheck.fromOption(this.shutdown, config.healthCheck);
@@ -133,6 +142,12 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     private registerStartupTasks(): void {
         if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
+        this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
+            this.bus.logger.utils.initialization('Subscribers', 'start');
+            await this.subscribers.init();
+            this.bus.logger.utils.initialization('Subscribers', 'end');
+        });
+
         const { interactions } = this;
         if (interactions) {
             this.startup.addTask(StartupPhase.Configuration, 'Interactions Initialization', async () => {
@@ -161,6 +176,7 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     private registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
             if (this.interactions) this.hmrManager.register(this.interactions);
+            this.hmrManager.register(this.subscribers);
             for (const plugin of this.plugins) {
                 this.hmrManager.register(plugin);
             }

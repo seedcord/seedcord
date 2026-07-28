@@ -1,5 +1,3 @@
-import '../utils/mock-env';
-
 import { randomUUID } from 'node:crypto';
 
 import { AckTrace } from '@seedcord/core/internal';
@@ -8,13 +6,13 @@ import { describe, expect, it } from 'vitest';
 
 import { UnknownException } from '@subscribers/default/UnknownException';
 
-import type { Core } from '@interfaces/Core';
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 
 const ESC = String.fromCharCode(27);
 
 // justified: the Subscriber base only stores core
-const core = {} as unknown as Core;
+const core = {} as unknown as CoreBase;
 
 // the text a text-display carries in the container, so an assertion sees the real webhook string
 function reportText(error: Error): string {

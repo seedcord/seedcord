@@ -10,8 +10,8 @@ import { harmlessError } from '../utils/harmlessError';
 import { TestNotice } from '../utils/TestNotice';
 
 import type { Core } from '@interfaces/Core';
+import type { SubscriptionData } from '@seedcord/core';
 import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
-import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 
@@ -73,7 +73,7 @@ describe('handleInteractionFault', () => {
         await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
 
         expect(mock.reply).toHaveBeenCalledTimes(1);
-        const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
         expect(event).toBe('unknownException');
         expect(payload.error).toBeInstanceOf(Error);
     });
@@ -83,7 +83,7 @@ describe('handleInteractionFault', () => {
 
         await handleInteractionFault(new Error('boom'), interaction, mockCore(publish));
 
-        const [, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
+        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
         expect(payload.metadata).toBe(interaction);
     });
 
@@ -138,7 +138,7 @@ describe('handleInteractionFault', () => {
         expect(mock.followUp).not.toHaveBeenCalled();
         expect(mock.deleteReply).not.toHaveBeenCalled();
         expect(mock.reply).not.toHaveBeenCalled();
-        const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['handledException']];
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
         expect(event).toBe('handledException');
         expect(payload.denial).toBeInstanceOf(Fault);
     });
@@ -200,7 +200,7 @@ describe('handleInteractionFault', () => {
             expect(mock.reply).not.toHaveBeenCalled();
             expect(mock.editReply).not.toHaveBeenCalled();
             expect(mock.followUp).not.toHaveBeenCalled();
-            const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
+            const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
             expect(event).toBe('unknownException');
             expect(payload.metadata).toBe(interaction);
         });
@@ -211,7 +211,7 @@ describe('handleInteractionFault', () => {
             await handleInteractionFault(new Fault({ cause: new Error('x') }), interaction, mockCore(publish));
 
             expect(mock.reply).not.toHaveBeenCalled();
-            const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
+            const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
             expect(event).toBe('unknownException');
             expect(payload.error).toBeInstanceOf(Fault);
             expect(payload.metadata).toBe(interaction);

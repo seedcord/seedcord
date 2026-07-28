@@ -14,7 +14,8 @@ const HTTP_UNAUTHORIZED = 401;
 export interface WebhookFile {
     name: string;
     description: string;
-    data: Buffer;
+    /** A `Buffer` still satisfies this, it extends `Uint8Array`. */
+    data: Uint8Array | string;
 }
 
 /**
