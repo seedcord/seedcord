@@ -10,6 +10,8 @@ Autocomplete choices responses publish `responseAttempted` too, with `method` `r
 
 A write that threw a non-Error reports an `Error` wrapping it, with the raw value on `cause`.
 
+One dispatch reports one `routeId` across both keys, on both transports. A dispatch that runs the unhandled default previously reported its handler's class name on `responseAttempted`, so grouping by route split one route into two buckets.
+
 Both carry `interactionId`, so a subscriber can join them and split a dispatch into its code time and its Discord round trips. `durationMs` on `interactionDispatched` runs from dispatch entry to the user having a response, replies included.
 
 The thrown value's type sets `outcome`, so a gate and a handler label the same stop identically. A `Silence` and a `Notice` with `report` false are `refused`. A `Notice` with `report` true, which includes a default `Fault`, is `failed`.
