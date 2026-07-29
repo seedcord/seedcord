@@ -90,6 +90,14 @@
             "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
         },
+        "@seedcord/core#lint": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"]
+        },
+        "@seedcord/core#tc": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"]
+        },
         "@seedcord/core#test": {
             "dependsOn": ["^build", "@seedcord/core#build"],
             "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
