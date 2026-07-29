@@ -15,7 +15,7 @@ import type { Config, IRateLimiter, Store } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
 import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
 import type { Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
-import type { PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
+import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
 import type { Bus } from '@subscribers/Bus';
 
 interface Attachment {
@@ -102,6 +102,11 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         return this.config.store ?? (this.rateLimiter as Store<'charge'>);
     }
 
+    /** @internal codegen reads these to emit the `Core` augmentation */
+    public get pluginKeys(): readonly string[] {
+        return this.attachments.map((attachment) => attachment.key);
+    }
+
     /** @internal releases the signal handlers and clears the singleton so the next host can construct */
     protected static reset(): void {
         Pluggable.liveShutdown?.removeSignalHandlers();
@@ -113,11 +118,12 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      * Attaches a plugin to this instance.
      *
      * The plugin initializes during startup, after every plugin attached before it, and becomes
-     * available as a property on `core`. Augment the transport's `Core` interface with the plugin
-     * type for intellisense.
+     * available as a property on `core`. `seedcord codegen` writes the `Core` augmentation that
+     * types it.
      *
      * A plugin declaring a `transport` or `runtime` this host does not run is a compile error on
-     * this call. An edge host takes no plugins at all.
+     * this call. An edge host takes no plugins at all. A plugin constructor narrowing its first
+     * parameter past `CoreBase` is a compile error here too. Read the transport `Core` off `this.core`.
      *
      * @typeParam Key - The property name for accessing the plugin
      * @typeParam Ctor - The plugin constructor type
@@ -134,7 +140,10 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
         key: Key,
-        Plugin: Ctor & TransportAssert<InstanceType<Ctor>, BotT> & RuntimeAssert<InstanceType<Ctor>, BotRt>,
+        Plugin: Ctor &
+            TransportAssert<InstanceType<Ctor>, BotT> &
+            RuntimeAssert<InstanceType<Ctor>, BotRt> &
+            CoreParamAssert<Ctor>,
         ...args: PluginArgs<Ctor>
     ): this & Record<Key, InstanceType<Ctor>> {
         if (this.isInitialized) {

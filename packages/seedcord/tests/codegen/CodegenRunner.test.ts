@@ -40,6 +40,7 @@ function makeRunner(root: string, logger: ILogger): CodegenRunner {
                 default: {
                     [SeedcordBrand]: true,
                     augmentTarget: '@seedcord/gateway',
+                    pluginKeys: [],
                     config: { bot: { commands: { path: null } } }
                 }
             })
@@ -67,6 +68,7 @@ function scanRunner(
                       default: {
                           [SeedcordBrand]: true,
                           augmentTarget: '@seedcord/gateway',
+                          pluginKeys: [],
                           config: { bot: { commands: { path: commandsPath } } }
                       }
                   })
@@ -88,6 +90,61 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
 
     return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
+
+function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
+    const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
+    const configLoader = { load: () => Promise.resolve({ root, instance }) } as unknown as ConfigLoader;
+    const moduleLoader = {
+        importModule: () =>
+            Promise.resolve({
+                default: {
+                    [SeedcordBrand]: true,
+                    augmentTarget: '@seedcord/gateway',
+                    pluginKeys,
+                    config: { bot: { commands: { path: null } } }
+                }
+            })
+    } as unknown as ModuleLoader;
+
+    return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
+}
+
+describe('CodegenRunner plugin capabilities', () => {
+    it('augments Core from the attach keys and imports the bot entry', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        await pluginRunner(root, resolve(root, 'bot.ts'), ['db'], silentLogger()).run(false);
+
+        const output = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(output).toContain("import type Bot from './bot';");
+        expect(output).toContain("        db: (typeof Bot)['db'];");
+    });
+
+    it('writes a nested bot entry as a relative specifier with no extension', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        await pluginRunner(root, resolve(root, 'app/bot.ts'), ['db'], silentLogger()).run(false);
+
+        const output = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(output).toContain("import type Bot from './app/bot';");
+    });
+
+    it('writes a bot entry above the root as a parent specifier', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        const instance = resolve(root, '..', `${root.split('/').pop() ?? 'x'}-bot.ts`);
+        await pluginRunner(root, instance, ['db'], silentLogger()).run(false);
+
+        const output = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(output).toContain("import type Bot from '../");
+    });
+
+    it('emits no import and no Core block when nothing is attached', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'codegen-'));
+        await pluginRunner(root, resolve(root, 'bot.ts'), [], silentLogger()).run(false);
+
+        const output = await readFile(resolve(root, OUTPUT), 'utf8');
+        expect(output).not.toContain('import type');
+        expect(output).not.toContain('interface Core');
+    });
+});
 
 describe('CodegenRunner', () => {
     afterEach(() => {

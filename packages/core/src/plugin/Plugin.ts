@@ -25,8 +25,11 @@ const resolvedSpecSlot = Symbol('seedcord.plugin.spec');
  * implements `init()`, and reads the framework surface through `this.ctx`.
  *
  * @typeParam Opts - The plugin's declared {@link PluginOptions}.
+ * @typeParam TCore - The host type `this.core` resolves to. Each transport binds it to its own `Core`.
  */
-export abstract class Plugin<Opts extends PluginOptions = {}> implements Initializeable, HmrAware {
+export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends CoreBase = CoreBase>
+    implements Initializeable, HmrAware
+{
     /** @internal phantom, never set at runtime */
     declare readonly __transport?: TransportOf<Opts>;
     /** @internal phantom, never set at runtime */
@@ -39,12 +42,18 @@ export abstract class Plugin<Opts extends PluginOptions = {}> implements Initial
 
     public abstract logger: Logger;
 
-    // subclasses redeclare the transport's own Core type on their constructor
+    // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
     constructor(
-        protected pluggable: CoreBase,
+        private readonly host: CoreBase,
         spec?: PluginLifecycleSpec
     ) {
         this[resolvedSpecSlot] = resolveLifecycleSpec(spec, this.constructor.name);
+    }
+
+    /** The host, typed to the transport whose `Plugin` base this class extends. */
+    protected get core(): TCore {
+        // justified: each transport binds TCore to the Core its own host satisfies
+        return this.host as TCore;
     }
 
     /** The framework surface, available from `init()` onward. Throws if read before `attach` finalizes it. */
@@ -104,19 +113,23 @@ export type PluginLike = Pick<
     'init' | 'ready' | 'dispose' | 'logger' | 'onHmr' | typeof resolvedSpecSlot | typeof pluginContextSlot
 >;
 
-/**
- * Constructor type for plugins that can accept extra arguments after Core.
- *
- * The first parameter stays untyped here. Subclasses declare their transport's own `Core`, and a
- * `CoreBase` parameter would reject them (construct-signature params check contravariantly). The
- * `Plugin` base constructor carries the real contract, and attach call sites still infer the
- * concrete subclass tuple for the trailing args.
- *
- * @internal
- */
+// a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
+// `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
+/** @internal */
 export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: any[]) => TPlugin;
 
 /** @internal */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
+
+type CoreParamTooNarrow = Record<
+    'this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core',
+    never
+>;
+
+// a narrowed first parameter fails `CoreBase extends Param`
+/** @internal */
+export type CoreParamAssert<Ctor extends PluginCtor> = CoreBase extends ConstructorParameters<Ctor>[0]
+    ? unknown
+    : CoreParamTooNarrow;
 
 export { finalizePluginContext } from './context';
