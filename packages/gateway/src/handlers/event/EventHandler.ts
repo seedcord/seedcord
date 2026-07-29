@@ -37,7 +37,9 @@ type EventMatchArms<Names extends ValidNonInteractionKeys, Ret> = {
  * }
  * ```
  */
-export abstract class EventHandler<Names extends ValidNonInteractionKeys> extends BaseHandler<ClientEvents[Names]> {
+export abstract class EventHandler<in out Names extends ValidNonInteractionKeys> extends BaseHandler<
+    ClientEvents[Names]
+> {
     // the fired event name, threaded by the controller. undefined when constructed directly, e.g. in a test.
     private readonly firedEvent: Names | undefined;
 
