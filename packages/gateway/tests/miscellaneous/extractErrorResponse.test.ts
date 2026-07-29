@@ -1,4 +1,5 @@
 import { Fault, CustomId } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
@@ -12,7 +13,7 @@ import type { Repliables } from '@src/handlers/interactionTypes';
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface extractErrorResponse reads.
-    return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
 function slashInteraction(commandName = 'ban'): Repliables {
@@ -134,18 +135,27 @@ describe('extractErrorResponse', () => {
         expect(publish).toHaveBeenCalledTimes(1);
     });
 
-    it('stamps the throttle on publish, not on webhook send success', () => {
-        // the stamp lands at publish time, so the first fault suppresses the retry (separate spy)
-        // with no subscriber send observed
+    it('stamps the throttle on publish, so the next identical fault suppresses', () => {
         const origin = { interaction: slashInteraction('stamp-probe'), guild: null, user: null };
+        const publish = vi.fn();
+        const core = mockCore(publish);
 
-        const firstPublish = vi.fn();
-        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(firstPublish), origin);
-        expect(firstPublish).toHaveBeenCalledTimes(1);
+        extractErrorResponse(new Fault({ cause: new Error('x') }), core, origin);
+        extractErrorResponse(new Fault({ cause: new Error('x') }), core, origin);
 
-        const retryPublish = vi.fn();
-        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(retryPublish), origin);
-        expect(retryPublish).not.toHaveBeenCalled();
+        expect(publish).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps a separate window per bot, so one bot never throttles another', () => {
+        const origin = { interaction: slashInteraction('two-bots'), guild: null, user: null };
+
+        const first = vi.fn();
+        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(first), origin);
+        const second = vi.fn();
+        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(second), origin);
+
+        expect(first).toHaveBeenCalledTimes(1);
+        expect(second).toHaveBeenCalledTimes(1);
     });
 
     it('collapses parameterized component customIds to one throttle key via the stable prefix', () => {

@@ -3,15 +3,18 @@ import {
     ComponentDefsKey,
     InteractionMetadataKey,
     InteractionRouteKeys,
-    InteractionRoutes
+    InteractionRoutes,
+    PublishDefault
 } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
+import { ReplySender } from '@bot/ReplySender';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { Paginator } from '@pagination/Paginator';
 import { ArraySource } from '@pagination/sources';
 
+import type { RepliableHandler } from '@handlers/RepliableHandler';
 import type { Core } from '@interfaces/Core';
 import type { PageContext } from '@pagination/PageContext';
 import type { Repliables } from '@src/handlers/interactionTypes';
@@ -47,6 +50,7 @@ class RemindersNav extends Reminders.Handler {}
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type -- inference is fine for the mock
 function startEvent() {
     return {
+        id: 'i1',
         reply: vi.fn().mockResolvedValue({ resource: { message: { id: 'page-message' } } }),
         deferReply: vi.fn().mockResolvedValue(undefined),
         followUp: vi.fn().mockResolvedValue({ id: 'page-message' }),
@@ -116,12 +120,26 @@ function sentContainerText(components: unknown[]): string {
     );
 }
 
+// justified: start only reads core.bus for telemetry and threads core into the page context
+function stubCore(): Core {
+    return { bus: { [PublishDefault]: () => true } } as unknown as Core;
+}
+
+// start reads the route id off the handler's sender, so the fixture builds a real one
+function stubHandler(event: ReturnType<typeof startEvent>): RepliableHandler<Repliables> {
+    const interaction = asRepliable(event);
+    const core = stubCore();
+    const sender = new ReplySender(interaction, 'slash:page', core.bus);
+    // justified: start reads only these three members off the handler
+    return { core, getEvent: () => interaction, getSender: () => sender } as unknown as RepliableHandler<Repliables>;
+}
+
 describe('Paginator.start', () => {
     beforeEach(() => vi.clearAllMocks());
 
     it('renders page 0 and sends it with the components-v2 flag', async () => {
         const event = startEvent();
-        await pager.start(asRepliable(event));
+        await pager.start(stubHandler(event));
 
         expect(event.reply).toHaveBeenCalledOnce();
         const options = event.reply.mock.calls[0]?.[0] as { components: unknown[]; flags: number };
@@ -135,7 +153,7 @@ describe('Paginator.start', () => {
         const event = startEvent();
         event.reply.mockRejectedValue(failure);
 
-        await expect(pager.start(asRepliable(event))).rejects.toBe(failure);
+        await expect(pager.start(stubHandler(event))).rejects.toBe(failure);
     });
 
     it('honors an ephemeral paginator', async () => {
@@ -146,7 +164,7 @@ describe('Paginator.start', () => {
             ephemeral: true
         });
         const event = startEvent();
-        await ephemeral.start(asRepliable(event));
+        await ephemeral.start(stubHandler(event));
         const options = event.reply.mock.calls[0]?.[0] as { flags: number };
         expect(options.flags & MessageFlags.Ephemeral).toBeTruthy();
     });

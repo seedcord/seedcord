@@ -61,7 +61,7 @@ describe('resolve', () => {
     it('resolves the unhandled default for a command name with no row', () => {
         const maps = buildRouteMaps(manifestWith({ commandRoutes: [{ name: 'ban', type: 1, ...rowFor('Ban') }] }));
 
-        expect(resolve(maps, slash('kick'))).toMatchObject({ kind: 'slash', routeId: null });
+        expect(resolve(maps, slash('kick'))).toMatchObject({ kind: 'slash', routeId: null, attemptedKey: 'kick' });
     });
 
     it('resolves a subcommand to its full route path', () => {
@@ -189,7 +189,11 @@ describe('resolve', () => {
 
         expect(resolve(maps, component(3, wire))).toMatchObject({ routeId: 'stringMenu:feed' });
         expect(resolve(maps, component(8, wire))).toMatchObject({ routeId: 'channelMenu:feed' });
-        expect(resolve(maps, component(5, wire))).toMatchObject({ kind: 'userMenu', routeId: null });
+        expect(resolve(maps, component(5, wire))).toMatchObject({
+            kind: 'userMenu',
+            routeId: null,
+            attemptedKey: 'feed'
+        });
     });
 
     it('resolves null for an unrecognized component type', () => {
@@ -231,6 +235,11 @@ describe('resolve', () => {
     it('resolves the unhandled default for a wire no prefix owns', () => {
         const maps = buildRouteMaps(manifestWith({ componentRoutes: [componentRow('button', 'approve')] }));
 
-        expect(resolve(maps, component(2, 'other-app-id'))).toMatchObject({ kind: 'button', routeId: null });
+        // no colon in the wire, so prefixOf reads an empty key, which the reporter renders as unrouted
+        expect(resolve(maps, component(2, 'other-app-id'))).toMatchObject({
+            kind: 'button',
+            routeId: null,
+            attemptedKey: ''
+        });
     });
 });

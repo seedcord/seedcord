@@ -47,7 +47,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
     async execute(): Promise<void> {
         const url = WebhookLog.urlOf(WebhookLog.envKeyOf(this.constructor));
         if (url === null) {
-            // a server host skips url-less reporters at registration, an edge host registers lazily and lands here
+            // a server host skips url-less reporters at registration, an edge host registers lazily and reaches this branch
             this.logger.warn(`${chalk.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`);
             return;
         }

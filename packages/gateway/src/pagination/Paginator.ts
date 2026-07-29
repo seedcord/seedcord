@@ -1,14 +1,13 @@
 import { pageCursor } from '@seedcord/core/internal';
 
-import { ReplySender } from '@bot/ReplySender';
 import { ButtonHandler } from '@handlers/interaction/components';
-import { interactionRoute } from '@miscellaneous/extractErrorResponse';
 
 import { renderPage } from './render';
 
 import type { PageContext } from './PageContext';
 import type { ItemRender, PageRender } from './render';
 import type { PageSource } from './sources';
+import type { RepliableHandler } from '@handlers/RepliableHandler';
 import type { Core } from '@interfaces/Core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
@@ -86,12 +85,15 @@ export class Paginator<Item, const Prefix extends string> {
         };
     }
 
-    /** Render page 0 and send it, picking reply or followUp from the interaction's state. */
-    async start(interaction: Repliables, core?: Core): Promise<Message> {
-        const response = await this.page(contextOf(interaction, core), 0);
-        return new ReplySender(interaction, interactionRoute(interaction)).send(response, {
-            ephemeral: this.config.ephemeral ?? false
-        });
+    /**
+     * Render page 0 and send it through the handler's sender, picking reply or followUp from its ack state.
+     *
+     * @param handler - The handler starting the paginator, normally `this`.
+     */
+    async start(handler: RepliableHandler<Repliables>): Promise<Message> {
+        const interaction = handler.getEvent();
+        const response = await this.page(contextOf(interaction, handler.core), 0);
+        return handler.getSender().send(response, { ephemeral: this.config.ephemeral ?? false });
     }
 
     /** Render a page as a {@link ReplyResponse}. To post it elsewhere, add `flags: MessageFlags.IsComponentsV2`. */

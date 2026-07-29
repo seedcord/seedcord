@@ -247,21 +247,24 @@ describe('fault boundary', () => {
         expect(posts[0]?.body.type).toBe(4);
     });
 
-    it('normalizes a non-Error throw into the generic fault card', async () => {
+    it('wraps a non-Error throw into the generic fault card', async () => {
         class Throws extends SlashHandler<never> {
             async execute(): Promise<void> {
                 await Promise.resolve();
-                // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- the boundary must survive user code throwing a bare value
+                // eslint-disable-next-line no-throw-literal, @typescript-eslint/only-throw-error -- a bare throw is what this pins
                 throw 'a bare string';
             }
         }
         const { signer, handle } = await readyEngine(manifestOf('bare', Throws));
         const ctx = capturingCtx();
 
-        await handle(await signedRequest(signer, slashPayload('bare')), ctx);
+        const response = await handle(await signedRequest(signer, slashPayload('bare')), ctx);
         await ctx.settled();
 
-        expect(postedBodies()[0]?.body.type).toBe(4);
+        expect(response.status).toBe(202);
+        const posts = postedBodies();
+        expect(posts).toHaveLength(1);
+        expect(posts[0]?.body.type).toBe(4);
     });
 
     it('catches a throwing handler constructor, still acks 202 and sends the fault card', async () => {

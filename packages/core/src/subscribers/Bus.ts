@@ -9,10 +9,17 @@ import { SubscribeMetadataKey } from '@src/metadataKeys';
 import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
+import { PublishDefault } from './publishDefault';
 
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { Subscriber } from './Subscriber';
-import type { AllSubscriptions, SubscriptionKey, SubscriptionTuples } from './types/Subscriptions';
+import type {
+    AllSubscriptions,
+    DefaultSubscriptions,
+    PublishableKey,
+    SubscriptionKey,
+    SubscriptionTuples
+} from './types/Subscriptions';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { EventFrequency } from '@seedcord/types';
 
@@ -35,8 +42,8 @@ export interface SubscriberRegistration {
     readonly keys: readonly SubscriptionKey[];
     readonly frequency: EventFrequency;
     readonly resolve: () => StoredSubscriberCtor | Promise<StoredSubscriberCtor>;
-    /** Set when the class is already resolved, which every server-host registration is. */
-    readonly ctor?: StoredSubscriberCtor | undefined;
+    /** The resolved class. A server-host registration carries it from the start, a lazy one fills it on first resolve. */
+    ctor?: StoredSubscriberCtor | undefined;
 }
 
 /**
@@ -139,11 +146,29 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
      * guarantee. A `'once'` subscriber is marked as executed when it starts (even if it throws), so
      * it never runs twice.
      *
+     * The framework's own keys are excluded. Subscribe to those and listen with `on`. The framework
+     * is their only publisher.
+     *
      * @param event - The subscription key to publish
      * @param data - Payload passed to each subscriber
      * @returns Whether the underlying emitter had native listeners for the event
      */
-    public publish<KeyOfSubscribers extends SubscriptionKey>(
+    public publish<KeyOfSubscribers extends PublishableKey>(
+        event: KeyOfSubscribers,
+        data: AllSubscriptions[KeyOfSubscribers]
+    ): boolean {
+        return this.dispatchKey(event, data);
+    }
+
+    /** @internal the framework's own publish path, keyed by a symbol no public entry exports */
+    public [PublishDefault]<KeyOfSubscribers extends keyof DefaultSubscriptions>(
+        event: KeyOfSubscribers,
+        data: AllSubscriptions[KeyOfSubscribers]
+    ): boolean {
+        return this.dispatchKey(event, data);
+    }
+
+    private dispatchKey<KeyOfSubscribers extends SubscriptionKey>(
         event: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): boolean {
@@ -184,8 +209,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         // named outside the try so the catch can report which subscriber threw, several run per key
         let name = '<unresolved>';
         try {
+            entry.ctor ??= await entry.resolve();
             // the registration keys each subscriber to its subscriptions, so data matches this ctor's payload arm
-            const Ctor = (entry.ctor ?? (await entry.resolve())) as new (
+            const Ctor = entry.ctor as new (
                 data: AllSubscriptions[KeyOfSubscribers],
                 core: CoreBase
             ) => Subscriber<KeyOfSubscribers, CoreBase>;

@@ -1,4 +1,5 @@
 import { Bus, Subscriber, WebhookLog, WebhookUrl, Subscribe } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -58,7 +59,7 @@ describe('manifest subscribers on workerd', () => {
 
         expect(load).not.toHaveBeenCalled();
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
         await vi.waitFor(() => {
             expect(ran).toEqual(['edge']);
         });
@@ -74,7 +75,7 @@ describe('manifest subscribers on workerd', () => {
             rowFor('UnsetReporter', () => Promise.resolve({ UnsetReporter }))
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         // the probe runs only for an eagerly registered class, so the disabled branch lands inside execute
         await vi.waitFor(() => {

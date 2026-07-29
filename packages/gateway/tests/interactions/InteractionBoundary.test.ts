@@ -1,10 +1,11 @@
 import { Silence, Fault } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
+import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { handleInteractionFault } from '@bot/handleInteractionFault';
+import { handleInteractionFault as boundary } from '@bot/handleInteractionFault';
 import { ReplySender } from '@bot/ReplySender';
-import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
 import { harmlessError } from '../utils/harmlessError';
 import { TestNotice } from '../utils/TestNotice';
@@ -23,6 +24,7 @@ function mockInteraction() {
         editReply: vi.fn().mockResolvedValue({ id: 'sent' }),
         followUp: vi.fn().mockResolvedValue({ id: 'sent' }),
         deleteReply: vi.fn().mockResolvedValue(undefined),
+        respond: vi.fn().mockResolvedValue(undefined),
         isAutocomplete: vi.fn().mockReturnValue(false),
         isMessageComponent: vi.fn().mockReturnValue(false),
         isModalSubmit: vi.fn().mockReturnValue(false),
@@ -46,12 +48,22 @@ function mockInteraction() {
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface the boundary reads.
-    return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
 // justified: the fixture implements only the interaction surface the boundary reads.
 function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteractionTypes {
     return mock as unknown as ValidInteractionTypes;
+}
+
+// the dispatcher supplies its own route id, these cases pin the boundary's other behavior
+function handleInteractionFault(
+    caught: unknown,
+    interaction: ValidInteractionTypes,
+    core: Core,
+    sender?: ReplySender
+): Promise<void> {
+    return boundary(caught, interaction, core, 'slash:test', sender);
 }
 
 function senderFor(mock: ReturnType<typeof mockInteraction>, routeId: string): ReplySender {
@@ -66,7 +78,6 @@ describe('handleInteractionFault', () => {
     beforeEach(() => {
         mock = mockInteraction();
         publish = vi.fn();
-        faultThrottle.clear();
     });
 
     it('replies the generic and publishes unknownException for a raw error on an unacked interaction', async () => {
@@ -96,13 +107,29 @@ describe('handleInteractionFault', () => {
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('rethrows a non-Error value to the root catch', async () => {
-        await expect(handleInteractionFault('a thrown string', asInteraction(mock), mockCore(publish))).rejects.toBe(
-            'a thrown string'
-        );
+    it('wraps a non-Error value, so a handler that threw a string still shows the fault card', async () => {
+        await expect(
+            handleInteractionFault('a thrown string', asInteraction(mock), mockCore(publish))
+        ).resolves.toBeUndefined();
 
-        expect(mock.reply).not.toHaveBeenCalled();
-        expect(publish).not.toHaveBeenCalled();
+        expect(mock.reply).toHaveBeenCalledTimes(1);
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(event).toBe('unknownException');
+        expect(payload.error.message).toBe('a thrown string');
+    });
+
+    // the uuid on the user's error card has to be greppable, so the log runs before the throttle
+    it('logs every occurrence of a throttled fault, publishing only the first', async () => {
+        const core = mockCore(publish);
+        const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+        await handleInteractionFault(new Error('db down'), asInteraction(mock), core);
+        await handleInteractionFault(new Error('db down'), asInteraction(mockInteraction()), core);
+
+        const lines = errorLog.mock.calls.map(([message]) => String(message));
+        expect(lines.filter((line: string) => line.includes('db down'))).toHaveLength(2);
+        expect(publish.mock.calls.filter(([event]) => event === 'unknownException')).toHaveLength(1);
+        errorLog.mockRestore();
     });
 
     it('reports an api code by default, since ignoreApiCodes is empty', async () => {
@@ -114,7 +141,7 @@ describe('handleInteractionFault', () => {
     it('swallows an api code listed in ignoreApiCodes, with no reply or report', async () => {
         // justified: the fixture implements only the Core surface the boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { ignoreApiCodes: [RESTJSONErrorCodes.UnknownInteraction] }, notifications: {} }
         } as unknown as Core;
 
@@ -143,13 +170,16 @@ describe('handleInteractionFault', () => {
         expect(payload.denial).toBeInstanceOf(Fault);
     });
 
-    it('follows up and publishes nothing for a non-reporting denial on a replied interaction', async () => {
+    it('follows up and reports no fault for a non-reporting denial on a replied interaction', async () => {
         mock.replied = true;
 
         await handleInteractionFault(new TestNotice(), asInteraction(mock), mockCore(publish));
 
         expect(mock.followUp).toHaveBeenCalledTimes(1);
-        expect(publish).not.toHaveBeenCalled();
+        // the boundary's own followUp publishes responseAttempted, so assert on the fault keys alone
+        const keys = publish.mock.calls.map(([event]) => event as string);
+        expect(keys).not.toContain('handledException');
+        expect(keys).not.toContain('unknownException');
     });
 
     it('replies ephemerally for a refusal by default', async () => {
@@ -192,6 +222,13 @@ describe('handleInteractionFault', () => {
             mock.isAutocomplete.mockReturnValue(true);
         });
 
+        // the only legal autocomplete response, and it clears the client's loading spinner
+        it('responds with empty choices, so the dropdown stops spinning', async () => {
+            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+
+            expect(mock.respond).toHaveBeenCalledWith([]);
+        });
+
         it('builds no sender and publishes unknownException with metadata for a raw error', async () => {
             const interaction = asInteraction(mock);
 
@@ -229,7 +266,20 @@ describe('handleInteractionFault', () => {
             await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(search), core);
             await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(lookup), core);
 
-            expect(publish).toHaveBeenCalledTimes(2);
+            // the empty-choices send publishes responseAttempted too, so count the fault key alone
+            expect(publish.mock.calls.filter(([event]) => event === 'unknownException')).toHaveLength(2);
+        });
+
+        it('publishes responseAttempted for the empty-choices send', async () => {
+            await handleInteractionFault(new Error('boom'), asInteraction(mock), mockCore(publish));
+
+            const writes = publish.mock.calls.filter(([key]) => key === 'responseAttempted');
+            expect(writes).toHaveLength(1);
+            expect(writes[0]?.[1] as SubscriptionData<'responseAttempted'>).toMatchObject({
+                method: 'respond',
+                outcome: 'sent',
+                messageId: null
+            });
         });
     });
 

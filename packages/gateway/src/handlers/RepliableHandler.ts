@@ -27,7 +27,7 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
         return this.event;
     }
 
-    protected buildSender(event: Event, _core: Core, routeId: string): ReplySender {
-        return new ReplySender(event, routeId);
+    protected buildSender(event: Event, core: Core, routeId: string): ReplySender {
+        return new ReplySender(event, routeId, core.bus);
     }
 }

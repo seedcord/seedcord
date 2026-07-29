@@ -35,7 +35,7 @@ export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
                     ]);
                 }
 
-                // the same shape the node loader requires, a hand-authored manifest reaches here too
+                // a hand-authored manifest reaches here too, so the check cannot rest on codegen
                 const exported = module[row.exportName];
                 if (typeof exported !== 'function' || !(exported.prototype instanceof Subscriber)) {
                     throw new SeedcordError(SeedcordErrorCode.SubscriberRouteNotASubscriber, [
@@ -44,6 +44,7 @@ export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
                         row.from
                     ]);
                 }
+                // justified: the two checks above prove it is a Subscriber subclass
                 return exported as StoredSubscriberCtor;
             }
         } satisfies SubscriberRegistration);

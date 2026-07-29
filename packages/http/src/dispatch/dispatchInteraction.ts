@@ -1,6 +1,15 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
-import { runHandlerGates, slowGateMonitor } from '@seedcord/core/internal';
+import {
+    asError,
+    dispatchedPayload,
+    outcomeFor,
+    queuedMsFor,
+    reportedWrite,
+    PublishDefault,
+    runHandlerGates,
+    slowGateMonitor
+} from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
@@ -9,10 +18,13 @@ import { RepliableHandler } from '@handlers/RepliableHandler';
 import { ReplySender } from '@reply/ReplySender';
 import { interactionGateContext } from '@src/gates/context';
 
+import { reportFault } from './reportFault';
+
 import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
+import type { DispatchOutcome } from '@seedcord/core';
 import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
@@ -71,11 +83,15 @@ async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promi
     }
 }
 
-// a Notice is illegal on autocomplete, so empty choices clear the pending state
+// a Notice is illegal on autocomplete, so empty choices clear the pending state. reports like any
+// other write, so a faulted autocomplete still shows its discord round trip
 async function respondEmptyChoices(scope: FaultScope): Promise<void> {
-    await scope.core.rest.post(Routes.interactionCallback(scope.payload.id, scope.payload.token), {
-        body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
-    });
+    const telemetry = { bus: scope.core.bus, interactionId: scope.payload.id };
+    await reportedWrite(telemetry, scope.routeId, 'respond', () =>
+        scope.core.rest.post(Routes.interactionCallback(scope.payload.id, scope.payload.token), {
+            body: { type: InteractionResponseType.ApplicationCommandAutocompleteResult, data: { choices: [] } }
+        })
+    );
 }
 
 function renderContext(core: Core, uuid: RenderContext['uuid']): RenderContext {
@@ -84,7 +100,10 @@ function renderContext(core: Core, uuid: RenderContext['uuid']): RenderContext {
 }
 
 async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
-    if (notice.report) logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
+    if (notice.report) {
+        logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
+        reportFault(notice, uuid, scope.payload, scope.core);
+    }
     const { sender } = scope;
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
@@ -99,6 +118,8 @@ async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: 
 
     if (core.config.errors?.errorStack ?? false) logger().error(paint.mute(uuid), error);
     else logger().error(`${paint.mute(uuid)} | ${error.message}`);
+
+    reportFault(error, uuid, scope.payload, core);
 
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));
@@ -123,7 +144,7 @@ async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
         return;
     }
 
-    const error = Error.isError(caught) ? caught : new Error(String(caught));
+    const error = asError(caught);
 
     // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(scope.core.config.errors?.ignoreApiCodes ?? []);
@@ -141,16 +162,87 @@ interface DispatchArgs {
     readonly core: Core;
 }
 
+function unhandledRouteId(match: ResolvedRoute): string {
+    if (match.routeId) return match.routeId;
+    // an empty key means a customId seedcord never minted, since a minted routeKey always outlives its 3-char hash
+    const key = match.attemptedKey ?? '';
+    return `${match.kind}:${key.length > 0 ? key : 'unrouted'}`;
+}
+
 // nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card
 function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: Core): FaultScope {
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
-    const routeId = match.routeId ?? 'unhandled';
+    const routeId = unhandledRouteId(match);
     return {
         core,
         payload,
         routeId,
-        sender: match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, routeId)
+        sender: match.kind === 'autocomplete' ? null : new ReplySender(ref, core.rest, routeId, core.bus)
     };
+}
+
+// the clock starts when the reporter is built, which is the first statement of the dispatch
+function dispatchReporter(
+    match: ResolvedRoute,
+    payload: ValidInteractionTypes,
+    core: Core
+): (outcome: DispatchOutcome) => void {
+    const startedAt = performance.now();
+    // read here, since a read at publish time would count the handler run into the queue too
+    const queuedMs = queuedMsFor(payload.id);
+    return (outcome) => {
+        core.bus[PublishDefault](
+            'interactionDispatched',
+            dispatchedPayload({
+                routeId: unhandledRouteId(match),
+                interactionId: payload.id,
+                kind: match.kind,
+                outcome,
+                fallback: match.routeId === null,
+                startedAt,
+                queuedMs
+            })
+        );
+    };
+}
+
+// reports in a finally, so a throw from the boundary still publishes
+async function answer(
+    caught: unknown,
+    scope: FaultScope,
+    report: (outcome: DispatchOutcome) => void,
+    outcome: DispatchOutcome = outcomeFor(caught)
+): Promise<void> {
+    try {
+        await handleFault(caught, scope);
+    } finally {
+        report(outcome);
+    }
+}
+
+// sends a response on either failure, so a null return means nothing can run
+async function loadHandlerCtor(
+    match: ResolvedRoute,
+    payload: ValidInteractionTypes,
+    core: Core,
+    report: (outcome: DispatchOutcome) => void
+): Promise<HandlerCtor | null> {
+    const routeId = unhandledRouteId(match);
+    let exported: unknown;
+    try {
+        exported = await match.load();
+    } catch (caught) {
+        logger().error(`Route ${paint.sky.bold(routeId)} failed to load its handler.`, caught);
+        await answer(caught, freshScope(match, payload, core), report, 'failed');
+        return null;
+    }
+
+    if (isHandlerCtor(exported)) return exported;
+
+    logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
+    const wrong = new Error(`route ${routeId} loaded an export that is not a handler class`);
+    await answer(wrong, freshScope(match, payload, core), report, 'failed');
+    return null;
 }
 
 /**
@@ -160,64 +252,53 @@ function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: 
  */
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
+    const report = dispatchReporter(match, payload, core);
 
-    let exported: unknown;
-    try {
-        exported = await match.load();
-    } catch (caught) {
-        logger().error(`Route ${paint.sky.bold(match.routeId ?? 'unhandled')} failed to load its handler.`, caught);
-        await handleFault(caught, freshScope(match, payload, core));
-        return null;
-    }
+    const ctor = await loadHandlerCtor(match, payload, core, report);
+    if (!ctor) return null;
 
-    if (!isHandlerCtor(exported)) {
-        const routeId = match.routeId ?? 'unhandled';
-        logger().error(`Route ${paint.sky.bold(routeId)} loaded an export that is not a handler class.`);
-        await handleFault(
-            new Error(`route ${routeId} loaded an export that is not a handler class`),
-            freshScope(match, payload, core)
-        );
-        return null;
-    }
-    const ctor = exported;
-
-    const dispatch = new DispatchContext(match.routeId);
+    const dispatch = new DispatchContext(unhandledRouteId(match));
     let handler: HttpHandler;
     try {
         handler = new ctor(payload, core, dispatch);
     } catch (caught) {
-        await handleFault(caught, freshScope(match, payload, core));
+        await answer(caught, freshScope(match, payload, core), report);
         return null;
     }
     const scope: FaultScope = {
         core,
         payload,
-        routeId: match.routeId ?? handler.constructor.name,
+        routeId: unhandledRouteId(match),
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 
-    if (!(await passedGates(ctor, match, payload, core, scope))) return null;
+    const refusal = await gateRefusal(ctor, match, payload, core);
+    if (refusal) {
+        await answer(refusal.caught, scope, report);
+        return null;
+    }
 
     return async () => {
         try {
             await handler.execute();
+            report('handled');
         } catch (caught) {
-            await handleFault(caught, scope);
+            await answer(caught, scope, report);
         }
     };
 }
 
-// autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
-async function passedGates(
+// autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop.
+// null when the gates passed. the caller answers the refusal, so one code path reports and replies
+async function gateRefusal(
     ctor: HandlerCtor,
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
-    core: Core,
-    scope: FaultScope
-): Promise<boolean> {
+    core: Core
+): Promise<{ caught: unknown } | null> {
     // the router derives match.kind from payload.type, so the two would be the same. the payload.type clause narrows
     // the union to Repliables for interactionGateContext below
-    if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return true;
+    if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return null;
     const monitor = slowGateMonitor();
     try {
         await runHandlerGates(
@@ -226,10 +307,9 @@ async function passedGates(
             match.routeId ?? undefined,
             monitor?.observe
         );
-        return true;
+        return null;
     } catch (caught) {
-        await handleFault(caught, scope);
-        return false;
+        return { caught };
     } finally {
         // a refusing gate ate budget too, report either way
         monitor?.report(match.routeId);

@@ -3,12 +3,15 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { checkAckLegality, sendTarget } from './ackLegality';
 import { AckTrace } from './AckTrace';
+import { attemptWrite, publishResponse } from './responseReport';
 import { serializeReply } from './serializeReply';
 import { translateSerializationError } from './translateSerialization';
 
 import type { AckState, ReplyMethod } from './ackLegality';
+import type { ReplyTelemetry } from './responseReport';
 import type { SerializedReply } from './serializeReply';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
+import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 import type { APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 
 /** The shape djs modal builders emit from `toJSON()`. */
@@ -31,29 +34,50 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
 
     protected constructor(
         protected readonly routeId: string,
-        initialState: AckState = 'unacked'
+        initialState: AckState = 'unacked',
+        // absent for getConfirmation, which builds a sender from an interaction alone and reaches no core
+        private readonly telemetry?: ReplyTelemetry
     ) {
         this.state = initialState;
     }
 
+    private report(method: ReplyMethod, startedAt: number, outcome: ResponseOutcome, messageId: string | null): void {
+        publishResponse(this.telemetry, { routeId: this.routeId, method, startedAt, outcome, messageId });
+    }
+
+    private async attempt<Result>(
+        method: ReplyMethod,
+        startedAt: number,
+        write: () => Promise<Result>
+    ): Promise<Result> {
+        return await attemptWrite(this.telemetry, this.routeId, method, startedAt, write);
+    }
+
     public async reply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('reply');
-        const created = await this.writeReply(response, opts);
+        const startedAt = performance.now();
+        const created = await this.attempt('reply', startedAt, () => this.writeReply(response, opts));
         // the callback already acked discord, so record replied before the message guard can throw
         this.transition('reply', 'replied');
-        return this.remember(this.requireMessage(created, 'reply'));
+        const message = this.remember(this.requireMessage(created, 'reply'));
+        this.report('reply', startedAt, 'sent', message.id);
+        return message;
     }
 
     public async defer(opts?: DeferOpts): Promise<void> {
         this.checkLegality('defer');
-        await this.writeDefer(opts);
+        const startedAt = performance.now();
+        await this.attempt('defer', startedAt, () => this.writeDefer(opts));
         this.transition('defer', 'deferred-reply');
+        this.report('defer', startedAt, 'sent', null);
     }
 
     public async deferUpdate(): Promise<void> {
         this.checkLegality('deferUpdate');
-        await this.writeDeferUpdate();
+        const startedAt = performance.now();
+        await this.attempt('deferUpdate', startedAt, () => this.writeDeferUpdate());
         this.transition('deferUpdate', 'deferred-update');
+        this.report('deferUpdate', startedAt, 'sent', null);
     }
 
     /**
@@ -63,17 +87,27 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
      */
     public async update(response: ReplyResponse | string): Promise<TMessage> {
         this.checkLegality('update');
+        const startedAt = performance.now();
         // in deferred-update the source message is @original and the ack-legality check above already passed
-        if (this.state === 'deferred-update') return await this.editOriginal(response);
-        const created = await this.writeUpdate(response);
+        if (this.state === 'deferred-update') {
+            const edited = await this.attempt('update', startedAt, () => this.editOriginal(response));
+            this.report('update', startedAt, 'sent', edited.id);
+            return edited;
+        }
+        const created = await this.attempt('update', startedAt, () => this.writeUpdate(response));
         this.transition('update', 'replied');
-        return this.remember(this.requireMessage(created, 'update'));
+        const message = this.remember(this.requireMessage(created, 'update'));
+        this.report('update', startedAt, 'sent', message.id);
+        return message;
     }
 
     public async followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('followUp');
-        const created = await this.writeFollowUp(response, opts);
-        return this.remember(created);
+        const startedAt = performance.now();
+        const created = await this.attempt('followUp', startedAt, () => this.writeFollowUp(response, opts));
+        const message = this.remember(created);
+        this.report('followUp', startedAt, 'sent', message.id);
+        return message;
     }
 
     public edit(response: ReplyResponse | string): Promise<TMessage>;
@@ -83,32 +117,43 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         maybeResponse?: ReplyResponse | string
     ): Promise<TMessage> {
         this.checkLegality('edit');
+        const startedAt = performance.now();
         if (maybeResponse === undefined) {
             // justified: the overloads narrow targetOrResponse to a response once maybeResponse is absent
-            return await this.editOriginal(targetOrResponse as ReplyResponse | string);
+            const edited = await this.attempt('edit', startedAt, () =>
+                this.editOriginal(targetOrResponse as ReplyResponse | string)
+            );
+            this.report('edit', startedAt, 'sent', edited.id);
+            return edited;
         }
         // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
         const target = targetOrResponse as TMessage;
         if (!this.sent.has(target.id)) {
             throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['edit', target.id, this.routeId]);
         }
-        return this.remember(await this.writeEditTarget(target.id, maybeResponse));
+        const written = await this.attempt('edit', startedAt, () => this.writeEditTarget(target.id, maybeResponse));
+        const message = this.remember(written);
+        this.report('edit', startedAt, 'sent', message.id);
+        return message;
     }
 
     public delete(): Promise<void>;
     public delete(target: TMessage): Promise<void>;
     public async delete(target?: TMessage): Promise<void> {
         this.checkLegality('delete');
+        const startedAt = performance.now();
         if (target === undefined) {
-            await this.writeDeleteOriginal();
+            await this.attempt('delete', startedAt, () => this.writeDeleteOriginal());
+            this.report('delete', startedAt, 'sent', null);
             return;
         }
         if (!this.sent.has(target.id)) {
             throw new SeedcordError(SeedcordErrorCode.ReplyForeignEditTarget, ['delete', target.id, this.routeId]);
         }
-        await this.writeDeleteTarget(target.id);
+        await this.attempt('delete', startedAt, () => this.writeDeleteTarget(target.id));
         // evict so a later targeted edit of this id throws foreign
         this.sent.delete(target.id);
+        this.report('delete', startedAt, 'sent', null);
     }
 
     /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
@@ -131,8 +176,10 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
             const name = modal.constructor?.name;
             throw translateSerializationError(error, !name || name === 'Object' ? 'modal' : name, 0, this.routeId);
         }
-        await this.writeModal(data);
+        const startedAt = performance.now();
+        await this.attempt('showModal', startedAt, () => this.writeModal(data));
         this.transition('showModal', 'replied');
+        this.report('showModal', startedAt, 'sent', null);
     }
 
     protected serialize(response: ReplyResponse | string): SerializedReply {

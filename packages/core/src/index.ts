@@ -53,6 +53,7 @@ export { type PageView } from '@pagination/PageView';
 
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '@subscribers/index';
 export type {
+    DispatchOutcome,
     FaultSource,
     SubscribeOptions,
     Subscriptions,

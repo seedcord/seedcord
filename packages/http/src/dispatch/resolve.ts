@@ -21,6 +21,8 @@ export interface ResolvedRoute {
      * unhandled default, which matches no row.
      */
     readonly routeId: string | null;
+    /** The key the router looked up. */
+    readonly attemptedKey?: string;
     /** Resolves the one export the row registers. */
     readonly load: () => Promise<unknown>;
 }
@@ -171,10 +173,11 @@ export function buildRouteMaps(manifest: RouteManifest): RouteMaps {
 }
 
 // dispatched through the normal pipeline like the gateway's unhandled default
-function unhandled(kind: ResolvedKind): ResolvedRoute {
+function unhandled(kind: ResolvedKind, attemptedKey: string): ResolvedRoute {
     return {
         kind,
         routeId: null,
+        attemptedKey,
         load: () => Promise.resolve(kind === 'autocomplete' ? UnhandledAutocomplete : UnhandledRepliable)
     };
 }
@@ -190,21 +193,25 @@ export function resolve(maps: RouteMaps, interaction: APIInteraction): ResolvedR
     switch (interaction.type) {
         case InteractionType.ApplicationCommand: {
             if (interaction.data.type === ApplicationCommandType.ChatInput) {
-                return maps.slash.get(slashRouteOf(interaction.data)) ?? unhandled('slash');
+                const route = slashRouteOf(interaction.data);
+                return maps.slash.get(route) ?? unhandled('slash', route);
             }
             const kind = commandKind(interaction.data.type);
-            return kind ? (maps[kind].get(interaction.data.name) ?? unhandled(kind)) : null;
+            return kind ? (maps[kind].get(interaction.data.name) ?? unhandled(kind, interaction.data.name)) : null;
         }
         case InteractionType.ApplicationCommandAutocomplete: {
-            return maps.autocomplete.get(slashRouteOf(interaction.data)) ?? unhandled('autocomplete');
+            const route = slashRouteOf(interaction.data);
+            return maps.autocomplete.get(route) ?? unhandled('autocomplete', route);
         }
         case InteractionType.MessageComponent: {
             const key = componentMapKey(interaction.data.component_type);
             if (!key) return null;
-            return maps.components[key].get(prefixOf(interaction.data.custom_id)) ?? unhandled(COMPONENT_KIND[key]);
+            const prefix = prefixOf(interaction.data.custom_id);
+            return maps.components[key].get(prefix) ?? unhandled(COMPONENT_KIND[key], prefix);
         }
         case InteractionType.ModalSubmit: {
-            return maps.components.modal.get(prefixOf(interaction.data.custom_id)) ?? unhandled('modal');
+            const prefix = prefixOf(interaction.data.custom_id);
+            return maps.components.modal.get(prefix) ?? unhandled('modal', prefix);
         }
         default: {
             return null;

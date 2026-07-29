@@ -1,5 +1,12 @@
 import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { EventMetadataKey, MiddlewareMetadataKey, runHandlerGates, areRoutes } from '@seedcord/core/internal';
+import {
+    areRoutes,
+    asError,
+    EventMetadataKey,
+    MiddlewareMetadataKey,
+    PublishDefault,
+    runHandlerGates
+} from '@seedcord/core/internal';
 import { settleWithin } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -17,7 +24,7 @@ import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { Initializeable } from '@seedcord/core';
+import type { Initializeable, SubscriptionData } from '@seedcord/core';
 import type { EventFrequency, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
@@ -308,10 +315,12 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
             if (this.draining) return;
-            this.core.bot.emitSafe('any:event', eventName, ...args);
-            const run = this.processEvent(eventName, args).catch((err: Error) => {
-                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bot.emitSafe('error:unhandled:event', err);
+            // justified: the per-event tuple erases across the generic key, args matches eventName here
+            this.core.bus[PublishDefault]('anyEvent', { name: eventName, args } as SubscriptionData<'anyEvent'>);
+            const run = this.processEvent(eventName, args).catch((caught: unknown) => {
+                const error = asError(caught);
+                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
+                this.core.bus[PublishDefault]('unhandledEventError', { error });
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));

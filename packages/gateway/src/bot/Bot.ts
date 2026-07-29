@@ -1,9 +1,8 @@
 import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { validateDiscordToken } from '@seedcord/errors/internal';
-import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
-import { Client, ClientEvents, Events, Interaction } from 'discord.js';
+import { Client, Events } from 'discord.js';
 import { Envapt } from 'envapt/legacy';
 
 import { CommandRegistry } from '@bControllers/CommandRegistry';
@@ -27,25 +26,9 @@ const UNBIND_TIMEOUT_MS = 2000;
 const LOGOUT_TIMEOUT_MS = 2000;
 
 /**
- * Types of events emitted by the {@link Core.bot} instance.
- */
-export interface BotEvents {
-    /** Emitted when an unhandled interaction error occurs */
-    'error:unhandled:interaction': [error: Error];
-    /** Emitted when an unhandled event error occurs */
-    'error:unhandled:event': [error: Error];
-    /** Emitted for any event */
-    'any:event': { [K in keyof ClientEvents]: [K, ...ClientEvents[K]] }[keyof ClientEvents];
-    /** Emitted for any interaction */
-    'any:interaction': [interaction: Interaction];
-    /** @internal */
-    ready: [];
-}
-
-/**
  * The Discord client and its controllers. Access it through `core.bot`.
  */
-export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable, HmrAware {
+export class Bot implements Initializeable, HmrAware {
     @Envapt<string>('DISCORD_BOT_TOKEN', {
         converter: (raw) => validateDiscordToken(raw)
     })
@@ -73,8 +56,6 @@ export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable,
 
     /** @internal */
     constructor(core: Core) {
-        super();
-
         this._client = new Client(core.config.bot.clientOptions);
 
         if (core.config.bot.interactions.path) {
@@ -155,9 +136,10 @@ export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable,
     }
 
     private async login(token: string): Promise<Bot> {
-        this._client.once(Events.ClientReady, () => this.emit('ready'));
+        const ready: PromiseWithResolvers<void> = Promise.withResolvers();
+        this._client.once(Events.ClientReady, () => ready.resolve());
         void this._client.login(token);
-        await this.waitFor('ready');
+        await ready.promise;
         this.logger.info(`Logged in as ${chalk.bold.magenta(this._client.user?.username)}!`);
         return this;
     }
@@ -169,45 +151,5 @@ export class Bot extends TypedEventEmitter<BotEvents> implements Initializeable,
 
     public get client(): Client {
         return this._client;
-    }
-
-    /** @internal */
-    override emit<TKey extends keyof ClientEvents>(
-        event: 'any:event',
-        name: TKey,
-        ...args: ClientEvents[TKey]
-    ): boolean;
-
-    /** @internal */
-    override emit<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
-
-    /**
-     * The overloads enforce the key/args correlation at compile time only. At runtime this forwards
-     * straight to the underlying TypedEventEmitter.
-     *
-     * @internal
-     */
-    override emit(event: string, ...args: unknown[]): boolean {
-        // justified, TS cannot correlate the overload generics across super.emit.
-        return super.emit(event as never, ...(args as never));
-    }
-
-    /** @internal */
-    override emitSafe<TKey extends keyof ClientEvents>(
-        event: 'any:event',
-        name: TKey,
-        ...args: ClientEvents[TKey]
-    ): boolean;
-
-    /** @internal */
-    override emitSafe<TEventKey extends keyof BotEvents>(event: TEventKey, ...args: BotEvents[TEventKey]): boolean;
-
-    override emitSafe(event: string, ...args: unknown[]): boolean {
-        // justified, same forward as emit()
-        return super.emitSafe(event as never, ...(args as never));
-    }
-
-    protected override onListenerError(error: unknown, event: string | symbol): void {
-        this.logger.error(`listener for ${String(event)} threw`, error);
     }
 }

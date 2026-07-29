@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 import { Subscribe } from '@subscribers/decorators/Subscribe';
 import { Bus, registrationFor } from '@subscribers/index';
+import { PublishDefault } from '@subscribers/publishDefault';
 import { Subscriber } from '@subscribers/Subscriber';
 
 import type { CoreBase } from '@interfaces/CoreBase';
@@ -41,7 +42,7 @@ describe('Bus subscriber concurrency', () => {
         order.length = 0;
         const bus = busWith(SlowSubscriber, FastSubscriber);
 
-        bus.publish('unknownException', { uuid: crypto.randomUUID(), error: new Error('boom') });
+        bus[PublishDefault]('unknownException', { uuid: crypto.randomUUID(), error: new Error('boom') });
         await delay(60);
 
         expect(order).toEqual(['fast', 'slow']);

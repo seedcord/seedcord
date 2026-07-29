@@ -72,10 +72,14 @@ async function engineFor(
     return { handle: createSeedcord(nullPathConfig, manifest), signer };
 }
 
-// queue the performance.now readings core's timedCheck takes, start then end per gate
-function stubClock(readings: number[]): void {
-    let i = 0;
-    vi.spyOn(performance, 'now').mockImplementation(() => readings[Math.min(i++, readings.length - 1)] ?? 0);
+// the gate bodies advance this, so a performance.now() reader anywhere else in the dispatch cannot
+// shift what core's timedCheck measures
+function fakeClock(): (ms: number) => void {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    return (ms) => {
+        now += ms;
+    };
 }
 
 type WarnSpy = MockInstance<Logger['warn']>;
@@ -96,14 +100,12 @@ afterEach(() => {
 describe('slow-gate dev warning', () => {
     it('warns once when a gate check runs past the 750ms threshold', async () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-        const slow = defineGate('slowgate', () => {
-            /* the stubbed clock reports the elapsed time, no real wait */
-        });
+        const advance = fakeClock();
+        const slow = defineGate('slowgate', () => advance(800));
         const { handle, signer } = await engineFor(guarded([slow]), false);
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
-        stubClock([0, 800]);
         await handle(request, ctx);
         await ctx.settled();
 
@@ -112,18 +114,14 @@ describe('slow-gate dev warning', () => {
 
     it('warns once when several gate checks sum past the threshold together', async () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-        const first = defineGate('firstgate', () => {
-            /* the stubbed clock reports the elapsed time */
-        });
-        const second = defineGate('secondgate', () => {
-            /* the stubbed clock reports the elapsed time */
-        });
+        const advance = fakeClock();
+        // 400ms per gate, 800ms combined
+        const first = defineGate('firstgate', () => advance(400));
+        const second = defineGate('secondgate', () => advance(400));
         const { handle, signer } = await engineFor(guarded([first, second]), false);
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
-        // 400ms per gate, 800ms combined
-        stubClock([0, 400, 400, 800]);
         await handle(request, ctx);
         await ctx.settled();
 
@@ -133,12 +131,12 @@ describe('slow-gate dev warning', () => {
 
     it('does not warn when a gate check runs under the threshold', async () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-        const fast = defineGate('fastgate', () => undefined);
+        const advance = fakeClock();
+        const fast = defineGate('fastgate', () => advance(10));
         const { handle, signer } = await engineFor(guarded([fast]), false);
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
-        stubClock([0, 10]);
         await handle(request, ctx);
         await ctx.settled();
 
@@ -147,12 +145,12 @@ describe('slow-gate dev warning', () => {
 
     it('never warns in production, even for a slow gate', async () => {
         const warn = vi.spyOn(Logger.prototype, 'warn').mockImplementation(() => undefined);
-        const slow = defineGate('slowgate', () => undefined);
+        const advance = fakeClock();
+        const slow = defineGate('slowgate', () => advance(800));
         const { handle, signer } = await engineFor(guarded([slow]), true);
         const request = await signedRequest(signer, slashPayload('guarded'));
         const ctx = capturingCtx();
 
-        stubClock([0, 800]);
         await handle(request, ctx);
         await ctx.settled();
 

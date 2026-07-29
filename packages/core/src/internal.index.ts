@@ -48,6 +48,7 @@ export {
     WebhookUrlMetadataKey
 } from '@src/metadataKeys';
 
+export { asError } from '@stops/asError';
 export { NoticeCard } from '@stops/NoticeCard';
 
 export { prefixOf, decodeFor, type AnyCustomId } from '@customId/CustomId';
@@ -71,7 +72,13 @@ export { deferFlags, sendFlags } from '@reply/flags';
 export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '@reply/ackLegality';
 export { AckTrace } from '@reply/AckTrace';
 export { BaseReplySender, type ModalLike } from '@reply/BaseReplySender';
+export { reportedWrite, type ReplyTelemetry } from '@reply/responseReport';
 export { translateSerializationError } from '@reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '@reply/serializeReply';
 
 export { type StoredSubscriberCtor, type SubscriberRegistration } from '@subscribers/Bus';
+export { FaultThrottle } from '@subscribers/FaultThrottle';
+export { PublishDefault } from '@subscribers/publishDefault';
+export { dispatchedPayload, outcomeFor, queuedMsFor } from '@src/dispatch/dispatchReport';
+// the transports' augmentation target for their own default keys
+export type { DefaultSubscriptions } from '@subscribers/types/Subscriptions';

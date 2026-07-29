@@ -1,12 +1,11 @@
 import * as crypto from 'node:crypto';
 
 import { Notice, Fault } from '@seedcord/core';
-import { prefixOf } from '@seedcord/core/internal';
+import { prefixOf, PublishDefault, FaultThrottle } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
 import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';
-import { FaultThrottle } from '@miscellaneous/FaultThrottle';
 
 import type { Core } from '@interfaces/Core';
 import type { FaultSource, SubscriptionData } from '@seedcord/core';
@@ -19,10 +18,6 @@ type InteractionFaultSource = Extract<FaultSource, { kind: 'interaction' }>;
 type EventFaultSource = Extract<FaultSource, { kind: 'event' }>;
 
 const logger = new Logger('ErrorsHandling');
-
-// one throttle across both report paths, so a recurring fault reports once per window. exported so
-// tests reset the shared window state.
-export const faultThrottle = new FaultThrottle();
 
 interface EventOrigin {
     name: string;
@@ -73,27 +68,37 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
 }
 
 // stamp only after a publish, so a throttled fault stays reportable next window
-function withThrottle(origin: ErrorOrigin, error: Error, publish: () => void): void {
+function withThrottle(core: Core, origin: ErrorOrigin, error: Error, publish: () => void): void {
+    const throttle = FaultThrottle.for(core);
     const key = faultKey(origin, error);
-    if (!faultThrottle.shouldReport(key)) {
-        logger.info(`throttled duplicate fault ${key}`);
+    if (!throttle.shouldReport(key)) {
+        logger.debug(`throttled duplicate fault ${key}`);
         return;
     }
     publish();
-    faultThrottle.markReported(key);
+    throttle.markReported(key);
 }
 
 function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    withThrottle(origin, denial, () => {
-        logger.error(`${denial.name}: ${uuid}`, denial);
+    // outside the throttle, so the uuid on the user's card always resolves to a log line
+    logger.error(`${denial.name}: ${uuid}`, denial);
 
+    withThrottle(core, origin, denial, () => {
         if (origin.interaction) {
-            core.bus.publish('handledException', { denial, uuid, source: buildInteractionSource(origin.interaction) });
+            core.bus[PublishDefault]('handledException', {
+                denial,
+                uuid,
+                source: buildInteractionSource(origin.interaction)
+            });
         } else if (origin.event) {
-            core.bus.publish('handledException', { denial, uuid, source: buildEventSource(origin.event, origin) });
+            core.bus[PublishDefault]('handledException', {
+                denial,
+                uuid,
+                source: buildEventSource(origin.event, origin)
+            });
         } else {
             // autocomplete has no reply target and no typed source, so report through unknownException
-            core.bus.publish('unknownException', {
+            core.bus[PublishDefault]('unknownException', {
                 uuid,
                 error: denial,
                 ...scalarActors(origin),
@@ -111,12 +116,13 @@ function causeLine(error: Error): string {
 }
 
 function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    withThrottle(origin, error, () => {
-        const showStack = core.config.errors?.errorStack ?? false;
-        if (showStack) logger.error(uuid, error);
-        else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
+    // outside the throttle, so the uuid on the user's card always resolves to a log line
+    const showStack = core.config.errors?.errorStack ?? false;
+    if (showStack) logger.error(uuid, error);
+    else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
-        core.bus.publish('unknownException', {
+    withThrottle(core, origin, error, () => {
+        core.bus[PublishDefault]('unknownException', {
             uuid,
             error,
             ...scalarActors(origin),

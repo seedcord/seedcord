@@ -1,10 +1,10 @@
 import { Silence, Fault } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { handleEventFault } from '@bot/handleEventFault';
-import { faultThrottle } from '@miscellaneous/extractErrorResponse';
 
 import { TestNotice } from '../utils/TestNotice';
 
@@ -37,7 +37,7 @@ function stringCodedError(): DiscordAPIError {
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface the event boundary reads.
-    return { bus: { publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
+    return { bus: { [PublishDefault]: publish }, config: { errors: {}, notifications: {} } } as unknown as Core;
 }
 
 describe('handleEventFault', () => {
@@ -45,7 +45,6 @@ describe('handleEventFault', () => {
 
     beforeEach(() => {
         publish = vi.fn();
-        faultThrottle.clear();
     });
 
     it('publishes handledException with an event source for a reporting denial', () => {
@@ -92,7 +91,7 @@ describe('handleEventFault', () => {
         const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { logSilences: false }, notifications: {} }
         } as unknown as Core;
 
@@ -138,7 +137,7 @@ describe('handleEventFault', () => {
     it('swallows an api code listed in ignoreEventApiCodes with no report', () => {
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { ignoreEventApiCodes: [RESTJSONErrorCodes.UnknownMessage] }, notifications: {} }
         } as unknown as Core;
 
@@ -150,7 +149,7 @@ describe('handleEventFault', () => {
     it('swallows a string-coded api error listed in ignoreEventApiCodes', () => {
         // justified: the fixture implements only the Core surface the event boundary reads.
         const core = {
-            bus: { publish },
+            bus: { [PublishDefault]: publish },
             config: { errors: { ignoreEventApiCodes: ['SLASH_COMMAND_UNKNOWN'] }, notifications: {} }
         } as unknown as Core;
 
@@ -159,9 +158,12 @@ describe('handleEventFault', () => {
         expect(publish).not.toHaveBeenCalled();
     });
 
-    it('rethrows a non-Error value to the root catch', () => {
-        expect(() => handleEventFault('a thrown string', 'ready', 'Boot', [], mockCore(publish))).toThrow();
-        expect(publish).not.toHaveBeenCalled();
+    it('wraps a non-Error value, so a handler that threw a string still reports', () => {
+        handleEventFault('a thrown string', 'ready', 'Boot', [], mockCore(publish));
+
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(event).toBe('unknownException');
+        expect(payload.error.message).toBe('a thrown string');
     });
 
     it('throttles duplicate event faults from the same handler within the window to one report', () => {

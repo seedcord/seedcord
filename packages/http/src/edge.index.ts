@@ -1,4 +1,5 @@
 import './plugin-capabilities';
+import './subscriptions';
 
 export { createSeedcord } from './createSeedcord';
 export type { EngineContext } from './createSeedcord';

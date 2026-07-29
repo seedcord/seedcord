@@ -1,4 +1,5 @@
 import { Bus } from '@seedcord/core';
+import { PublishDefault } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -41,7 +42,7 @@ describe('registerSubscribers', () => {
         expect(load).not.toHaveBeenCalled();
     });
 
-    it('resolves and runs the row on the first publish of its key', async () => {
+    it('resolves the row once and runs it on every publish of its key', async () => {
         const ran: string[] = [];
         class Reporter extends Subscriber<'unknownException'> {
             execute(): Promise<void> {
@@ -53,9 +54,13 @@ describe('registerSubscribers', () => {
 
         const bus = stubBus();
         registerSubscribers(bus, manifestWith(load));
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
         await vi.waitFor(() => {
             expect(ran).toEqual(['reporter']);
+        });
+        bus[PublishDefault]('unknownException', payload());
+        await vi.waitFor(() => {
+            expect(ran).toEqual(['reporter', 'reporter']);
         });
 
         expect(load).toHaveBeenCalledTimes(1);
@@ -77,7 +82,7 @@ describe('registerSubscribers', () => {
             )
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         await vi.waitFor(() => {
             const cause = loggedCause(error);
@@ -95,7 +100,7 @@ describe('registerSubscribers', () => {
             manifestWith(() => Promise.reject(boom))
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         await vi.waitFor(() => {
             const cause = loggedCause(error);
@@ -113,7 +118,7 @@ describe('registerSubscribers', () => {
             manifestWith(() => Promise.resolve({}))
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         await vi.waitFor(() => {
             const cause = loggedCause(error);

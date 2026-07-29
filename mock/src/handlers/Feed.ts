@@ -30,6 +30,6 @@ export class FeedNav extends Feed.Handler {}
 @SlashRoute('feed')
 export class FeedSlash extends SlashHandler<'feed'> {
     public async execute(): Promise<void> {
-        await Feed.start(this.event);
+        await Feed.start(this);
     }
 }

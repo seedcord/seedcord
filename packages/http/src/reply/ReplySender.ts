@@ -2,6 +2,7 @@ import { BaseReplySender, deferFlags, sendFlags } from '@seedcord/core/internal'
 import { InteractionResponseType, MessageFlags, Routes } from 'discord-api-types/v10';
 
 import type { REST, RawFile } from '@discordjs/rest';
+import type { Bus } from '@seedcord/core';
 import type { SerializedReply } from '@seedcord/core/internal';
 import type { DeferOpts, ReplyResponse, SendOpts, TypedOmit } from '@seedcord/types';
 import type { APIMessage, APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
@@ -67,9 +68,10 @@ export class ReplySender extends BaseReplySender<SentMessage> {
     public constructor(
         private readonly ref: InteractionRef,
         private readonly rest: REST,
-        routeId: string
+        routeId: string,
+        bus?: Bus
     ) {
-        super(routeId);
+        super(routeId, 'unacked', bus && { bus, interactionId: ref.id });
     }
 
     protected async writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage | undefined> {

@@ -1,3 +1,4 @@
+import { PublishDefault } from '@seedcord/core/internal';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
@@ -5,6 +6,8 @@ import { Seedcord } from '@src/Seedcord';
 import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
+
+import type { SubscriptionData } from '@seedcord/core';
 
 import '../utils/mock-client';
 import '../utils/mock-env';
@@ -67,7 +70,7 @@ describe('EventDispatcher Integration', () => {
         expect(controller.eventMap.get('ready')).toHaveLength(1);
     });
 
-    it('a throwing any:event observer does not abort the dispatch', async () => {
+    it('a throwing anyEvent observer does not abort the dispatch', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/Ping.ts`,
@@ -93,7 +96,7 @@ describe('EventDispatcher Integration', () => {
         const onSpy = vi.spyOn(seedcord.bot.client, 'on');
         await testBot.events.init();
 
-        seedcord.bot.on('any:event', () => {
+        seedcord.bus.on('anyEvent', () => {
             throw new Error('observer boom');
         });
 
@@ -103,6 +106,45 @@ describe('EventDispatcher Integration', () => {
 
         expect(fire).toBeDefined();
         expect(() => fire?.({ reply: vi.fn() })).not.toThrow();
+    });
+
+    it('publishes anyEvent with the fired name and its args', async () => {
+        const eventsDir = 'events';
+        await testEnv.createFile(
+            `${eventsDir}/Ping.ts`,
+            `
+            import { EventHandler, RegisterEvent } from '${seedcordPath}';
+            import { Events } from 'discord.js';
+
+            @RegisterEvent(['messageCreate'])
+            export class PingHandler extends EventHandler<Events.MessageCreate> {
+                public async execute() {
+                    await Promise.resolve();
+                }
+            }
+            `
+        );
+
+        const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
+        seedcord = new Seedcord(config);
+        // justified: TestBot exposes the private events controller for assertion
+        const testBot = seedcord.bot as unknown as TestBot;
+
+        const onSpy = vi.spyOn(seedcord.bot.client, 'on');
+        await testBot.events.init();
+
+        const seen: SubscriptionData<'anyEvent'>[] = [];
+        seedcord.bus.on('anyEvent', (payload) => seen.push(payload));
+
+        const fire = onSpy.mock.calls.find(([event]) => event === 'messageCreate')?.[1] as
+            | ((...args: unknown[]) => void)
+            | undefined;
+        const message = { id: 'm1', content: 'hi' };
+        fire?.(message);
+
+        expect(seen).toHaveLength(1);
+        expect(seen[0]?.name).toBe('messageCreate');
+        expect(seen[0]?.args[0]).toBe(message);
     });
 
     it('threads the fired event name into the handler so match routes to the right arm', async () => {
@@ -162,7 +204,7 @@ describe('EventDispatcher Integration', () => {
         const config = testConfig({ events: testEnv.resolvePath(eventsDir) });
 
         seedcord = new Seedcord(config);
-        const publish = vi.spyOn(seedcord.bus, 'publish');
+        const publish = vi.spyOn(seedcord.bus, PublishDefault);
         // justified: TestBot exposes the private events controller for assertion
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();
@@ -172,7 +214,7 @@ describe('EventDispatcher Integration', () => {
         expect(publish).toHaveBeenCalledWith('unknownException', expect.anything());
     });
 
-    it('marks a once handler spent even when it rethrows a non-Error, so it does not re-fire', async () => {
+    it('marks a once handler spent even when it throws a non-Error, so it does not re-fire', async () => {
         const eventsDir = 'events';
         await testEnv.createFile(
             `${eventsDir}/OnceBoom.ts`,
@@ -183,7 +225,7 @@ describe('EventDispatcher Integration', () => {
             @RegisterEvent(['guildMemberAdd', { frequency: 'once' }])
             export class OnceBoom extends EventHandler<Events.GuildMemberAdd> {
                 public async execute() {
-                    await Promise.resolve();
+                    await this.match({ guildMemberAdd: (member) => member.setNickname('ran') });
                     throw 'raw string';
                 }
             }
@@ -197,9 +239,11 @@ describe('EventDispatcher Integration', () => {
         const testBot = seedcord.bot as unknown as TestBot;
         await testBot.events.init();
 
-        await expect(testBot.events.processEvent('guildMemberAdd', [{}])).rejects.toBe('raw string');
-        // a second fire must not re-run it
-        await expect(testBot.events.processEvent('guildMemberAdd', [{}])).resolves.toBeUndefined();
+        const member = { setNickname: vi.fn() };
+        await testBot.events.processEvent('guildMemberAdd', [member]);
+        await testBot.events.processEvent('guildMemberAdd', [member]);
+
+        expect(member.setNickname).toHaveBeenCalledTimes(1);
     });
 
     it('runs a once handler exactly once when the same event fires concurrently', async () => {
@@ -482,16 +526,16 @@ describe('EventDispatcher Integration', () => {
             return { controller, fire };
         }
 
-        it('runs later error:unhandled:event listeners after an earlier one throws', async () => {
+        it('runs later unhandledEventError listeners after an earlier one throws', async () => {
             const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'processEvent').mockRejectedValue(new Error('boom'));
             vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
 
             let reached = false;
-            seedcord.bot.on('error:unhandled:event', () => {
+            seedcord.bus.on('unhandledEventError', () => {
                 throw new Error('listener blew up');
             });
-            seedcord.bot.on('error:unhandled:event', () => {
+            seedcord.bus.on('unhandledEventError', () => {
                 reached = true;
             });
 
@@ -500,6 +544,22 @@ describe('EventDispatcher Integration', () => {
             await vi.waitFor(() => {
                 expect(reached).toBe(true);
             });
+        });
+
+        it('wraps a non-Error rejection at the root, so the payload still carries an Error', async () => {
+            const { controller, fire } = await clientHarness();
+            vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
+            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+
+            const seen: SubscriptionData<'unhandledEventError'>[] = [];
+            seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));
+
+            fire?.({ reply: vi.fn() });
+
+            await vi.waitFor(() => {
+                expect(seen).toHaveLength(1);
+            });
+            expect(seen[0]?.error.message).toBe('a bare string');
         });
 
         it('stops dispatching new events after stopAccepting, and drain resolves', async () => {

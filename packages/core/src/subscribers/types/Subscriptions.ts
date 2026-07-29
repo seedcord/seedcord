@@ -1,5 +1,18 @@
+import type { WriteMethod } from '@reply/responseReport';
+import type { TypedExclude } from '@seedcord/types';
+import type { InteractionRoutes } from '@src/metadataKeys';
 import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
+
+/**
+ * How a dispatch finished. The thrown value's type sets this, wherever it was thrown. A `Silence` and a
+ * `Notice` with `report` false are `refused`. A `Notice` with `report` true, which includes a default
+ * `Fault`, is `failed`, as is any other throw.
+ */
+export type DispatchOutcome = 'handled' | 'refused' | 'failed';
+
+/** Whether a write through the reply surface reached Discord. */
+export type ResponseOutcome = 'sent' | 'failed';
 
 /**
  * Where a reported fault came from.
@@ -42,9 +55,15 @@ export interface EventFaultSource {
     raw: unknown;
 }
 
-/** The framework's own subscription keys. */
-interface DefaultSubscriptions {
-    /** Triggered when an unhandled exception (a raw non-Notice throw) occurs */
+/**
+ * The framework's own subscription keys. A transport adds a key whose payload type references a type
+ * outside this package, through declaration merging on its own module.
+ *
+ * Every key here is publish-protected. Subscribe to them. The framework is the
+ * only publisher.
+ */
+export interface DefaultSubscriptions {
+    /** Triggered when an unhandled exception (a raw non-Notice throw) occurs. */
     unknownException: {
         uuid: UUID;
         error: Error;
@@ -52,11 +71,52 @@ interface DefaultSubscriptions {
         user?: { id: string; username: string } | undefined;
         metadata?: unknown;
     };
-    /** Triggered when a reported Notice (`report: true`) is caught */
+    /** Triggered when a reported Notice (`report: true`) is caught. */
     handledException: {
         denial: Notice;
         uuid: UUID;
         source: FaultSource;
+    };
+    /** Triggered when an interaction dispatch throws past the fault boundary. */
+    unhandledInteractionError: {
+        error: Error;
+    };
+    /** Triggered once per interaction dispatch, after the handler chain settles. */
+    interactionDispatched: {
+        routeId: string;
+        /** The interaction this dispatch ran, for joining against `responseAttempted`. */
+        interactionId: string;
+        kind: `${InteractionRoutes}`;
+        outcome: DispatchOutcome;
+        /** True when no route matched and the unhandled default ran. */
+        fallback: boolean;
+        /** Dispatch entry until the user has a response, replies included. A clock change never affects it. */
+        durationMs: number;
+        /**
+         * Discord's interaction creation until dispatch entry, read from the snowflake. This covers
+         * network transit plus any time your bot was busy before starting, so a rise points at either
+         * Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a host
+         * running behind Discord reports a negative value.
+         */
+        queuedMs: number;
+    };
+    /**
+     * Triggered on every write through the reply surface, several times per interaction. A write that
+     * throws reports here too, with `outcome` `failed`. A write that reaches Discord and then returns an
+     * unexpected shape publishes nothing, since the callback succeeded and carries no message to name.
+     */
+    responseAttempted: {
+        routeId: string;
+        /** The interaction this write belongs to, for joining against `interactionDispatched`. */
+        interactionId: string;
+        /** `send` routes to another verb, so it reports the verb that ran. */
+        method: WriteMethod;
+        outcome: ResponseOutcome;
+        durationMs: number;
+        /** Null for every ack-only or choice-only verb, and for a failed write. */
+        messageId: string | null;
+        /** Present when `outcome` is `failed`. */
+        error?: Error;
     };
 }
 
@@ -79,8 +139,14 @@ export interface Subscriptions {}
 
 export interface AllSubscriptions extends DefaultSubscriptions, Subscriptions {}
 
-/** All subscriber event names available to publish and augment. */
+/** All subscriber event names available to subscribe to and augment. */
 export type SubscriptionKey = keyof AllSubscriptions;
+
+/**
+ * The keys `publish` accepts. The framework's own keys are excluded, since only the framework
+ * produces them.
+ */
+export type PublishableKey = TypedExclude<SubscriptionKey, keyof DefaultSubscriptions>;
 
 /**
  * The payload type for a subscriber event.

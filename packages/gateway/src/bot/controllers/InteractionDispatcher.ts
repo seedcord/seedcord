@@ -5,8 +5,13 @@ import {
     InteractionMetadataKey,
     InteractionRouteKeys,
     InteractionRoutes,
+    asError,
+    dispatchedPayload,
+    outcomeFor,
+    queuedMsFor,
     MiddlewareMetadataKey,
     prefixOf,
+    PublishDefault,
     routeIdOf,
     runHandlerGates,
     slowGateMonitor,
@@ -37,7 +42,7 @@ import type { ReplySender } from '@bot/ReplySender';
 import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
-import type { Initializeable } from '@seedcord/core';
+import type { DispatchOutcome, Initializeable } from '@seedcord/core';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type {
@@ -63,6 +68,10 @@ interface InteractionArtifact {
 interface RegisteredMiddleware {
     readonly ctor: InteractionMiddlewareConstructor;
     readonly priority: number;
+}
+
+interface DispatchedHandler {
+    execute(): Promise<void>;
 }
 
 /**
@@ -396,10 +405,11 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private attachToClient(): void {
         this.core.bot.client.on(Events.InteractionCreate, (interaction) => {
             if (this.draining) return;
-            this.core.bot.emitSafe('any:interaction', interaction);
-            const run = this.handleInteraction(interaction).catch((err: Error) => {
-                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${err.name}`, err.stack);
-                this.core.bot.emitSafe('error:unhandled:interaction', err);
+            this.core.bus[PublishDefault]('anyInteraction', { interaction });
+            const run = this.handleInteraction(interaction).catch((caught: unknown) => {
+                const error = asError(caught);
+                this.logger.error(`[${paint.coral.bold('UNHANDLED ERROR AT ROOT')}] ${error.name}`, error.stack);
+                this.core.bus[PublishDefault]('unhandledInteractionError', { error });
             });
             this.inFlight.add(run);
             void run.finally(() => this.inFlight.delete(run));
@@ -416,18 +426,21 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async handleCustomIdInteraction<TInteraction extends Interaction & { customId: string }>(
         interaction: TInteraction,
-        getMap: () => Map<string, HandlerConstructor>,
-        interactionType: string
+        kind: InteractionRoutes,
+        getMap: () => Map<string, HandlerConstructor>
     ): Promise<void> {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
 
         // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
         // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies.
+        // an empty prefix matches no route, so the unhandled default replies to it the way http does
         const prefix = prefixOf(interaction.customId);
-        if (!prefix) return this.logger.warn(`${interactionType} has invalid customId: ${interaction.customId}`);
+        if (!prefix)
+            this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
 
         await this.processInteraction(
             interaction,
+            kind,
             () => prefix,
             (key) => getMap().get(key)
         );
@@ -435,51 +448,123 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private async processInteraction<TInteraction extends Interaction>(
         interaction: TInteraction,
+        kind: InteractionRoutes,
         extractKey: (i: TInteraction) => string,
         getHandler: (key: string) => HandlerConstructor | undefined,
         fallback: HandlerConstructor = UnhandledRepliable
     ): Promise<void> {
         const key = extractKey(interaction);
+        const startedAt = performance.now();
+        // read here, since a read at publish time would count the handler run into the queue too
+        const queuedMs = queuedMsFor(interaction.id);
+        const matched = getHandler(key);
+
+        // the handler's own routeId replaces this once the dispatch context is built, and the closure
+        // below reads whichever one is current when it publishes. an empty key means a customId
+        // seedcord never minted, since a minted routeKey always outlives its 3-char hash
+        let routeId = `${kind}:${key || 'unrouted'}`;
+        // the key fires once per dispatch, and a throw from the boundary itself reaches the catch below
+        // after the refusal already reported
+        let reported = false;
+        const report = (outcome: DispatchOutcome): void => {
+            if (reported) return;
+            reported = true;
+            this.core.bus[PublishDefault](
+                'interactionDispatched',
+                dispatchedPayload({
+                    routeId,
+                    interactionId: interaction.id,
+                    kind,
+                    outcome,
+                    startedAt,
+                    fallback: !matched,
+                    queuedMs
+                })
+            );
+        };
 
         // declared outside the try so the fault boundary replies through the handler's exact ack state
         let sender: ReplySender | undefined;
         try {
-            if (!interaction.isAutocomplete()) {
-                for (const { ctor } of this.middlewares) {
-                    const middleware = new ctor(interaction as Repliables, this.core);
-                    await middleware.execute();
-                }
-            }
+            if (!interaction.isAutocomplete()) await this.runMiddlewares(interaction as Repliables);
 
-            let HandlerCtor = getHandler(key);
-            if (!HandlerCtor) {
-                this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${fallback.name}.`);
-                HandlerCtor = fallback;
-            }
-
-            this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
-            const dispatch = new DispatchContext(routeIdOf(HandlerCtor));
-            // @ts-expect-error TS can't infer the type of interaction here
-            const handler = new HandlerCtor(interaction as Repliables, this.core, dispatch);
+            const HandlerCtor = matched ?? fallback;
+            const dispatch = new DispatchContext(routeIdOf(HandlerCtor) ?? routeId);
+            routeId = dispatch.routeId ?? routeId;
+            const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
             if (handler instanceof RepliableHandler) sender = handler.getSender();
             // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
-            if (!interaction.isAutocomplete()) {
-                const monitor = slowGateMonitor();
-                try {
-                    await runHandlerGates(
-                        HandlerCtor,
-                        interactionGateContext(interaction as Repliables, this.core),
-                        dispatch.routeId ?? undefined,
-                        monitor?.observe
-                    );
-                } finally {
-                    // a refusing gate ate budget too, report either way
-                    monitor?.report(dispatch.routeId);
-                }
+            const refusal = interaction.isAutocomplete()
+                ? null
+                : await this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch.routeId);
+            if (refusal) {
+                await this.answer(refusal.caught, interaction as ValidInteractionTypes, routeId, sender, report);
+                return;
             }
             await handler.execute();
+            report('handled');
         } catch (caught) {
-            await handleInteractionFault(caught, interaction as ValidInteractionTypes, this.core, sender);
+            await this.answer(caught, interaction as ValidInteractionTypes, routeId, sender, report);
+        }
+    }
+
+    // reports in a finally, so a throw from the boundary still publishes
+    private async answer(
+        caught: unknown,
+        interaction: ValidInteractionTypes,
+        routeId: string,
+        sender: ReplySender | undefined,
+        report: (outcome: DispatchOutcome) => void
+    ): Promise<void> {
+        try {
+            await handleInteractionFault(caught, interaction, this.core, routeId, sender);
+        } finally {
+            report(outcomeFor(caught));
+        }
+    }
+
+    private buildHandler(
+        HandlerCtor: HandlerConstructor,
+        interaction: Repliables,
+        dispatch: DispatchContext,
+        key: string,
+        isFallback: boolean
+    ): DispatchedHandler {
+        if (isFallback) {
+            this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
+        }
+        this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
+        // @ts-expect-error TS can't infer the type of interaction here
+        return new HandlerCtor(interaction, this.core, dispatch);
+    }
+
+    private async runMiddlewares(interaction: Repliables): Promise<void> {
+        for (const { ctor } of this.middlewares) {
+            const middleware = new ctor(interaction, this.core);
+            await middleware.execute();
+        }
+    }
+
+    // null when the gates passed. the caller answers the refusal, so one code path reports and replies
+    private async gateRefusal(
+        HandlerCtor: HandlerConstructor,
+        interaction: Repliables,
+        routeId: string | null
+    ): Promise<{ caught: unknown } | null> {
+        const monitor = slowGateMonitor();
+        try {
+            await runHandlerGates(
+                HandlerCtor,
+                interactionGateContext(interaction, this.core),
+                routeId ?? undefined,
+                monitor?.observe
+            );
+            return null;
+        } catch (caught) {
+            return { caught };
+        } finally {
+            // a refusing gate ate budget too, report either way
+            monitor?.report(routeId);
         }
     }
 
@@ -540,42 +625,48 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
+            InteractionRoutes.Slash,
             () => route,
             (key) => this.slashMap.get(key)
         );
     }
 
     private async handleButton(interaction: ButtonInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.buttonMap, 'Button');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.Button, () => this.buttonMap);
     }
 
     private async handleModal(interaction: ModalSubmitInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.modalMap, 'Modal');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.Modal, () => this.modalMap);
     }
 
     private async handleStringSelectMenu(interaction: StringSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.stringSelectMap, 'String select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.StringMenu, () => this.stringSelectMap);
     }
 
     private async handleUserSelectMenu(interaction: UserSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.userSelectMap, 'User select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.UserMenu, () => this.userSelectMap);
     }
 
     private async handleRoleSelectMenu(interaction: RoleSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.roleSelectMap, 'Role select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.RoleMenu, () => this.roleSelectMap);
     }
 
     private async handleChannelSelectMenu(interaction: ChannelSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.channelSelectMap, 'Channel select menu');
+        await this.handleCustomIdInteraction(interaction, InteractionRoutes.ChannelMenu, () => this.channelSelectMap);
     }
 
     private async handleMentionableSelectMenu(interaction: MentionableSelectMenuInteraction): Promise<void> {
-        await this.handleCustomIdInteraction(interaction, () => this.mentionableSelectMap, 'Mentionable select menu');
+        await this.handleCustomIdInteraction(
+            interaction,
+            InteractionRoutes.MentionableMenu,
+            () => this.mentionableSelectMap
+        );
     }
 
     private async handleMessageContextMenu(interaction: MessageContextMenuCommandInteraction): Promise<void> {
         await this.processInteraction(
             interaction,
+            InteractionRoutes.MessageContextMenu,
             () => interaction.commandName,
             (key) => this.messageContextMenuMap.get(key)
         );
@@ -584,6 +675,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private async handleUserContextMenu(interaction: UserContextMenuCommandInteraction): Promise<void> {
         await this.processInteraction(
             interaction,
+            InteractionRoutes.UserContextMenu,
             () => interaction.commandName,
             (key) => this.userContextMenuMap.get(key)
         );
@@ -593,6 +685,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const route = slashRouteOf(interaction);
         await this.processInteraction(
             interaction,
+            InteractionRoutes.Autocomplete,
             () => route,
             (key) => this.autocompleteMap.get(key),
             UnhandledAutocomplete
