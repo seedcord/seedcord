@@ -52,7 +52,7 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
 
     /** The host, typed to the transport whose `Plugin` base this class extends. */
     protected get core(): TCore {
-        // safe, each transport binds TCore to the Core its own host satisfies
+        // justified: each transport binds TCore to the Core its own host satisfies
         return this.host as TCore;
     }
 
@@ -113,25 +113,20 @@ export type PluginLike = Pick<
     'init' | 'ready' | 'dispose' | 'logger' | 'onHmr' | typeof resolvedSpecSlot | typeof pluginContextSlot
 >;
 
-/**
- * Constructor type for plugins that can accept extra arguments after Core.
- *
- * The first parameter stays untyped here, and `CoreParamAssert` checks it at the attach call so a
- * mismatch reports the plugin by name. Attach call sites still infer the concrete subclass tuple
- * for the trailing args.
- *
- * @internal
- */
+// a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
+// `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
+/** @internal */
 export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: any[]) => TPlugin;
 
 /** @internal */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;
 
-interface CoreParamTooNarrow {
-    ERROR_plugin_constructor_must_take_CoreBase: never;
-}
+type CoreParamTooNarrow = Record<
+    'this plugin constructor must take CoreBase as its first parameter and read the transport Core off this.core',
+    never
+>;
 
-// a narrowed first parameter fails `CoreBase extends Param`. read the transport Core off `this.core`.
+// a narrowed first parameter fails `CoreBase extends Param`
 /** @internal */
 export type CoreParamAssert<Ctor extends PluginCtor> = CoreBase extends ConstructorParameters<Ctor>[0]
     ? unknown

@@ -123,7 +123,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      *
      * A plugin declaring a `transport` or `runtime` this host does not run is a compile error on
      * this call. An edge host takes no plugins at all. A plugin constructor narrowing its first
-     * parameter past `CoreBase` is a compile error here too, read the transport `Core` off `this.core`.
+     * parameter past `CoreBase` is a compile error here too. Read the transport `Core` off `this.core`.
      *
      * @typeParam Key - The property name for accessing the plugin
      * @typeParam Ctor - The plugin constructor type

@@ -11,8 +11,7 @@ const CONTROL_CHAR = 0x20;
 const HEX_RADIX = 16;
 
 interface AttachedPlugins {
-    // relative to the generated file, which sits at config.root
-    readonly specifier: string;
+    readonly specifier: string; // relative to the generated file at config.root
     readonly keys: readonly string[];
 }
 

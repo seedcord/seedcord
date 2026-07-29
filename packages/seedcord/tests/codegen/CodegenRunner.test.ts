@@ -91,7 +91,6 @@ function invalidRunner(root: string, logger: ILogger): CodegenRunner {
     return new CodegenRunner(locator, configLoader, moduleLoader, new AugmentationBuilder(logger), logger);
 }
 
-// instance double carrying attach keys, with the bot entry at an arbitrary path under or beside root.
 function pluginRunner(root: string, instance: string, pluginKeys: readonly string[], logger: ILogger): CodegenRunner {
     const locator = { locate: () => resolve(root, 'seedcord.config.ts') } as unknown as ConfigLocator;
     const configLoader = { load: () => Promise.resolve({ root, instance }) } as unknown as ConfigLoader;

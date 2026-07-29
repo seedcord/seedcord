@@ -41,17 +41,17 @@ export type Transport = TypedExclude<NonNullable<PluginOptions['transport']>, 'a
 /** @internal the runtime a bot runs */
 export type Runtime = TypedExclude<NonNullable<PluginOptions['runtime']>, 'any'>;
 
-interface TransportMismatch<PluginT extends string, BotT extends string> {
-    ERROR_plugin_transport_does_not_match_this_bot: { plugin: PluginT; bot: BotT };
-}
+type TransportMismatch<PluginT extends string, BotT extends string> = Record<
+    `this plugin declares transport '${PluginT}' but this bot runs '${BotT}'`,
+    never
+>;
 
-interface RuntimeMismatch<PluginRt extends string, BotRt extends string> {
-    ERROR_plugin_runtime_does_not_match_this_bot: { plugin: PluginRt; bot: BotRt };
-}
+type RuntimeMismatch<PluginRt extends string, BotRt extends string> = Record<
+    `this plugin declares runtime '${PluginRt}' but this bot runs '${BotRt}'`,
+    never
+>;
 
-interface EdgePluginsUnsupported {
-    ERROR_edge_plugins_arrive_post_v1: never;
-}
+type EdgePluginsUnsupported = Record<'an edge bot takes no plugins until edge support ships after v1', never>;
 
 type BrandTransport<Plug> = Plug extends { readonly __transport?: infer T extends string } ? T : 'any';
 type BrandRuntime<Plug> = Plug extends { readonly __runtime?: infer R extends string } ? R : 'any';

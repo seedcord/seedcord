@@ -37,8 +37,8 @@ interface ScanResult {
     pluginKeys: readonly string[];
 }
 
-// the generated file sits at config.root and TypeScript resolves it there, so the bot entry is
-// relative to that. extensionless because the emitted import is type-only under bundler resolution.
+// relative to config.root, where the generated file sits. extensionless resolves under
+// moduleResolution bundler, which a seedcord project sets.
 function botSpecifier(root: string, instance: string): string {
     const posix = relative(root, instance).split(sep).join('/').replace(ENTRY_EXTENSION, '');
     return posix.startsWith('.') ? posix : `./${posix}`;

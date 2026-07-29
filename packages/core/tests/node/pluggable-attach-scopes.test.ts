@@ -176,7 +176,7 @@ describe('attaching a plugin that declares options', () => {
     it('rejects a constructor narrowing its core parameter past CoreBase', () => {
         const host = new TestHost();
 
-        // @ts-expect-error NarrowedCtor asks for a Core the base does not promise
+        // @ts-expect-error NarrowedCtor requires a narrower Core than CoreBase
         host.attach('narrow', NarrowedCtor);
     });
 
