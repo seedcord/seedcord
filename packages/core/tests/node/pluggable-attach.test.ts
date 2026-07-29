@@ -50,7 +50,7 @@ class TestPlugin extends Plugin {
     public onDispose?: () => void;
 }
 
-class TestHost extends Pluggable {
+class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config: Config;
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;

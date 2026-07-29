@@ -28,9 +28,9 @@ class Narrowed extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
 }
 
 describe('plugin brands', () => {
-    it('defaults both axis brands to both', () => {
-        expectTypeOf<Defaults['__transport']>().toEqualTypeOf<'both' | undefined>();
-        expectTypeOf<Defaults['__runtime']>().toEqualTypeOf<'both' | undefined>();
+    it('defaults both axis brands to any', () => {
+        expectTypeOf<Defaults['__transport']>().toEqualTypeOf<'any' | undefined>();
+        expectTypeOf<Defaults['__runtime']>().toEqualTypeOf<'any' | undefined>();
     });
 
     it('carries the declared axis literals', () => {

@@ -22,7 +22,14 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         super('Startup', PHASE_ORDER, StartupPhase);
     }
 
-    /** Adds a startup-phase task. @param timeoutMs - Task timeout in ms. {@default 10000} */
+    /**
+     * Adds a startup-phase task.
+     *
+     * @param phase - The startup phase to run the task in.
+     * @param taskName - A descriptive name for the task.
+     * @param task - The async function to run.
+     * @param timeoutMs - Task timeout in ms. {@default `10000` }
+     */
     public override addTask(
         phase: StartupPhase,
         taskName: string,
