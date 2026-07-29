@@ -27,7 +27,7 @@ import type { SeedcordInstance } from '@seedcord/types/internal';
  * The gateway bot host. Opens a discord.js gateway session, discovers handlers, and runs
  * coordinated startup and shutdown. Attach plugins with `attach()`.
  */
-export class Seedcord extends Pluggable implements Core, SeedcordInstance {
+export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, SeedcordInstance {
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;

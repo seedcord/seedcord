@@ -88,13 +88,21 @@ export abstract class Plugin<Opts extends PluginOptions = {}> implements Initial
 }
 
 /** @internal */
-export function resolvedLifecycleSpecOf(plugin: Plugin): ResolvedPluginLifecycleSpec {
+export function resolvedLifecycleSpecOf(plugin: PluginLike): ResolvedPluginLifecycleSpec {
     return plugin[resolvedSpecSlot];
 }
 
 export type { PluginContext, PluginCapabilityTypes } from './context';
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
+
+// a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
+// are mutually unassignable. every member here must stay Opts-independent.
+/** @internal */
+export type PluginLike = Pick<
+    Plugin,
+    'init' | 'ready' | 'dispose' | 'logger' | 'onHmr' | typeof resolvedSpecSlot | typeof pluginContextSlot
+>;
 
 /**
  * Constructor type for plugins that can accept extra arguments after Core.
@@ -106,7 +114,7 @@ export type { PluginOptions } from './options';
  *
  * @internal
  */
-export type PluginCtor<TPlugin extends Plugin = Plugin> = new (...args: any[]) => TPlugin;
+export type PluginCtor<TPlugin extends PluginLike = PluginLike> = new (...args: any[]) => TPlugin;
 
 /** @internal */
 export type PluginArgs<Ctor extends PluginCtor> = Tail<ConstructorParameters<Ctor>>;

@@ -41,6 +41,8 @@ const DEFAULT_PORT = 3000;
 const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
 const DRAIN_TIMEOUT_MS = 10_000;
 
+type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ? 'edge' : 'server';
+
 /**
  * The HTTP-interactions bot host, a long-running node server around the engine.
  *
@@ -48,7 +50,10 @@ const DRAIN_TIMEOUT_MS = 10_000;
  * `start(port)`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
  * `createSeedcord` from a generated entry.
  */
-export class Seedcord extends Pluggable implements Core, SeedcordInstance {
+export class Seedcord<Cfg extends HttpConfig = HttpConfig>
+    extends Pluggable<'http', RuntimeOfConfig<Cfg>>
+    implements Core, SeedcordInstance
+{
     // the CLI reads these to detect and augment the instance
     /** @internal */
     public readonly [SeedcordBrand] = true;
@@ -78,7 +83,7 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     private requestedPort = DEFAULT_PORT;
     private fetchedUsername?: string | undefined;
 
-    constructor(public readonly config: HttpConfig) {
+    constructor(public readonly config: Cfg) {
         super(new CoordinatedShutdown(), new CoordinatedStartup());
 
         installNodeDefaults(config.logger);
@@ -119,7 +124,7 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     /**
      * Starts the host and runs the startup tasks.
      *
-     * @param port - The port the interaction server binds. {@default `3000`}
+     * @param port - The port the interaction server binds. {@default `3000` }
      */
     public async start(port = DEFAULT_PORT): Promise<this> {
         this.requestedPort = port;

@@ -14,12 +14,13 @@ import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import type { Config, IRateLimiter, Store } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
 import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
-import type { PluginArgs, PluginCtor, Plugin } from '@src/plugin/Plugin';
+import type { Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
+import type { PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
 import type { Bus } from '@subscribers/Bus';
 
 interface Attachment {
     readonly key: string;
-    readonly instance: Plugin;
+    readonly instance: PluginLike;
 }
 
 /**
@@ -28,7 +29,8 @@ interface Attachment {
  * Plugins are attached during configuration and initialized during startup, sequentially in attach
  * order within each phase. Not constructed directly, the host is a transport `Seedcord` class.
  */
-export abstract class Pluggable implements CoreBase {
+// no defaults, a default runtime of the full union contains 'edge' and RuntimeAssert rejects every plugin on that
+export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
@@ -41,7 +43,7 @@ export abstract class Pluggable implements CoreBase {
 
     protected isInitialized = false;
     protected startFailed = false;
-    protected readonly plugins: Plugin[] = [];
+    protected readonly plugins: PluginLike[] = [];
 
     private readonly pluginLogger = new Logger('Plugins');
 
@@ -114,6 +116,9 @@ export abstract class Pluggable implements CoreBase {
      * available as a property on `core`. Augment the transport's `Core` interface with the plugin
      * type for intellisense.
      *
+     * A plugin declaring a `transport` or `runtime` this host does not run is a compile error on
+     * this call. An edge host takes no plugins at all.
+     *
      * @typeParam Key - The property name for accessing the plugin
      * @typeParam Ctor - The plugin constructor type
      * @param key - Property name to access the plugin instance
@@ -129,7 +134,7 @@ export abstract class Pluggable implements CoreBase {
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
         key: Key,
-        Plugin: Ctor,
+        Plugin: Ctor & TransportAssert<InstanceType<Ctor>, BotT> & RuntimeAssert<InstanceType<Ctor>, BotRt>,
         ...args: PluginArgs<Ctor>
     ): this & Record<Key, InstanceType<Ctor>> {
         if (this.isInitialized) {
@@ -147,7 +152,7 @@ export abstract class Pluggable implements CoreBase {
         return Object.assign(this, { [key]: instance } as Record<Key, InstanceType<Ctor>>);
     }
 
-    private finalizeContext(key: string, instance: Plugin): void {
+    private finalizeContext(key: string, instance: PluginLike): void {
         const caps = this.pluginCapabilities();
         const readToken = (): string | undefined => this.pluginCapabilities().token;
         const ctx: StoredPluginContext = {
