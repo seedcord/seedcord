@@ -8,6 +8,7 @@ import { Pluggable } from '@node/Pluggable';
 import { Plugin } from '@src/plugin/Plugin';
 import { Bus } from '@subscribers/Bus';
 
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { Config, IRateLimiter } from '@seedcord/types';
 import type { Runtime } from '@src/plugin/options';
 
@@ -41,6 +42,33 @@ class HttpScoped extends Plugin<{ transport: 'http'; runtime: 'server'; needs: '
 
 class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server'; needs: 'rest' }> {
     public logger = new Logger('FullyScoped');
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+interface TransportCore extends CoreBase {
+    readonly extra: string;
+}
+
+class NarrowedCtor extends Plugin<{ transport: 'gateway' }> {
+    public logger = new Logger('NarrowedCtor');
+    constructor(host: TransportCore) {
+        super(host);
+    }
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
+    public logger = new Logger('WidenedCtor');
+    constructor(
+        host: CoreBase,
+        public readonly options: { readonly dir: string }
+    ) {
+        super(host);
+    }
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -143,6 +171,21 @@ describe('attaching a plugin that declares options', () => {
 
         // @ts-expect-error a host that might be edge takes no plugins
         host.attach('any', NeedsScoped);
+    });
+
+    it('rejects a constructor narrowing its core parameter past CoreBase', () => {
+        const host = new TestHost();
+
+        // @ts-expect-error NarrowedCtor asks for a Core the base does not promise
+        host.attach('narrow', NarrowedCtor);
+    });
+
+    it('accepts a constructor taking CoreBase with trailing options', () => {
+        const host = new TestHost();
+
+        const attached = host.attach('wide', WidenedCtor, { dir: './services' });
+
+        expect(attached.wide.options.dir).toBe('./services');
     });
 
     it('rejects a class that carries no plugin brand', () => {

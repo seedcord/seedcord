@@ -2,9 +2,9 @@ import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { ShutdownPhase } from '@seedcord/core/node/internal';
-import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
@@ -19,7 +19,7 @@ import { MongoService } from './MongoService';
 import type { MongoServiceConstructor } from './MongoService';
 import type { MongoOptions } from './types/MongoOptions';
 import type { MongoServices } from './types/MongoServices';
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Mongoose } from 'mongoose';
 
@@ -34,7 +34,7 @@ interface MongoArtifact {
  * Manages MongoDB connections, service loading, and provides type-safe
  * access to database services through service registration decorators.
  */
-export class Mongo extends Plugin {
+export class Mongo extends Plugin<{ transport: 'gateway' }> {
     public readonly logger = new Logger('Mongo');
     private isInitialised = false;
     private servicesReady = false;
@@ -62,10 +62,10 @@ export class Mongo extends Plugin {
     private readonly hmrHandler?: HmrModuleHandler<MongoServiceConstructor, void, MongoArtifact>;
 
     constructor(
-        public readonly core: Core,
+        host: CoreBase,
         private readonly options: MongoOptions
     ) {
-        super(core);
+        super(host);
         this.uri = options.uri;
 
         this.core.shutdown.addTask(

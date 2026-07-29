@@ -2,9 +2,9 @@ import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { ShutdownPhase } from '@seedcord/core/node/internal';
-import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
@@ -21,7 +21,7 @@ import type { KyselyServiceConstructor } from './KpgService';
 import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigration';
 import type { KpgOptions } from './types/KpgOptions';
 import type { KpgServices } from './types/KpgServices';
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { MigrationInfo } from 'kysely/migration';
 
@@ -35,7 +35,7 @@ export interface KyselyArtifact {
  * Sets up the connection pool, applies migrations, and registers decorated
  * services so the core can resolve them.
  */
-export class KyselyPg<Database extends object> extends Plugin {
+export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gateway' }> {
     public readonly logger = new Logger('KyselyPg');
     private isInitialised = false;
     private servicesReady = false;
@@ -61,11 +61,11 @@ export class KyselyPg<Database extends object> extends Plugin {
     }
 
     constructor(
-        public readonly core: Core,
+        host: CoreBase,
         private readonly options: KpgOptions
     ) {
-        super(core);
-        this.serviceRegistry = new KpgServiceRegistry(this, core, this.logger);
+        super(host);
+        this.serviceRegistry = new KpgServiceRegistry(this, this.core, this.logger);
         this.databaseBootstrapper = new KpgDatabaseBootstrapper(this.logger);
         this.core.shutdown.addTask(
             ShutdownPhase.Disconnect,

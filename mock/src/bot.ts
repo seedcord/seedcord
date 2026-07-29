@@ -58,10 +58,4 @@ export const seedcord = new Seedcord({
     name: Vars.dbName
 });
 
-declare module '@seedcord/gateway' {
-    interface Core {
-        db: Mongo;
-    }
-}
-
 export default seedcord;

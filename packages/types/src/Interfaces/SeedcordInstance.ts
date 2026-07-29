@@ -6,6 +6,7 @@ export interface SeedcordInstance {
     readonly version: string; // for `seedcord dev` to show the current version
     readonly username: string | undefined; // the bot's discord username, for the dev status. undefined before login
     readonly augmentTarget: string; // the transport package codegen uses for declare module
+    readonly pluginKeys: readonly string[]; // the attach keys codegen augments Core with
     readonly shutdown: { run(exitCode?: number, exitProcess?: boolean): Promise<void> };
     readonly startup: { abort(): void };
     start(): Promise<unknown>;

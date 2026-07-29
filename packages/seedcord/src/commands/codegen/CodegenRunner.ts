@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -19,13 +19,29 @@ import { renderAugmentation } from './renderAugmentation';
 import type { ScannedCommand } from './AugmentationBuilder';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
-import type { EmojiConfig, ILogger } from '@seedcord/types';
+import type { EmojiConfig, ILogger, TypedOmit } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 
 const OUTPUT_FILENAME = 'seedcord-gen.d.ts';
 
+const ENTRY_EXTENSION = /\.[mc]?[jt]sx?$/;
+
 interface BuilderLike {
     component: { toJSON: () => unknown };
+}
+
+interface ScanResult {
+    commands: ScannedCommand[];
+    emojis: EmojiConfig;
+    augmentTarget: string;
+    pluginKeys: readonly string[];
+}
+
+// the generated file sits at config.root and TypeScript resolves it there, so the bot entry is
+// relative to that. extensionless because the emitted import is type-only under bundler resolution.
+function botSpecifier(root: string, instance: string): string {
+    const posix = relative(root, instance).split(sep).join('/').replace(ENTRY_EXTENSION, '');
+    return posix.startsWith('.') ? posix : `./${posix}`;
 }
 
 /**
@@ -53,8 +69,11 @@ export class CodegenRunner {
 
     public async run(check: boolean): Promise<void> {
         const config = await this.loadConfig();
-        const { commands, emojis, augmentTarget } = await this.scan(config);
-        const rendered = renderAugmentation(this.generator.generate(commands, emojis), augmentTarget);
+        const { commands, emojis, augmentTarget, pluginKeys } = await this.scan(config);
+        const rendered = renderAugmentation(this.generator.generate(commands, emojis), augmentTarget, {
+            specifier: botSpecifier(config.root, config.instance),
+            keys: pluginKeys
+        });
         const outputPath = resolve(config.root, OUTPUT_FILENAME);
 
         if (check) {
@@ -69,10 +88,8 @@ export class CodegenRunner {
         return this.configLoader.load(this.locator.locate());
     }
 
-    private async scan(
-        config: ResolvedSeedcordDevConfig
-    ): Promise<{ commands: ScannedCommand[]; emojis: EmojiConfig; augmentTarget: string }> {
-        const { commandsDir, emojis, augmentTarget } = await this.resolveInstance(config);
+    private async scan(config: ResolvedSeedcordDevConfig): Promise<ScanResult> {
+        const { commandsDir, emojis, augmentTarget, pluginKeys } = await this.resolveInstance(config);
 
         const commands: ScannedCommand[] = [];
         if (commandsDir) {
@@ -80,7 +97,7 @@ export class CodegenRunner {
                 commands.push(command);
             }
         }
-        return { commands, emojis, augmentTarget };
+        return { commands, emojis, augmentTarget, pluginKeys };
     }
 
     // the bot's own scan runs under tsx/vite, so its import() handles .ts. codegen runs under plain node, so
@@ -116,7 +133,7 @@ export class CodegenRunner {
 
     private async resolveInstance(
         config: ResolvedSeedcordDevConfig
-    ): Promise<{ commandsDir: string | undefined; emojis: EmojiConfig; augmentTarget: string }> {
+    ): Promise<TypedOmit<ScanResult, 'commands'> & { commandsDir: string | undefined }> {
         // loading the instance constructs the bot to read commands.path and emojis, so its lifecycle and plugin
         // setup logs follow this line. codegen never starts the bot, nothing logs in or connects.
         this.logger.info('Loading instance to resolve the commands directory');
@@ -131,7 +148,8 @@ export class CodegenRunner {
         return {
             commandsDir: commandsPath ? resolve(process.cwd(), commandsPath) : undefined,
             emojis: instance.config.bot.emojis ?? {},
-            augmentTarget: instance.augmentTarget
+            augmentTarget: instance.augmentTarget,
+            pluginKeys: instance.pluginKeys
         };
     }
 
