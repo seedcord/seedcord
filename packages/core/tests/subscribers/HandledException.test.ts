@@ -1,5 +1,3 @@
-import '../utils/mock-env';
-
 import { randomUUID } from 'node:crypto';
 
 import { Notice } from '@seedcord/core';
@@ -8,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { HandledException } from '@subscribers/default/HandledException';
 
-import type { Core } from '@interfaces/Core';
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { ReplyResponse } from '@seedcord/types';
 import type { EventFaultSource, FaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
@@ -45,7 +43,7 @@ const eventSource: EventFaultSource = {
 };
 
 // justified: the Subscriber base only stores core
-const core = {} as unknown as Core;
+const core = {} as unknown as CoreBase;
 
 function reportText(denial: Notice, source: FaultSource): string {
     const report = new HandledException({ denial, uuid: randomUUID(), source }, core).report();

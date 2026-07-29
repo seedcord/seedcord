@@ -1,5 +1,6 @@
-import { BuilderComponent } from '@seedcord/core';
 import { stripAnsi } from '@seedcord/utils';
+
+import { BuilderComponent } from '@components/Component';
 
 import { jsonAttachment, neutralizeFences, WebhookSeparator } from '../bases/webhookHelpers';
 import { WebhookLog } from '../bases/WebhookLog';
@@ -8,7 +9,8 @@ import { WebhookUrl } from '../decorators/WebhookUrl';
 
 import type { WebhookReport } from '../bases/WebhookLog';
 import type { AllSubscriptions, FaultSource } from '../types/Subscriptions';
-import type { Notice } from '@seedcord/core';
+import type { CoreBase } from '@interfaces/CoreBase';
+import type { Notice } from '@stops/Notice';
 
 /**
  * Default subscriber that delivers a reported `Notice` (`report: true`) to a webhook with the
@@ -20,7 +22,7 @@ import type { Notice } from '@seedcord/core';
  */
 @Subscribe('handledException')
 @WebhookUrl('HANDLED_EXCEPTION_WEBHOOK_URL')
-export class HandledException extends WebhookLog<'handledException'> {
+export class HandledException extends WebhookLog<'handledException', CoreBase> {
     report(): WebhookReport {
         return {
             username: 'Handled Exception',

@@ -1,5 +1,5 @@
 import { DiscordAPIError, REST } from '@discordjs/rest';
-import { BaseHandler, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
+import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
 import { runHandlerGates, slowGateMonitor } from '@seedcord/core/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -13,7 +13,7 @@ import type { ResolvedRoute } from './resolve';
 import type { ValidInteractionTypes } from '@handlers/interactionTypes';
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
-import type { IRateLimiter, RenderContext } from '@seedcord/types';
+import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
 // lazy because the logger reads the environment, which binds after this module loads
 let dispatchLogger: Logger | undefined;
@@ -28,9 +28,15 @@ interface HttpHandler {
 
 type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: DispatchContext) => HttpHandler;
 
+// a writable view of Core, so the bus assignment below needs no second cast
+type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
+
 export function createCore(config: HttpConfig, token: string): Core {
     const rateLimiter: IRateLimiter = config.store ?? new MemoryRateLimiter();
-    return { config, rateLimiter, rest: new REST().setToken(token) };
+    // justified: bus completes the shape on the next line, and the Bus reads core at dispatch
+    const draft = { config, rateLimiter, rest: new REST().setToken(token) } as CoreDraft;
+    draft.bus = new Bus(draft);
+    return draft;
 }
 
 function isHandlerCtor(value: unknown): value is HandlerCtor {

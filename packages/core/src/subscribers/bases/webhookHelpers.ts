@@ -1,6 +1,7 @@
-import { BuilderComponent } from '@seedcord/core';
 import { filterCirculars, stripAnsi } from '@seedcord/utils';
 import { SeparatorSpacingSize } from 'discord-api-types/v10';
+
+import { BuilderComponent } from '@components/Component';
 
 import type { WebhookFile } from './WebhookSender';
 
@@ -14,7 +15,7 @@ export function isDiscordWebhookUrl(value: string): boolean {
 
 export function jsonAttachment(name: string, description: string, data: unknown): WebhookFile {
     const content = filterCirculars(data);
-    return { name, description, data: Buffer.from(JSON.stringify(content, undefined, 2), 'utf8') };
+    return { name, description, data: JSON.stringify(content, undefined, 2) };
 }
 
 // the report renders inside a ``` fence, break any triple-backtick run to keep it from closing early

@@ -58,7 +58,6 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "discord-api-types": "catalog:deps",
         "envapt": "catalog:deps"
     },
     "devDependencies": {

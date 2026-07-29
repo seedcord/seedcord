@@ -5,20 +5,14 @@ import { describe, it, expect } from 'vitest';
 import { Bus } from '@subscribers/Bus';
 import { Subscribe } from '@subscribers/decorators/Subscribe';
 import { Subscriber } from '@subscribers/Subscriber';
-import '../utils/mock-env';
 
-import type { Core } from '@interfaces/Core';
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
-
-// justified: exposes the private subscribersMap so the test can inject a subscriber without disk I/O.
-interface PrivateBus {
-    subscribersMap: Map<string, { ctor: unknown; frequency: string }[]>;
-}
 
 describe("Bus 'once' re-entrancy", () => {
     it('runs a once subscriber a single time even if it re-publishes the same event', async () => {
-        // justified: minimal Core stub, Bus only reads config.subscribers.path at construction.
-        const core = { config: { subscribers: { path: null } } } as unknown as Core;
+        // justified: the subscriber reads core.bus to re-publish, nothing else on core
+        const core = {} as unknown as CoreBase;
         const bus = new Bus(core);
         (core as { bus: Bus }).bus = bus;
 
@@ -28,8 +22,8 @@ describe("Bus 'once' re-entrancy", () => {
         };
 
         let runs = 0;
-        @Subscribe('unknownException')
-        class ReentrantOnce extends Subscriber<'unknownException'> {
+        @Subscribe('unknownException', { frequency: 'once' })
+        class ReentrantOnce extends Subscriber<'unknownException', CoreBase> {
             public execute(): Promise<void> {
                 runs += 1;
                 // re-publish while still executing, the old fire-then-mark order ran this twice
@@ -38,9 +32,12 @@ describe("Bus 'once' re-entrancy", () => {
             }
         }
 
-        (bus as unknown as PrivateBus).subscribersMap.set('unknownException', [
-            { ctor: ReentrantOnce, frequency: 'once' }
-        ]);
+        bus.register({
+            keys: ['unknownException'],
+            frequency: 'once',
+            resolve: () => ReentrantOnce,
+            ctor: ReentrantOnce
+        });
 
         bus.publish('unknownException', payload);
         await new Promise((resolve) => setTimeout(resolve, 20));

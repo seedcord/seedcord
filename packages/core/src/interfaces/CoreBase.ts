@@ -1,4 +1,5 @@
 import type { Config, IRateLimiter } from '@seedcord/types';
+import type { Bus } from '@subscribers/Bus';
 
 /**
  * The transport-agnostic slice of the running framework, what core code (gates, notices, plugins'
@@ -10,4 +11,6 @@ export interface CoreBase {
     readonly config: Config;
     /** Sliding-window rate limiting, the `Cooldown` gate's backend and a public direct-use API. */
     readonly rateLimiter: IRateLimiter;
+    /** Publish and subscribe to framework and application events. */
+    readonly bus: Bus;
 }

@@ -15,6 +15,7 @@ import type { Config, IRateLimiter, Store } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
 import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
 import type { PluginArgs, PluginCtor, Plugin } from '@src/plugin/Plugin';
+import type { Bus } from '@subscribers/Bus';
 
 interface Attachment {
     readonly key: string;
@@ -30,6 +31,7 @@ interface Attachment {
 export abstract class Pluggable implements CoreBase {
     public abstract readonly config: Config;
     public abstract readonly rateLimiter: IRateLimiter;
+    public abstract readonly bus: Bus;
 
     /** @see {@link CoordinatedShutdown} */
     public readonly shutdown: CoordinatedShutdown;

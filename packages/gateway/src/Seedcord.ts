@@ -1,10 +1,12 @@
+import { Bus } from '@seedcord/core';
 import { HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     HealthCheck,
     CoordinatedShutdown,
     CoordinatedStartup,
     StartupPhase,
-    Pluggable
+    Pluggable,
+    SubscriberLoader
 } from '@seedcord/core/node/internal';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
@@ -13,7 +15,6 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { Envapter } from 'envapt';
 
 import { Bot } from './bot/Bot';
-import { Bus } from './subscribers/Bus';
 import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
@@ -41,6 +42,8 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     /** @see {@link Bus} */
     public readonly bus: Bus;
 
+    private readonly subscribers: SubscriberLoader;
+
     /** @see {@link Bot} */
     public readonly bot: Bot;
 
@@ -60,6 +63,7 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
         this.hmrManager = new HmrManager();
         this.hmrManager.init();
         this.bus = new Bus(this);
+        this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.healthCheck = HealthCheck.fromOption(this.shutdown, config.healthCheck);
@@ -86,7 +90,7 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
 
         this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
             this.bus.logger.utils.initialization('Subscribers', 'start');
-            await this.bus.init();
+            await this.subscribers.init();
             this.bus.logger.utils.initialization('Subscribers', 'end');
         });
 
@@ -126,7 +130,7 @@ export class Seedcord extends Pluggable implements Core, SeedcordInstance {
     private registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
             this.hmrManager.register(this.bot);
-            this.hmrManager.register(this.bus);
+            this.hmrManager.register(this.subscribers);
             for (const plugin of this.plugins) {
                 this.hmrManager.register(plugin);
             }

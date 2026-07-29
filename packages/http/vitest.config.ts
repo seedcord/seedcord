@@ -22,6 +22,7 @@ export default createVitestConfig(import.meta.url, {
                 test: {
                     name: 'workerd',
                     testTimeout: 10_000,
+                    setupFiles: ['./tests/setup.ts'],
                     include: ['tests/**/*.test.ts'],
                     exclude: ['tests/node/**'],
                     deps: {
@@ -44,6 +45,7 @@ export default createVitestConfig(import.meta.url, {
                     name: 'node',
                     environment: 'node',
                     testTimeout: 10_000,
+                    setupFiles: ['./tests/setup.ts'],
                     include: ['tests/node/**/*.test.ts']
                 }
             }

@@ -1,4 +1,5 @@
 import { CustomId } from '@seedcord/core';
+import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
 import { buildRouteMaps, resolve } from '@src/dispatch/resolve';
@@ -37,6 +38,24 @@ describe('resolve', () => {
 
         expect(match).toMatchObject({ kind: 'slash', routeId: 'slash:ban' });
         await expect(match?.load()).resolves.toEqual({ name: 'Ban' });
+    });
+
+    it('translates a row whose module throws while importing, keeping the cause', async () => {
+        const boom = new Error('module init exploded');
+        const maps = buildRouteMaps(
+            manifestWith({
+                commandRoutes: [
+                    { name: 'ban', type: 1, exportName: 'Ban', from: FROM, load: () => Promise.reject(boom) }
+                ]
+            })
+        );
+
+        const match = resolve(maps, slash('ban'));
+
+        const caught: unknown = await match?.load().catch((error: unknown) => error);
+        expect(isSeedcordError(caught, undefined, SeedcordErrorCode.RouteModuleLoadFailed)).toBe(true);
+        expect((caught as Error).message).toContain(FROM);
+        expect((caught as Error).cause).toBe(boom);
     });
 
     it('resolves the unhandled default for a command name with no row', () => {

@@ -7,8 +7,8 @@ import { cardJson } from '../utils/cardText';
 import { TestNotice } from '../utils/TestNotice';
 
 import type { Core } from '@interfaces/Core';
+import type { SubscriptionData } from '@seedcord/core';
 import type { Repliables } from '@src/handlers/interactionTypes';
-import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface extractErrorResponse reads.
@@ -60,7 +60,7 @@ describe('extractErrorResponse', () => {
         });
 
         expect(publish).toHaveBeenCalledTimes(1);
-        const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['handledException']];
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
         expect(event).toBe('handledException');
         expect(payload.denial).toBe(denial);
         expect(payload.uuid).toBe(result.uuid);
@@ -89,7 +89,7 @@ describe('extractErrorResponse', () => {
 
         extractErrorResponse(new Error('a bug'), mockCore(publish), { route: 'scalar-probe', guild, user });
 
-        const [, payload] = publish.mock.calls[0] as [string, AllSubscriptions['unknownException']];
+        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
         expect(payload.guild).toEqual({ id: 'g1', name: 'Guild One' });
         expect(payload.user).toEqual({ id: 'u1', username: 'uname' });
     });
@@ -114,7 +114,7 @@ describe('extractErrorResponse', () => {
             user: null
         });
 
-        const [event, payload] = publish.mock.calls[0] as [string, AllSubscriptions['handledException']];
+        const [event, payload] = publish.mock.calls[0] as [string, SubscriptionData<'handledException'>];
         expect(event).toBe('handledException');
         expect(payload.denial).toBe(denial);
         if (payload.source.kind !== 'event') throw new Error('expected event source');

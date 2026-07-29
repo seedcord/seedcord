@@ -2,6 +2,7 @@ import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { createCore } from './dispatch/dispatchInteraction';
+import { registerSubscribers } from './dispatch/registerSubscribers';
 import { buildRouteMaps } from './dispatch/resolve';
 import { buildEngine } from './engine';
 
@@ -30,5 +31,7 @@ export function createSeedcord(
 ): (request: Request, ctx?: EngineContext) => Promise<Response> {
     const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
     const core = createCore(config, token);
+    core.bus.registerDefaults();
+    registerSubscribers(core.bus, manifest);
     return buildEngine(core, buildRouteMaps(manifest)).handle;
 }

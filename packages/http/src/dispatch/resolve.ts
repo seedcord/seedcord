@@ -98,7 +98,12 @@ function componentMapKey(type: ComponentType): Exclude<ComponentMapKey, 'modal'>
 
 function namedExport(routeId: string, row: RouteModule): () => Promise<unknown> {
     return async () => {
-        const moduleExports = await row.load();
+        let moduleExports: Awaited<ReturnType<typeof row.load>>;
+        try {
+            moduleExports = await row.load();
+        } catch (caught) {
+            throw new SeedcordError(SeedcordErrorCode.RouteModuleLoadFailed, [routeId, row.from], { cause: caught });
+        }
         if (!Object.hasOwn(moduleExports, row.exportName)) {
             throw new SeedcordError(SeedcordErrorCode.InteractionRouteExportMissing, [
                 routeId,

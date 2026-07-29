@@ -16,6 +16,9 @@ export * from './handlers';
 // two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass
 export { RepliableHandler } from '@handlers/RepliableHandler';
 
+// same shadowing reason, these bind the transport Core into the two subscriber bases
+export { Subscriber, WebhookLog } from '@subscribers/index';
+
 export { Gated } from '@src/gates/Gated';
 export type { InteractionGateContext } from '@src/gates/Gate';
 

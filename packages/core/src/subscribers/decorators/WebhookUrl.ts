@@ -1,7 +1,10 @@
-import { WebhookUrlMetadataKey } from '@seedcord/core/internal';
+import 'reflect-metadata';
+
+import { WebhookUrlMetadataKey } from '@src/metadataKeys';
 
 import type { WebhookLog } from '../bases/WebhookLog';
 import type { SubscriptionKey } from '../types/Subscriptions';
+import type { CoreBase } from '@interfaces/CoreBase';
 import type { Constructor } from 'type-fest';
 
 /**
@@ -24,7 +27,9 @@ import type { Constructor } from 'type-fest';
  * ```
  */
 export function WebhookUrl(envKey: string) {
-    return function <HandlerCtor extends Constructor<WebhookLog<SubscriptionKey>>>(constructor: HandlerCtor): void {
+    return function <HandlerCtor extends Constructor<WebhookLog<SubscriptionKey, CoreBase>>>(
+        constructor: HandlerCtor
+    ): void {
         Reflect.defineMetadata(WebhookUrlMetadataKey, envKey, constructor);
     };
 }

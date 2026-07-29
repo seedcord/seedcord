@@ -1,4 +1,4 @@
-import type { Notice } from '@seedcord/core';
+import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
 
 /**
@@ -42,6 +42,7 @@ export interface EventFaultSource {
     raw: unknown;
 }
 
+/** The framework's own subscription keys. */
 interface DefaultSubscriptions {
     /** Triggered when an unhandled exception (a raw non-Notice throw) occurs */
     unknownException: {
@@ -65,6 +66,7 @@ interface DefaultSubscriptions {
  *
  * @example
  * ```typescript
+ * // the transport package your bot installs, '@seedcord/gateway' or '@seedcord/http'
  * declare module '@seedcord/gateway' {
  *   interface Subscriptions {
  *     'userJoin': { userId: string; guildId: string };

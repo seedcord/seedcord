@@ -11,21 +11,32 @@ import '../utils/mock-env';
 
 import type { HmrUpdateEvent } from '@seedcord/types';
 
-interface RegisteredSubscriberHandlerEntry {
-    ctor: new (...args: unknown[]) => unknown;
+interface Registration {
+    ctor?: (new (...args: unknown[]) => unknown) | undefined;
     frequency: string;
 }
 
 interface PrivateBus {
-    subscribersMap: Map<string, RegisteredSubscriberHandlerEntry[]>;
+    subscribersMap: Map<string, Registration[]>;
 }
 
 interface PrivateHmrManager {
     handleUpdate(event: HmrUpdateEvent): Promise<void>;
 }
 
-interface PrivateSeedcordHmr {
+interface PrivateSeedcordInternals {
     hmrManager: PrivateHmrManager;
+    subscribers: { init(): Promise<void>; onHmr(event: HmrUpdateEvent): Promise<void> };
+}
+
+// justified: the loader is private on the host, and it runs discovery and hot reload
+function internalsOf(instance: Seedcord): PrivateSeedcordInternals {
+    return instance as unknown as PrivateSeedcordInternals;
+}
+
+// justified: PrivateBus exposes the private subscribersMap for assertion
+function registrationsOf(instance: Seedcord, key: string): Registration[] | undefined {
+    return (instance.bus as unknown as PrivateBus).subscribersMap.get(key);
 }
 
 describe('Bus Integration', () => {
@@ -63,12 +74,10 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
-        await seedcord.bus.init();
+        await internalsOf(seedcord).subscribers.init();
 
-        // justified: PrivateBus exposes the private subscribersMap for assertion
-        const controller = seedcord.bus as unknown as PrivateBus;
         // unknownException has a default handler (UnknownException), plus our custom one = 2
-        expect(controller.subscribersMap.get('unknownException')).toHaveLength(2);
+        expect(registrationsOf(seedcord, 'unknownException')).toHaveLength(2);
     });
 
     it('should handle HMR updates for subscribers', async () => {
@@ -90,11 +99,9 @@ describe('Bus Integration', () => {
         const config = testConfig({ subscribers: testEnv.resolvePath(subscribersDir) });
 
         seedcord = new Seedcord(config);
-        await seedcord.bus.init();
+        await internalsOf(seedcord).subscribers.init();
 
-        // justified: PrivateBus exposes the private subscribersMap for assertion
-        let controller = seedcord.bus as unknown as PrivateBus;
-        const handlersBefore = controller.subscribersMap.get('unknownException');
+        const handlersBefore = registrationsOf(seedcord, 'unknownException');
 
         expect(handlersBefore).toHaveLength(2);
         const customHandlerBefore = handlersBefore?.[1]?.ctor;
@@ -114,14 +121,12 @@ describe('Bus Integration', () => {
             `
         );
 
-        await seedcord.bus.onHmr({
+        await internalsOf(seedcord).subscribers.onHmr({
             file: filePath,
             type: 'update'
         });
 
-        // justified: re-cast after HMR to read fresh subscribersMap state
-        controller = seedcord.bus as unknown as PrivateBus;
-        const handlersAfter = controller.subscribersMap.get('unknownException');
+        const handlersAfter = registrationsOf(seedcord, 'unknownException');
 
         expect(handlersAfter).toHaveLength(2);
         const customHandlerAfter = handlersAfter?.[1]?.ctor;
@@ -152,10 +157,9 @@ describe('Bus Integration', () => {
         // the test env omits), so let the later phase fail, the wiring we assert has already run
         await seedcord.startup.run().catch(() => undefined);
 
-        const onHmr = vi.spyOn(seedcord.bus, 'onHmr');
+        const { hmrManager, subscribers } = internalsOf(seedcord);
+        const onHmr = vi.spyOn(subscribers, 'onHmr');
         const event: HmrUpdateEvent = { file: filePath, type: 'update' };
-        // justified: reach the private hmrManager to assert the Bus is wired into HMR dispatch
-        const { hmrManager } = seedcord as unknown as PrivateSeedcordHmr;
         await hmrManager.handleUpdate(event);
 
         expect(onHmr).toHaveBeenCalledWith(event);

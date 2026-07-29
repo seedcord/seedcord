@@ -8,6 +8,11 @@ import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-client';
 
+// justified: the loader is private on the host, and it runs discovery plus the webhook verify step
+function loaderOf(instance: Seedcord): { init(): Promise<void> } {
+    return (instance as unknown as { subscribers: { init(): Promise<void> } }).subscribers;
+}
+
 const restMocks = vi.hoisted(() => {
     process.env.MALFORMED_REPORTER_WEBHOOK_URL = 'https://example.com/not-a-webhook';
     process.env.DUPLICATE_A_WEBHOOK_URL = 'https://discord.com/api/webhooks/9/shared-tok';
@@ -66,7 +71,7 @@ describe('Bus webhook reporter registration', () => {
 
         seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
         const warnSpy = vi.spyOn(seedcord.bus.logger, 'warn');
-        await seedcord.bus.init();
+        await loaderOf(seedcord).init();
 
         // justified: PrivateBus exposes the private subscribersMap for assertion
         const bus = seedcord.bus as unknown as PrivateBus;
@@ -92,12 +97,12 @@ describe('Bus webhook reporter registration', () => {
         );
 
         seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
-        await expect(seedcord.bus.init()).rejects.toThrow('MALFORMED_REPORTER_WEBHOOK_URL');
+        await expect(loaderOf(seedcord).init()).rejects.toThrow('MALFORMED_REPORTER_WEBHOOK_URL');
     });
 
     it('throws at verify when a configured webhook does not exist on discord', async () => {
         seedcord = new Seedcord(testConfig({}));
-        await seedcord.bus.init();
+        await loaderOf(seedcord).init();
 
         const { DiscordAPIError } = await import('@discordjs/rest');
         restMocks.getMock.mockRejectedValue(
@@ -134,7 +139,7 @@ describe('Bus webhook reporter registration', () => {
         );
 
         seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
-        await seedcord.bus.init();
+        await loaderOf(seedcord).init();
 
         const { DiscordAPIError } = await import('@discordjs/rest');
         restMocks.getMock.mockRejectedValue(
@@ -145,7 +150,7 @@ describe('Bus webhook reporter registration', () => {
 
     it('warns and continues when discord is unreachable at verify', async () => {
         seedcord = new Seedcord(testConfig({}));
-        await seedcord.bus.init();
+        await loaderOf(seedcord).init();
 
         restMocks.getMock.mockRejectedValue(new TypeError('fetch failed'));
         const warnSpy = vi.spyOn(seedcord.bus.logger, 'warn');
@@ -169,6 +174,6 @@ describe('Bus webhook reporter registration', () => {
         );
 
         seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
-        await expect(seedcord.bus.init()).rejects.toThrow('UndeclaredReporter');
+        await expect(loaderOf(seedcord).init()).rejects.toThrow('UndeclaredReporter');
     });
 });
