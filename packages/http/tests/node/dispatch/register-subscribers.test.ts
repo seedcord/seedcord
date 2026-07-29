@@ -100,7 +100,7 @@ describe('registerSubscribers', () => {
             manifestWith(() => Promise.reject(boom))
         );
 
-        bus.publish('unknownException', payload());
+        bus[PublishDefault]('unknownException', payload());
 
         await vi.waitFor(() => {
             const cause = loggedCause(error);
