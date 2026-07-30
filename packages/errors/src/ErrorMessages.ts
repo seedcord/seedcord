@@ -159,6 +159,10 @@ const messages = {
         'Failed to close the Postgres pool cleanly during shutdown.',
     [SeedcordErrorCode.PluginKyselyServicesNotReady]: () =>
         'Kysely services accessed before the plugin finished initializing.',
+    [SeedcordErrorCode.PluginKyselyConnectionFailed]: (databaseName?: string) =>
+        databaseName ? `Could not connect to Postgres (${databaseName}).` : 'Could not connect to Postgres.',
+    [SeedcordErrorCode.PluginKyselyBootstrapFailed]: (databaseName: string) =>
+        `Failed to ensure database ${databaseName} exists.`,
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>

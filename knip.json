@@ -107,6 +107,7 @@
                 "tests/node/fixtures/**"
             ]
         },
+        "plugins/kysely-postgres": {},
         "plugins/mongoose": {}
     }
 }

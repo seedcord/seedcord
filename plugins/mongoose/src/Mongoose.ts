@@ -37,6 +37,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public readonly logger = new Logger('Mongoose');
     private isInitialised = false;
     private servicesReady = false;
+    private inFlight: Promise<void> | null = null;
     private readonly uri: string;
 
     private readonly _services: Record<string, unknown> = {};
@@ -90,12 +91,18 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.hmrHandler?.handle(event);
     }
 
-    public async init(): Promise<void> {
-        if (this.isInitialised) return;
-        this.isInitialised = true;
+    public init(): Promise<void> {
+        if (this.isInitialised) return Promise.resolve();
+        // racing callers share one attempt, and clearing it on settle means the next call starts a fresh one
+        this.inFlight ??= this.runInit().finally(() => {
+            this.inFlight = null;
+        });
+        return this.inFlight;
+    }
 
-        await this.connect();
+    private async runInit(): Promise<void> {
         try {
+            await this.connect();
             await this.loadServices();
         } catch (caught) {
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
@@ -103,6 +110,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             throw caught;
         }
         this.servicesReady = true;
+        this.isInitialised = true;
     }
 
     public override async dispose(): Promise<void> {
@@ -138,6 +146,10 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async disconnect(): Promise<void> {
+        for (const key of Object.keys(this._services)) Reflect.deleteProperty(this._services, key);
+        this.servicesReady = false;
+        this.isInitialised = false;
+
         this.clearModels();
 
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- connect() may have failed before assigning, so there is nothing to disconnect
@@ -146,8 +158,9 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
-            .catch((err) => {
-                this.logger.error(`Could not disconnect from MongoDB: ${(err as Error).message}`);
+            .catch((err: unknown) => {
+                const error = Error.isError(err) ? err : new Error(String(err));
+                this.logger.error(`Could not disconnect from MongoDB: ${error.message}`);
                 throw new SeedcordError(SeedcordErrorCode.PluginMongooseDisconnectFailed, { cause: err });
             });
     }
@@ -188,11 +201,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         );
     }
 
-    /**
-     * Register hook used by decorated services.
-     *
-     * @internal
-     */
+    /** @internal */
     _register(key: string, instance: unknown): void {
         this._services[key] = instance;
     }

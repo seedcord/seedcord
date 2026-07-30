@@ -13,6 +13,8 @@
   color: 8fbc62
 - name: '📦 plugin-mongoose'
   color: 7fbc62
+- name: '📦 plugin-kysely-postgres'
+  color: 6fbc62
 - name: '📦 errors'
   color: 6ebc62
 - name: '📦 rate-limiter'

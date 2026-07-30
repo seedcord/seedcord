@@ -1050,30 +1050,6 @@ importers:
 
   packages/plugins:
     dependencies:
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../core
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/gateway':
-        specifier: workspace:*
-        version: link:../gateway
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../logger
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1090,21 +1066,6 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../vitest-config
-      '@types/pg':
-        specifier: ^8.20.0
-        version: 8.20.0
-      kysely:
-        specifier: ^0.29.2
-        version: 0.29.2
-      pg:
-        specifier: ^8.21.0
-        version: 8.21.0
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
 
   packages/rate-limiter:
     dependencies:
@@ -1408,6 +1369,67 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
+
+  plugins/kysely-postgres:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@seedcord/gateway':
+        specifier: workspace:*
+        version: link:../../packages/gateway
+      '@seedcord/http':
+        specifier: workspace:*
+        version: link:../../packages/http
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../packages/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../packages/vitest-config
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
+      kysely:
+        specifier: ^0.29.2
+        version: 0.29.2
+      pg:
+        specifier: ^8.21.0
+        version: 8.21.0
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
 
   plugins/mongoose:
     dependencies:

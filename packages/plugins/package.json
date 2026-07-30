@@ -33,49 +33,23 @@
     "scripts": {
         "build": "tsdown",
         "clean": "rm -rf dist",
-        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
-        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
-        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
         "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
-        "kysely": "^0.29.2",
-        "pg": "^8.21.0",
-        "reflect-metadata": "catalog:peer",
         "typescript": "catalog:peer"
-    },
-    "peerDependenciesMeta": {
-        "kysely": {
-            "optional": true
-        },
-        "pg": {
-            "optional": true
-        }
-    },
-    "dependencies": {
-        "@seedcord/core": "workspace:*",
-        "@seedcord/errors": "workspace:*",
-        "@seedcord/logger": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
-        "chalk": "catalog:deps",
-        "envapt": "catalog:deps",
-        "@seedcord/gateway": "workspace:*"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
-        "@types/pg": "^8.20.0",
-        "kysely": "^0.29.2",
-        "pg": "^8.21.0",
-        "reflect-metadata": "catalog:peer",
-        "type-fest": "catalog:deps"
+        "@seedcord/vitest-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",
