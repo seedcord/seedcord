@@ -6,7 +6,7 @@ import { ServiceMetadataKey } from './decorators/RegisterMongooseService';
 
 import type { Mongoose } from './Mongoose';
 import type { MongooseDocument } from './types/MongooseDocument';
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 import type { TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
 
@@ -38,7 +38,7 @@ export abstract class MongooseService<Doc extends MongooseDocument = MongooseDoc
 
     public constructor(
         protected readonly db: Mongoose,
-        protected readonly core: Core
+        protected readonly core: CoreBase
     ) {
         const ctor = this.constructor;
 

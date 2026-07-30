@@ -6,11 +6,11 @@ import { Mongoose } from '@src/Mongoose';
 
 import { TestEnvironment } from './utils/test-env';
 
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 
 describe('Mongoose lifecycle', () => {
     let testEnv: TestEnvironment;
-    let mockCore: Core;
+    let mockCore: CoreBase;
     let servicesDir: string;
 
     beforeEach(async () => {
@@ -18,11 +18,7 @@ describe('Mongoose lifecycle', () => {
         await testEnv.setup();
         await testEnv.createFile('services/.keep', '');
         servicesDir = testEnv.resolvePath('services');
-        mockCore = {
-            shutdown: { addTask: vi.fn() },
-            startup: { addTask: vi.fn() },
-            config: {}
-        } as unknown as Core;
+        mockCore = { config: {} } as unknown as CoreBase;
     });
 
     afterEach(async () => {

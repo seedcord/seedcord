@@ -5,21 +5,17 @@ import { Mongoose } from '@src/Mongoose';
 import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';
 
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 
 describe('Mongoose Plugin Integration', () => {
     let testEnv: TestEnvironment;
     let plugin: Mongoose;
-    let mockCore: Core;
+    let mockCore: CoreBase;
 
     beforeEach(async () => {
         testEnv = new TestEnvironment('mongoose-test-');
         await testEnv.setup();
-        mockCore = {
-            shutdown: { addTask: vi.fn() },
-            startup: { addTask: vi.fn() },
-            config: {}
-        } as unknown as Core;
+        mockCore = { config: {} } as unknown as CoreBase;
     });
 
     afterEach(async () => {

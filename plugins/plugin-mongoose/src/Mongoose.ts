@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
+import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
@@ -33,7 +33,7 @@ interface MongooseArtifact {
  * Manages MongoDB connections, service loading, and provides type-safe
  * access to database services through service registration decorators.
  */
-export class Mongoose extends Plugin<{ transport: 'gateway' }> {
+export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public readonly logger = new Logger('Mongoose');
     private isInitialised = false;
     private servicesReady = false;
