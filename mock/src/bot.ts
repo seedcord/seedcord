@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { resolve } from 'node:path';
 
 import { Seedcord } from '@seedcord/gateway';
-import { Mongoose } from '@seedcord/plugins';
+import { Mongoose } from '@seedcord/plugin-mongoose';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapter } from 'envapt';
 import { Envapt } from 'envapt/legacy';

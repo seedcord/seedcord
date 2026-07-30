@@ -13,6 +13,9 @@
 '📦 plugins':
   - changed-files:
       - any-glob-to-any-file: 'packages/plugins/**'
+'📦 plugin-mongoose':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/plugin-mongoose/**'
 '📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'

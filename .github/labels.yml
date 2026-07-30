@@ -11,6 +11,8 @@
   color: bca562
 - name: '📦 plugins'
   color: 8fbc62
+- name: '📦 plugin-mongoose'
+  color: 7fbc62
 - name: '📦 errors'
   color: 6ebc62
 - name: '📦 rate-limiter'

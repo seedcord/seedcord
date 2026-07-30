@@ -37,12 +37,6 @@
                 "src/**/*.{ts,tsx}"
             ]
         },
-        "packages/seedcord": {
-            "ignoreDependencies": [
-                "fix-esm-import-path",
-                "@seedcord/tsconfig"
-            ]
-        },
         "packages/core": {},
         "packages/docs-engine": {},
         "packages/docs-generator": {
@@ -88,15 +82,21 @@
             ]
         },
         "packages/eslint-utils": {},
-        "packages/plugins": {},
-        "packages/rate-limiter": {},
         "packages/event-emitter": {},
-        "packages/logger": {},
         "packages/gateway": {},
         "packages/http": {
             "ignore": [
                 "tests/node/discovery/fixtures/**",
                 "tests/node/discovery/duplicates/**"
+            ]
+        },
+        "packages/logger": {},
+        "packages/plugins": {},
+        "packages/rate-limiter": {},
+        "packages/seedcord": {
+            "ignoreDependencies": [
+                "fix-esm-import-path",
+                "@seedcord/tsconfig"
             ]
         },
         "packages/tsconfig": {},
@@ -106,6 +106,7 @@
             "ignore": [
                 "tests/node/fixtures/**"
             ]
-        }
+        },
+        "plugins/plugin-mongoose": {}
     }
 }

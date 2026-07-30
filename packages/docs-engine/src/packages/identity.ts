@@ -26,6 +26,10 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'plugins',
         aliases: ['plugins']
     },
+    '@seedcord/plugin-mongoose': {
+        displayName: 'plugin-mongoose',
+        aliases: ['plugin-mongoose', 'mongoose', 'mongo']
+    },
     '@seedcord/types': {
         displayName: 'types',
         aliases: ['types']

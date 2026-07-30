@@ -1,4 +1,9 @@
-import { MongooseDocument, MongooseService, RegisterMongooseModel, RegisterMongooseService } from '@seedcord/plugins';
+import {
+    MongooseDocument,
+    MongooseService,
+    RegisterMongooseModel,
+    RegisterMongooseService
+} from '@seedcord/plugin-mongoose';
 import mongoose from 'mongoose';
 
 interface IUser extends MongooseDocument {
@@ -16,7 +21,7 @@ export class Users<Doc extends IUser = IUser> extends MongooseService<Doc> {
 }
 
 /* Declare Users to augment the ServiceMap */
-declare module '@seedcord/plugins' {
+declare module '@seedcord/plugin-mongoose' {
     interface MongooseServices {
         users: Users;
     }
