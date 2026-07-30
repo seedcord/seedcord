@@ -1,19 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Mongo } from '@src/mongo/Mongo';
+import { Mongoose } from '@src/mongoose/Mongoose';
 
 import { pluginsPath } from '../utils/source-path';
 import { TestEnvironment } from '../utils/test-env';
 
 import type { Core } from '@seedcord/gateway';
 
-describe('Mongo Plugin Integration', () => {
+describe('Mongoose Plugin Integration', () => {
     let testEnv: TestEnvironment;
-    let mongo: Mongo;
+    let plugin: Mongoose;
     let mockCore: Core;
 
     beforeEach(async () => {
-        testEnv = new TestEnvironment('mongo-test-');
+        testEnv = new TestEnvironment('mongoose-test-');
         await testEnv.setup();
         mockCore = {
             shutdown: { addTask: vi.fn() },
@@ -27,17 +27,17 @@ describe('Mongo Plugin Integration', () => {
         vi.clearAllMocks();
     });
 
-    it('should load mongo services from directory', async () => {
+    it('should load mongoose services from directory', async () => {
         const servicesDir = 'services';
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongoService, RegisterMongoService, RegisterMongoModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
-            @RegisterMongoService('users')
-            export class UserService extends MongoService {
-                @RegisterMongoModel('users')
+            @RegisterMongooseService('users')
+            export class UserService extends MongooseService {
+                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
@@ -47,28 +47,28 @@ describe('Mongo Plugin Integration', () => {
             `
         );
 
-        mongo = new Mongo(mockCore, {
+        plugin = new Mongoose(mockCore, {
             uri: 'mongodb://localhost:27017',
             name: 'test',
             dir: testEnv.resolvePath(servicesDir)
         });
 
-        await mongo.init();
+        await plugin.init();
 
-        expect(mongo.services).toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('users');
     });
 
-    it('should handle HMR updates for mongo services', async () => {
+    it('should handle HMR updates for mongoose services', async () => {
         const servicesDir = 'services';
         const filePath = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongoService, RegisterMongoService, RegisterMongoModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
-            @RegisterMongoService('users')
-            export class UserService extends MongoService {
-                @RegisterMongoModel('users')
+            @RegisterMongooseService('users')
+            export class UserService extends MongooseService {
+                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
@@ -78,26 +78,26 @@ describe('Mongo Plugin Integration', () => {
             `
         );
 
-        mongo = new Mongo(mockCore, {
+        plugin = new Mongoose(mockCore, {
             uri: 'mongodb://localhost:27017',
             name: 'test',
             dir: testEnv.resolvePath(servicesDir)
         });
 
-        await mongo.init();
+        await plugin.init();
 
-        expect(mongo.services).toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('users');
 
         // Simulate HMR update: Change key
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongoService, RegisterMongoService, RegisterMongoModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
-            @RegisterMongoService('admins')
-            export class UserService extends MongoService {
-                @RegisterMongoModel('admins')
+            @RegisterMongooseService('admins')
+            export class UserService extends MongooseService {
+                @RegisterMongooseModel('admins')
                 public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
@@ -107,12 +107,12 @@ describe('Mongo Plugin Integration', () => {
             `
         );
 
-        await mongo.onHmr({
+        await plugin.onHmr({
             file: filePath,
             type: 'update'
         });
 
-        expect(mongo.services).not.toHaveProperty('users');
-        expect(mongo.services).toHaveProperty('admins');
+        expect(plugin.services).not.toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('admins');
     });
 });

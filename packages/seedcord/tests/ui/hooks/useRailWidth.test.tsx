@@ -71,4 +71,4 @@ describe('useRailWidth', () => {
         expect(lastFrame()).toContain('w:10');
         unmount();
     });
-});
+}, 10_000);

@@ -13,11 +13,11 @@ describe('LogStore', () => {
     afterEach(() => store.clear());
 
     it('carries level, label, channel, head, and the record timestamp onto each entry', async () => {
-        store.onLog(record({ level: 'warn', label: 'Mongo', channel: 'db', message: 'up', timestamp: 42 }));
+        store.onLog(record({ level: 'warn', label: 'Mongoose', channel: 'db', message: 'up', timestamp: 42 }));
         await store.flush();
 
         const [entry] = store.getLogs();
-        expect(entry).toMatchObject({ level: 'warn', label: 'Mongo', channel: 'db', head: true, timestamp: 42 });
+        expect(entry).toMatchObject({ level: 'warn', label: 'Mongoose', channel: 'db', head: true, timestamp: 42 });
     });
 
     it('marks the first line head and the rest continuation for a multi-line record', async () => {

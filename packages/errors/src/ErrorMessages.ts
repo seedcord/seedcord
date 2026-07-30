@@ -131,32 +131,34 @@ const messages = {
     [SeedcordErrorCode.PluginContextBeforeInit]: (pluginName: string) =>
         `${pluginName} read this.ctx before attach finalized it. ctx is available from init() onward.`,
 
-    [SeedcordErrorCode.PluginMongoServiceDecoratorMissing]: (className: string) =>
-        `Missing @RegisterMongoService on ${className}.`,
-    [SeedcordErrorCode.PluginMongoModelDecoratorMissing]: (className: string) =>
-        `Missing @RegisterMongoModel on ${className}.`,
-    [SeedcordErrorCode.PluginMongoConnectionFailed]: (databaseName?: string) =>
+    [SeedcordErrorCode.PluginMongooseServiceDecoratorMissing]: (className: string) =>
+        `Missing @RegisterMongooseService on ${className}.`,
+    [SeedcordErrorCode.PluginMongooseModelDecoratorMissing]: (className: string) =>
+        `Missing @RegisterMongooseModel on ${className}.`,
+    [SeedcordErrorCode.PluginMongooseConnectionFailed]: (databaseName?: string) =>
         databaseName ? `Could not connect to MongoDB (${databaseName}).` : 'Could not connect to MongoDB.',
-    [SeedcordErrorCode.PluginMongoDisconnectFailed]: () => 'Failed to disconnect from MongoDB cleanly during shutdown.',
-    [SeedcordErrorCode.PluginMongoServicesNotReady]: () =>
-        'Mongo services accessed before the plugin finished initializing.',
+    [SeedcordErrorCode.PluginMongooseDisconnectFailed]: () =>
+        'Failed to disconnect from MongoDB cleanly during shutdown.',
+    [SeedcordErrorCode.PluginMongooseServicesNotReady]: () =>
+        'Mongoose services accessed before the plugin finished initializing.',
 
-    [SeedcordErrorCode.PluginKpgServiceDecoratorMissing]: (className: string) =>
-        `Missing @RegisterKpgService on ${className}.`,
-    [SeedcordErrorCode.PluginKpgServiceTableMissing]: (className: string) =>
-        `Missing table metadata for ${className}. Provide a table via @RegisterKpgService().`,
-    [SeedcordErrorCode.PluginKpgInvalidStepCount]: () => 'Migration step count must be a non-negative integer.',
-    [SeedcordErrorCode.PluginKpgUnknownDirection]: (direction: unknown) =>
+    [SeedcordErrorCode.PluginKyselyServiceDecoratorMissing]: (className: string) =>
+        `Missing @RegisterKyselyService on ${className}.`,
+    [SeedcordErrorCode.PluginKyselyServiceTableMissing]: (className: string) =>
+        `Missing table metadata for ${className}. Provide a table via @RegisterKyselyService().`,
+    [SeedcordErrorCode.PluginKyselyInvalidStepCount]: () => 'Migration step count must be a non-negative integer.',
+    [SeedcordErrorCode.PluginKyselyUnknownDirection]: (direction: unknown) =>
         `Unknown migration direction: ${String(direction)}.`,
-    [SeedcordErrorCode.PluginKpgUnresolvedMigrationsPath]: (label: string) =>
+    [SeedcordErrorCode.PluginKyselyUnresolvedMigrationsPath]: (label: string) =>
         `Unable to resolve migrations at path: ${label}.`,
-    [SeedcordErrorCode.PluginKpgNoMigrationFiles]: () => 'No migration files provided.',
-    [SeedcordErrorCode.PluginKpgInvalidMigrationModule]: (filePath: string) =>
+    [SeedcordErrorCode.PluginKyselyNoMigrationFiles]: () => 'No migration files provided.',
+    [SeedcordErrorCode.PluginKyselyInvalidMigrationModule]: (filePath: string) =>
         `Migration file ${filePath} must export async functions up and down.`,
-    [SeedcordErrorCode.PluginKpgNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,
-    [SeedcordErrorCode.PluginKpgDisconnectFailed]: () => 'Failed to close the Postgres pool cleanly during shutdown.',
-    [SeedcordErrorCode.PluginKpgServicesNotReady]: () =>
-        'KPG services accessed before the plugin finished initializing.',
+    [SeedcordErrorCode.PluginKyselyNonErrorFailure]: (message: string) => `Migration failure: ${message}.`,
+    [SeedcordErrorCode.PluginKyselyDisconnectFailed]: () =>
+        'Failed to close the Postgres pool cleanly during shutdown.',
+    [SeedcordErrorCode.PluginKyselyServicesNotReady]: () =>
+        'Kysely services accessed before the plugin finished initializing.',
 
     [SeedcordErrorCode.CliConfigInvalidExport]: () => 'Config file must default export an object.',
     [SeedcordErrorCode.CliConfigMissingInstance]: () =>

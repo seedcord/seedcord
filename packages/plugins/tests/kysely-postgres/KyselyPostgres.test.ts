@@ -1,20 +1,20 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { KyselyPg } from '@src/kysely-pg/KyselyPg';
+import { KyselyPostgres } from '@src/kysely-postgres/KyselyPostgres';
 
 import { pluginsPath } from '../utils/source-path';
 import { TestEnvironment } from '../utils/test-env';
 
 import type { Core } from '@seedcord/gateway';
 
-describe('KyselyPg Plugin Integration', () => {
+describe('KyselyPostgres Plugin Integration', () => {
     let testEnv: TestEnvironment;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test fixture, the Database type param is irrelevant
-    let kyselyPg: KyselyPg<any>;
+    let plugin: KyselyPostgres<any>;
     let mockCore: Core;
 
     beforeEach(async () => {
-        testEnv = new TestEnvironment('kysely-test-');
+        testEnv = new TestEnvironment('kysely-postgres-test-');
         await testEnv.setup();
         await testEnv.createFile('migrations/.keep', '');
         mockCore = {
@@ -34,10 +34,10 @@ describe('KyselyPg Plugin Integration', () => {
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('users')
-            export class UserService extends KpgService<any> {
+            @RegisterKyselyService('users')
+            export class UserService extends KyselyService<any> {
                 public async findUser() {
                     return 'user';
                 }
@@ -45,15 +45,15 @@ describe('KyselyPg Plugin Integration', () => {
             `
         );
 
-        kyselyPg = new KyselyPg(mockCore, {
+        plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { path: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
 
-        await kyselyPg.init();
+        await plugin.init();
 
-        expect(kyselyPg.services).toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('users');
     });
 
     it('should handle HMR updates for kysely services', async () => {
@@ -61,10 +61,10 @@ describe('KyselyPg Plugin Integration', () => {
         const filePath = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('users')
-            export class UserService extends KpgService<any> {
+            @RegisterKyselyService('users')
+            export class UserService extends KyselyService<any> {
                 public async findUser() {
                     return 'user';
                 }
@@ -72,24 +72,24 @@ describe('KyselyPg Plugin Integration', () => {
             `
         );
 
-        kyselyPg = new KyselyPg(mockCore, {
+        plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { path: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
 
-        await kyselyPg.init();
+        await plugin.init();
 
-        expect(kyselyPg.services).toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('users');
 
         // HMR update that changes the registered key
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('admins')
-            export class UserService extends KpgService<any> {
+            @RegisterKyselyService('admins')
+            export class UserService extends KyselyService<any> {
                 public async findUser() {
                     return 'admin';
                 }
@@ -97,13 +97,13 @@ describe('KyselyPg Plugin Integration', () => {
             `
         );
 
-        await kyselyPg.onHmr({
+        await plugin.onHmr({
             file: filePath,
             type: 'update'
         });
 
-        expect(kyselyPg.services).not.toHaveProperty('users');
-        expect(kyselyPg.services).toHaveProperty('admins');
+        expect(plugin.services).not.toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('admins');
     });
 
     it('keeps other tracked services registered when one leaf reloads', async () => {
@@ -111,10 +111,10 @@ describe('KyselyPg Plugin Integration', () => {
         const userFile = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('users')
-            export class UserService extends KpgService<any> {
+            @RegisterKyselyService('users')
+            export class UserService extends KyselyService<any> {
                 public async findUser() {
                     return 'user';
                 }
@@ -124,10 +124,10 @@ describe('KyselyPg Plugin Integration', () => {
         await testEnv.createFile(
             `${servicesDir}/ProductService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('products')
-            export class ProductService extends KpgService<any> {
+            @RegisterKyselyService('products')
+            export class ProductService extends KyselyService<any> {
                 public async findProduct() {
                     return 'product';
                 }
@@ -135,25 +135,25 @@ describe('KyselyPg Plugin Integration', () => {
             `
         );
 
-        kyselyPg = new KyselyPg(mockCore, {
+        plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { path: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
 
-        await kyselyPg.init();
+        await plugin.init();
 
-        expect(kyselyPg.services).toHaveProperty('users');
-        expect(kyselyPg.services).toHaveProperty('products');
+        expect(plugin.services).toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('products');
 
         // reload only the user leaf
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('admins')
-            export class UserService extends KpgService<any> {
+            @RegisterKyselyService('admins')
+            export class UserService extends KyselyService<any> {
                 public async findUser() {
                     return 'admin';
                 }
@@ -161,12 +161,12 @@ describe('KyselyPg Plugin Integration', () => {
             `
         );
 
-        await kyselyPg.onHmr({ file: userFile, type: 'update' });
+        await plugin.onHmr({ file: userFile, type: 'update' });
 
         // the unchanged product leaf is still tracked, so the store survived the single-leaf reload
-        expect(kyselyPg.services).toHaveProperty('products');
-        expect(kyselyPg.services).toHaveProperty('admins');
-        expect(kyselyPg.services).not.toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('products');
+        expect(plugin.services).toHaveProperty('admins');
+        expect(plugin.services).not.toHaveProperty('users');
     });
 
     it('keeps the last-good service when a reload throws', async () => {
@@ -174,10 +174,10 @@ describe('KyselyPg Plugin Integration', () => {
         const userFile = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { KpgService, RegisterKpgService } from '${pluginsPath}';
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
 
-            @RegisterKpgService('users')
-            export class UserService extends KpgService<any> {
+            @RegisterKyselyService('users')
+            export class UserService extends KyselyService<any> {
                 public async findUser() {
                     return 'user';
                 }
@@ -185,20 +185,20 @@ describe('KyselyPg Plugin Integration', () => {
             `
         );
 
-        kyselyPg = new KyselyPg(mockCore, {
+        plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { path: testEnv.resolvePath('migrations') },
             dir: testEnv.resolvePath(servicesDir)
         });
 
-        await kyselyPg.init();
-        expect(kyselyPg.services).toHaveProperty('users');
+        await plugin.init();
+        expect(plugin.services).toHaveProperty('users');
 
         // a broken edit, the reload import throws
         await testEnv.createFile(`${servicesDir}/UserService.ts`, 'export const broken = {{{ not valid');
-        await kyselyPg.onHmr({ file: userFile, type: 'update' });
+        await plugin.onHmr({ file: userFile, type: 'update' });
 
         // the failed reload rolled back, so the last-good service round-trips and stays registered
-        expect(kyselyPg.services).toHaveProperty('users');
+        expect(plugin.services).toHaveProperty('users');
     });
 });

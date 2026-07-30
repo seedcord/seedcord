@@ -5,7 +5,7 @@ export interface SearchTarget {
 
 export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     // Classes
-    { query: 'MongoService' },
+    { query: 'MongooseService' },
     { query: 'Seedcord' },
     { query: 'AutocompleteHandler' },
     { query: 'HealthCheck' },
@@ -14,7 +14,7 @@ export const DEFAULT_SEARCH_TARGETS: SearchTarget[] = [
     { query: 'BuilderComponent' },
     { query: 'CoordinatedShutdown' },
     { query: 'UnknownException' },
-    { query: 'Mongo' },
+    { query: 'Mongoose' },
     { query: 'Bot' },
     { query: 'BaseComponent' },
     { query: 'MemoryRateLimiter' },

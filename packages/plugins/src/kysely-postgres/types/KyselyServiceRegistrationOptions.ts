@@ -1,7 +1,7 @@
 /**
- * Extra configuration supplied to `@RegisterKpgService`.
+ * Extra configuration supplied to `@RegisterKyselyService`.
  */
-export interface KpgServiceRegistrationOptions {
+export interface KyselyServiceRegistrationOptions {
     /**
      * Optional override for the table name exposed via the service.
      *

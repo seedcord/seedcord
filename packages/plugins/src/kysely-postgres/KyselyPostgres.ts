@@ -12,15 +12,15 @@ import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
 
-import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
-import { KpgDatabaseBootstrapper } from './KpgDatabaseBootstrapper';
-import { KpgMigrationManager } from './KpgMigrationManager';
-import { KpgServiceRegistry } from './KpgServiceRegistry';
+import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
+import { KyselyMigrationManager } from './KyselyMigrationManager';
+import { KyselyServiceRegistry } from './KyselyServiceRegistry';
+import { PostgresDatabaseBootstrapper } from './PostgresDatabaseBootstrapper';
 
-import type { KyselyServiceConstructor } from './KpgService';
-import type { MigrationOptions, StepMigrationOptions } from './types/KpgMigration';
-import type { KpgOptions } from './types/KpgOptions';
-import type { KpgServices } from './types/KpgServices';
+import type { KyselyServiceConstructor } from './KyselyService';
+import type { MigrationOptions, StepMigrationOptions } from './types/KyselyMigration';
+import type { KyselyOptions } from './types/KyselyOptions';
+import type { KyselyServices } from './types/KyselyServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { MigrationInfo } from 'kysely/migration';
@@ -35,8 +35,8 @@ export interface KyselyArtifact {
  * Sets up the connection pool, applies migrations, and registers decorated
  * services so the core can resolve them.
  */
-export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gateway' }> {
-    public readonly logger = new Logger('KyselyPg');
+export class KyselyPostgres<Database extends object> extends Plugin<{ transport: 'gateway' }> {
+    public readonly logger = new Logger('KyselyPostgres');
     private isInitialised = false;
     private servicesReady = false;
 
@@ -44,32 +44,32 @@ export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gate
     declare public connection: Kysely<Database>;
     private pool: Pool | null = null;
     private onConnectHandler: ((client: PoolClient) => void) | null = null;
-    private migrationManager: KpgMigrationManager<Database> | null = null;
-    private readonly serviceRegistry: KpgServiceRegistry<Database>;
-    private readonly databaseBootstrapper: KpgDatabaseBootstrapper;
+    private migrationManager: KyselyMigrationManager<Database> | null = null;
+    private readonly serviceRegistry: KyselyServiceRegistry<Database>;
+    private readonly databaseBootstrapper: PostgresDatabaseBootstrapper;
     private databaseName: string | null = null;
     private readonly hmrHandler?: HmrModuleHandler<KyselyServiceConstructor<Database>, void, KyselyArtifact>;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
      */
-    public get services(): KpgServices {
+    public get services(): KyselyServices {
         if (!this.servicesReady) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKpgServicesNotReady);
+            throw new SeedcordError(SeedcordErrorCode.PluginKyselyServicesNotReady);
         }
         return this.serviceRegistry.map;
     }
 
     constructor(
         host: CoreBase,
-        private readonly options: KpgOptions
+        private readonly options: KyselyOptions
     ) {
         super(host);
-        this.serviceRegistry = new KpgServiceRegistry(this, this.core, this.logger);
-        this.databaseBootstrapper = new KpgDatabaseBootstrapper(this.logger);
+        this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger);
+        this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
         this.core.shutdown.addTask(
             ShutdownPhase.Disconnect,
-            'stop-kyselypg',
+            'stop-kysely-postgres',
             async () => await this.stop(),
             this.options.timeout
         );
@@ -90,7 +90,7 @@ export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gate
     }
 
     private getArtifacts(ctor: KyselyServiceConstructor<Database>): KyselyArtifact {
-        const key = Reflect.getMetadata(PgServiceMetadataKey, ctor) as string | undefined;
+        const key = Reflect.getMetadata(KyselyServiceMetadataKey, ctor) as string | undefined;
         return key ? { key } : {};
     }
 
@@ -141,7 +141,7 @@ export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gate
                 ...keepDefined(this.options.kysely ?? {})
             });
 
-            this.migrationManager = new KpgMigrationManager({
+            this.migrationManager = new KyselyMigrationManager({
                 db: this.connection,
                 logger: this.logger,
                 config: this.options.migrations,
@@ -172,7 +172,7 @@ export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gate
         this.logger.info(chalk.gray('Closing Postgres pool.'));
         await pool.end().catch((err) => {
             this.logger.error(`Could not close pg pool: ${(err as Error).message}`);
-            throw new SeedcordError(SeedcordErrorCode.PluginKpgDisconnectFailed, { cause: err });
+            throw new SeedcordError(SeedcordErrorCode.PluginKyselyDisconnectFailed, { cause: err });
         });
         this.logger.info(chalk.red.bold('Disconnected from Postgres'));
     }
@@ -219,10 +219,10 @@ export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gate
         return all.filter((m) => !m.executedAt);
     }
 
-    private getMigrationManager(): KpgMigrationManager<Database> {
+    private getMigrationManager(): KyselyMigrationManager<Database> {
         if (this.migrationManager) return this.migrationManager;
 
-        const manager = new KpgMigrationManager({
+        const manager = new KyselyMigrationManager({
             db: this.connection,
             logger: this.logger,
             config: this.options.migrations,
@@ -245,7 +245,7 @@ export class KyselyPg<Database extends object> extends Plugin<{ transport: 'gate
     /**
      * Tracks a service file with the HMR handler so dev reloads can swap it. No-op outside dev.
      *
-     * @internal Exposes the dev-only HMR handler to {@link KpgServiceRegistry}.
+     * @internal Exposes the dev-only HMR handler to {@link KyselyServiceRegistry}.
      */
     public trackServiceFile(filePath: string, ctor: KyselyServiceConstructor<Database>): void {
         this.hmrHandler?.trackHandler(filePath, ctor);

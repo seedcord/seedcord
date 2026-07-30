@@ -1,4 +1,4 @@
-import type { MigrationOptions } from './KpgMigration';
+import type { MigrationOptions } from './KyselyMigration';
 import type { KyselyConfig } from 'kysely';
 import type { Pool, PoolConfig } from 'pg';
 import type { Except } from 'type-fest';
@@ -7,7 +7,7 @@ import type { Except } from 'type-fest';
  * Options that describe where migrations live and how the migrator should
  * behave.
  */
-export interface KpgMigrationsOptions {
+export interface KyselyMigrationsOptions {
     /** Directory path, single file path, or array of migration files */
     readonly path: string | string[];
     /** Allow running migrations even if new ones are inserted out of order */
@@ -27,11 +27,11 @@ export interface KpgMigrationsOptions {
 /**
  * Configuration options for Postgres connection and service discovery.
  */
-export interface KpgOptions {
+export interface KyselyOptions {
     /** Directory containing service classes. Make sure file(s)/folder(s) are built to `.js` in dist and aren't merged into a single file. */
     readonly dir: string;
     /** Migration settings */
-    readonly migrations: KpgMigrationsOptions;
+    readonly migrations: KyselyMigrationsOptions;
     /** Optional existing Pool instance or configuration overrides */
     readonly pool?: Pool | PoolConfig;
     /** Optional connection string used when a pool config is provided */

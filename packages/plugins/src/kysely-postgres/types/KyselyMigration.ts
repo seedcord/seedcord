@@ -1,4 +1,4 @@
-import type { KpgMigrationsOptions } from './KpgOptions';
+import type { KyselyMigrationsOptions } from './KyselyOptions';
 import type { Logger } from '@seedcord/logger';
 import type { Kysely } from 'kysely';
 import type { Migration, NoMigrations } from 'kysely/migration';
@@ -62,6 +62,6 @@ export interface StepMigrationOptions {
 export interface MigrationManagerContext<Database extends object> {
     readonly db: Kysely<Database>;
     readonly logger: Logger;
-    readonly config: KpgMigrationsOptions;
+    readonly config: KyselyMigrationsOptions;
     readonly baseDir: string;
 }

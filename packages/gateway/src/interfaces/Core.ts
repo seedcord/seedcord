@@ -15,7 +15,7 @@ import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/nod
  * ```typescript
  * declare module '@seedcord/gateway' {
  *   interface Core {
- *     db: Mongo;
+ *     db: Mongoose;
  *   }
  * }
  * ```

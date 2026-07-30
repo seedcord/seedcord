@@ -1,13 +1,13 @@
-import { MongoDocument, MongoService, RegisterMongoModel, RegisterMongoService } from '@seedcord/plugins';
+import { MongooseDocument, MongooseService, RegisterMongooseModel, RegisterMongooseService } from '@seedcord/plugins';
 import mongoose from 'mongoose';
 
-interface IUser extends MongoDocument {
+interface IUser extends MongooseDocument {
     username: string;
 }
 
-@RegisterMongoService('users')
-export class Users<Doc extends IUser = IUser> extends MongoService<Doc> {
-    @RegisterMongoModel('users')
+@RegisterMongooseService('users')
+export class Users<Doc extends IUser = IUser> extends MongooseService<Doc> {
+    @RegisterMongooseModel('users')
     public static schema = new mongoose.Schema<IUser>({
         username: { type: String, required: true, unique: true }
     });
@@ -17,7 +17,7 @@ export class Users<Doc extends IUser = IUser> extends MongoService<Doc> {
 
 /* Declare Users to augment the ServiceMap */
 declare module '@seedcord/plugins' {
-    interface MongoServices {
+    interface MongooseServices {
         users: Users;
     }
 }

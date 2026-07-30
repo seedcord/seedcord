@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import { resolve } from 'node:path';
 
 import { Seedcord } from '@seedcord/gateway';
-import { Mongo } from '@seedcord/plugins';
+import { Mongoose } from '@seedcord/plugins';
 import { GatewayIntentBits, Partials } from 'discord.js';
 import { Envapter } from 'envapt';
 import { Envapt } from 'envapt/legacy';
@@ -11,7 +11,7 @@ import { Envapt } from 'envapt/legacy';
 Envapter.baseDir = resolve(import.meta.dirname, '..');
 
 export class Vars extends Envapter {
-    // Mongo Plugin
+    // Mongoose Plugin
     @Envapt('MONGO_URI', { fallback: 'mongodb://localhost:27017/' })
     public static readonly mongoUri: string;
 
@@ -52,7 +52,7 @@ export const seedcord = new Seedcord({
         path: null
     },
     botColor: '#fe565a'
-}).attach('db', Mongo, {
+}).attach('db', Mongoose, {
     dir: resolve(import.meta.dirname, './services'),
     uri: Vars.mongoUri,
     name: Vars.dbName

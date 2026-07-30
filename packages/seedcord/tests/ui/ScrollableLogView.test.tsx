@@ -17,14 +17,14 @@ describe('ScrollableLogView', () => {
     afterEach(() => store.clear());
 
     it('renders a head line with the label, dot, and message', async () => {
-        store.onLog(record({ label: 'Mongo', message: 'connected' }));
+        store.onLog(record({ label: 'Mongoose', message: 'connected' }));
         await store.flush();
 
         const { lastFrame } = render(
             <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
         );
         const frame = lastFrame() ?? '';
-        expect(frame).toContain('Mongo');
+        expect(frame).toContain('Mongoose');
         expect(frame).toContain('⏺');
         expect(frame).toContain('connected');
     });

@@ -1,29 +1,29 @@
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 
-import { PgServiceMetadataKey } from './decorators/RegisterKpgService';
-import { KpgService } from './KpgService';
+import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';
+import { KyselyService } from './KyselyService';
 
-import type { KyselyServiceConstructor } from './KpgService';
-import type { KyselyArtifact, KyselyPg } from './KyselyPg';
-import type { KpgServices } from './types/KpgServices';
+import type { KyselyArtifact, KyselyPostgres } from './KyselyPostgres';
+import type { KyselyServiceConstructor } from './KyselyService';
+import type { KyselyServices } from './types/KyselyServices';
 import type { Core } from '@seedcord/gateway';
 import type { Logger } from '@seedcord/logger';
 
 /**
  * Discovers and registers Postgres services for the plugin.
  */
-export class KpgServiceRegistry<Database extends object> {
+export class KyselyServiceRegistry<Database extends object> {
     private readonly services: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
 
     constructor(
-        private readonly plugin: KyselyPg<Database>,
+        private readonly plugin: KyselyPostgres<Database>,
         private readonly core: Core,
         private readonly logger: Logger
     ) {}
 
-    public get map(): KpgServices {
-        // KpgServices is augmented per-consumer via declaration merging; the registry holds the
+    public get map(): KyselyServices {
+        // KyselyServices is augmented per-consumer via declaration merging; the registry holds the
         // instances opaquely and exposes the generated map shape at this boundary.
         return this.services;
     }
@@ -51,7 +51,7 @@ export class KpgServiceRegistry<Database extends object> {
     }
 
     public unregister(Service: KyselyServiceConstructor<Database>, artifacts?: KyselyArtifact): void {
-        const key = artifacts?.key ?? (Reflect.getMetadata(PgServiceMetadataKey, Service) as string | undefined);
+        const key = artifacts?.key ?? (Reflect.getMetadata(KyselyServiceMetadataKey, Service) as string | undefined);
         if (key && this.services[key]) {
             // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name, not a static property
             delete this.services[key];
@@ -66,8 +66,8 @@ export class KpgServiceRegistry<Database extends object> {
     public isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {
         return (
             typeof obj === 'function' &&
-            obj.prototype instanceof KpgService &&
-            Reflect.hasMetadata(PgServiceMetadataKey, obj)
+            obj.prototype instanceof KyselyService &&
+            Reflect.hasMetadata(KyselyServiceMetadataKey, obj)
         );
     }
 }

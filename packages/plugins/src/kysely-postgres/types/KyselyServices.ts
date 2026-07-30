@@ -2,22 +2,22 @@
  * Namespace interface that gets augmented by individual service packages.
  *
  * This interface can be augmented via declaration merging to add
- * type-safe service definitions when using the `@RegisterKpgService` decorator.
+ * type-safe service definitions when using the `@RegisterKyselyService` decorator.
  *
  * @example
  * ```typescript
  * declare module '@seedcord/plugins' {
- *   interface KpgServices {
+ *   interface KyselyServices {
  *     'users': Users;
  *   }
  * }
  * ```
  */
-export interface KpgServices {}
+export interface KyselyServices {}
 
 /**
  * Union of all registered service keys.
  *
  * @internal
  */
-export type KpgServiceKeys = keyof KpgServices;
+export type KyselyServiceKeys = keyof KyselyServices;

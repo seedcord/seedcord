@@ -134,7 +134,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      * @throws A **SeedcordError** When called after initialization or if key already exists
      * @example
      * ```typescript
-     * seedcord.attach('db', Mongo, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
+     * seedcord.attach('db', Mongoose, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
      * ```
      */
     public attach<Key extends string, Ctor extends PluginCtor>(

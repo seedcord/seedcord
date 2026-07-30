@@ -14,7 +14,7 @@ function disposablePool(pool: Pool): Pool & AsyncDisposable {
 /**
  * Ensures the target Postgres database exists, creating it if missing.
  */
-export class KpgDatabaseBootstrapper {
+export class PostgresDatabaseBootstrapper {
     private static readonly ADMIN_DB = 'postgres';
     private static readonly DATABASE_EXISTS_SQL =
         'SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = $1) AS "exists"';
@@ -22,7 +22,7 @@ export class KpgDatabaseBootstrapper {
     constructor(private readonly logger: Logger) {}
 
     public resolveDatabaseName(config: PoolConfig): string | null {
-        return KpgDatabaseBootstrapper.parseDatabaseName(config);
+        return PostgresDatabaseBootstrapper.parseDatabaseName(config);
     }
 
     public resolveDatabaseFromPool(pool: Pool): string | null {
@@ -48,7 +48,7 @@ export class KpgDatabaseBootstrapper {
             return;
         }
 
-        if (targetDb === KpgDatabaseBootstrapper.ADMIN_DB) {
+        if (targetDb === PostgresDatabaseBootstrapper.ADMIN_DB) {
             this.logger.info(chalk.gray('Target database is postgres; skipping creation.'));
             return;
         }
@@ -84,21 +84,21 @@ export class KpgDatabaseBootstrapper {
 
         const { connectionString } = adminConfig;
         if (connectionString) {
-            const connection = KpgDatabaseBootstrapper.applyDatabaseToConnectionString(
+            const connection = PostgresDatabaseBootstrapper.applyDatabaseToConnectionString(
                 connectionString,
-                KpgDatabaseBootstrapper.ADMIN_DB
+                PostgresDatabaseBootstrapper.ADMIN_DB
             );
             if (!connection) return null;
             adminConfig.connectionString = connection;
         }
 
-        adminConfig.database = KpgDatabaseBootstrapper.ADMIN_DB;
+        adminConfig.database = PostgresDatabaseBootstrapper.ADMIN_DB;
         return adminConfig;
     }
 
     private async databaseExists(pool: Pool, database: string): Promise<boolean> {
         using client = disposableClient(await pool.connect());
-        const { rows } = await client.query<{ exists: boolean }>(KpgDatabaseBootstrapper.DATABASE_EXISTS_SQL, [
+        const { rows } = await client.query<{ exists: boolean }>(PostgresDatabaseBootstrapper.DATABASE_EXISTS_SQL, [
             database
         ]);
         return Boolean(rows[0]?.exists);
@@ -106,7 +106,7 @@ export class KpgDatabaseBootstrapper {
 
     private async createDatabase(pool: Pool, database: string): Promise<void> {
         using client = disposableClient(await pool.connect());
-        const createSql = `CREATE DATABASE ${KpgDatabaseBootstrapper.escapeIdentifier(database)}`;
+        const createSql = `CREATE DATABASE ${PostgresDatabaseBootstrapper.escapeIdentifier(database)}`;
         await client.query(createSql);
     }
 

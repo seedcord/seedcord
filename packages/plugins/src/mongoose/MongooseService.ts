@@ -1,11 +1,11 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { ModelMetadataKey } from './decorators/RegisterMongoModel';
-import { ServiceMetadataKey } from './decorators/RegisterMongoService';
+import { ModelMetadataKey } from './decorators/RegisterMongooseModel';
+import { ServiceMetadataKey } from './decorators/RegisterMongooseService';
 
-import type { Mongo } from './Mongo';
-import type { MongoDocument } from './types/MongoDocument';
+import type { Mongoose } from './Mongoose';
+import type { MongooseDocument } from './types/MongooseDocument';
 import type { Core } from '@seedcord/gateway';
 import type { TypedConstructor } from '@seedcord/types';
 import type mongoose from 'mongoose';
@@ -14,14 +14,14 @@ import type mongoose from 'mongoose';
  * Base class for MongoDB service layers
  *
  * Provides typed access to MongoDB collections through Mongoose models.
- * Services are automatically registered with the Mongo plugin when instantiated.
+ * Services are automatically registered with the Mongoose plugin when instantiated.
  *
  * @typeParam Doc - The document type this service manages
  * @example
  * ```typescript
- * \@RegisterMongoService('users')
- * export class Users extends MongoService<IUser> {
- *   \@RegisterMongoModel('users')
+ * \@RegisterMongooseService('users')
+ * export class Users extends MongooseService<IUser> {
+ *   \@RegisterMongooseModel('users')
  *   public static schema = new mongoose.Schema<IUser>({
  *     username: { type: String, required: true, unique: true }
  *   });
@@ -33,23 +33,23 @@ import type mongoose from 'mongoose';
  * }
  * ```
  */
-export abstract class MongoService<Doc extends MongoDocument = MongoDocument> {
+export abstract class MongooseService<Doc extends MongooseDocument = MongooseDocument> {
     public readonly model: mongoose.Model<Doc>;
 
     public constructor(
-        protected readonly db: Mongo,
+        protected readonly db: Mongoose,
         protected readonly core: Core
     ) {
         const ctor = this.constructor;
 
         const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
         if (!key) {
-            throw new SeedcordError(SeedcordErrorCode.PluginMongoServiceDecoratorMissing, [ctor.name]);
+            throw new SeedcordError(SeedcordErrorCode.PluginMongooseServiceDecoratorMissing, [ctor.name]);
         }
 
         const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<Doc> | undefined;
         if (!model) {
-            throw new SeedcordError(SeedcordErrorCode.PluginMongoModelDecoratorMissing, [ctor.name]);
+            throw new SeedcordError(SeedcordErrorCode.PluginMongooseModelDecoratorMissing, [ctor.name]);
         }
 
         this.model = model;
@@ -58,5 +58,5 @@ export abstract class MongoService<Doc extends MongoDocument = MongoDocument> {
     }
 }
 
-/** Constructor type for {@link MongoService} classes */
-export type MongoServiceConstructor = TypedConstructor<typeof MongoService>;
+/** Constructor type for {@link MongooseService} classes */
+export type MongooseServiceConstructor = TypedConstructor<typeof MongooseService>;

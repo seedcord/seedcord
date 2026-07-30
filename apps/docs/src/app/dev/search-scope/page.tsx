@@ -76,9 +76,9 @@ const MOCK: MockResult[] = [
     entry('seedcord', 'debug', 'method', 'Logger#debug'),
     entry(
         'seedcord',
-        'PluginKpgServiceDecoratorMissing',
+        'PluginKyselyServiceDecoratorMissing',
         'enumMember',
-        'SeedcordErrorCode.PluginKpgServiceDecoratorMissing'
+        'SeedcordErrorCode.PluginKyselyServiceDecoratorMissing'
     ),
     entry('services', 'Logger', 'class'),
     entry('rate-limiter', 'MemoryRateLimiter', 'class'),
@@ -86,10 +86,10 @@ const MOCK: MockResult[] = [
     entry('event-emitter', 'TypedEventEmitter', 'class'),
     entry('services', 'LogLevel', 'enum'),
     entry('rate-limiter', 'charge', 'method', 'MemoryRateLimiter#charge'),
-    entry('plugins', 'Mongo', 'class'),
-    entry('plugins', 'KpgService', 'class'),
+    entry('plugins', 'Mongoose', 'class'),
+    entry('plugins', 'KyselyService', 'class'),
     entry('plugins', 'PluginConfig', 'interface'),
-    entry('plugins', 'query', 'method', 'KpgService#query'),
+    entry('plugins', 'query', 'method', 'KyselyService#query'),
     entry('utils', 'formatLog', 'function'),
     entry('utils', 'prettify', 'function'),
     entry('utils', 'isObject', 'function'),

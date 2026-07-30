@@ -14,7 +14,7 @@ import type {
     MigrationModule,
     MigrationOptions,
     StepMigrationOptions
-} from './types/KpgMigration';
+} from './types/KyselyMigration';
 import type {
     Migration,
     MigrationInfo,
@@ -25,11 +25,11 @@ import type {
 import type { Stats } from 'node:fs';
 
 /**
- * Migration tooling for KyselyPg.
+ * Migration tooling for KyselyPostgres.
  *
  * @sealed
  */
-export class KpgMigrationManager<Database extends object> {
+export class KyselyMigrationManager<Database extends object> {
     constructor(private readonly ctx: MigrationManagerContext<Database>) {}
 
     public async migrate(options?: MigrationOptions): Promise<void> {
@@ -50,7 +50,7 @@ export class KpgMigrationManager<Database extends object> {
             case 'down': {
                 const stepCount = steps ?? 1;
                 if (!Number.isSafeInteger(stepCount) || stepCount < 0) {
-                    throw new SeedcordRangeError(SeedcordErrorCode.PluginKpgInvalidStepCount);
+                    throw new SeedcordRangeError(SeedcordErrorCode.PluginKyselyInvalidStepCount);
                 }
 
                 if (stepCount === 0) {
@@ -66,7 +66,7 @@ export class KpgMigrationManager<Database extends object> {
                 return;
             }
             default: {
-                throw new SeedcordError(SeedcordErrorCode.PluginKpgUnknownDirection, [direction]);
+                throw new SeedcordError(SeedcordErrorCode.PluginKyselyUnknownDirection, [direction]);
             }
         }
     }
@@ -192,12 +192,12 @@ export class KpgMigrationManager<Database extends object> {
         }
 
         const label = Array.isArray(target) ? target.join(', ') : target;
-        throw new SeedcordError(SeedcordErrorCode.PluginKpgUnresolvedMigrationsPath, [label]);
+        throw new SeedcordError(SeedcordErrorCode.PluginKyselyUnresolvedMigrationsPath, [label]);
     }
 
     private async createModuleProvider(files: string[]): Promise<MigrationProvider> {
         if (files.length === 0) {
-            throw new SeedcordError(SeedcordErrorCode.PluginKpgNoMigrationFiles);
+            throw new SeedcordError(SeedcordErrorCode.PluginKyselyNoMigrationFiles);
         }
 
         const comparator =
@@ -209,7 +209,7 @@ export class KpgMigrationManager<Database extends object> {
                 const mod: unknown = await import(moduleUrl);
 
                 if (!this.isMigrationModule(mod)) {
-                    throw new SeedcordError(SeedcordErrorCode.PluginKpgInvalidMigrationModule, [filePath]);
+                    throw new SeedcordError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, [filePath]);
                 }
 
                 const { up, down } = mod;
@@ -296,7 +296,7 @@ export class KpgMigrationManager<Database extends object> {
             throw error;
         }
 
-        throw new SeedcordError(SeedcordErrorCode.PluginKpgNonErrorFailure, [message]);
+        throw new SeedcordError(SeedcordErrorCode.PluginKyselyNonErrorFailure, [message]);
     }
 
     private isMigrationModule(value: unknown): value is MigrationModule {

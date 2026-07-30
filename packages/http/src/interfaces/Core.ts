@@ -12,7 +12,7 @@ import type { CoreBase } from '@seedcord/core';
  * ```typescript
  * declare module '@seedcord/http' {
  *   interface Core {
- *     db: Mongo;
+ *     db: Mongoose;
  *   }
  * }
  * ```

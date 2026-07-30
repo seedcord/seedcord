@@ -12,18 +12,18 @@ import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 
-import { ModelMetadataKey } from './decorators/RegisterMongoModel';
-import { ServiceMetadataKey } from './decorators/RegisterMongoService';
-import { MongoService } from './MongoService';
+import { ModelMetadataKey } from './decorators/RegisterMongooseModel';
+import { ServiceMetadataKey } from './decorators/RegisterMongooseService';
+import { MongooseService } from './MongooseService';
 
-import type { MongoServiceConstructor } from './MongoService';
-import type { MongoOptions } from './types/MongoOptions';
-import type { MongoServices } from './types/MongoServices';
+import type { MongooseServiceConstructor } from './MongooseService';
+import type { MongooseOptions } from './types/MongooseOptions';
+import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
-import type { Mongoose } from 'mongoose';
+import type { Mongoose as MongooseInstance } from 'mongoose';
 
-interface MongoArtifact {
+interface MongooseArtifact {
     key?: string;
     modelName?: string;
 }
@@ -34,8 +34,8 @@ interface MongoArtifact {
  * Manages MongoDB connections, service loading, and provides type-safe
  * access to database services through service registration decorators.
  */
-export class Mongo extends Plugin<{ transport: 'gateway' }> {
-    public readonly logger = new Logger('Mongo');
+export class Mongoose extends Plugin<{ transport: 'gateway' }> {
+    public readonly logger = new Logger('Mongoose');
     private isInitialised = false;
     private servicesReady = false;
     private readonly uri: string;
@@ -43,27 +43,24 @@ export class Mongo extends Plugin<{ transport: 'gateway' }> {
     private readonly _services: Record<string, unknown> = {};
 
     /**
-     * Map of all loaded services. Keys come from `@RegisterMongoService('key')`.
+     * Map of all loaded services. Keys come from `@RegisterMongooseService('key')`.
      *
-     * @throws A **SeedcordError** if accessed before the plugin finishes initializing (e.g. from
-     * a plugin that starts in an earlier phase).
+     * @throws A **SeedcordError** if accessed before the plugin finishes initializing.
      */
-    public get services(): MongoServices {
+    public get services(): MongooseServices {
         if (!this.servicesReady) {
-            throw new SeedcordError(SeedcordErrorCode.PluginMongoServicesNotReady);
+            throw new SeedcordError(SeedcordErrorCode.PluginMongooseServicesNotReady);
         }
-        // MongoServices is augmented per-consumer via declaration merging, so the registry's opaque
-        // instances surface as the generated map shape at this boundary.
         return this._services;
     }
 
     /** Exposed Mongoose instance once `init` completes. */
-    declare public connection: Mongoose;
-    private readonly hmrHandler?: HmrModuleHandler<MongoServiceConstructor, void, MongoArtifact>;
+    declare public connection: MongooseInstance;
+    private readonly hmrHandler?: HmrModuleHandler<MongooseServiceConstructor, void, MongooseArtifact>;
 
     constructor(
         host: CoreBase,
-        private readonly options: MongoOptions
+        private readonly options: MongooseOptions
     ) {
         super(host);
         this.uri = options.uri;
@@ -86,7 +83,7 @@ export class Mongo extends Plugin<{ transport: 'gateway' }> {
         });
     }
 
-    private getArtifacts(ctor: MongoServiceConstructor): MongoArtifact {
+    private getArtifacts(ctor: MongooseServiceConstructor): MongooseArtifact {
         const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
         const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<unknown> | undefined;
         return {
@@ -127,7 +124,7 @@ export class Mongo extends Plugin<{ transport: 'gateway' }> {
                 return conn;
             })
             .catch((err) => {
-                throw new SeedcordError(SeedcordErrorCode.PluginMongoConnectionFailed, [this.options.name], {
+                throw new SeedcordError(SeedcordErrorCode.PluginMongooseConnectionFailed, [this.options.name], {
                     cause: err
                 });
             });
@@ -152,7 +149,7 @@ export class Mongo extends Plugin<{ transport: 'gateway' }> {
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
             .catch((err) => {
                 this.logger.error(`Could not disconnect from MongoDB: ${(err as Error).message}`);
-                throw new SeedcordError(SeedcordErrorCode.PluginMongoDisconnectFailed, { cause: err });
+                throw new SeedcordError(SeedcordErrorCode.PluginMongooseDisconnectFailed, { cause: err });
             });
     }
 
@@ -177,15 +174,15 @@ export class Mongo extends Plugin<{ transport: 'gateway' }> {
         );
     }
 
-    private initializeService(Service: MongoServiceConstructor, relativePath: string): void {
+    private initializeService(Service: MongooseServiceConstructor, relativePath: string): void {
         const instance = new Service(this, this.core);
         this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
-    private isServiceClass(obj: unknown): obj is MongoServiceConstructor {
+    private isServiceClass(obj: unknown): obj is MongooseServiceConstructor {
         return (
             typeof obj === 'function' &&
-            obj.prototype instanceof MongoService &&
+            obj.prototype instanceof MongooseService &&
             Reflect.hasMetadata(ServiceMetadataKey, obj)
         );
     }
@@ -199,7 +196,7 @@ export class Mongo extends Plugin<{ transport: 'gateway' }> {
         this._services[key] = instance;
     }
 
-    private unregister(Service: MongoServiceConstructor, artifacts?: { key?: string; modelName?: string }): void {
+    private unregister(Service: MongooseServiceConstructor, artifacts?: { key?: string; modelName?: string }): void {
         const key = artifacts?.key ?? (Reflect.getMetadata(ServiceMetadataKey, Service) as string | undefined);
         const modelName =
             artifacts?.modelName ??

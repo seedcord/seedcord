@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
-import type { MongoServiceKeys } from '../types/MongoServices';
+import type { MongooseServiceKeys } from '../types/MongooseServices';
 
-export const ModelMetadataKey = Symbol('db:model');
+export const ModelMetadataKey = Symbol('seedcord:mongoose:model');
 
 /**
  * Associates a Mongoose model with a database service
@@ -16,16 +16,16 @@ export const ModelMetadataKey = Symbol('db:model');
  * @decorator
  * @example
  * ```typescript
- * \@RegisterMongoService('users')
- * export class Users extends MongoService<IUser> {
- *   \@RegisterMongoModel('users')
+ * \@RegisterMongooseService('users')
+ * export class Users extends MongooseService<IUser> {
+ *   \@RegisterMongooseModel('users')
  *   public static schema = new mongoose.Schema<IUser>({
  *     username: { type: String, required: true, unique: true }
  *   });
  * }
  * ```
  */
-export function RegisterMongoModel<TService extends MongoServiceKeys>(collection: TService) {
+export function RegisterMongooseModel<TService extends MongooseServiceKeys>(collection: TService) {
     return <
         SchemaObj extends Record<KeyOfSchema, mongoose.Schema>,
         KeyOfSchema extends keyof SchemaObj & (string | symbol)

@@ -139,37 +139,37 @@ export enum SeedcordErrorCode {
     /** A plugin read `this.ctx` before `attach` finalized it. */
     PluginContextBeforeInit = 2002,
 
-    /** Mongo service class is missing the `@RegisterMongoService` decorator. */
-    PluginMongoServiceDecoratorMissing = 2101,
-    /** Mongo model class is missing the `@RegisterMongoModel` decorator. */
-    PluginMongoModelDecoratorMissing = 2102,
-    /** Mongo client failed to establish a connection. */
-    PluginMongoConnectionFailed = 2103,
-    /** Mongo client failed to disconnect cleanly during shutdown. */
-    PluginMongoDisconnectFailed = 2104,
-    /** Mongo `services` was accessed before the plugin finished initializing. */
-    PluginMongoServicesNotReady = 2105,
+    /** Mongoose service class is missing the `@RegisterMongooseService` decorator. */
+    PluginMongooseServiceDecoratorMissing = 2101,
+    /** Mongoose model class is missing the `@RegisterMongooseModel` decorator. */
+    PluginMongooseModelDecoratorMissing = 2102,
+    /** Mongoose client failed to establish a connection. */
+    PluginMongooseConnectionFailed = 2103,
+    /** Mongoose client failed to disconnect cleanly during shutdown. */
+    PluginMongooseDisconnectFailed = 2104,
+    /** Mongoose `services` was accessed before the plugin finished initializing. */
+    PluginMongooseServicesNotReady = 2105,
 
-    /** KPG service class is missing the `@RegisterKpgService` decorator. */
-    PluginKpgServiceDecoratorMissing = 2201,
-    /** KPG service class is missing its table metadata. */
-    PluginKpgServiceTableMissing = 2202,
+    /** Kysely service class is missing the `@RegisterKyselyService` decorator. */
+    PluginKyselyServiceDecoratorMissing = 2201,
+    /** Kysely service class is missing its table metadata. */
+    PluginKyselyServiceTableMissing = 2202,
     /** Migration manager received an invalid step count. */
-    PluginKpgInvalidStepCount = 2203,
+    PluginKyselyInvalidStepCount = 2203,
     /** Migration direction was not recognized. */
-    PluginKpgUnknownDirection = 2204,
+    PluginKyselyUnknownDirection = 2204,
     /** Provided migrations path could not be resolved. */
-    PluginKpgUnresolvedMigrationsPath = 2205,
+    PluginKyselyUnresolvedMigrationsPath = 2205,
     /** No migration files were found for execution. */
-    PluginKpgNoMigrationFiles = 2206,
+    PluginKyselyNoMigrationFiles = 2206,
     /** A migration module failed to export the expected functions. */
-    PluginKpgInvalidMigrationModule = 2207,
+    PluginKyselyInvalidMigrationModule = 2207,
     /** An arbitrary (non-Error) failure was reported by a migration. */
-    PluginKpgNonErrorFailure = 2208,
+    PluginKyselyNonErrorFailure = 2208,
     /** Postgres pool failed to close cleanly during shutdown. */
-    PluginKpgDisconnectFailed = 2209,
-    /** KPG `services` was accessed before the plugin finished initializing. */
-    PluginKpgServicesNotReady = 2210,
+    PluginKyselyDisconnectFailed = 2209,
+    /** Kysely `services` was accessed before the plugin finished initializing. */
+    PluginKyselyServicesNotReady = 2210,
 
     /** Config file default export was not an object. */
     CliConfigInvalidExport = 3101,
