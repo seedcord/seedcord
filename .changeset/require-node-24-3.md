@@ -2,7 +2,6 @@
 '@seedcord/event-emitter': patch
 '@seedcord/gateway': patch
 '@seedcord/errors': patch
-'@seedcord/plugins': patch
 '@seedcord/rate-limiter': patch
 '@seedcord/types': patch
 '@seedcord/utils': patch
