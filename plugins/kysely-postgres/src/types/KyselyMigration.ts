@@ -1,3 +1,4 @@
+import type { KyselySchema } from './KyselyDatabase';
 import type { KyselyMigrationsOptions } from './KyselyOptions';
 import type { Logger } from '@seedcord/logger';
 import type { Kysely } from 'kysely';
@@ -59,8 +60,8 @@ export interface StepMigrationOptions {
  *
  * @internal
  */
-export interface MigrationManagerContext<Database extends object> {
-    readonly db: Kysely<Database>;
+export interface MigrationManagerContext {
+    readonly db: Kysely<KyselySchema>;
     readonly logger: Logger;
     readonly config: KyselyMigrationsOptions;
     readonly baseDir: string;

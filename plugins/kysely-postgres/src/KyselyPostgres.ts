@@ -18,6 +18,7 @@ import { KyselyServiceRegistry } from './KyselyServiceRegistry';
 import { PostgresDatabaseBootstrapper } from './PostgresDatabaseBootstrapper';
 
 import type { KyselyServiceConstructor } from './KyselyService';
+import type { KyselySchema } from './types/KyselyDatabase';
 import type { MigrationOptions, StepMigrationOptions } from './types/KyselyMigration';
 import type { KyselyOptions } from './types/KyselyOptions';
 import type { KyselyServices } from './types/KyselyServices';
@@ -35,20 +36,20 @@ export interface KyselyArtifact {
  * Sets up the connection pool, applies migrations, and registers decorated
  * services so the core can resolve them.
  */
-export class KyselyPostgres<Database extends object> extends Plugin<{ transport: 'gateway' }> {
+export class KyselyPostgres extends Plugin<{ transport: 'gateway' }> {
     public readonly logger = new Logger('KyselyPostgres');
     private isInitialised = false;
     private servicesReady = false;
 
     /** Exposed Kysely instance once `init` completes. */
-    declare public connection: Kysely<Database>;
+    declare public connection: Kysely<KyselySchema>;
     private pool: Pool | null = null;
     private onConnectHandler: ((client: PoolClient) => void) | null = null;
-    private migrationManager: KyselyMigrationManager<Database> | null = null;
-    private readonly serviceRegistry: KyselyServiceRegistry<Database>;
+    private migrationManager: KyselyMigrationManager | null = null;
+    private readonly serviceRegistry: KyselyServiceRegistry;
     private readonly databaseBootstrapper: PostgresDatabaseBootstrapper;
     private databaseName: string | null = null;
-    private readonly hmrHandler?: HmrModuleHandler<KyselyServiceConstructor<Database>, void, KyselyArtifact>;
+    private readonly hmrHandler?: HmrModuleHandler<KyselyServiceConstructor, void, KyselyArtifact>;
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
@@ -89,7 +90,7 @@ export class KyselyPostgres<Database extends object> extends Plugin<{ transport:
         });
     }
 
-    private getArtifacts(ctor: KyselyServiceConstructor<Database>): KyselyArtifact {
+    private getArtifacts(ctor: KyselyServiceConstructor): KyselyArtifact {
         const key = Reflect.getMetadata(KyselyServiceMetadataKey, ctor) as string | undefined;
         return key ? { key } : {};
     }
@@ -136,7 +137,7 @@ export class KyselyPostgres<Database extends object> extends Plugin<{ transport:
         try {
             await this.testPoolConnection(pool);
 
-            this.connection = new Kysely<Database>({
+            this.connection = new Kysely<KyselySchema>({
                 dialect: new PostgresDialect({ pool }),
                 ...keepDefined(this.options.kysely ?? {})
             });
@@ -219,7 +220,7 @@ export class KyselyPostgres<Database extends object> extends Plugin<{ transport:
         return all.filter((m) => !m.executedAt);
     }
 
-    private getMigrationManager(): KyselyMigrationManager<Database> {
+    private getMigrationManager(): KyselyMigrationManager {
         if (this.migrationManager) return this.migrationManager;
 
         const manager = new KyselyMigrationManager({
@@ -247,7 +248,7 @@ export class KyselyPostgres<Database extends object> extends Plugin<{ transport:
      *
      * @internal Exposes the dev-only HMR handler to {@link KyselyServiceRegistry}.
      */
-    public trackServiceFile(filePath: string, ctor: KyselyServiceConstructor<Database>): void {
+    public trackServiceFile(filePath: string, ctor: KyselyServiceConstructor): void {
         this.hmrHandler?.trackHandler(filePath, ctor);
     }
 

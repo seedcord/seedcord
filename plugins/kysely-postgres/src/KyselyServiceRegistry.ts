@@ -13,23 +13,22 @@ import type { Logger } from '@seedcord/logger';
 /**
  * Discovers and registers Postgres services for the plugin.
  */
-export class KyselyServiceRegistry<Database extends object> {
-    private readonly services: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+export class KyselyServiceRegistry {
+    private readonly services = Object.create(null) as KyselyServices;
 
     constructor(
-        private readonly plugin: KyselyPostgres<Database>,
+        private readonly plugin: KyselyPostgres,
         private readonly core: Core,
         private readonly logger: Logger
     ) {}
 
     public get map(): KyselyServices {
-        // KyselyServices is augmented per-consumer via declaration merging; the registry holds the
-        // instances opaquely and exposes the generated map shape at this boundary.
         return this.services;
     }
 
     public register(key: string, instance: unknown): void {
-        this.services[key] = instance;
+        // keyed at runtime, so the augmented shape's known keys do not cover it
+        Reflect.set(this.services, key, instance);
     }
 
     public async loadFromDirectory(dir: string): Promise<void> {
@@ -50,20 +49,19 @@ export class KyselyServiceRegistry<Database extends object> {
         );
     }
 
-    public unregister(Service: KyselyServiceConstructor<Database>, artifacts?: KyselyArtifact): void {
+    public unregister(Service: KyselyServiceConstructor, artifacts?: KyselyArtifact): void {
         const key = artifacts?.key ?? (Reflect.getMetadata(KyselyServiceMetadataKey, Service) as string | undefined);
-        if (key && this.services[key]) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name, not a static property
-            delete this.services[key];
+        if (key && Reflect.get(this.services, key)) {
+            Reflect.deleteProperty(this.services, key);
         }
     }
 
-    public initializeService(Service: KyselyServiceConstructor<Database>, relativePath: string): void {
+    public initializeService(Service: KyselyServiceConstructor, relativePath: string): void {
         const instance = new Service(this.plugin, this.core);
         this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
-    public isServiceClass(obj: unknown): obj is KyselyServiceConstructor<Database> {
+    public isServiceClass(obj: unknown): obj is KyselyServiceConstructor {
         return (
             typeof obj === 'function' &&
             obj.prototype instanceof KyselyService &&

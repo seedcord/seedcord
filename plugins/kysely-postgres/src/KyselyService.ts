@@ -4,6 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { KyselyServiceMetadataKey, KyselyTableMetadataKey } from './decorators/RegisterKyselyService';
 
 import type { KyselyPostgres } from './KyselyPostgres';
+import type { KyselySchema, KyselyTable } from './types/KyselyDatabase';
 import type { Core } from '@seedcord/gateway';
 import type { TypedConstructor } from '@seedcord/types';
 import type { Kysely } from 'kysely';
@@ -15,13 +16,12 @@ import type { LiteralUnion } from 'type-fest';
  * Provides a small, typed shim around the shared Kysely instance and ensures
  * that subclasses have been decorated with `@RegisterKyselyService`.
  *
- * @typeParam Database - The database shape used by Kysely (tables as keys).
- * @typeParam TTable - The specific table key from `Database` this service works with.
+ * @typeParam TTable - The table this service works with. Defaults to every table in the schema.
  *
  * @example
  * ```typescript
  * \@RegisterKyselyService('users')
- * export class UsersService extends KyselyService<ImportedDatabaseInterface, 'users'> {
+ * export class UsersService extends KyselyService<'users'> {
  *   public async findById(id: string) {
  *     return this.entity
  *       .selectFrom(this.table)
@@ -34,11 +34,11 @@ import type { LiteralUnion } from 'type-fest';
  * const user = await this.core.db.services.users.findById('abc');
  * ```
  */
-export abstract class KyselyService<Database extends object, TTable extends LiteralUnion<keyof Database, string>> {
+export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, string> = KyselyTable> {
     public readonly table: TTable;
 
     public constructor(
-        protected readonly kysely: KyselyPostgres<Database>,
+        protected readonly kysely: KyselyPostgres,
         protected readonly core: Core
     ) {
         const ctor = this.constructor;
@@ -62,12 +62,10 @@ export abstract class KyselyService<Database extends object, TTable extends Lite
     /**
      * Shared Kysely instance used to interact with the Postgres database.
      */
-    public get db(): Kysely<Database> {
+    public get db(): Kysely<KyselySchema> {
         return this.kysely.connection;
     }
 }
 
 /** Constructor type for {@link KyselyService} classes */
-export type KyselyServiceConstructor<Database extends object = object> = TypedConstructor<
-    typeof KyselyService<Database, keyof Database & string>
->;
+export type KyselyServiceConstructor = TypedConstructor<typeof KyselyService<KyselyTable>>;

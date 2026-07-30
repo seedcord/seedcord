@@ -32,8 +32,7 @@ describe('KyselyPostgres lifecycle', () => {
         vi.clearAllMocks();
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- the Database type param is irrelevant here
-    function build(timeout?: number): KyselyPostgres<any> {
+    function build(timeout?: number): KyselyPostgres {
         return new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
             migrations: { path: testEnv.resolvePath('migrations') },

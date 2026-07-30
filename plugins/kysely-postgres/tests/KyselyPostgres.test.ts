@@ -9,8 +9,8 @@ import type { Core } from '@seedcord/gateway';
 
 describe('KyselyPostgres Plugin Integration', () => {
     let testEnv: TestEnvironment;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- test fixture, the Database type param is irrelevant
-    let plugin: KyselyPostgres<any>;
+
+    let plugin: KyselyPostgres;
     let mockCore: Core;
 
     beforeEach(async () => {

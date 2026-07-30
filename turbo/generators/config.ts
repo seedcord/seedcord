@@ -2,7 +2,7 @@ import type { PlopTypes } from '@turbo/gen';
 
 // eslint-disable-next-line max-lines-per-function -- one add action per scaffolded file, splitting only fragments the list
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
-    // every directory under plugins/ is a plugin, so the folder drops the prefix the package name keeps for npm
+    // every directory under plugins/ is a plugin, so the folder omits the prefix the package name keeps for npm
     plop.setHelper('folder', (dir: string, name: string) => (dir === 'plugins' ? name.replace(/^plugin-/, '') : name));
 
     plop.setGenerator('package', {

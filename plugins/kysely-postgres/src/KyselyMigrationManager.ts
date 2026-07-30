@@ -29,8 +29,8 @@ import type { Stats } from 'node:fs';
  *
  * @sealed
  */
-export class KyselyMigrationManager<Database extends object> {
-    constructor(private readonly ctx: MigrationManagerContext<Database>) {}
+export class KyselyMigrationManager {
+    constructor(private readonly ctx: MigrationManagerContext) {}
 
     public async migrate(options?: MigrationOptions): Promise<void> {
         const { target, direction = 'latest', steps } = options ?? {};
