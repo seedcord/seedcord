@@ -4,6 +4,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Mongoose } from '@src/Mongoose';
 
+import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';
 
 import type { CoreBase } from '@seedcord/core';
@@ -23,6 +24,8 @@ describe('Mongoose lifecycle', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
+        // the mongoose mock is module-level, so a leaked model name reaches the next test
+        for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
         vi.clearAllMocks();
     });
 
@@ -34,6 +37,38 @@ describe('Mongoose lifecycle', () => {
             ...(timeout !== undefined && { timeout })
         });
     }
+
+    it('clears its own model on dispose', async () => {
+        await testEnv.createFile(
+            'services/UserService.ts',
+            `
+            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('users')
+            export class UserService extends MongooseService {
+                @RegisterMongooseModel('users')
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            `
+        );
+        const plugin = build();
+
+        await plugin.init();
+        await plugin.dispose();
+
+        expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('users');
+    });
+
+    it('leaves a model it never registered alone', async () => {
+        mongoose.models.foreign = { modelName: 'foreign' } as unknown as mongoose.Model<unknown>;
+        const plugin = build();
+
+        await plugin.init();
+        await plugin.dispose();
+
+        expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('foreign');
+    });
 
     it('throws when services is read before init', () => {
         const plugin = build();

@@ -40,6 +40,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     private readonly uri: string;
 
     private readonly _services: Record<string, unknown> = {};
+    private readonly ownModels = new Set<string>();
 
     /**
      * Map of all loaded services. Keys come from `@RegisterMongooseService('key')`.
@@ -121,12 +122,13 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             });
     }
 
+    // scoped to this plugin's own models, the mongoose registry is global and shared with other users
     private clearModels(): void {
-        const modelNames = Object.keys(mongoose.models);
-        if (modelNames.length > 0) {
-            this.logger.debug(`Clearing ${modelNames.length} mongoose models`);
-            for (const name of modelNames) mongoose.deleteModel(name);
-        }
+        if (this.ownModels.size === 0) return;
+
+        this.logger.debug(`Clearing ${this.ownModels.size} mongoose models`);
+        for (const name of this.ownModels) mongoose.deleteModel(name);
+        this.ownModels.clear();
     }
 
     private async disconnect(): Promise<void> {
@@ -167,6 +169,8 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     private initializeService(Service: MongooseServiceConstructor, relativePath: string): void {
         const instance = new Service(this, this.core);
+        const { modelName } = this.getArtifacts(Service);
+        if (modelName) this.ownModels.add(modelName);
         this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
@@ -200,6 +204,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         if (modelName) {
             mongoose.deleteModel(modelName);
+            this.ownModels.delete(modelName);
         }
     }
 }
