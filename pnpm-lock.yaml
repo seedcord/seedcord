@@ -1048,25 +1048,6 @@ importers:
         specifier: workspace:*
         version: link:../vitest-config
 
-  packages/plugins:
-    dependencies:
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-
   packages/rate-limiter:
     dependencies:
       '@seedcord/types':
