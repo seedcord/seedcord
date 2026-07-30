@@ -95,7 +95,13 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         this.isInitialised = true;
 
         await this.connect();
-        await this.loadServices();
+        try {
+            await this.loadServices();
+        } catch (caught) {
+            // the host skips dispose for a plugin whose init rejected so need to disconnect here
+            await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
+            throw caught;
+        }
         this.servicesReady = true;
     }
 

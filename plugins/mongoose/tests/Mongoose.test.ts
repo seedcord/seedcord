@@ -16,6 +16,7 @@ describe('Mongoose Plugin Integration', () => {
     beforeEach(async () => {
         testEnv = new TestEnvironment('mongoose-test-');
         await testEnv.setup();
+        // justified: just to satisfy the constructor
         mockCore = { config: {} } as unknown as CoreBase;
     });
 

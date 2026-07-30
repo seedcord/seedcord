@@ -19,12 +19,13 @@ describe('Mongoose lifecycle', () => {
         await testEnv.setup();
         await testEnv.createFile('services/.keep', '');
         servicesDir = testEnv.resolvePath('services');
+        // justified: just to satisfy the constructor
         mockCore = { config: {} } as unknown as CoreBase;
     });
 
     afterEach(async () => {
         await testEnv.teardown();
-        // the mongoose mock is module-level, so a leaked model name reaches the next test
+        // the mongoose mock is module-level, so a leaked model goes into the the next test
         for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
         vi.clearAllMocks();
     });
@@ -37,6 +38,32 @@ describe('Mongoose lifecycle', () => {
             ...(timeout !== undefined && { timeout })
         });
     }
+
+    it('closes the connection when service loading fails after connecting', async () => {
+        const plugin = new Mongoose(mockCore, {
+            uri: 'mongodb://localhost:27017',
+            name: 'test',
+            dir: testEnv.resolvePath('absent')
+        });
+
+        await expect(plugin.init()).rejects.toThrow();
+
+        expect(vi.mocked(plugin.connection.disconnect)).toHaveBeenCalled();
+    });
+
+    it('keeps the init failure when the cleanup disconnect also fails', async () => {
+        const plugin = new Mongoose(mockCore, {
+            uri: 'mongodb://localhost:27017',
+            name: 'test',
+            dir: testEnv.resolvePath('absent')
+        });
+        const connection = await mongoose.connect('');
+        vi.mocked(connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
+
+        await expect(plugin.init()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryUnreadable })
+        );
+    });
 
     it('clears its own model on dispose', async () => {
         await testEnv.createFile(
