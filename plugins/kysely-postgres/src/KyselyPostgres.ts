@@ -123,8 +123,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             }
             await this.serviceRegistry.loadFromDirectory(this.options.dir);
         } catch (caught) {
-            // a partial scan leaves services registered, and a retry would carry them over
-            this.serviceRegistry.clear();
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to close the pool', error));
             throw caught;
@@ -168,6 +166,10 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
     }
 
     private async disconnect(): Promise<void> {
+        this.serviceRegistry.clear();
+        this.servicesReady = false;
+        this.isInitialised = false;
+
         const pool = this.pool;
         if (!pool) return;
 

@@ -188,6 +188,28 @@ describe('Mongoose lifecycle', () => {
         expect(vi.mocked(connection.disconnect)).toHaveBeenCalled();
     });
 
+    it('reconnects when init runs after dispose', async () => {
+        const plugin = build();
+        await plugin.init();
+        await plugin.dispose();
+        vi.mocked(mongoose.connect).mockClear();
+
+        await plugin.init();
+
+        expect(vi.mocked(mongoose.connect)).toHaveBeenCalled();
+    });
+
+    it('reports services unavailable after dispose', async () => {
+        const plugin = build();
+        await plugin.init();
+
+        await plugin.dispose();
+
+        expect(() => plugin.services).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseServicesNotReady })
+        );
+    });
+
     it('disposes without throwing when init never ran', async () => {
         const plugin = build();
 

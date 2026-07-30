@@ -193,6 +193,28 @@ describe('KyselyPostgres lifecycle', () => {
         expect(poolEnd).toHaveBeenCalled();
     });
 
+    it('reconnects when init runs after dispose', async () => {
+        const plugin = build();
+        await plugin.init();
+        await plugin.dispose();
+        poolConstruct.mockClear();
+
+        await plugin.init();
+
+        expect(poolConstruct).toHaveBeenCalled();
+    });
+
+    it('reports services unavailable after dispose', async () => {
+        const plugin = build();
+        await plugin.init();
+
+        await plugin.dispose();
+
+        expect(() => plugin.services).toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyServicesNotReady })
+        );
+    });
+
     it('disposes without throwing when init never ran', async () => {
         const plugin = build();
 

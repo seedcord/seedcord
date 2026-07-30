@@ -105,8 +105,6 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             await this.connect();
             await this.loadServices();
         } catch (caught) {
-            // a partial scan leaves services registered, and a retry would carry them over
-            for (const key of Object.keys(this._services)) Reflect.deleteProperty(this._services, key);
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
             throw caught;
@@ -148,6 +146,10 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async disconnect(): Promise<void> {
+        for (const key of Object.keys(this._services)) Reflect.deleteProperty(this._services, key);
+        this.servicesReady = false;
+        this.isInitialised = false;
+
         this.clearModels();
 
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- connect() may have failed before assigning, so there is nothing to disconnect
