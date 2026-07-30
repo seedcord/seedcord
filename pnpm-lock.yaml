@@ -453,7 +453,7 @@ importers:
         version: link:../packages/gateway
       '@seedcord/plugin-mongoose':
         specifier: workspace:*
-        version: link:../plugins/plugin-mongoose
+        version: link:../plugins/mongoose
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
@@ -1409,7 +1409,7 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
 
-  plugins/plugin-mongoose:
+  plugins/mongoose:
     dependencies:
       '@seedcord/errors':
         specifier: workspace:*

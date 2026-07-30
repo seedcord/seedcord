@@ -107,6 +107,6 @@
                 "tests/node/fixtures/**"
             ]
         },
-        "plugins/plugin-mongoose": {}
+        "plugins/mongoose": {}
     }
 }

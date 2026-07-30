@@ -2,6 +2,9 @@ import type { PlopTypes } from '@turbo/gen';
 
 // eslint-disable-next-line max-lines-per-function -- one add action per scaffolded file, splitting only fragments the list
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
+    // every directory under plugins/ is a plugin, so the folder drops the prefix the package name keeps for npm
+    plop.setHelper('folder', (dir: string, name: string) => (dir === 'plugins' ? name.replace(/^plugin-/, '') : name));
+
     plop.setGenerator('package', {
         description: 'Scaffold a new published @seedcord/<name> leaf package',
         prompts: [
@@ -32,52 +35,52 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         actions: [
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/package.json',
+                path: '{{ dir }}/{{ folder dir name }}/package.json',
                 templateFile: 'templates/package.json.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/tsconfig.json',
+                path: '{{ dir }}/{{ folder dir name }}/tsconfig.json',
                 templateFile: 'templates/tsconfig.json.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/tsdown.config.ts',
+                path: '{{ dir }}/{{ folder dir name }}/tsdown.config.ts',
                 templateFile: 'templates/tsdown.config.ts.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/eslint.config.mjs',
+                path: '{{ dir }}/{{ folder dir name }}/eslint.config.mjs',
                 templateFile: 'templates/eslint.config.mjs.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/tsdoc.json',
+                path: '{{ dir }}/{{ folder dir name }}/tsdoc.json',
                 templateFile: 'templates/tsdoc.json.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/README.md',
+                path: '{{ dir }}/{{ folder dir name }}/README.md',
                 templateFile: 'templates/README.md.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/LICENSE',
+                path: '{{ dir }}/{{ folder dir name }}/LICENSE',
                 templateFile: 'templates/LICENSE.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/src/index.ts',
+                path: '{{ dir }}/{{ folder dir name }}/src/index.ts',
                 templateFile: 'templates/src/index.ts.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/tests/basic.test.ts',
+                path: '{{ dir }}/{{ folder dir name }}/tests/basic.test.ts',
                 templateFile: 'templates/tests/basic.test.ts.hbs'
             },
             {
                 type: 'add',
-                path: '{{ dir }}/{{ name }}/vitest.config.ts',
+                path: '{{ dir }}/{{ folder dir name }}/vitest.config.ts',
                 templateFile: 'templates/vitest.config.ts.hbs'
             }
         ]

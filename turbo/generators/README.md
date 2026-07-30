@@ -10,7 +10,9 @@ turbo gen package --args <name> "<one-line description>" <dir>
 
 It prompts for the unscoped name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.mjs`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/basic.test.ts`, and `vitest.config.ts` from the templates in `templates/`.
 
-The folder basename matches the unscoped package name, so `@seedcord/plugin-mongoose` resolves to `plugins/plugin-mongoose/`. Every glob below reads that mapping.
+Under `packages/` the folder basename matches the unscoped package name. Under `plugins/` the folder drops the `plugin-` prefix, so `@seedcord/plugin-mongoose` scaffolds into `plugins/mongoose/`. The prefix earns its place on npm, where a package name carries no parent folder.
+
+Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name stays a human-facing label. The globs below are the exception and name the folder directly.
 
 A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, only the three internal config devDeps plus the `typescript` peer (`catalog:peer`), a single `.` export with one tsdown entry, `publishConfig` access public with provenance, tsconfig extending `@seedcord/tsconfig/node`, tsdown via `createTsdownConfig`, and the `version` export line.
 
