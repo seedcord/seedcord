@@ -7,8 +7,11 @@ import { TestEnvironment } from './utils/test-env';
 
 import type { CoreBase } from '@seedcord/core';
 
-// the pg mock shares one `end` across pool instances so the close is assertable
-const { poolEnd } = (await import('pg')) as unknown as { poolEnd: ReturnType<typeof vi.fn> };
+// the pg mock shares `end` and `connect` across pool instances so both are assertable and failable
+const { poolEnd, poolConnect } = (await import('pg')) as unknown as {
+    poolEnd: ReturnType<typeof vi.fn>;
+    poolConnect: ReturnType<typeof vi.fn>;
+};
 
 describe('KyselyPostgres lifecycle', () => {
     let testEnv: TestEnvironment;
@@ -37,6 +40,34 @@ describe('KyselyPostgres lifecycle', () => {
         });
     }
 
+    it('closes the pool when the connection test fails', async () => {
+        // targeting the admin db makes the bootstrapper skip its own pool, so the only connect is the plugin's
+        const plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/postgres',
+            migrations: { path: testEnv.resolvePath('migrations') },
+            dir: testEnv.resolvePath('services')
+        });
+        poolConnect.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+
+        await expect(plugin.init()).rejects.toThrow('ECONNREFUSED');
+
+        expect(poolEnd).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries after a failed init', async () => {
+        const plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/postgres',
+            migrations: { path: testEnv.resolvePath('migrations') },
+            dir: testEnv.resolvePath('services')
+        });
+        poolConnect.mockRejectedValueOnce(new Error('ECONNREFUSED'));
+        await expect(plugin.init()).rejects.toThrow();
+
+        await plugin.init();
+
+        expect(plugin.services).toEqual({});
+    });
+
     it('closes the pool when service loading fails after connecting', async () => {
         const plugin = new KyselyPostgres(mockCore, {
             connectionString: 'postgres://localhost:5432/test',
@@ -44,7 +75,9 @@ describe('KyselyPostgres lifecycle', () => {
             dir: testEnv.resolvePath('absent')
         });
 
-        await expect(plugin.init()).rejects.toThrow();
+        await expect(plugin.init()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryUnreadable })
+        );
 
         // the bootstrapper's admin pool is the first close, the plugin's own pool is the second
         expect(poolEnd).toHaveBeenCalledTimes(2);

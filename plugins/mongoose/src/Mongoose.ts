@@ -92,10 +92,9 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     public async init(): Promise<void> {
         if (this.isInitialised) return;
-        this.isInitialised = true;
 
-        await this.connect();
         try {
+            await this.connect();
             await this.loadServices();
         } catch (caught) {
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
@@ -103,6 +102,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             throw caught;
         }
         this.servicesReady = true;
+        this.isInitialised = true;
     }
 
     public override async dispose(): Promise<void> {
@@ -146,8 +146,9 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.connection
             .disconnect()
             .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
-            .catch((err) => {
-                this.logger.error(`Could not disconnect from MongoDB: ${(err as Error).message}`);
+            .catch((err: unknown) => {
+                const error = Error.isError(err) ? err : new Error(String(err));
+                this.logger.error(`Could not disconnect from MongoDB: ${error.message}`);
                 throw new SeedcordError(SeedcordErrorCode.PluginMongooseDisconnectFailed, { cause: err });
             });
     }
@@ -188,11 +189,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         );
     }
 
-    /**
-     * Register hook used by decorated services.
-     *
-     * @internal
-     */
+    /** @internal */
     _register(key: string, instance: unknown): void {
         this._services[key] = instance;
     }

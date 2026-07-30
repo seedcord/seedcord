@@ -132,6 +132,16 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
+    it('retries after a failed init', async () => {
+        vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
+        const plugin = build();
+        await expect(plugin.init()).rejects.toThrow();
+
+        await plugin.init();
+
+        expect(plugin.services).toEqual({});
+    });
+
     it('disconnects the live connection on dispose', async () => {
         const plugin = build();
         await plugin.init();

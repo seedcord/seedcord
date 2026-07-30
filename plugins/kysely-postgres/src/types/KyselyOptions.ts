@@ -38,7 +38,7 @@ export interface KyselyOptions {
     readonly connectionString?: string;
     /** Optional SQL statements executed for each new connection */
     readonly onConnectSQL?: string[];
-    /** Force using insecure SSL*/
+    /** Force using insecure SSL */
     readonly forceInsecureSSL?: boolean;
     /** Kysely config (excludes dialect because it's Postgres for this plugin) */
     readonly kysely?: Except<KyselyConfig, 'dialect'>;
@@ -47,5 +47,5 @@ export interface KyselyOptions {
      *
      * @defaultValue `10_000`
      */
-    timeout?: number;
+    readonly timeout?: number;
 }

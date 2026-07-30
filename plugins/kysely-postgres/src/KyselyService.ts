@@ -50,7 +50,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
 
         const table = Reflect.getMetadata(KyselyTableMetadataKey, ctor) as TTable | undefined;
 
-        // This check should always pass since TTable is derived from the key if a table is not provided explicitly.
+        // the decorator always writes a table with the key, so this only fires if it was bypassed
         if (!table) {
             throw new SeedcordError(SeedcordErrorCode.PluginKyselyServiceTableMissing, [ctor.name]);
         }

@@ -14,6 +14,7 @@ import type { Logger } from '@seedcord/logger';
  * Discovers and registers Postgres services for the plugin.
  */
 export class KyselyServiceRegistry {
+    // the augmented interface has no index signature, hence Reflect below
     private readonly services = Object.create(null) as KyselyServices;
 
     constructor(
@@ -27,7 +28,6 @@ export class KyselyServiceRegistry {
     }
 
     public register(key: string, instance: unknown): void {
-        // keyed at runtime, so the augmented shape's known keys do not cover it
         Reflect.set(this.services, key, instance);
     }
 

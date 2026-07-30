@@ -52,6 +52,8 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
     /**
      * Map of all services registered with the plugin, keyed by their decorator name.
+     *
+     * @throws A **SeedcordError** if accessed before the plugin finishes initializing.
      */
     public get services(): KyselyServices {
         if (!this.servicesReady) {
@@ -100,10 +102,9 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
      */
     public async init(): Promise<void> {
         if (this.isInitialised) return;
-        this.isInitialised = true;
 
-        await this.connect();
         try {
+            await this.connect();
             const startupConfig = this.options.migrations.onStartup;
             if (startupConfig !== false) {
                 if (startupConfig && typeof startupConfig !== 'boolean') {
@@ -119,6 +120,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             throw caught;
         }
         this.servicesReady = true;
+        this.isInitialised = true;
     }
 
     public override async dispose(): Promise<void> {
@@ -168,8 +170,9 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         this.migrationManager = null;
 
         this.logger.info(chalk.gray('Closing Postgres pool.'));
-        await pool.end().catch((err) => {
-            this.logger.error(`Could not close pg pool: ${(err as Error).message}`);
+        await pool.end().catch((err: unknown) => {
+            const error = Error.isError(err) ? err : new Error(String(err));
+            this.logger.error(`Could not close pg pool: ${error.message}`);
             throw new SeedcordError(SeedcordErrorCode.PluginKyselyDisconnectFailed, { cause: err });
         });
         this.logger.info(chalk.red.bold('Disconnected from Postgres'));
@@ -231,11 +234,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         return manager;
     }
 
-    /**
-     * Register hook used by decorated services.
-     *
-     * @internal
-     */
+    /** @internal */
     _register(key: string, instance: unknown): void {
         this.serviceRegistry.register(key, instance);
     }

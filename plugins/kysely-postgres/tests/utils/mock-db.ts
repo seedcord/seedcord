@@ -9,15 +9,16 @@ vi.mock('kysely', async () => {
 });
 
 vi.mock('pg', () => {
-    // shared across instances so a test can assert the plugin closed its pool
+    // shared across instances so a test can assert the plugin closed its pool, or fail a connect
     const end = vi.fn().mockResolvedValue(undefined);
+    const connect = vi.fn().mockResolvedValue({
+        release: vi.fn(),
+        query: vi.fn().mockResolvedValue({ rows: [] })
+    });
     class Pool {
-        connect = vi.fn().mockResolvedValue({
-            release: vi.fn(),
-            query: vi.fn().mockResolvedValue({ rows: [] })
-        });
+        connect = connect;
         end = end;
         on = vi.fn();
     }
-    return { Pool, poolEnd: end };
+    return { Pool, poolEnd: end, poolConnect: connect };
 });

@@ -1,8 +1,8 @@
 /**
- * Namespace interface that gets augmented by individual service packages.
+ * Registry of Kysely services, augmented per consumer via declaration merging.
  *
- * This interface can be augmented via declaration merging to add
- * type-safe service definitions when using the `@RegisterKyselyService` decorator.
+ * Declare a member for each class you decorate with `@RegisterKyselyService` to get
+ * type-safe access to it.
  *
  * @example
  * ```typescript
