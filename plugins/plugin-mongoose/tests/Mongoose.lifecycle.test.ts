@@ -47,17 +47,6 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
-    it('registers a shutdown task carrying the configured timeout', () => {
-        build(5000);
-
-        expect(mockCore.shutdown.addTask).toHaveBeenCalledWith(
-            expect.anything(),
-            'stop-database',
-            expect.any(Function),
-            5000
-        );
-    });
-
     it('connects once across repeated init calls', async () => {
         const plugin = build();
 
@@ -85,9 +74,19 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
-    it('stops without throwing when init never ran', async () => {
+    it('disconnects the live connection on dispose', async () => {
+        const plugin = build();
+        await plugin.init();
+        const { connection } = plugin;
+
+        await plugin.dispose();
+
+        expect(vi.mocked(connection.disconnect)).toHaveBeenCalled();
+    });
+
+    it('disposes without throwing when init never ran', async () => {
         const plugin = build();
 
-        await expect(plugin.stop()).resolves.toBeUndefined();
+        await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 });

@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Plugin } from '@seedcord/gateway';
@@ -62,15 +61,8 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
         host: CoreBase,
         private readonly options: MongooseOptions
     ) {
-        super(host);
+        super(host, { dispose: keepDefined({ timeout: options.timeout }) });
         this.uri = options.uri;
-
-        this.core.shutdown.addTask(
-            ShutdownPhase.Disconnect,
-            'stop-database',
-            async () => await this.stop(),
-            this.options.timeout
-        );
 
         if (!Envapter.isDevelopment) return;
         this.hmrHandler = new HmrModuleHandler({
@@ -106,8 +98,7 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
         this.servicesReady = true;
     }
 
-    /** @internal */
-    public async stop(): Promise<void> {
+    public override async dispose(): Promise<void> {
         await this.disconnect();
     }
 
