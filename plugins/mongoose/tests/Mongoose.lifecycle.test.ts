@@ -132,6 +132,42 @@ describe('Mongoose lifecycle', () => {
         );
     });
 
+    it('drops services registered by a failed init when the retry no longer finds them', async () => {
+        // A sorts before Z, so this one registers before the broken file aborts the scan
+        await testEnv.createFile(
+            'services/AUserService.ts',
+            `
+            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('users')
+            export class AUserService extends MongooseService {
+                @RegisterMongooseModel('users')
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            `
+        );
+        await testEnv.createFile('services/ZBroken.ts', 'export const broken = {{{ not valid');
+        const plugin = build();
+
+        await expect(plugin.init()).rejects.toThrow();
+
+        await testEnv.removeFile('services/AUserService.ts');
+        await testEnv.createFile('services/ZBroken.ts', 'export const fine = 1;');
+
+        await plugin.init();
+
+        expect(plugin.services).not.toHaveProperty('users');
+    });
+
+    it('connects once when two callers race init', async () => {
+        const plugin = build();
+
+        await Promise.all([plugin.init(), plugin.init()]);
+
+        expect(vi.mocked(mongoose.connect)).toHaveBeenCalledTimes(1);
+    });
+
     it('retries after a failed init', async () => {
         vi.mocked(mongoose.connect).mockRejectedValueOnce(new Error('refused'));
         const plugin = build();

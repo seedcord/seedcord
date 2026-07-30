@@ -166,6 +166,45 @@ describe('KyselyPostgres Plugin Integration', () => {
         expect(plugin.services).not.toHaveProperty('users');
     });
 
+    it('drops services registered by a failed init when the retry no longer finds them', async () => {
+        const servicesDir = 'services';
+        // A sorts before Z, so this one registers before the broken file aborts the scan
+        await testEnv.createFile(
+            `${servicesDir}/AUserService.ts`,
+            `
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
+
+            @RegisterKyselyService('users')
+            export class AUserService extends KyselyService<any> {}
+            `
+        );
+        await testEnv.createFile(`${servicesDir}/ZBroken.ts`, 'export const broken = {{{ not valid');
+
+        plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: { path: testEnv.resolvePath('migrations') },
+            dir: testEnv.resolvePath(servicesDir)
+        });
+
+        await expect(plugin.init()).rejects.toThrow();
+
+        await testEnv.removeFile(`${servicesDir}/AUserService.ts`);
+        await testEnv.createFile(
+            `${servicesDir}/ZBroken.ts`,
+            `
+            import { KyselyService, RegisterKyselyService } from '${pluginsPath}';
+
+            @RegisterKyselyService('products')
+            export class ZProductService extends KyselyService<any> {}
+            `
+        );
+
+        await plugin.init();
+
+        expect(plugin.services).toHaveProperty('products');
+        expect(plugin.services).not.toHaveProperty('users');
+    });
+
     it('keeps the last-good service when a reload throws', async () => {
         const servicesDir = 'services';
         const userFile = await testEnv.createFile(

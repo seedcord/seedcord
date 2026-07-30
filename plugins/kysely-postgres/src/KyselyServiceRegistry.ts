@@ -31,6 +31,10 @@ export class KyselyServiceRegistry {
         Reflect.set(this.services, key, instance);
     }
 
+    public clear(): void {
+        for (const key of Object.keys(this.services)) Reflect.deleteProperty(this.services, key);
+    }
+
     public async loadFromDirectory(dir: string): Promise<void> {
         this.logger.info(chalk.bold(dir));
 

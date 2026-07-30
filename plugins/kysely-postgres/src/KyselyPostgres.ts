@@ -39,6 +39,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
     public readonly logger = new Logger('KyselyPostgres');
     private isInitialised = false;
     private servicesReady = false;
+    private inFlight: Promise<void> | null = null;
 
     /** Exposed Kysely instance once `init` completes. */
     declare public connection: Kysely<KyselySchema>;
@@ -100,9 +101,16 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
      *
      * Safe to call multiple times, subsequent calls exit early.
      */
-    public async init(): Promise<void> {
-        if (this.isInitialised) return;
+    public init(): Promise<void> {
+        if (this.isInitialised) return Promise.resolve();
+        // racing callers share one attempt, and clearing it on settle means the next call starts a fresh one
+        this.inFlight ??= this.runInit().finally(() => {
+            this.inFlight = null;
+        });
+        return this.inFlight;
+    }
 
+    private async runInit(): Promise<void> {
         try {
             await this.connect();
             const startupConfig = this.options.migrations.onStartup;
@@ -115,6 +123,8 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             }
             await this.serviceRegistry.loadFromDirectory(this.options.dir);
         } catch (caught) {
+            // a partial scan leaves services registered, and a retry would carry them over
+            this.serviceRegistry.clear();
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to close the pool', error));
             throw caught;
@@ -151,9 +161,9 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             const dbLabel = this.databaseName ?? 'unknown';
             this.logger.info(`Connected to Postgres database ${chalk.bold.magenta(dbLabel)}`);
         } catch (err) {
-            const error = Error.isError(err) ? err : new Error(String(err));
-            this.logger.error(`Could not connect to Postgres: ${error.message}`);
-            throw error;
+            throw new SeedcordError(SeedcordErrorCode.PluginKyselyConnectionFailed, [this.databaseName ?? undefined], {
+                cause: err
+            });
         }
     }
 

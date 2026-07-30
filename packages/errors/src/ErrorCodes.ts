@@ -170,6 +170,10 @@ export enum SeedcordErrorCode {
     PluginKyselyDisconnectFailed = 2209,
     /** Kysely `services` was accessed before the plugin finished initializing. */
     PluginKyselyServicesNotReady = 2210,
+    /** Postgres pool failed to establish a connection. */
+    PluginKyselyConnectionFailed = 2211,
+    /** Bootstrapper failed to ensure the target Postgres database exists. */
+    PluginKyselyBootstrapFailed = 2212,
 
     /** Config file default export was not an object. */
     CliConfigInvalidExport = 3101,

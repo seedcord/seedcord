@@ -37,6 +37,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public readonly logger = new Logger('Mongoose');
     private isInitialised = false;
     private servicesReady = false;
+    private inFlight: Promise<void> | null = null;
     private readonly uri: string;
 
     private readonly _services: Record<string, unknown> = {};
@@ -90,13 +91,22 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         await this.hmrHandler?.handle(event);
     }
 
-    public async init(): Promise<void> {
-        if (this.isInitialised) return;
+    public init(): Promise<void> {
+        if (this.isInitialised) return Promise.resolve();
+        // racing callers share one attempt, and clearing it on settle means the next call starts a fresh one
+        this.inFlight ??= this.runInit().finally(() => {
+            this.inFlight = null;
+        });
+        return this.inFlight;
+    }
 
+    private async runInit(): Promise<void> {
         try {
             await this.connect();
             await this.loadServices();
         } catch (caught) {
+            // a partial scan leaves services registered, and a retry would carry them over
+            for (const key of Object.keys(this._services)) Reflect.deleteProperty(this._services, key);
             // the host skips dispose for a plugin whose init rejected so need to disconnect here
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
             throw caught;

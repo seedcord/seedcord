@@ -1,3 +1,5 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 import { Pool, type PoolClient, type PoolConfig } from 'pg';
 
@@ -9,6 +11,12 @@ function disposableClient(client: PoolClient): PoolClient & Disposable {
 
 function disposablePool(pool: Pool): Pool & AsyncDisposable {
     return Object.assign(pool, { [Symbol.asyncDispose]: () => pool.end() });
+}
+
+const DUPLICATE_DATABASE = '42P04'; // postgres duplicate_database
+
+function isDuplicateDatabase(error: unknown): boolean {
+    return typeof error === 'object' && error !== null && 'code' in error && error.code === DUPLICATE_DATABASE;
 }
 
 /**
@@ -71,11 +79,8 @@ export class PostgresDatabaseBootstrapper {
             }
 
             await this.createDatabase(adminPool, targetDb);
-            this.logger.info(chalk.green(`Created database ${chalk.bold(targetDb)}.`));
         } catch (error) {
-            const err = Error.isError(error) ? error : new Error(String(error));
-            this.logger.error(`Failed to ensure database ${targetDb}: ${err.message}`);
-            throw err;
+            throw new SeedcordError(SeedcordErrorCode.PluginKyselyBootstrapFailed, [targetDb], { cause: error });
         }
     }
 
@@ -107,7 +112,15 @@ export class PostgresDatabaseBootstrapper {
     private async createDatabase(pool: Pool, database: string): Promise<void> {
         using client = disposableClient(await pool.connect());
         const createSql = `CREATE DATABASE ${PostgresDatabaseBootstrapper.escapeIdentifier(database)}`;
-        await client.query(createSql);
+
+        try {
+            await client.query(createSql);
+            this.logger.info(chalk.green(`Created database ${chalk.bold(database)}.`));
+        } catch (error) {
+            // another process created it first, and the database exists either way
+            if (!isDuplicateDatabase(error)) throw error;
+            this.logger.info(chalk.gray(`Database ${chalk.yellow(database)} was created concurrently.`));
+        }
     }
 
     private static parseDatabaseName(config: PoolConfig): string | null {
