@@ -104,7 +104,6 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async connect(): Promise<void> {
-        this.clearModels();
         this.connection = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
@@ -122,7 +121,8 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             });
     }
 
-    // scoped to this plugin's own models, the mongoose registry is global and shared with other users
+    // scoped to this plugin's own models because the mongoose registry is global and shared with
+    // everything else in the process
     private clearModels(): void {
         if (this.ownModels.size === 0) return;
 

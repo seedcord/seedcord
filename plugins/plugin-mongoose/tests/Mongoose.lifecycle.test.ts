@@ -120,4 +120,14 @@ describe('Mongoose lifecycle', () => {
 
         await expect(plugin.dispose()).resolves.toBeUndefined();
     });
+
+    it('translates a disconnect failure into PluginMongooseDisconnectFailed', async () => {
+        const plugin = build();
+        await plugin.init();
+        vi.mocked(plugin.connection.disconnect).mockRejectedValueOnce(new Error('still busy'));
+
+        await expect(plugin.dispose()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseDisconnectFailed })
+        );
+    });
 });

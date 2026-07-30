@@ -1,6 +1,6 @@
 import type { PlopTypes } from '@turbo/gen';
 
-// eslint-disable-next-line max-lines-per-function -- this is a generator function. it's fine.
+// eslint-disable-next-line max-lines-per-function -- one add action per scaffolded file, splitting only fragments the list
 export default function generator(plop: PlopTypes.NodePlopAPI): void {
     plop.setGenerator('package', {
         description: 'Scaffold a new published @seedcord/<name> leaf package',
