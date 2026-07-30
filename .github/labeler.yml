@@ -10,9 +10,6 @@
 '📦 mock':
   - changed-files:
       - any-glob-to-any-file: 'mock/**'
-'📦 plugins':
-  - changed-files:
-      - any-glob-to-any-file: 'packages/plugins/**'
 '📦 plugin-mongoose':
   - changed-files:
       - any-glob-to-any-file: 'plugins/mongoose/**'

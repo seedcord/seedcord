@@ -20,7 +20,7 @@ const PACKAGE_OPTIONS: DropdownOption[] = [
     { value: 'logger', label: '@seedcord/logger' },
     { value: 'utils', label: '@seedcord/utils' },
     { value: 'types', label: '@seedcord/types' },
-    { value: 'plugins', label: '@seedcord/plugins' }
+    { value: 'plugin-mongoose', label: '@seedcord/plugin-mongoose' }
 ];
 
 const VERSION_OPTIONS: DropdownOption[] = [

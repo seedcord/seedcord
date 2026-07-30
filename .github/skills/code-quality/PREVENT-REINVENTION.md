@@ -2,7 +2,7 @@ name: prevent-reinvention description: Use this before adding code, config, or c
 
 # Prevent Reinvention & Tech-Debt Discipline
 
-Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of shared building blocks (`@seedcord/types`, `@seedcord/utils`, `@seedcord/core`, `@seedcord/logger`, `@seedcord/plugins`, `@seedcord/docs-engine`, `@seedcord/docs-generator`), with Next.js 16 + React 19 apps in `apps/{docs,guide,home}` and a mock bot in `mock/` for end-to-end tests of the framework. There is a unified `tsconfig` package, an `eslint-config` package, a `tsup-config` package, and a workspace catalog (`pnpm-workspace.yaml`) that pins shared versions. Every new piece of code is one of two things:
+Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of shared building blocks (`@seedcord/types`, `@seedcord/utils`, `@seedcord/core`, `@seedcord/logger`, `@seedcord/docs-engine`, `@seedcord/docs-generator`), with Next.js 16 + React 19 apps in `apps/{docs,guide,home}` and a mock bot in `mock/` for end-to-end tests of the framework. There is a unified `tsconfig` package, an `eslint-config` package, a `tsup-config` package, and a workspace catalog (`pnpm-workspace.yaml`) that pins shared versions. Every new piece of code is one of two things:
 
 1. **Reuse** of an existing primitive, helper, type, convention, or pattern.
 2. **A justified, named extension** to that existing surface — added in the right package, exported through the right boundary, then reused.
@@ -169,7 +169,7 @@ If no existing surface fits and there is no clean shared extension path, stop an
     - Runtime service (logger, rate limiter, lifecycle, error class, health check): `@seedcord/logger` / `@seedcord/rate-limiter` / `@seedcord/core/node` / `@seedcord/errors`
     - Typed event emitter: `@seedcord/event-emitter`
     - Framework-level bus event, interface, or orchestrator hook: `@seedcord/seedcord`
-    - Plugin-shaped behavior: `@seedcord/plugins`
+    - Plugin-shaped behavior: a package under `plugins/`
     - CLI command / Ink component for the CLI: `@seedcord/cli`
     - Doc-extraction or doc-rendering logic: `@seedcord/docs-generator` / `@seedcord/docs-engine`
 2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the tsup config entry if the package uses tsup.

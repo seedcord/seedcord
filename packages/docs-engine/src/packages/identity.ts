@@ -22,10 +22,6 @@ const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
         displayName: 'http',
         aliases: ['http', 'edge']
     },
-    '@seedcord/plugins': {
-        displayName: 'plugins',
-        aliases: ['plugins']
-    },
     '@seedcord/plugin-mongoose': {
         displayName: 'plugin-mongoose',
         aliases: ['plugin-mongoose', 'mongoose', 'mongo']

@@ -61,8 +61,8 @@ describe('VersionedDocsEngine', () => {
                     entities: { logger: 'class' }
                 },
                 // Known but declares no entities here: a ref mis-attributed to it re-homes elsewhere.
-                plugins: {
-                    fullName: '@seedcord/plugins',
+                types: {
+                    fullName: '@seedcord/types',
                     stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
                     prerelease: null,
                     entities: {}
