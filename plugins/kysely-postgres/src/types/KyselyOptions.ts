@@ -42,6 +42,10 @@ export interface KyselyOptions {
     readonly forceInsecureSSL?: boolean;
     /** Kysely config (excludes dialect because it's Postgres for this plugin) */
     readonly kysely?: Except<KyselyConfig, 'dialect'>;
-    /** Plugin timeout in milliseconds */
+    /**
+     * How long closing the pool may take during shutdown, in milliseconds.
+     *
+     * @defaultValue `10_000`
+     */
     timeout?: number;
 }

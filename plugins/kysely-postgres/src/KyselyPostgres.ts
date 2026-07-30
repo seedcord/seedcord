@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { ShutdownPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Plugin } from '@seedcord/gateway';
@@ -65,15 +64,9 @@ export class KyselyPostgres extends Plugin<{ transport: 'gateway' }> {
         host: CoreBase,
         private readonly options: KyselyOptions
     ) {
-        super(host);
+        super(host, { dispose: keepDefined({ timeout: options.timeout }) });
         this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger);
         this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
-        this.core.shutdown.addTask(
-            ShutdownPhase.Disconnect,
-            'stop-kysely-postgres',
-            async () => await this.stop(),
-            this.options.timeout
-        );
 
         if (!Envapter.isDevelopment) return; // HMR only in development
 
@@ -110,21 +103,25 @@ export class KyselyPostgres extends Plugin<{ transport: 'gateway' }> {
         this.isInitialised = true;
 
         await this.connect();
-
-        const startupConfig = this.options.migrations.onStartup;
-        if (startupConfig !== false) {
-            if (startupConfig && typeof startupConfig !== 'boolean') {
-                await this.migrate(startupConfig);
-            } else {
-                await this.migrate();
+        try {
+            const startupConfig = this.options.migrations.onStartup;
+            if (startupConfig !== false) {
+                if (startupConfig && typeof startupConfig !== 'boolean') {
+                    await this.migrate(startupConfig);
+                } else {
+                    await this.migrate();
+                }
             }
+            await this.serviceRegistry.loadFromDirectory(this.options.dir);
+        } catch (caught) {
+            // the host skips dispose for a plugin whose init rejected so need to disconnect here
+            await this.disconnect().catch((error: unknown) => this.logger.error('failed to close the pool', error));
+            throw caught;
         }
-        await this.serviceRegistry.loadFromDirectory(this.options.dir);
         this.servicesReady = true;
     }
 
-    /** @internal */
-    public async stop(): Promise<void> {
+    public override async dispose(): Promise<void> {
         await this.disconnect();
     }
 

@@ -41,22 +41,38 @@ describe('KyselyPostgres lifecycle', () => {
         });
     }
 
+    it('closes the pool when service loading fails after connecting', async () => {
+        const plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: { path: testEnv.resolvePath('migrations') },
+            dir: testEnv.resolvePath('absent')
+        });
+
+        await expect(plugin.init()).rejects.toThrow();
+
+        // the bootstrapper's admin pool is the first close, the plugin's own pool is the second
+        expect(poolEnd).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps the init failure when the cleanup close also fails', async () => {
+        const plugin = new KyselyPostgres(mockCore, {
+            connectionString: 'postgres://localhost:5432/test',
+            migrations: { path: testEnv.resolvePath('migrations') },
+            dir: testEnv.resolvePath('absent')
+        });
+        // the bootstrapper's admin close comes first, the cleanup close is the one that fails
+        poolEnd.mockResolvedValueOnce(undefined).mockRejectedValueOnce(new Error('still busy'));
+
+        await expect(plugin.init()).rejects.toThrow(
+            expect.objectContaining({ code: SeedcordErrorCode.CoreDirectoryUnreadable })
+        );
+    });
+
     it('throws when services is read before init', () => {
         const plugin = build();
 
         expect(() => plugin.services).toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyServicesNotReady })
-        );
-    });
-
-    it('registers a shutdown task carrying the configured timeout', () => {
-        build(5000);
-
-        expect(mockCore.shutdown.addTask).toHaveBeenCalledWith(
-            expect.anything(),
-            'stop-kysely-postgres',
-            expect.any(Function),
-            5000
         );
     });
 
@@ -79,21 +95,21 @@ describe('KyselyPostgres lifecycle', () => {
         expect(plugin.services).toEqual({});
     });
 
-    it('closes the pool on stop', async () => {
+    it('closes the pool on dispose', async () => {
         const plugin = build();
         await plugin.init();
         // the bootstrapper opens and closes an admin pool during init so only count the stop
         poolEnd.mockClear();
 
-        await plugin.stop();
+        await plugin.dispose();
 
         expect(poolEnd).toHaveBeenCalled();
     });
 
-    it('stops without throwing when init never ran', async () => {
+    it('disposes without throwing when init never ran', async () => {
         const plugin = build();
 
-        await expect(plugin.stop()).resolves.toBeUndefined();
+        await expect(plugin.dispose()).resolves.toBeUndefined();
     });
 
     it('translates a pool close failure into PluginKyselyDisconnectFailed', async () => {
@@ -101,7 +117,7 @@ describe('KyselyPostgres lifecycle', () => {
         await plugin.init();
         poolEnd.mockRejectedValueOnce(new Error('still busy'));
 
-        await expect(plugin.stop()).rejects.toThrow(
+        await expect(plugin.dispose()).rejects.toThrow(
             expect.objectContaining({ code: SeedcordErrorCode.PluginKyselyDisconnectFailed })
         );
     });
