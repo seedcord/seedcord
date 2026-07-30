@@ -37,18 +37,22 @@ export function pruneSupersededPrereleases(changelog: string): string {
 }
 
 function pruneAllPackages(): void {
-    const packagesDir = resolve(import.meta.dirname, '..', '..', 'packages');
+    const repoRoot = resolve(import.meta.dirname, '..', '..');
     let prunedAny = false;
-    for (const entry of fs.readdirSync(packagesDir, { withFileTypes: true })) {
-        if (!entry.isDirectory()) continue;
-        const changelogPath = resolve(packagesDir, entry.name, 'CHANGELOG.md');
-        if (!fs.existsSync(changelogPath)) continue;
-        const before = fs.readFileSync(changelogPath, 'utf8');
-        const after = pruneSupersededPrereleases(before);
-        if (after === before) continue;
-        fs.writeFileSync(changelogPath, after, 'utf8');
-        console.log(`Pruned superseded prerelease sections from ${changelogPath}`);
-        prunedAny = true;
+    for (const root of ['packages', 'plugins']) {
+        const rootDir = resolve(repoRoot, root);
+        if (!fs.existsSync(rootDir)) continue;
+        for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {
+            if (!entry.isDirectory()) continue;
+            const changelogPath = resolve(rootDir, entry.name, 'CHANGELOG.md');
+            if (!fs.existsSync(changelogPath)) continue;
+            const before = fs.readFileSync(changelogPath, 'utf8');
+            const after = pruneSupersededPrereleases(before);
+            if (after === before) continue;
+            fs.writeFileSync(changelogPath, after, 'utf8');
+            console.log(`Pruned superseded prerelease sections from ${changelogPath}`);
+            prunedAny = true;
+        }
     }
     if (!prunedAny) console.log('No superseded prerelease sections to prune');
 }

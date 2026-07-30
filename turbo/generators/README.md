@@ -1,14 +1,16 @@
 # Package generator
 
-`turbo gen package` scaffolds a new published `@seedcord/<name>` leaf package under `packages/<name>/`.
+`turbo gen package` scaffolds a new published `@seedcord/<name>` leaf package under `<dir>/<name>/`, where `dir` is `packages` for a framework package and `plugins` for an ecosystem plugin.
 
 ```sh
 turbo gen package
 # or non-interactive
-turbo gen package --args <name> "<one-line description>"
+turbo gen package --args <name> "<one-line description>" <dir>
 ```
 
-It prompts for the unscoped name and a description, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.mjs`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/basic.test.ts`, and `vitest.config.ts` from the templates in `templates/`.
+It prompts for the unscoped name, a description, and the workspace folder, then writes `package.json`, `tsconfig.json`, `tsdown.config.ts`, `eslint.config.mjs`, `tsdoc.json`, `README.md`, `LICENSE`, `src/index.ts`, `tests/basic.test.ts`, and `vitest.config.ts` from the templates in `templates/`.
+
+The folder basename matches the unscoped package name, so `@seedcord/plugin-mongoose` resolves to `plugins/plugin-mongoose/`. Every glob below reads that mapping.
 
 A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, only the three internal config devDeps plus the `typescript` peer (`catalog:peer`), a single `.` export with one tsdown entry, `publishConfig` access public with provenance, tsconfig extending `@seedcord/tsconfig/node`, tsdown via `createTsdownConfig`, and the `version` export line.
 
@@ -17,9 +19,9 @@ A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, 
 Finish these after generating, none of them are automated.
 
 1. `.changeset/pre.json`, add `"@seedcord/<name>": "<first-version>"` to `initialVersions` (skip for a private package).
-2. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `packages/<name>/**`.
+2. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `<dir>/<name>/**`.
 3. `.github/labels.yml`, add the `📦 <name>` label entry (name, a muted color).
-4. `knip.json`, add `"packages/<name>": {}` to the `workspaces` map.
+4. `knip.json`, add `"<dir>/<name>": {}` to the `workspaces` map.
 5. `packages/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry (`displayName` plus any `aliases`) for `@seedcord/<name>`. Without it the docs site renders the full scoped name. The override sets the short display name (`core`) and extra search aliases. Skip for a package with no documented entry point, it never shows in the docs site.
 6. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
 7. The package's own `package.json`, set the real `version`, add runtime `dependencies` (`catalog:deps` or `workspace:*`), any extra `peerDependencies` with `peerDependenciesMeta` (for example `discord.js` as `catalog:peer`), extra `devDependencies`, and the `./internal` export block plus a second tsdown entry plus `src/internal.index.ts` if the package ships an internal surface.
@@ -27,9 +29,9 @@ Finish these after generating, none of them are automated.
 9. Bootstrap the package on npm by publishing it once by hand. Only `@materwelonDhruv` can do this.
 
     ```sh
-    # set "version": "0.0.1" in packages/<name>/package.json first, then:
-    pnpm -C packages/<name> build
-    cd packages/<name>
+    # set "version": "0.0.1" in <dir>/<name>/package.json first, then:
+    pnpm -C <dir>/<name> build
+    cd <dir>/<name>
     # latest first, a bare publish defaults to the latest tag, no provenance locally
     npm publish --access public --no-provenance
     # then point next at the same version
