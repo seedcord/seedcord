@@ -1,4 +1,3 @@
-export * from './mongoose';
 export * from './kysely-postgres';
 
 /** Package version */

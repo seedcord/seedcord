@@ -1,10 +1,9 @@
 import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { ShutdownPhase } from '@seedcord/core/node/internal';
+import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Plugin } from '@seedcord/gateway';
 import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
@@ -34,13 +33,14 @@ interface MongooseArtifact {
  * Manages MongoDB connections, service loading, and provides type-safe
  * access to database services through service registration decorators.
  */
-export class Mongoose extends Plugin<{ transport: 'gateway' }> {
+export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     public readonly logger = new Logger('Mongoose');
     private isInitialised = false;
     private servicesReady = false;
     private readonly uri: string;
 
     private readonly _services: Record<string, unknown> = {};
+    private readonly ownModels = new Set<string>();
 
     /**
      * Map of all loaded services. Keys come from `@RegisterMongooseService('key')`.
@@ -62,15 +62,8 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
         host: CoreBase,
         private readonly options: MongooseOptions
     ) {
-        super(host);
+        super(host, { dispose: keepDefined({ timeout: options.timeout }) });
         this.uri = options.uri;
-
-        this.core.shutdown.addTask(
-            ShutdownPhase.Disconnect,
-            'stop-database',
-            async () => await this.stop(),
-            this.options.timeout
-        );
 
         if (!Envapter.isDevelopment) return;
         this.hmrHandler = new HmrModuleHandler({
@@ -102,17 +95,21 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
         this.isInitialised = true;
 
         await this.connect();
-        await this.loadServices();
+        try {
+            await this.loadServices();
+        } catch (caught) {
+            // the host skips dispose for a plugin whose init rejected so need to disconnect here
+            await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
+            throw caught;
+        }
         this.servicesReady = true;
     }
 
-    /** @internal */
-    public async stop(): Promise<void> {
+    public override async dispose(): Promise<void> {
         await this.disconnect();
     }
 
     private async connect(): Promise<void> {
-        this.clearModels();
         this.connection = await mongoose
             .connect(this.uri, {
                 dbName: this.options.name,
@@ -130,12 +127,14 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
             });
     }
 
+    // scoped to this plugin's own models because the mongoose registry is global and shared with
+    // everything else in the process
     private clearModels(): void {
-        const modelNames = Object.keys(mongoose.models);
-        if (modelNames.length > 0) {
-            this.logger.debug(`Clearing ${modelNames.length} mongoose models`);
-            for (const name of modelNames) mongoose.deleteModel(name);
-        }
+        if (this.ownModels.size === 0) return;
+
+        this.logger.debug(`Clearing ${this.ownModels.size} mongoose models`);
+        for (const name of this.ownModels) mongoose.deleteModel(name);
+        this.ownModels.clear();
     }
 
     private async disconnect(): Promise<void> {
@@ -176,6 +175,8 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
 
     private initializeService(Service: MongooseServiceConstructor, relativePath: string): void {
         const instance = new Service(this, this.core);
+        const { modelName } = this.getArtifacts(Service);
+        if (modelName) this.ownModels.add(modelName);
         this.logger.utils.registration(instance.constructor.name, relativePath);
     }
 
@@ -209,6 +210,7 @@ export class Mongoose extends Plugin<{ transport: 'gateway' }> {
 
         if (modelName) {
             mongoose.deleteModel(modelName);
+            this.ownModels.delete(modelName);
         }
     }
 }

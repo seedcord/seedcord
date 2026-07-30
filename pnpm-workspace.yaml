@@ -1,6 +1,7 @@
 packages:
 - mock
 - packages/*
+- plugins/*
 - apps/*
 
 embedReadme: true

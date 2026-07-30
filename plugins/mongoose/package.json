@@ -1,15 +1,15 @@
 {
-    "name": "@seedcord/{{ name }}",
+    "name": "@seedcord/plugin-mongoose",
     "type": "module",
-    "version": "0.0.0",
-    "description": "{{ description }}",
+    "version": "0.0.1",
+    "description": "Mongoose database plugin for Seedcord",
     "engines": {
         "node": ">=24.3"
     },
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "{{ dir }}/{{ folder dir name }}"
+        "directory": "plugins/mongoose"
     },
     "types": "./dist/index.d.mts",
     "exports": {
@@ -43,13 +43,30 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "@seedcord/core": "workspace:^",
+        "mongoose": "catalog:peer",
+        "reflect-metadata": "catalog:peer",
         "typescript": "catalog:peer"
     },
+    "dependencies": {
+        "@seedcord/errors": "workspace:*",
+        "@seedcord/logger": "workspace:*",
+        "@seedcord/types": "workspace:*",
+        "@seedcord/utils": "workspace:*",
+        "chalk": "catalog:deps",
+        "envapt": "catalog:deps"
+    },
     "devDependencies": {
+        "@seedcord/core": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/gateway": "workspace:*",
+        "@seedcord/http": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*"
+        "@seedcord/vitest-config": "workspace:*",
+        "mongoose": "catalog:peer",
+        "reflect-metadata": "catalog:peer",
+        "type-fest": "catalog:deps"
     },
     "publishConfig": {
         "access": "public",

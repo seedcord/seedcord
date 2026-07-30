@@ -1,25 +1,23 @@
+import mongoose from 'mongoose';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Mongoose } from '@src/mongoose/Mongoose';
+import { Mongoose } from '@src/Mongoose';
 
-import { pluginsPath } from '../utils/source-path';
-import { TestEnvironment } from '../utils/test-env';
+import { pluginsPath } from './utils/source-path';
+import { TestEnvironment } from './utils/test-env';
 
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 
 describe('Mongoose Plugin Integration', () => {
     let testEnv: TestEnvironment;
     let plugin: Mongoose;
-    let mockCore: Core;
+    let mockCore: CoreBase;
 
     beforeEach(async () => {
         testEnv = new TestEnvironment('mongoose-test-');
         await testEnv.setup();
-        mockCore = {
-            shutdown: { addTask: vi.fn() },
-            startup: { addTask: vi.fn() },
-            config: {}
-        } as unknown as Core;
+        // justified: just to satisfy the constructor
+        mockCore = { config: {} } as unknown as CoreBase;
     });
 
     afterEach(async () => {
@@ -114,5 +112,38 @@ describe('Mongoose Plugin Integration', () => {
 
         expect(plugin.services).not.toHaveProperty('users');
         expect(plugin.services).toHaveProperty('admins');
+    });
+
+    it('drops a model it unregistered during HMR from its later cleanup', async () => {
+        const servicesDir = 'services';
+        const filePath = await testEnv.createFile(
+            `${servicesDir}/UserService.ts`,
+            `
+            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('users')
+            export class UserService extends MongooseService {
+                @RegisterMongooseModel('users')
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            `
+        );
+
+        plugin = new Mongoose(mockCore, {
+            uri: 'mongodb://localhost:27017',
+            name: 'test',
+            dir: testEnv.resolvePath(servicesDir)
+        });
+
+        await plugin.init();
+        await plugin.onHmr({ file: filePath, type: 'delete' });
+
+        expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('users');
+
+        vi.mocked(mongoose.deleteModel).mockClear();
+        await plugin.dispose();
+
+        expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('users');
     });
 });

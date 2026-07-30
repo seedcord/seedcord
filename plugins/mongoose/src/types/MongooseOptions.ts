@@ -12,6 +12,10 @@ export interface MongooseOptions {
     name: string;
     /** mongoose connection options */
     connectionOptions?: mongoose.ConnectOptions | undefined;
-    /** Plugin timeout in milliseconds */
+    /**
+     * How long disconnecting may take during shutdown, in milliseconds.
+     *
+     * @defaultValue `10_000`
+     */
     timeout?: number;
 }

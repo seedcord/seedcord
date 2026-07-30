@@ -44,16 +44,12 @@
     },
     "peerDependencies": {
         "kysely": "^0.29.2",
-        "mongoose": "catalog:peer",
         "pg": "^8.21.0",
         "reflect-metadata": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "peerDependenciesMeta": {
         "kysely": {
-            "optional": true
-        },
-        "mongoose": {
             "optional": true
         },
         "pg": {
@@ -77,7 +73,6 @@
         "@seedcord/vitest-config": "workspace:*",
         "@types/pg": "^8.20.0",
         "kysely": "^0.29.2",
-        "mongoose": "catalog:peer",
         "pg": "^8.21.0",
         "reflect-metadata": "catalog:peer",
         "type-fest": "catalog:deps"
