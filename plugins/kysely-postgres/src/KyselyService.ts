@@ -5,7 +5,7 @@ import { KyselyServiceMetadataKey, KyselyTableMetadataKey } from './decorators/R
 
 import type { KyselyPostgres } from './KyselyPostgres';
 import type { KyselySchema, KyselyTable } from './types/KyselyDatabase';
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 import type { TypedConstructor } from '@seedcord/types';
 import type { Kysely } from 'kysely';
 import type { LiteralUnion } from 'type-fest';
@@ -23,7 +23,7 @@ import type { LiteralUnion } from 'type-fest';
  * \@RegisterKyselyService('users')
  * export class UsersService extends KyselyService<'users'> {
  *   public async findById(id: string) {
- *     return this.entity
+ *     return this.db
  *       .selectFrom(this.table)
  *       .selectAll().where('id', '=', id)
  *       .executeTakeFirst();
@@ -39,7 +39,7 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
 
     public constructor(
         protected readonly kysely: KyselyPostgres,
-        protected readonly core: Core
+        protected readonly core: CoreBase
     ) {
         const ctor = this.constructor;
 

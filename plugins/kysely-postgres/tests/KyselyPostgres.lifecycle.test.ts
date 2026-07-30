@@ -5,26 +5,22 @@ import { KyselyPostgres } from '@src/KyselyPostgres';
 
 import { TestEnvironment } from './utils/test-env';
 
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 
 // the pg mock shares one `end` across pool instances so the close is assertable
 const { poolEnd } = (await import('pg')) as unknown as { poolEnd: ReturnType<typeof vi.fn> };
 
 describe('KyselyPostgres lifecycle', () => {
     let testEnv: TestEnvironment;
-    let mockCore: Core;
+    let mockCore: CoreBase;
 
     beforeEach(async () => {
         testEnv = new TestEnvironment('kysely-lifecycle-');
         await testEnv.setup();
         await testEnv.createFile('migrations/.keep', '');
         await testEnv.createFile('services/.keep', '');
-        // the plugin reads only shutdown off core
-        mockCore = {
-            shutdown: { addTask: vi.fn() },
-            startup: { addTask: vi.fn() },
-            config: {}
-        } as unknown as Core;
+        // the plugin reads nothing off core, this only satisfies the constructor
+        mockCore = { config: {} } as unknown as CoreBase;
     });
 
     afterEach(async () => {

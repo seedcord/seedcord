@@ -14,8 +14,8 @@
 export interface KyselyDatabase {}
 
 /**
- * The declared schema. Resolves to an empty shape until {@link KyselyDatabase} carries a `schema`,
- * where every table name is then rejected.
+ * The declared schema. Until {@link KyselyDatabase} declares a `schema` this resolves to
+ * `Record<string, never>`, which widens {@link KyselyTable} to `string`, so any table name type-checks.
  */
 export type KyselySchema = KyselyDatabase extends { schema: infer Declared extends object }
     ? Declared

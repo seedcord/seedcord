@@ -53,6 +53,7 @@
         "@seedcord/core": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/gateway": "workspace:*",
+        "@seedcord/http": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",

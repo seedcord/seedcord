@@ -7,20 +7,20 @@ export const KyselyServiceMetadataKey = Symbol('seedcord:kysely-postgres:service
 export const KyselyTableMetadataKey = Symbol('seedcord:kysely-postgres:table');
 
 /**
- *
- * Registers a Kysely PG service with the specified key and options.
+ * Registers a Kysely Postgres service with the specified key and options.
  *
  * Associates a service class with a key for dependency injection.
  * The service becomes available via `core.db.services[key]`.
  *
  * @typeParam TKey - The service key type
+ * @typeParam TTable - The table the service reads, defaulting to the key
  * @param key - Service key for registration and type-safe access
  * @param options - Additional registration options
  * @decorator
  * @example
  * ```typescript
  * \@RegisterKyselyService('users', { table: 'app_users' })
- * export class UsersService extends KyselyService<{ users: IUser }, 'users'> {
+ * export class UsersService extends KyselyService<'app_users'> {
  *   // Some code
  * }
  * ```

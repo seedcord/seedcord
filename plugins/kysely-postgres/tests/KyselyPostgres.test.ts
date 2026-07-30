@@ -5,23 +5,20 @@ import { KyselyPostgres } from '@src/KyselyPostgres';
 import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';
 
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 
 describe('KyselyPostgres Plugin Integration', () => {
     let testEnv: TestEnvironment;
 
     let plugin: KyselyPostgres;
-    let mockCore: Core;
+    let mockCore: CoreBase;
 
     beforeEach(async () => {
         testEnv = new TestEnvironment('kysely-postgres-test-');
         await testEnv.setup();
         await testEnv.createFile('migrations/.keep', '');
-        mockCore = {
-            shutdown: { addTask: vi.fn() },
-            startup: { addTask: vi.fn() },
-            config: {}
-        } as unknown as Core;
+        // the plugin reads nothing off core, this only satisfies the constructor
+        mockCore = { config: {} } as unknown as CoreBase;
     });
 
     afterEach(async () => {

@@ -7,7 +7,7 @@ import { KyselyService } from './KyselyService';
 import type { KyselyArtifact, KyselyPostgres } from './KyselyPostgres';
 import type { KyselyServiceConstructor } from './KyselyService';
 import type { KyselyServices } from './types/KyselyServices';
-import type { Core } from '@seedcord/gateway';
+import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 
 /**
@@ -18,7 +18,7 @@ export class KyselyServiceRegistry {
 
     constructor(
         private readonly plugin: KyselyPostgres,
-        private readonly core: Core,
+        private readonly core: CoreBase,
         private readonly logger: Logger
     ) {}
 
