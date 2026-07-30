@@ -6,7 +6,7 @@
  *
  * @example
  * ```typescript
- * declare module '@seedcord/plugins' {
+ * declare module '@seedcord/plugin-kysely-postgres' {
  *   interface KyselyServices {
  *     'users': Users;
  *   }

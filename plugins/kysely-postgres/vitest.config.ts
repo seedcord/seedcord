@@ -5,7 +5,6 @@ export default createVitestConfig(import.meta.url, {
         globals: true,
         environment: 'node',
         testTimeout: 10_000,
-        // both plugins ship as their own packages now, this one is emptied until it is deleted
-        passWithNoTests: true
+        setupFiles: ['./tests/setup.ts']
     }
 });

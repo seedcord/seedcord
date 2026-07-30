@@ -16,6 +16,9 @@
 '📦 plugin-mongoose':
   - changed-files:
       - any-glob-to-any-file: 'plugins/mongoose/**'
+'📦 plugin-kysely-postgres':
+  - changed-files:
+      - any-glob-to-any-file: 'plugins/kysely-postgres/**'
 '📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'
