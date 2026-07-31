@@ -43,7 +43,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     // keep this ctor. it gives typeof AutocompleteHandler a public construct signature the dispatcher
     // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses the handler ctor type to never.
     constructor(event: APIApplicationCommandAutocompleteInteraction, core: Core, dispatch?: DispatchContext) {
-        super(event, core, dispatch);
+        super(event, core, dispatch, 'interactions');
     }
 
     // phantom, never set at runtime.

@@ -76,7 +76,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private readonly interactions?: InteractionDispatcher;
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
-    private readonly logger = new Logger('Server');
+    private readonly logger = new Logger('Server', { channel: 'bot' });
 
     private server?: Server;
     private boundPort?: number;
