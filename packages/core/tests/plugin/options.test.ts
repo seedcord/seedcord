@@ -3,11 +3,9 @@ import { describe, expectTypeOf, it } from 'vitest';
 import { Plugin } from '@src/plugin/Plugin';
 
 import type { CoreBase } from '@interfaces/CoreBase';
-import type { Logger } from '@seedcord/logger';
 
 class Defaults extends Plugin {
     // justified: never invoked, these fixtures exist for type probes only
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -18,7 +16,6 @@ class Defaults extends Plugin {
 
 class Narrowed extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
     // justified: never invoked, these fixtures exist for type probes only
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }

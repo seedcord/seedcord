@@ -170,8 +170,8 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private finalizeContext(key: string, instance: PluginLike): void {
         const caps = this.pluginCapabilities();
         const readToken = (): string | undefined => this.pluginCapabilities().token;
+        instance.logger.setChannel(key);
         const ctx: StoredPluginContext = {
-            logger: new Logger(key),
             config: this.config,
             store: this.pluginStore(),
             client: caps.client,

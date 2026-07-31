@@ -4,13 +4,11 @@ import { describe, expect, it } from 'vitest';
 import { finalizePluginContext, Plugin } from '@src/plugin/Plugin';
 
 import type { CoreBase } from '@interfaces/CoreBase';
-import type { Logger } from '@seedcord/logger';
 import type { Config, Store } from '@seedcord/types';
 import type { PluginContext } from '@src/plugin/Plugin';
 
 class Db extends Plugin<{ needs: 'token' | 'rest' }> {
     // justified: never invoked, ctx wiring is all these tests read
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -28,7 +26,6 @@ const host = { config: {}, rateLimiter: {} } as unknown as CoreBase;
 // justified: field stubs, the tests only check identity and the token arm
 function makeCtx(): PluginContext<'token' | 'rest'> {
     return {
-        logger: null as unknown as Logger,
         config: {} as Config,
         store: {} as Store<'charge'>,
         token: 'secret',

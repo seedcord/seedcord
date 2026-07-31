@@ -1,5 +1,4 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach } from 'vitest';
 
@@ -12,7 +11,6 @@ import { Bus } from '@subscribers/Bus';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
 class Anywhere extends Plugin {
-    public logger = new Logger('Anywhere');
     public init(): Promise<void> {
         return Promise.resolve();
     }

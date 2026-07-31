@@ -1,4 +1,3 @@
-import { Logger } from '@seedcord/logger';
 import { describe, it, expect } from 'vitest';
 
 import { Plugin } from '@src/plugin';
@@ -10,7 +9,6 @@ import type { CoreBase } from '@seedcord/core';
 const core = { rest: { options: {} } } as unknown as Core;
 
 class HttpScoped extends Plugin<{ transport: 'http' }> {
-    public logger = new Logger('HttpScoped');
     constructor(host: CoreBase) {
         super(host);
     }
@@ -28,14 +26,12 @@ class HttpScoped extends Plugin<{ transport: 'http' }> {
 
 // @ts-expect-error the http base rejects a plugin declaring the other transport
 class WrongTransport extends Plugin<{ transport: 'gateway' }> {
-    public logger = new Logger('WrongTransport');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class Portable extends Plugin<{ transport: 'any' }> {
-    public logger = new Logger('Portable');
     public init(): Promise<void> {
         return Promise.resolve();
     }

@@ -13,35 +13,30 @@ import type { Config, IRateLimiter } from '@seedcord/types';
 import type { Runtime } from '@src/plugin/options';
 
 class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
-    public logger = new Logger('GatewayScoped');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class EdgeScoped extends Plugin<{ runtime: 'edge' }> {
-    public logger = new Logger('EdgeScoped');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class NeedsScoped extends Plugin<{ needs: 'rest' }> {
-    public logger = new Logger('NeedsScoped');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class HttpScoped extends Plugin<{ transport: 'http'; runtime: 'server'; needs: 'rest' }> {
-    public logger = new Logger('HttpScoped');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server'; needs: 'rest' }> {
-    public logger = new Logger('FullyScoped');
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -52,7 +47,6 @@ interface TransportCore extends CoreBase {
 }
 
 class NarrowedCtor extends Plugin<{ transport: 'gateway' }> {
-    public logger = new Logger('NarrowedCtor');
     constructor(host: TransportCore) {
         super(host);
     }
@@ -62,7 +56,6 @@ class NarrowedCtor extends Plugin<{ transport: 'gateway' }> {
 }
 
 class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
-    public logger = new Logger('WidenedCtor');
     constructor(
         host: CoreBase,
         public readonly options: { readonly dir: string }

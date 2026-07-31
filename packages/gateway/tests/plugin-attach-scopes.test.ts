@@ -1,32 +1,27 @@
 import { Plugin } from '@seedcord/core/plugin';
-import { Logger } from '@seedcord/logger';
 import { describe, it, expect } from 'vitest';
 
 import type { Seedcord } from '@src/Seedcord';
 
 class Anywhere extends Plugin {
-    public logger = new Logger('Anywhere');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class GatewayOnly extends Plugin<{ transport: 'gateway' }> {
-    public logger = new Logger('GatewayOnly');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class HttpOnly extends Plugin<{ transport: 'http' }> {
-    public logger = new Logger('HttpOnly');
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
 class EdgeOnly extends Plugin<{ runtime: 'edge' }> {
-    public logger = new Logger('EdgeOnly');
     public init(): Promise<void> {
         return Promise.resolve();
     }

@@ -2,14 +2,12 @@ import { describe, expectTypeOf, it } from 'vitest';
 
 import { Plugin } from '@src/plugin/Plugin';
 
-import type { Logger } from '@seedcord/logger';
 import type { Config, Store } from '@seedcord/types';
 import type { PluginContext } from '@src/plugin/Plugin';
 
 // core leaves the transport arms unknown, so these probe declared-vs-never membership
 class Bare extends Plugin {
     // justified: never invoked, these fixtures exist for type probes only
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -20,7 +18,6 @@ class Bare extends Plugin {
 
 class NeedsToken extends Plugin<{ needs: 'token' }> {
     // justified: never invoked, these fixtures exist for type probes only
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -31,7 +28,6 @@ class NeedsToken extends Plugin<{ needs: 'token' }> {
 
 class NeedsTokenRest extends Plugin<{ needs: 'token' | 'rest' }> {
     // justified: never invoked, these fixtures exist for type probes only
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -41,8 +37,7 @@ class NeedsTokenRest extends Plugin<{ needs: 'token' | 'rest' }> {
 }
 
 describe('plugin ctx typing', () => {
-    it('always exposes logger, config, store', () => {
-        expectTypeOf<PluginContext<never>['logger']>().toEqualTypeOf<Logger>();
+    it('always exposes config and store', () => {
         expectTypeOf<PluginContext<never>['config']>().toEqualTypeOf<Config>();
         expectTypeOf<PluginContext<never>['store']>().toEqualTypeOf<Store<'charge'>>();
     });
