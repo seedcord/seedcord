@@ -1,4 +1,3 @@
-import { Logger } from '@seedcord/logger';
 import { describe, it, expect } from 'vitest';
 
 import { Plugin } from '@src/plugin/Plugin';
@@ -13,7 +12,6 @@ interface TransportCore extends CoreBase {
 const host = { extra: { id: 'seed' } } as unknown as TransportCore;
 
 class Bound extends Plugin<{}, TransportCore> {
-    public logger = new Logger('Bound');
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -27,7 +25,6 @@ class Bound extends Plugin<{}, TransportCore> {
 }
 
 class Unbound extends Plugin {
-    public logger = new Logger('Unbound');
     public init(): Promise<void> {
         return Promise.resolve();
     }

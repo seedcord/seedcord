@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '@src/lifecycle/phases';
 import { finalizePluginContext } from '@src/plugin/context';
@@ -14,7 +14,7 @@ import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import type { Config, IRateLimiter, Store } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
 import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
-import type { Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
+import type { ChannelKeyAssert, Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
 import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
 import type { Bus } from '@subscribers/Bus';
 
@@ -22,6 +22,8 @@ interface Attachment {
     readonly key: string;
     readonly instance: PluginLike;
 }
+
+const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 /**
  * Base class for objects that can have plugins attached.
@@ -45,7 +47,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     protected startFailed = false;
     protected readonly plugins: PluginLike[] = [];
 
-    private readonly pluginLogger = new Logger('Plugins');
+    private readonly pluginLogger = new Logger('Plugins', { channel: 'plugins' });
 
     private readonly attachments: Attachment[] = [];
     private readonly completedInits = new Set<Attachment>();
@@ -131,7 +133,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      * @param Plugin - Plugin constructor class
      * @param args - Additional arguments to pass to the plugin constructor
      * @returns This instance with the plugin attached as a typed property
-     * @throws A **SeedcordError** When called after initialization or if key already exists
+     * @throws A **SeedcordError** When called after initialization or if key already exists or is reserved
      * @example
      * ```typescript
      * seedcord.attach('db', Mongoose, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
@@ -139,7 +141,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      */
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
-        key: Key,
+        key: ChannelKeyAssert<Key>,
         Plugin: Ctor &
             TransportAssert<InstanceType<Ctor>, BotT> &
             RuntimeAssert<InstanceType<Ctor>, BotRt> &
@@ -148,6 +150,10 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     ): this & Record<Key, InstanceType<Ctor>> {
         if (this.isInitialized) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
+        }
+        // several reserved channels are also members on a host, which the next check would report first
+        if (RESERVED_KEYS.has(key)) {
+            throw new SeedcordError(SeedcordErrorCode.CorePluginReservedChannel, [key]);
         }
         if (key in this) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
@@ -164,8 +170,8 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     private finalizeContext(key: string, instance: PluginLike): void {
         const caps = this.pluginCapabilities();
         const readToken = (): string | undefined => this.pluginCapabilities().token;
+        instance.logger.setChannel(key);
         const ctx: StoredPluginContext = {
-            logger: new Logger(key),
             config: this.config,
             store: this.pluginStore(),
             client: caps.client,
@@ -195,7 +201,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             // Ready inits run in the combined Ready task, before the ready hooks
             if (phase === StartupPhase.Ready) continue;
             const budget = group.reduce((sum, a) => sum + resolvedLifecycleSpecOf(a.instance).init.timeout, 0);
-            this.startup.addTask(phase, 'Plugins:init', () => this.runInits(group), budget);
+            this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);
         }
 
         this.registerReadyTask(groups.get(StartupPhase.Ready) ?? []);
@@ -207,7 +213,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             const spec = resolvedLifecycleSpecOf(instance);
 
             instance.logger.utils.initialization(key, 'start');
-            await withTimeout(`Plugin:${key}`, () => instance.init(), spec.init.timeout);
+            await withTimeout(`Plugin (${key})`, () => instance.init(), spec.init.timeout);
             instance.logger.utils.initialization(key, 'end');
 
             this.completedInits.add(attachment);
@@ -237,7 +243,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             steps.reduce((sum, step) => sum + step.timeout, 0);
         this.startup.addTask(
             StartupPhase.Ready,
-            'Plugins',
+            'plugins-ready',
             async () => {
                 await this.runInits(readyInits);
                 for (const step of steps) {
@@ -257,7 +263,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             const spec = resolvedLifecycleSpecOf(a.instance);
             return a.instance.dispose && spec.dispose.phase === phase ? sum + spec.dispose.timeout : sum;
         }, 0);
-        this.shutdown.addTask(phase, 'Plugins:dispose', () => this.runDisposals(phase), budget);
+        this.shutdown.addTask(phase, 'plugins-dispose', () => this.runDisposals(phase), budget);
     }
 
     private async runDisposals(phase: ShutdownPhase): Promise<void> {

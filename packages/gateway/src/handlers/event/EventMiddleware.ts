@@ -26,7 +26,7 @@ export abstract class EventMiddleware<
     private readonly firedEvent: EventName | undefined;
 
     constructor(event: ClientEvents[EventName], core: Core, eventName?: EventName) {
-        super(event, core);
+        super(event, core, undefined, 'events');
         this.firedEvent = eventName;
     }
 

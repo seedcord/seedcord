@@ -5,7 +5,6 @@ import { BaseCommand } from '@core/BaseCommand';
 import { DevApp } from '@ui/DevApp';
 import { DevStore } from '@ui/stores/DevStore';
 import { LogStore } from '@ui/stores/LogStore';
-import { silentLogger } from '@utils/SilentLogger';
 
 import { DevRunner } from './DevRunner';
 
@@ -16,9 +15,9 @@ export class DevCommand extends BaseCommand {
     private readonly store: DevStore;
 
     constructor() {
-        super('dev', 'Run a Seedcord instance from the config file', 'CLI:Dev');
+        super('dev', 'Run a Seedcord instance from the config file', 'Dev');
         this.store = new DevStore();
-        this.runner = DevRunner.create(silentLogger, this.store);
+        this.runner = DevRunner.create(this.logger, this.store);
     }
 
     public register(program: Command): void {

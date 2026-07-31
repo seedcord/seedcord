@@ -49,7 +49,7 @@ export function checkBotPermissions(
     const me = target.guild.members.me;
 
     if (!me) {
-        const logger = new Logger('checkBotPermissions');
+        const logger = new Logger('checkBotPermissions', { channel: 'errors' });
         logger.warn(
             `Bot member is unavailable in guild ${target.guild.id} while checking permissions in channel ${target.id}`
         );

@@ -52,7 +52,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
     const replays = new ReplayGuard();
     const inFlight = new Set<Promise<void>>();
     // constructed here because the logger reads the environment, which binds before this factory runs
-    const logger = new Logger('Engine');
+    const logger = new Logger('Engine', { channel: 'bot' });
 
     async function dispatchMatched(
         match: NonNullable<ReturnType<typeof resolve>>,

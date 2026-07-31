@@ -52,7 +52,7 @@ export interface SubscriberRegistration {
  */
 export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     /** @internal */
-    public readonly logger = new Logger('Subscribers');
+    public readonly logger = new Logger('Subscribers', { channel: 'subscribers' });
 
     private readonly subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
     private readonly executedOnce = new Set<SubscriberRegistration>();

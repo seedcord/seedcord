@@ -13,7 +13,7 @@ function defaultSinks(): ILogSink[] {
 }
 
 function channelSinks(channels: NonNullable<LoggerConfig['channels']>): ILogSink[] {
-    return Object.values(channels).flatMap((override) => override.sinks ?? []);
+    return Object.values(channels).flatMap((override) => override?.sinks ?? []);
 }
 
 /**

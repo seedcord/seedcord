@@ -10,7 +10,7 @@ export class BuildCommand extends BaseCommand {
     private readonly runner: BuildRunner;
 
     constructor() {
-        super('build', 'Compile a Seedcord project from the config file', 'CLI:Build');
+        super('build', 'Compile a Seedcord project from the config file', 'Build');
         this.runner = BuildRunner.create(this.logger);
     }
 

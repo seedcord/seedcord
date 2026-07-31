@@ -44,7 +44,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
     private readonly firedEvent: Names | undefined;
 
     constructor(event: ClientEvents[Names], core: Core, eventName?: Names) {
-        super(event, core);
+        super(event, core, undefined, 'events');
         this.firedEvent = eventName;
     }
 

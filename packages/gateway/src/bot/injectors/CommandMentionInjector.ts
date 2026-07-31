@@ -37,7 +37,7 @@ const MULTI_GUILD = Symbol('seedcord:commandmentions:multi-guild');
  * @internal
  */
 export class CommandMentionInjector {
-    private readonly logger = new Logger('CommandMentions');
+    private readonly logger = new Logger('CommandMentions', { channel: 'bot' });
 
     constructor(private readonly core: Core) {}
 

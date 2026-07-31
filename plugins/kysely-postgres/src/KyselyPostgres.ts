@@ -4,7 +4,6 @@ import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
@@ -36,7 +35,6 @@ export interface KyselyArtifact {
  * services so the core can resolve them.
  */
 export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server' }> {
-    public readonly logger = new Logger('KyselyPostgres');
     private isInitialised = false;
     private servicesReady = false;
     private inFlight: Promise<void> | null = null;

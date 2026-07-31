@@ -9,8 +9,6 @@ import { DevCommand } from '@commands/dev/DevCommand';
 
 import { version } from '.';
 
-const LOGGER_LABEL = 'seedcord CLI';
-
 async function main(): Promise<void> {
     if (!process.env.ENV && !process.env.ENVIRONMENT && !process.env.NODE_ENV) {
         process.env.NODE_ENV = 'development';
@@ -29,7 +27,7 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error) => {
-    const logger = new Logger(LOGGER_LABEL);
+    const logger = new Logger('CLI', { channel: 'cli' });
     logger.error('Unexpected CLI error', error);
     process.exit(1);
 });

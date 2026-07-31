@@ -10,11 +10,7 @@ export class CodegenCommand extends BaseCommand {
     private readonly runner: CodegenRunner;
 
     constructor() {
-        super(
-            'codegen',
-            'Generate typed augmentations (slash options, context menus, emojis) from your commands and config',
-            'CLI:Codegen'
-        );
+        super('codegen', 'Generate typed augmentations from your commands and config', 'Codegen');
         this.runner = CodegenRunner.create(this.logger);
     }
 

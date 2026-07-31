@@ -33,7 +33,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly targets: Record<InteractionRoutes, RouteTarget>;
 
     /** @internal */
-    public readonly logger = new Logger('Interactions');
+    public readonly logger = new Logger('Interactions', { channel: 'interactions' });
 
     private isInitialized = false;
     private readonly hmrHandler?: HmrModuleHandler<HandlerConstructor, void, string[]>;

@@ -2,7 +2,6 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { PluginNeed } from './options';
-import type { Logger } from '@seedcord/logger';
 import type { Config, Store } from '@seedcord/types';
 
 /**
@@ -30,13 +29,12 @@ type CapabilityValue<TNeeds extends PluginNeed, Key extends PluginNeed, Value> =
 /**
  * The framework surface a plugin reads through `this.ctx`, typed by its declared `needs`.
  *
- * Always available: `logger`, `config`, `store`. Each capability resolves to its value only when
- * the plugin declared that key, otherwise `never`.
+ * Always available: `config` and `store`. Each capability resolves to its value only when
+ * the plugin declared that key, otherwise `never`. The logger comes from `this.logger`.
  *
  * @typeParam TNeeds - The plugin's declared `needs` union.
  */
 export interface PluginContext<TNeeds extends PluginNeed = never> {
-    readonly logger: Logger;
     readonly config: Config;
     readonly store: Store<'charge'>;
     readonly client: CapabilityValue<TNeeds, 'client', CapabilityType<'client', unknown>>;
@@ -50,7 +48,7 @@ export interface PluginContext<TNeeds extends PluginNeed = never> {
 
 // the conditional capability types make PluginContext<A> and PluginContext<B> mutually unassignable
 /** @internal */
-export type StoredPluginContext = Pick<PluginContext, 'logger' | 'config' | 'store'> & {
+export type StoredPluginContext = Pick<PluginContext, 'config' | 'store'> & {
     client?: unknown;
     token?: string | undefined;
     rest?: unknown;

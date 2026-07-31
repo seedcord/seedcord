@@ -1,6 +1,5 @@
 import { setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
-import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '@src/Seedcord';
@@ -29,7 +28,6 @@ function fakeChannel(): { channel: FrameworkChannel; send: SendMock; on: OnMock 
 }
 
 class CriticalPlugin extends Plugin {
-    public logger = new Logger('CriticalPlugin');
     public async init(): Promise<void> {
         await Promise.resolve();
     }

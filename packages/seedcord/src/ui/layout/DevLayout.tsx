@@ -26,7 +26,6 @@ export interface DevLayoutProps {
     readonly measured: boolean;
     readonly enabled: ReadonlySet<string>;
     readonly enabledLevels: ReadonlySet<LogLevel>;
-    readonly showToggles: boolean;
     readonly cursor: FilterCursor;
     readonly interactive: boolean;
     readonly uptimeMs: number | null;
@@ -35,7 +34,7 @@ export interface DevLayoutProps {
 // notification cards render below the logs so stack traces have room
 export function DevLayout(props: DevLayoutProps): ReactElement {
     const { state, railRef, railWidth, logBoxRef, scroll, viewportHeight, measured } = props;
-    const { enabled, enabledLevels, showToggles, cursor, interactive, uptimeMs } = props;
+    const { enabled, enabledLevels, cursor, interactive, uptimeMs } = props;
 
     return (
         <Box flexGrow={1}>
@@ -47,7 +46,6 @@ export function DevLayout(props: DevLayoutProps): ReactElement {
                 uptimeMs={uptimeMs}
                 following={scroll.following}
                 interactive={interactive}
-                showToggles={showToggles}
                 cursor={cursor}
                 width={railWidth}
             />

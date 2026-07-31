@@ -8,7 +8,7 @@ import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import type { Core } from '@interfaces/Core';
 
-const logger = new Logger('EventBoundary');
+const logger = new Logger('EventBoundary', { channel: 'errors' });
 
 /**
  * The event controller boundary. Reports a throw from an event handler and never replies, since a

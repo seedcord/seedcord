@@ -50,7 +50,7 @@ type EventArtifact = string;
  * @internal
  */
 export class EventDispatcher implements Initializeable, HmrAware {
-    private readonly logger = new Logger('Events');
+    private readonly logger = new Logger('Events', { channel: 'events' });
     private isInitialized = false;
 
     private readonly eventMap = new Map<keyof ClientEvents, RegisteredEventHandlerEntry[]>();

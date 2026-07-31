@@ -1,14 +1,35 @@
 import type { ILogger } from './ILogger';
+import type { LiteralUnion } from 'type-fest';
 
 /** Severity of a log record, highest to lowest. */
 export type LogLevel = keyof ILogger;
+
+/** Channels the framework logs on. They're reserved as well */
+export type FrameworkChannel =
+    | 'default'
+    | 'bot'
+    | 'lifecycle'
+    | 'health'
+    | 'interactions'
+    | 'events'
+    | 'commands'
+    | 'subscribers'
+    | 'errors'
+    | 'gates'
+    | 'plugins'
+    | 'hmr'
+    | 'cli'
+    | 'tsc';
+
+/** A log channel. */
+export type LoggerChannelId = LiteralUnion<FrameworkChannel, string>;
 
 /** A single log entry the core builds and passes to every sink. */
 export interface LogRecord {
     level: LogLevel;
     message: string;
     label: string;
-    channel: string;
+    channel: LoggerChannelId;
     timestamp: number;
     /** The `...args` after the message, unformatted. */
     args?: unknown[];
@@ -36,7 +57,7 @@ export interface LoggerConfig {
     /** Config-layer sinks. Defaults to a single console sink. */
     sinks?: ILogSink[];
     /** Per-channel level or sink overrides. */
-    channels?: Record<string, ChannelOverride>;
+    channels?: Partial<Record<LoggerChannelId, ChannelOverride>>;
 }
 
 /** Handle returned by `installSink`. Disposable, so it works with `using`. */

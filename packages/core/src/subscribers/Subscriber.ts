@@ -25,7 +25,7 @@ export abstract class Subscriber<KeyOfSubscribers extends SubscriptionKey, TCore
         protected readonly data: AllSubscriptions[KeyOfSubscribers],
         protected readonly core: TCore
     ) {
-        this.logger = new Logger(this.constructor.name);
+        this.logger = new Logger(this.constructor.name, { channel: 'subscribers' });
     }
 
     /**

@@ -88,13 +88,13 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     private registerStartupTasks(): void {
         if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
-        this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
+        this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             this.bus.logger.utils.initialization('Subscribers', 'start');
             await this.subscribers.init();
             this.bus.logger.utils.initialization('Subscribers', 'end');
         });
 
-        this.startup.addTask(StartupPhase.Login, 'Bot Initialization', async () => {
+        this.startup.addTask(StartupPhase.Login, 'bot-initialization', async () => {
             this.bot.logger.utils.initialization('Bot', 'start');
             await this.bot.init();
             this.bot.logger.utils.initialization('Bot', 'end');
@@ -102,7 +102,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
 
         const { healthCheck } = this;
         if (healthCheck) {
-            this.startup.addTask(StartupPhase.Ready, 'Health Check', async () => {
+            this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
                 healthCheck.logger.utils.initialization('HealthCheck', 'start');
                 await healthCheck.init();
                 healthCheck.logger.utils.initialization('HealthCheck', 'end');
@@ -128,7 +128,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     }
 
     private registerHmrAwareModules(): void {
-        this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
+        this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             this.hmrManager.register(this.bot);
             this.hmrManager.register(this.subscribers);
             for (const plugin of this.plugins) {

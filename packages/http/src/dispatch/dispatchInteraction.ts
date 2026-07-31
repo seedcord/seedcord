@@ -30,7 +30,7 @@ import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 // lazy because the logger reads the environment, which binds after this module loads
 let dispatchLogger: Logger | undefined;
 function logger(): Logger {
-    dispatchLogger ??= new Logger('Dispatcher');
+    dispatchLogger ??= new Logger('Dispatcher', { channel: 'interactions' });
     return dispatchLogger;
 }
 

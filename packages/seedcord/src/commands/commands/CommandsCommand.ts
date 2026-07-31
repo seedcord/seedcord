@@ -28,7 +28,7 @@ export class CommandsCommand extends BaseCommand {
     private readonly cleanRunner: CleanRunner;
 
     constructor() {
-        super('commands', 'Inspect and clean deployed guild commands', 'CLI:Commands');
+        super('commands', 'Inspect and clean deployed guild commands', 'Commands');
         this.cleanRunner = CleanRunner.create();
     }
 

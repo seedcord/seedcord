@@ -5,12 +5,10 @@ import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
 import { Plugin, resolvedLifecycleSpecOf } from '@src/plugin/Plugin';
 
 import type { CoreBase } from '@interfaces/CoreBase';
-import type { Logger } from '@seedcord/logger';
 import type { PluginLifecycleSpec } from '@src/plugin/Plugin';
 
 class SpecPlugin extends Plugin {
     // justified: never invoked, spec resolution is all these tests read
-    public logger = null as unknown as Logger;
     public init(): Promise<void> {
         return Promise.resolve();
     }

@@ -33,7 +33,6 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     const [enabled, setEnabled] = useState<ReadonlySet<string>>(() => new Set());
     const [enabledLevels, setEnabledLevels] = useState<ReadonlySet<LogLevel>>(() => new Set());
-    const [showToggles, setShowToggles] = useState(false);
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
@@ -71,8 +70,6 @@ export function DevApp(props: DevAppProps): ReactElement {
             setEnabled,
             enabledLevels,
             setEnabledLevels,
-            showToggles,
-            setShowToggles,
             cursor,
             setCursor,
             onQuit: props.onQuit,
@@ -108,7 +105,6 @@ export function DevApp(props: DevAppProps): ReactElement {
                 measured={logBoxHeight > 0}
                 enabled={enabled}
                 enabledLevels={enabledLevels}
-                showToggles={showToggles}
                 cursor={cursor}
                 interactive={interactive}
                 uptimeMs={uptimeMs}

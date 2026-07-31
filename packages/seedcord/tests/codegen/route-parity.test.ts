@@ -3,7 +3,8 @@ import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
 import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
-import { silentLogger } from '@utils/SilentLogger';
+
+import { silentLogger } from '../silentLogger';
 
 import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
 import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';

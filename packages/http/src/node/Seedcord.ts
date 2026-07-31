@@ -76,7 +76,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private readonly interactions?: InteractionDispatcher;
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
-    private readonly logger = new Logger('Server');
+    private readonly logger = new Logger('Server', { channel: 'bot' });
 
     private server?: Server;
     private boundPort?: number;
@@ -147,7 +147,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private registerStartupTasks(): void {
         if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
-        this.startup.addTask(StartupPhase.Configuration, 'Bus Initialization', async () => {
+        this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
             this.bus.logger.utils.initialization('Subscribers', 'start');
             await this.subscribers.init();
             this.bus.logger.utils.initialization('Subscribers', 'end');
@@ -155,22 +155,22 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
         const { interactions } = this;
         if (interactions) {
-            this.startup.addTask(StartupPhase.Configuration, 'Interactions Initialization', async () => {
+            this.startup.addTask(StartupPhase.Configuration, 'interactions-initialization', async () => {
                 interactions.logger.utils.initialization('Interactions', 'start');
                 await interactions.init();
                 interactions.logger.utils.initialization('Interactions', 'end');
             });
         }
 
-        this.startup.addTask(StartupPhase.Ready, 'Http Server', () => this.listen());
+        this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.listen());
 
         if (!Envapter.isTest) {
-            this.startup.addTask(StartupPhase.Ready, 'Identity', () => this.fetchUsername());
+            this.startup.addTask(StartupPhase.Ready, 'identity', () => this.fetchUsername());
         }
 
         const { healthCheck } = this;
         if (healthCheck) {
-            this.startup.addTask(StartupPhase.Ready, 'Health Check', async () => {
+            this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
                 healthCheck.logger.utils.initialization('HealthCheck', 'start');
                 await healthCheck.init();
                 healthCheck.logger.utils.initialization('HealthCheck', 'end');
@@ -179,7 +179,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     }
 
     private registerHmrAwareModules(): void {
-        this.startup.addTask(StartupPhase.Configuration, 'HMR Registration', async () => {
+        this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             if (this.interactions) this.hmrManager.register(this.interactions);
             this.hmrManager.register(this.subscribers);
             for (const plugin of this.plugins) {

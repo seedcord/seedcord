@@ -1,4 +1,3 @@
-import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach } from 'vitest';
 
@@ -11,7 +10,6 @@ import { Bus } from '@subscribers/Bus';
 import type { Config, IRateLimiter } from '@seedcord/types';
 
 class TestPlugin extends Plugin {
-    public logger = new Logger('TestPlugin');
     public init(): Promise<void> {
         return Promise.resolve();
     }

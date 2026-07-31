@@ -9,7 +9,7 @@ const SLOW_GATE_MS = 750;
 // lazy because the logger reads the environment, which binds after this module loads
 let gateLogger: Logger | undefined;
 function logger(): Logger {
-    gateLogger ??= new Logger('Gates');
+    gateLogger ??= new Logger('Gates', { channel: 'gates' });
     return gateLogger;
 }
 

@@ -16,7 +16,7 @@ type InteractionFaultSource = Extract<FaultSource, { kind: 'interaction' }>;
 // lazy because the logger reads the environment, which binds after this module loads
 let faultLogger: Logger | undefined;
 function logger(): Logger {
-    faultLogger ??= new Logger('Faults');
+    faultLogger ??= new Logger('Faults', { channel: 'errors' });
     return faultLogger;
 }
 

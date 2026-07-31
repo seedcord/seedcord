@@ -43,7 +43,6 @@ interface SidebarProps {
     readonly uptimeMs: number | null;
     readonly following: boolean;
     readonly interactive: boolean;
-    readonly showToggles: boolean;
     readonly cursor: FilterCursor;
     readonly width: number | null;
     readonly ref?: Ref<DOMElement>;
@@ -77,7 +76,6 @@ export function Sidebar({
     uptimeMs,
     following,
     interactive,
-    showToggles,
     cursor,
     width,
     ref
@@ -103,16 +101,11 @@ export function Sidebar({
                     channels={LogStore.instance.getChannels()}
                     enabledChannels={enabled}
                     enabledLevels={enabledLevels}
-                    cursor={showToggles ? cursor : null}
+                    cursor={cursor}
                 />
             </Box>
             <Box flexShrink={0} marginTop={1}>
-                <HotkeyBar
-                    phase={state.phase}
-                    interactive={interactive}
-                    mode={showToggles ? 'toggles' : 'default'}
-                    following={following}
-                />
+                <HotkeyBar phase={state.phase} interactive={interactive} following={following} />
             </Box>
             <Box flexGrow={1} />
             <Box flexShrink={0} justifyContent="flex-end">

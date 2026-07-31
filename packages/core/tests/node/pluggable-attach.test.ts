@@ -21,7 +21,6 @@ function delay(ms: number): Promise<void> {
 }
 
 class TestPlugin extends Plugin {
-    public logger = new Logger('TestPlugin');
     public initCalls = 0;
 
     constructor(
@@ -102,7 +101,7 @@ describe('Pluggable', () => {
 
         await host.run();
         expect(withDb.db.initCalls).toBe(1);
-        expect(startup.removeTask(StartupPhase.Configuration, 'Plugins:init')).toBe(true);
+        expect(startup.removeTask(StartupPhase.Configuration, 'plugins-init')).toBe(true);
     });
 
     it('runs plugin inits sequentially in attach order within a phase', async () => {
@@ -126,12 +125,11 @@ describe('Pluggable', () => {
     });
 
     describe('ctx', () => {
-        it('finalizes ctx with a key-channel logger, the config, and the store', () => {
+        it('finalizes ctx with the config and the store', () => {
             const { host } = makeHost();
             const withDb = host.attach('db', TestPlugin, 'x');
 
             const ctx = withDb.db.reachCtx();
-            expect(ctx.logger).toBeInstanceOf(Logger);
             expect(ctx.config).toBe(host.config);
             expect(ctx.store).toBe(host.rateLimiter);
         });
@@ -171,10 +169,10 @@ describe('Pluggable', () => {
             const { host, shutdown } = makeHost();
             host.attach('db', TestPlugin, 'x');
 
-            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'Plugins:dispose')).toBe(false);
+            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'plugins-dispose')).toBe(false);
 
             await host.run();
-            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'Plugins:dispose')).toBe(true);
+            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'plugins-dispose')).toBe(true);
         });
 
         it('disposes in reverse attach order at shutdown', async () => {
@@ -215,7 +213,6 @@ describe('Pluggable', () => {
         it('a shared non-default dispose phase runs both disposes in reverse attach order', async () => {
             const order: string[] = [];
             class LogoutDisposer extends Plugin {
-                public logger = new Logger('LogoutDisposer');
                 constructor(
                     core: CoreBase,
                     private readonly tag: string
@@ -245,7 +242,6 @@ describe('Pluggable', () => {
     it('runs a Ready-phase init before the ready hooks', async () => {
         const order: string[] = [];
         class ReadyPhaseInit extends Plugin {
-            public logger = new Logger('ReadyPhaseInit');
             constructor(core: CoreBase) {
                 super(core, { init: { phase: StartupPhase.Ready } });
             }
@@ -269,7 +265,6 @@ describe('Pluggable', () => {
     it('runs a Login-phase init after the Configuration phase completes', async () => {
         const order: string[] = [];
         class LoginInit extends Plugin {
-            public logger = new Logger('LoginInit');
             constructor(core: CoreBase) {
                 super(core, { init: { phase: StartupPhase.Login } });
             }
@@ -291,7 +286,6 @@ describe('Pluggable', () => {
     it('runs each dispose in its declared phase', async () => {
         const order: string[] = [];
         class LogoutDispose extends Plugin {
-            public logger = new Logger('LogoutDispose');
             constructor(core: CoreBase) {
                 super(core, { dispose: { phase: ShutdownPhase.Logout } });
             }
@@ -352,7 +346,7 @@ describe('Pluggable', () => {
         await host.run();
 
         const readyPlugins = addTask.mock.calls.filter(
-            ([phase, name]) => phase === StartupPhase.Ready && name === 'Plugins'
+            ([phase, name]) => phase === StartupPhase.Ready && name === 'plugins-ready'
         );
         expect(readyPlugins).toHaveLength(0);
     });
@@ -379,7 +373,6 @@ describe('Pluggable', () => {
     it('never runs ready hooks when a Ready-phase init rejects', async () => {
         const order: string[] = [];
         class FailingReadyInit extends Plugin {
-            public logger = new Logger('FailingReadyInit');
             constructor(core: CoreBase) {
                 super(core, { init: { phase: StartupPhase.Ready } });
             }
@@ -388,7 +381,6 @@ describe('Pluggable', () => {
             }
         }
         class OnlyReady extends Plugin {
-            public logger = new Logger('OnlyReady');
             constructor(core: CoreBase) {
                 super(core);
             }

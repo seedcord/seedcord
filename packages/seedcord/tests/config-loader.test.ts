@@ -7,7 +7,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { DevRunner, isSeedcordInstance } from '@commands/dev/DevRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { DevStore } from '@ui/stores/DevStore';
-import { silentLogger } from '@utils/SilentLogger';
+
+import { silentLogger } from './silentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import type { ConfigLocator } from '@core/config/ConfigLocator';

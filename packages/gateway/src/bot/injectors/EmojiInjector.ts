@@ -37,7 +37,7 @@ export const Emojis = emojiStorage as InjectedEmojiMap;
  * @internal
  */
 export class EmojiInjector {
-    private readonly logger = new Logger('Emojis');
+    private readonly logger = new Logger('Emojis', { channel: 'bot' });
 
     constructor(private readonly core: Core) {}
 

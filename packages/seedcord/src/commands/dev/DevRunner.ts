@@ -155,11 +155,11 @@ export class DevRunner {
         private readonly codegenLogger: ILogger
     ) {}
 
-    public static create(logger: ILogger, store: DevStore): DevRunner {
+    public static create(logger: Logger, store: DevStore): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
+        const codegenLogger = new Logger('Codegen', { channel: 'cli' });
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);
-        const codegenLogger = new Logger('CLI:Codegen');
 
         return new DevRunner(locator, configLoader, store, CodegenRunner.create(codegenLogger), codegenLogger);
     }

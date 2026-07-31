@@ -3,6 +3,7 @@ import { Box, Text } from 'ink';
 import React from 'react';
 
 import { channelColor } from '@ui/channelColor';
+import { Rule } from '@ui/components/primitives/Rule';
 import { formatClock } from '@ui/format';
 import { LogStore } from '@ui/stores/LogStore';
 
@@ -90,22 +91,6 @@ function ContinuationLine({ log, labelWidth }: { log: LogEntry; labelWidth: numb
             {' '.repeat(messageColumn(labelWidth) - 2)}
             <Text dimColor>{GUIDE}</Text> {log.text}
         </Text>
-    );
-}
-
-// full-width flex line bracketing a block. flexShrink={0} keeps the border-only box from compressing to
-// zero height under overflow, which would land the rule on the neighbouring text line.
-function Rule(): ReactElement {
-    return (
-        <Box
-            flexShrink={0}
-            borderStyle="single"
-            borderTop
-            borderBottom={false}
-            borderLeft={false}
-            borderRight={false}
-            borderDimColor
-        />
     );
 }
 

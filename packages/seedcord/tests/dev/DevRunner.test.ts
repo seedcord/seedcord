@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '@commands/dev/DevRunner';
-import { silentLogger } from '@utils/SilentLogger';
+
+import { silentLogger } from '../silentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import type { ConfigLoader } from '@core/config/ConfigLoader';

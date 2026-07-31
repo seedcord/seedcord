@@ -1,6 +1,7 @@
 import { Logger } from '@seedcord/logger';
 
 import type { CoreBase } from '@interfaces/CoreBase';
+import type { LoggerChannelId } from '@seedcord/logger';
 import type { DispatchContext } from '@src/dispatch/DispatchContext';
 
 /**
@@ -19,10 +20,11 @@ export abstract class BaseHandler<Event, TCore extends CoreBase> {
     protected constructor(
         event: Event,
         public readonly core: TCore,
-        dispatch?: DispatchContext
+        dispatch?: DispatchContext,
+        channel?: LoggerChannelId
     ) {
         this.event = event;
-        this.logger = new Logger(this.constructor.name);
+        this.logger = new Logger(this.constructor.name, { channel });
         this.dispatch = dispatch;
     }
 

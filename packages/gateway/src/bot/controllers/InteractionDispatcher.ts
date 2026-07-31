@@ -81,7 +81,7 @@ interface DispatchedHandler {
  * @internal
  */
 export class InteractionDispatcher implements Initializeable, HmrAware {
-    private readonly logger = new Logger('Interactions');
+    private readonly logger = new Logger('Interactions', { channel: 'interactions' });
     private isInitialized = false;
 
     private readonly slashMap = new Map<string, HandlerConstructor>();
