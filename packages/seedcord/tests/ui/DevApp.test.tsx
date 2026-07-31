@@ -22,7 +22,7 @@ describe('DevApp render smoke', () => {
         expect(frame).toBeTruthy();
         expect(frame).toContain('seedcord');
         expect(frame).toContain('running');
-        expect(frame).toContain('filters');
+        expect(frame).toContain('toggle');
 
         unmount();
     });

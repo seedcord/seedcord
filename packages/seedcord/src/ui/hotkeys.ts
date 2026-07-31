@@ -1,5 +1,5 @@
 import { FILTER_LEVELS } from '@ui/components/primitives/FilterChips';
-import { focusedIn, INITIAL_CURSOR, moveCursor } from '@ui/filterCursor';
+import { focusedIn, moveCursor } from '@ui/filterCursor';
 import { isSessionLive } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
@@ -45,8 +45,6 @@ interface HotkeyContext {
     readonly setEnabled: (next: ReadonlySet<string>) => void;
     readonly enabledLevels: ReadonlySet<LogLevel>;
     readonly setEnabledLevels: (next: ReadonlySet<LogLevel>) => void;
-    readonly showToggles: boolean;
-    readonly setShowToggles: (next: boolean) => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
@@ -98,14 +96,12 @@ function applyAtCursor(
     if (level !== undefined) ctx.setEnabledLevels(onLevel(ctx.enabledLevels, level));
 }
 
-function handleToggleMode(ctx: HotkeyContext): boolean {
-    if (!ctx.showToggles) return false;
+function handleFilters(ctx: HotkeyContext): boolean {
     const channels = LogStore.instance.getChannels();
     const move = (dir: CursorMove): void =>
         ctx.setCursor(moveCursor(ctx.cursor, dir, channels.length, FILTER_LEVELS.length));
 
-    if (ctx.key.escape || ctx.key.return || ctx.input === 'f') ctx.setShowToggles(false);
-    else if (ctx.key.leftArrow) move('left');
+    if (ctx.key.leftArrow) move('left');
     else if (ctx.key.rightArrow) move('right');
     else if (ctx.key.tab) move('switch');
     else if (ctx.input === ' ') applyAtCursor(ctx, channels, soloChannel, soloLevel);
@@ -150,12 +146,6 @@ function handleActions(ctx: HotkeyContext): void {
 
             break;
         }
-        case 'f': {
-            ctx.setCursor(INITIAL_CURSOR);
-            ctx.setShowToggles(true);
-
-            break;
-        }
         case 'l': {
             LogStore.instance.clear();
             ctx.scroll.toBottom();
@@ -170,7 +160,7 @@ function handleActions(ctx: HotkeyContext): void {
 export function dispatchHotkey(ctx: HotkeyContext): void {
     if (handleQuitSignal(ctx)) return;
     if (handlePrompt(ctx)) return;
-    if (handleToggleMode(ctx)) return;
+    if (handleFilters(ctx)) return;
     if (handleScroll(ctx)) return;
     handleActions(ctx);
 }

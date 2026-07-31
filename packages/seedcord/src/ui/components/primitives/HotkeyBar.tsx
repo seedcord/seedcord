@@ -8,12 +8,9 @@ import { isSessionLive } from '@ui/stores/devPhase';
 import type { DevPhase } from '@ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
-type HotkeyBarMode = 'default' | 'toggles';
-
 interface HotkeyBarProps {
     readonly phase: DevPhase;
     readonly interactive: boolean;
-    readonly mode: HotkeyBarMode;
     readonly following: boolean;
 }
 
@@ -41,7 +38,7 @@ function Hotkey({ keyLabel, action, enabled = true, highlight = false }: HotkeyP
 // Highlight r in the phases the user recovers from with a restart.
 const RESTART_HINT_PHASES = new Set<DevPhase>(['restart-required', 'disconnected', 'error']);
 
-function DefaultKeys({
+function SessionKeys({
     phase,
     interactive,
     following
@@ -55,7 +52,6 @@ function DefaultKeys({
             <Hotkey keyLabel="q" action="quit" />
             <Hotkey keyLabel="r" action="restart" enabled={interactive} highlight={RESTART_HINT_PHASES.has(phase)} />
             <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isSessionLive(phase)} />
-            <Hotkey keyLabel="f" action="filters" enabled={interactive} />
             <Hotkey keyLabel="l" action="clear" enabled={interactive} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
@@ -63,20 +59,15 @@ function DefaultKeys({
     );
 }
 
-export function HotkeyBar({ phase, interactive, mode, following }: HotkeyBarProps): ReactElement {
+export function HotkeyBar({ phase, interactive, following }: HotkeyBarProps): ReactElement {
     return (
         <Box flexDirection="column" flexWrap="wrap">
-            <DefaultKeys phase={phase} interactive={interactive} following={following} />
-            {mode === 'toggles' && (
-                <>
-                    <Rule />
-                    <Hotkey keyLabel="←→" action="move" />
-                    <Hotkey keyLabel="tab" action="group" />
-                    <Hotkey keyLabel="space" action="solo" />
-                    <Hotkey keyLabel="o" action="toggle" />
-                    <Hotkey keyLabel="↵/esc" action="done" />
-                </>
-            )}
+            <SessionKeys phase={phase} interactive={interactive} following={following} />
+            <Rule />
+            <Hotkey keyLabel="←→" action="move" />
+            <Hotkey keyLabel="tab" action="group" />
+            <Hotkey keyLabel="space" action="solo" />
+            <Hotkey keyLabel="o" action="toggle" />
         </Box>
     );
 }
