@@ -26,7 +26,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         protected readonly phaseOrder: TPhase[],
         protected readonly phaseEnum: Record<number, string>
     ) {
-        this.logger = new Logger(loggerName);
+        this.logger = new Logger(loggerName, { channel: 'lifecycle' });
         this.phaseOrder.forEach((phase) => this.tasksMap.set(phase, []));
     }
 

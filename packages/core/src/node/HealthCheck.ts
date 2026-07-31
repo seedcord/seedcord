@@ -19,7 +19,7 @@ const DEFAULT_HEALTH_CHECK_PATH = '/health';
  */
 export class HealthCheck {
     /** @internal */
-    public readonly logger = new Logger('HealthCheck');
+    public readonly logger = new Logger('HealthCheck', { channel: 'health' });
 
     public readonly port: number;
     public readonly path: string;

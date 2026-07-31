@@ -45,7 +45,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
     protected startFailed = false;
     protected readonly plugins: PluginLike[] = [];
 
-    private readonly pluginLogger = new Logger('Plugins');
+    private readonly pluginLogger = new Logger('Plugins', { channel: 'plugins' });
 
     private readonly attachments: Attachment[] = [];
     private readonly completedInits = new Set<Attachment>();

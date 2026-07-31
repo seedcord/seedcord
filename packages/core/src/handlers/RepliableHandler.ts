@@ -24,9 +24,9 @@ export abstract class RepliableHandler<
     protected readonly routeId: string;
 
     protected constructor(event: Event, core: TCore, dispatch?: DispatchContext) {
-        super(event, core, dispatch);
+        super(event, core, dispatch, 'interactions');
         this.routeId = dispatch?.routeId ?? this.constructor.name;
-        // runs inside the ctor, an override builds from its arguments only, subclass fields are not initialized yet
+        // Runs inside the ctor so an override can only use its arguments
         this.sender = this.buildSender(event, core, this.routeId);
     }
 

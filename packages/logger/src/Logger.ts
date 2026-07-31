@@ -2,7 +2,7 @@ import { DEFAULT_CHANNEL } from './levels';
 import { LoggerChannelRegistry } from './LoggerChannelRegistry';
 import { LoggerUtilities } from './LoggerUtilities';
 
-import type { LogLevel, LoggerConfig, LoggerOptions } from './types';
+import type { LogLevel, LoggerChannelId, LoggerConfig, LoggerOptions } from './types';
 import type { ILogger } from '@seedcord/types';
 
 /**
@@ -14,7 +14,7 @@ import type { ILogger } from '@seedcord/types';
  */
 export class Logger implements ILogger {
     private readonly label: string;
-    private channel: string;
+    private channel: LoggerChannelId;
     private readonly registry = LoggerChannelRegistry.instance;
 
     public readonly utils: LoggerUtilities;
@@ -32,12 +32,12 @@ export class Logger implements ILogger {
     }
 
     /** Switches this logger to a different channel. */
-    public setChannel(channel: string): void {
+    public setChannel(channel: LoggerChannelId): void {
         this.channel = channel;
     }
 
     /** Returns a new logger for this label on the given channel. */
-    public inChannel(channel: string): Logger {
+    public inChannel(channel: LoggerChannelId): Logger {
         return new Logger(this.label, { channel });
     }
 
