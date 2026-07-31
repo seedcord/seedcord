@@ -109,13 +109,13 @@ function handleToggleMode(ctx: HotkeyContext): boolean {
     else if (ctx.key.rightArrow) move('right');
     else if (ctx.key.tab) move('switch');
     else if (ctx.input === ' ') applyAtCursor(ctx, channels, soloChannel, soloLevel);
-    else if (ctx.input === 't') applyAtCursor(ctx, channels, toggleChannel, toggleLevel);
+    else if (ctx.input === 'o') applyAtCursor(ctx, channels, toggleChannel, toggleLevel);
     else return false;
     return true;
 }
 
 function handleScroll(ctx: HotkeyContext): boolean {
-    // runs before session actions so scroll works even when non-interactive. t and b are taken here, a new single-letter action must avoid them.
+    // runs before session actions so scroll works even when non-interactive
     const { key, input, scroll } = ctx;
     if (key.upArrow) scroll.up();
     else if (key.downArrow) scroll.down();
@@ -166,13 +166,11 @@ function handleActions(ctx: HotkeyContext): void {
     }
 }
 
-// first stage that returns true captures the keypress. the prompt captures all input while open, and
-// toggle mode captures everything past scrolling.
+// first stage that returns true captures the keypress. the prompt captures all input while open
 export function dispatchHotkey(ctx: HotkeyContext): void {
     if (handleQuitSignal(ctx)) return;
     if (handlePrompt(ctx)) return;
     if (handleToggleMode(ctx)) return;
     if (handleScroll(ctx)) return;
-    if (ctx.showToggles) return;
     handleActions(ctx);
 }

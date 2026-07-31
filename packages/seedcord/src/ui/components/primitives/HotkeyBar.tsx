@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { Rule } from '@ui/components/primitives/Rule';
 import { ui } from '@ui/palette';
 import { isSessionLive } from '@ui/stores/devPhase';
 
@@ -65,17 +66,17 @@ function DefaultKeys({
 export function HotkeyBar({ phase, interactive, mode, following }: HotkeyBarProps): ReactElement {
     return (
         <Box flexDirection="column" flexWrap="wrap">
+            <DefaultKeys phase={phase} interactive={interactive} following={following} />
             {mode === 'toggles' && (
                 <>
+                    <Rule />
                     <Hotkey keyLabel="←→" action="move" />
                     <Hotkey keyLabel="tab" action="group" />
                     <Hotkey keyLabel="space" action="solo" />
-                    <Hotkey keyLabel="t" action="toggle" />
-                    <Hotkey keyLabel="↑↓" action="scroll" />
+                    <Hotkey keyLabel="o" action="toggle" />
                     <Hotkey keyLabel="↵/esc" action="done" />
                 </>
             )}
-            {mode === 'default' && <DefaultKeys phase={phase} interactive={interactive} following={following} />}
         </Box>
     );
 }

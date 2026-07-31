@@ -107,21 +107,21 @@ describe('dispatchHotkey channel toggle mode', () => {
         expect(setEnabled).toHaveBeenCalledWith(new Set());
     });
 
-    it('toggles the focused channel off on t, keeping the rest', async () => {
+    it('toggles the focused channel off on o, keeping the rest', async () => {
         await seedChannel('alpha');
         await seedChannel('beta');
         const setEnabled = vi.fn();
 
-        dispatchHotkey(makeCtx({ showToggles: true, input: 't', cursor: INITIAL_CURSOR, setEnabled }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'o', cursor: INITIAL_CURSOR, setEnabled }));
 
         expect(setEnabled).toHaveBeenCalledWith(new Set(['beta']));
     });
 
-    it('does nothing on space or t when no channels exist', () => {
+    it('does nothing on space or o when no channels exist', () => {
         const setEnabled = vi.fn();
 
         dispatchHotkey(makeCtx({ showToggles: true, input: ' ', cursor: INITIAL_CURSOR, setEnabled }));
-        dispatchHotkey(makeCtx({ showToggles: true, input: 't', cursor: INITIAL_CURSOR, setEnabled }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'o', cursor: INITIAL_CURSOR, setEnabled }));
 
         expect(setEnabled).not.toHaveBeenCalled();
     });
@@ -162,25 +162,37 @@ describe('scrolling while filter mode is open', () => {
         expect(scroll.toBottom).toHaveBeenCalledTimes(2);
     });
 
-    it('keeps t on the cursor', async () => {
+    it('keeps t on top-of-log and o on the cursor', async () => {
         await seedChannel('alpha');
         const scroll = scrollSpy();
         const setEnabled = vi.fn();
 
         dispatchHotkey(makeCtx({ showToggles: true, input: 't', scroll, setEnabled }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'o', scroll, setEnabled }));
 
-        expect(scroll.toTop).not.toHaveBeenCalled();
-        expect(setEnabled).toHaveBeenCalled();
+        expect(scroll.toTop).toHaveBeenCalledOnce();
+        expect(setEnabled).toHaveBeenCalledOnce();
     });
 
-    it('still swallows session actions', () => {
-        // justified: the action path reads only beginRestart off the store
-        const store = { beginRestart: vi.fn() } as unknown as Ctx['store'];
+    it('keeps the session actions reachable, they collide with no filter key', () => {
+        // justified: the action path reads only these two off the store
+        const store = { beginRestart: vi.fn(), beginQuit: vi.fn() } as unknown as Ctx['store'];
         const onRestart = vi.fn();
+        const onQuit = vi.fn();
 
         dispatchHotkey(makeCtx({ showToggles: true, input: 'r', store, onRestart, scroll: scrollSpy() }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'q', store, onQuit, scroll: scrollSpy() }));
 
-        expect(onRestart).not.toHaveBeenCalled();
+        expect(onRestart).toHaveBeenCalledOnce();
+        expect(onQuit).toHaveBeenCalledOnce();
+    });
+
+    it('closes the panel on f rather than reopening it', () => {
+        const setShowToggles = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'f', setShowToggles, scroll: scrollSpy() }));
+
+        expect(setShowToggles).toHaveBeenCalledExactlyOnceWith(false);
     });
 });
 
