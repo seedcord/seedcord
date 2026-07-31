@@ -14,12 +14,12 @@ describe('moveCursor', () => {
         expect(moveCursor(INITIAL_CURSOR, 'left', 3, 5).channels).toBe(2);
     });
 
-    it('switches groups on up/down and keeps each index', () => {
+    it('switches groups and keeps each index', () => {
         let cursor = moveCursor(INITIAL_CURSOR, 'right', 3, 5); // channels 1
-        cursor = moveCursor(cursor, 'down', 3, 5);
+        cursor = moveCursor(cursor, 'switch', 3, 5);
         expect(cursor.group).toBe('levels');
         cursor = moveCursor(cursor, 'right', 3, 5); // levels 1
-        cursor = moveCursor(cursor, 'up', 3, 5);
+        cursor = moveCursor(cursor, 'switch', 3, 5);
         expect(cursor.group).toBe('channels');
         expect(cursor.channels).toBe(1);
         expect(cursor.levels).toBe(1);

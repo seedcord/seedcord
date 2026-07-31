@@ -126,3 +126,96 @@ describe('dispatchHotkey channel toggle mode', () => {
         expect(setEnabled).not.toHaveBeenCalled();
     });
 });
+
+type ScrollSpy = Record<'up' | 'down' | 'pageUp' | 'pageDown' | 'toTop' | 'toBottom', ReturnType<typeof vi.fn>>;
+
+// justified: dispatch reads only these six methods off scroll
+function scrollSpy(): ScrollSpy & Ctx['scroll'] {
+    const spies: ScrollSpy = {
+        up: vi.fn(),
+        down: vi.fn(),
+        pageUp: vi.fn(),
+        pageDown: vi.fn(),
+        toTop: vi.fn(),
+        toBottom: vi.fn()
+    };
+    return spies as ScrollSpy & Ctx['scroll'];
+}
+
+describe('scrolling while filter mode is open', () => {
+    afterEach(() => {
+        LogStore.instance.clear();
+    });
+
+    it('scrolls on the keys filter mode leaves free', () => {
+        const scroll = scrollSpy();
+
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ pageUp: true }), scroll }));
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ pageDown: true }), scroll }));
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ home: true }), scroll }));
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ end: true }), scroll }));
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'b', scroll }));
+
+        expect(scroll.pageUp).toHaveBeenCalledOnce();
+        expect(scroll.pageDown).toHaveBeenCalledOnce();
+        expect(scroll.toTop).toHaveBeenCalledOnce();
+        expect(scroll.toBottom).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps t on the cursor', async () => {
+        await seedChannel('alpha');
+        const scroll = scrollSpy();
+        const setEnabled = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, input: 't', scroll, setEnabled }));
+
+        expect(scroll.toTop).not.toHaveBeenCalled();
+        expect(setEnabled).toHaveBeenCalled();
+    });
+
+    it('still swallows session actions', () => {
+        // justified: the action path reads only beginRestart off the store
+        const store = { beginRestart: vi.fn() } as unknown as Ctx['store'];
+        const onRestart = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, input: 'r', store, onRestart, scroll: scrollSpy() }));
+
+        expect(onRestart).not.toHaveBeenCalled();
+    });
+});
+
+describe('filter mode arrow keys', () => {
+    afterEach(() => {
+        LogStore.instance.clear();
+    });
+
+    it('scrolls the log pane on up and down, which is what a wheel sends', () => {
+        const scroll = scrollSpy();
+        const setCursor = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ upArrow: true }), scroll, setCursor }));
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ downArrow: true }), scroll, setCursor }));
+
+        expect(scroll.up).toHaveBeenCalledOnce();
+        expect(scroll.down).toHaveBeenCalledOnce();
+        expect(setCursor).not.toHaveBeenCalled();
+    });
+
+    it('switches group on tab', () => {
+        const setCursor = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ tab: true }), setCursor, scroll: scrollSpy() }));
+
+        expect(setCursor).toHaveBeenCalledWith({ group: 'levels', channels: 0, levels: 0 });
+    });
+
+    it('keeps left and right moving within the group', async () => {
+        await seedChannel('alpha');
+        await seedChannel('beta');
+        const setCursor = vi.fn();
+
+        dispatchHotkey(makeCtx({ showToggles: true, key: key({ rightArrow: true }), setCursor, scroll: scrollSpy() }));
+
+        expect(setCursor).toHaveBeenCalledWith({ group: 'channels', channels: 1, levels: 0 });
+    });
+});

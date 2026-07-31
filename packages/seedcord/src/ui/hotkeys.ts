@@ -4,7 +4,7 @@ import { isSessionLive } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { LogLevel } from '@seedcord/logger';
-import type { FilterCursor } from '@ui/filterCursor';
+import type { CursorMove, FilterCursor } from '@ui/filterCursor';
 import type { ScrollApi } from '@ui/hooks/useScroll';
 import type { LogRow } from '@ui/logRows';
 import type { DevState, DevStore } from '@ui/stores/DevStore';
@@ -101,16 +101,16 @@ function applyAtCursor(
 function handleToggleMode(ctx: HotkeyContext): boolean {
     if (!ctx.showToggles) return false;
     const channels = LogStore.instance.getChannels();
-    const move = (dir: 'left' | 'right' | 'up' | 'down'): void =>
+    const move = (dir: CursorMove): void =>
         ctx.setCursor(moveCursor(ctx.cursor, dir, channels.length, FILTER_LEVELS.length));
 
     if (ctx.key.escape || ctx.key.return || ctx.input === 'f') ctx.setShowToggles(false);
     else if (ctx.key.leftArrow) move('left');
     else if (ctx.key.rightArrow) move('right');
-    else if (ctx.key.upArrow) move('up');
-    else if (ctx.key.downArrow) move('down');
+    else if (ctx.key.tab) move('switch');
     else if (ctx.input === ' ') applyAtCursor(ctx, channels, soloChannel, soloLevel);
     else if (ctx.input === 't') applyAtCursor(ctx, channels, toggleChannel, toggleLevel);
+    else return false;
     return true;
 }
 
@@ -166,11 +166,13 @@ function handleActions(ctx: HotkeyContext): void {
     }
 }
 
-// first stage that returns true captures the keypress. prompt and toggle modes capture all input while open.
+// first stage that returns true captures the keypress. the prompt captures all input while open, and
+// toggle mode captures everything past scrolling.
 export function dispatchHotkey(ctx: HotkeyContext): void {
     if (handleQuitSignal(ctx)) return;
     if (handlePrompt(ctx)) return;
     if (handleToggleMode(ctx)) return;
     if (handleScroll(ctx)) return;
+    if (ctx.showToggles) return;
     handleActions(ctx);
 }

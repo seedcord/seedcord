@@ -68,9 +68,10 @@ export function HotkeyBar({ phase, interactive, mode, following }: HotkeyBarProp
             {mode === 'toggles' && (
                 <>
                     <Hotkey keyLabel="←→" action="move" />
-                    <Hotkey keyLabel="↑↓" action="group" />
+                    <Hotkey keyLabel="tab" action="group" />
                     <Hotkey keyLabel="space" action="solo" />
                     <Hotkey keyLabel="t" action="toggle" />
+                    <Hotkey keyLabel="↑↓" action="scroll" />
                     <Hotkey keyLabel="↵/esc" action="done" />
                 </>
             )}

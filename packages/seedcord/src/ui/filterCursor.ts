@@ -1,5 +1,5 @@
 export type FilterGroup = 'channels' | 'levels';
-export type CursorMove = 'left' | 'right' | 'up' | 'down';
+export type CursorMove = 'left' | 'right' | 'switch';
 
 // one remembered index per group, kept across group switches
 export interface FilterCursor {
@@ -16,7 +16,7 @@ export function moveCursor(
     channelCount: number,
     levelCount: number
 ): FilterCursor {
-    if (move === 'up' || move === 'down') {
+    if (move === 'switch') {
         return { ...cursor, group: cursor.group === 'channels' ? 'levels' : 'channels' };
     }
 
