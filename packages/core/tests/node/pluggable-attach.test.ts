@@ -101,7 +101,7 @@ describe('Pluggable', () => {
 
         await host.run();
         expect(withDb.db.initCalls).toBe(1);
-        expect(startup.removeTask(StartupPhase.Configuration, 'Plugins:init')).toBe(true);
+        expect(startup.removeTask(StartupPhase.Configuration, 'plugins-init')).toBe(true);
     });
 
     it('runs plugin inits sequentially in attach order within a phase', async () => {
@@ -169,10 +169,10 @@ describe('Pluggable', () => {
             const { host, shutdown } = makeHost();
             host.attach('db', TestPlugin, 'x');
 
-            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'Plugins:dispose')).toBe(false);
+            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'plugins-dispose')).toBe(false);
 
             await host.run();
-            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'Plugins:dispose')).toBe(true);
+            expect(shutdown.removeTask(ShutdownPhase.Disconnect, 'plugins-dispose')).toBe(true);
         });
 
         it('disposes in reverse attach order at shutdown', async () => {
@@ -346,7 +346,7 @@ describe('Pluggable', () => {
         await host.run();
 
         const readyPlugins = addTask.mock.calls.filter(
-            ([phase, name]) => phase === StartupPhase.Ready && name === 'Plugins'
+            ([phase, name]) => phase === StartupPhase.Ready && name === 'plugins-ready'
         );
         expect(readyPlugins).toHaveLength(0);
     });

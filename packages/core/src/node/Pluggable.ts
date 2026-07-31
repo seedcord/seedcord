@@ -201,7 +201,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             // Ready inits run in the combined Ready task, before the ready hooks
             if (phase === StartupPhase.Ready) continue;
             const budget = group.reduce((sum, a) => sum + resolvedLifecycleSpecOf(a.instance).init.timeout, 0);
-            this.startup.addTask(phase, 'Plugins:init', () => this.runInits(group), budget);
+            this.startup.addTask(phase, 'plugins-init', () => this.runInits(group), budget);
         }
 
         this.registerReadyTask(groups.get(StartupPhase.Ready) ?? []);
@@ -213,7 +213,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             const spec = resolvedLifecycleSpecOf(instance);
 
             instance.logger.utils.initialization(key, 'start');
-            await withTimeout(`Plugin:${key}`, () => instance.init(), spec.init.timeout);
+            await withTimeout(`Plugin (${key})`, () => instance.init(), spec.init.timeout);
             instance.logger.utils.initialization(key, 'end');
 
             this.completedInits.add(attachment);
@@ -243,7 +243,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             steps.reduce((sum, step) => sum + step.timeout, 0);
         this.startup.addTask(
             StartupPhase.Ready,
-            'Plugins',
+            'plugins-ready',
             async () => {
                 await this.runInits(readyInits);
                 for (const step of steps) {
@@ -263,7 +263,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
             const spec = resolvedLifecycleSpecOf(a.instance);
             return a.instance.dispose && spec.dispose.phase === phase ? sum + spec.dispose.timeout : sum;
         }, 0);
-        this.shutdown.addTask(phase, 'Plugins:dispose', () => this.runDisposals(phase), budget);
+        this.shutdown.addTask(phase, 'plugins-dispose', () => this.runDisposals(phase), budget);
     }
 
     private async runDisposals(phase: ShutdownPhase): Promise<void> {
