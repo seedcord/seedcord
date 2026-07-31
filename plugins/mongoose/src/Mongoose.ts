@@ -6,14 +6,11 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
-import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 
-import { ModelMetadataKey } from './decorators/RegisterMongooseModel';
-import { ServiceMetadataKey } from './decorators/RegisterMongooseService';
-import { MongooseService } from './MongooseService';
+import { MongooseServiceRegistry } from './MongooseServiceRegistry';
 
 import type { MongooseServiceConstructor } from './MongooseService';
 import type { MongooseOptions } from './types/MongooseOptions';
@@ -22,7 +19,7 @@ import type { CoreBase } from '@seedcord/core';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { Mongoose as MongooseInstance } from 'mongoose';
 
-interface MongooseArtifact {
+export interface MongooseArtifact {
     key?: string;
     modelName?: string;
 }
@@ -40,8 +37,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     private inFlight: Promise<void> | null = null;
     private readonly uri: string;
 
-    private readonly _services: Record<string, unknown> = {};
-    private readonly ownModels = new Set<string>();
+    private readonly serviceRegistry: MongooseServiceRegistry;
 
     /**
      * Map of all loaded services. Keys come from `@RegisterMongooseService('key')`.
@@ -52,7 +48,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
         if (!this.servicesReady) {
             throw new SeedcordError(SeedcordErrorCode.PluginMongooseServicesNotReady);
         }
-        return this._services;
+        return this.serviceRegistry.map;
     }
 
     /** Exposed Mongoose instance once `init` completes. */
@@ -65,25 +61,17 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     ) {
         super(host, { dispose: keepDefined({ timeout: options.timeout }) });
         this.uri = options.uri;
+        this.serviceRegistry = new MongooseServiceRegistry(this, this.core, this.logger);
 
         if (!Envapter.isDevelopment) return;
         this.hmrHandler = new HmrModuleHandler({
             handlersDir: this.options.dir,
-            isHandler: this.isServiceClass.bind(this),
-            registerHandler: this.initializeService.bind(this),
-            unregisterHandler: this.unregister.bind(this),
-            getArtifacts: this.getArtifacts.bind(this),
+            isHandler: this.serviceRegistry.isServiceClass.bind(this.serviceRegistry),
+            registerHandler: this.serviceRegistry.initializeService.bind(this.serviceRegistry),
+            unregisterHandler: this.serviceRegistry.unregister.bind(this.serviceRegistry),
+            getArtifacts: this.serviceRegistry.getArtifacts.bind(this.serviceRegistry),
             logger: this.logger
         });
-    }
-
-    private getArtifacts(ctor: MongooseServiceConstructor): MongooseArtifact {
-        const key = Reflect.getMetadata(ServiceMetadataKey, ctor) as string | undefined;
-        const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<unknown> | undefined;
-        return {
-            ...(key && { key }),
-            ...(model?.modelName && { modelName: model.modelName })
-        };
     }
 
     /** @internal For use in dev mode */
@@ -135,22 +123,12 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             });
     }
 
-    // scoped to this plugin's own models because the mongoose registry is global and shared with
-    // everything else in the process
-    private clearModels(): void {
-        if (this.ownModels.size === 0) return;
-
-        this.logger.debug(`Clearing ${this.ownModels.size} mongoose models`);
-        for (const name of this.ownModels) mongoose.deleteModel(name);
-        this.ownModels.clear();
-    }
-
     private async disconnect(): Promise<void> {
-        for (const key of Object.keys(this._services)) Reflect.deleteProperty(this._services, key);
+        this.serviceRegistry.clear();
         this.servicesReady = false;
         this.isInitialised = false;
 
-        this.clearModels();
+        this.serviceRegistry.clearModels();
 
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- connect() may have failed before assigning, so there is nothing to disconnect
         if (!this.connection) return;
@@ -166,60 +144,13 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
     }
 
     private async loadServices(): Promise<void> {
-        const servicesDir = this.options.dir;
-        this.logger.info(chalk.bold(servicesDir));
-
-        await traverseDirectory(servicesDir, (fullPath, rel, mod) => {
-            for (const Service of Object.values(mod)) {
-                if (!this.isServiceClass(Service)) {
-                    continue;
-                }
-
-                this.initializeService(Service, rel);
-                this.hmrHandler?.trackHandler(fullPath, Service);
-            }
+        await this.serviceRegistry.loadFromDirectory(this.options.dir, (fullPath, Service) => {
+            this.hmrHandler?.trackHandler(fullPath, Service);
         });
-
-        this.logger.utils.list(
-            [`${chalk.magenta(Object.keys(this._services).length)} services`],
-            chalk.bold.green('Loaded')
-        );
-    }
-
-    private initializeService(Service: MongooseServiceConstructor, relativePath: string): void {
-        const instance = new Service(this, this.core);
-        const { modelName } = this.getArtifacts(Service);
-        if (modelName) this.ownModels.add(modelName);
-        this.logger.utils.registration(instance.constructor.name, relativePath);
-    }
-
-    private isServiceClass(obj: unknown): obj is MongooseServiceConstructor {
-        return (
-            typeof obj === 'function' &&
-            obj.prototype instanceof MongooseService &&
-            Reflect.hasMetadata(ServiceMetadataKey, obj)
-        );
     }
 
     /** @internal */
     _register(key: string, instance: unknown): void {
-        this._services[key] = instance;
-    }
-
-    private unregister(Service: MongooseServiceConstructor, artifacts?: { key?: string; modelName?: string }): void {
-        const key = artifacts?.key ?? (Reflect.getMetadata(ServiceMetadataKey, Service) as string | undefined);
-        const modelName =
-            artifacts?.modelName ??
-            (Reflect.getMetadata(ModelMetadataKey, Service) as mongoose.Model<unknown> | undefined)?.modelName;
-
-        if (key && this._services[key]) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete -- key is a runtime service name
-            delete this._services[key];
-        }
-
-        if (modelName) {
-            mongoose.deleteModel(modelName);
-            this.ownModels.delete(modelName);
-        }
+        this.serviceRegistry.register(key, instance);
     }
 }

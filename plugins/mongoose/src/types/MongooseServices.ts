@@ -1,8 +1,8 @@
 /**
  * Registry of available database services.
  *
- * This interface can be augmented via declaration merging to add
- * type-safe service definitions when using the \@RegisterMongooseService and \@RegisterMongooseModel decorator.
+ * Declare a member for each class you decorate with `@RegisterMongooseService` to get
+ * type-safe access to it.
  *
  * @example
  * ```typescript

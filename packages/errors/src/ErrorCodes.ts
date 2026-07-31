@@ -7,19 +7,19 @@ export enum SeedcordErrorCode {
     /** DISCORD_BOT_TOKEN is not present in the environment. */
     ConfigMissingDiscordToken = 1001,
     /** DISCORD_BOT_TOKEN is present but fails validation. */
-    ConfigIncorrectDiscordToken = 1004,
+    ConfigIncorrectDiscordToken = 1002,
     /** One or more configured emojis could not be resolved at startup. */
-    ConfigEmojiUnresolved = 1005,
+    ConfigEmojiUnresolved = 1003,
     /** A webhook reporter's env var is set but fails webhook URL validation. */
-    ConfigWebhookUrlInvalid = 1006,
+    ConfigWebhookUrlInvalid = 1004,
     /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
-    ConfigWebhookNotFound = 1007,
+    ConfigWebhookNotFound = 1005,
     /** DISCORD_PUBLIC_KEY is not present in the environment. */
-    ConfigMissingPublicKey = 1008,
+    ConfigMissingPublicKey = 1006,
     /** DISCORD_PUBLIC_KEY is present but fails validation. */
-    ConfigIncorrectPublicKey = 1009,
+    ConfigIncorrectPublicKey = 1007,
     /** The generated route manifest was imported before `seedcord build` generated it. */
-    ConfigManifestNotGenerated = 1010,
+    ConfigManifestNotGenerated = 1008,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
@@ -141,14 +141,16 @@ export enum SeedcordErrorCode {
 
     /** Mongoose service class is missing the `@RegisterMongooseService` decorator. */
     PluginMongooseServiceDecoratorMissing = 2101,
-    /** Mongoose model class is missing the `@RegisterMongooseModel` decorator. */
-    PluginMongooseModelDecoratorMissing = 2102,
     /** Mongoose client failed to establish a connection. */
-    PluginMongooseConnectionFailed = 2103,
+    PluginMongooseConnectionFailed = 2102,
     /** Mongoose client failed to disconnect cleanly during shutdown. */
-    PluginMongooseDisconnectFailed = 2104,
+    PluginMongooseDisconnectFailed = 2103,
     /** Mongoose `services` was accessed before the plugin finished initializing. */
-    PluginMongooseServicesNotReady = 2105,
+    PluginMongooseServicesNotReady = 2104,
+    /** Mongoose rejected the model, usually a duplicate model name or an absent schema. */
+    PluginMongooseModelCreationFailed = 2105,
+    /** A mongoose service was registered with an empty model name override. */
+    PluginMongooseModelNameMissing = 2106,
 
     /** Kysely service class is missing the `@RegisterKyselyService` decorator. */
     PluginKyselyServiceDecoratorMissing = 2201,
@@ -224,17 +226,17 @@ export enum SeedcordErrorCode {
     /** Two context-menu commands of the same kind share a name during codegen. */
     CliCodegenDuplicateContextMenu = 3124,
     /** Could not resolve the application from the bot token during `commands --clean`. */
-    CliCleanAppFetchFailed = 3126,
+    CliCleanAppFetchFailed = 3125,
     /** `commands --clean` ran with neither --guild nor --all-guilds, so there is nothing to scan. */
-    CliCleanNoGuilds = 3127,
+    CliCleanNoGuilds = 3126,
     /** `commands --clean` combined --purge with --all-guilds, which would wipe every guild. */
-    CliCleanPurgeAllGuilds = 3128,
+    CliCleanPurgeAllGuilds = 3127,
     /** An interactive prompt was cancelled (Ctrl-C), so the command aborts without changes. */
-    CliCancelled = 3129,
+    CliCancelled = 3128,
     /** `commands --clean --all-guilds` matched more guilds than the safety threshold without `--yes`. */
-    CliCleanLargeBotUnconfirmed = 3130,
+    CliCleanLargeBotUnconfirmed = 3129,
     /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
-    CliCleanApplyNeedsYes = 3131,
+    CliCleanApplyNeedsYes = 3130,
     /** Config hmr rollback flag must be a boolean when provided. */
-    CliConfigInvalidHmrRollback = 3132
+    CliConfigInvalidHmrRollback = 3131
 }

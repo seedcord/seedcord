@@ -1,7 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { ModelMetadataKey } from './decorators/RegisterMongooseModel';
 import { ServiceMetadataKey } from './decorators/RegisterMongooseService';
 
 import type { Mongoose } from './Mongoose';
@@ -21,7 +20,6 @@ import type mongoose from 'mongoose';
  * ```typescript
  * \@RegisterMongooseService('users')
  * export class Users extends MongooseService<IUser> {
- *   \@RegisterMongooseModel('users')
  *   public static schema = new mongoose.Schema<IUser>({
  *     username: { type: String, required: true, unique: true }
  *   });
@@ -34,11 +32,10 @@ import type mongoose from 'mongoose';
  * ```
  */
 export abstract class MongooseService<Doc extends MongooseDocument = MongooseDocument> {
-    public readonly model: mongoose.Model<Doc>;
-
     public constructor(
         protected readonly db: Mongoose,
-        protected readonly core: CoreBase
+        protected readonly core: CoreBase,
+        public readonly model: mongoose.Model<Doc>
     ) {
         const ctor = this.constructor;
 
@@ -47,16 +44,11 @@ export abstract class MongooseService<Doc extends MongooseDocument = MongooseDoc
             throw new SeedcordError(SeedcordErrorCode.PluginMongooseServiceDecoratorMissing, [ctor.name]);
         }
 
-        const model = Reflect.getMetadata(ModelMetadataKey, ctor) as mongoose.Model<Doc> | undefined;
-        if (!model) {
-            throw new SeedcordError(SeedcordErrorCode.PluginMongooseModelDecoratorMissing, [ctor.name]);
-        }
-
-        this.model = model;
-
         db._register(key, this);
     }
 }
 
 /** Constructor type for {@link MongooseService} classes */
-export type MongooseServiceConstructor = TypedConstructor<typeof MongooseService>;
+export type MongooseServiceConstructor = TypedConstructor<typeof MongooseService> & {
+    schema: mongoose.Schema<MongooseDocument>;
+};

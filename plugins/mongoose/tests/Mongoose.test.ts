@@ -22,6 +22,8 @@ describe('Mongoose Plugin Integration', () => {
 
     afterEach(async () => {
         await testEnv.teardown();
+        // the mongoose mock is module-level, so a leaked model goes into the next test
+        for (const name of Object.keys(mongoose.models)) Reflect.deleteProperty(mongoose.models, name);
         vi.clearAllMocks();
     });
 
@@ -30,12 +32,11 @@ describe('Mongoose Plugin Integration', () => {
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
             @RegisterMongooseService('users')
             export class UserService extends MongooseService {
-                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
@@ -61,12 +62,11 @@ describe('Mongoose Plugin Integration', () => {
         const filePath = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
             @RegisterMongooseService('users')
             export class UserService extends MongooseService {
-                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
@@ -90,12 +90,11 @@ describe('Mongoose Plugin Integration', () => {
         await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
             @RegisterMongooseService('admins')
             export class UserService extends MongooseService {
-                @RegisterMongooseModel('admins')
                 public static schema = new mongoose.Schema({ name: String });
 
                 public async findUser() {
@@ -119,12 +118,11 @@ describe('Mongoose Plugin Integration', () => {
         const filePath = await testEnv.createFile(
             `${servicesDir}/UserService.ts`,
             `
-            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
             @RegisterMongooseService('users')
             export class UserService extends MongooseService {
-                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
             }
             `

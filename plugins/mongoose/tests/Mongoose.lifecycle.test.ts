@@ -69,12 +69,11 @@ describe('Mongoose lifecycle', () => {
         await testEnv.createFile(
             'services/UserService.ts',
             `
-            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
             @RegisterMongooseService('users')
             export class UserService extends MongooseService {
-                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
             }
             `
@@ -85,6 +84,93 @@ describe('Mongoose lifecycle', () => {
         await plugin.dispose();
 
         expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('users');
+    });
+
+    describe('model registration', () => {
+        it('names the model after the modelName override when the key differs', async () => {
+            await testEnv.createFile(
+                'services/UserService.ts',
+                `
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('users', { modelName: 'app_users' })
+            export class UserService extends MongooseService {
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            `
+            );
+            const plugin = build();
+
+            await plugin.init();
+            await plugin.dispose();
+
+            expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('app_users');
+        });
+
+        it('translates a duplicate model name into PluginMongooseModelCreationFailed', async () => {
+            for (const name of ['AFirst', 'BSecond']) {
+                await testEnv.createFile(
+                    `services/${name}.ts`,
+                    `
+                import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
+                import mongoose from 'mongoose';
+
+                @RegisterMongooseService('users')
+                export class ${name} extends MongooseService {
+                    public static schema = new mongoose.Schema({ name: String });
+                }
+                `
+                );
+            }
+            const plugin = build();
+
+            await expect(plugin.init()).rejects.toThrow(
+                expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseModelCreationFailed })
+            );
+        });
+
+        it('builds the model from the schema on the service class', async () => {
+            await testEnv.createFile(
+                'services/UserService.ts',
+                `
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('users')
+            export class UserService extends MongooseService {
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            `
+            );
+            const plugin = build();
+
+            await plugin.init();
+
+            expect(vi.mocked(mongoose.model)).toHaveBeenCalledWith('users', expect.any(mongoose.Schema));
+        });
+
+        it('builds the model after the connection opens', async () => {
+            await testEnv.createFile(
+                'services/UserService.ts',
+                `
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
+            import mongoose from 'mongoose';
+
+            @RegisterMongooseService('users')
+            export class UserService extends MongooseService {
+                public static schema = new mongoose.Schema({ name: String });
+            }
+            `
+            );
+            const plugin = build();
+
+            await plugin.init();
+
+            const connectOrder = vi.mocked(mongoose.connect).mock.invocationCallOrder[0];
+            const modelOrder = vi.mocked(mongoose.model).mock.invocationCallOrder[0];
+            expect(connectOrder).toBeLessThan(modelOrder!);
+        });
     });
 
     it('leaves a model it never registered alone', async () => {
@@ -137,12 +223,11 @@ describe('Mongoose lifecycle', () => {
         await testEnv.createFile(
             'services/AUserService.ts',
             `
-            import { MongooseService, RegisterMongooseService, RegisterMongooseModel } from '${pluginsPath}';
+            import { MongooseService, RegisterMongooseService } from '${pluginsPath}';
             import mongoose from 'mongoose';
 
             @RegisterMongooseService('users')
             export class AUserService extends MongooseService {
-                @RegisterMongooseModel('users')
                 public static schema = new mongoose.Schema({ name: String });
             }
             `
