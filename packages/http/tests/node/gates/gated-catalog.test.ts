@@ -10,7 +10,7 @@ import {
     SelectMenuKind,
     SelectMenuRoute
 } from '@seedcord/core';
-import { ApplicationCommandType, PermissionFlagsBits } from 'discord-api-types/v10';
+import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
@@ -20,6 +20,8 @@ import { SelectMenuHandler } from '@handlers/interaction/components/SelectMenuHa
 import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 import { Gated } from '@src/gates/Gated';
+
+import type { ApplicationCommandType } from 'discord-api-types/v10';
 
 declare module '@seedcord/core' {
     interface SlashOptionRegistry {

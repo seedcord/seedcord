@@ -74,6 +74,10 @@ export class MongooseServiceRegistry {
         // isServiceClass gates every caller on ServiceMetadataKey, and the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
+        // mongoose returns an existing model when the schema instance matches, and that one belongs
+        // to whoever registered it first, so it should stay out of this plugin's cleanup
+        const preexisting = modelName in mongoose.models;
+
         let model;
         try {
             model = mongoose.model(modelName, Service.schema);
@@ -84,7 +88,7 @@ export class MongooseServiceRegistry {
         }
 
         // tracked before construction so a throw below still leaves the model reachable for cleanup
-        this.ownModels.add(model.modelName);
+        if (!preexisting) this.ownModels.add(model.modelName);
 
         const instance = new Service(this.plugin, this.core, model);
         this.logger.utils.registration(instance.constructor.name, relativePath);

@@ -24,7 +24,7 @@ If you're about to write a string utility, number helper, object helper, type-fe
 - `@seedcord/core/node`, `HealthCheck` and the lifecycle coordinators. `@seedcord/logger`, the `Logger`. Compose these, do not parallel-implement them inside a bot or plugin.
 - `packages/event-emitter/src/index.ts`, `TypedEventEmitter`, the typed cross-runtime event emitter. Extend it for typed events, do not hand-roll an emitter or add `mitt` / `eventemitter3`.
 - `packages/seedcord/src/{bot,bus,hmr,interfaces,miscellaneous,Seedcord.ts}` — the framework surface. The bus (`core.bus`, `Subscriber<K>`, `@Subscribe(...)`, `BusEvents` augmentation), interfaces, and the `Seedcord` orchestrator are first-class APIs, not internal-only.
-- `packages/plugins/src` — plugin contract and existing first-party plugins. If your "feature" is really a plugin, that's where it goes.
+- `plugins/*` — the first-party plugin packages. If your "feature" is really a plugin, it becomes a package there. The contract itself is `@seedcord/core/plugin`.
 - `packages/cli/src` — the seedcord CLI built on Commander + Ink. CLI-shaped features extend this, not a new ad-hoc CLI.
 
 If your helper is "almost" one that already exists but has one different behavior, that is a missing **option / overload / variant**, not a new helper. Extend the existing one and use it. Inline duplication of "just one slightly different formatter" is how packages drift.
@@ -64,7 +64,7 @@ If the helper would be reused across apps (`docs` + `guide` + `home`), it belong
 
 ### 5. Where does this kind of file live in this repo?
 
-Before creating any file, look at sibling packages. The conventions are consistent across `packages/seedcord`, `packages/gateway`, `packages/core`, `packages/utils`, `packages/types`, `packages/plugins`, `packages/docs-engine`, `packages/docs-generator`:
+Before creating any file, look at sibling packages. The conventions are consistent across `packages/seedcord`, `packages/gateway`, `packages/core`, `packages/utils`, `packages/types`, `packages/docs-engine`, `packages/docs-generator`:
 
 - Tests live in `<package>/tests/` mirroring `src/` — not in `src/**/*.test.ts`.
 - Vitest is the runner (`vitest run` / `vitest dev`); coverage via `vitest run --coverage`.
