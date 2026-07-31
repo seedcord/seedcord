@@ -53,7 +53,7 @@ export abstract class AutocompleteHandler<
     // keep this ctor. it gives typeof AutocompleteHandler a public construct signature that HandlerConstructor
     // needs, and dropping it (inheriting BaseHandler's protected ctor) collapses HandlerConstructor to never.
     constructor(event: AutocompleteInteraction<Cache>, core: Core, dispatch?: DispatchContext) {
-        super(event, core, dispatch);
+        super(event, core, dispatch, 'interactions');
     }
 
     private decodedFocused?: { name: string; value: string };

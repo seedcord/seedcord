@@ -45,7 +45,7 @@ interface CommandArtifact {
  * to Discord's API. Accessed via `core.bot.commands`. Do not construct it directly.
  */
 export class CommandRegistry implements Initializeable, HmrAware {
-    private readonly logger = new Logger('Commands');
+    private readonly logger = new Logger('Commands', { channel: 'commands' });
     private isInitialised = false;
 
     public readonly globalCommands: (SlashCommandBuilder | ContextMenuCommandBuilder)[] = [];

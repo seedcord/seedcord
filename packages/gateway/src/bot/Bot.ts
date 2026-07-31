@@ -35,7 +35,7 @@ export class Bot implements Initializeable, HmrAware {
     declare public readonly botToken: string;
 
     /** @internal */
-    public readonly logger = new Logger('Bot');
+    public readonly logger = new Logger('Bot', { channel: 'bot' });
     private isInitialized = false;
 
     private readonly _client: Client;

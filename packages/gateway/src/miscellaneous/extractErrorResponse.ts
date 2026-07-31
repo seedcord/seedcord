@@ -17,7 +17,7 @@ import type { UUID } from 'node:crypto';
 type InteractionFaultSource = Extract<FaultSource, { kind: 'interaction' }>;
 type EventFaultSource = Extract<FaultSource, { kind: 'event' }>;
 
-const logger = new Logger('ErrorsHandling');
+const logger = new Logger('ErrorsHandling', { channel: 'errors' });
 
 interface EventOrigin {
     name: string;
