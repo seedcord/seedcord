@@ -28,7 +28,7 @@ beforeEach(() => {
     registry.configure({ level: 'trace', sinks: [sink] });
 });
 
-// justified: these bases read only the payload and the logger, the rest of Core is unused here
+// justified: these bases read only the payload and the logger
 const core = {} as Core;
 const payload = { application_id: 'app-1', id: 'int-1', token: 'tok', type: 2 };
 

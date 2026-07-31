@@ -30,7 +30,7 @@ beforeEach(() => {
     registry.configure({ level: 'trace', sinks: [sink] });
 });
 
-// justified: these bases read only the payload and the logger, the rest of Core is unused here
+// justified: these bases read only the payload and the logger
 const core = {} as Core;
 const messagePayload = [] as unknown as ClientEvents['messageCreate'];
 

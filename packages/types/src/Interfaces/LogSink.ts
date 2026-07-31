@@ -4,7 +4,7 @@ import type { LiteralUnion } from 'type-fest';
 /** Severity of a log record, highest to lowest. */
 export type LogLevel = keyof ILogger;
 
-/** Channels the framework logs on. They're reserved channels for the framework */
+/** Channels the framework logs on. They're reserved as well */
 export type FrameworkChannel =
     | 'default'
     | 'bot'

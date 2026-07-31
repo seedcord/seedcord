@@ -151,11 +151,12 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         if (this.isInitialized) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginAfterInit);
         }
-        if (key in this) {
-            throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
-        }
+        // several reserved channels are also members on a host, which the next check would report first
         if (RESERVED_KEYS.has(key)) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginReservedChannel, [key]);
+        }
+        if (key in this) {
+            throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
         }
 
         const instance = new Plugin(this, ...args);

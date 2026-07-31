@@ -155,9 +155,8 @@ export class DevRunner {
         private readonly codegenLogger: ILogger
     ) {}
 
-    public static create(store: DevStore): DevRunner {
+    public static create(logger: Logger, store: DevStore): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
-        const logger = new Logger('Dev', { channel: 'cli' });
         const codegenLogger = new Logger('Codegen', { channel: 'cli' });
         const locator = new ConfigLocator(logger);
         const configLoader = new ConfigLoader(moduleLoader, logger);

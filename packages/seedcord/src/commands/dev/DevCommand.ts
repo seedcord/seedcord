@@ -17,7 +17,7 @@ export class DevCommand extends BaseCommand {
     constructor() {
         super('dev', 'Run a Seedcord instance from the config file', 'Dev');
         this.store = new DevStore();
-        this.runner = DevRunner.create(this.store);
+        this.runner = DevRunner.create(this.logger, this.store);
     }
 
     public register(program: Command): void {

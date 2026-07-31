@@ -57,7 +57,7 @@ type EdgePluginsUnsupported = Record<'an edge bot takes no plugins until edge su
 // a string argument against an object type renders only as `string is not assignable`
 /** @internal */
 export type ChannelKeyAssert<Key extends string> = Key extends FrameworkChannel
-    ? `'${Key}' is a channel the framework logs on, pick another plugin key`
+    ? `'${Key}' is a channel the framework logs on. Pick another plugin key.`
     : Key;
 
 type BrandTransport<Plug> = Plug extends { readonly __transport?: infer T extends string } ? T : 'any';
@@ -69,9 +69,8 @@ type BrandRuntime<Plug> = Plug extends { readonly __runtime?: infer R extends st
 export type TransportAssert<Plug, BotT extends Transport> =
     BrandTransport<Plug> extends 'any' | BotT ? unknown : TransportMismatch<BrandTransport<Plug>, BotT>;
 
-// `'edge' extends BotRt` ensures conditional type distribution. When BotRt is 'server', the flipped
-// `BotRt extends 'edge'` branch resolves to `unknown`, which causes the `EdgePluginsUnsupported`
-// check to be bypassed for non-edge runtimes.
+// keep this order. when flipped, TypeScript checks 'server' and 'edge' separately and unions the
+// results. the 'server' half is `unknown`, and `unknown | X` is `unknown`, so the gate never fires.
 /** @internal */
 export type RuntimeAssert<Plug, BotRt extends Runtime> = 'edge' extends BotRt
     ? EdgePluginsUnsupported
