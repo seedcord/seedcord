@@ -23,7 +23,7 @@ describe('packages module constants', () => {
 
 describe('formatDisplayPackageName', () => {
     it('strips the @seedcord scope for known overrides', () => {
-        expect(formatDisplayPackageName('@seedcord/plugins')).toBe('plugins');
+        expect(formatDisplayPackageName('@seedcord/plugin-mongoose')).toBe('plugin-mongoose');
         expect(formatDisplayPackageName('@seedcord/logger')).toBe('logger');
         expect(formatDisplayPackageName('@seedcord/gateway')).toBe('gateway');
     });
@@ -146,13 +146,13 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('falls back to seedcord when present and no request was made', () => {
-        const list = ids('@seedcord/logger', 'seedcord', '@seedcord/plugins');
+        const list = ids('@seedcord/logger', 'seedcord', '@seedcord/types');
         expect(resolvePackageIdentity(list, null)?.fullName).toBe('seedcord');
         expect(resolvePackageIdentity(list, '')?.fullName).toBe('seedcord');
     });
 
     it('falls back to the first package when seedcord is absent and no request', () => {
-        const list = ids('@seedcord/logger', '@seedcord/plugins');
+        const list = ids('@seedcord/logger', '@seedcord/types');
         expect(resolvePackageIdentity(list, null)?.fullName).toBe('@seedcord/logger');
     });
 
@@ -162,12 +162,12 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('resolves the display alias to the identity (folder + fullName)', () => {
-        const list = ids('seedcord', '@seedcord/logger', '@seedcord/plugins');
+        const list = ids('seedcord', '@seedcord/logger', '@seedcord/plugin-mongoose');
         expect(resolvePackageIdentity(list, 'logger')).toEqual({
             folder: 'logger',
             fullName: '@seedcord/logger'
         });
-        expect(resolvePackageIdentity(list, 'plugins')?.fullName).toBe('@seedcord/plugins');
+        expect(resolvePackageIdentity(list, 'mongoose')?.fullName).toBe('@seedcord/plugin-mongoose');
     });
 
     it('resolves last-segment alias for scoped packages', () => {
@@ -205,7 +205,7 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('falls back to the first package when seedcord is absent and request is unknown', () => {
-        const list = ids('@seedcord/logger', '@seedcord/plugins');
+        const list = ids('@seedcord/logger', '@seedcord/types');
         expect(resolvePackageIdentity(list, 'no-such-package')?.fullName).toBe('@seedcord/logger');
     });
 });

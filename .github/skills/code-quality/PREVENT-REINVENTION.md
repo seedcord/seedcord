@@ -2,7 +2,7 @@ name: prevent-reinvention description: Use this before adding code, config, or c
 
 # Prevent Reinvention & Tech-Debt Discipline
 
-Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of shared building blocks (`@seedcord/types`, `@seedcord/utils`, `@seedcord/core`, `@seedcord/logger`, `@seedcord/plugins`, `@seedcord/docs-engine`, `@seedcord/docs-generator`), with Next.js 16 + React 19 apps in `apps/{docs,guide,home}` and a mock bot in `mock/` for end-to-end tests of the framework. There is a unified `tsconfig` package, an `eslint-config` package, a `tsup-config` package, and a workspace catalog (`pnpm-workspace.yaml`) that pins shared versions. Every new piece of code is one of two things:
+Seedcord is a monorepo. The core framework (`packages/seedcord`) sits on top of shared building blocks (`@seedcord/types`, `@seedcord/utils`, `@seedcord/core`, `@seedcord/logger`, `@seedcord/docs-engine`, `@seedcord/docs-generator`), with Next.js 16 + React 19 apps in `apps/{docs,guide,home}` and a mock bot in `mock/` for end-to-end tests of the framework. There is a unified `tsconfig` package, an `eslint-config` package, a `tsup-config` package, and a workspace catalog (`pnpm-workspace.yaml`) that pins shared versions. Every new piece of code is one of two things:
 
 1. **Reuse** of an existing primitive, helper, type, convention, or pattern.
 2. **A justified, named extension** to that existing surface — added in the right package, exported through the right boundary, then reused.
@@ -24,7 +24,7 @@ If you're about to write a string utility, number helper, object helper, type-fe
 - `@seedcord/core/node`, `HealthCheck` and the lifecycle coordinators. `@seedcord/logger`, the `Logger`. Compose these, do not parallel-implement them inside a bot or plugin.
 - `packages/event-emitter/src/index.ts`, `TypedEventEmitter`, the typed cross-runtime event emitter. Extend it for typed events, do not hand-roll an emitter or add `mitt` / `eventemitter3`.
 - `packages/seedcord/src/{bot,bus,hmr,interfaces,miscellaneous,Seedcord.ts}` — the framework surface. The bus (`core.bus`, `Subscriber<K>`, `@Subscribe(...)`, `BusEvents` augmentation), interfaces, and the `Seedcord` orchestrator are first-class APIs, not internal-only.
-- `packages/plugins/src` — plugin contract and existing first-party plugins. If your "feature" is really a plugin, that's where it goes.
+- `plugins/*` — the first-party plugin packages. If your "feature" is really a plugin, it becomes a package there. The contract itself is `@seedcord/core/plugin`.
 - `packages/cli/src` — the seedcord CLI built on Commander + Ink. CLI-shaped features extend this, not a new ad-hoc CLI.
 
 If your helper is "almost" one that already exists but has one different behavior, that is a missing **option / overload / variant**, not a new helper. Extend the existing one and use it. Inline duplication of "just one slightly different formatter" is how packages drift.
@@ -64,7 +64,7 @@ If the helper would be reused across apps (`docs` + `guide` + `home`), it belong
 
 ### 5. Where does this kind of file live in this repo?
 
-Before creating any file, look at sibling packages. The conventions are consistent across `packages/seedcord`, `packages/gateway`, `packages/core`, `packages/utils`, `packages/types`, `packages/plugins`, `packages/docs-engine`, `packages/docs-generator`:
+Before creating any file, look at sibling packages. The conventions are consistent across `packages/seedcord`, `packages/gateway`, `packages/core`, `packages/utils`, `packages/types`, `packages/docs-engine`, `packages/docs-generator`:
 
 - Tests live in `<package>/tests/` mirroring `src/` — not in `src/**/*.test.ts`.
 - Vitest is the runner (`vitest run` / `vitest dev`); coverage via `vitest run --coverage`.
@@ -169,7 +169,7 @@ If no existing surface fits and there is no clean shared extension path, stop an
     - Runtime service (logger, rate limiter, lifecycle, error class, health check): `@seedcord/logger` / `@seedcord/rate-limiter` / `@seedcord/core/node` / `@seedcord/errors`
     - Typed event emitter: `@seedcord/event-emitter`
     - Framework-level bus event, interface, or orchestrator hook: `@seedcord/seedcord`
-    - Plugin-shaped behavior: `@seedcord/plugins`
+    - Plugin-shaped behavior: a package under `plugins/`
     - CLI command / Ink component for the CLI: `@seedcord/cli`
     - Doc-extraction or doc-rendering logic: `@seedcord/docs-generator` / `@seedcord/docs-engine`
 2. **Add the export** to the relevant `src/index.ts` (and `internal.index.ts` if it's an internal-only surface). Update the package.json `exports` field and the tsup config entry if the package uses tsup.

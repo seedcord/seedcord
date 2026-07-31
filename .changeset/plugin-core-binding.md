@@ -2,7 +2,6 @@
 '@seedcord/core': minor
 '@seedcord/gateway': minor
 '@seedcord/http': minor
-'@seedcord/plugins': minor
 ---
 
 Both transports now export a `Plugin` base bound to their own `Core`, so a plugin reads `this.core.bot` on gateway and `this.core.rest` on http with no `Core` import. A plugin that runs on either transport keeps extending the base from `@seedcord/core/plugin`, whose `this.core` carries the shared members.

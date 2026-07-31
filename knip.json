@@ -91,7 +91,6 @@
             ]
         },
         "packages/logger": {},
-        "packages/plugins": {},
         "packages/rate-limiter": {},
         "packages/seedcord": {
             "ignoreDependencies": [

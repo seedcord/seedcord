@@ -1,6 +1,5 @@
 ---
 '@seedcord/gateway': patch
-'@seedcord/plugins': patch
 'seedcord': patch
 ---
 

@@ -133,14 +133,16 @@ const messages = {
 
     [SeedcordErrorCode.PluginMongooseServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongooseService on ${className}.`,
-    [SeedcordErrorCode.PluginMongooseModelDecoratorMissing]: (className: string) =>
-        `Missing @RegisterMongooseModel on ${className}.`,
     [SeedcordErrorCode.PluginMongooseConnectionFailed]: (databaseName?: string) =>
         databaseName ? `Could not connect to MongoDB (${databaseName}).` : 'Could not connect to MongoDB.',
     [SeedcordErrorCode.PluginMongooseDisconnectFailed]: () =>
         'Failed to disconnect from MongoDB cleanly during shutdown.',
     [SeedcordErrorCode.PluginMongooseServicesNotReady]: () =>
         'Mongoose services accessed before the plugin finished initializing.',
+    [SeedcordErrorCode.PluginMongooseModelCreationFailed]: (modelName: string, className: string) =>
+        `Could not build the mongoose model ${modelName} for ${className}.`,
+    [SeedcordErrorCode.PluginMongooseModelNameMissing]: (className: string) =>
+        `Empty model name on ${className}. Provide a non-empty modelName via @RegisterMongooseService().`,
 
     [SeedcordErrorCode.PluginKyselyServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterKyselyService on ${className}.`,
