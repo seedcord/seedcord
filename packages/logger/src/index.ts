@@ -1,3 +1,4 @@
+export { FRAMEWORK_CHANNELS } from './channels';
 export { Logger } from './Logger';
 export { LoggerChannelRegistry } from './LoggerChannelRegistry';
 export { ObjectConsoleSink } from './ObjectConsoleSink';

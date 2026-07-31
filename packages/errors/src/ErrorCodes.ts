@@ -50,6 +50,8 @@ export enum SeedcordErrorCode {
     CoreDirectoryImportFailed = 1206,
     /** A scanned directory could not be read. */
     CoreDirectoryUnreadable = 1207,
+    /** A plugin was attached under a key the framework logs on. */
+    CorePluginReservedChannel = 1208,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,

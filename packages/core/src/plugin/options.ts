@@ -1,3 +1,4 @@
+import type { FrameworkChannel } from '@seedcord/logger';
 import type { TypedExclude } from '@seedcord/types';
 
 /** A capability a plugin declares through `needs`, each surfacing a typed `ctx` field. */
@@ -53,6 +54,12 @@ type RuntimeMismatch<PluginRt extends string, BotRt extends string> = Record<
 
 type EdgePluginsUnsupported = Record<'an edge bot takes no plugins until edge support ships after v1', never>;
 
+// a string argument against an object type renders only as `string is not assignable`
+/** @internal */
+export type ChannelKeyAssert<Key extends string> = Key extends FrameworkChannel
+    ? `'${Key}' is a channel the framework logs on, pick another plugin key`
+    : Key;
+
 type BrandTransport<Plug> = Plug extends { readonly __transport?: infer T extends string } ? T : 'any';
 type BrandRuntime<Plug> = Plug extends { readonly __runtime?: infer R extends string } ? R : 'any';
 
@@ -62,8 +69,9 @@ type BrandRuntime<Plug> = Plug extends { readonly __runtime?: infer R extends st
 export type TransportAssert<Plug, BotT extends Transport> =
     BrandTransport<Plug> extends 'any' | BotT ? unknown : TransportMismatch<BrandTransport<Plug>, BotT>;
 
-// keep `'edge' extends BotRt`. the flipped `BotRt extends 'edge'` distributes, and the 'server' arm
-// gives `unknown`, which absorbs the edge arm and drops the gate on an un-narrowed host runtime.
+// `'edge' extends BotRt` ensures conditional type distribution. When BotRt is 'server', the flipped
+// `BotRt extends 'edge'` branch resolves to `unknown`, which causes the `EdgePluginsUnsupported`
+// check to be bypassed for non-edge runtimes.
 /** @internal */
 export type RuntimeAssert<Plug, BotRt extends Runtime> = 'edge' extends BotRt
     ? EdgePluginsUnsupported

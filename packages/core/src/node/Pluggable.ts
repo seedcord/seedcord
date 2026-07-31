@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '@src/lifecycle/phases';
 import { finalizePluginContext } from '@src/plugin/context';
@@ -14,7 +14,7 @@ import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import type { Config, IRateLimiter, Store } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
 import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
-import type { Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
+import type { ChannelKeyAssert, Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
 import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
 import type { Bus } from '@subscribers/Bus';
 
@@ -22,6 +22,8 @@ interface Attachment {
     readonly key: string;
     readonly instance: PluginLike;
 }
+
+const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 /**
  * Base class for objects that can have plugins attached.
@@ -131,7 +133,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      * @param Plugin - Plugin constructor class
      * @param args - Additional arguments to pass to the plugin constructor
      * @returns This instance with the plugin attached as a typed property
-     * @throws A **SeedcordError** When called after initialization or if key already exists
+     * @throws A **SeedcordError** When called after initialization or if key already exists or is reserved
      * @example
      * ```typescript
      * seedcord.attach('db', Mongoose, { uri: 'mongodb://...', name: 'seedcord', dir: ... })
@@ -139,7 +141,7 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
      */
     public attach<Key extends string, Ctor extends PluginCtor>(
         this: this,
-        key: Key,
+        key: ChannelKeyAssert<Key>,
         Plugin: Ctor &
             TransportAssert<InstanceType<Ctor>, BotT> &
             RuntimeAssert<InstanceType<Ctor>, BotRt> &
@@ -151,6 +153,9 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
         if (key in this) {
             throw new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, [key]);
+        }
+        if (RESERVED_KEYS.has(key)) {
+            throw new SeedcordError(SeedcordErrorCode.CorePluginReservedChannel, [key]);
         }
 
         const instance = new Plugin(this, ...args);

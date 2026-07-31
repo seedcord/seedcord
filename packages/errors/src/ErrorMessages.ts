@@ -39,6 +39,8 @@ const messages = {
         `${controllerName} was instantiated without a ${pathKind} path.`,
     [SeedcordErrorCode.CoreDirectoryImportFailed]: (file: string) => `${file} threw while importing.`,
     [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
+    [SeedcordErrorCode.CorePluginReservedChannel]: (key: string) =>
+        `Plugin key "${key}" is a channel the framework logs on. Pick another key.`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorMethodNotFound]: () =>
