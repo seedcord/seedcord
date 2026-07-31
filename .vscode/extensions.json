@@ -6,37 +6,23 @@
         "EditorConfig.EditorConfig",
         "DavidAnson.vscode-markdownlint",
 
-        // Tailwind CSS IntelliSense
-        "bradlc.vscode-tailwindcss",
-
-        // TypeScript/JavaScript development
+        // Lang Tooling
         "christian-kohler.path-intellisense",
         "christian-kohler.npm-intellisense",
         "yoavbls.pretty-ts-errors",
+        "bradlc.vscode-tailwindcss",
 
-        // Git and AI assistance
-        "eamodio.gitlens",
+        // Git
         "GitHub.copilot-chat",
         "github.vscode-github-actions",
         "GitHub.vscode-pull-request-github",
-
-        // Project-specific tools
-        // Use the official MongoDB Compass app for MongoDB management
-        "prisma.prisma",
-        "mikestead.dotenv",
 
         // Syntax highlighting
         "kennylong.kubernetes-yaml-formatter",
         "mikestead.dotenv",
         "redhat.vscode-yaml",
 
-        // Mermaid
-        "MermaidChart.vscode-mermaid-chart",
-
         // Vitest
-        "vitest.explorer",
-
-        // Context7 MCP for agent context
-        "Upstash.context7-mcp"
+        "vitest.explorer"
     ]
 }
