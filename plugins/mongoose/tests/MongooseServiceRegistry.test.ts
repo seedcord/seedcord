@@ -48,6 +48,27 @@ describe('MongooseServiceRegistry model ownership', () => {
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
     });
 
+    it('leaves an externally registered model alone when HMR unregisters the service', () => {
+        mongoose.model('adopted', Adopted.schema);
+        const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
+        // justified: discovery erases the document type, which the type predicate hides in production
+        registry.initializeService(Adopted as unknown as MongooseServiceConstructor, 'Adopted.ts');
+
+        registry.unregister(Adopted as unknown as MongooseServiceConstructor);
+
+        expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
+    });
+
+    it('deletes its own model when HMR unregisters the service', () => {
+        const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
+        // justified: discovery erases the document type, which the type predicate hides in production
+        registry.initializeService(Adopted as unknown as MongooseServiceConstructor, 'Adopted.ts');
+
+        registry.unregister(Adopted as unknown as MongooseServiceConstructor);
+
+        expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('adopted');
+    });
+
     it('cleans up a model it registered itself', () => {
         const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
 

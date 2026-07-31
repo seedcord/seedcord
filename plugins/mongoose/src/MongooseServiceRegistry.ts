@@ -103,7 +103,8 @@ export class MongooseServiceRegistry {
             Reflect.deleteProperty(this.services, key);
         }
 
-        if (modelName) {
+        // make sure hmr doesn't delete a model registered elsewhere
+        if (modelName && this.ownModels.has(modelName)) {
             mongoose.deleteModel(modelName);
             this.ownModels.delete(modelName);
         }
