@@ -89,7 +89,7 @@ describe('handler log channels', () => {
 describe('subscriber log channel', () => {
     it('emits on the subscribers channel', async () => {
         // justified: execute reaches nothing on the payload or core
-        await new Reporter({} as never, core).execute();
+        await new Reporter({} as ConstructorParameters<typeof Reporter>[0], core).execute();
 
         expect(sink.records[0]?.channel).toBe('subscribers');
         expect(sink.records[0]?.label).toBe('Reporter');

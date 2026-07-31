@@ -59,6 +59,7 @@ class TestHost extends Pluggable<'gateway', 'server'> {
 
 describe('the plugin logger', () => {
     afterEach(() => {
+        registry.reset();
         TestHost.resetHost();
     });
 
