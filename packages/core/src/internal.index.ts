@@ -26,6 +26,7 @@ export { wrapHot } from '@hmr/wrapHot';
 
 export {
     GateNotice,
+    HasDangerousPermissions,
     MissingPermissions,
     MissingRole,
     NeedsAny,

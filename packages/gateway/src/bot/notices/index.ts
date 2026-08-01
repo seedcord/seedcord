@@ -42,27 +42,6 @@ export class CannotAssignBotRole extends Notice {
     }
 }
 
-export class HasDangerousPermissions extends Notice {
-    private readonly customLead: string | undefined;
-
-    public constructor(
-        message: string | undefined,
-        public subject: string,
-        public dangerousPerms: readonly string[]
-    ) {
-        super(message ?? 'A dangerous permission is enabled.');
-        this.customLead = message;
-    }
-
-    public render(): ReplyResponse {
-        const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
-        const lead =
-            this.customLead ?? `${this.subject} has the following permission entries that must not be enabled:`;
-        const card = new NoticeCard(`${lead}\n\n${bullets}`);
-        return { components: [card.component] };
-    }
-}
-
 // ----- utility refusals -----
 
 export class UserNotFound extends Notice {

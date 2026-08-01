@@ -1,26 +1,15 @@
-import { prettify } from '@seedcord/utils';
-import { PermissionFlagsBits } from 'discord-api-types/v10';
-
 import { defineGate } from '@gates/Gate';
 import { MissingPermissions, MissingRole, NotInGuild } from '@notices/index';
+import { hasAll, missingNames } from '@src/permissions/bits';
 
 import { pickNotice } from './options';
 
 import type { GateNoticeOptions } from './options';
 import type { Gate, GateContextBase, GuildPermissionsContext } from '@gates/Gate';
+import type { PermissionScope } from '@src/permissions/bits';
 
-/**
- * The permission flag bits a caller or the bot must hold. Pass the `PermissionFlagsBits` values from
- * `discord-api-types/v10` (or `discord.js`).
- */
-export type PermissionScope = readonly bigint[];
-
-/** Permission bit to its prettified human-readable name, for the missing-permission refusal. */
-export const PermissionNames = new Map<bigint, string>(
-    Object.entries(PermissionFlagsBits).map(([key, bit]) => [bit, prettify(key)])
-);
-
-const ADMINISTRATOR = PermissionFlagsBits.Administrator;
+export type { PermissionScope } from '@src/permissions/bits';
+export { PermissionNames } from '@src/permissions/bits';
 
 interface PermCheckKind {
     unresolved: string;
@@ -35,19 +24,6 @@ const BOT_CHECK: PermCheckKind = {
     unresolved: "The bot's permissions could not be resolved. Try again.",
     subject: 'The bot'
 };
-
-// discord treats the administrator bit as granting every permission, so test it before refusing
-function hasAll(held: bigint, scope: PermissionScope): boolean {
-    if ((held & ADMINISTRATOR) === ADMINISTRATOR) return true;
-    return scope.every((bit) => (held & bit) === bit);
-}
-
-function missingNames(held: bigint, scope: PermissionScope): string[] {
-    return scope.reduce<string[]>((names, bit) => {
-        if ((held & bit) !== bit) names.push(PermissionNames.get(bit) ?? String(bit));
-        return names;
-    }, []);
-}
 
 function refusePermissions(
     held: bigint | null,

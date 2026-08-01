@@ -89,3 +89,23 @@ export class MissingPermissions extends Notice {
         };
     }
 }
+
+export class HasDangerousPermissions extends Notice {
+    private readonly customLead: string | undefined;
+
+    public constructor(
+        message: string | undefined,
+        public subject: string,
+        public dangerousPerms: readonly string[]
+    ) {
+        super(message ?? 'A dangerous permission is enabled.');
+        this.customLead = message;
+    }
+
+    public render(): ReplyResponse {
+        const bullets = this.dangerousPerms.map((perm) => `• ${perm}`).join('\n');
+        const lead =
+            this.customLead ?? `${this.subject} has the following permission entries that must not be enabled:`;
+        return { components: [new NoticeCard(`${lead}\n\n${bullets}`).component] };
+    }
+}

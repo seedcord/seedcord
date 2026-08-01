@@ -4,36 +4,27 @@ import { Guild } from 'discord.js';
 
 import { checkPermissions } from './checkPermissions';
 
-import type { PermissionErrorNoticeOverrides } from './checkPermissions';
-import type { PermissionScope } from '@seedcord/core';
+import type { PermissionNoticeOverrides, PermissionScope } from '@seedcord/core';
 import type { TextChannel } from 'discord.js';
 
 /**
- * Checks if the bot has required permissions in a {@link Guild} or {@link TextChannel}. Refuses when a
- * required permission is missing.
- *
- * @param target - Guild or text channel to check in
- * @param scope - Permission bits to validate
- * @param inverse - Whether to check for absence of the given permissions
- * @param errors - Optional custom error constructors
+ * Checks the bot's own permissions in a {@link Guild} or {@link TextChannel}. Refuses when a permission in
+ * `scope` is missing, or with `inverse` when one is present. When the bot member is uncached, the refusal
+ * reports every permission in `scope` as missing.
  *
  * @example
  * ```ts
  * import { PermissionFlagsBits } from 'discord.js';
  * import { checkBotPermissions } from '@seedcord/gateway';
  *
- * // Check if the bot has SendMessages and ViewChannel permissions in a text channel
- * checkBotPermissions(textChannel, [
- *   PermissionFlagsBits.SendMessages,
- *   PermissionFlagsBits.ViewChannel
- * ]);
+ * checkBotPermissions(textChannel, [PermissionFlagsBits.SendMessages, PermissionFlagsBits.ViewChannel]);
  * ```
  */
 export function checkBotPermissions(
     target: Guild | TextChannel,
     scope: PermissionScope,
     inverse = false,
-    errors?: PermissionErrorNoticeOverrides
+    errors?: PermissionNoticeOverrides
 ): void {
     if (target instanceof Guild) {
         const me = target.members.me;

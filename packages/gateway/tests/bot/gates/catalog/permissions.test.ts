@@ -1,8 +1,7 @@
-import { MissingPermissions } from '@seedcord/core/internal';
-import { Guild, GuildMember, PermissionFlagsBits, Role } from 'discord.js';
+import { HasDangerousPermissions, MissingPermissions } from '@seedcord/core/internal';
+import { Guild, GuildMember, PermissionFlagsBits, PermissionsBitField, Role } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { HasDangerousPermissions } from '@bot/notices';
 import { checkBotPermissions } from '@bUtilities/permissions/checkBotPermissions';
 import { checkPermissions } from '@bUtilities/permissions/checkPermissions';
 import { hasPermsToAssign } from '@bUtilities/permissions/hasPermsToAssign';
@@ -16,7 +15,7 @@ function guildFake(extra: object = {}): Guild {
 function memberWith(perms: bigint[], id = 'm1'): GuildMember {
     const member = Object.create(GuildMember.prototype) as GuildMember;
     Object.defineProperty(member, 'id', { value: id });
-    Object.defineProperty(member, 'permissions', { value: { has: (bit: bigint) => perms.includes(bit) } });
+    Object.defineProperty(member, 'permissions', { value: new PermissionsBitField(perms) });
     return member;
 }
 
