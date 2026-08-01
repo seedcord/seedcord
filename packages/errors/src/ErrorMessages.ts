@@ -187,7 +187,7 @@ const messages = {
     [SeedcordErrorCode.CliTsxImportFailed]: (entryPath: string, reason: string) =>
         `Failed to import ${entryPath} via tsx: ${reason}`,
     [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
-        `Failed to import ${entryPath}: ${nativeReason} Fallback via jiti also failed: ${fallbackReason}`,
+        `Failed to import ${entryPath}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
     [SeedcordErrorCode.CliInstanceInvalid]: () =>
         'Seedcord instance must default export an object with a start() method.',
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>

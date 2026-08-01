@@ -12,8 +12,8 @@ import type { ReactElement } from 'react';
 
 const HINT = '⇅ resize for full ui';
 
-// below this the right slot would crowd out the summary, and the phase chip still shows the state
-const RIGHT_COLUMNS = 64;
+// below this the hint would crowd out the summary, and it stays optional either way
+const HINT_COLUMNS = 64;
 
 interface StatusLineProps {
     readonly state: DevState;
@@ -35,18 +35,16 @@ export function StatusLine({ state, notices, columns }: StatusLineProps): ReactE
                     {rest.length > 0 ? <Text dimColor> · +{rest.length}</Text> : null}
                 </Text>
             </Box>
-            {columns < RIGHT_COLUMNS ? null : (
-                // flexShrink 0 and the margin keep the key readable against a summary that fills the row
-                <Box flexShrink={0} marginLeft={2}>
-                    {top ? (
-                        <Text bold color={ui.accent}>
-                            {top.action}
-                        </Text>
-                    ) : (
-                        <Text dimColor>{HINT}</Text>
-                    )}
-                </Box>
-            )}
+            {/* flexShrink 0 and the margin keep the key readable against a summary that fills the row */}
+            <Box flexShrink={0} marginLeft={2}>
+                {top ? (
+                    <Text bold color={ui.accent}>
+                        {top.action}
+                    </Text>
+                ) : null}
+                {/* the action always renders, since a prompt swallows every key and this row is its only affordance */}
+                {!top && columns >= HINT_COLUMNS ? <Text dimColor>{HINT}</Text> : null}
+            </Box>
         </Box>
     );
 }

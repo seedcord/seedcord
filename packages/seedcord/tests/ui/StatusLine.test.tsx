@@ -51,6 +51,15 @@ describe('StatusLine', () => {
         expect(frameOf(running(), 30)).not.toContain('resize');
     });
 
+    it('keeps the action on a terminal too narrow for the hint', () => {
+        const store = running();
+        store.apply({ type: 'command-update-prompt', files: ['a.ts'] });
+
+        const frame = frameOf(store, 50);
+        expect(frame).not.toContain('resize');
+        expect(frame).toContain('y/n');
+    });
+
     it('keeps the action beside a summary too long for the row', () => {
         const store = running();
         store.setError(new Error('connect ECONNREFUSED 127.0.0.1:27017 while opening the pool'));
