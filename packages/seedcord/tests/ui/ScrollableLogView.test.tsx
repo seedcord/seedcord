@@ -2,7 +2,7 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
+import { NO_ROOM, ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
 import { expandRows } from '@ui/logRows';
 import { LogStore } from '@ui/stores/LogStore';
 
@@ -91,5 +91,10 @@ describe('ScrollableLogView', () => {
     it('renders nothing until measured', () => {
         const { lastFrame } = render(<ScrollableLogView visible={[]} viewportHeight={10} measured={false} />);
         expect((lastFrame() ?? '').trim()).toBe('');
+    });
+
+    it('reports a viewport with too few rows to carry a log line', () => {
+        const { lastFrame } = render(<ScrollableLogView visible={[]} viewportHeight={2} measured />);
+        expect(lastFrame() ?? '').toContain(NO_ROOM);
     });
 });
