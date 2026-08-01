@@ -114,7 +114,7 @@ class SeedcordDevSession {
         this.instance?.startup.abort();
 
         if (this.startupPromise) {
-            // startup.abort() was triggered above. await the rejection and suppress it to maintain shutdown order
+            // suppress the abort rejection to keep shutdown ordered
             try {
                 await this.startupPromise;
             } catch {
@@ -221,7 +221,7 @@ export class DevRunner {
     private async handleError(error: unknown): Promise<void> {
         this.store.setPhase('error');
         this.store.setError(Error.isError(error) ? error : new Error(String(error)));
-        this.store.setStatus('Error occurred. Press r to restart.');
+        this.store.setStatus('Press r to restart.');
         this.store.setBusy(false);
         await this.waitForSignal();
         this.store.setBusy(true);
@@ -254,14 +254,14 @@ export class DevRunner {
         this.currentSession?.refreshCommands(shouldRefresh);
     }
 
-    // an accepted refresh means command files changed, regenerate the typed registry so tsc picks up the new option types
+    // an accepted refresh means command files changed, so regenerate the registry for tsc to pick up the new option types
     private async regenerateRegistry(): Promise<void> {
         if (this.isRegenerating) return;
         this.isRegenerating = true;
         try {
             await this.codegen.run(false);
         } catch (error: unknown) {
-            // codegen throws, log here and keep the dev session running
+            // codegen throws, so log here and keep the dev session running
             this.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
             this.isRegenerating = false;
