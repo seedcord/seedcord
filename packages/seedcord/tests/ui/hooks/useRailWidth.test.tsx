@@ -5,11 +5,13 @@ import { describe, expect, it } from 'vitest';
 
 import { useRailWidth } from '@ui/hooks/useRailWidth';
 
+import { settled } from '../settled';
+
 import type { DevPhase } from '@ui/stores/devPhase';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 
-// a row parent keeps the rail at its natural content width, and the readout sits outside the measured box
+// a row parent keeps the rail at its natural content width, and the readout renders outside the measured box
 function Harness({ phase, label }: { readonly phase: DevPhase; readonly label: string }): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const width = useRailWidth(railRef, phase, 24, 80);
@@ -23,52 +25,40 @@ function Harness({ phase, label }: { readonly phase: DevPhase; readonly label: s
     );
 }
 
-// lets the layout effect's state update commit before reading the frame
-const flush = async (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
-
 describe('useRailWidth', () => {
     it('holds no width before the session runs', async () => {
         const { lastFrame, unmount } = render(<Harness phase="starting" label="abcde" />);
-        await flush();
-
-        expect(lastFrame()).toContain('w:null');
+        await settled(() => expect(lastFrame()).toContain('w:null'));
         unmount();
     });
 
     it('locks the rail width at the first running render', async () => {
         const { lastFrame, rerender, unmount } = render(<Harness phase="starting" label="abcde" />);
-        await flush();
+        await settled(() => expect(lastFrame()).toContain('w:null'));
 
         rerender(<Harness phase="running" label="abcde" />);
-        await flush();
-
-        expect(lastFrame()).toContain('w:5');
+        await settled(() => expect(lastFrame()).toContain('w:5'));
         unmount();
     });
 
     it('holds the lock while the session stays running', async () => {
         const { lastFrame, rerender, unmount } = render(<Harness phase="running" label="abcde" />);
-        await flush();
+        await settled(() => expect(lastFrame()).toContain('w:5'));
 
         rerender(<Harness phase="running" label="abcdefghij" />);
-        await flush();
-
-        expect(lastFrame()).toContain('w:5');
+        await settled(() => expect(lastFrame()).toContain('w:5'));
         unmount();
     });
 
     it('resets and re-measures across a restart', async () => {
         const { lastFrame, rerender, unmount } = render(<Harness phase="running" label="abcde" />);
-        await flush();
-        expect(lastFrame()).toContain('w:5');
+        await settled(() => expect(lastFrame()).toContain('w:5'));
 
         rerender(<Harness phase="starting" label="abcdefghij" />);
-        await flush();
+        await settled(() => expect(lastFrame()).toContain('w:null'));
 
         rerender(<Harness phase="running" label="abcdefghij" />);
-        await flush();
-
-        expect(lastFrame()).toContain('w:10');
+        await settled(() => expect(lastFrame()).toContain('w:10'));
         unmount();
     });
 }, 10_000);

@@ -9,14 +9,12 @@ export function isSessionLive(phase: DevPhase): boolean {
     return phase === 'running' || phase === 'restart-required';
 }
 
-// Phases where the process is up and emitting logs (in restart-required it is up but stale), so the live
-// dot blinks. disconnected, error, and quitting produce no logs and read as idle.
+// up and emitting logs (restart-required is up but stale), which is what the live dot blinks for
 export function isStreaming(phase: DevPhase): boolean {
     return phase === 'starting' || phase === 'running' || phase === 'restart-required';
 }
 
-// How the status glyph animates: a one-shot spinner for transient phases, a steady looping arc while the
-// session is live, or a static icon for resting states.
+// spinner runs once, arc loops
 type PhaseGlyph = 'spinner' | 'arc' | 'static';
 
 export interface PhaseMeta {
@@ -31,6 +29,6 @@ export const PHASE_META = {
     running: { label: 'running', icon: '●', color: ui.good, kind: 'arc' },
     'restart-required': { label: 'restart required', icon: '◆', color: ui.warn, kind: 'static' },
     disconnected: { label: 'offline', icon: '○', color: ui.muted, kind: 'static' },
-    error: { label: 'error', icon: '✖', color: ui.bad, kind: 'static' },
+    error: { label: 'error', icon: '✘', color: ui.bad, kind: 'static' },
     quitting: { label: 'quitting', icon: '◐', color: ui.muted, kind: 'spinner' }
 } as const satisfies Record<DevPhase, PhaseMeta>;

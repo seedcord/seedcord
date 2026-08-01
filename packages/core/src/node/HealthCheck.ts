@@ -66,16 +66,14 @@ export class HealthCheck {
             server.on('error', onListenError);
 
             server.once('listening', () => {
-                // Swap the listen-time reject handler for a logging one: keeping it would reject an
-                // already-settled promise on a late error, and removing it without a replacement
-                // would crash the process on an unhandled 'error' event.
+                // a late error would reject an already-settled promise, and no 'error' listener at all crashes the process
                 server.removeListener('error', onListenError);
                 server.on('error', (err) => this.logger.error('Health check server error', err));
 
-                // the server binds all interfaces, the log shows an address a browser can open
+                // binds all interfaces, so log an address a browser can open
                 const address = this.host ?? 'localhost';
                 this.logger.info(
-                    `${paint.mint.bold('✓')} Health check server listening on ${paint.sky(`http://${address}:${this.port}${this.path}`)}`
+                    `${paint.mint.bold('✔︎')} Health check server listening on ${paint.sky(`http://${address}:${this.port}${this.path}`)}`
                 );
                 resolve();
             });

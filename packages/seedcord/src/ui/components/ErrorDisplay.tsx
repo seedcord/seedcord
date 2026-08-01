@@ -18,12 +18,10 @@ export function ErrorDisplay({ error }: ErrorDisplayProps): ReactElement {
     const hidden = frames.length - preview.length;
 
     return (
-        <Box flexDirection="column" borderStyle="round" borderColor={ui.bad} padding={1}>
-            <Box marginTop={-1}>
-                <Text color={ui.bad} bold>
-                    Error: {error.name}
-                </Text>
-            </Box>
+        <Box flexDirection="column" borderStyle="round" borderColor={ui.bad} paddingX={1}>
+            <Text color={ui.bad} bold>
+                Error: {error.name}
+            </Text>
             <Text>{error.message}</Text>
             {preview.length > 0 && (
                 <Box marginTop={1} flexDirection="column">

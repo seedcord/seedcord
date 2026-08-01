@@ -185,18 +185,18 @@ const messages = {
         `Entry file ${entryPath} must reside inside configured root ${root}.`,
     [SeedcordErrorCode.CliEntryNotFound]: (entryPath: string) => `Cannot find entry file at ${entryPath}.`,
     [SeedcordErrorCode.CliTsxImportFailed]: (entryPath: string, reason: string) =>
-        `Failed to import ${entryPath} via tsx: ${reason}.`,
+        `Failed to import ${entryPath} via tsx: ${reason}`,
     [SeedcordErrorCode.CliImportFailed]: (entryPath: string, nativeReason: string, fallbackReason: string) =>
-        `Failed to import ${entryPath}: ${nativeReason}. Fallback via jiti also failed: ${fallbackReason}.`,
+        `Failed to import ${entryPath}: ${nativeReason} (the jiti fallback also failed: ${fallbackReason})`,
     [SeedcordErrorCode.CliInstanceInvalid]: () =>
         'Seedcord instance must default export an object with a start() method.',
     [SeedcordErrorCode.CliStartFailed]: (instancePath: string, reason: string) =>
-        `Failed to start Seedcord from ${instancePath}: ${reason}.`,
+        `Failed to start Seedcord from ${instancePath}: ${reason}`,
     [SeedcordErrorCode.CliBuildTsconfigNotFound]: (hint: string) =>
         `Unable to resolve a tsconfig for builds (${hint}). Provide build.tsconfig or add tsconfig.build.json / tsconfig.json.`,
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
-        `Failed to write bootstrap file at ${targetPath}: ${reason}.`,
+        `Failed to write bootstrap file at ${targetPath}: ${reason}`,
     [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
@@ -205,7 +205,7 @@ const messages = {
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>
-        `Could not read the commands directory ${dir} during codegen. ${reason}.`,
+        `Could not read the commands directory ${dir} during codegen. ${reason}`,
     [SeedcordErrorCode.CliCodegenDuplicateContextMenu]: (
         kind: string,
         name: string,
@@ -214,7 +214,7 @@ const messages = {
     ) =>
         `Two ${kind} context-menu commands share the name \`${name}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCleanAppFetchFailed]: (reason: string) =>
-        `Could not resolve the application from the bot token. ${reason}.`,
+        `Could not resolve the application from the bot token. ${reason}`,
     [SeedcordErrorCode.CliCleanNoGuilds]: () =>
         'No guilds given. Pass --guild <ids...> or --all-guilds. Global commands are never touched.',
     [SeedcordErrorCode.CliCleanPurgeAllGuilds]: () =>

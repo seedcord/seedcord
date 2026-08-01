@@ -17,6 +17,18 @@ interface FilterChipsProps {
     readonly enabledChannels: ReadonlySet<string>;
     readonly enabledLevels: ReadonlySet<LogLevel>;
     readonly cursor: FilterCursor | null;
+    readonly open: boolean;
+}
+
+function Heading({ label, open }: { label: string; open: boolean }): ReactElement {
+    return (
+        <Text>
+            <Text color={ui.accent} bold>
+                {open ? '▾' : '▸'}
+            </Text>
+            <Text color={ui.muted}> {label}</Text>
+        </Text>
+    );
 }
 
 function Chip({
@@ -46,7 +58,13 @@ function Chip({
 }
 
 // empty enabled set means all
-export function FilterChips({ channels, enabledChannels, enabledLevels, cursor }: FilterChipsProps): ReactElement {
+export function FilterChips({
+    channels,
+    enabledChannels,
+    enabledLevels,
+    cursor,
+    open
+}: FilterChipsProps): ReactElement {
     const allChannels = enabledChannels.size === 0;
     const allLevels = enabledLevels.size === 0;
     const channelFocus = focusedIn(cursor, 'channels', channels.length);
@@ -54,35 +72,40 @@ export function FilterChips({ channels, enabledChannels, enabledLevels, cursor }
 
     return (
         <Box flexDirection="column">
-            <Text bold color={ui.heading}>
-                - channels
-            </Text>
-            <Box marginLeft={2} flexWrap="wrap">
-                {channels.map((channel, index) => (
-                    <Chip
-                        key={channel}
-                        label={channel}
-                        on={allChannels || enabledChannels.has(channel)}
-                        color={channelColor(channel)}
-                        focused={channelFocus === index}
-                    />
-                ))}
-            </Box>
+            {open ? null : (
+                <Text dimColor wrap="truncate">
+                    ⇅ resize to see filters
+                </Text>
+            )}
+            <Heading label="channels" open={open} />
+            {open ? (
+                <Box marginLeft={2} flexWrap="wrap">
+                    {channels.map((channel, index) => (
+                        <Chip
+                            key={channel}
+                            label={channel}
+                            on={allChannels || enabledChannels.has(channel)}
+                            color={channelColor(channel)}
+                            focused={channelFocus === index}
+                        />
+                    ))}
+                </Box>
+            ) : null}
 
-            <Text bold color={ui.heading}>
-                - levels
-            </Text>
-            <Box marginLeft={2} flexWrap="wrap">
-                {FILTER_LEVELS.map((level, index) => (
-                    <Chip
-                        key={level}
-                        label={level}
-                        on={allLevels || enabledLevels.has(level)}
-                        color={LEVEL_COLOR[level]}
-                        focused={levelFocus === index}
-                    />
-                ))}
-            </Box>
+            <Heading label="levels" open={open} />
+            {open ? (
+                <Box marginLeft={2} flexWrap="wrap">
+                    {FILTER_LEVELS.map((level, index) => (
+                        <Chip
+                            key={level}
+                            label={level}
+                            on={allLevels || enabledLevels.has(level)}
+                            color={LEVEL_COLOR[level]}
+                            focused={levelFocus === index}
+                        />
+                    ))}
+                </Box>
+            ) : null}
         </Box>
     );
 }

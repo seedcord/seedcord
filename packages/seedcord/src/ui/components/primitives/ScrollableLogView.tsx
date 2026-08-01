@@ -5,6 +5,7 @@ import React from 'react';
 import { channelColor } from '@ui/channelColor';
 import { Rule } from '@ui/components/primitives/Rule';
 import { formatClock } from '@ui/format';
+import { ui } from '@ui/palette';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { LogLevel } from '@seedcord/logger';
@@ -12,7 +13,10 @@ import type { LogRow } from '@ui/logRows';
 import type { LogEntry } from '@ui/stores/LogStore';
 import type { ReactElement } from 'react';
 
-const MIN_LOG_LINES = 3;
+// an error is a head line plus stack frames, and fewer rows shows almost none of it
+const MIN_LOG_LINES = 5;
+
+export const NO_ROOM = 'Need more room for logs.';
 const DOT = '⏺';
 const BAR = '▌';
 const GUIDE = '│';
@@ -106,9 +110,11 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
 
     if (viewportHeight < MIN_LOG_LINES) {
         return (
-            <Text color="yellow" wrap="truncate">
-                Terminal too small to show logs.
-            </Text>
+            <Box flexGrow={1} alignItems="center" justifyContent="center" overflow="hidden">
+                <Text color={ui.warn} bold wrap="truncate">
+                    {NO_ROOM}
+                </Text>
+            </Box>
         );
     }
 

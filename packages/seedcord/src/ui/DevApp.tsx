@@ -1,16 +1,19 @@
-import { Box, measureElement, useInput, useWindowSize } from 'ink';
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Box, useInput, useWindowSize } from 'ink';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { INITIAL_CURSOR } from '@ui/filterCursor';
 import { useDevState } from '@ui/hooks/useDevState';
 import { useLogs } from '@ui/hooks/useLogs';
+import { useMeasuredHeight } from '@ui/hooks/useMeasuredHeight';
 import { useRailWidth } from '@ui/hooks/useRailWidth';
 import { useScroll } from '@ui/hooks/useScroll';
 import { useUptime } from '@ui/hooks/useUptime';
 import { dispatchHotkey } from '@ui/hotkeys';
 import { DevLayout } from '@ui/layout/DevLayout';
 import { expandRows, rowKey } from '@ui/logRows';
+import { noticesOf } from '@ui/notices';
 import { LogStore } from '@ui/stores/LogStore';
+import { tierFor } from '@ui/tier';
 
 import type { LogLevel } from '@seedcord/logger';
 import type { DevStore } from '@ui/stores/DevStore';
@@ -36,10 +39,13 @@ export function DevApp(props: DevAppProps): ReactElement {
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
-    const [logBoxHeight, setLogBoxHeight] = useState(0);
+    const logBoxHeight = useMeasuredHeight(logBoxRef);
 
     const railRef = useRef<DOMElement | null>(null);
     const railWidth = useRailWidth(railRef, state.phase, rows, columns);
+
+    const tier = tierFor(rows, columns);
+    const notices = noticesOf(state);
 
     const logs = useLogs(enabled, enabledLevels);
     const logRows = useMemo(() => expandRows(logs), [logs]);
@@ -48,15 +54,6 @@ export function DevApp(props: DevAppProps): ReactElement {
     const uptimeMs = useUptime(state);
 
     const interactive = !state.isBusy || state.restartRequired;
-
-    // re-measure on anything that changes the box height, a resize, a notification card, or the scroll header
-    // toggling between its scroll status and nothing while following
-    useLayoutEffect(() => {
-        if (!logBoxRef.current) return;
-        const measured = measureElement(logBoxRef.current).height;
-        // eslint-disable-next-line @eslint-react/set-state-in-effect -- Ink layout is only measurable after render, so this sets the scroll-window height
-        setLogBoxHeight((prev) => (prev === measured ? prev : measured));
-    }, [rows, columns, state.error, state.restartRequired, state.commandUpdatePrompt, scroll.following]);
 
     useInput((input, key) => {
         dispatchHotkey({
@@ -72,6 +69,7 @@ export function DevApp(props: DevAppProps): ReactElement {
             setEnabledLevels,
             cursor,
             setCursor,
+            filtersOpen: tier === 'full',
             onQuit: props.onQuit,
             onDisconnect: props.onDisconnect,
             onRestart: props.onRestart,
@@ -97,12 +95,15 @@ export function DevApp(props: DevAppProps): ReactElement {
         <Box flexDirection="column" width={columns} height={rows} overflow="hidden">
             <DevLayout
                 state={state}
+                tier={tier}
+                notices={notices}
                 railRef={railRef}
                 railWidth={railWidth}
                 logBoxRef={logBoxRef}
                 scroll={scroll}
                 viewportHeight={viewportHeight}
                 measured={logBoxHeight > 0}
+                columns={columns}
                 enabled={enabled}
                 enabledLevels={enabledLevels}
                 cursor={cursor}

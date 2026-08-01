@@ -47,6 +47,7 @@ interface HotkeyContext {
     readonly setEnabledLevels: (next: ReadonlySet<LogLevel>) => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
+    readonly filtersOpen: boolean; // to disable hotkeys that would otherwise move the cursor when the filter chips are closed
     readonly onQuit?: (() => Promise<void> | void) | undefined;
     readonly onDisconnect?: (() => Promise<void> | void) | undefined;
     readonly onRestart?: (() => Promise<void> | void) | undefined;
@@ -97,6 +98,8 @@ function applyAtCursor(
 }
 
 function handleFilters(ctx: HotkeyContext): boolean {
+    if (!ctx.filtersOpen) return false;
+
     const channels = LogStore.instance.getChannels();
     const move = (dir: CursorMove): void =>
         ctx.setCursor(moveCursor(ctx.cursor, dir, channels.length, FILTER_LEVELS.length));
