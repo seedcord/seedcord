@@ -131,7 +131,7 @@ describe('checkBotPermissions', () => {
 });
 
 describe('hasPermsToAssign', () => {
-    // getBotRole reads guild.roles.botRoleFor(guild.client.user), checkBotPermissions reads guild.members.me
+    // botRoleOf reads guild.roles.botRoleFor(guild.client.user), checkBotPermissions reads guild.members.me
     function guildWithBot(mePerms: bigint[]): { guild: Guild; botRole: Role } {
         const botRole = roleWith({ id: 'bot' });
         const guild = guildFake({
