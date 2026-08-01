@@ -4,12 +4,10 @@ import { Logger } from '@seedcord/logger';
 
 import { getDevChannel } from '@hmr/devChannel';
 
-import { pluginContextSlot, readPluginContext } from './context';
 import { resolveLifecycleSpec } from './lifecycle';
 
-import type { PluginContext, StoredPluginContext } from './context';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
-import type { TransportOf, NeedsOf, PluginOptions, RuntimeOf } from './options';
+import type { TransportOf, PluginOptions, RuntimeOf } from './options';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
@@ -22,7 +20,7 @@ const resolvedSpecSlot = Symbol('seedcord.plugin.spec');
 
 /**
  * Base class for Seedcord plugins. A subclass declares its options as the `Opts` type argument,
- * implements `init()`, and reads the framework surface through `this.ctx`.
+ * implements `init()`, and reads the framework surface through `this.core`.
  *
  * @typeParam Opts - The plugin's declared {@link PluginOptions}.
  * @typeParam TCore - The host type `this.core` resolves to. Each transport binds it to its own `Core`.
@@ -37,10 +35,8 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
 
     /** @internal */
     readonly [resolvedSpecSlot]: ResolvedPluginLifecycleSpec;
-    /** @internal */
-    [pluginContextSlot]?: StoredPluginContext;
 
-    /** Logs under the plugin's class name, on the channel its attach key names. */
+    /** Logs under the plugin's class name, on the channel its attach key sets. */
     public readonly logger: Logger;
 
     // CoreBase here keeps the augmented Core out of ConstructorParameters, which attach reads
@@ -58,11 +54,6 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
         return this.host as TCore;
     }
 
-    /** The framework surface, available from `init()` onward. Throws if read before `attach` finalizes it. */
-    protected get ctx(): PluginContext<NeedsOf<Opts>> {
-        return readPluginContext<NeedsOf<Opts>>(this);
-    }
-
     abstract init(): Promise<void>;
 
     /**
@@ -75,8 +66,7 @@ export abstract class Plugin<Opts extends PluginOptions = {}, TCore extends Core
     dispose?(): Promise<void>;
 
     /**
-     * Rejects the plugin's constructor options with a reason. Throws a `SeedcordError` naming the
-     * plugin class and the reason.
+     * Throws a `SeedcordError` that contains the plugin class name and the reason.
      *
      * @param reason - Why the options are invalid.
      */
@@ -103,17 +93,13 @@ export function resolvedLifecycleSpecOf(plugin: PluginLike): ResolvedPluginLifec
     return plugin[resolvedSpecSlot];
 }
 
-export type { PluginContext, PluginCapabilityTypes } from './context';
 export type { PluginLifecycleSpec } from './lifecycle';
 export type { PluginOptions } from './options';
 
 // a bound of Plugin<{}> rejects every plugin that declares an option, since Plugin<A> and Plugin<B>
 // are mutually unassignable. every member here must stay Opts-independent.
 /** @internal */
-export type PluginLike = Pick<
-    Plugin,
-    'init' | 'ready' | 'dispose' | 'logger' | 'onHmr' | typeof resolvedSpecSlot | typeof pluginContextSlot
->;
+export type PluginLike = Pick<Plugin, 'init' | 'ready' | 'dispose' | 'logger' | 'onHmr' | typeof resolvedSpecSlot>;
 
 // a `CoreBase` first parameter rejects a narrowing ctor on its own, and it also collapses
 // `InstanceType<Ctor>` to `PluginLike` at every attach call. CoreParamAssert checks it instead.
@@ -133,5 +119,3 @@ type CoreParamTooNarrow = Record<
 export type CoreParamAssert<Ctor extends PluginCtor> = CoreBase extends ConstructorParameters<Ctor>[0]
     ? unknown
     : CoreParamTooNarrow;
-
-export { finalizePluginContext } from './context';

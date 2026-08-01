@@ -20,7 +20,6 @@ import { version as packageVersion } from './version';
 import type { GatewayConfig } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
 import type { REST } from '@discordjs/rest';
-import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 
@@ -48,7 +47,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     /** @see {@link Bot} */
     public readonly bot: Bot;
 
-    /** The discord.js client's REST client. It carries no token until the Login phase. */
+    /** The discord.js client's REST client. Its token is set during the Login phase. */
     public readonly rest: REST;
 
     /** @see {@link IRateLimiter} */
@@ -79,10 +78,6 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     /** The bot's discord username, populated after login. */
     public get username(): string | undefined {
         return this.bot.client.user?.username;
-    }
-
-    protected override pluginCapabilities(): PluginCapabilities {
-        return { client: this.bot.client, token: this.bot.botToken, rest: this.bot.client.rest };
     }
 
     protected static override reset(): void {

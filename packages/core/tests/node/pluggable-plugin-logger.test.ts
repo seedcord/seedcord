@@ -11,7 +11,6 @@ import { Bus } from '@subscribers/Bus';
 
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { PluginContext } from '@src/plugin/context';
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];
@@ -30,20 +29,15 @@ beforeEach(() => {
     registry.configure({ level: 'trace', sinks: [sink] });
 });
 
-// no logger field, the base supplies it
 class Database extends Plugin {
     public init(): Promise<void> {
         this.logger.info('connected');
         return Promise.resolve();
     }
-
-    public reachCtx(): PluginContext {
-        return this.ctx;
-    }
 }
 
 class TestHost extends Pluggable<'gateway', 'server'> {
-    // justified: the host reads nothing off config in these probes
+    // justified: the host reads nothing off config in these tests
     public readonly config = {} as Config;
     public readonly rest = new REST();
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
@@ -77,13 +71,5 @@ describe('the plugin logger', () => {
         await host.attach('db', Database).db.init();
 
         expect(sink.records[0]?.channel).toBe('db');
-    });
-
-    it('is the same instance ctx used to carry', () => {
-        const host = new TestHost();
-        const attached = host.attach('db', Database);
-
-        // @ts-expect-error the base supplies the logger, ctx no longer carries one
-        void attached.db.reachCtx().logger;
     });
 });

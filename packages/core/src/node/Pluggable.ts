@@ -3,7 +3,6 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '@src/lifecycle/phases';
-import { finalizePluginContext } from '@src/plugin/context';
 import { resolvedLifecycleSpecOf } from '@src/plugin/Plugin';
 
 import { withTimeout } from './Lifecycle/withTimeout';
@@ -12,9 +11,8 @@ import type { REST } from '@discordjs/rest';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import type { Config, IRateLimiter, Store } from '@seedcord/types';
+import type { Config, IRateLimiter } from '@seedcord/types';
 import type { ShutdownPhase } from '@src/lifecycle/phases';
-import type { PluginCapabilities, PluginContext, StoredPluginContext } from '@src/plugin/context';
 import type { ChannelKeyAssert, Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
 import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
 import type { Bus } from '@subscribers/Bus';
@@ -27,10 +25,10 @@ interface Attachment {
 const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 
 /**
- * Base class for objects that can have plugins attached.
+ * Base class for a plugin host, a transport `Seedcord` class.
  *
  * Plugins are attached during configuration and initialized during startup, sequentially in attach
- * order within each phase. Not constructed directly, the host is a transport `Seedcord` class.
+ * order within each phase.
  */
 // no defaults, a default runtime of the full union contains 'edge' and RuntimeAssert rejects every plugin on that
 export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
@@ -96,22 +94,12 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         return this;
     }
 
-    // transports override to inject client/token/rest
-    protected pluginCapabilities(): PluginCapabilities {
-        return {};
-    }
-
-    protected pluginStore(): Store<'charge'> {
-        // justified: both assignment branches of rateLimiter are Store<'charge'> at the hosts
-        return this.config.store ?? (this.rateLimiter as Store<'charge'>);
-    }
-
     /** @internal codegen reads these to emit the `Core` augmentation */
     public get pluginKeys(): readonly string[] {
         return this.attachments.map((attachment) => attachment.key);
     }
 
-    /** @internal releases the signal handlers and clears the singleton so the next host can construct */
+    /** @internal so the next host can construct */
     protected static reset(): void {
         Pluggable.liveShutdown?.removeSignalHandlers();
         Pluggable.liveShutdown = undefined;
@@ -162,28 +150,11 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         }
 
         const instance = new Plugin(this, ...args);
+        instance.logger.setChannel(key);
         this.plugins.push(instance);
         this.attachments.push({ key, instance });
-        this.finalizeContext(key, instance);
 
         return Object.assign(this, { [key]: instance } as Record<Key, InstanceType<Ctor>>);
-    }
-
-    private finalizeContext(key: string, instance: PluginLike): void {
-        const caps = this.pluginCapabilities();
-        const readToken = (): string | undefined => this.pluginCapabilities().token;
-        instance.logger.setChannel(key);
-        const ctx: StoredPluginContext = {
-            config: this.config,
-            store: this.pluginStore(),
-            client: caps.client,
-            // http sets the token during Ready, read it live
-            get token(): string | undefined {
-                return readToken();
-            },
-            rest: caps.rest
-        };
-        finalizePluginContext(instance, ctx as PluginContext);
     }
 
     // one combined task per phase keeps plugin inits sequential while the phase's other tasks run concurrently

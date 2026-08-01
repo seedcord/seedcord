@@ -130,8 +130,6 @@ const messages = {
 
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
         `${pluginName} rejected its options, ${reason.replace(/\.$/, '')}.`,
-    [SeedcordErrorCode.PluginContextBeforeInit]: (pluginName: string) =>
-        `${pluginName} read this.ctx before attach finalized it. ctx is available from init() onward.`,
 
     [SeedcordErrorCode.PluginMongooseServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongooseService on ${className}.`,

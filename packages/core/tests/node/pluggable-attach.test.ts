@@ -14,7 +14,6 @@ import { Bus } from '@subscribers/Bus';
 
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { PluginCapabilities, PluginContext } from '@src/plugin/context';
 import type { PluginArgs } from '@src/plugin/Plugin';
 
 function delay(ms: number): Promise<void> {
@@ -42,8 +41,8 @@ class TestPlugin extends Plugin {
         return Promise.resolve();
     }
 
-    public reachCtx(): PluginContext {
-        return this.ctx;
+    public reachCore(): CoreBase {
+        return this.core;
     }
 
     public onInit?: () => void;
@@ -126,43 +125,21 @@ describe('Pluggable', () => {
         expect(order).toEqual(['a', 'b']);
     });
 
-    describe('ctx', () => {
-        it('finalizes ctx with the config and the store', () => {
+    describe('core access', () => {
+        it('hands the attaching host to the plugin', () => {
             const { host } = makeHost();
             const withDb = host.attach('db', TestPlugin, 'x');
 
-            const ctx = withDb.db.reachCtx();
-            expect(ctx.config).toBe(host.config);
-            expect(ctx.store).toBe(host.rateLimiter);
+            expect(withDb.db.reachCore()).toBe(host);
         });
 
-        it('finalizes ctx.store from a configured config.store over the fallback rate limiter', () => {
-            const store = new MemoryRateLimiter();
-            const startup = new CoordinatedStartup();
-            // justified: pluginStore only reads config.store
-            const host = new TestHost(new CoordinatedShutdown(), startup, { store } as unknown as Config);
+        it('reaches the host config, rate limiter, and rest through this.core', () => {
+            const { host } = makeHost();
+            const core = host.attach('db', TestPlugin, 'x').db.reachCore();
 
-            const withDb = host.attach('db', TestPlugin, 'x');
-            const ctx = withDb.db.reachCtx();
-
-            expect(ctx.store).toBe(store);
-            expect(ctx.store).not.toBe(host.rateLimiter);
-        });
-
-        it('reads ctx.token live, reflecting a token resolved after attach', () => {
-            class TokenHost extends TestHost {
-                public liveToken: string | undefined;
-                protected override pluginCapabilities(): PluginCapabilities {
-                    return { token: this.liveToken };
-                }
-            }
-
-            const host = new TokenHost(new CoordinatedShutdown(), new CoordinatedStartup());
-            const ctx = host.attach('db', TestPlugin, 'x').db.reachCtx();
-
-            expect(ctx.token).toBeUndefined();
-            host.liveToken = 'set-after-attach';
-            expect(ctx.token).toBe('set-after-attach');
+            expect(core.config).toBe(host.config);
+            expect(core.rateLimiter).toBe(host.rateLimiter);
+            expect(core.rest).toBe(host.rest);
         });
     });
 
