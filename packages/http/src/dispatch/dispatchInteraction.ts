@@ -134,7 +134,9 @@ async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: 
 
 async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
     if (caught instanceof Silence) {
-        if (caught.reason !== undefined) logger().debug(`Silence: ${caught.reason}`);
+        if (caught.reason !== undefined && (scope.core.config.errors?.logSilences ?? true)) {
+            logger().debug(`Silence: ${caught.reason}`);
+        }
         return;
     }
 
@@ -247,8 +249,8 @@ async function loadHandlerCtor(
 
 /**
  * Runs the pre-ack phase for a matched interaction. Loads the route's handler class, constructs it, and
- * runs its gates, and the sender posts any refusal. Returns the post-ack execute continuation, or null
- * when a gate refuses or nothing can run.
+ * runs its gates. The sender posts any refusal. Returns the post-ack execute continuation, or null when a
+ * gate refuses or nothing can run.
  */
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
@@ -288,8 +290,8 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     };
 }
 
-// autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop.
-// null when the gates passed. the caller answers the refusal, so one code path reports and replies
+// autocomplete has no reply target, so @Gated rejects it at compile time and this is the runtime backstop.
+// the caller answers the refusal, so one code path reports and replies
 async function gateRefusal(
     ctor: HandlerCtor,
     match: ResolvedRoute,
