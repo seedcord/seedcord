@@ -1,0 +1,119 @@
+import { Box, Text, measureElement } from 'ink';
+import { render } from 'ink-testing-library';
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { afterEach, describe, expect, it } from 'vitest';
+
+import { Sidebar } from '@ui/components/primitives/Sidebar';
+import { INITIAL_CURSOR } from '@ui/filterCursor';
+import { DevStore } from '@ui/stores/DevStore';
+import { LogStore } from '@ui/stores/LogStore';
+import { COMPACT_ROWS, FULL_ROWS } from '@ui/tier';
+
+import { settled } from './settled';
+
+import type { LogRecord } from '@seedcord/logger';
+import type { DevState } from '@ui/stores/DevStore';
+import type { DOMElement } from 'ink';
+import type { ReactElement } from 'react';
+
+// every channel the framework logs on, which is the tallest the chip list gets without plugins
+const FRAMEWORK_CHANNELS = [
+    'default',
+    'bot',
+    'lifecycle',
+    'health',
+    'interactions',
+    'events',
+    'commands',
+    'subscribers',
+    'errors',
+    'gates',
+    'plugins',
+    'hmr',
+    'cli',
+    'tsc'
+];
+
+function runningState(): DevState {
+    const store = new DevStore();
+    store.setPhase('running');
+    store.setBusy(false);
+    store.setStatus('Connected as TestBot');
+    return store.getState();
+}
+const RUNNING = runningState();
+
+// the readout renders outside the measured rail, so it never changes the size it reports
+function Harness({ filtersOpen }: { readonly filtersOpen: boolean }): ReactElement {
+    const railRef = useRef<DOMElement | null>(null);
+    const [size, setSize] = useState('pending');
+
+    // eslint-disable-next-line @eslint-react/exhaustive-deps, react-hooks/exhaustive-deps -- the equality bail below is what keeps the update chain from forming
+    useLayoutEffect(() => {
+        if (!railRef.current) return;
+        const { height, width } = measureElement(railRef.current);
+
+        setSize((prev) => (prev === `${height}x${width}` ? prev : `${height}x${width}`));
+    });
+
+    return (
+        <Box flexDirection="column">
+            <Box flexDirection="row">
+                <Sidebar
+                    ref={railRef}
+                    state={RUNNING}
+                    enabled={new Set()}
+                    enabledLevels={new Set()}
+                    uptimeMs={12_000}
+                    following={true}
+                    interactive={true}
+                    cursor={INITIAL_CURSOR}
+                    width={null}
+                    filtersOpen={filtersOpen}
+                />
+            </Box>
+            <Text>size:{size}</Text>
+        </Box>
+    );
+}
+
+function read(frame: string | undefined): { rows: number; columns: number } {
+    const match = /size:(?<rows>\d+)x(?<columns>\d+)/u.exec(frame ?? '');
+    return { rows: Number(match?.groups?.rows ?? 0), columns: Number(match?.groups?.columns ?? 0) };
+}
+
+describe('Sidebar', () => {
+    afterEach(() => LogStore.instance.clear());
+
+    async function measure(filtersOpen: boolean): Promise<{ rows: number; columns: number }> {
+        for (const channel of FRAMEWORK_CHANNELS) {
+            LogStore.instance.onLog({
+                level: 'info',
+                message: 'x',
+                label: 'Bot',
+                channel,
+                timestamp: 1_700_000_000_000
+            } satisfies LogRecord);
+        }
+        await LogStore.instance.flush();
+
+        const view = render(<Harness filtersOpen={filtersOpen} />);
+        await settled(() => expect(read(view.lastFrame()).rows).toBeGreaterThan(0));
+        const size = read(view.lastFrame());
+        view.unmount();
+        return size;
+    }
+
+    // the tier thresholds are authored constants, and this is what keeps them honest as the rail changes
+    it('fits the open rail inside the full tier', async () => {
+        const { rows } = await measure(true);
+
+        expect(rows).toBeLessThanOrEqual(FULL_ROWS);
+    });
+
+    it('fits the collapsed rail inside the compact tier', async () => {
+        const { rows } = await measure(false);
+
+        expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
+    });
+}, 20_000);

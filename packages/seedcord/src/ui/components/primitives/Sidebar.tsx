@@ -1,15 +1,16 @@
-import { Box, Text, useAnimation } from 'ink';
+import { Box, Text } from 'ink';
 import React from 'react';
 
 import { formatUptime } from '@ui/format';
-import { ui } from '@ui/palette';
 import { isStreaming } from '@ui/stores/devPhase';
 import { LogStore } from '@ui/stores/LogStore';
 
 import { Banner } from '../Banner';
 import { StatusBadge } from '../StatusBadge';
+import { BlinkDot } from './BlinkDot';
 import { FilterChips } from './FilterChips';
-import { HotkeyBar } from './HotkeyBar';
+import { FilterKeys, SessionKeys } from './Hotkeys';
+import { Rule } from './Rule';
 
 import type { LogLevel } from '@seedcord/logger';
 import type { FilterCursor } from '@ui/filterCursor';
@@ -17,24 +18,12 @@ import type { DevState } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
-const MAX_RAIL = 40;
+export const MAX_RAIL = 40;
 
 const META_LABEL_WIDTH = 5;
 
 // the dev default writes one combined file into this folder
 const LOG_DIR = 'logs/';
-
-const BLINK_MS = 530;
-
-function LiveDot(): ReactElement {
-    const { frame } = useAnimation({ interval: BLINK_MS });
-    return (
-        <Text>
-            <Text color={ui.bad}>{frame % 2 === 0 ? '●' : ' '}</Text>
-            <Text dimColor> live</Text>
-        </Text>
-    );
-}
 
 interface SidebarProps {
     readonly state: DevState;
@@ -45,6 +34,7 @@ interface SidebarProps {
     readonly interactive: boolean;
     readonly cursor: FilterCursor;
     readonly width: number | null;
+    readonly filtersOpen: boolean;
     readonly ref?: Ref<DOMElement>;
 }
 
@@ -68,7 +58,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
     );
 }
 
-// flexShrink={0} on every section keeps each at its natural height, without it a short terminal overlaps rows
+// flexShrink={0} on every section holds its natural height. A short terminal overlaps rows without it
 export function Sidebar({
     state,
     enabled,
@@ -78,6 +68,7 @@ export function Sidebar({
     interactive,
     cursor,
     width,
+    filtersOpen,
     ref
 }: SidebarProps): ReactElement {
     return (
@@ -102,14 +93,29 @@ export function Sidebar({
                     enabledChannels={enabled}
                     enabledLevels={enabledLevels}
                     cursor={cursor}
+                    open={filtersOpen}
                 />
             </Box>
-            <Box flexShrink={0} marginTop={1}>
-                <HotkeyBar phase={state.phase} interactive={interactive} following={following} />
+            {filtersOpen ? (
+                <Box flexShrink={0} marginTop={1} flexDirection="column">
+                    <FilterKeys />
+                    <Rule />
+                </Box>
+            ) : null}
+            {/* the rule already separates the two key groups, so the blank row is only for the collapsed form */}
+            <Box flexShrink={0} marginTop={filtersOpen ? 0 : 1}>
+                <SessionKeys phase={state.phase} interactive={interactive} following={following} />
             </Box>
             <Box flexGrow={1} />
             <Box flexShrink={0} justifyContent="flex-end">
-                {isStreaming(state.phase) ? <LiveDot /> : <Text dimColor>○ idle</Text>}
+                {isStreaming(state.phase) ? (
+                    <Text>
+                        <BlinkDot />
+                        <Text dimColor> live</Text>
+                    </Text>
+                ) : (
+                    <Text dimColor>○ idle</Text>
+                )}
             </Box>
         </Box>
     );

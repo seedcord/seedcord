@@ -45,6 +45,7 @@ function makeCtx(overrides: Partial<Ctx>): Ctx {
         setEnabledLevels: vi.fn(),
         cursor: INITIAL_CURSOR,
         setCursor: vi.fn(),
+        filtersOpen: true,
         ...overrides
     } as unknown as Ctx;
 }
@@ -68,6 +69,20 @@ describe('dispatchHotkey channel filters', () => {
         dispatchHotkey(makeCtx({ input: ' ', cursor: INITIAL_CURSOR, setEnabled }));
 
         expect(setEnabled).toHaveBeenCalledWith(new Set(['alpha']));
+    });
+
+    // the chips render only in the full tier, and a filter applied without them is invisible
+    it('ignores the filter keys while the chips are closed', async () => {
+        await seedChannel('alpha');
+        const setEnabled = vi.fn();
+        const setCursor = vi.fn();
+
+        for (const input of [' ', 'o']) {
+            dispatchHotkey(makeCtx({ input, filtersOpen: false, setEnabled, setCursor }));
+        }
+
+        expect(setEnabled).not.toHaveBeenCalled();
+        expect(setCursor).not.toHaveBeenCalled();
     });
 
     it('restores all on space when the focused channel is already solo', async () => {
