@@ -1,5 +1,25 @@
 # @seedcord/utils
 
+## 0.8.0-next.8
+
+### Minor Changes
+
+- 44b6d72: **BREAKING:** `traverseDirectory` no longer takes a logger. An unreadable directory and a file that throws while importing both reject, reporting the path.
+
+    An unreadable directory previously resolved to an empty list, which started a bot with none of its handlers registered.
+
+### Patch Changes
+
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [53d5cac]
+- Updated dependencies [4f11816]
+- Updated dependencies [9ff4e85]
+    - @seedcord/errors@0.3.0-next.6
+    - @seedcord/types@0.8.0-next.8
+
 ## 0.8.0-next.7
 
 ### Patch Changes

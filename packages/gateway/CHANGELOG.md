@@ -1,5 +1,85 @@
 # @seedcord/gateway
 
+## 0.1.0-next.5
+
+### Minor Changes
+
+- 9dba6ea: **BREAKING:** `core.bot` no longer emits events, and `Bot` no longer extends the event emitter. The four keys move to the bus under new names. `error:unhandled:interaction` becomes `unhandledInteractionError`, `error:unhandled:event` becomes `unhandledEventError`, `any:event` becomes `anyEvent`, and `any:interaction` becomes `anyInteraction`. Register them with `core.bus.on(...)` or a `@Subscribe` subscriber class.
+
+    **BREAKING:** `Paginator.start(handler)` takes the handler, normally `this`, in place of the interaction and core. It sends through that handler's sender, so the page write reports the same `routeId` the dispatch did.
+
+    A write from the fault boundary reports the dispatcher's route id. A middleware or constructor throw leaves no handler sender, and the boundary's own sender previously reported an id with no interaction kind on it, so `responseAttempted` and `interactionDispatched` disagreed for one dispatch.
+
+    A component or modal whose customId carries no route prefix now reaches the unhandled default and gets a reply, matching http. It previously logged a warning and left the interaction with no reply.
+
+    A fault during autocomplete now sends empty choices, which clears the client's loading spinner.
+
+    A handler that throws a non-Error value now gets the generic fault card and an `unknownException` report, where it previously escaped the boundary with no reply. The value is wrapped in an `Error` with `String(value)` as the message and the original as `cause`.
+
+    A fault log line now writes on every occurrence. The 60s throttle covers the bus publish alone, so the uuid on a user's error card always resolves to a log line.
+
+- 9ff4e85: **BREAKING:** the subscriber surface moves from `@seedcord/gateway` to `@seedcord/core`, and both transports re-export it. `Subscriber` and `WebhookLog` now bind their transport's `Core`, so a bot author writes the same one type argument as before.
+
+    Each bot instance keeps its own fault-throttle window, so two bots in one process stop suppressing each other's reports.
+
+    `core.bus` is available on both transports. Subscribers on one key run concurrently with no ordering guarantee. A webhook attachment carries `Uint8Array | string`, which a `Buffer` still satisfies.
+
+- 44b6d72: **BREAKING:** `Core` no longer extends `SeedcordInstance`, so `this.core.version`, `this.core.username`, `this.core.augmentTarget`, and `this.core.start()` are gone from handlers. The host class still carries all four.
+
+    Gateway's `Core` narrows `shutdown` and `startup` to `addTask`. Read the rest off the instance you constructed, whose `shutdown` and `startup` are now public.
+
+    The HTTP `Core` carries neither coordinator, matching the edge runtime that has no lifecycle.
+
+- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
+- 479ed72: **BREAKING:** `PluginOptions.transport` and `.runtime` take `'any'` in place of `'both'`. `'any'` is the default for both axes, so a plugin that declares neither is unaffected.
+
+    **BREAKING:** `attach` now rejects a plugin whose declared `transport` or `runtime` the host does not run, and an edge host rejects every plugin. The error message contains the plugin's declared value and the bot's.
+
+    A plugin declaring any of `transport`, `runtime`, or `needs` can now be attached. Before this, `attach` accepted only plugins that declared no options.
+
+    `new Seedcord(config)` on http reads its runtime from the config it is constructed with. A config typed as the whole `HttpConfig` union leaves the host on both runtimes and it accepts no plugins, so narrow the config to `HttpServerConfig` to attach.
+
+- 464438f: Both transports now export a `Plugin` base bound to their own `Core`, so a plugin reads `this.core.bot` on gateway and `this.core.rest` on http with no `Core` import. A plugin that runs on either transport keeps extending the base from `@seedcord/core/plugin`, whose `this.core` carries the shared members.
+
+    **BREAKING:** a plugin constructor takes `CoreBase` as its first parameter. Naming a transport `Core` there is a compile error at `attach`. Read the transport type off `this.core`.
+
+    Every attach gate reports as a sentence naming both values, for example `this plugin declares transport 'http' and this bot runs 'gateway'`.
+
+    **BREAKING:** a transport the imported base does not serve is a compile error on the type argument, so `Plugin<{ transport: 'http' }>` from `@seedcord/gateway` is rejected where it is declared.
+
+    **BREAKING:** `Mongo` and `KyselyPg` declare `transport: 'gateway'` and no longer expose a public `core`.
+
+### Patch Changes
+
+- bce91fc: A throwing `core.bus.on()` listener no longer escapes `publish` or skips the listeners after it, and each listener error is caught and logged. The same guard covers the `error:unhandled:interaction` and `error:unhandled:event` emits, where a throwing listener became an unhandled rejection.
+
+    A listener that threw during a fault report also left the duplicate-fault throttle unstamped, so every repeat of that fault reported again.
+
+- 9ff4e85: `EventFrequency` moves to `@seedcord/types`, beside the other shared config types.
+- 4f11816: Doc examples and docs search targets use the renamed plugin classes.
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9dba6ea]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [53d5cac]
+- Updated dependencies [6c35827]
+- Updated dependencies [479ed72]
+- Updated dependencies [464438f]
+- Updated dependencies [4f11816]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [4f11816]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [44b6d72]
+    - @seedcord/core@0.1.0-next.7
+    - @seedcord/errors@0.3.0-next.6
+    - @seedcord/types@0.8.0-next.8
+    - @seedcord/logger@0.1.0-next.3
+    - @seedcord/utils@0.8.0-next.8
+    - @seedcord/rate-limiter@0.1.0-next.5
+
 ## 0.1.0-next.4
 
 ### Minor Changes
