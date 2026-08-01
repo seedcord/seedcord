@@ -126,8 +126,7 @@ describe('ModalHandler base', () => {
         }
     }
 
-    it('inherits update and rejects a command-opened modal with 1504 before any djs call', async () => {
-        // a modal opened from a command has no source message, so update throws through the sender's narrowing
+    it('rejects update on a command-opened modal before any djs call', async () => {
         const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: true, isFromMessage: false });
 
         await expect(new Save(asModal(mock), core).execute()).rejects.toSatisfy((e: unknown) =>
@@ -140,6 +139,34 @@ describe('ModalHandler base', () => {
         const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: true, isFromMessage: true });
         await new Save(asModal(mock), core).execute();
         expect(mock.update).toHaveBeenCalledOnce();
+    });
+
+    it('rejects deferUpdate on a command-opened modal before any djs call', async () => {
+        class Ack extends ModalHandler<never> {
+            async execute(): Promise<void> {
+                await this.deferUpdate();
+            }
+        }
+        const mock = mockInteraction({ isMessageComponent: false, isModalSubmit: true, isFromMessage: false });
+
+        await expect(new Ack(asModal(mock), core).execute()).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyUpdateWithoutSource)
+        );
+        expect(mock.deferUpdate).not.toHaveBeenCalled();
+    });
+
+    // the missing source outranks the ack state, matching http where the handler checks before the sender runs
+    it('names the missing source on a command-opened modal that already replied', async () => {
+        const mock = mockInteraction({
+            isMessageComponent: false,
+            isModalSubmit: true,
+            isFromMessage: false,
+            replied: true
+        });
+
+        await expect(new Save(asModal(mock), core).execute()).rejects.toSatisfy((e: unknown) =>
+            isSeedcordError(e, 'SeedcordError', SeedcordErrorCode.ReplyUpdateWithoutSource)
+        );
     });
 });
 

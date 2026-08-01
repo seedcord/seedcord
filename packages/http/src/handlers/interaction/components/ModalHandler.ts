@@ -25,19 +25,19 @@ export abstract class ModalHandler<Defs extends readonly AnyCustomId[]> extends 
     /** @internal */
     declare readonly __component?: 'modal';
 
-    /** Rewrite the message this modal was opened from (only when a component opened it). */
+    /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
     protected override update(response: ReplyResponse | string): Promise<SentMessage> {
         this.ensureSourceMessage('update');
         return super.update(response);
     }
 
-    /** Silently acknowledge, leaving the source message untouched. */
+    /** Acknowledge the submit without changing the source message. Throws when a command opened the modal. */
     protected override deferUpdate(): Promise<void> {
         this.ensureSourceMessage('deferUpdate');
         return super.deferUpdate();
     }
 
-    // discord omits message when a command opened the modal, the source verbs have no target then
+    // discord omits the message when a command opened the modal, so update and deferUpdate have no target
     private ensureSourceMessage(method: string): void {
         if (this.event.message) return;
         throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);
