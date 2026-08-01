@@ -1,5 +1,39 @@
 # seedcord
 
+## 0.16.0-next.10
+
+### Minor Changes
+
+- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
+- 464438f: `seedcord codegen` now writes the `Core` augmentation for every attached plugin, so `this.core.db` types without a hand-written `declare module` block. A bot with no plugins emits nothing new.
+
+    The generated file imports your bot's default export and resolves each key off it, which needs `moduleResolution: bundler`.
+
+### Patch Changes
+
+- 2b326b2: `seedcord dev` adapts to the terminal size. A short terminal collapses the filter chips, and a shorter one replaces the sidebar with a single status line.
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9dba6ea]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [53d5cac]
+- Updated dependencies [6c35827]
+- Updated dependencies [479ed72]
+- Updated dependencies [464438f]
+- Updated dependencies [4f11816]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [4f11816]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [44b6d72]
+    - @seedcord/core@0.1.0-next.7
+    - @seedcord/errors@0.3.0-next.6
+    - @seedcord/types@0.8.0-next.8
+    - @seedcord/logger@0.1.0-next.3
+    - @seedcord/utils@0.8.0-next.8
+
 ## 0.16.0-next.9
 
 ### Patch Changes

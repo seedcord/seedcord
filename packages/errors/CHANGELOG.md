@@ -1,5 +1,24 @@
 # @seedcord/errors
 
+## 0.3.0-next.6
+
+### Minor Changes
+
+- f0ba9f3: **BREAKING:** `attach` rejects a plugin key matching a framework log channel, at compile time and at runtime with new code `CorePluginReservedChannel`. Rename any plugin attached under `bot`, `errors`, `plugins`, or another reserved name.
+- 53d5cac: `PluginKyselyConnectionFailed` and `PluginKyselyBootstrapFailed` cover the two Postgres startup failures that previously surfaced as raw errors.
+
+    **BREAKING:** `PluginMongooseModelDecoratorMissing` is removed along with the decorator it reported on.
+
+- 4f11816: **BREAKING:** `PluginMongo*` error codes are now `PluginMongoose*`, and `PluginKpg*` are now `PluginKysely*`. Numeric values are unchanged.
+
+### Patch Changes
+
+- 44b6d72: Adds `CoreDirectoryImportFailed`, `CoreDirectoryUnreadable`, and `InteractionRouteExportMissing`.
+
+    `InteractionDuplicateRoute` now specifies the file each colliding class came from.
+
+- 9ff4e85: Adds `SubscriberRouteNotASubscriber` for a manifest subscriber row whose named export does not extend `Subscriber`. `InteractionRouteExportMissing` stays for an export name the module lacks.
+
 ## 0.3.0-next.5
 
 ### Patch Changes

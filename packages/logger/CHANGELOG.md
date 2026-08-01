@@ -1,5 +1,19 @@
 # @seedcord/logger
 
+## 0.1.0-next.3
+
+### Minor Changes
+
+- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
+
+### Patch Changes
+
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [44b6d72]
+    - @seedcord/types@0.8.0-next.8
+    - @seedcord/utils@0.8.0-next.8
+
 ## 0.1.0-next.2
 
 ### Patch Changes

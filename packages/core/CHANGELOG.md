@@ -1,5 +1,77 @@
 # @seedcord/core
 
+## 0.1.0-next.7
+
+### Minor Changes
+
+- f0ba9f3: **BREAKING:** `attach` rejects a plugin key matching a framework log channel, at compile time and at runtime with new code `CorePluginReservedChannel`. Rename any plugin attached under `bot`, `errors`, `plugins`, or another reserved name.
+- 9ff4e85: **BREAKING:** the subscriber surface moves from `@seedcord/gateway` to `@seedcord/core`, and both transports re-export it. `Subscriber` and `WebhookLog` now bind their transport's `Core`, so a bot author writes the same one type argument as before.
+
+    Each bot instance keeps its own fault-throttle window, so two bots in one process stop suppressing each other's reports.
+
+    `core.bus` is available on both transports. Subscribers on one key run concurrently with no ordering guarantee. A webhook attachment carries `Uint8Array | string`, which a `Buffer` still satisfies.
+
+- 44b6d72: **BREAKING:** `Core` no longer extends `SeedcordInstance`, so `this.core.version`, `this.core.username`, `this.core.augmentTarget`, and `this.core.start()` are gone from handlers. The host class still carries all four.
+
+    Gateway's `Core` narrows `shutdown` and `startup` to `addTask`. Read the rest off the instance you constructed, whose `shutdown` and `startup` are now public.
+
+    The HTTP `Core` carries neither coordinator, matching the edge runtime that has no lifecycle.
+
+- 9dba6ea: **BREAKING:** core's default bus keys are now five, all camelCase, and each transport augments the set with its own. `publish` no longer accepts any of them, including `unknownException` and `handledException`. `on`, `once`, and `waitFor` stay open for every key. A bot that reported its own faults declares its own key and its own `WebhookLog`.
+
+    Two keys are new. `interactionDispatched` fires once per dispatch with `routeId`, `interactionId`, `kind`, `outcome` (`handled` / `refused` / `failed`), `fallback`, `durationMs`, and `queuedMs`. `responseAttempted` fires on every write through the reply surface with `routeId`, `interactionId`, `method`, `outcome` (`sent` / `failed`), `durationMs`, `messageId`, and an `error` when the write threw.
+
+    Autocomplete choices responses publish `responseAttempted` too, with `method` `respond`.
+
+    A write that threw a non-Error reports an `Error` wrapping it, with the raw value on `cause`.
+
+    One dispatch reports one `routeId` across both keys, on both transports. A dispatch that runs the unhandled default previously reported its handler's class name on `responseAttempted`, so grouping by route split one route into two buckets.
+
+    Both carry `interactionId`, so a subscriber can join them and split a dispatch into its code time and its Discord round trips. `durationMs` on `interactionDispatched` runs from dispatch entry to the user having a response, replies included.
+
+    The thrown value's type sets `outcome`, so a gate and a handler label the same stop identically. A `Silence` and a `Notice` with `report` false are `refused`. A `Notice` with `report` true, which includes a default `Fault`, is `failed`.
+
+- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
+- 6c35827: **BREAKING:** the startup and shutdown coordinators no longer emit events. `startup:start|complete|error`, `shutdown:start|complete|error`, and the per-phase `phase:N:start|complete` keys are gone, along with the emitter base on both coordinators and on `Pluggable`. Nothing replaces them. A task registered with `addTask` runs at the same point the matching event fired.
+
+    A failed shutdown now logs every phase failure on its `Coordinated shutdown failed` error line. The `AggregateError` payload built for the removed `shutdown:error` event is gone.
+
+- 479ed72: **BREAKING:** `PluginOptions.transport` and `.runtime` take `'any'` in place of `'both'`. `'any'` is the default for both axes, so a plugin that declares neither is unaffected.
+
+    **BREAKING:** `attach` now rejects a plugin whose declared `transport` or `runtime` the host does not run, and an edge host rejects every plugin. The error message contains the plugin's declared value and the bot's.
+
+    A plugin declaring any of `transport`, `runtime`, or `needs` can now be attached. Before this, `attach` accepted only plugins that declared no options.
+
+    `new Seedcord(config)` on http reads its runtime from the config it is constructed with. A config typed as the whole `HttpConfig` union leaves the host on both runtimes and it accepts no plugins, so narrow the config to `HttpServerConfig` to attach.
+
+- 464438f: Both transports now export a `Plugin` base bound to their own `Core`, so a plugin reads `this.core.bot` on gateway and `this.core.rest` on http with no `Core` import. A plugin that runs on either transport keeps extending the base from `@seedcord/core/plugin`, whose `this.core` carries the shared members.
+
+    **BREAKING:** a plugin constructor takes `CoreBase` as its first parameter. Naming a transport `Core` there is a compile error at `attach`. Read the transport type off `this.core`.
+
+    Every attach gate reports as a sentence naming both values, for example `this plugin declares transport 'http' and this bot runs 'gateway'`.
+
+    **BREAKING:** a transport the imported base does not serve is a compile error on the type argument, so `Plugin<{ transport: 'http' }>` from `@seedcord/gateway` is rejected where it is declared.
+
+    **BREAKING:** `Mongo` and `KyselyPg` declare `transport: 'gateway'` and no longer expose a public `core`.
+
+- f0ba9f3: **BREAKING:** `Plugin` supplies `this.logger` itself, labelled from the class name and channelled to the attach key. Delete the `logger` field from your plugin. `PluginContext` no longer carries `logger`, read `this.logger`.
+
+### Patch Changes
+
+- 4f11816: Doc examples and docs search targets use the renamed plugin classes.
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [53d5cac]
+- Updated dependencies [4f11816]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [44b6d72]
+    - @seedcord/errors@0.3.0-next.6
+    - @seedcord/types@0.8.0-next.8
+    - @seedcord/logger@0.1.0-next.3
+    - @seedcord/utils@0.8.0-next.8
+
 ## 0.1.0-next.6
 
 ### Minor Changes

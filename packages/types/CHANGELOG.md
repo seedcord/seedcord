@@ -1,5 +1,12 @@
 # @seedcord/types
 
+## 0.8.0-next.8
+
+### Minor Changes
+
+- 9ff4e85: `EventFrequency` moves to `@seedcord/types`, beside the other shared config types.
+- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
+
 ## 0.8.0-next.7
 
 ### Minor Changes
