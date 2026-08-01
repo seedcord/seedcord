@@ -265,12 +265,12 @@ export class KyselyMigrationManager {
 
         for (const result of results) {
             if (result.status === 'Success') {
-                this.ctx.logger.info(`${chalk.green('✓')} ${chalk.bold(result.migrationName)}`);
+                this.ctx.logger.info(`${chalk.green('✔︎')} ${chalk.bold(result.migrationName)}`);
                 continue;
             }
 
             if (result.status === 'Error') {
-                this.ctx.logger.error(`${chalk.red('✗')} ${chalk.bold(result.migrationName)}`);
+                this.ctx.logger.error(`${chalk.red('✘')} ${chalk.bold(result.migrationName)}`);
                 continue;
             }
 
