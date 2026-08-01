@@ -2,13 +2,12 @@ import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
 import { BuilderComponent, RowComponent } from '@seedcord/core';
 import { ButtonStyle, ComponentType } from 'discord.js';
 
-import { ReplySender } from '@bot/ReplySender';
-import { interactionRoute } from '@miscellaneous/extractErrorResponse';
-
 import { CONFIRM_DEF } from './reserved';
 
+import type { ReplySender } from '@bot/ReplySender';
 import type { ReplyResponse } from '@seedcord/types';
 import type { NonModalInteraction } from '@src/handlers/interactionTypes';
+import type { RepliableHandler } from '@src/handlers/RepliableHandler';
 import type { ButtonInteraction, Message } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
@@ -124,10 +123,10 @@ async function settle(sender: ReplySender, message: Message, outcome: Outcome | 
 /**
  * Shows a confirm/cancel prompt with built-in Confirm and Cancel buttons and resolves to `true` only if the
  * invoking user clicks confirm. A cancel click or a timeout resolves to `false`. Gate the action behind it
- * with an early return. A failed prompt send throws into the fault boundary. Not usable from a
- * {@link ModalHandler}, the `interaction` parameter excludes a modal submit at compile time.
+ * with an early return. A failed prompt send throws into the fault boundary. A {@link ModalHandler} is
+ * excluded at compile time.
  *
- * @param interaction - The repliable interaction to prompt on, `this.event` inside a non-modal handler.
+ * @param handler - The handler to prompt from, `this` inside a non-modal handler.
  * @param prompt - The message shown above the Confirm and Cancel buttons.
  * @param options - Ephemeral flag, timeout, the built-in buttons' labels and style, and the optional
  *   `onConfirm`/`onCancel`/`onTimeout` outcome replies that edit the prompt in place.
@@ -141,33 +140,33 @@ async function settle(sender: ReplySender, message: Message, outcome: Outcome | 
  * class BanHandler extends SlashHandler<'ban'> {
  *     async execute() {
  *         const target = this.options.getUser('target', true);
- *         if (!(await getConfirmation(this.event, `Ban ${target.tag}? This cannot be undone.`))) return;
+ *         if (!(await getConfirmation(this, `Ban ${target.tag}? This cannot be undone.`))) return;
  *         await this.event.guild?.members.ban(target.id);
  *     }
  * }
  * ```
  */
 export function getConfirmation(
-    interaction: NonModalInteraction,
+    handler: RepliableHandler<NonModalInteraction>,
     prompt: string,
     options?: DefaultConfirmOptions
 ): Promise<boolean>;
 /**
  * Shows a confirm/cancel prompt you build yourself and resolves to `true` only if the invoking user clicks
  * confirm. The factory receives the two minted button ids. Set them on your own buttons. A cancel click or a
- * timeout resolves to `false`. A failed prompt send throws into the fault boundary. Not usable from a
- * {@link ModalHandler}.
+ * timeout resolves to `false`. A failed prompt send throws into the fault boundary. A {@link ModalHandler} is
+ * excluded at compile time.
  *
- * @param interaction - The repliable interaction to prompt on, `this.event` inside a non-modal handler.
+ * @param handler - The handler to prompt from, `this` inside a non-modal handler.
  * @param prompt - A factory given the minted `{ confirm, cancel }` ids that returns the reply to show. Build
- *   it with the kit `BuilderComponent`/`RowComponent` wrappers, not raw discord.js builders.
+ *   it with the `BuilderComponent` and `RowComponent` wrappers.
  * @param options - Ephemeral flag, timeout, and the optional `onConfirm`/`onCancel`/`onTimeout` outcome
  *   replies that edit the prompt in place.
  * @returns `true` if confirmed, `false` on cancel or timeout.
  *
  * @remarks
- * The prompt is collected in-process, so it does not survive a bot restart. Without an outcome hook, deliver
- * a result after confirming with a fresh `interaction.followUp(...)`, the prompt is already gone.
+ * The prompt is collected in-process, so it does not survive a bot restart. Without an outcome hook the
+ * prompt is gone once the user confirms, so deliver the result with a fresh `this.followUp(...)`.
  *
  * @example
  * ```ts
@@ -197,7 +196,7 @@ export function getConfirmation(
  *
  * const target = this.options.getUser('target', true);
  * const confirmed = await getConfirmation(
- *     this.event,
+ *     this,
  *     (ids) => ({ components: [new BanPrompt(`Ban ${target.tag}?`).component, new ConfirmRow(ids).component] }),
  *     { onConfirm: { components: [new BanPrompt(`Banned ${target.tag}.`).component] } }
  * );
@@ -205,19 +204,20 @@ export function getConfirmation(
  * ```
  */
 export function getConfirmation(
-    interaction: NonModalInteraction,
+    handler: RepliableHandler<NonModalInteraction>,
     prompt: (ids: { confirm: string; cancel: string }) => Promisable<ReplyResponse>,
     options?: ConfirmOptions
 ): Promise<boolean>;
 export async function getConfirmation(
-    interaction: NonModalInteraction,
+    handler: RepliableHandler<NonModalInteraction>,
     prompt: ConfirmPrompt,
     options?: DefaultConfirmOptions
 ): Promise<boolean> {
     const { ephemeral = true, timeoutMs = DEFAULT_TIMEOUT_MS } = options ?? {};
 
     const response = typeof prompt === 'string' ? defaultPrompt(prompt, options) : await prompt(CONFIRM_IDS);
-    const sender = new ReplySender(interaction, interactionRoute(interaction));
+    const interaction = handler.getEvent();
+    const sender = handler.getSender();
     const message = await sender.send(response, { ephemeral });
 
     const winner = await collectChoice(message, interaction.user.id, timeoutMs);

@@ -1,15 +1,26 @@
 import { ContainerBuilder } from '@discordjs/builders';
+import { PublishDefault } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getConfirmation } from '@bot/confirm';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
+import { ReplySender } from '@bot/ReplySender';
 
 import type { DefaultConfirmOptions } from '@bot/confirm';
+import type { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
+import type { ModalHandler } from '@handlers/interaction/components/ModalHandler';
+import type { Bus } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
 import type { NonModalInteraction } from '@src/handlers/interactionTypes';
-import type { ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
+import type { RepliableHandler } from '@src/handlers/RepliableHandler';
 
 type Prompt = string | ((ids: { confirm: string; cancel: string }) => ReplyResponse);
+// justified: collapses the overloads so one call site can forward either a string or a factory prompt
+type ConfirmCall = (
+    handler: RepliableHandler<NonModalInteraction>,
+    prompt: Prompt,
+    options?: DefaultConfirmOptions
+) => Promise<boolean>;
 
 const confirmWire = CONFIRM_DEF.encode({ choice: 'confirm' });
 const cancelWire = CONFIRM_DEF.encode({ choice: 'cancel' });
@@ -60,14 +71,29 @@ describe('getConfirmation', () => {
         mockMessage.awaitMessageComponent.mockResolvedValue(winner(confirmWire));
     });
 
-    // justified: the fixture implements only the interaction surface getConfirmation reads, and the cast
-    // collapses the overloads so the helper can forward either a string or a factory prompt.
+    // justified: the fixture implements only the surface getConfirmation reads off a handler
+    function handlerFor(source: object, routeId = 'confirm-test', bus?: Bus): RepliableHandler<NonModalInteraction> {
+        const interaction = source as NonModalInteraction;
+        const sender = new ReplySender(interaction, routeId, bus);
+        return {
+            getEvent: () => interaction,
+            getSender: () => sender
+        } as unknown as RepliableHandler<NonModalInteraction>;
+    }
+
     const run = (prompt: Prompt, options?: DefaultConfirmOptions): Promise<boolean> =>
-        (getConfirmation as (i: NonModalInteraction, p: Prompt, o?: DefaultConfirmOptions) => Promise<boolean>)(
-            event as unknown as NonModalInteraction,
-            prompt,
-            options
-        );
+        (getConfirmation as ConfirmCall)(handlerFor(event), prompt, options);
+
+    it('sends the prompt through the handler sender, so the publish carries the handler routeId', async () => {
+        const publish = vi.fn();
+        // justified: the sender reads only the publish slot off the bus
+        const bus = { [PublishDefault]: publish } as unknown as Bus;
+
+        await (getConfirmation as ConfirmCall)(handlerFor(event, 'slash:ban', bus), v2Prompt);
+
+        const sent = publish.mock.calls.find(([key]) => key === 'responseAttempted');
+        expect(sent?.[1]).toMatchObject({ routeId: 'slash:ban' });
+    });
 
     it('resolves true when the user confirms', async () => {
         await expect(run(v2Prompt)).resolves.toBe(true);
@@ -164,7 +190,7 @@ describe('getConfirmation', () => {
                 user: { id: userId },
                 reply: vi.fn().mockResolvedValue({ resource: { message } })
             };
-            return getConfirmation(ev as unknown as NonModalInteraction, v2Prompt);
+            return (getConfirmation as ConfirmCall)(handlerFor(ev, `slash:${userId}`), v2Prompt);
         }
         const [a, b] = await Promise.all([flow(confirmWire, 'userA'), flow(cancelWire, 'userB')]);
         expect(a).toBe(true);
@@ -174,13 +200,13 @@ describe('getConfirmation', () => {
 
 // type-level checks, validated by tc. the runtime body only anchors the file.
 describe('getConfirmation typing', () => {
-    it('accepts a non-modal interaction and rejects a modal submit', () => {
-        function probe(button: ButtonInteraction, modal: ModalSubmitInteraction): void {
+    it('accepts a non-modal handler and rejects a modal handler', () => {
+        function probe(button: ButtonHandler<never>, modal: ModalHandler<never>): void {
             void getConfirmation(button, 'sure?');
             void getConfirmation(button, () => ({ components: [new ContainerBuilder()] }), {
                 onConfirm: { components: [new ContainerBuilder()] }
             });
-            // @ts-expect-error getConfirmation excludes a modal-submit interaction
+            // @ts-expect-error getConfirmation excludes a modal handler
             void getConfirmation(modal, 'sure?');
         }
 
