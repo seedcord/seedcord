@@ -120,8 +120,6 @@ async function extractPackage(pkg: PublishedPackage, projectFolderUrl: string): 
         'scripts/docs/extract-docs.ts',
         '-o',
         './generated',
-        '-p',
-        './packages',
         '--package',
         pkg.name,
         '--ref',
@@ -131,9 +129,7 @@ async function extractPackage(pkg: PublishedPackage, projectFolderUrl: string): 
     ]);
 }
 
-// Returns null for a published package with no documentable API (a pure-config package like
-// @seedcord/tsconfig): it publishes to npm but extraction yields no manifest entry, so it has nothing
-// to render and is skipped rather than failing the whole sync.
+// a pure-config package like @seedcord/tsconfig publishes to npm with no extractable API
 async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry | null> {
     const found = engine.getPackage(pkg.name);
     if (!found) {

@@ -9,8 +9,6 @@ const HELP_TEXT = `Usage: tsx extract-docs.ts [options]
 
 Options:
     --output <dir>              Directory where generated JSON files will be written.
-    --packages <dir>            Directory that contains the packages to extract from.
-    --source-path <dir>         Alias for --packages; point at a checked-out tag's packages root.
     --package <name>            Extract only this package (e.g. @seedcord/utils or utils).
     --project-folder-url <url>  GitHub repo base for source links (e.g. https://github.com/seedcord/seedcord).
     --ref <ref>                 Git ref the source links point at (default branch locally, the tag per archive).
@@ -21,7 +19,6 @@ Options:
 
 interface SmokeOptions {
     outputDir?: string;
-    packagesDir?: string;
     packageName?: string;
     githubBase?: string;
     ref?: string;
@@ -36,7 +33,6 @@ const resolvePath = (value: string): string =>
 
 const FLAG_ALIASES: Record<string, string> = {
     '-o': '--output',
-    '-p': '--packages',
     '-r': '--repo',
     '-m': '--manifest',
     '-h': '--help'
@@ -49,18 +45,6 @@ const FLAG_HANDLERS = new Map<string, FlagHandler>([
         '--output',
         (value, options) => {
             options.outputDir = resolvePath(value);
-        }
-    ],
-    [
-        '--packages',
-        (value, options) => {
-            options.packagesDir = resolvePath(value);
-        }
-    ],
-    [
-        '--source-path',
-        (value, options) => {
-            options.packagesDir = resolvePath(value);
         }
     ],
     [
@@ -167,7 +151,6 @@ const logPackageResult = (result: ApiDocsGeneratorResult['results'][number]): vo
 const createGeneratorOptions = (options: SmokeOptions): ApiDocsGeneratorOptions => {
     const generatorOptions: ApiDocsGeneratorOptions = {};
     if (options.outputDir) generatorOptions.outputDir = options.outputDir;
-    if (options.packagesDir) generatorOptions.packagesDir = options.packagesDir;
     if (options.packageName) generatorOptions.packageName = options.packageName;
     if (options.githubBase) generatorOptions.githubBase = options.githubBase;
     if (options.ref) generatorOptions.ref = options.ref;

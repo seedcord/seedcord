@@ -46,7 +46,7 @@
         "bump:deps:pkgs": "for dir in packages/*/ plugins/*/ mock/; do [ -d \"$dir\" ] || continue; echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
         "bump:deps:apps": "for dir in apps/*/; do echo \"Updating $dir...\"; (cd \"$dir\" && pnpm update --latest); done",
         "bump:deps": "pnpm run bump:deps:pkgs && pnpm run bump:deps:apps",
-        "docs:extract": "pnpm tsx scripts/docs/extract-docs.ts -o ./generated -p ./packages --project-folder-url https://github.com/seedcord/seedcord --ref next",
+        "docs:extract": "pnpm tsx scripts/docs/extract-docs.ts -o ./generated --project-folder-url https://github.com/seedcord/seedcord --ref next",
         "docs:artifacts": "pnpm tsx scripts/docs/build-docs-artifacts.ts",
         "docs:artifacts:fixtures": "pnpm tsx scripts/docs/build-docs-artifacts.ts --fixtures",
         "docs:local": "pnpm docs:extract && pnpm docs:artifacts",

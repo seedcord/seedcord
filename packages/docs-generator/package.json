@@ -51,7 +51,8 @@
     ],
     "dependencies": {
         "@microsoft/api-extractor": "7.58.9",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "yaml": "^2.9.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

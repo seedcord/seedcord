@@ -76,14 +76,6 @@ export class ApiDocsGenerator {
         return this.paths.toRepoRelative(this.paths.manifestPath);
     }
 
-    getPackagesDirectory(): string {
-        return this.paths.packagesDir;
-    }
-
-    getPackagesDirectoryRelativeToRepo(): string {
-        return this.paths.toRepoRelative(this.paths.packagesDir);
-    }
-
     getLastResults(): PackageDocResult[] {
         return [...this.lastResults];
     }
@@ -115,7 +107,7 @@ export class ApiDocsGenerator {
             .filter(({ name }) => name === target || unscopedName(name) === target)
             .map(({ dir }) => dir);
         if (matches.length === 0) {
-            throw new Error(`--package "${target}" matched no package under ${this.paths.packagesDir}`);
+            throw new Error(`--package "${target}" matched no package in the workspace`);
         }
         return matches;
     }
