@@ -10,7 +10,7 @@ import type { Notice } from '@ui/notices';
 import type { DevState } from '@ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
-const HINT = '⇅ resize for full ui';
+const HINT = '↕ resize for full ui';
 
 // below this the hint would crowd out the summary, and it stays optional either way
 const HINT_COLUMNS = 64;
