@@ -1,3 +1,4 @@
+import { REST } from '@discordjs/rest';
 import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach } from 'vitest';
@@ -69,6 +70,7 @@ class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
 
 class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config = {} as Config;
+    public readonly rest = new REST();
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 
@@ -128,6 +130,7 @@ describe('attaching a plugin that declares options', () => {
     it('rejects every plugin on an edge host', () => {
         class EdgeHost extends Pluggable<'http', 'edge'> {
             public readonly config = {} as Config;
+            public readonly rest = new REST();
             public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
             public readonly bus: Bus;
             constructor() {
@@ -149,6 +152,7 @@ describe('attaching a plugin that declares options', () => {
         // an http host lands here when its config type is the whole union, leaving 'edge' in BotRt
         class WideHost extends Pluggable<'http', Runtime> {
             public readonly config = {} as Config;
+            public readonly rest = new REST();
             public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
             public readonly bus: Bus;
             constructor() {

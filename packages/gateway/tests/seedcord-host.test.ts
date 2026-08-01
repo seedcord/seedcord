@@ -28,6 +28,12 @@ describe('Seedcord host', () => {
         expect(process.listenerCount('SIGTERM')).toBe(base);
     });
 
+    it('exposes the discord.js client REST as core.rest', () => {
+        const seedcord = new Seedcord(testConfig());
+
+        expect(seedcord.rest).toBe(seedcord.bot.client.rest);
+    });
+
     it('registers the health server by default', () => {
         const seedcord = new Seedcord(testConfig());
 

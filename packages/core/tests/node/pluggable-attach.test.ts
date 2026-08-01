@@ -1,3 +1,4 @@
+import { REST } from '@discordjs/rest';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -51,6 +52,7 @@ class TestPlugin extends Plugin {
 
 class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config: Config;
+    public readonly rest = new REST();
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 

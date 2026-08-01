@@ -8,6 +8,7 @@ import { resolvedLifecycleSpecOf } from '@src/plugin/Plugin';
 
 import { withTimeout } from './Lifecycle/withTimeout';
 
+import type { REST } from '@discordjs/rest';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
 import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
@@ -34,6 +35,7 @@ const RESERVED_KEYS: ReadonlySet<string> = new Set(FRAMEWORK_CHANNELS);
 // no defaults, a default runtime of the full union contains 'edge' and RuntimeAssert rejects every plugin on that
 export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> implements CoreBase {
     public abstract readonly config: Config;
+    public abstract readonly rest: REST;
     public abstract readonly rateLimiter: IRateLimiter;
     public abstract readonly bus: Bus;
 

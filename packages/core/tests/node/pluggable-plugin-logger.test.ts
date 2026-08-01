@@ -1,3 +1,4 @@
+import { REST } from '@discordjs/rest';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -44,6 +45,7 @@ class Database extends Plugin {
 class TestHost extends Pluggable<'gateway', 'server'> {
     // justified: the host reads nothing off config in these probes
     public readonly config = {} as Config;
+    public readonly rest = new REST();
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 

@@ -19,6 +19,7 @@ import { version as packageVersion } from './version';
 
 import type { GatewayConfig } from './interfaces/Config';
 import type { Core } from './interfaces/Core';
+import type { REST } from '@discordjs/rest';
 import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
@@ -47,6 +48,9 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
     /** @see {@link Bot} */
     public readonly bot: Bot;
 
+    /** The discord.js client's REST client. It carries no token until the Login phase. */
+    public readonly rest: REST;
+
     /** @see {@link IRateLimiter} */
     public readonly rateLimiter: IRateLimiter;
 
@@ -65,6 +69,7 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
         this.bus = new Bus(this);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         this.bot = new Bot(this);
+        this.rest = this.bot.client.rest;
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.healthCheck = HealthCheck.fromOption(this.shutdown, config.healthCheck);
 
