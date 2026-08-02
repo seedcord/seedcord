@@ -1,3 +1,8 @@
+import type { ApplicationCommandType } from 'discord-api-types/v10';
+
+/** The two context-menu command kinds Discord defines. */
+export type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandType.Message;
+
 /**
  * Maps each user context-menu command name to a presence marker. Populated by `seedcord codegen`, which
  * reads every command's `toJSON()` and emits a `declare module '@seedcord/gateway'` augmentation, so

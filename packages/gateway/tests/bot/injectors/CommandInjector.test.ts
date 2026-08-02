@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { CommandInjector, Commands, ContextMenus } from '@bot/injectors/CommandInjector';
 
 import type { CommandInfo, ContextMenuInfo } from '@bot/injectors/CommandInjector';
-import type { CommandRegistry } from '@seedcord/core/node/internal';
+import type { CommandBuilder, CommandRegistry } from '@seedcord/core/node/internal';
 import type { APIApplicationCommand } from 'discord.js';
 
 // justified: SlashOptionRegistry is empty in tests, so runtime values read through a plain record
@@ -17,9 +17,7 @@ const mentionOf = (route: string): string => commands[route]!.mention;
 const userMenus = ContextMenus.user as Record<string, ContextMenuInfo>;
 const messageMenus = ContextMenus.message as Record<string, ContextMenuInfo>;
 
-type AnyBuilder = SlashCommandBuilder | ContextMenuCommandBuilder;
-
-function registryOf(global: AnyBuilder[], guilds = new Collection<string, AnyBuilder[]>()): CommandRegistry {
+function registryOf(global: CommandBuilder[], guilds = new Collection<string, CommandBuilder[]>()): CommandRegistry {
     // fixture: inject reads only globalCommands and guildCommands
     return { globalCommands: global, guildCommands: guilds } as unknown as CommandRegistry;
 }

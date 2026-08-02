@@ -4,13 +4,14 @@ import { Logger } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType, chatInputApplicationCommandMention } from 'discord.js';
 
-import type { ContextMenuCommandBuilder } from '@discordjs/builders';
-import type { MessageContextMenuRegistry, SlashOptionRegistry, UserContextMenuRegistry } from '@seedcord/core';
-import type { CommandRegistry, DeployResult } from '@seedcord/core/node/internal';
+import type {
+    ContextMenuKind,
+    MessageContextMenuRegistry,
+    SlashOptionRegistry,
+    UserContextMenuRegistry
+} from '@seedcord/core';
+import type { CommandBuilder, CommandRegistry, DeployResult } from '@seedcord/core/node/internal';
 import type { APIApplicationCommand, Snowflake } from 'discord.js';
-
-type CommandBuilder = SlashCommandBuilder | ContextMenuCommandBuilder;
-type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandType.Message;
 
 // null-proto, on a plain object a route named `__proto__` sets the store's prototype and adds no key
 const commandStorage = Object.create(null) as Record<string, CommandInfo>;
