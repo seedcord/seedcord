@@ -31,7 +31,10 @@ describe('warnUnhandledRoutes', () => {
         dispatcher.warnUnhandledRoutes(['ping', 'admin/ban']);
 
         expect(warn).toHaveBeenCalledOnce();
-        expect(String(warn.mock.calls[0]?.[0])).toContain('admin/ban');
+        const message = String(warn.mock.calls[0]?.[0]);
+        expect(message).toContain('Slash route');
+        expect(message).toContain('admin/ban');
+        expect(message).toContain('@SlashRoute');
     });
 
     it('stays quiet when every route is registered', () => {
@@ -66,6 +69,9 @@ describe('warnUnhandledContextMenuRoutes', () => {
         dispatcher.warnUnhandledContextMenuRoutes({ user: new Set(['Report']), message: new Set(['Report']) });
 
         expect(warn).toHaveBeenCalledOnce();
-        expect(String(warn.mock.calls[0]?.[0])).toContain('Message context menu');
+        const message = String(warn.mock.calls[0]?.[0]);
+        expect(message).toContain('Message context menu');
+        expect(message).toContain('Report');
+        expect(message).toContain('@ContextMenuRoute');
     });
 });
