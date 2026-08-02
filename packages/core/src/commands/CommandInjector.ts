@@ -1,10 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
-import { accessorStore, clearStore, guardedAccessor } from '@src/accessors/guarded';
 import { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
+import { accessorStore, clearStore, guardedAccessor } from '@src/miscellaneous/guarded';
 
 import type {
     ContextMenuKind,
@@ -197,7 +197,7 @@ export class CommandInjector {
         if (guild === undefined) return undefined;
         if (guild === MULTI_GUILD) {
             if (!ids.warned.has(key)) {
-                this.logger.warn(`${name} is deployed to multiple guilds, ${consequence}.`);
+                this.logger.warn(`${paint.sky.bold(name)} is deployed to multiple guilds, ${consequence}.`);
                 ids.warned.add(key);
             }
             return undefined;

@@ -1,4 +1,4 @@
-import { accessorStore, clearStore, guardedAccessor } from '@seedcord/core/internal';
+import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -31,8 +31,8 @@ class Emoji implements ResolvedEmoji {
 
 const emojiStorage = accessorStore<ResolvedEmoji>();
 
-function isEmojiTuple(v: unknown): v is readonly [string, string] {
-    return Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string';
+function reasonOf(error: unknown): string {
+    return Error.isError(error) ? error.message : String(error);
 }
 
 function byName(list: readonly APIEmoji[]): Map<string, APIEmoji> {
@@ -72,13 +72,15 @@ export class EmojiInjector {
         }
 
         const failures: string[] = [];
-        const application = byName(await this.applicationEmojis());
         const guilds = new Map<string, Map<string, APIEmoji>>();
+        let application: Map<string, APIEmoji> | undefined;
 
         for (const [key, value] of Object.entries(configured)) {
             if (isEmojiTuple(value)) await this.resolveTuple(key, value, guilds, failures);
-            else if (typeof value === 'string') this.resolve(key, value, application, failures, 'the application');
-            else failures.push(`  - "${key}" has an invalid value (expected a name or [name, guildId])`);
+            else if (typeof value === 'string') {
+                application ??= await this.applicationEmojis(failures);
+                this.resolve(key, value, application, failures, 'the application');
+            } else failures.push(`  - "${key}" has an invalid value (expected a name or [name, guildId])`);
         }
 
         // surface every unresolved emoji at once so the user fixes the whole config in one pass
@@ -89,10 +91,18 @@ export class EmojiInjector {
         this.logger.utils.summary('Loaded emojis', { emojis: Object.keys(emojiStorage).length });
     }
 
-    private async applicationEmojis(): Promise<APIEmoji[]> {
-        const application = (await this.core.rest.get(Routes.currentApplication())) as APIApplication;
-        const listed = (await this.core.rest.get(Routes.applicationEmojis(application.id))) as { items: APIEmoji[] };
-        return listed.items;
+    private async applicationEmojis(failures: string[]): Promise<Map<string, APIEmoji>> {
+        try {
+            // justified: the discord api contract for these two routes
+            const application = (await this.core.rest.get(Routes.currentApplication())) as APIApplication;
+            const listed = (await this.core.rest.get(Routes.applicationEmojis(application.id))) as {
+                items: APIEmoji[];
+            };
+            return byName(listed.items);
+        } catch (error) {
+            failures.push(`  - the application emojis could not be read (${reasonOf(error)})`);
+            return new Map();
+        }
     }
 
     private async resolveTuple(
@@ -104,9 +114,12 @@ export class EmojiInjector {
         let guild = guilds.get(guildId);
         if (!guild) {
             try {
+                // justified: the discord api contract for this route
                 guild = byName((await this.core.rest.get(Routes.guildEmojis(guildId))) as APIEmoji[]);
-            } catch {
-                failures.push(`  - "${name}" for "${key}" targets guild ${guildId}, which could not be read`);
+            } catch (error) {
+                failures.push(
+                    `  - "${name}" for "${key}" targets guild ${guildId}, which could not be read (${reasonOf(error)})`
+                );
                 return;
             }
             guilds.set(guildId, guild);

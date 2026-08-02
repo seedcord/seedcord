@@ -7,6 +7,7 @@ import { EmojiInjector, Emojis } from '@src/emojis/EmojiInjector';
 import type { Core } from '@interfaces/Core';
 import type { ResolvedEmoji } from '@src/emojis/EmojiInjector';
 import type { APIEmoji } from 'discord-api-types/v10';
+import type { Mock } from 'vitest';
 
 const APP = 'app-1';
 
@@ -19,12 +20,17 @@ function apiEmoji(name: string, id: string, animated = false): APIEmoji {
 
 interface Fixture {
     core: Core;
-    get: ReturnType<typeof vi.fn>;
+    get: Mock<(route: string) => unknown>;
 }
 
-function coreWith(configEmojis: unknown, guildEmojis: Record<string, APIEmoji[]> = {}): Fixture {
+function coreWith(
+    configEmojis: unknown,
+    guildEmojis: Record<string, APIEmoji[]> = {},
+    failOn: (route: string) => boolean = () => false
+): Fixture {
     const application = [apiEmoji('confirm', '111'), apiEmoji('spin', '222', true)];
     const get = vi.fn((route: string) => {
+        if (failOn(route)) throw new Error('Missing Access');
         if (route === Routes.currentApplication()) return { id: APP };
         if (route === Routes.applicationEmojis(APP)) return { items: application };
         for (const [guildId, list] of Object.entries(guildEmojis)) {
@@ -78,6 +84,47 @@ describe('EmojiInjector', () => {
 
         expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
         expect(String(caught)).toContain('nope');
+    });
+
+    it('leaves the application routes alone when every emoji is a guild tuple', async () => {
+        const { core, get } = coreWith({ Wave: ['wave', 'g1'] }, { g1: [apiEmoji('wave', '333')] });
+
+        await new EmojiInjector(core).init();
+
+        expect(get.mock.calls.map((call) => call[0])).toEqual([Routes.guildEmojis('g1')]);
+    });
+
+    it('collects an application fetch failure instead of throwing it raw', async () => {
+        const { core } = coreWith({ Confirm: 'confirm' }, {}, (route) => route === Routes.currentApplication());
+
+        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
+
+        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
+        expect(String(caught)).toContain('Missing Access');
+    });
+
+    it('collects a guild fetch failure with its cause', async () => {
+        const { core } = coreWith({ Wave: ['wave', 'g1'] }, {}, (route) => route === Routes.guildEmojis('g1'));
+
+        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
+
+        expect(String(caught)).toContain('Missing Access');
+    });
+
+    it('reports a configured value that is neither a name nor a tuple', async () => {
+        const { core } = coreWith({ Bad: 42 });
+
+        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
+
+        expect(String(caught)).toContain('"Bad" has an invalid value');
+    });
+
+    it('reports an emoji whose payload carries no id', async () => {
+        const { core } = coreWith({ Wave: ['wave', 'g1'] }, { g1: [apiEmoji('wave', '')] });
+
+        const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
+
+        expect(String(caught)).toContain('was not found in guild g1');
     });
 
     it('skips every request when no emojis are configured', async () => {
