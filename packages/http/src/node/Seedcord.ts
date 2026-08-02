@@ -79,7 +79,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private readonly interactions?: InteractionDispatcher;
     private readonly commandRegistry?: CommandRegistry;
     private appId?: string;
-    private readonly emojiInjector = new EmojiInjector(this);
+    private appIdPromise?: Promise<string>;
+    private readonly emojiInjector = new EmojiInjector(this, () => this.applicationId());
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
@@ -191,7 +192,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             // one task, because tasks within a phase run concurrently and the deploy reads the id
             this.startup.addTask(StartupPhase.Login, 'command-deploy', async () => {
                 await commandRegistry.init();
-                this.appId = await fetchApplicationId(this.rest);
+                this.appId = await this.applicationId();
                 await commandRegistry.setCommands();
                 interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
                 interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
@@ -228,6 +229,12 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     private authenticate(): void {
         this.rest.setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')));
+    }
+
+    // the promise is stored, so two concurrent Login tasks share one fetch
+    private applicationId(): Promise<string> {
+        this.appIdPromise ??= fetchApplicationId(this.rest);
+        return this.appIdPromise;
     }
 
     // the registry deploys on a hot reload too, after the startup task resolved this

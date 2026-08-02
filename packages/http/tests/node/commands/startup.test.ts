@@ -53,7 +53,11 @@ afterEach(async () => {
 // REST's verb methods sit far up its prototype chain, where vi.spyOn resolves get and reports put
 // as undefined. assigning own properties shadows both.
 function stubRest(host: Seedcord): { get: ReturnType<typeof vi.fn>; put: ReturnType<typeof vi.fn> } {
-    const get = vi.fn((route: string) => (route === Routes.currentApplication() ? { id: APP } : {}));
+    const get = vi.fn((route: string) => {
+        if (route === Routes.currentApplication()) return { id: APP };
+        if (route === Routes.applicationEmojis(APP)) return { items: [{ name: 'confirm', id: '111' }] };
+        return {};
+    });
     const put = vi.fn().mockResolvedValue([{ id: 'cmd-1', name: 'ping', type: ApplicationCommandType.ChatInput }]);
     Object.assign(host.rest, { get, put });
     return { get, put };
@@ -104,6 +108,19 @@ describe('command deploy during http startup', () => {
 
         expect([...(slash.mock.calls[0]?.[0] ?? [])]).toContain('ping');
         expect(menus).toHaveBeenCalledOnce();
+    });
+
+    it('resolves the application id once when emojis and commands both need it', async () => {
+        const host = new Seedcord({
+            ...config(COMMANDS_DIR),
+            bot: { ...config(COMMANDS_DIR).bot, emojis: { Confirm: 'confirm' } }
+        });
+        live = host;
+        const { get } = stubRest(host);
+
+        await host.start(0);
+
+        expect(get.mock.calls.filter((call) => call[0] === Routes.currentApplication())).toHaveLength(1);
     });
 
     it('touches no command route when no commands path is configured', async () => {

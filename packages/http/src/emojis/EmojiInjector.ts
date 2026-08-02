@@ -4,9 +4,11 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { Routes } from 'discord-api-types/v10';
 
+import { fetchApplicationId } from '@src/applicationId';
+
 import type { Core } from '@interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
-import type { APIApplication, APIEmoji, APIMessageComponentEmoji } from 'discord-api-types/v10';
+import type { APIEmoji, APIMessageComponentEmoji } from 'discord-api-types/v10';
 
 /** A resolved emoji. Renders as `<:name:id>` in message content, or `<a:name:id>` when animated. */
 export interface ResolvedEmoji extends APIMessageComponentEmoji {
@@ -60,7 +62,11 @@ export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMa
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis', { channel: 'bot' });
 
-    constructor(private readonly core: Core) {}
+    constructor(
+        private readonly core: Core,
+        // the host passes its memoized one so a boot that also deploys commands resolves the id once
+        private readonly applicationId: () => Promise<string> = () => fetchApplicationId(core.rest)
+    ) {}
 
     public async init(): Promise<void> {
         clearStore(emojiStorage);
@@ -93,9 +99,9 @@ export class EmojiInjector {
 
     private async applicationEmojis(failures: string[]): Promise<Map<string, APIEmoji>> {
         try {
-            // justified: the discord api contract for these two routes
-            const application = (await this.core.rest.get(Routes.currentApplication())) as APIApplication;
-            const listed = (await this.core.rest.get(Routes.applicationEmojis(application.id))) as {
+            const appId = await this.applicationId();
+            // justified: the discord api contract for this route
+            const listed = (await this.core.rest.get(Routes.applicationEmojis(appId))) as {
                 items: APIEmoji[];
             };
             return byName(listed.items);

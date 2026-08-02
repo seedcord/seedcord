@@ -41,8 +41,7 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
     [SeedcordErrorCode.CorePluginReservedChannel]: (key: string) =>
         `Plugin key "${key}" is a channel the framework logs on. Pick another key.`,
-    [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
-        "Commands cannot deploy until the bot's application id resolves.",
+    [SeedcordErrorCode.CoreApplicationUnavailable]: () => "The bot's application id could not be resolved.",
     [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
         `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
 
