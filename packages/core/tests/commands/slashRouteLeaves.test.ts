@@ -1,7 +1,8 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
-import { slashRouteLeaves } from '@seedcord/core/internal';
-import { ApplicationCommandType } from 'discord.js';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
+
+import { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
 
 const flat = (name: string): SlashCommandBuilder => new SlashCommandBuilder().setName(name).setDescription('d');
 
