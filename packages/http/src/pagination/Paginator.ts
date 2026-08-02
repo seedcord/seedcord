@@ -19,7 +19,7 @@ type PaginatorHandlerCtor<Prefix extends string> = new (
     core: Core
 ) => ButtonHandler<[PageCursor<Prefix>]> & { execute(): Promise<void> };
 
-function contextOf(interaction: Repliables, core?: Core): PageContext {
+function contextOf(interaction: Repliables, core: Core): PageContext {
     // discord sends member.user in a guild and the top-level user in a dm
     const resolved = interaction.member?.user ?? interaction.user;
     return {
@@ -27,7 +27,7 @@ function contextOf(interaction: Repliables, core?: Core): PageContext {
         // justified: every repliable interaction Discord delivers carries a user, the wrapper types don't say so
         user: resolved as APIUser,
         guildId: interaction.guild_id ?? null,
-        ...(core && { core })
+        core
     };
 }
 

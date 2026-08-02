@@ -18,8 +18,8 @@ type PaginatorHandlerCtor<Prefix extends string> = new (
     core: Core
 ) => ButtonHandler<[PageCursor<Prefix>]> & { execute(): Promise<void> };
 
-function contextOf(interaction: Repliables, core?: Core): PageContext {
-    return { interaction, user: interaction.user, guild: interaction.guild, ...(core && { core }) };
+function contextOf(interaction: Repliables, core: Core): PageContext {
+    return { interaction, user: interaction.user, guild: interaction.guild, core };
 }
 
 /**

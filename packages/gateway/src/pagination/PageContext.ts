@@ -13,5 +13,5 @@ export interface PageContext {
     /** The guild, or `null` in a DM. */
     guild: Guild | null;
     /** The framework core. */
-    core?: Core;
+    core: Core;
 }
