@@ -5,6 +5,7 @@ import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { InteractionDispatcher } from '@src/node/InteractionDispatcher';
 import { Seedcord } from '@src/node/Seedcord';
 
 import { createSigner } from '../../helpers/ed25519';
@@ -13,15 +14,16 @@ import { VALID_TOKEN } from '../../helpers/fixtures';
 import type { HttpConfig } from '@src/interfaces/Config';
 
 const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
+const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 const APP = 'app-1';
 
 // justified: the generated Commands map is empty in tests, so entries read through a plain record
 const commands = Commands as Record<string, { id: string; mention: string } | undefined>;
 
-function config(commandsPath: string | null): HttpConfig {
+function config(commandsPath: string | null, interactionsPath: string | null = null): HttpConfig {
     return {
         bot: {
-            interactions: { path: null },
+            interactions: interactionsPath === null ? { path: null } : { path: interactionsPath },
             commands: commandsPath === null ? { path: null } : { path: commandsPath }
         },
         subscribers: { path: null },
@@ -89,6 +91,19 @@ describe('command deploy during http startup', () => {
         await host.start(0);
 
         expect(get).toHaveBeenCalledWith(Routes.currentApplication());
+    });
+
+    it('checks the deployed routes against the registered handlers', async () => {
+        const slash = vi.spyOn(InteractionDispatcher.prototype, 'warnUnhandledRoutes');
+        const menus = vi.spyOn(InteractionDispatcher.prototype, 'warnUnhandledContextMenuRoutes');
+        const host = new Seedcord(config(COMMANDS_DIR, HANDLERS_DIR));
+        live = host;
+        stubRest(host);
+
+        await host.start(0);
+
+        expect([...(slash.mock.calls[0]?.[0] ?? [])]).toContain('ping');
+        expect(menus).toHaveBeenCalledOnce();
     });
 
     it('touches no command route when no commands path is configured', async () => {

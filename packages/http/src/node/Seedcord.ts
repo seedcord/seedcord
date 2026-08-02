@@ -193,6 +193,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                 await commandRegistry.init();
                 this.appId = await fetchApplicationId(this.rest);
                 await commandRegistry.setCommands();
+                interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
+                interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
             });
         }
 

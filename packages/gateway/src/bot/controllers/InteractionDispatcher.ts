@@ -169,12 +169,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         });
     }
 
-    /**
-     * Warns for each command route with no registered `@SlashRoute` handler, which would fall through to
-     * UnhandledRepliable at runtime. A bot may route commands outside the registry, so this does not throw.
-     *
-     * @internal
-     */
     public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
         for (const route of commandLeaves) {
             if (!this.slashMap.has(route)) {
@@ -185,12 +179,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    /**
-     * Warns for each context-menu command with no matching handler, which would fall through to UnhandledRepliable
-     * at runtime. Checked per kind since a user and a message command can share a name.
-     *
-     * @internal
-     */
     public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
         for (const name of leaves.user) {
             if (!this.userContextMenuMap.has(name)) {
