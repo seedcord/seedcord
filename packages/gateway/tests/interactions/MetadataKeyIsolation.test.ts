@@ -6,7 +6,6 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
-import '../utils/mock-client';
 import '../utils/mock-env';
 
 interface PrivateDispatcher {
@@ -23,7 +22,7 @@ describe('interaction route metadata key isolation', () => {
     let seedcord: Seedcord;
 
     beforeEach(async () => {
-        // @ts-expect-error Accessing private method for testing
+        // @ts-expect-error reset the Seedcord singleton between tests
         Seedcord.reset();
         testEnv = new TestEnvironment('metadata-keys-test-');
         await testEnv.setup();

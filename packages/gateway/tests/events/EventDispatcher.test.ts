@@ -9,7 +9,6 @@ import { TestEnvironment } from '../utils/test-env';
 
 import type { SubscriptionData } from '@seedcord/core';
 
-import '../utils/mock-client';
 import '../utils/mock-env';
 
 interface PrivateEventDispatcher {

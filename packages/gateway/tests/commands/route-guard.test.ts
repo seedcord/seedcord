@@ -6,7 +6,6 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
-import '../utils/mock-client';
 import '../utils/mock-env';
 
 interface GuardBot {
