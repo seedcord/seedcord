@@ -1,18 +1,18 @@
-import { ShutdownPhase } from '@seedcord/core/node/internal';
-import { validateDiscordToken } from '@seedcord/errors/internal';
+import { CommandRegistry, ShutdownPhase } from '@seedcord/core/node/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 import { Client, Events } from 'discord.js';
 import { Envapt } from 'envapt/legacy';
 
-import { CommandRegistry } from '@bControllers/CommandRegistry';
 import { EventDispatcher } from '@bControllers/EventDispatcher';
 import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
 
-import { CommandMentionInjector, CommandMentions } from './injectors/CommandMentionInjector';
+import { CommandInjector, Commands, ContextMenus } from './injectors/CommandInjector';
 import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
 
-import type { InjectedMentionMap } from './injectors/CommandMentionInjector';
+import type { InjectedCommandMap, InjectedContextMenuMap } from './injectors/CommandInjector';
 import type { InjectedEmojiMap } from './injectors/EmojiInjector';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@seedcord/core';
@@ -42,16 +42,17 @@ export class Bot implements Initializeable, HmrAware {
     private readonly interactions?: InteractionDispatcher;
     private readonly events?: EventDispatcher;
     private readonly emojiInjector: EmojiInjector;
+    private readonly commandRegistry?: CommandRegistry;
 
-    public readonly commands?: CommandRegistry;
     public readonly emojis: InjectedEmojiMap = Emojis;
-    public readonly mentions: InjectedMentionMap = CommandMentions;
+    public readonly commands: InjectedCommandMap = Commands;
+    public readonly contextMenus: InjectedContextMenuMap = ContextMenus;
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.interactions) await this.interactions.onHmr(event);
         if (this.events) await this.events.onHmr(event);
-        if (this.commands) await this.commands.onHmr(event);
+        if (this.commandRegistry) await this.commandRegistry.onHmr(event);
     }
 
     /** @internal */
@@ -65,16 +66,31 @@ export class Bot implements Initializeable, HmrAware {
             this.events = new EventDispatcher(core);
         }
 
-        if (core.config.bot.commands.path) {
-            const mentionInjector = new CommandMentionInjector(core);
-            this.commands = new CommandRegistry(core, (result) => {
-                mentionInjector.inject(result);
+        const commandsDir = core.config.bot.commands.path;
+        if (commandsDir) {
+            const injector = new CommandInjector();
+            // onDeployed only fires at deploy time, so registry is assigned by then
+            const registry: CommandRegistry = new CommandRegistry({
+                dir: commandsDir,
+                // core.rest is this same object, assigned only after this constructor returns
+                rest: this._client.rest,
+                applicationId: () => this.applicationId(),
+                onDeployed: (result) => {
+                    injector.inject(result, registry);
+                }
             });
+            this.commandRegistry = registry;
         }
 
         this.emojiInjector = new EmojiInjector(core);
 
         this.registerShutdownTasks(core);
+    }
+
+    private applicationId(): string {
+        const { application } = this._client;
+        if (!application) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
+        return application.id;
     }
 
     private registerShutdownTasks(core: Core): void {
@@ -120,11 +136,11 @@ export class Bot implements Initializeable, HmrAware {
 
         await this.emojiInjector.init();
 
-        if (this.commands) {
-            await this.commands.init();
-            await this.commands.setCommands();
-            this.interactions?.warnUnhandledRoutes(this.commands.routeLeaves());
-            this.interactions?.warnUnhandledContextMenuRoutes(this.commands.contextMenuLeaves());
+        if (this.commandRegistry) {
+            await this.commandRegistry.init();
+            await this.commandRegistry.setCommands();
+            this.interactions?.warnUnhandledRoutes(this.commandRegistry.routeLeaves());
+            this.interactions?.warnUnhandledContextMenuRoutes(this.commandRegistry.contextMenuLeaves());
         }
     }
 

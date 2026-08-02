@@ -6,6 +6,7 @@ import { ComponentDefsKey } from '@customId/routing';
 import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
 
 import type { AnyCustomId } from '@customId/CustomId';
+import type { ContextMenuKind } from '@registries/ContextMenuRegistry';
 
 /** The select menu kinds the select route decorators take. */
 export enum SelectMenuKind {
@@ -75,9 +76,7 @@ export function selectMenuRouteOf(kind: SelectMenuKind): InteractionRoutes {
     return SELECT_ROUTES[kind];
 }
 
-export function contextMenuRouteOf(
-    kind: ApplicationCommandType.User | ApplicationCommandType.Message
-): InteractionRoutes {
+export function contextMenuRouteOf(kind: ContextMenuKind): InteractionRoutes {
     return kind === ApplicationCommandType.User
         ? InteractionRoutes.UserContextMenu
         : InteractionRoutes.MessageContextMenu;

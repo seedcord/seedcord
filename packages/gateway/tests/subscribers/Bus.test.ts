@@ -6,7 +6,6 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
-import '../utils/mock-client';
 import '../utils/mock-env';
 
 import type { HmrUpdateEvent } from '@seedcord/types';
@@ -44,7 +43,7 @@ describe('Bus Integration', () => {
     let seedcord: Seedcord;
 
     beforeEach(async () => {
-        // @ts-expect-error: Accessing private method for testing
+        // @ts-expect-error reset the Seedcord singleton between tests
         Seedcord.reset();
         testEnv = new TestEnvironment('subscribers-test-');
         await testEnv.setup();
@@ -106,7 +105,6 @@ describe('Bus Integration', () => {
         expect(handlersBefore).toHaveLength(2);
         const customHandlerBefore = handlersBefore?.[1]?.ctor;
 
-        // Simulate HMR update: Change subscriber implementation
         await testEnv.createFile(
             `${subscribersDir}/LogSubscriber.ts`,
             `

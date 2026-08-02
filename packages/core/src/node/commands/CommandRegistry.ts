@@ -1,35 +1,48 @@
 import { resolve } from 'node:path';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { BuilderComponent } from '@seedcord/core';
-import { HmrModuleHandler } from '@seedcord/core/hmr';
-import { CommandMetadataKey, getDevChannel } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger, paint } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
-import { Collection } from 'discord.js';
+import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { contextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
-import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
+import { BuilderComponent } from '@components/Component';
+import { getDevChannel } from '@hmr/devChannel';
+import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
+import { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
+import { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
+import { CommandMetadataKey } from '@src/metadataKeys';
 
-import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
+import type { CommandMeta } from '@decorators/Command';
 import type { ContextMenuCommandBuilder } from '@discordjs/builders';
-import type { Core } from '@interfaces/Core';
-import type { Initializeable } from '@seedcord/core';
-import type { CommandMeta } from '@seedcord/core/internal';
+import type { REST } from '@discordjs/rest';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { ApplicationCommand, Snowflake } from 'discord.js';
+import type { ContextMenuLeaves } from '@src/commands/contextMenuLeaves';
+import type { Initializeable } from '@src/plugin/Plugin';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
 
-/** The command collections Discord returns from each scope's deploy, keyed by command id. */
+/** Either builder a registered command can produce. @internal */
+export type CommandBuilder = SlashCommandBuilder | ContextMenuCommandBuilder;
+
+/** The commands Discord returns from each scope's deploy, keyed by command id. */
 export interface DeployResult {
-    global: Collection<Snowflake, ApplicationCommand>;
-    guilds: Collection<Snowflake, Collection<Snowflake, ApplicationCommand>>;
+    global: Map<string, APIApplicationCommand>;
+    guilds: Map<string, Map<string, APIApplicationCommand>>;
+}
+
+/** @internal */
+export interface CommandRegistryOptions {
+    readonly dir: string;
+    readonly rest: REST;
+    /** Called at deploy time, because the application id only resolves after login. */
+    readonly applicationId: () => string;
+    readonly onDeployed?: (result: DeployResult) => void;
 }
 
 interface CommandArtifact {
@@ -38,18 +51,21 @@ interface CommandArtifact {
     guilds?: string[];
 }
 
+function indexById(commands: readonly APIApplicationCommand[]): Map<string, APIApplicationCommand> {
+    return new Map(commands.map((command) => [command.id, command]));
+}
+
 /**
- * Manages Discord application command registration and deployment.
+ * Scans the command directory, builds each command, and PUTs the global and guild scopes to Discord.
  *
- * Scans command directories, builds command structures, and registers both global and guild-scoped commands
- * to Discord's API. Accessed via `core.bot.commands`. Do not construct it directly.
+ * @internal
  */
 export class CommandRegistry implements Initializeable, HmrAware {
     private readonly logger = new Logger('Commands', { channel: 'commands' });
     private isInitialised = false;
 
-    public readonly globalCommands: (SlashCommandBuilder | ContextMenuCommandBuilder)[] = [];
-    public readonly guildCommands = new Collection<string, (SlashCommandBuilder | ContextMenuCommandBuilder)[]>();
+    public readonly globalCommands: CommandBuilder[] = [];
+    public readonly guildCommands = new Map<string, CommandBuilder[]>();
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
 
@@ -60,18 +76,14 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private readonly hmrHandler?: HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>;
     private readonly pendingEvents = new Map<string, HmrUpdateEvent>();
 
-    public constructor(
-        private readonly core: Core,
-        private readonly onDeployed?: (result: DeployResult) => void
-    ) {
-        const commandsDir = this.core.config.bot.commands.path;
-        if (!commandsDir) {
+    public constructor(private readonly options: CommandRegistryOptions) {
+        if (!options.dir) {
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, ['CommandRegistry', 'commands']);
         }
 
         if (!Envapter.isDevelopment && !Envapter.isTest) return;
         this.hmrHandler = new HmrModuleHandler<CommandCtor, void, CommandArtifact | undefined>({
-            handlersDir: commandsDir,
+            handlersDir: options.dir,
             isHandler: this.isCommandClass.bind(this),
             registerHandler: this.registerCommand.bind(this),
             unregisterHandler: this.unregisterCommand.bind(this),
@@ -89,13 +101,10 @@ export class CommandRegistry implements Initializeable, HmrAware {
         if (this.isInitialised) return;
         this.isInitialised = true;
 
-        const commandsDir = this.core.config.bot.commands.path;
-        if (!commandsDir) return;
-
         this.loading = true;
         this.loadedCommands.length = 0;
         try {
-            await this.loadCommands(commandsDir);
+            await this.loadCommands(this.options.dir);
         } finally {
             this.loading = false;
         }
@@ -146,8 +155,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
-        const commandsDir = this.core.config.bot.commands.path;
-        if (commandsDir && event.file.startsWith(resolve(process.cwd(), commandsDir))) {
+        if (event.file.startsWith(resolve(process.cwd(), this.options.dir))) {
             this.pendingEvents.delete(event.file);
             this.pendingEvents.set(event.file, event);
             getDevChannel()?.send('seedcord:commands-update-prompt', {
@@ -227,11 +235,12 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     /** @internal */
     public async setCommands(): Promise<DeployResult> {
-        const result: DeployResult = { global: new Collection(), guilds: new Collection() };
+        const result: DeployResult = { global: new Map(), guilds: new Map() };
+        const appId = this.options.applicationId();
 
         if (this.globalCommands.length > 0) {
-            const deployed = await this.core.bot.client.application?.commands.set(this.globalCommands);
-            if (deployed) result.global = deployed;
+            const deployed = await this.put(Routes.applicationCommands(appId), this.globalCommands);
+            result.global = indexById(deployed);
             const tag = this.globalCommands.length === 1 ? 'command' : 'commands';
             this.logger.utils.block(
                 `Deployed ${this.globalCommands.length} global ${tag}`,
@@ -241,33 +250,38 @@ export class CommandRegistry implements Initializeable, HmrAware {
         }
 
         for (const [guildId, commands] of this.guildCommands.entries()) {
-            const guild = this.core.bot.client.guilds.cache.get(guildId);
-            if (!guild) {
-                this.logger.warn(`Guild with ID ${guildId} not found, skipping command registration.`);
-                continue;
-            }
-
-            const deployed = await guild.commands.set(commands);
-            result.guilds.set(guildId, deployed);
+            const deployed = await this.put(Routes.applicationGuildCommands(appId, guildId), commands);
+            result.guilds.set(guildId, indexById(deployed));
             const tag = commands.length === 1 ? 'command' : 'commands';
             this.logger.utils.block(
-                `Deployed ${commands.length} ${tag} to ${paint.amber.bold(guild.name)}`,
+                `Deployed ${commands.length} ${tag} to ${paint.amber.bold(guildId)}`,
                 this.logger.utils.wrap(commands.map((command) => command.name)),
                 'info'
             );
         }
 
-        this.onDeployed?.(result);
+        this.options.onDeployed?.(result);
         return result;
+    }
+
+    private async put(route: `/${string}`, commands: readonly CommandBuilder[]): Promise<APIApplicationCommand[]> {
+        const body = commands.map((command) => command.toJSON());
+        // justified: the bulk-overwrite routes return the deployed command array
+        return (await this.options.rest.put(route, { body })) as APIApplicationCommand[];
+    }
+
+    /** Every registered builder, global first. A guild command in N guilds appears once per guild. @internal */
+    public allCommands(): CommandBuilder[] {
+        return [...this.globalCommands, ...this.guildCommands.values()].flat();
     }
 
     /** The deduplicated slash route keys across every global and guild command. @internal */
     public routeLeaves(): Set<string> {
-        return slashRouteLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
+        return slashRouteLeaves(this.allCommands());
     }
 
     /** The registered context-menu command names, split by kind, across every global and guild command. @internal */
     public contextMenuLeaves(): ContextMenuLeaves {
-        return contextMenuLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
+        return contextMenuLeaves(this.allCommands());
     }
 }

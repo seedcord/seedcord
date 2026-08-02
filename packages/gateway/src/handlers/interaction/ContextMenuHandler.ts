@@ -1,5 +1,6 @@
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
+import type { ContextMenuKind } from '@seedcord/core';
 import type {
     APIInteractionGuildMember,
     ApplicationCommandType,
@@ -12,8 +13,6 @@ import type {
     User,
     UserContextMenuCommandInteraction
 } from 'discord.js';
-
-type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandType.Message;
 
 // the interaction class for each kind, so this.event carries the right targetUser/targetMessage members.
 type InteractionFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User

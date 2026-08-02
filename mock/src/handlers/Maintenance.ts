@@ -1,4 +1,4 @@
-import { CommandMentions, Gated, GuildOnly, RequirePermissions, SlashHandler, SlashRoute } from '@seedcord/gateway';
+import { Commands, Gated, GuildOnly, RequirePermissions, SlashHandler, SlashRoute } from '@seedcord/gateway';
 import { PermissionFlagsBits } from 'discord.js';
 
 import { MaintenanceEmbed } from '../components/bundles/Maintenance';
@@ -19,10 +19,10 @@ export class Maintenance extends SlashHandler<'maintenance'> {
 
         await this.edit(
             `Maintenance message sent to <#${target.id}>, notified <@${notify.id}>${reason ? ` (${reason})` : ''}.\n` +
-                `- ${CommandMentions['test/confirmable/v2']}\n` +
-                `- ${CommandMentions.maintenance}\n` +
-                `- ${CommandMentions.probe}\n` +
-                `- ${CommandMentions.throw}\n`
+                `- ${Commands['test/confirmable/v2'].mention}\n` +
+                `- ${Commands.maintenance.mention}\n` +
+                `- ${Commands.probe.mention}\n` +
+                `- ${Commands.throw.mention}\n`
         );
     }
 }

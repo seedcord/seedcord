@@ -2,6 +2,7 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
+import type { ContextMenuKind } from '@seedcord/core';
 import type {
     APIInteractionDataResolvedGuildMember,
     APIMessage,
@@ -9,8 +10,6 @@ import type {
     APIUser,
     APIUserApplicationCommandInteraction
 } from 'discord-api-types/v10';
-
-type ContextMenuKind = ApplicationCommandType.User | ApplicationCommandType.Message;
 
 type InteractionFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandType.User
     ? APIUserApplicationCommandInteraction

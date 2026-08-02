@@ -6,8 +6,6 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
-import '../utils/mock-client';
-
 // justified: the loader is private on the host, and it runs discovery plus the webhook verify step
 function loaderOf(instance: Seedcord): { init(): Promise<void> } {
     return (instance as unknown as { subscribers: { init(): Promise<void> } }).subscribers;

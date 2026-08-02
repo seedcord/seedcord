@@ -1,8 +1,7 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
+import { slashRouteLeaves } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
-
-import { slashRouteLeaves } from '@bUtilities/miscellaneous/slashRouteLeaves';
 
 const flat = (name: string): SlashCommandBuilder => new SlashCommandBuilder().setName(name).setDescription('d');
 
@@ -16,8 +15,7 @@ describe('slashRouteLeaves', () => {
     });
 
     it('keys each subcommand as command/subcommand', () => {
-        // mutate in place so the fixture stays a SlashCommandBuilder, matching how the registry holds it.
-        // chaining addSubcommand would narrow the type to SlashCommandSubcommandsOnlyBuilder.
+        // mutate in place because chaining addSubcommand would narrow the fixture to SlashCommandSubcommandsOnlyBuilder
         const config = flat('config');
         config.addSubcommand((s) => s.setName('set').setDescription('d'));
         config.addSubcommand((s) => s.setName('get').setDescription('d'));

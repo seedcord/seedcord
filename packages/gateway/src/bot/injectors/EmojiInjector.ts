@@ -1,3 +1,4 @@
+import { accessorStore, clearStore, guardedAccessor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -8,7 +9,7 @@ import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 
 type SavedEmojiType = GuildEmoji | ApplicationEmoji;
 
-const emojiStorage: Record<string, SavedEmojiType> = {};
+const emojiStorage = accessorStore<SavedEmojiType>();
 
 function isEmojiTuple(v: unknown): v is readonly [string, string] {
     return Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string';
@@ -23,16 +24,14 @@ export type InjectedEmojiMap = {
 };
 
 /**
- * Global emoji mappings object
- *
- * @see {@link EmojiMap}
+ * The bot's resolved emojis, keyed by {@link EmojiMap}. Filled by {@link EmojiInjector} during startup.
+ * A read before that throws.
  */
-export const Emojis = emojiStorage as InjectedEmojiMap;
+export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
 
 /**
- * Loads and injects emojis based on bot configuration.
- *
- * For emojis injected from specific guilds, ensure that the Guilds intent is provided in client options.
+ * Loads and injects emojis based on bot configuration. A guild emoji requires the Guilds intent in the client
+ * options.
  *
  * @internal
  */
@@ -112,6 +111,6 @@ export class EmojiInjector {
     }
 
     private clearEmojis(): void {
-        for (const key of Object.keys(emojiStorage)) Reflect.deleteProperty(emojiStorage, key);
+        clearStore(emojiStorage);
     }
 }

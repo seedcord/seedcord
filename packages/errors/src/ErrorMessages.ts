@@ -41,6 +41,10 @@ const messages = {
     [SeedcordErrorCode.CoreDirectoryUnreadable]: (dir: string) => `${dir} could not be read.`,
     [SeedcordErrorCode.CorePluginReservedChannel]: (key: string) =>
         `Plugin key "${key}" is a channel the framework logs on. Pick another key.`,
+    [SeedcordErrorCode.CoreApplicationUnavailable]: () =>
+        'Commands cannot deploy before the client resolves its application. This runs after login.',
+    [SeedcordErrorCode.CoreAccessorUnresolved]: (accessor: string, key: string) =>
+        `${accessor}.${key} has no value yet. ${accessor} fills during startup, and a read at the top of a file runs before that.`,
 
     [SeedcordErrorCode.DecoratorInteractionEventFilter]: () => 'Interaction middleware cannot specify event filters.',
     [SeedcordErrorCode.DecoratorMethodNotFound]: () =>
