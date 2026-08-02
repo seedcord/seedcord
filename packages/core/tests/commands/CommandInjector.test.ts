@@ -99,6 +99,15 @@ describe('CommandInjector', () => {
         expect(commands.ping?.id).toBeUndefined();
     });
 
+    it('spaces a nested route when it falls back to plain text', () => {
+        const buckets = guildBucket('g1', [['1', 'mod']]);
+        buckets.set('g2', deployed([['2', 'mod']]));
+
+        new CommandInjector().inject({ global: new Map(), guilds: buckets }, [grouped()]);
+
+        expect(mentionOf('mod/case/close')).toBe('/mod case close');
+    });
+
     it('prefers the global id when a name exists both globally and in a guild', () => {
         const registry = [ping(), ping()];
 
