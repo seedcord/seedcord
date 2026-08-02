@@ -20,7 +20,7 @@ type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
 
 function deployed(entries: DeployedEntry[]): Map<string, APIApplicationCommand> {
     const built = new Map<string, APIApplicationCommand>();
-    // fixture: only the id, name, and type are read downstream
+    // justified: only the id, name, and type are read downstream
     for (const [id, name, type = ApplicationCommandType.ChatInput] of entries)
         built.set(id, { id, name, type } as unknown as APIApplicationCommand);
     return built;
@@ -191,7 +191,14 @@ describe('CommandInjector', () => {
     it('throws for a route name inherited from Object.prototype', () => {
         new CommandInjector().inject({ global: deployed([['1', 'ping']]), guilds: new Map() }, [ping()]);
 
-        expect(() => mentionOf('constructor')).toThrow();
+        let caught: unknown;
+        try {
+            mentionOf('constructor');
+        } catch (error) {
+            caught = error;
+        }
+
+        expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.CoreAccessorUnresolved)).toBe(true);
     });
 
     it('enumerates through the guard, so a help listing reads every resolved route', () => {

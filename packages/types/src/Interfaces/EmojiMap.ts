@@ -1,8 +1,8 @@
 /**
  * The configured emoji keys, written by `seedcord codegen` from `config.bot.emojis`. Each key maps to a tag,
- * `'application'` for a plain name and `'guild'` for a `[name, guildId]` tuple, and `Emojis.X` reads that tag
- * to type each emoji as the precise `ApplicationEmoji` or `GuildEmoji`. Do not augment it by hand, run
- * `seedcord codegen` after changing `config.bot.emojis`.
+ * `'application'` for a plain name and `'guild'` for a `[name, guildId]` tuple. Gateway reads that tag to
+ * type each emoji as the precise `ApplicationEmoji` or `GuildEmoji`. http resolves both tags to one
+ * `ResolvedEmoji`. Do not augment it by hand, run `seedcord codegen` after changing `config.bot.emojis`.
  *
  * @example
  * ```ts
