@@ -1,5 +1,6 @@
 import { DiscordAPIError } from '@discordjs/rest';
 import { Fault, Notice, Silence } from '@seedcord/core';
+import { Logger } from '@seedcord/logger';
 import { MessageFlags } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -33,7 +34,7 @@ const rest = vi.hoisted(() => {
     return { instances, FakeRest };
 });
 
-// the factory must not import project modules, vitest loads factory imports in a mock-bypass
+// the factory must not import project modules, because vitest loads factory imports in a mock-bypass
 // context that would cache the engine graph unmocked
 vi.mock('@discordjs/rest', async (importOriginal) => ({
     ...(await importOriginal<object>()),
@@ -103,6 +104,47 @@ describe('fault boundary', () => {
         await ctx.settled();
 
         expect(postedBodies()).toHaveLength(1);
+    });
+
+    it('debug-logs a Silence reason by default', async () => {
+        class Quiet extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+                throw new Silence('user dismissed');
+            }
+        }
+        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+        const { signer, handle } = await readyEngine(manifestOf('quiet', Quiet));
+        const ctx = capturingCtx();
+
+        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
+        await ctx.settled();
+
+        expect(debug).toHaveBeenCalledWith('Silence: user dismissed');
+        debug.mockRestore();
+    });
+
+    it('omits the Silence debug line when logSilences is false', async () => {
+        const config: Config = {
+            bot: { interactions: { path: null }, commands: { path: null } },
+            subscribers: { path: null },
+            errors: { logSilences: false }
+        };
+        class Quiet extends SlashHandler<never> {
+            async execute(): Promise<void> {
+                await Promise.resolve();
+                throw new Silence('user dismissed');
+            }
+        }
+        const debug = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => undefined);
+        const { signer, handle } = await readyEngine(manifestOf('quiet', Quiet), config);
+        const ctx = capturingCtx();
+
+        await handle(await signedRequest(signer, slashPayload('quiet')), ctx);
+        await ctx.settled();
+
+        expect(debug).not.toHaveBeenCalledWith('Silence: user dismissed');
+        debug.mockRestore();
     });
 
     it('sends a post-ack Notice card as a follow-up when already replied', async () => {
@@ -214,7 +256,7 @@ describe('fault boundary', () => {
         const ctx = capturingCtx();
 
         await handle(await signedRequest(signer, slashPayload('broken')), ctx);
-        // the card send dies on a dead interaction token
+        // the card send fails on a dead interaction token
         rest.instances[0]?.post.mockRejectedValueOnce(apiError(10_062));
         releaseExecute(null);
 

@@ -116,8 +116,8 @@ function causeLine(error: Error): string {
 }
 
 function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    // outside the throttle, so the uuid on the user's card always resolves to a log line
     const showStack = core.config.errors?.errorStack ?? false;
+    // outside the throttle, so the uuid on the user's card always resolves to a log line
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
@@ -171,19 +171,17 @@ function faultKey(origin: ErrorOrigin, error: Error): string {
     return `autocomplete:${name}`;
 }
 
-/** The stable route id of a repliable interaction, its slash route path, command name, or customId prefix. */
-export function interactionRoute(interaction: Repliables): string {
+function interactionRoute(interaction: Repliables): string {
     if (interaction.isChatInputCommand()) return slashRouteOf(interaction);
     if (interaction.isContextMenuCommand()) return interaction.commandName;
     if (interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {
-        // || not ??, an empty prefix (a too-short routeKey) must fall back to the full wire
+        // || so an empty prefix (a too-short routeKey) falls back to the full wire
         return prefixOf(interaction.customId) || interaction.customId;
     }
     return 'interaction';
 }
 
 function buildInteractionSource(interaction: Repliables): InteractionFaultSource {
-    // the full slash route (with subcommand) so two subcommands of one parent do not share a key
     const command = interaction.isChatInputCommand()
         ? slashRouteOf(interaction)
         : interaction.isContextMenuCommand()
