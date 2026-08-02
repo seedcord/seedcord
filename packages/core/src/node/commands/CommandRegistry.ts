@@ -18,23 +18,14 @@ import { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
 import { CommandMetadataKey } from '@src/metadataKeys';
 
 import type { CommandMeta } from '@decorators/Command';
-import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 import type { REST } from '@discordjs/rest';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ContextMenuLeaves } from '@src/commands/contextMenuLeaves';
+import type { CommandBuilder, DeployResult } from '@src/commands/types';
 import type { Initializeable } from '@src/plugin/Plugin';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;
-
-/** Either builder a registered command can produce. @internal */
-export type CommandBuilder = SlashCommandBuilder | ContextMenuCommandBuilder;
-
-/** The commands Discord returns from each scope's deploy, keyed by command id. */
-export interface DeployResult {
-    global: Map<string, APIApplicationCommand>;
-    guilds: Map<string, Map<string, APIApplicationCommand>>;
-}
 
 /** @internal */
 export interface CommandRegistryOptions {

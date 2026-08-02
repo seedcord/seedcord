@@ -1,13 +1,12 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
-import { ApplicationCommandType, Collection } from 'discord.js';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, it, expect } from 'vitest';
 
-import { CommandInjector, Commands, ContextMenus } from '@bot/injectors/CommandInjector';
+import { CommandInjector, Commands, ContextMenus } from '@src/commands/CommandInjector';
 
-import type { CommandInfo, ContextMenuInfo } from '@bot/injectors/CommandInjector';
-import type { CommandBuilder, CommandRegistry } from '@seedcord/core/node/internal';
-import type { APIApplicationCommand } from 'discord.js';
+import type { CommandInfo, ContextMenuInfo } from '@src/commands/CommandInjector';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 // justified: SlashOptionRegistry is empty in tests, so runtime values read through a plain record
 const commands = Commands as Record<string, CommandInfo>;
@@ -16,11 +15,6 @@ const mentionOf = (route: string): string => commands[route]!.mention;
 // justified: both context-menu registries are empty in tests, same as above
 const userMenus = ContextMenus.user as Record<string, ContextMenuInfo>;
 const messageMenus = ContextMenus.message as Record<string, ContextMenuInfo>;
-
-function registryOf(global: CommandBuilder[], guilds = new Collection<string, CommandBuilder[]>()): CommandRegistry {
-    // fixture: inject reads only allCommands, flattened the same way the real registry does
-    return { allCommands: () => [...global, ...guilds.values()].flat() } as unknown as CommandRegistry;
-}
 
 type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
 
@@ -69,31 +63,25 @@ function withSubcommand(): SlashCommandBuilder {
 
 describe('CommandInjector', () => {
     it('links a global command to a clickable mention', () => {
-        new CommandInjector().inject({ global: deployed([['123', 'ping']]), guilds: new Map() }, registryOf([ping()]));
+        new CommandInjector().inject({ global: deployed([['123', 'ping']]), guilds: new Map() }, [ping()]);
 
         expect(mentionOf('ping')).toBe('</ping:123>');
     });
 
     it('links a grouped leaf with the group in the middle slot', () => {
-        new CommandInjector().inject(
-            { global: deployed([['999', 'mod']]), guilds: new Map() },
-            registryOf([grouped()])
-        );
+        new CommandInjector().inject({ global: deployed([['999', 'mod']]), guilds: new Map() }, [grouped()]);
 
         expect(mentionOf('mod/case/close')).toBe('</mod case close:999>');
     });
 
     it('links a subcommand leaf to its parent id', () => {
-        new CommandInjector().inject(
-            { global: deployed([['42', 'ban']]), guilds: new Map() },
-            registryOf([withSubcommand()])
-        );
+        new CommandInjector().inject({ global: deployed([['42', 'ban']]), guilds: new Map() }, [withSubcommand()]);
 
         expect(mentionOf('ban/list')).toBe('</ban list:42>');
     });
 
     it('resolves a single-guild command against that guild id', () => {
-        const registry = registryOf([], new Collection([['g1', [ping()]]]));
+        const registry = [ping()];
 
         new CommandInjector().inject({ global: new Map(), guilds: guildBucket('g1', [['555', 'ping']]) }, registry);
 
@@ -101,7 +89,7 @@ describe('CommandInjector', () => {
     });
 
     it('falls back to plain text for a command deployed to two or more guilds', () => {
-        const registry = registryOf([], new Collection([['g1', [ping()]]]));
+        const registry = [ping()];
         const buckets = guildBucket('g1', [['1', 'ping']]);
         buckets.set('g2', deployed([['2', 'ping']]));
 
@@ -112,7 +100,7 @@ describe('CommandInjector', () => {
     });
 
     it('prefers the global id when a name exists both globally and in a guild', () => {
-        const registry = registryOf([ping()], new Collection([['g1', [ping()]]]));
+        const registry = [ping(), ping()];
 
         new CommandInjector().inject(
             { global: deployed([['100', 'ping']]), guilds: guildBucket('g1', [['200', 'ping']]) },
@@ -134,7 +122,7 @@ describe('CommandInjector', () => {
                 ]),
                 guilds: new Map()
             },
-            registryOf([slash])
+            [slash]
         );
 
         expect(mentionOf('report')).toBe('</report:1>');
@@ -142,7 +130,7 @@ describe('CommandInjector', () => {
 
     it('ignores a same-named guild context menu when resolving a guild slash command', () => {
         const slash = new SlashCommandBuilder().setName('report').setDescription('file a report');
-        const registry = registryOf([], new Collection([['g1', [slash]]]));
+        const registry = [slash];
 
         new CommandInjector().inject(
             {
@@ -161,12 +149,12 @@ describe('CommandInjector', () => {
     it('drops stale keys when re-injected after a rename', () => {
         const builders = [ping()];
         const injector = new CommandInjector();
-        injector.inject({ global: deployed([['1', 'ping']]), guilds: new Map() }, registryOf(builders));
+        injector.inject({ global: deployed([['1', 'ping']]), guilds: new Map() }, builders);
         expect(mentionOf('ping')).toBe('</ping:1>');
 
         builders.length = 0;
         builders.push(new SlashCommandBuilder().setName('pong').setDescription('Replies with Ping!'));
-        injector.inject({ global: deployed([['2', 'pong']]), guilds: new Map() }, registryOf(builders));
+        injector.inject({ global: deployed([['2', 'pong']]), guilds: new Map() }, builders);
 
         expect(mentionOf('pong')).toBe('</pong:2>');
         expect(() => mentionOf('ping')).toThrow();
@@ -186,14 +174,14 @@ describe('CommandInjector', () => {
     it('keeps a route named __proto__ as an ordinary entry', () => {
         const odd = new SlashCommandBuilder().setName('__proto__').setDescription('edge');
 
-        new CommandInjector().inject({ global: deployed([['7', '__proto__']]), guilds: new Map() }, registryOf([odd]));
+        new CommandInjector().inject({ global: deployed([['7', '__proto__']]), guilds: new Map() }, [odd]);
 
         expect(mentionOf('__proto__')).toBe('</__proto__:7>');
         expect(Object.keys(Commands)).toContain('__proto__');
     });
 
     it('throws for a route name inherited from Object.prototype', () => {
-        new CommandInjector().inject({ global: deployed([['1', 'ping']]), guilds: new Map() }, registryOf([ping()]));
+        new CommandInjector().inject({ global: deployed([['1', 'ping']]), guilds: new Map() }, [ping()]);
 
         expect(() => mentionOf('constructor')).toThrow();
     });
@@ -207,14 +195,14 @@ describe('CommandInjector', () => {
                 ]),
                 guilds: new Map()
             },
-            registryOf([ping(), withSubcommand()])
+            [ping(), withSubcommand()]
         );
 
         expect(Object.keys(Commands).sort()).toEqual(['ban/list', 'ping']);
     });
 
     it('records the id, route, and description of a top-level command', () => {
-        new CommandInjector().inject({ global: deployed([['123', 'ping']]), guilds: new Map() }, registryOf([ping()]));
+        new CommandInjector().inject({ global: deployed([['123', 'ping']]), guilds: new Map() }, [ping()]);
 
         expect(commands.ping).toEqual({
             mention: '</ping:123>',
@@ -228,7 +216,7 @@ describe('CommandInjector', () => {
         it('records a global user menu under its name', () => {
             new CommandInjector().inject(
                 { global: deployed([['9', 'View Profile', ApplicationCommandType.User]]), guilds: new Map() },
-                registryOf([userMenu()])
+                [userMenu()]
             );
 
             expect(userMenus['View Profile']).toEqual({
@@ -241,7 +229,7 @@ describe('CommandInjector', () => {
         it('records a message menu in the message bucket', () => {
             new CommandInjector().inject(
                 { global: deployed([['8', 'Report Message', ApplicationCommandType.Message]]), guilds: new Map() },
-                registryOf([messageMenu()])
+                [messageMenu()]
             );
 
             expect(messageMenus['Report Message']?.kind).toBe(ApplicationCommandType.Message);
@@ -258,7 +246,7 @@ describe('CommandInjector', () => {
                     ]),
                     guilds: new Map()
                 },
-                registryOf([userMenu('Inspect'), messageMenu('Inspect')])
+                [userMenu('Inspect'), messageMenu('Inspect')]
             );
 
             expect(userMenus.Inspect?.id).toBe('1');
@@ -266,7 +254,7 @@ describe('CommandInjector', () => {
         });
 
         it('resolves a single-guild menu against that guild id', () => {
-            const registry = registryOf([], new Collection([['g1', [userMenu()]]]));
+            const registry = [userMenu()];
 
             new CommandInjector().inject(
                 {
@@ -280,7 +268,7 @@ describe('CommandInjector', () => {
         });
 
         it('records a menu deployed to two or more guilds with no id', () => {
-            const registry = registryOf([], new Collection([['g1', [userMenu()]]]));
+            const registry = [userMenu()];
             const buckets = guildBucket('g1', [['1', 'View Profile', ApplicationCommandType.User]]);
             buckets.set('g2', deployed([['2', 'View Profile', ApplicationCommandType.User]]));
 
@@ -305,12 +293,12 @@ describe('CommandInjector', () => {
             const injector = new CommandInjector();
             injector.inject(
                 { global: deployed([['1', 'View Profile', ApplicationCommandType.User]]), guilds: new Map() },
-                registryOf([userMenu()])
+                [userMenu()]
             );
 
             injector.inject(
                 { global: deployed([['2', 'Inspect User', ApplicationCommandType.User]]), guilds: new Map() },
-                registryOf([userMenu('Inspect User')])
+                [userMenu('Inspect User')]
             );
 
             expect(userMenus['Inspect User']?.id).toBe('2');
@@ -327,7 +315,7 @@ describe('CommandInjector', () => {
                 ]),
                 guilds: new Map()
             },
-            registryOf([grouped(), withSubcommand()])
+            [grouped(), withSubcommand()]
         );
 
         expect(commands['mod/case/close']?.description).toBe('close a case');

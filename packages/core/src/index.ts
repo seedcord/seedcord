@@ -3,6 +3,14 @@ import 'reflect-metadata';
 export type * from '@registries/ContextMenuRegistry';
 export type * from '@registries/SlashOptionRegistry';
 
+export { Commands, ContextMenus } from '@src/commands/CommandInjector';
+export type {
+    CommandInfo,
+    ContextMenuInfo,
+    InjectedCommandMap,
+    InjectedContextMenuMap
+} from '@src/commands/CommandInjector';
+
 export { RegisterCommand } from '@decorators/Command';
 export { SelectMenuKind } from '@decorators/interactionRoutes';
 export {

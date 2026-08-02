@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { CommandRegistry } from '@node/commands/CommandRegistry';
 
 import type { REST } from '@discordjs/rest';
-import type { DeployResult } from '@node/commands/CommandRegistry';
+import type { DeployResult } from '@src/commands/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 const APP = 'app-1';
