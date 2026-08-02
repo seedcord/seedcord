@@ -23,6 +23,12 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     SentMessage,
     ReplySender
 > {
+    // core's base keeps event protected, and Paginator.start reads it from outside the class
+    /** @internal */
+    public getEvent(): Event {
+        return this.event;
+    }
+
     protected buildSender(event: Event, core: Core, routeId: string): ReplySender {
         const ref = { application_id: event.application_id, id: event.id, token: event.token };
         return new ReplySender(ref, core.rest, routeId, core.bus);

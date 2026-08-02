@@ -23,6 +23,10 @@ export { RepliableHandler } from '@handlers/RepliableHandler';
 // same shadowing reason, these bind the transport Core into the two subscriber bases
 export { Subscriber, WebhookLog } from '@subscribers/index';
 
+export * from '@src/pagination/index';
+// same reason, core exports its own ArraySource and CursorSource
+export { ArraySource, CursorSource } from '@src/pagination/sources';
+
 export { Gated } from '@src/gates/Gated';
 export type { InteractionGateContext } from '@src/gates/Gate';
 

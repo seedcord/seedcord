@@ -1,16 +1,18 @@
 import { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
-import { PAGE_MAX, type PageCursor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { ButtonStyle } from 'discord.js';
+import { ButtonStyle } from 'discord-api-types/v10';
 
-import type { PageView } from '@seedcord/core';
-import type { APIMessageComponentEmoji } from 'discord.js';
+import { PAGE_MAX } from '@pagination/cursor';
+
+import type { PageCursor } from '@pagination/cursor';
+import type { PageView } from '@pagination/PageView';
+import type { APIMessageComponentEmoji } from 'discord-api-types/v10';
 
 /** The five built-in nav controls. */
 export type ControlKey = 'first' | 'prev' | 'indicator' | 'next' | 'last';
 
-// the button styles with a custom_id. Link and Premium have none, so they would un-route a control.
+// Link and Premium have no custom_id, so they would un-route a control.
 type CustomIdStyle = ButtonStyle.Primary | ButtonStyle.Secondary | ButtonStyle.Success | ButtonStyle.Danger;
 
 /** Cosmetic overrides for a control button. `style` excludes Link and Premium, which would un-route it. */
@@ -20,11 +22,11 @@ export interface ControlCosmetics {
     emoji?: APIMessageComponentEmoji;
 }
 
-/** The controls passed to `render`. Each accessor returns a fresh builder stamped with its target page. */
+/** The controls passed to `render`. */
 export interface PaginatorControls {
     /**
      * A fresh `ButtonBuilder` for one control, already stamped with its target page and disabled-at-bounds
-     * state. Call only cosmetic setters on it, a `setCustomId` or `setStyle(Link)` un-routes it.
+     * state. Call only cosmetic setters on it, because a `setCustomId` or `setStyle(Link)` un-routes it.
      */
     button(key: ControlKey, cosmetics?: ControlCosmetics): ButtonBuilder;
     /**
@@ -42,8 +44,7 @@ const DEFAULT_LABEL: Record<ControlKey, string> = {
     last: 'Last'
 };
 
-// a distinct slot per control keeps two controls with the same target page from sharing an id, within
-// the cursor's SLOT_MAX (0-4).
+// a distinct slot keeps two controls on the same page from sharing an id, and 0-4 is the cursor's SLOT_MAX.
 const CONTROL_SLOT: Record<ControlKey, number> = {
     first: 0,
     prev: 1,
@@ -68,7 +69,7 @@ export class Controls implements PaginatorControls {
         const label = cosmetics?.label ?? (key === 'indicator' || !cosmetics?.emoji ? defaultLabel : undefined);
 
         const button = new ButtonBuilder()
-            // clamp to the cursor's [0, PAGE_MAX] bound, an enormous list could push last/next past it and encode throws.
+            // an enormous list could push last/next past PAGE_MAX, where encode throws.
             .setCustomId(this.cursor.encode({ page: Math.min(Math.max(0, target), PAGE_MAX), slot: CONTROL_SLOT[key] }))
             .setStyle(cosmetics?.style ?? ButtonStyle.Secondary)
             .setDisabled(disabled);

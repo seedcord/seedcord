@@ -3,10 +3,11 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { ArraySource, CursorSource } from '@pagination/sources';
 
-import type { PageContext } from '@pagination/PageContext';
-
-// the sources only forward ctx to the loader, so a minimal fake is enough (mirrors handlers.test.ts).
-const ctx = {} as unknown as PageContext;
+// the sources only forward ctx to the loader, so a fake shape is enough
+interface TestCtx {
+    readonly tag: string;
+}
+const ctx: TestCtx = { tag: 'ctx' };
 
 describe('ArraySource', () => {
     it('pages a loaded array through the pure math', async () => {
@@ -19,8 +20,8 @@ describe('ArraySource', () => {
     });
 
     it('forwards the context to the loader', async () => {
-        const seen: PageContext[] = [];
-        const source = new ArraySource((received) => {
+        const seen: TestCtx[] = [];
+        const source = new ArraySource<number, TestCtx>((received) => {
             seen.push(received);
             return [1, 2, 3];
         });
@@ -76,8 +77,8 @@ describe('CursorSource', () => {
     });
 
     it('forwards ctx, page, and perPage to the fetcher', async () => {
-        const calls: [PageContext, number, number][] = [];
-        const source = new CursorSource(
+        const calls: [TestCtx, number, number][] = [];
+        const source = new CursorSource<never, TestCtx>(
             (received, page, perPage) => {
                 calls.push([received, page, perPage]);
                 return { items: [], hasNext: false };

@@ -1,16 +1,18 @@
 import { ButtonBuilder, TextDisplayBuilder } from '@discordjs/builders';
-import { BuilderComponent } from '@seedcord/core';
-import { pageCursor } from '@seedcord/core/internal';
-import { ButtonStyle, ComponentType } from 'discord.js';
+import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
+import { BuilderComponent } from '@components/Component';
+import { CustomId } from '@customId/CustomId';
+import { pageCursor } from '@pagination/cursor';
 import { renderPage } from '@pagination/render';
 
-import type { PageView } from '@seedcord/core';
+import type { PageView } from '@pagination/PageView';
 import type { ReplyResponse } from '@seedcord/types';
-import type { APIComponentInContainer, APIContainerComponent } from 'discord.js';
+import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 
 const cursor = pageCursor('roles');
+const accessoryId = new CustomId('go').str('text');
 
 function arrayView<Item>(items: Item[], page: number, totalPages: number): PageView<Item> {
     return { items, page, perPage: 2, totalPages, hasPrev: page > 0, hasNext: page < totalPages - 1 };
@@ -41,7 +43,10 @@ class ItemSection extends BuilderComponent<'section'> {
         this.instance
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(text))
             .setButtonAccessory(
-                new ButtonBuilder().setCustomId(`go:${text}`).setLabel('Go').setStyle(ButtonStyle.Secondary)
+                new ButtonBuilder()
+                    .setCustomId(accessoryId.encode({ text }))
+                    .setLabel('Go')
+                    .setStyle(ButtonStyle.Secondary)
             );
     }
 }

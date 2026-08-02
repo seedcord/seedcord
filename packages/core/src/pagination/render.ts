@@ -1,21 +1,20 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
-import { BuilderComponent } from '@seedcord/core';
 
-import { Controls } from './controls';
+import { BuilderComponent } from '@components/Component';
+import { Controls } from '@pagination/controls';
 
-import type { ControlKey, PaginatorControls } from './controls';
 import type { ButtonBuilder, ActionRowBuilder } from '@discordjs/builders';
-import type { PageView } from '@seedcord/core';
-import type { PageCursor } from '@seedcord/core/internal';
+import type { ControlKey, PaginatorControls } from '@pagination/controls';
+import type { PageCursor } from '@pagination/cursor';
+import type { PageView } from '@pagination/PageView';
 import type { ReplyResponse, V2Component } from '@seedcord/types';
 
 /** What `renderItem` returns for one item, a text line or a section. */
 export type ItemRender<Item> = (item: Item, index: number) => string | BuilderComponent<'section'>;
 
-/** What the V2 reply can be built from. Each arm is normalized into a {@link ReplyResponse}. */
 type Renderable = string | V2Component[] | ReplyResponse;
 
-/** A full-page render override, handed the page data and the controls factory. */
+/** A full-page render override. */
 export type PageRender<Item> = (view: PageView<Item>, controls: PaginatorControls) => Renderable;
 
 // subclassed because BuilderComponent.instance is protected, so the assembly has to happen inside.
@@ -53,8 +52,8 @@ const ARRAY_KEYS: ControlKey[] = ['first', 'prev', 'indicator', 'next', 'last'];
 const CURSOR_KEYS: ControlKey[] = ['prev', 'indicator', 'next'];
 
 /**
- * Build a page's V2 reply. A `render` override builds the whole tree, otherwise the default container lists
- * the items and appends the controls (all five for a known total, prev/indicator/next for a cursor source).
+ * A `render` override builds the whole tree, otherwise the default container lists the items and appends
+ * the controls (all five for a known total, prev/indicator/next for a cursor source).
  */
 export function renderPage<Item>(
     view: PageView<Item>,

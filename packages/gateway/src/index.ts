@@ -20,6 +20,8 @@ export * from '@handlers/index';
 export { RepliableHandler } from '@handlers/RepliableHandler';
 
 export * from '@pagination/index';
+// same reason, core exports its own ArraySource and CursorSource
+export { ArraySource, CursorSource } from '@pagination/sources';
 
 export type * from '@inputs/index';
 
