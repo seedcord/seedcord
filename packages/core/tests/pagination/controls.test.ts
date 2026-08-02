@@ -1,13 +1,13 @@
-import { PAGE_MAX, pageCursor } from '@seedcord/core/internal';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
-import { ButtonStyle, ComponentType } from 'discord.js';
+import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
 import { Controls } from '@pagination/controls';
+import { PAGE_MAX, pageCursor } from '@pagination/cursor';
 
 import type { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
-import type { PageView } from '@seedcord/core';
-import type { APIButtonComponentWithCustomId } from 'discord.js';
+import type { PageView } from '@pagination/PageView';
+import type { APIButtonComponentWithCustomId } from 'discord-api-types/v10';
 
 const cursor = pageCursor('bans');
 
@@ -15,7 +15,7 @@ function arrayView(page: number, totalPages: number): PageView<number> {
     return { items: [], page, perPage: 10, totalPages, hasPrev: page > 0, hasNext: page < totalPages - 1 };
 }
 
-// ButtonBuilder.data/.toJSON() is a union, narrow to the custom-id variant to read custom_id and label.
+// toJSON() is a union and the link variant has no custom_id.
 function jsonOf(button: ButtonBuilder): APIButtonComponentWithCustomId {
     const json = button.toJSON();
     if (!('custom_id' in json)) throw new Error('control button has no custom_id');

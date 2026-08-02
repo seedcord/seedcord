@@ -5,21 +5,30 @@ import { ButtonHandler } from '@handlers/interaction/components';
 import type { PageContext } from './PageContext';
 import type { RepliableHandler } from '@handlers/RepliableHandler';
 import type { Core } from '@interfaces/Core';
+import type { SentMessage } from '@reply/ReplySender';
 import type { PaginatorConfig } from '@seedcord/core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 import type { Repliables } from '@src/handlers/interactionTypes';
-import type { ButtonInteraction, Message } from 'discord.js';
+import type { APIMessageComponentButtonInteraction, APIUser } from 'discord-api-types/v10';
 
 // `& { execute }` concretizes the abstract execute so the empty `extends Bans.Handler {}` stays concrete
 // (no TS2515) and a concrete Nav assigns with no cast.
 type PaginatorHandlerCtor<Prefix extends string> = new (
-    event: ButtonInteraction<'cached'>,
+    event: APIMessageComponentButtonInteraction,
     core: Core
 ) => ButtonHandler<[PageCursor<Prefix>]> & { execute(): Promise<void> };
 
 function contextOf(interaction: Repliables, core: Core): PageContext {
-    return { interaction, user: interaction.user, guild: interaction.guild, core };
+    // discord sends member.user in a guild and the top-level user in a dm
+    const resolved = interaction.member?.user ?? interaction.user;
+    return {
+        interaction,
+        // justified: every repliable interaction Discord delivers carries a user, the wrapper types don't say so
+        user: resolved as APIUser,
+        guildId: interaction.guild_id ?? null,
+        core
+    };
 }
 
 /**
@@ -33,8 +42,8 @@ function contextOf(interaction: Repliables, core: Core): PageContext {
  * ```ts
  * export const Bans = new Paginator({
  *     prefix: 'bans',
- *     source: new ArraySource((ctx) => ctx.guild.bans.fetch().then((b) => [...b.values()]), { perPage: 10 }),
- *     renderItem: (ban) => ban.user.tag
+ *     source: new ArraySource((ctx) => loadBans(ctx.guildId), { perPage: 10 }),
+ *     renderItem: (ban) => ban.user.username
  * });
  *
  * \@ButtonRoute(Bans.cursor)
@@ -66,7 +75,7 @@ export class Paginator<Item, const Prefix extends string> extends PaginatorBase<
      *
      * @param handler - The handler starting the paginator, normally `this`.
      */
-    async start(handler: RepliableHandler<Repliables>): Promise<Message> {
+    async start(handler: RepliableHandler<Repliables>): Promise<SentMessage> {
         const interaction = handler.getEvent();
         const response = await this.page(contextOf(interaction, handler.core), 0);
         return handler.getSender().send(response, { ephemeral: this.config.ephemeral ?? false });

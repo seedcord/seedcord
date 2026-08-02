@@ -1,17 +1,18 @@
 import type { Core } from '@interfaces/Core';
 import type { Repliables } from '@src/handlers/interactionTypes';
-import type { Guild, User } from 'discord.js';
+import type { APIUser } from 'discord-api-types/v10';
 
 /**
- * The context passed to a source loader. In a DM `guild` is `null` and `user` is still present.
+ * The context passed to a source loader. The raw payload carries a guild id with no guild object, so a
+ * loader that requires guild data fetches it through `core.rest`.
  */
 export interface PageContext {
     /** The interaction that triggered this load (a command or a nav click). */
     interaction: Repliables;
     /** The acting user, always present. */
-    user: User;
-    /** The guild, or `null` in a DM. */
-    guild: Guild | null;
+    user: APIUser;
+    /** The guild id, or `null` in a DM. */
+    guildId: string | null;
     /** The framework core. */
     core: Core;
 }

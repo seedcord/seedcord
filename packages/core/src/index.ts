@@ -60,6 +60,12 @@ export type { AutocompleteOptions } from '@inputs/AutocompleteOptions';
 
 export { paginate } from '@pagination/paginate';
 export { type PageView } from '@pagination/PageView';
+export { PaginatorBase } from '@pagination/PaginatorBase';
+export type { PaginatorConfig } from '@pagination/PaginatorBase';
+export { ArraySource, CursorSource } from '@pagination/sources';
+export type { PageSource } from '@pagination/sources';
+export type { ControlCosmetics, ControlKey, PaginatorControls } from '@pagination/controls';
+export type { ItemRender, PageRender } from '@pagination/render';
 
 export { Bus, Subscribe, Subscriber, WebhookLog, WebhookUrl } from '@subscribers/index';
 export type {
