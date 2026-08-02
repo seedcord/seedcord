@@ -35,6 +35,10 @@ export { RequireBotPermissions, RequirePermissions, RequireRole } from '@gates/c
 export type { PermissionScope, RequirePermissionsOptions, RequireRoleOptions } from '@gates/catalog/permissions';
 export type { GateNoticeOptions } from '@gates/catalog/options';
 
+export { assertPermissions } from '@src/permissions/assert';
+export type { PermissionAssertion, PermissionNoticeOverrides } from '@src/permissions/assert';
+export { mergeRoles } from '@src/permissions/mergeRoles';
+
 export { BuilderComponent, RowComponent } from '@components/Component';
 export { type RowType, type BuilderType } from '@components/builderTypes';
 
