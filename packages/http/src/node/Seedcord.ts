@@ -3,8 +3,9 @@ import { createServer } from 'node:http';
 
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { HmrManager, setBotColor } from '@seedcord/core/internal';
+import { CommandInjector, HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
+    CommandRegistry,
     CoordinatedShutdown,
     CoordinatedStartup,
     HealthCheck,
@@ -13,7 +14,8 @@ import {
     StartupPhase,
     SubscriberLoader
 } from '@seedcord/core/node/internal';
-import { validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Logger, LoggerChannelRegistry, paint } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
@@ -21,6 +23,7 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
+import { fetchApplicationId } from '@src/applicationId';
 import { buildRouteMaps } from '@src/dispatch/resolve';
 import { EmojiInjector } from '@src/emojis/EmojiInjector';
 import { buildEngine } from '@src/engine';
@@ -74,7 +77,10 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private readonly subscribers: SubscriberLoader;
 
     private readonly interactions?: InteractionDispatcher;
-    private readonly emojiInjector = new EmojiInjector(this);
+    private readonly commandRegistry?: CommandRegistry;
+    private appId?: string;
+    private appIdPromise?: Promise<string>;
+    private readonly emojiInjector = new EmojiInjector(this, () => this.applicationId());
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
@@ -95,6 +101,21 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
         if (this.config.bot.interactions.path) {
             this.interactions = new InteractionDispatcher(this.config.bot.interactions.path);
+        }
+
+        const commandsDir = this.config.bot.commands.path;
+        if (commandsDir) {
+            const injector = new CommandInjector();
+            // onDeployed only fires at deploy time, so registry is assigned by then
+            const registry: CommandRegistry = new CommandRegistry({
+                dir: commandsDir,
+                rest: this.rest,
+                applicationId: () => this.requireApplicationId(),
+                onDeployed: (result) => {
+                    injector.inject(result, registry.allCommands());
+                }
+            });
+            this.commandRegistry = registry;
         }
 
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
@@ -166,6 +187,18 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         // needs the token from Configuration, and must finish before Ready opens the server to interactions
         this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.emojiInjector.init());
 
+        const { commandRegistry } = this;
+        if (commandRegistry) {
+            // one task, because tasks within a phase run concurrently and the deploy reads the id
+            this.startup.addTask(StartupPhase.Login, 'command-deploy', async () => {
+                await commandRegistry.init();
+                this.appId = await this.applicationId();
+                await commandRegistry.setCommands();
+                interactions?.warnUnhandledRoutes(commandRegistry.routeLeaves());
+                interactions?.warnUnhandledContextMenuRoutes(commandRegistry.contextMenuLeaves());
+            });
+        }
+
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.listen());
 
         if (!Envapter.isTest) {
@@ -185,6 +218,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private registerHmrAwareModules(): void {
         this.startup.addTask(StartupPhase.Configuration, 'hmr-registration', async () => {
             if (this.interactions) this.hmrManager.register(this.interactions);
+            if (this.commandRegistry) this.hmrManager.register(this.commandRegistry);
             this.hmrManager.register(this.subscribers);
             for (const plugin of this.plugins) {
                 this.hmrManager.register(plugin);
@@ -195,6 +229,18 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     private authenticate(): void {
         this.rest.setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')));
+    }
+
+    // the promise is stored, so two concurrent Login tasks share one fetch
+    private applicationId(): Promise<string> {
+        this.appIdPromise ??= fetchApplicationId(this.rest);
+        return this.appIdPromise;
+    }
+
+    // the registry deploys on a hot reload too, after the startup task resolved this
+    private requireApplicationId(): string {
+        if (!this.appId) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
+        return this.appId;
     }
 
     private async listen(): Promise<void> {

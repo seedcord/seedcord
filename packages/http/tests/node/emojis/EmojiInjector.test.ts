@@ -100,7 +100,7 @@ describe('EmojiInjector', () => {
         const caught = await new EmojiInjector(core).init().catch((error: unknown) => error);
 
         expect(isSeedcordError(caught, 'SeedcordError', SeedcordErrorCode.ConfigEmojiUnresolved)).toBe(true);
-        expect(String(caught)).toContain('Missing Access');
+        expect(String(caught)).toContain('application id could not be resolved');
     });
 
     it('collects a guild fetch failure with its cause', async () => {

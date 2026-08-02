@@ -2,9 +2,10 @@ import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { interactionRoutesOf, InteractionMetadataKey, InteractionRoutes } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
+import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
@@ -14,6 +15,7 @@ import { EMPTY_MANIFEST } from '@src/manifest/RouteManifest';
 
 import type { HandlerConstructor } from '@handlers/constructors';
 import type { Initializeable } from '@seedcord/core';
+import type { ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { ResolvedRoute, RouteMap, RouteMaps } from '@src/dispatch/resolve';
 
@@ -89,6 +91,22 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
+    }
+
+    public warnUnhandledRoutes(commandLeaves: Iterable<string>): void {
+        this.warnMissing(commandLeaves, this.maps.slash, 'Slash route', '@SlashRoute');
+    }
+
+    public warnUnhandledContextMenuRoutes(leaves: ContextMenuLeaves): void {
+        this.warnMissing(leaves.user, this.maps.userContextMenu, 'User context menu', '@ContextMenuRoute');
+        this.warnMissing(leaves.message, this.maps.messageContextMenu, 'Message context menu', '@ContextMenuRoute');
+    }
+
+    private warnMissing(names: Iterable<string>, map: RouteMap, label: string, decorator: string): void {
+        for (const name of names) {
+            if (map.has(name)) continue;
+            this.logger.warn(`${label} ${paint.sky.bold(name)} has no registered ${chalk.bold(decorator)} handler.`);
+        }
     }
 
     private isHandler(value: unknown): value is HandlerConstructor {

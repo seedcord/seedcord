@@ -89,6 +89,7 @@
         "packages/gateway": {},
         "packages/http": {
             "ignore": [
+                "tests/node/commands/fixtures/**",
                 "tests/node/discovery/fixtures/**",
                 "tests/node/discovery/duplicates/**"
             ]
