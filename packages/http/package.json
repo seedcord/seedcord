@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/http",
     "type": "module",
-    "version": "0.1.0-next.2",
+    "version": "0.1.0-next.3",
     "description": "HTTP-interactions transport for Seedcord bots",
     "engines": {
         "node": ">=24.3"

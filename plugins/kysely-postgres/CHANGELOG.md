@@ -1,5 +1,17 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.1.0-next.1
+
+### Patch Changes
+
+- Updated dependencies [b586a14]
+- Updated dependencies [58ee649]
+- Updated dependencies [b586a14]
+- Updated dependencies [c26ec13]
+    - @seedcord/errors@0.3.0-next.7
+    - @seedcord/utils@0.8.0-next.9
+    - @seedcord/logger@0.1.0-next.4
+
 ## 0.1.0-next.0
 
 ### Minor Changes

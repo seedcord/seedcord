@@ -1,5 +1,19 @@
 # @seedcord/utils
 
+## 0.8.0-next.9
+
+### Patch Changes
+
+- b586a14: `Commands` replaces `CommandMentions`, keyed by slash route. `ContextMenus` maps each deployed context-menu command, split into `user` and `message`. Both ship from `@seedcord/core` and re-export through each transport.
+
+    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import `Emojis`, `Commands`, and `ContextMenus` directly. Reading one before startup resolves it throws.
+
+- Updated dependencies [b586a14]
+- Updated dependencies [58ee649]
+- Updated dependencies [b586a14]
+- Updated dependencies [c26ec13]
+    - @seedcord/errors@0.3.0-next.7
+
 ## 0.8.0-next.8
 
 ### Minor Changes

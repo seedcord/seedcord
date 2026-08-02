@@ -1,5 +1,20 @@
 # @seedcord/errors
 
+## 0.3.0-next.7
+
+### Minor Changes
+
+- 58ee649: **BREAKING:** the plugin `needs` option and `this.ctx` have been removed.
+
+### Patch Changes
+
+- b586a14: **BREAKING:** An unreachable guild now fails the command deploy.
+- b586a14: `Commands` replaces `CommandMentions`, keyed by slash route. `ContextMenus` maps each deployed context-menu command, split into `user` and `message`. Both ship from `@seedcord/core` and re-export through each transport.
+
+    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import `Emojis`, `Commands`, and `ContextMenus` directly. Reading one before startup resolves it throws.
+
+- c26ec13: An http bot on `runtime: 'server'` deploys the commands at `bot.commands.path` during startup and fills the `Commands` accessor, matching gateway. The application id resolves over REST, since http holds no gateway session to read it from.
+
 ## 0.3.0-next.6
 
 ### Minor Changes
