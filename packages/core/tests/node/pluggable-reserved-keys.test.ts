@@ -1,3 +1,4 @@
+import { REST } from '@discordjs/rest';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach } from 'vitest';
@@ -18,6 +19,7 @@ class Anywhere extends Plugin {
 
 class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config = {} as Config;
+    public readonly rest = new REST();
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 

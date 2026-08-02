@@ -9,10 +9,6 @@ describe('@seedcord/core/plugin entry', () => {
     });
 
     it('keeps internal helpers and the phase enums off the entry', () => {
-        const keys = Object.keys(pluginEntry);
-        expect(keys).toStrictEqual(['Plugin']);
-        for (const name of ['finalizePluginContext', 'resolvedLifecycleSpecOf', 'StartupPhase', 'ShutdownPhase']) {
-            expect(keys).not.toContain(name);
-        }
+        expect(Object.keys(pluginEntry)).toStrictEqual(['Plugin']);
     });
 });

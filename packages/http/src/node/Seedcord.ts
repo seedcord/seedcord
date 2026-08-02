@@ -31,7 +31,6 @@ import { version as packageVersion } from '../version';
 
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
-import type { PluginCapabilities } from '@seedcord/core/node/internal';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
@@ -114,11 +113,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     /** The bound server port, populated once `start()` is listening. */
     public get port(): number | undefined {
         return this.boundPort;
-    }
-
-    protected override pluginCapabilities(): PluginCapabilities {
-        const token = Envapter.get('DISCORD_BOT_TOKEN');
-        return { rest: this.rest, ...(token !== undefined && { token }) };
     }
 
     /**

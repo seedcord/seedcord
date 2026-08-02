@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 import './logger-bootstrap';
-import './plugin-capabilities';
 import './subscriptions';
 
 export * from '@bDecorators/index';
@@ -27,9 +26,8 @@ export type * from '@inputs/index';
 // these bind the transport Core into the two subscriber bases, shadowing core's unbound pair
 export { Subscriber, WebhookLog } from '@subscribers/index';
 
-// the plugin authoring surface with gateway's Core bound to it
 export { Plugin } from './plugin';
-export type { GatewayPluginOptions, PluginContext, PluginLifecycleSpec, PluginOptions } from './plugin';
+export type { GatewayPluginOptions, PluginLifecycleSpec, PluginOptions } from './plugin';
 
 export * from './Seedcord';
 

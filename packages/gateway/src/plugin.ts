@@ -11,10 +11,10 @@ export type GatewayPluginOptions = TypedOmit<PluginOptions, 'transport'> & { tra
  * Base class for a gateway plugin, binding `this.core` to the gateway {@link Core}.
  *
  * A plugin that runs on either transport extends the base from `@seedcord/core/plugin`, whose
- * `this.core` carries the shared members only.
+ * `this.core` is typed to the shared members only.
  *
- * @typeParam Opts - The transport, runtime, and capabilities the plugin declares.
+ * @typeParam Opts - The transport and runtime the plugin declares.
  */
 export abstract class Plugin<Opts extends GatewayPluginOptions = {}> extends CorePlugin<Opts, Core> {}
 
-export type { PluginContext, PluginLifecycleSpec, PluginOptions } from '@seedcord/core/plugin';
+export type { PluginLifecycleSpec, PluginOptions } from '@seedcord/core/plugin';

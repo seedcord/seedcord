@@ -1,3 +1,4 @@
+import { REST } from '@discordjs/rest';
 import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach } from 'vitest';
@@ -24,19 +25,25 @@ class EdgeScoped extends Plugin<{ runtime: 'edge' }> {
     }
 }
 
-class NeedsScoped extends Plugin<{ needs: 'rest' }> {
+class ServerScoped extends Plugin<{ runtime: 'server' }> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
-class HttpScoped extends Plugin<{ transport: 'http'; runtime: 'server'; needs: 'rest' }> {
+class Unscoped extends Plugin {
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
 
-class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server'; needs: 'rest' }> {
+class HttpScoped extends Plugin<{ transport: 'http'; runtime: 'server' }> {
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+class FullyScoped extends Plugin<{ transport: 'gateway'; runtime: 'server' }> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
@@ -69,6 +76,7 @@ class WidenedCtor extends Plugin<{ transport: 'gateway' }> {
 
 class TestHost extends Pluggable<'gateway', 'server'> {
     public readonly config = {} as Config;
+    public readonly rest = new REST();
     public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
     public readonly bus: Bus;
 
@@ -90,10 +98,10 @@ describe('attaching a plugin that declares options', () => {
     it('accepts each option axis on its own', () => {
         const host = new TestHost();
 
-        const attached = host.attach('gw', GatewayScoped).attach('needs', NeedsScoped);
+        const attached = host.attach('gw', GatewayScoped).attach('rt', ServerScoped);
 
         expect(attached.gw).toBeInstanceOf(GatewayScoped);
-        expect(attached.needs).toBeInstanceOf(NeedsScoped);
+        expect(attached.rt).toBeInstanceOf(ServerScoped);
     });
 
     it('accepts all three axes at once and keeps the concrete instance type', () => {
@@ -128,6 +136,7 @@ describe('attaching a plugin that declares options', () => {
     it('rejects every plugin on an edge host', () => {
         class EdgeHost extends Pluggable<'http', 'edge'> {
             public readonly config = {} as Config;
+            public readonly rest = new REST();
             public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
             public readonly bus: Bus;
             constructor() {
@@ -142,13 +151,14 @@ describe('attaching a plugin that declares options', () => {
         const host = new EdgeHost();
 
         // @ts-expect-error edge plugins arrive post-v1, an unscoped plugin is rejected too
-        host.attach('any', NeedsScoped);
+        host.attach('any', Unscoped);
     });
 
     it('rejects every plugin when the host runtime is not narrowed to one value', () => {
         // an http host lands here when its config type is the whole union, leaving 'edge' in BotRt
         class WideHost extends Pluggable<'http', Runtime> {
             public readonly config = {} as Config;
+            public readonly rest = new REST();
             public readonly rateLimiter: IRateLimiter = new MemoryRateLimiter();
             public readonly bus: Bus;
             constructor() {
@@ -163,7 +173,7 @@ describe('attaching a plugin that declares options', () => {
         const host = new WideHost();
 
         // @ts-expect-error a host that might be edge takes no plugins
-        host.attach('any', NeedsScoped);
+        host.attach('any', Unscoped);
     });
 
     it('rejects a constructor narrowing its core parameter past CoreBase', () => {
@@ -184,7 +194,7 @@ describe('attaching a plugin that declares options', () => {
     it('rejects a class that carries no plugin brand', () => {
         const host = new TestHost();
 
-        // every PluginLike member except the two symbol slots
+        // every PluginLike member except the symbol slot
         class Impostor {
             public logger = new Logger('Impostor');
             public init(): Promise<void> {
@@ -201,7 +211,7 @@ describe('attaching a plugin that declares options', () => {
             }
         }
 
-        // @ts-expect-error Impostor lacks the two symbol slots
+        // @ts-expect-error Impostor lacks the symbol slot
         host.attach('impostor', Impostor);
     });
 });

@@ -138,8 +138,6 @@ export enum SeedcordErrorCode {
 
     /** A plugin's constructor rejected its options through `rejectOptions`. */
     PluginOptionsRejected = 2001,
-    /** A plugin read `this.ctx` before `attach` finalized it. */
-    PluginContextBeforeInit = 2002,
 
     /** Mongoose service class is missing the `@RegisterMongooseService` decorator. */
     PluginMongooseServiceDecoratorMissing = 2101,
