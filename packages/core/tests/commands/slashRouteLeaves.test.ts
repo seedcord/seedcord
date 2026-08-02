@@ -41,7 +41,7 @@ describe('slashRouteLeaves', () => {
     });
 
     it('deduplicates the same builder appearing more than once', () => {
-        // a guild command registered for several guilds is the same builder pushed once per guild.
+        // a guild command registered for several guilds is the same builder pushed once per guild
         const ban = flat('ban');
         expect(slashRouteLeaves([ban, ban, ban])).toEqual(new Set(['ban']));
     });

@@ -163,7 +163,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             return Promise.resolve();
         });
 
-        // Login so the token from Configuration is set, and before Ready opens the server to interactions
+        // needs the token from Configuration, and must finish before Ready opens the server to interactions
         this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.emojiInjector.init());
 
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.listen());

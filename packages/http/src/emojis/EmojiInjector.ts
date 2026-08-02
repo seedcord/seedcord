@@ -8,7 +8,7 @@ import type { Core } from '@interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
 import type { APIApplication, APIEmoji, APIMessageComponentEmoji } from 'discord-api-types/v10';
 
-/** A resolved emoji. Renders as `<:name:id>` in message content and passes every component builder. */
+/** A resolved emoji. Renders as `<:name:id>` in message content, or `<a:name:id>` when animated. */
 export interface ResolvedEmoji extends APIMessageComponentEmoji {
     readonly id: string;
     readonly name: string;
@@ -16,8 +16,7 @@ export interface ResolvedEmoji extends APIMessageComponentEmoji {
     toString(): string;
 }
 
-// a class keeps toString off the own keys. setEmoji validates with a strict object strategy and
-// rejects any own enumerable key beyond the three wire fields.
+// a class keeps toString off the own keys, which setEmoji rejects past the three wire fields
 class Emoji implements ResolvedEmoji {
     constructor(
         public readonly name: string,
@@ -42,7 +41,7 @@ function byName(list: readonly APIEmoji[]): Map<string, APIEmoji> {
     return map;
 }
 
-/** The global {@link Emojis} accessor type. Each key resolves to a {@link ResolvedEmoji}. */
+/** The global {@link Emojis} accessor type. */
 export type InjectedEmojiMap = {
     [K in keyof EmojiMap]: ResolvedEmoji;
 };

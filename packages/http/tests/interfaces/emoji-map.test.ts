@@ -4,9 +4,9 @@ import { Emojis } from '@src/emojis/EmojiInjector';
 
 import type { ResolvedEmoji } from '@src/emojis/EmojiInjector';
 
-// each @ts-expect-error fails the typecheck if its guard stops being an error. vitest never runs these.
+// typecheck-only, vitest never calls typeChecks
 
-// augment EmojiMap exactly as `seedcord codegen` emits it, a string config tags 'application' and a tuple tags 'guild'
+// mirrors what `seedcord codegen` emits, where a string config tags 'application' and a tuple tags 'guild'
 declare module '@seedcord/types' {
     interface EmojiMap {
         Confirm: 'application';

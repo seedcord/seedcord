@@ -119,7 +119,6 @@ describe('CommandInjector', () => {
         expect(mentionOf('ping')).toBe('</ping:100>');
     });
 
-    // Discord scopes name uniqueness per command type, and a context-menu name may be all lowercase
     it('ignores a context menu deployed under the same name as a slash command', () => {
         const slash = new SlashCommandBuilder().setName('report').setDescription('file a report');
 
@@ -245,7 +244,6 @@ describe('CommandInjector', () => {
             expect(Object.keys(ContextMenus.user)).toHaveLength(0);
         });
 
-        // Discord allows a user and a message command to share a name, which is why the buckets are split
         it('keeps a user and a message menu of the same name apart', () => {
             new CommandInjector().inject(
                 {

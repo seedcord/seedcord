@@ -39,6 +39,22 @@ export const TYPESCRIPT_RULES: Linter.RulesRecord = {
     '@typescript-eslint/await-thenable': 'error',
     '@typescript-eslint/require-await': 'error',
     '@typescript-eslint/no-misused-promises': 'error',
+    '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        {
+            // emojis have toString that works correctly in template literals
+            allow: [
+                { name: ['Error', 'URL', 'URLSearchParams'], from: 'lib' },
+                { name: 'ResolvedEmoji', from: 'package', package: '@seedcord/http' },
+                { name: ['GuildEmoji', 'ApplicationEmoji'], from: 'package', package: 'discord.js' }
+            ],
+            allowAny: true,
+            allowBoolean: true,
+            allowNullish: true,
+            allowNumber: true,
+            allowRegExp: true
+        }
+    ],
     '@typescript-eslint/prefer-readonly': 'error',
     '@typescript-eslint/prefer-readonly-parameter-types': 'off',
     '@typescript-eslint/strict-boolean-expressions': [

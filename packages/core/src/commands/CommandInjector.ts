@@ -61,10 +61,7 @@ export interface ContextMenuInfo {
     readonly kind: ContextMenuKind;
 }
 
-/**
- * Each registered context-menu command mapped to its deployed command, split by kind because Discord allows a
- * user command and a message command to share a name.
- */
+/** Deployed context-menu commands, split by kind because Discord scopes name uniqueness per command type. */
 export interface InjectedContextMenuMap {
     readonly user: { [K in keyof UserContextMenuRegistry]: ContextMenuInfo };
     readonly message: { [K in keyof MessageContextMenuRegistry]: ContextMenuInfo };
@@ -107,10 +104,6 @@ interface DeployedIds {
 
 /**
  * Records each deployed command on {@link Commands} and {@link ContextMenus}.
- *
- * The ids come from {@link DeployResult}, which is the only place Discord reports them. Discord assigns a
- * separate id per guild, so a command deployed to two or more guilds resolves to no single id and falls back
- * to plain `/name` text with one warn. A guild command on a non-owning shard falls back the same way.
  *
  * @internal
  */
@@ -182,6 +175,7 @@ export class CommandInjector {
             for (const command of collection.values()) {
                 const key = commandKey(command.type, command.name);
                 const existing = map.get(key);
+                // Discord assigns a separate id per guild, so two ids for one name means no single mention
                 if (existing === undefined) map.set(key, command.id);
                 else if (existing !== command.id) map.set(key, MULTI_GUILD);
             }

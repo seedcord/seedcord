@@ -10,7 +10,7 @@ import type { APIEmoji } from 'discord-api-types/v10';
 
 const APP = 'app-1';
 
-// justified: both registries are empty in tests, so runtime values read through a plain record
+// justified: EmojiMap is empty in tests, so runtime values read through a plain record
 const emojis = Emojis as Record<string, ResolvedEmoji>;
 
 function apiEmoji(name: string, id: string, animated = false): APIEmoji {
