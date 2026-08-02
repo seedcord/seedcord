@@ -1,5 +1,33 @@
 # @seedcord/http
 
+## 0.1.0-next.3
+
+### Minor Changes
+
+- 58ee649: **BREAKING:** the plugin `needs` option and `this.ctx` have been removed.
+- 075a6eb: Re-export `@seedcord/types`, so the `EmojiMap` block `seedcord codegen` emits merges into it and every `Emojis` key resolves to a real type.
+- c26ec13: An http bot on `runtime: 'server'` deploys the commands at `bot.commands.path` during startup and fills the `Commands` accessor, matching gateway. The application id resolves over REST, since http holds no gateway session to read it from.
+- 075a6eb: `Emojis` resolves the configured emojis over REST during startup. Each value carries `id`, `name`, and `animated`, and renders as `<:name:id>`, or `<a:name:id>` when animated.
+- 597add8: `Paginator`, `ArraySource`, and `CursorSource` are available on `@seedcord/http`, matching gateway. A source loader on http receives `guildId` and fetches guild data through `core.rest`.
+
+    **BREAKING:** a custom `PageSource` takes the page context as a second type parameter, `PageSource<Item, PageContext>`, and `PageContext.core` is required.
+
+### Patch Changes
+
+- 40f847b: `errors.logSilences` now turns off the per-`Silence` debug line on http, matching gateway. The field was read on gateway only.
+- Updated dependencies [5ea2d74]
+- Updated dependencies [b586a14]
+- Updated dependencies [5ea2d74]
+- Updated dependencies [58ee649]
+- Updated dependencies [b586a14]
+- Updated dependencies [c26ec13]
+- Updated dependencies [597add8]
+- Updated dependencies [58ee649]
+    - @seedcord/core@0.1.0-next.8
+    - @seedcord/errors@0.3.0-next.7
+    - @seedcord/utils@0.8.0-next.9
+    - @seedcord/logger@0.1.0-next.4
+
 ## 0.1.0-next.2
 
 ### Minor Changes

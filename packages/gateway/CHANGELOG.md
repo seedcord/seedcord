@@ -1,5 +1,49 @@
 # @seedcord/gateway
 
+## 0.1.0-next.6
+
+### Minor Changes
+
+- 5ea2d74: **BREAKING:** `PermissionErrorNoticeOverrides` is now `PermissionNoticeOverrides` and comes from `@seedcord/core`.
+
+    `assertPermissions` ships on `@seedcord/core` for both transports. The caller passes the effective bitfield and a subject, and gateway's `checkPermissions` computes those from discord.js.
+
+- b586a14: **BREAKING:** An unreachable guild now fails the command deploy.
+- 5ea2d74: **BREAKING:** the `bot/utilities` fetch helpers have been removed, along with the `UserNotFound`, `UserNotInGuild`, `RoleDoesNotExist`, and `CouldNotFindChannel` notices. Call discord.js directly, `client.users.fetch(id)`, `guild.members.fetch({ user: ids })`, `guild.roles.fetch(id)`, `guild.roles.botRoleFor(user)`, and `client.channels.fetch(id)`.
+
+    `updateMemberRoles` is replaced by `mergeRoles(current, add, remove)` (exported from `@seedcord/core`), which returns the merged ids for you to use.
+
+- 58ee649: **BREAKING:** the plugin `needs` option and `this.ctx` have been removed.
+- 40f847b: **BREAKING:** `getConfirmation` takes the handler as its first argument. Pass `this` where you passed `this.event`.
+
+    The prompt now sends through the handler's own sender, so it carries the dispatch route id and publishes to the bus.
+
+- b586a14: `Commands` replaces `CommandMentions`, keyed by slash route. `ContextMenus` maps each deployed context-menu command, split into `user` and `message`. Both ship from `@seedcord/core` and re-export through each transport.
+
+    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import `Emojis`, `Commands`, and `ContextMenus` directly. Reading one before startup resolves it throws.
+
+- 597add8: `Paginator`, `ArraySource`, and `CursorSource` are available on `@seedcord/http`, matching gateway. A source loader on http receives `guildId` and fetches guild data through `core.rest`.
+
+    **BREAKING:** a custom `PageSource` takes the page context as a second type parameter, `PageSource<Item, PageContext>`, and `PageContext.core` is required.
+
+- 58ee649: `core.rest` is on `CoreBase`, so both transports expose the Discord REST client. Gateway returns the discord.js client's own, which carries no token until the Login phase.
+
+### Patch Changes
+
+- 40f847b: `ModalHandler` carries `update` and `deferUpdate` guards, matching http. A modal opened from a command reports the missing source message before the ack state, and the failed write no longer publishes `responseAttempted`.
+- Updated dependencies [5ea2d74]
+- Updated dependencies [b586a14]
+- Updated dependencies [5ea2d74]
+- Updated dependencies [58ee649]
+- Updated dependencies [b586a14]
+- Updated dependencies [c26ec13]
+- Updated dependencies [597add8]
+- Updated dependencies [58ee649]
+    - @seedcord/core@0.1.0-next.8
+    - @seedcord/errors@0.3.0-next.7
+    - @seedcord/utils@0.8.0-next.9
+    - @seedcord/logger@0.1.0-next.4
+
 ## 0.1.0-next.5
 
 ### Minor Changes
