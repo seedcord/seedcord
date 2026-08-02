@@ -4,10 +4,9 @@ import { routeLeavesOf } from '@seedcord/utils/internal';
 import type { ContextMenuCommandBuilder } from '@discordjs/builders';
 
 /**
- * Collects the route keys of every executable slash leaf across a set of command builders, deduplicated. The
- * same builder may appear more than once (a guild command is pushed once per guild), and context-menu
- * commands carry no slash route, so both collapse here. Route keys come from the same {@link routeLeavesOf}
- * that `seedcord codegen` reads, so the boot-time check compares against the generated registry's keys.
+ * Collects the route keys of every executable slash leaf across a set of command builders, deduplicated
+ * because the same builder appears once per guild. The keys come from the same {@link routeLeavesOf} that
+ * `seedcord codegen` reads, so the boot-time check compares against the generated registry's keys.
  *
  * @internal
  */

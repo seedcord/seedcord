@@ -39,10 +39,10 @@ import { RepliableHandler } from '@handlers/RepliableHandler';
 
 import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
 import type { ReplySender } from '@bot/ReplySender';
-import type { ContextMenuLeaves } from '@bUtilities/miscellaneous/contextMenuLeaves';
 import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
 import type { Core } from '@interfaces/Core';
 import type { DispatchOutcome, Initializeable } from '@seedcord/core';
+import type { ContextMenuLeaves } from '@seedcord/core/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type {

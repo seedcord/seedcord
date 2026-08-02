@@ -6,14 +6,21 @@ import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
 import { TestEnvironment } from '../utils/test-env';
 
+import type { CommandRegistry } from '@seedcord/core/node/internal';
+
 import '../utils/mock-env';
+
+// justified: commandRegistry is private on Bot, and these tests use it without a login
+function registryOf(instance: Seedcord): CommandRegistry {
+    return (instance.bot as unknown as { commandRegistry: CommandRegistry }).commandRegistry;
+}
 
 describe('CommandRegistry Integration', () => {
     let testEnv: TestEnvironment;
     let seedcord: Seedcord;
 
     beforeEach(async () => {
-        // @ts-expect-error: Accessing private method for testing
+        // @ts-expect-error reset the Seedcord singleton between tests
         Seedcord.reset();
         testEnv = new TestEnvironment('commands-test-');
         await testEnv.setup();
@@ -46,10 +53,9 @@ describe('CommandRegistry Integration', () => {
 
         seedcord = new Seedcord(config);
         expect(seedcord.version).toBe('0.0.0');
-        if (!seedcord.bot.commands) throw new Error('Commands not initialized');
-        await seedcord.bot.commands.init();
+        await registryOf(seedcord).init();
 
-        const globalCommands = seedcord.bot.commands.globalCommands;
+        const globalCommands = registryOf(seedcord).globalCommands;
         expect(globalCommands).toHaveLength(1);
         expect(globalCommands[0]?.name).toBe('ping');
     });
@@ -73,13 +79,15 @@ describe('CommandRegistry Integration', () => {
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
-        if (!seedcord.bot.commands) throw new Error('Commands not initialized');
 
         // fixture: access the private load + flag to force a mid-load throw
-        const internal = seedcord.bot.commands as unknown as { loadCommands: () => Promise<void>; loading: boolean };
+        const internal = registryOf(seedcord) as unknown as {
+            loadCommands: () => Promise<void>;
+            loading: boolean;
+        };
         vi.spyOn(internal, 'loadCommands').mockRejectedValue(new Error('load boom'));
 
-        await expect(seedcord.bot.commands.init()).rejects.toThrow('load boom');
+        await expect(registryOf(seedcord).init()).rejects.toThrow('load boom');
         expect(internal.loading).toBe(false);
     });
 
@@ -104,10 +112,9 @@ describe('CommandRegistry Integration', () => {
         const config = testConfig({ commands: testEnv.resolvePath(commandsDir) });
 
         seedcord = new Seedcord(config);
-        if (!seedcord.bot.commands) throw new Error('Commands not initialized');
-        await seedcord.bot.commands.init();
+        await registryOf(seedcord).init();
 
-        expect(seedcord.bot.commands.globalCommands[0]?.name).toBe('ping');
+        expect(registryOf(seedcord).globalCommands[0]?.name).toBe('ping');
 
         await testEnv.createFile(
             `${commandsDir}/PingCommand.ts`,
@@ -125,14 +132,14 @@ describe('CommandRegistry Integration', () => {
             `
         );
 
-        await seedcord.bot.commands.onHmr({
+        await registryOf(seedcord).onHmr({
             file: filePath,
             type: 'update'
         });
 
-        await seedcord.bot.commands.refresh();
+        await registryOf(seedcord).refresh();
 
-        expect(seedcord.bot.commands.globalCommands).toHaveLength(1);
-        expect(seedcord.bot.commands.globalCommands[0]?.name).toBe('pong');
+        expect(registryOf(seedcord).globalCommands).toHaveLength(1);
+        expect(registryOf(seedcord).globalCommands[0]?.name).toBe('pong');
     });
 });

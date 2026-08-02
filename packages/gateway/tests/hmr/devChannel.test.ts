@@ -11,8 +11,14 @@ import { TestEnvironment } from '../utils/test-env';
 import '../utils/mock-env';
 
 import type { Core } from '@interfaces/Core';
+import type { CommandRegistry } from '@seedcord/core/node/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vitest';
+
+// justified: commandRegistry is private on Bot, and these tests use it without a login
+function registryOf(instance: Seedcord): CommandRegistry {
+    return (instance.bot as unknown as { commandRegistry: CommandRegistry }).commandRegistry;
+}
 
 type FrameworkChannel = DevChannel<SeedcordFrameworkEvents, SeedcordCliEvents>;
 type SendMock = Mock<(event: string, data: unknown) => void>;
@@ -84,8 +90,7 @@ describe('dev channel routing', () => {
         await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
         const config = testConfig({ commands: testEnv.resolvePath('commands') });
         const seedcord = new Seedcord(config);
-        if (!seedcord.bot.commands) throw new Error('Commands not initialized');
-        await seedcord.bot.commands.init();
+        await registryOf(seedcord).init();
 
         expect(on).toHaveBeenCalledWith('seedcord:refresh-commands', expect.any(Function));
     });
@@ -97,10 +102,9 @@ describe('dev channel routing', () => {
         const commandFile = await testEnv.createFile('commands/Ping.ts', PING_COMMAND);
         const config = testConfig({ commands: testEnv.resolvePath('commands') });
         const seedcord = new Seedcord(config);
-        if (!seedcord.bot.commands) throw new Error('Commands not initialized');
-        await seedcord.bot.commands.init();
+        await registryOf(seedcord).init();
 
-        await seedcord.bot.commands.onHmr({ file: commandFile, type: 'update' });
+        await registryOf(seedcord).onHmr({ file: commandFile, type: 'update' });
 
         const sentEvents = send.mock.calls.map((args) => args[0]);
         expect(sentEvents).toContain('seedcord:commands-update-prompt');

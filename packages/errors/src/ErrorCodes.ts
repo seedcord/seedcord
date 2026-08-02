@@ -52,6 +52,10 @@ export enum SeedcordErrorCode {
     CoreDirectoryUnreadable = 1207,
     /** A plugin was attached under a key the framework logs on. */
     CorePluginReservedChannel = 1208,
+    /** A command deploy ran before the client resolved its application. */
+    CoreApplicationUnavailable = 1209,
+    /** A generated accessor was read before startup resolved its values. */
+    CoreAccessorUnresolved = 1210,
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,

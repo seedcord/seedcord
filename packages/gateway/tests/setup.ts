@@ -1,6 +1,5 @@
 import 'reflect-metadata';
 
-import { Collection } from 'discord.js';
 import { vi } from 'vitest';
 
 // the default reporters require these at boot
@@ -20,12 +19,13 @@ function buildMockClient(): unknown {
             id: 'mock-bot-id',
             tag: 'MockBot#1234'
         },
+        // the command deploy reads application.id and PUTs through rest
         application: {
-            id: 'mock-app-id',
-            // the deploy assigns the returned collection, so an empty one keeps the shape
-            commands: { set: vi.fn().mockResolvedValue(new Collection()) }
+            id: 'mock-app-id'
         },
-        guilds: { cache: new Collection() }
+        rest: {
+            put: vi.fn().mockResolvedValue([])
+        }
     };
 }
 

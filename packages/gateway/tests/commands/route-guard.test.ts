@@ -9,7 +9,7 @@ import { TestEnvironment } from '../utils/test-env';
 import '../utils/mock-env';
 
 interface GuardBot {
-    commands: { init(): Promise<void>; routeLeaves(): Set<string> };
+    commandRegistry: { init(): Promise<void>; routeLeaves(): Set<string> };
     interactions: {
         init(): Promise<void>;
         warnUnhandledRoutes(commandLeaves: Iterable<string>): void;
@@ -22,7 +22,7 @@ describe('Boot-time slash route exhaustiveness guard', () => {
     let seedcord: Seedcord;
 
     beforeEach(async () => {
-        // @ts-expect-error: Accessing private method for testing
+        // @ts-expect-error reset the Seedcord singleton between tests
         Seedcord.reset();
         testEnv = new TestEnvironment('route-guard-test-');
         await testEnv.setup();
@@ -73,13 +73,13 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         });
 
         seedcord = new Seedcord(config);
-        // justified: the guard and the controllers it reads are private; drive them directly without a login.
+        // justified: the guard and the controllers it reads are private, and these tests use them without a login
         const bot = seedcord.bot as unknown as GuardBot;
-        await bot.commands.init();
+        await bot.commandRegistry.init();
         await bot.interactions.init();
 
         const warnSpy = vi.spyOn(bot.interactions.logger, 'warn');
-        bot.interactions.warnUnhandledRoutes(bot.commands.routeLeaves());
+        bot.interactions.warnUnhandledRoutes(bot.commandRegistry.routeLeaves());
 
         expect(warnSpy).toHaveBeenCalledTimes(1);
         expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('config/get'));
@@ -122,13 +122,13 @@ describe('Boot-time slash route exhaustiveness guard', () => {
         });
 
         seedcord = new Seedcord(config);
-        // justified: the guard and the controllers it reads are private; drive them directly without a login.
+        // justified: the guard and the controllers it reads are private, and these tests drive them without a login
         const bot = seedcord.bot as unknown as GuardBot;
-        await bot.commands.init();
+        await bot.commandRegistry.init();
         await bot.interactions.init();
 
         const warnSpy = vi.spyOn(bot.interactions.logger, 'warn');
-        bot.interactions.warnUnhandledRoutes(bot.commands.routeLeaves());
+        bot.interactions.warnUnhandledRoutes(bot.commandRegistry.routeLeaves());
 
         expect(warnSpy).not.toHaveBeenCalled();
     });
