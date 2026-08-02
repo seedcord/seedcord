@@ -4,7 +4,7 @@
 export enum StartupPhase {
     /** Nothing connected. Plugin init runs here by default. */
     Configuration = 1,
-    /** The gateway session opens. Empty on http. */
+    /** The gateway session opens, and http runs its REST-only startup work. */
     Login,
     /** Handlers are live and interactions dispatch. */
     Ready

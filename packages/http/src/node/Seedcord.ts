@@ -22,6 +22,7 @@ import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
 import { buildRouteMaps } from '@src/dispatch/resolve';
+import { EmojiInjector } from '@src/emojis/EmojiInjector';
 import { buildEngine } from '@src/engine';
 import { EMPTY_MANIFEST } from '@src/manifest/RouteManifest';
 
@@ -73,6 +74,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private readonly subscribers: SubscriberLoader;
 
     private readonly interactions?: InteractionDispatcher;
+    private readonly emojiInjector = new EmojiInjector(this);
     private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
@@ -156,6 +158,14 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             });
         }
 
+        this.startup.addTask(StartupPhase.Configuration, 'authenticate', () => {
+            this.authenticate();
+            return Promise.resolve();
+        });
+
+        // needs the token from Configuration, and must finish before Ready opens the server to interactions
+        this.startup.addTask(StartupPhase.Login, 'emoji-injection', () => this.emojiInjector.init());
+
         this.startup.addTask(StartupPhase.Ready, 'http-server', () => this.listen());
 
         if (!Envapter.isTest) {
@@ -183,10 +193,11 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         });
     }
 
-    private async listen(): Promise<void> {
-        const token = validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'));
-        this.rest.setToken(token);
+    private authenticate(): void {
+        this.rest.setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')));
+    }
 
+    private async listen(): Promise<void> {
         const maps = this.interactions?.maps ?? buildRouteMaps(EMPTY_MANIFEST);
         const { handle, inFlight } = buildEngine(this, maps);
 

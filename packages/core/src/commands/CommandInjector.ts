@@ -1,17 +1,19 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { accessorStore, clearStore, contextMenuLeaves, guardedAccessor } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
-import { ApplicationCommandType, chatInputApplicationCommandMention } from 'discord.js';
+import { ApplicationCommandType } from 'discord-api-types/v10';
+
+import { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
+import { accessorStore, clearStore, guardedAccessor } from '@src/miscellaneous/guarded';
 
 import type {
     ContextMenuKind,
     MessageContextMenuRegistry,
-    SlashOptionRegistry,
     UserContextMenuRegistry
-} from '@seedcord/core';
-import type { CommandBuilder, CommandRegistry, DeployResult } from '@seedcord/core/node/internal';
-import type { APIApplicationCommand, Snowflake } from 'discord.js';
+} from '@registries/ContextMenuRegistry';
+import type { SlashOptionRegistry } from '@registries/SlashOptionRegistry';
+import type { CommandBuilder, DeployResult } from '@src/commands/types';
+import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
 
 const commandStorage = accessorStore<CommandInfo>();
 const userMenuStorage = accessorStore<ContextMenuInfo>();
@@ -59,10 +61,7 @@ export interface ContextMenuInfo {
     readonly kind: ContextMenuKind;
 }
 
-/**
- * Each registered context-menu command mapped to its deployed command, split by kind because Discord allows a
- * user command and a message command to share a name.
- */
+/** Deployed context-menu commands, split by kind because Discord scopes name uniqueness per command type. */
 export interface InjectedContextMenuMap {
     readonly user: { [K in keyof UserContextMenuRegistry]: ContextMenuInfo };
     readonly message: { [K in keyof MessageContextMenuRegistry]: ContextMenuInfo };
@@ -104,18 +103,14 @@ interface DeployedIds {
 }
 
 /**
- * Records each deployed slash route on {@link Commands}.
- *
- * The ids come from {@link DeployResult}, because discord.js exposes no name cache for command ids. Discord
- * assigns a separate id per guild, so a command deployed to two or more guilds resolves to no single id and
- * falls back to plain `/name` text with one warn. A guild command on a non-owning shard falls back the same way.
+ * Records each deployed command on {@link Commands} and {@link ContextMenus}.
  *
  * @internal
  */
 export class CommandInjector {
     private readonly logger = new Logger('Commands', { channel: 'bot' });
 
-    public inject(deploy: DeployResult, registry: CommandRegistry): void {
+    public inject(deploy: DeployResult, all: readonly CommandBuilder[]): void {
         this.clear();
 
         const ids: DeployedIds = {
@@ -123,7 +118,6 @@ export class CommandInjector {
             guild: this.indexGuilds(deploy.guilds),
             warned: new Set<string>()
         };
-        const all = registry.allCommands();
         let clickable = 0;
 
         for (const command of slashBuildersOf(all)) {
@@ -181,6 +175,7 @@ export class CommandInjector {
             for (const command of collection.values()) {
                 const key = commandKey(command.type, command.name);
                 const existing = map.get(key);
+                // Discord assigns a separate id per guild, so two ids for one name means no single mention
                 if (existing === undefined) map.set(key, command.id);
                 else if (existing !== command.id) map.set(key, MULTI_GUILD);
             }
@@ -202,7 +197,7 @@ export class CommandInjector {
         if (guild === undefined) return undefined;
         if (guild === MULTI_GUILD) {
             if (!ids.warned.has(key)) {
-                this.logger.warn(`${name} is deployed to multiple guilds, ${consequence}.`);
+                this.logger.warn(`${paint.sky.bold(name)} is deployed to multiple guilds, ${consequence}.`);
                 ids.warned.add(key);
             }
             return undefined;
@@ -210,12 +205,8 @@ export class CommandInjector {
         return guild;
     }
 
-    // buildSlashRoute puts the GROUP in the middle slot, matching the 4-arg (name, group, sub, id) overload order
     private toMention(route: string, id: Snowflake): string {
-        const [name, middle, sub] = route.split('/');
-        if (name && middle && sub) return chatInputApplicationCommandMention(name, middle, sub, id);
-        if (name && middle) return chatInputApplicationCommandMention(name, middle, id);
-        return chatInputApplicationCommandMention(name ?? route, id);
+        return `</${route.replaceAll('/', ' ')}:${id}>`;
     }
 
     private toPlain(route: string): string {

@@ -4,6 +4,9 @@
         "seedcord",
         "continue"
     ],
+    "ignoreDependencies": [
+        "fallow"
+    ],
     "ignoreWorkspaces": [
         "mock"
     ],

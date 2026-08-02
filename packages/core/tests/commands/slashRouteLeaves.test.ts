@@ -1,7 +1,8 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
-import { slashRouteLeaves } from '@seedcord/core/internal';
-import { ApplicationCommandType } from 'discord.js';
+import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
+
+import { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
 
 const flat = (name: string): SlashCommandBuilder => new SlashCommandBuilder().setName(name).setDescription('d');
 
@@ -40,7 +41,7 @@ describe('slashRouteLeaves', () => {
     });
 
     it('deduplicates the same builder appearing more than once', () => {
-        // a guild command registered for several guilds is the same builder pushed once per guild.
+        // a guild command registered for several guilds is the same builder pushed once per guild
         const ban = flat('ban');
         expect(slashRouteLeaves([ban, ban, ban])).toEqual(new Set(['ban']));
     });

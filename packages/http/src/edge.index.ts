@@ -10,7 +10,11 @@ export type { HttpConfig, HttpEdgeConfig, HttpServerConfig } from '@interfaces/C
 
 export type { SlashOptions } from '@inputs/SlashOptions';
 
+export { Emojis } from '@src/emojis/EmojiInjector';
+export type { InjectedEmojiMap, ResolvedEmoji } from '@src/emojis/EmojiInjector';
+
 export * from '@seedcord/core';
+export type * from '@seedcord/types';
 
 export * from './handlers';
 // two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass

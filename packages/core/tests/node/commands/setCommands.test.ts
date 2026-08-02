@@ -1,23 +1,24 @@
 import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/builders';
-import { CommandRegistry } from '@seedcord/core/node/internal';
-import { ApplicationCommandType, Routes } from 'discord.js';
+import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vitest';
 
+import { CommandRegistry } from '@node/commands/CommandRegistry';
+
 import type { REST } from '@discordjs/rest';
-import type { DeployResult } from '@seedcord/core/node/internal';
-import type { APIApplicationCommand } from 'discord.js';
+import type { DeployResult } from '@src/commands/types';
+import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 const APP = 'app-1';
 
 function deployedAs(id: string, name: string): APIApplicationCommand[] {
-    // fixture: only the id and name flow downstream into mentions
+    // justified: only the id and name flow downstream into mentions
     return [{ id, name } as APIApplicationCommand];
 }
 
 function registryWith(put: ReturnType<typeof vi.fn>, onDeployed?: (result: DeployResult) => void): CommandRegistry {
     return new CommandRegistry({
         dir: 'commands',
-        // fixture: setCommands only calls put
+        // justified: setCommands only calls put
         rest: { put } as unknown as REST,
         applicationId: () => APP,
         ...(onDeployed && { onDeployed })

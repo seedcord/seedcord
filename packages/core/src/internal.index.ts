@@ -16,11 +16,14 @@ export {
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { slowGateMonitor, type SlowGateMonitor } from '@gates/slowGate';
 export type { GateObserver } from '@gates/runGates';
-export { accessorStore, clearStore, guardedAccessor } from '@src/accessors/guarded';
+export { accessorStore, clearStore, guardedAccessor } from '@src/miscellaneous/guarded';
+export { isEmojiTuple } from '@src/miscellaneous/emojiConfig';
 
 export { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '@src/commands/contextMenuLeaves';
 export { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
+export { CommandInjector } from '@src/commands/CommandInjector';
+export type { CommandBuilder, DeployResult } from '@src/commands/types';
 
 export { pickNotice } from '@gates/catalog/options';
 export { PermissionNames } from '@gates/catalog/permissions';

@@ -1,4 +1,4 @@
-import { accessorStore, clearStore, guardedAccessor } from '@seedcord/core/internal';
+import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -10,10 +10,6 @@ import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 type SavedEmojiType = GuildEmoji | ApplicationEmoji;
 
 const emojiStorage = accessorStore<SavedEmojiType>();
-
-function isEmojiTuple(v: unknown): v is readonly [string, string] {
-    return Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string';
-}
 
 /**
  * The global {@link Emojis} accessor type. Each key resolves to its precise class, `GuildEmoji` for a `'guild'`

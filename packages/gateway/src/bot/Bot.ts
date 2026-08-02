@@ -1,3 +1,4 @@
+import { CommandInjector } from '@seedcord/core/internal';
 import { CommandRegistry, ShutdownPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
@@ -9,11 +10,8 @@ import { Envapt } from 'envapt/legacy';
 import { EventDispatcher } from '@bControllers/EventDispatcher';
 import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
 
-import { CommandInjector, Commands, ContextMenus } from './injectors/CommandInjector';
-import { EmojiInjector, Emojis } from './injectors/EmojiInjector';
+import { EmojiInjector } from './injectors/EmojiInjector';
 
-import type { InjectedCommandMap, InjectedContextMenuMap } from './injectors/CommandInjector';
-import type { InjectedEmojiMap } from './injectors/EmojiInjector';
 import type { Core } from '@interfaces/Core';
 import type { Initializeable } from '@seedcord/core';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
@@ -44,10 +42,6 @@ export class Bot implements Initializeable, HmrAware {
     private readonly emojiInjector: EmojiInjector;
     private readonly commandRegistry?: CommandRegistry;
 
-    public readonly emojis: InjectedEmojiMap = Emojis;
-    public readonly commands: InjectedCommandMap = Commands;
-    public readonly contextMenus: InjectedContextMenuMap = ContextMenus;
-
     /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         if (this.interactions) await this.interactions.onHmr(event);
@@ -76,7 +70,7 @@ export class Bot implements Initializeable, HmrAware {
                 rest: this._client.rest,
                 applicationId: () => this.applicationId(),
                 onDeployed: (result) => {
-                    injector.inject(result, registry);
+                    injector.inject(result, registry.allCommands());
                 }
             });
             this.commandRegistry = registry;
