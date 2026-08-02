@@ -16,7 +16,7 @@ export {
 export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
 export { slowGateMonitor, type SlowGateMonitor } from '@gates/slowGate';
 export type { GateObserver } from '@gates/runGates';
-export { guardedAccessor } from '@src/accessors/guarded';
+export { accessorStore, clearStore, guardedAccessor } from '@src/accessors/guarded';
 
 export { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
 export type { ContextMenuLeaves } from '@src/commands/contextMenuLeaves';

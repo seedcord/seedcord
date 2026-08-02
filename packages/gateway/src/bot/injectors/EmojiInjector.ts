@@ -1,4 +1,4 @@
-import { guardedAccessor } from '@seedcord/core/internal';
+import { accessorStore, clearStore, guardedAccessor } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
@@ -9,8 +9,7 @@ import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 
 type SavedEmojiType = GuildEmoji | ApplicationEmoji;
 
-// null-proto, on a plain object an emoji key named `__proto__` sets the store's prototype and adds no key
-const emojiStorage = Object.create(null) as Record<string, SavedEmojiType>;
+const emojiStorage = accessorStore<SavedEmojiType>();
 
 function isEmojiTuple(v: unknown): v is readonly [string, string] {
     return Array.isArray(v) && v.length === 2 && typeof v[0] === 'string' && typeof v[1] === 'string';
@@ -112,6 +111,6 @@ export class EmojiInjector {
     }
 
     private clearEmojis(): void {
-        for (const key of Object.keys(emojiStorage)) Reflect.deleteProperty(emojiStorage, key);
+        clearStore(emojiStorage);
     }
 }

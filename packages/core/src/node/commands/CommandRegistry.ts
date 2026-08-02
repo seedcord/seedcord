@@ -270,13 +270,18 @@ export class CommandRegistry implements Initializeable, HmrAware {
         return (await this.options.rest.put(route, { body })) as APIApplicationCommand[];
     }
 
+    /** Every registered builder, global first. A guild command in N guilds appears once per guild. @internal */
+    public allCommands(): CommandBuilder[] {
+        return [...this.globalCommands, ...this.guildCommands.values()].flat();
+    }
+
     /** The deduplicated slash route keys across every global and guild command. @internal */
     public routeLeaves(): Set<string> {
-        return slashRouteLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
+        return slashRouteLeaves(this.allCommands());
     }
 
     /** The registered context-menu command names, split by kind, across every global and guild command. @internal */
     public contextMenuLeaves(): ContextMenuLeaves {
-        return contextMenuLeaves([...this.globalCommands, ...this.guildCommands.values()].flat());
+        return contextMenuLeaves(this.allCommands());
     }
 }

@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { contextMenuLeaves, guardedAccessor } from '@seedcord/core/internal';
+import { accessorStore, clearStore, contextMenuLeaves, guardedAccessor } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType, chatInputApplicationCommandMention } from 'discord.js';
@@ -13,10 +13,9 @@ import type {
 import type { CommandBuilder, CommandRegistry, DeployResult } from '@seedcord/core/node/internal';
 import type { APIApplicationCommand, Snowflake } from 'discord.js';
 
-// null-proto, on a plain object a route named `__proto__` sets the store's prototype and adds no key
-const commandStorage = Object.create(null) as Record<string, CommandInfo>;
-const userMenuStorage = Object.create(null) as Record<string, ContextMenuInfo>;
-const messageMenuStorage = Object.create(null) as Record<string, ContextMenuInfo>;
+const commandStorage = accessorStore<CommandInfo>();
+const userMenuStorage = accessorStore<ContextMenuInfo>();
+const messageMenuStorage = accessorStore<ContextMenuInfo>();
 
 /** What {@link Commands} resolves to for one slash route. */
 export interface CommandInfo {
@@ -92,10 +91,6 @@ function commandKey(type: ApplicationCommandType, name: string): string {
     return `${type}:${name}`;
 }
 
-function buildersOf(registry: CommandRegistry): CommandBuilder[] {
-    return [...registry.globalCommands, ...registry.guildCommands.values()].flat();
-}
-
 function slashBuildersOf(all: readonly CommandBuilder[]): SlashCommandBuilder[] {
     const slash = all.filter((command): command is SlashCommandBuilder => command instanceof SlashCommandBuilder);
     // a guild command in N guilds is the same builder pushed once per guild
@@ -128,7 +123,7 @@ export class CommandInjector {
             guild: this.indexGuilds(deploy.guilds),
             warned: new Set<string>()
         };
-        const all = buildersOf(registry);
+        const all = registry.allCommands();
         let clickable = 0;
 
         for (const command of slashBuildersOf(all)) {
@@ -228,7 +223,6 @@ export class CommandInjector {
     }
 
     private clear(): void {
-        for (const store of [commandStorage, userMenuStorage, messageMenuStorage])
-            for (const key of Object.keys(store)) Reflect.deleteProperty(store, key);
+        for (const store of [commandStorage, userMenuStorage, messageMenuStorage]) clearStore(store);
     }
 }

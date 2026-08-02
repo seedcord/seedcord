@@ -1,11 +1,9 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { guardedAccessor } from '@src/accessors/guarded';
+import { accessorStore, clearStore, guardedAccessor } from '@src/accessors/guarded';
 
-function emptyStore(): Record<string, string> {
-    return Object.create(null) as Record<string, string>;
-}
+const emptyStore = (): Record<string, string> => accessorStore<string>();
 
 function unresolved(read: () => unknown): boolean {
     try {
@@ -49,6 +47,27 @@ describe('guardedAccessor', () => {
 
         expect(Object.keys(accessor).sort()).toEqual(['Cancel', 'Confirm']);
         expect(Object.values(accessor).sort()).toEqual(['no', 'yes']);
+    });
+
+    it('keeps a key named __proto__ as an ordinary entry', () => {
+        const store = emptyStore();
+        const accessor = guardedAccessor('Emojis', store);
+        const key = '__proto__';
+        store[key] = 'yes';
+
+        expect(accessor[key]).toBe('yes');
+        expect(Object.keys(accessor)).toContain(key);
+    });
+
+    it('clearStore empties the record the accessor wraps', () => {
+        const store = emptyStore();
+        const accessor = guardedAccessor('Emojis', store);
+        store.Confirm = 'yes';
+
+        clearStore(store);
+
+        expect(Object.keys(accessor)).toHaveLength(0);
+        expect(unresolved(() => accessor.Confirm)).toBe(true);
     });
 
     it('leaves the `in` operator untrapped, so a probe never throws', () => {

@@ -18,8 +18,8 @@ const userMenus = ContextMenus.user as Record<string, ContextMenuInfo>;
 const messageMenus = ContextMenus.message as Record<string, ContextMenuInfo>;
 
 function registryOf(global: CommandBuilder[], guilds = new Collection<string, CommandBuilder[]>()): CommandRegistry {
-    // fixture: inject reads only globalCommands and guildCommands
-    return { globalCommands: global, guildCommands: guilds } as unknown as CommandRegistry;
+    // fixture: inject reads only allCommands, flattened the same way the real registry does
+    return { allCommands: () => [...global, ...guilds.values()].flat() } as unknown as CommandRegistry;
 }
 
 type DeployedEntry = [id: string, name: string, type?: ApplicationCommandType];
