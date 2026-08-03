@@ -7,17 +7,19 @@ packages:
 embedReadme: true
 
 overrides:
-  # discord.js/rest pin undici 6.24.1; < 6.27 has a WebSocket DoS (GHSA-vxpw-j846-p89q)
+  # discord.js/rest pin undici 6.24.1
   discord.js>undici: ^6.27.0
   '@discordjs/rest>undici': ^6.27.0
+  # < 7.29 has GHSA-4cwx-7wf7-3272
+  'undici@7': ^7.29.0
   # forces one api-types copy so the djs-free reply types assign to djs
   discord-api-types: ^0.38.51
   # djs pins 3.5.3, rest needs ^3.5.5, collapse to one (same API)
   '@sapphire/snowflake': 3.5.5
 
-  brace-expansion: ^5.0.9 # < 5.0.9 has a DoS bypassing the CVE-2026-14257 mitigation (GHSA-rgw5-rvv9-x895)
-  minimatch: ^10.2.5 # brace-expansion 5 exports `expand` named, minimatch 9 default-imports it
-  'fast-uri@3': ^3.1.4
+  brace-expansion: ^5.0.9 # < 5.0.9 has GHSA-rgw5-rvv9-x895
+  minimatch: ^10.2.5 # brace-expansion 5 exports named `expand` while minimatch 9 default-imports it
+  'fast-uri@3': ^3.1.5 # < 3.1.5 has GHSA-7p8r-x3mc-p8w7
   'js-yaml@3': ^3.15.0
   'js-yaml@4': ^4.3.0
   'linkify-it@5': ^5.0.2

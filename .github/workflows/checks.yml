@@ -71,4 +71,4 @@ jobs:
 
             - name: Audit for high severity vulnerabilities
               if: github.event_name == 'push'
-              run: pnpm audit --audit-level=high
+              run: pnpm audit --prod --audit-level=high
