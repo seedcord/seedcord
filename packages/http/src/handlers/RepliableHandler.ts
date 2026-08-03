@@ -21,6 +21,7 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     Event,
     Core,
     SentMessage,
+    never,
     ReplySender
 > {
     // core's base keeps event protected, and Paginator.start reads it from outside the class

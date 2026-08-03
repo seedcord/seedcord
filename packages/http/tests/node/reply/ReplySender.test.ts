@@ -71,7 +71,7 @@ interface WebhookOptions {
     files?: { name: string; data: Buffer }[];
 }
 
-// justified: vitest types mock.calls as unknown[], the tuple cast reads the wire route and body the sender passed
+// justified: vitest types mock.calls as unknown[], so the tuple cast reads the wire route and body the sender passed
 function postCall(rest: RestMock, index = 0): { route: string; options: PostOptions } {
     const [route, options] = rest.post.mock.calls[index] as [string, PostOptions];
     return { route, options };
@@ -700,13 +700,13 @@ describe('ReplySender.showModal', () => {
 describe('ReplySender files', () => {
     it('forwards files to the REST files option and allowed_mentions into the body', async () => {
         const rest = restMock();
-        const files = [{ attachment: Buffer.from('x'), name: 'a.txt' }];
+        const files = [{ data: Buffer.from('x'), name: 'a.txt' }];
         const allowedMentions = { parse: [] as ('roles' | 'users' | 'everyone')[] };
 
         await senderFor(rest).reply({ components: reply.components, allowedMentions, files });
 
         const { options } = postCall(rest);
-        expect(options.files).toEqual([{ name: 'a.txt', data: files[0]?.attachment }]);
+        expect(options.files).toEqual([{ name: 'a.txt', data: files[0]?.data }]);
         expect(options.body.data?.allowed_mentions).toEqual(allowedMentions);
     });
 
@@ -723,7 +723,7 @@ describe('ReplySender files', () => {
 
     it('omits the attachments key when files carry no description', async () => {
         const rest = restMock();
-        const files = [{ attachment: Buffer.from('x'), name: 'a.txt' }];
+        const files = [{ data: Buffer.from('x'), name: 'a.txt' }];
 
         await senderFor(rest).reply({ components: reply.components, files });
 
@@ -733,8 +733,8 @@ describe('ReplySender files', () => {
     it('keeps attachment ids aligned when only some files carry descriptions', async () => {
         const rest = restMock();
         const files = [
-            { attachment: Buffer.from('a'), name: 'plain.txt' },
-            { attachment: Buffer.from('b'), name: 'described.txt', description: 'alt text' }
+            { data: Buffer.from('a'), name: 'plain.txt' },
+            { data: Buffer.from('b'), name: 'described.txt', description: 'alt text' }
         ];
 
         await senderFor(rest).reply({ components: reply.components, files });
@@ -747,13 +747,13 @@ describe('ReplySender files', () => {
 
     it('carries file descriptions into the attachments body entries', async () => {
         const rest = restMock();
-        const files = [{ attachment: Buffer.from('x'), name: 'report.txt', description: 'quarterly totals' }];
+        const files = [{ data: Buffer.from('x'), name: 'report.txt', description: 'quarterly totals' }];
 
         await senderFor(rest).reply({ components: reply.components, files });
 
         expect(postCall(rest).options.body.data?.attachments).toEqual([
             { id: 0, filename: 'report.txt', description: 'quarterly totals' }
         ]);
-        expect(postCall(rest).options.files).toEqual([{ name: 'report.txt', data: files[0]?.attachment }]);
+        expect(postCall(rest).options.files).toEqual([{ name: 'report.txt', data: files[0]?.data }]);
     });
 });

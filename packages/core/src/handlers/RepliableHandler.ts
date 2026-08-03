@@ -12,13 +12,15 @@ import type { DispatchContext } from '@src/dispatch/DispatchContext';
  * @typeParam Event - The repliable interaction type this handler processes
  * @typeParam TCore - The transport's Core
  * @typeParam TMessage - The transport's created-message lens
+ * @typeParam TNative - The transport's own file forms, beyond the portable `ReplyFile`
  * @typeParam TSender - The transport's reply sender
  */
 export abstract class RepliableHandler<
     Event,
     TCore extends CoreBase,
     TMessage extends { id: string },
-    TSender extends BaseReplySender<TMessage>
+    TNative,
+    TSender extends BaseReplySender<TMessage, TNative>
 > extends BaseHandler<Event, TCore> {
     protected readonly sender: TSender;
     protected readonly routeId: string;
@@ -38,7 +40,7 @@ export abstract class RepliableHandler<
     }
 
     /** Send the initial response, exactly once. */
-    protected reply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
+    protected reply(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         return this.sender.reply(response, opts);
     }
 
@@ -48,25 +50,25 @@ export abstract class RepliableHandler<
     }
 
     /** Send a new message once the interaction is acknowledged. */
-    protected followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
+    protected followUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         return this.sender.followUp(response, opts);
     }
 
     /** Rewrite the initial reply or deferred placeholder. The targeted form rewrites a message a prior send returned. */
-    protected edit(response: ReplyResponse | string): Promise<TMessage>;
-    protected edit(target: TMessage, response: ReplyResponse | string): Promise<TMessage>;
+    protected edit(response: ReplyResponse<TNative> | string): Promise<TMessage>;
+    protected edit(target: TMessage, response: ReplyResponse<TNative> | string): Promise<TMessage>;
     protected edit(
-        targetOrResponse: TMessage | ReplyResponse | string,
-        maybeResponse?: ReplyResponse | string
+        targetOrResponse: TMessage | ReplyResponse<TNative> | string,
+        maybeResponse?: ReplyResponse<TNative> | string
     ): Promise<TMessage> {
         // justified: the overloads narrow targetOrResponse to a response once maybeResponse is absent
-        if (maybeResponse === undefined) return this.sender.edit(targetOrResponse as ReplyResponse | string);
+        if (maybeResponse === undefined) return this.sender.edit(targetOrResponse as ReplyResponse<TNative> | string);
         // justified: the overloads narrow targetOrResponse to a target message once maybeResponse is defined
         return this.sender.edit(targetOrResponse as TMessage, maybeResponse);
     }
 
     /** Routes to reply, followUp, or edit based on the current ack state. */
-    protected send(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
+    protected send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         return this.sender.send(response, opts);
     }
 

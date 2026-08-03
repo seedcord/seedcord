@@ -43,11 +43,11 @@ describe('serializeReply', () => {
         const response: ReplyResponse = {
             components: [new TextDisplayBuilder().setContent('a')],
             allowedMentions: { parse: ['users'] },
-            files: [{ attachment: 'buf', name: 'f.txt' }]
+            files: [{ data: new Uint8Array([1, 2]), name: 'f.txt' }]
         };
         const result = serializeReply(response, ROUTE);
         expect(result.allowedMentions).toEqual({ parse: ['users'] });
-        expect(result.files).toEqual([{ attachment: 'buf', name: 'f.txt' }]);
+        expect(result.files).toEqual([{ data: new Uint8Array([1, 2]), name: 'f.txt' }]);
     });
 
     it('omits allowedMentions and files when the response has none', () => {

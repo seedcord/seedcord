@@ -1,6 +1,22 @@
 import { describe, expect, it } from 'vitest';
 
-import { errorReport } from '@subscribers/bases/webhookHelpers';
+import { errorReport, jsonAttachment } from '@subscribers/bases/webhookHelpers';
+
+describe('jsonAttachment', () => {
+    it('encodes the json to bytes, which is what @discordjs/rest uploads as a file', () => {
+        const file = jsonAttachment('metadata.json', 'error metadata', { userId: '1' });
+
+        expect(file.data).toBeInstanceOf(Uint8Array);
+        expect(new TextDecoder().decode(file.data)).toBe(JSON.stringify({ userId: '1' }, undefined, 2));
+    });
+
+    it('drops circular references so the encode cannot throw', () => {
+        const circular: Record<string, unknown> = { name: 'a' };
+        circular.self = circular;
+
+        expect(() => jsonAttachment('m.json', 'd', circular)).not.toThrow();
+    });
+});
 
 describe('errorReport', () => {
     it('neutralizes triple-backtick fences so the downstream code block cannot break', () => {

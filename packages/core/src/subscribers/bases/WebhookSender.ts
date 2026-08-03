@@ -3,24 +3,18 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Routes } from 'discord-api-types/v10';
 
+import type { ReplyFile } from '@seedcord/types';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 const HTTP_NOT_FOUND = 404;
 const HTTP_UNAUTHORIZED = 401;
 
-/**
- * A file attached to a webhook report.
- */
-export interface WebhookFile {
-    name: string;
-    description: string;
-    /** A `Buffer` still satisfies this, it extends `Uint8Array`. */
-    data: Uint8Array | string;
+/** A file attached to a webhook report. */
+export interface WebhookFile extends ReplyFile {
+    readonly description: string;
 }
 
-/**
- * The payload {@link WebhookSender.send} posts.
- */
+/** The payload {@link WebhookSender.send} posts. */
 export interface WebhookSendOptions {
     flags: number;
     username: string;
@@ -39,7 +33,7 @@ export class WebhookSender {
 
     constructor(url: string) {
         const match = /\/webhooks\/(\d+)\/([\w$-]+)$/.exec(url);
-        // the url is a secret, the error message never carries it
+        // the url is a secret, so the error message never carries it
         if (!match?.[1] || !match[2]) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, ['The url']);
         this.route = Routes.webhook(match[1], match[2]);
     }
@@ -64,7 +58,7 @@ export class WebhookSender {
         const { flags, username, components, files } = options;
         await this.rest.post(this.route, {
             auth: false,
-            // with_components=true makes discord accept a components-v2 payload, wait=true makes it
+            // with_components=true makes discord accept a components-v2 payload. wait=true makes it
             // return payload errors in the response
             query: new URLSearchParams({ with_components: 'true', wait: 'true' }),
             body: {

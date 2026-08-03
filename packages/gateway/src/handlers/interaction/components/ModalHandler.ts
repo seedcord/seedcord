@@ -4,8 +4,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { ComponentHandler } from './ComponentHandler';
 
 import type { SentMessage } from '@bot/ReplySender';
+import type { GatewayReplyResponse } from '@interfaces/ReplyResponse';
 import type { AnyCustomId } from '@seedcord/core/internal';
-import type { ReplyResponse } from '@seedcord/types';
 import type { CacheType, ModalSubmitInteraction } from 'discord.js';
 
 /**
@@ -40,7 +40,7 @@ export abstract class ModalHandler<
     declare readonly __component?: 'modal';
 
     /** Rewrite the message this modal was opened from. Throws when a command opened the modal. */
-    protected override update(response: ReplyResponse | string): Promise<SentMessage> {
+    protected override update(response: GatewayReplyResponse | string): Promise<SentMessage> {
         this.ensureSourceMessage('update');
         return super.update(response);
     }
