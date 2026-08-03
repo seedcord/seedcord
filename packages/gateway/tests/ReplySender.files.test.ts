@@ -99,9 +99,10 @@ describe('the discord.js file forms', () => {
     });
 
     it('passes an Attachment a message already carries through untouched', async () => {
+        // justified: Attachment's constructor is private, and typing it keeps the GatewayFile check
         const attachment = Reflect.construct(Attachment, [
             { id: '1', filename: 'a.txt', size: 4, url: 'https://cdn.discordapp.com/a.txt', proxy_url: 'x' }
-        ]) as never;
+        ]) as Attachment;
 
         expect(await replyWith([attachment])).toEqual([attachment]);
     });
