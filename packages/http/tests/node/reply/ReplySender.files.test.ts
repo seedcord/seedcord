@@ -79,6 +79,27 @@ describe('the portable file', () => {
     });
 });
 
+describe('the attachment metadata', () => {
+    it('sends a title on the attachments entry', async () => {
+        const rest = await replyWith([{ data: BYTES, name: 'note.ogg', title: 'Voice note' }]);
+
+        expect(sentAttachments(rest)).toEqual([{ id: 0, filename: 'note.ogg', title: 'Voice note' }]);
+    });
+
+    it('sends a title and alt text together', async () => {
+        const rest = await replyWith([{ data: BYTES, name: 'a.png', title: 'T', description: 'D' }]);
+
+        expect(sentAttachments(rest)).toEqual([{ id: 0, filename: 'a.png', description: 'D', title: 'T' }]);
+    });
+
+    it('sends a SPOILER_ name on both the file part and the attachments entry', async () => {
+        const rest = await replyWith([{ data: BYTES, name: 'SPOILER_secret.png', description: 'hidden' }]);
+
+        expect(sentFiles(rest)?.[0]?.name).toBe('SPOILER_secret.png');
+        expect(sentAttachments(rest)).toEqual([{ id: 0, filename: 'SPOILER_secret.png', description: 'hidden' }]);
+    });
+});
+
 describe('what the types reject', () => {
     it('rejects every form @discordjs/rest cannot upload', () => {
         const rejected: ReplyResponse[] = [

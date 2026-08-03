@@ -35,7 +35,8 @@ function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
     return {
         attachment: Buffer.from(file.data),
         name: file.name,
-        ...(file.description !== undefined && { description: file.description })
+        ...(file.description !== undefined && { description: file.description }),
+        ...(file.title !== undefined && { title: file.title })
     };
 }
 

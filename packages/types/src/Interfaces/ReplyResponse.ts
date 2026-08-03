@@ -28,10 +28,15 @@ interface ReplyAllowedMentions {
 export interface ReplyFile {
     /** The file's bytes. A node `Buffer` assigns here because it extends `Uint8Array`. */
     readonly data: Uint8Array;
-    /** The filename Discord shows, and the name an `attachment://` component reference resolves against. */
+    /**
+     * The filename Discord shows, and the name an `attachment://` component reference resolves against.
+     * Prefix it with `SPOILER_` to blur the attachment until the viewer clicks through.
+     */
     readonly name: string;
     /** Alt text shown to screen readers and on hover. */
     readonly description?: string;
+    /** A display title Discord shows in place of the filename. */
+    readonly title?: string;
 }
 
 /**

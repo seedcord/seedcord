@@ -43,6 +43,32 @@ describe('the portable file', () => {
     });
 });
 
+describe('the attachment metadata', () => {
+    it('carries a title through', async () => {
+        const files = await replyWith([{ data: BYTES, name: 'note.ogg', title: 'Voice note' }]);
+
+        expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'note.ogg', title: 'Voice note' }]);
+    });
+
+    it('carries a title and alt text together', async () => {
+        const files = await replyWith([{ data: BYTES, name: 'a.png', title: 'T', description: 'D' }]);
+
+        expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'a.png', description: 'D', title: 'T' }]);
+    });
+
+    it('omits title when the file sets none', async () => {
+        const files = await replyWith([{ data: BYTES, name: 'a.png' }]);
+
+        expect(files?.[0]).not.toHaveProperty('title');
+    });
+
+    it('sends a SPOILER_ name through', async () => {
+        const files = await replyWith([{ data: BYTES, name: 'SPOILER_secret.png' }]);
+
+        expect(files).toEqual([{ attachment: Buffer.from(BYTES), name: 'SPOILER_secret.png' }]);
+    });
+});
+
 describe('the discord.js file forms', () => {
     it('passes an AttachmentBuilder through untouched', async () => {
         const builder = new AttachmentBuilder(Buffer.from(BYTES), { name: 'seed.txt' });

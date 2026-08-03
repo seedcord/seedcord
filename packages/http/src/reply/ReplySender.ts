@@ -26,6 +26,7 @@ interface WireAttachment {
     id: number;
     filename: string;
     description?: string;
+    title?: string;
 }
 
 interface MessageBody {
@@ -42,11 +43,12 @@ function wireAllowedMentions(mentions: NonNullable<ReplyResponse['allowedMention
 
 // RawFile has no description field, so alt text goes on the wire attachments entries
 function wireAttachments(files: SerializedReply['files']): WireAttachment[] | null {
-    if (!files?.some((file) => file.description)) return null;
+    if (!files?.some((file) => file.description ?? file.title)) return null;
     return files.map((file, index) => ({
         id: index,
         filename: file.name,
-        ...(file.description && { description: file.description })
+        ...(file.description && { description: file.description }),
+        ...(file.title && { title: file.title })
     }));
 }
 
