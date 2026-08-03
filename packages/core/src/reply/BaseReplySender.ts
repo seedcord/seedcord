@@ -25,11 +25,11 @@ export interface ModalLike {
  * state and ack trace. Each transport binds `TMessage` to its created-message lens and supplies the
  * writers.
  */
-export abstract class BaseReplySender<TMessage extends { id: string }> {
+export abstract class BaseReplySender<TMessage extends { id: string }, TNative = never> {
     private state: AckState;
     // the only ids a targeted edit accepts
     private readonly sent = new Set<string>();
-    // the cause carries the first ack's stack so a double-ack names both lines
+    // the cause carries the first ack's stack so a double-ack reports both lines
     private ackedBy?: AckTrace;
 
     protected constructor(
@@ -53,7 +53,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         return await attemptWrite(this.telemetry, this.routeId, method, startedAt, write);
     }
 
-    public async reply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
+    public async reply(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('reply');
         const startedAt = performance.now();
         const created = await this.attempt('reply', startedAt, () => this.writeReply(response, opts));
@@ -85,7 +85,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
      * is the source message, editable only through a bare `update` or `edit`. A targeted `edit` or `delete`
      * of it throws the foreign-target error.
      */
-    public async update(response: ReplyResponse | string): Promise<TMessage> {
+    public async update(response: ReplyResponse<TNative> | string): Promise<TMessage> {
         this.checkLegality('update');
         const startedAt = performance.now();
         // in deferred-update the source message is @original and the ack-legality check above already passed
@@ -101,7 +101,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         return message;
     }
 
-    public async followUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
+    public async followUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         this.checkLegality('followUp');
         const startedAt = performance.now();
         const created = await this.attempt('followUp', startedAt, () => this.writeFollowUp(response, opts));
@@ -110,18 +110,18 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         return message;
     }
 
-    public edit(response: ReplyResponse | string): Promise<TMessage>;
-    public edit(target: TMessage, response: ReplyResponse | string): Promise<TMessage>;
+    public edit(response: ReplyResponse<TNative> | string): Promise<TMessage>;
+    public edit(target: TMessage, response: ReplyResponse<TNative> | string): Promise<TMessage>;
     public async edit(
-        targetOrResponse: TMessage | ReplyResponse | string,
-        maybeResponse?: ReplyResponse | string
+        targetOrResponse: TMessage | ReplyResponse<TNative> | string,
+        maybeResponse?: ReplyResponse<TNative> | string
     ): Promise<TMessage> {
         this.checkLegality('edit');
         const startedAt = performance.now();
         if (maybeResponse === undefined) {
             // justified: the overloads narrow targetOrResponse to a response once maybeResponse is absent
             const edited = await this.attempt('edit', startedAt, () =>
-                this.editOriginal(targetOrResponse as ReplyResponse | string)
+                this.editOriginal(targetOrResponse as ReplyResponse<TNative> | string)
             );
             this.report('edit', startedAt, 'sent', edited.id);
             return edited;
@@ -157,7 +157,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
     }
 
     /** Routes to the verb the current ack state permits. Every state has a route, so the illegal-ack throw is unreachable. */
-    public async send(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage> {
+    public async send(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage> {
         const target = sendTarget(this.state);
         if (target === 'reply') return await this.reply(response, opts);
         if (target === 'edit') return await this.edit(response);
@@ -182,7 +182,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         this.report('showModal', startedAt, 'sent', null);
     }
 
-    protected serialize(response: ReplyResponse | string): SerializedReply {
+    protected serialize(response: ReplyResponse<TNative> | string): SerializedReply<TNative> {
         return serializeReply(response, this.routeId);
     }
 
@@ -191,13 +191,13 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         return created;
     }
 
-    // a with_response callback always returns the created message, this guards a wire-contract gap
+    // a with_response callback always returns the created message, so this guards a wire-contract gap
     private requireMessage(created: TMessage | undefined, method: 'reply' | 'update'): TMessage {
         if (!created) throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
         return created;
     }
 
-    private async editOriginal(response: ReplyResponse | string): Promise<TMessage> {
+    private async editOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage> {
         const edited = await this.writeEditOriginal(response);
         // after a deferUpdate the source message is @original, which this interaction did not send
         if (this.state !== 'deferred-update') this.remember(edited);
@@ -213,16 +213,19 @@ export abstract class BaseReplySender<TMessage extends { id: string }> {
         this.ackedBy = new AckTrace(method);
     }
 
-    // the modal-submit backstop, gateway overrides, the base call is a no-op elsewhere
+    // gateway overrides this to reject a modal-submit source
     protected guardModalSource(): void {}
 
-    protected abstract writeReply(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage | undefined>;
+    protected abstract writeReply(
+        response: ReplyResponse<TNative> | string,
+        opts?: SendOpts
+    ): Promise<TMessage | undefined>;
     protected abstract writeDefer(opts?: DeferOpts): Promise<void>;
     protected abstract writeDeferUpdate(): Promise<void>;
-    protected abstract writeUpdate(response: ReplyResponse | string): Promise<TMessage | undefined>;
-    protected abstract writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<TMessage>;
-    protected abstract writeEditOriginal(response: ReplyResponse | string): Promise<TMessage>;
-    protected abstract writeEditTarget(targetId: string, response: ReplyResponse | string): Promise<TMessage>;
+    protected abstract writeUpdate(response: ReplyResponse<TNative> | string): Promise<TMessage | undefined>;
+    protected abstract writeFollowUp(response: ReplyResponse<TNative> | string, opts?: SendOpts): Promise<TMessage>;
+    protected abstract writeEditOriginal(response: ReplyResponse<TNative> | string): Promise<TMessage>;
+    protected abstract writeEditTarget(targetId: string, response: ReplyResponse<TNative> | string): Promise<TMessage>;
     protected abstract writeDeleteOriginal(): Promise<void>;
     protected abstract writeDeleteTarget(targetId: string): Promise<void>;
     protected abstract writeModal(data: APIModalInteractionResponseCallbackData): Promise<void>;

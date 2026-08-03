@@ -5,6 +5,7 @@ import { ReplySender } from '@bot/ReplySender';
 import type { Repliables } from './interactionTypes';
 import type { SentMessage } from '@bot/ReplySender';
 import type { Core } from '@interfaces/Core';
+import type { GatewayFile } from '@interfaces/ReplyResponse';
 
 /**
  * Shared base the repliable interaction handlers extend.
@@ -19,6 +20,7 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     Event,
     Core,
     SentMessage,
+    GatewayFile,
     ReplySender
 > {
     // this chain skips gateway BaseHandler, the only class that defines getEvent, so it re-declares here
