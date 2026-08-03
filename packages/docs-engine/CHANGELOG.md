@@ -1,10 +1,10 @@
 # @seedcord/docs-engine
 
-## 0.3.2-next.0
+## 0.3.2
 
 ### Patch Changes
 
-- 4f11816: Doc examples and docs search targets use the renamed plugin classes.
+- 789f17a: Docs search targets use the renamed plugin classes.
 
 ## 0.3.1
 

@@ -1,110 +1,26 @@
 # @seedcord/utils
 
-## 0.8.0-next.9
-
-### Patch Changes
-
-- b586a14: `Commands` replaces `CommandMentions`, keyed by slash route. `ContextMenus` maps each deployed context-menu command, split into `user` and `message`. Both ship from `@seedcord/core` and re-export through each transport.
-
-    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import `Emojis`, `Commands`, and `ContextMenus` directly. Reading one before startup resolves it throws.
-
-- Updated dependencies [b586a14]
-- Updated dependencies [58ee649]
-- Updated dependencies [b586a14]
-- Updated dependencies [c26ec13]
-    - @seedcord/errors@0.3.0-next.7
-
-## 0.8.0-next.8
+## 0.8.0
 
 ### Minor Changes
 
-- 44b6d72: **BREAKING:** `traverseDirectory` no longer takes a logger. An unreadable directory and a file that throws while importing both reject, reporting the path.
+- 789f17a: **BREAKING:** Node 24.3 or newer is required.
+- 789f17a: Add `stripAnsi` and `timestampFromSnowflake`. `formatFilePath` returns a path outside the working directory unchanged.
+- 93544a8: **BREAKING:** `traverseDirectory` and `isTsOrJsFile` moved to `@seedcord/utils/node`, and `traverseDirectory` no longer takes a logger.
 
-    An unreadable directory previously resolved to an empty list, which started a bot with none of its handlers registered.
-
-### Patch Changes
-
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [44b6d72]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [53d5cac]
-- Updated dependencies [4f11816]
-- Updated dependencies [9ff4e85]
-    - @seedcord/errors@0.3.0-next.6
-    - @seedcord/types@0.8.0-next.8
-
-## 0.8.0-next.7
+    **BREAKING:** an unreadable directory and a file that throws while importing both reject. An unreadable directory used to resolve empty, which started a bot with none of its handlers registered.
 
 ### Patch Changes
 
-- Updated dependencies [25b58be]
-    - @seedcord/types@0.8.0-next.7
-
-## 0.8.0-next.6
-
-### Minor Changes
-
-- c959e1a: Add `stripAnsi`, removing ANSI escapes from a string.
-- 5ec46ca: New `timestampFromSnowflake(snowflake)` returns the epoch milliseconds encoded in a Discord snowflake.
-
-### Patch Changes
-
-- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
-- Updated dependencies [b03c8cd]
-- Updated dependencies [c959e1a]
-- Updated dependencies [137e641]
-    - @seedcord/types@0.8.0-next.6
-
-## 0.8.0-next.5
-
-### Minor Changes
-
-- 93544a8: **BREAKING:** `traverseDirectory` and `isTsOrJsFile` moved to the new `@seedcord/utils/node` subpath. `formatFilePath` no longer reads `node:path`, and a path outside the working directory is returned unchanged.
-
-### Patch Changes
-
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [93544a8]
-    - @seedcord/types@0.8.0-next.5
-
-## 0.8.0-next.4
-
-### Patch Changes
-
-- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
-- Updated dependencies [d1cb181]
-- Updated dependencies [e60fcf7]
-    - @seedcord/types@0.8.0-next.4
-
-## 0.8.0-next.3
-
-### Patch Changes
-
-- Updated dependencies [7174db3]
-- Updated dependencies [7174db3]
-    - @seedcord/types@0.8.0-next.3
-
-## 0.8.0-next.2
-
-### Patch Changes
-
-- Updated dependencies [993f609]
-    - @seedcord/types@0.8.0-next.2
-
-## 0.8.0-next.1
-
-### Minor Changes
-
-- c046193: **BREAKING:** require Node 24. `engines.node` moves to `>=24` so the framework can use Node 24 APIs like `Error.isError` and `RegExp.escape`. Upgrade your runtime to Node 24 or newer.
-
-### Patch Changes
-
-- c046193: Modernize internals via the curated eslint-plugin-unicorn rules (modern array, string, and number APIs, and `Error.isError` in error checks). Behavior-preserving, no public API change.
-- Updated dependencies [d8b91f5]
-- Updated dependencies [c046193]
-    - @seedcord/types@0.8.0-next.1
+- 789f17a: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+    - @seedcord/types@0.8.0
+    - @seedcord/errors@0.3.0
 
 ## 0.7.1-next.0
 

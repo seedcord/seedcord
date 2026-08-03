@@ -1,290 +1,95 @@
 # @seedcord/gateway
 
-## 0.1.0-next.6
+## 0.1.0
 
 ### Minor Changes
 
-- 5ea2d74: **BREAKING:** `PermissionErrorNoticeOverrides` is now `PermissionNoticeOverrides` and comes from `@seedcord/core`.
+- 789f17a: `Commands` and `ContextMenus` join `Emojis` as module-level accessors filled during startup. `Commands` is keyed by slash route and `ContextMenus` splits into `user` and `message`.
 
-    `assertPermissions` ships on `@seedcord/core` for both transports. The caller passes the effective bitfield and a subject, and gateway's `checkPermissions` computes those from discord.js.
+    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import the accessors directly. Reading a key before startup resolves it will throw.
 
-- b586a14: **BREAKING:** An unreachable guild now fails the command deploy.
-- 5ea2d74: **BREAKING:** the `bot/utilities` fetch helpers have been removed, along with the `UserNotFound`, `UserNotInGuild`, `RoleDoesNotExist`, and `CouldNotFindChannel` notices. Call discord.js directly, `client.users.fetch(id)`, `guild.members.fetch({ user: ids })`, `guild.roles.fetch(id)`, `guild.roles.botRoleFor(user)`, and `client.channels.fetch(id)`.
+- 789f17a: **BREAKING:** the component builders are built on `@discordjs/builders`. Import any builder you nest inside a seedcord component from there too, because the copy discord.js re-exports is a separate class that breaks `instanceof`.
 
-    `updateMemberRoles` is replaced by `mergeRoles(current, add, remove)` (exported from `@seedcord/core`), which returns the merged ids for you to use.
+    **BREAKING:** `ControlCosmetics.emoji` takes an `APIMessageComponentEmoji` such as `{ name: '👍' }`. A bare string no longer type-checks.
 
-- 58ee649: **BREAKING:** the plugin `needs` option and `this.ctx` have been removed.
-- 40f847b: **BREAKING:** `getConfirmation` takes the handler as its first argument. Pass `this` where you passed `this.event`.
+- 789f17a: **BREAKING:** `core.bot` no longer emits events. The four keys moved to `core.bus` as `unhandledInteractionError`, `unhandledEventError`, `anyEvent`, and `anyInteraction`. Register them with `core.bus.on(...)` or a `@Subscribe` subscriber.
 
-    The prompt now sends through the handler's own sender, so it carries the dispatch route id and publishes to the bus.
+    `interactionDispatched` and `responseAttempted` are new, and both carry `interactionId` so a subscriber can join them to calculate durations such as network time. `publish` rejects the framework's own keys.
 
-- b586a14: `Commands` replaces `CommandMentions`, keyed by slash route. `ContextMenus` maps each deployed context-menu command, split into `user` and `message`. Both ship from `@seedcord/core` and re-export through each transport.
+    **BREAKING:** `AllSubscriptions` is no longer exported. Type a payload with `SubscriptionData<K>` if needed.
 
-    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import `Emojis`, `Commands`, and `ContextMenus` directly. Reading one before startup resolves it throws.
+- 789f17a: **BREAKING:** `RequirePermissions`, `RequireBotPermissions`, and `RequireRole` check the payload's effective channel permissions by default. Pass `{ in: 'guild' }` for the previous base-set behavior. They fit modal and event handlers now.
 
-- 597add8: `Paginator`, `ArraySource`, and `CursorSource` are available on `@seedcord/http`, matching gateway. A source loader on http receives `guildId` and fetches guild data through `core.rest`.
+    **BREAKING:** `GateContextBase` is scalar (`userId`, `guildId`, `channelId`, `memberRoleIds`, `memberPermissions`, `appPermissions`, `routeId`). A gate that read `ctx.user`, `ctx.guild`, or `ctx.member` reads the id scalars or annotates a gateway arm.
 
-    **BREAKING:** a custom `PageSource` takes the page context as a second type parameter, `PageSource<Item, PageContext>`, and `PageContext.core` is required.
+    `Cooldown` keys its window by route, so a durable store keeps it across restarts.
 
-- 58ee649: `core.rest` is on `CoreBase`, so both transports expose the Discord REST client. Gateway returns the discord.js client's own, which carries no token until the Login phase.
+- 789f17a: **BREAKING:** the lifecycle phases are renamed and trimmed. `StartupPhase` is `Configuration`, `Login`, `Ready`. `ShutdownPhase` is `Unbind`, `Drain`, `Disconnect`, `Logout`.
 
-### Patch Changes
+    **BREAKING:** the coordinators no longer emit events, and nothing replaces them. A task registered with `addTask` runs where the matching event fired. Gateway drains in-flight dispatch before the client disconnects.
 
-- 40f847b: `ModalHandler` carries `update` and `deferUpdate` guards, matching http. A modal opened from a command reports the missing source message before the ack state, and the failed write no longer publishes `responseAttempted`.
-- Updated dependencies [5ea2d74]
-- Updated dependencies [b586a14]
-- Updated dependencies [5ea2d74]
-- Updated dependencies [58ee649]
-- Updated dependencies [b586a14]
-- Updated dependencies [c26ec13]
-- Updated dependencies [597add8]
-- Updated dependencies [58ee649]
-    - @seedcord/core@0.1.0-next.8
-    - @seedcord/errors@0.3.0-next.7
-    - @seedcord/utils@0.8.0-next.9
-    - @seedcord/logger@0.1.0-next.4
+    **BREAKING:** `Core` no longer extends `SeedcordInstance`, so `this.core.version`, `username`, `augmentTarget`, and `start()` are gone from handlers. Read them off the instance you constructed.
 
-## 0.1.0-next.5
+- 789f17a: **BREAKING:** the gateway framework moved from `seedcord` to `@seedcord/gateway`. Its surface changed substantially in this release, so read the entries below before upgrading.
+- 789f17a: Each transport exports a `Plugin` base bound to its own `Core`, so a plugin reads `this.core.bot` on gateway with no `Core` import. A plugin serving either transport extends the base from `@seedcord/core/plugin`.
 
-### Minor Changes
+    **BREAKING:** `attach(key, Plugin, ...args)` takes no `startupPhase`, plugin init runs during startup. It rejects a plugin whose declared `transport` or `runtime` the host does not run, and a key matching a framework log channel.
 
-- 9dba6ea: **BREAKING:** `core.bot` no longer emits events, and `Bot` no longer extends the event emitter. The four keys move to the bus under new names. `error:unhandled:interaction` becomes `unhandledInteractionError`, `error:unhandled:event` becomes `unhandledEventError`, `any:event` becomes `anyEvent`, and `any:interaction` becomes `anyInteraction`. Register them with `core.bus.on(...)` or a `@Subscribe` subscriber class.
+    **BREAKING:** a plugin constructor takes `CoreBase` as its first parameter, `stop()` is now `dispose()`, and `this.logger` comes from the base.
 
-    **BREAKING:** `Paginator.start(handler)` takes the handler, normally `this`, in place of the interaction and core. It sends through that handler's sender, so the page write reports the same `routeId` the dispatch did.
+- 789f17a: **BREAKING:** the `bot/utilities` fetch helpers are removed with their four notices. Call discord.js directly: `client.users.fetch(id)`, `guild.members.fetch({ user: ids })`, `guild.roles.fetch(id)`, `guild.roles.botRoleFor(user)`, and `client.channels.fetch(id)`. `updateMemberRoles` is replaced by `mergeRoles(current, add, remove)`.
 
-    A write from the fault boundary reports the dispatcher's route id. A middleware or constructor throw leaves no handler sender, and the boundary's own sender previously reported an id with no interaction kind on it, so `responseAttempted` and `interactionDispatched` disagreed for one dispatch.
+    **BREAKING:** `HmrModuleHandler` moved to `@seedcord/core/hmr` and no longer takes a `name` option. A failed hot reload restores the file's last-good version, which `hmr.rollback: false` turns off in the config file.
 
-    A component or modal whose customId carries no route prefix now reaches the unhandled default and gets a reply, matching http. It previously logged a warning and left the interaction with no reply.
+    **BREAKING:** `@seedcord/kit` is removed, its exports come from `@seedcord/core`.
 
-    A fault during autocomplete now sends empty choices, which clears the client's loading spinner.
+- 789f17a: Handlers reply through members on the base, `this.reply`, `defer`, `followUp`, `edit`, `delete`, and `send`, with `update` and `deferUpdate` on component kinds and `showModal` on non-modal kinds. Autocomplete handlers define `this.respond(choices)`.
 
-    A handler that throws a non-Error value now gets the generic fault card and an `unknownException` report, where it previously escaped the boundary with no reply. The value is wrapped in an `Error` with `String(value)` as the message and the original as `cause`.
+    **BREAKING:** `ReplySender` is no longer exported. An unmatched interaction now gets a reply from an unhandled default, and a failed `getConfirmation` or `Paginator.start` send throws into the fault boundary.
 
-    A fault log line now writes on every occurrence. The 60s throttle covers the bus publish alone, so the uuid on a user's error card always resolves to a log line.
+- 789f17a: **BREAKING:** a `WebhookLog` subclass declares its url's env var with `@WebhookUrl` and implements `report()` returning `{ username?, components, files? }`. The abstract `webhook` field is removed.
 
-- 9ff4e85: **BREAKING:** the subscriber surface moves from `@seedcord/gateway` to `@seedcord/core`, and both transports re-export it. `Subscriber` and `WebhookLog` now bind their transport's `Core`, so a bot author writes the same one type argument as before.
+    An unset url disables that reporter with a boot warning. A malformed one throws at boot, and a webhook Discord does not recognise stops the boot.
 
-    Each bot instance keeps its own fault-throttle window, so two bots in one process stop suppressing each other's reports.
+    **BREAKING:** the `unknownException` payload carries plain `guild` and `user` objects. Fetch anything else through the client.
 
-    `core.bus` is available on both transports. Subscribers on one key run concurrently with no ordering guarantee. A webhook attachment carries `Uint8Array | string`, which a `Buffer` still satisfies.
-
-- 44b6d72: **BREAKING:** `Core` no longer extends `SeedcordInstance`, so `this.core.version`, `this.core.username`, `this.core.augmentTarget`, and `this.core.start()` are gone from handlers. The host class still carries all four.
-
-    Gateway's `Core` narrows `shutdown` and `startup` to `addTask`. Read the rest off the instance you constructed, whose `shutdown` and `startup` are now public.
-
-    The HTTP `Core` carries neither coordinator, matching the edge runtime that has no lifecycle.
-
-- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
-- 479ed72: **BREAKING:** `PluginOptions.transport` and `.runtime` take `'any'` in place of `'both'`. `'any'` is the default for both axes, so a plugin that declares neither is unaffected.
-
-    **BREAKING:** `attach` now rejects a plugin whose declared `transport` or `runtime` the host does not run, and an edge host rejects every plugin. The error message contains the plugin's declared value and the bot's.
-
-    A plugin declaring any of `transport`, `runtime`, or `needs` can now be attached. Before this, `attach` accepted only plugins that declared no options.
-
-    `new Seedcord(config)` on http reads its runtime from the config it is constructed with. A config typed as the whole `HttpConfig` union leaves the host on both runtimes and it accepts no plugins, so narrow the config to `HttpServerConfig` to attach.
-
-- 464438f: Both transports now export a `Plugin` base bound to their own `Core`, so a plugin reads `this.core.bot` on gateway and `this.core.rest` on http with no `Core` import. A plugin that runs on either transport keeps extending the base from `@seedcord/core/plugin`, whose `this.core` carries the shared members.
-
-    **BREAKING:** a plugin constructor takes `CoreBase` as its first parameter. Naming a transport `Core` there is a compile error at `attach`. Read the transport type off `this.core`.
-
-    Every attach gate reports as a sentence naming both values, for example `this plugin declares transport 'http' and this bot runs 'gateway'`.
-
-    **BREAKING:** a transport the imported base does not serve is a compile error on the type argument, so `Plugin<{ transport: 'http' }>` from `@seedcord/gateway` is rejected where it is declared.
-
-    **BREAKING:** `Mongo` and `KyselyPg` declare `transport: 'gateway'` and no longer expose a public `core`.
+- 789f17a: **BREAKING:** Node 24.3 or newer is required.
 
 ### Patch Changes
 
-- bce91fc: A throwing `core.bus.on()` listener no longer escapes `publish` or skips the listeners after it, and each listener error is caught and logged. The same guard covers the `error:unhandled:interaction` and `error:unhandled:event` emits, where a throwing listener became an unhandled rejection.
+- 789f17a: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- 701b669: Require envapt `^8.1.0`. An older pin in your own bot installs a second copy whose `Envapter` state splits from the framework's.
+- 789f17a: Duplicate interaction routes and same-named middleware classes now throw at registration, where the later one used to overwrite the earlier silently.
 
-    A listener that threw during a fault report also left the duplicate-fault throttle unstamped, so every repeat of that fault reported again.
+    A `once` event handler no longer runs twice when its event fires concurrently. A throwing `core.bus.on()` listener no longer escapes `publish` or skips the listeners after it. Editing a subscriber file hot-reloads it in dev.
 
-- 9ff4e85: `EventFrequency` moves to `@seedcord/types`, beside the other shared config types.
-- 4f11816: Doc examples and docs search targets use the renamed plugin classes.
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [44b6d72]
-- Updated dependencies [9dba6ea]
-- Updated dependencies [44b6d72]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [53d5cac]
-- Updated dependencies [6c35827]
-- Updated dependencies [479ed72]
-- Updated dependencies [464438f]
-- Updated dependencies [4f11816]
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [4f11816]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [44b6d72]
-    - @seedcord/core@0.1.0-next.7
-    - @seedcord/errors@0.3.0-next.6
-    - @seedcord/types@0.8.0-next.8
-    - @seedcord/logger@0.1.0-next.3
-    - @seedcord/utils@0.8.0-next.8
-    - @seedcord/rate-limiter@0.1.0-next.5
-
-## 0.1.0-next.4
-
-### Minor Changes
-
-- 25b58be: The `Plugin` base and the `attach` host machinery moved to `@seedcord/core`. Plugin authors import the base from `@seedcord/core/plugin`. A host whose startup failed throws on a second `start()`, construct a new instance.
-
-    **BREAKING (`@seedcord/gateway`):** `attach(key, Plugin, ...args)` no longer takes a `startupPhase` argument, plugin init runs during startup. `shutdownEnabled` is removed, coordinated shutdown is always on. `healthCheck` is `false | true | HealthCheckConfig` (omit for the defaults) and the health server's default path is `/health`. `runtime` accepts only `'server'`.
-
-    **BREAKING (`@seedcord/types`):** `Config` removes `shutdownEnabled` and `healthCheck` (each transport config declares its own) and adds `runtime?: 'server' | 'edge'`.
-
-- 8e33bf4: **BREAKING:** the lifecycle phase enums are renamed and trimmed. `StartupPhase` is `Configuration`, `Login`, `Ready`. `ShutdownPhase` is `Unbind`, `Drain`, `Disconnect`, `Logout`. An `addTask` call naming an old member moves to the new name (e.g. `ShutdownPhase.ExternalResources` becomes `ShutdownPhase.Disconnect`, `ShutdownPhase.StopServices` becomes `ShutdownPhase.Drain`).
-
-    `@seedcord/gateway` drains in-flight interaction and event dispatch during shutdown before the client disconnects.
-
-### Patch Changes
-
-- Updated dependencies [25b58be]
-- Updated dependencies [8e33bf4]
-- Updated dependencies [25b58be]
-    - @seedcord/core@0.1.0-next.6
-    - @seedcord/types@0.8.0-next.7
-    - @seedcord/errors@0.3.0-next.5
-    - @seedcord/logger@0.1.0-next.2
-    - @seedcord/rate-limiter@0.1.0-next.4
-    - @seedcord/utils@0.8.0-next.7
-
-## 0.1.0-next.3
-
-### Minor Changes
-
-- 701b669: **BREAKING:** `RequirePermissions`, `RequireBotPermissions`, and `RequireRole` now come from `@seedcord/core` and check the payload's effective channel permissions by default. Pass `{ in: 'guild' }` to keep the previous base-set behavior. The gates now fit modal and event handlers too.
-
-    Outside production, the interaction dispatcher now warns when a dispatch's gate checks run past 750ms of the 3s ack budget combined, naming each gate's share.
-
-    **BREAKING:** `BotPermissionScope` is renamed `PermissionScope`. The `missing`/`dangerous` notice overrides on `checkPermissions`, `checkBotPermissions`, and `hasPermsToAssign` now construct with `(message, subject, permissionNames)` where `subject` is a pre-rendered mention string. The gate contexts carry `appPermissions` plus the two guild base sets.
-
-- c959e1a: Handlers reply through members on the base, `this.reply` / `defer` / `followUp` / `edit` / `delete` / `send`, with `update` / `deferUpdate` on component kinds and `showModal` on non-modal kinds (a modal handler rejects it at compile time). `this.delete()` removes the initial reply or a message the interaction sent. The autocomplete base defines `this.respond(choices)`. Unmatched interactions dispatch to unhandled defaults that reply "Feature not implemented yet." as a ComponentsV2 text display (empty choices on autocomplete). Webhook exception logs strip ANSI escapes and render the direct error cause, the compact fault log appends the cause's first line, and a `Silence` respects the new `errors.logSilences` config.
-
-    **BREAKING:** `ReplySender` is removed from the package exports. Reply through the handler members. A failed `getConfirmation` prompt or `Paginator.start` send now throws into the fault boundary (both previously swallowed the failure), and `Paginator.start` returns `Promise<Message>`.
-
-- c89adde: `@seedcord/core/node` is a new subpath exporting the lifecycle coordinators (`CoordinatedStartup`, `CoordinatedShutdown`) and `HealthCheck`, moved out of the deleted `@seedcord/services`.
-
-    **BREAKING:** the `@seedcord/gateway` barrel no longer re-exports the lifecycle coordinators, `HealthCheck`, or the lifecycle types (`LifecycleTask`, `PhaseEventMap`). `StartupPhase` and `ShutdownPhase` stay exported.
-
-- 5ec46ca: **BREAKING:** `AllSubscriptions` is no longer exported. Type a payload with `SubscriptionData<K>` and add keys by augmenting `Subscriptions`.
-- 5ec46ca: **BREAKING:** the `unknownException` payload carries plain `guild` and `user` objects (`{ id, name }` and `{ id, username }`), each key omitted when absent. A subscriber that read other discord.js fields off the payload now fetches them through the client.
-- 5ec46ca: `WebhookLog` now runs the webhook ceremony. A reporter declares its url's env var with the new `@WebhookUrl` decorator and implements `report()` returning `{ username?, components, files? }`. The base resolves and validates the url, reuses one sender per url, posts through `@discordjs/rest`, and logs send failures. `username` defaults to the class name.
-
-    The webhook urls are optional. An unset var disables that reporter with a boot warning. A set but malformed value throws at boot. `UNKNOWN_EXCEPTION_WEBHOOK_URL` and `HANDLED_EXCEPTION_WEBHOOK_URL` keep their names.
-
-    At boot each configured webhook is probed with a GET on the token-bearing webhook route, without a bot token and without sending a message. A webhook that does not exist on Discord stops the boot. An unreachable Discord logs a warning and the boot continues.
-
-    **BREAKING:** a `WebhookLog` subclass implements `report()` and carries `@WebhookUrl`. The abstract `webhook` field is removed.
-
-### Patch Changes
-
-- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
-- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
-- Updated dependencies [3817214]
-- Updated dependencies [137e641]
-- Updated dependencies [b03c8cd]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
 - Updated dependencies [701b669]
-- Updated dependencies [c959e1a]
-- Updated dependencies [e17f818]
-- Updated dependencies [c959e1a]
-- Updated dependencies [5ec46ca]
-- Updated dependencies [b03c8cd]
-- Updated dependencies [c89adde]
-- Updated dependencies [701b669]
-- Updated dependencies [c959e1a]
-- Updated dependencies [701b669]
-- Updated dependencies [137e641]
-- Updated dependencies [137e641]
-- Updated dependencies [3817214]
-- Updated dependencies [c959e1a]
-- Updated dependencies [5ec46ca]
-- Updated dependencies [5ec46ca]
-    - @seedcord/errors@0.3.0-next.4
-    - @seedcord/core@0.1.0-next.5
-    - @seedcord/types@0.8.0-next.6
-    - @seedcord/utils@0.8.0-next.6
-    - @seedcord/logger@0.1.0-next.1
-    - @seedcord/rate-limiter@0.1.0-next.3
-    - @seedcord/event-emitter@0.1.0-next.0
-
-## 0.1.0-next.2
-
-### Minor Changes
-
-- cd3ee0f: `new Seedcord({ logger })` configures logging (level, sinks, per-channel overrides). Omitted fields keep the node defaults. `@seedcord/gateway` re-exports `@seedcord/logger`.
-- 93544a8: **BREAKING:** `HmrModuleHandler` is no longer exported from `@seedcord/gateway`. Import it from `@seedcord/core/hmr`.
-
-### Patch Changes
-
-- f011978: upgrade envapt to v8
-- cd3ee0f: Rework the interaction, event, and command loader logs to correct levels with one block per load summary, and deploy commands as a wrapped block.
-- cd3ee0f: The file sink opens on first write so repeated setup leaves no empty log files, evicted and reset sinks are disposed to close winston handles, and a log call with two Errors keeps both. The gateway loader flag resets when a bulk load throws. LoggerOptions is exported for typing the Logger constructor.
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
 - Updated dependencies [93544a8]
-- Updated dependencies [f011978]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [93544a8]
-- Updated dependencies [93544a8]
-    - @seedcord/core@0.1.0-next.4
-    - @seedcord/services@0.9.0-next.6
-    - @seedcord/types@0.8.0-next.5
-    - @seedcord/logger@0.1.0-next.0
-    - @seedcord/utils@0.8.0-next.5
-    - @seedcord/rate-limiter@0.1.0-next.2
-
-## 0.1.0-next.1
-
-### Minor Changes
-
-- 42fd262: Codegen captures a slash channel option's declared `addChannelTypes` into `SlashOptionRegistry`. The gateway `getChannel` narrows to the matching channel subtype, so a text-only option returns `TextChannel` with no cast.
-- 42fd262: `Cooldown` keys its window by the handler's route and window settings, so a durable store keeps the same window across restarts and isolates. `GateContextBase` now has a `routeId` that identifies the dispatched handler, for example `slash:daily` or `button:confirm`.
-- 42fd262: `@seedcord/core` adds `DispatchContext` and the augmentable `DispatchState`. The interaction dispatcher allocates one per dispatch and passes it to the handler as an optional third constructor argument. The bag is empty until middleware and i18n merge fields into `DispatchState`.
-- e60fcf7: New `@seedcord/event-emitter` package, a pure-JS `TypedEventEmitter` with typed per-event tuples and zero runtime dep (no `node:events`). `waitFor(event, { filter, signal, timeoutMs })` resolves on the first matching payload, and rejects with a `WaitForError` whose `reason` is `'aborted'` or `'timeout'`. `EventMap`, `NoEvents`, and `WaitForOptions` are exported. `@seedcord/gateway` re-exports the package.
-
-    `TypedEventEmitter` does not bind `this` to the emitter inside a listener (use an arrow or a bound method), and a bare `error` event with no listener no longer throws.
-
-    An `any:interaction` or `any:event` observer that throws no longer aborts the interaction or event dispatch. The dispatcher passes the error to the emitter's `onListenerError` hook, which logs it.
-
-    **BREAKING:** `@seedcord/services` no longer exports `StrictEventEmitter` or the `SE*` types. Extend `TypedEventEmitter` and use `EventMap` / `NoEvents` for the event-map constraint.
-
-    **BREAKING:** the `Plugin` and `Pluggable` bases extend `TypedEventEmitter`. `setMaxListeners` and the `addListener` alias are removed, use `on`.
-
-    **BREAKING:** `@seedcord/errors` no longer defines the `EventEmitterWaitForAborted` (1501) and `EventEmitterWaitForTimeout` (1502) codes.
-
-### Patch Changes
-
-- d1cb181: Add optional `config.store` to supply a durable rate-limiter backend, replacing the in-memory default.
-- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
-- Updated dependencies [42fd262]
-- Updated dependencies [d1cb181]
-- Updated dependencies [42fd262]
-- Updated dependencies [42fd262]
-- Updated dependencies [e60fcf7]
-- Updated dependencies [e60fcf7]
-    - @seedcord/core@0.1.0-next.3
-    - @seedcord/types@0.8.0-next.4
-    - @seedcord/rate-limiter@0.1.0-next.1
-    - @seedcord/event-emitter@0.1.0-next.0
-    - @seedcord/services@0.9.0-next.5
-    - @seedcord/errors@0.3.0-next.3
-    - @seedcord/utils@0.8.0-next.4
-
-## 0.1.0-next.0
-
-### Minor Changes
-
-- 8cb06e1: **BREAKING:** The gateway framework moves from `seedcord` to `@seedcord/gateway`, and the CLI from `@seedcord/cli` to `seedcord`. Import the framework from `@seedcord/gateway`, and `defineConfig` from `seedcord`.
+    - @seedcord/core@0.1.0
+    - @seedcord/types@0.8.0
+    - @seedcord/utils@0.8.0
+    - @seedcord/logger@0.1.0
+    - @seedcord/errors@0.3.0
+    - @seedcord/event-emitter@0.1.0
+    - @seedcord/rate-limiter@0.1.0
 
 ---
 

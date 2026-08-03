@@ -1,62 +1,24 @@
 # @seedcord/eslint-config
 
-## 1.5.0-next.4
-
-### Patch Changes
-
-- Updated dependencies [5ec46ca]
-- Updated dependencies [b03c8cd]
-- Updated dependencies [c959e1a]
-- Updated dependencies [5ec46ca]
-    - @seedcord/eslint-plugin@0.1.0-next.3
-    - eslint-plugin-discordjs@0.1.0-next.3
-
-## 1.5.0-next.3
-
-### Patch Changes
-
-- Updated dependencies [94912d9]
-    - eslint-plugin-discordjs@0.1.0-next.2
-    - @seedcord/eslint-plugin@0.1.0-next.2
-
-## 1.5.0-next.2
-
-### Patch Changes
-
-- Updated dependencies [7174db3]
-    - eslint-plugin-discordjs@0.1.0-next.1
-    - @seedcord/eslint-plugin@0.1.0-next.1
-
-## 1.5.0-next.1
+## 1.5.0
 
 ### Minor Changes
 
-- 9650385: Add `registerDiscordjsPlugin` and `registerSeedcordPlugin` options. `registerDiscordjsPlugin` applies `eslint-plugin-discordjs`'s recommended preset, `registerSeedcordPlugin` applies `@seedcord/eslint-plugin`'s. The seedcord preset includes `no-djs-builder-import`, which bans discord.js component builder imports in favor of `@discordjs/builders`.
+- 789f17a: Support eslint 10. `eslint` moves to a peer dependency at `^9.39.4 || ^10.6.0`.
+
+    **BREAKING:** `eslint-plugin-import` is replaced by `eslint-plugin-import-x`, so rename any `import/*` override or disable comment to `import-x/*`. Turning a plugin off now drops its rules too.
+
+- 789f17a: Add `registerUnicornPlugin`, `registerDiscordjsPlugin`, and `registerSeedcordPlugin`. Unicorn requires eslint 10, so set `registerUnicornPlugin: false` on eslint 9.
+
+    `proseWrap` is now `never`.
 
 ### Patch Changes
 
-- 9650385: Split the config content into a private bundled base package. No consumer-visible change.
-- 9650385: Keep the TypeScript rule set applied when `registerTsdocPlugin` is off. The tsdoc toggle now controls only `tsdoc/syntax`.
-- Updated dependencies [9650385]
-- Updated dependencies [9650385]
-    - @seedcord/eslint-plugin@0.1.0-next.0
-    - eslint-plugin-discordjs@0.1.0-next.0
-
-## 1.5.0-next.0
-
-### Minor Changes
-
-- c046193: Replace `eslint-plugin-import` with the maintained `eslint-plugin-import-x` fork, which fixes the `import/order` autofixer crashing under eslint 10 (the original calls the removed `getTokenOrCommentBefore` API). It uses import-x's faster `resolver-next` resolver and adds `no-rename-default`. Import rule and setting names move from the `import/` namespace to `import-x/`, so update any `import/*` overrides or disable comments to `import-x/*`.
-
-    A disabled plugin now also drops its rules. Turning a plugin off (for example `registerImportPlugin: false`) previously left its rules in the config, which threw "rule not found" unless another config registered that plugin.
-
-- c046193: Support eslint 10. `eslint` moves from `dependencies` to `peerDependencies` at `^9.39.4 || ^10.6.0`, so consumers stay on eslint 9 or move to 10 as they choose. Consumers still on `eslint-plugin-react` (which breaks on eslint 10) can pin eslint 9 without conflict.
-- c046193: Add a curated set of eslint-plugin-unicorn rules (correctness, modern APIs, clarity), on by default via the new `registerUnicornPlugin` option. Consumers on eslint 9 must set `registerUnicornPlugin: false`, because unicorn requires eslint >=10.4.
-- 86c1299: proseWrap is now set to `never` instead of `preserve`
-
-### Patch Changes
-
-- c046193: The `no-restricted-syntax` bans on inline `import()` types and `as X as Y` double casts fire again, after a second rule definition had silently shadowed them. `.test.tsx` files now also receive the test-file rule exemptions.
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+    - @seedcord/eslint-plugin@0.1.0
+    - eslint-plugin-discordjs@0.1.0
 
 ## 1.4.3
 
