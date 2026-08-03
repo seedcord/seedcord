@@ -1,75 +1,22 @@
 # @seedcord/types
 
-## 0.8.0-next.8
+## 0.8.0
 
 ### Minor Changes
 
-- 9ff4e85: `EventFrequency` moves to `@seedcord/types`, beside the other shared config types.
-- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
+- 789f17a: **BREAKING:** Node 24.3 or newer is required.
+- 789f17a: `Config` gains `logger`, `store`, and `runtime`.
 
-## 0.8.0-next.7
+    **BREAKING:** `Config` drops `shutdownEnabled` and `healthCheck`, which each transport config now declares. `clientOptions` and `events` move to `GatewayBotConfig` in `@seedcord/gateway`.
 
-### Minor Changes
+- 789f17a: **BREAKING:** `ILogger` levels are `error`, `warn`, `info`, `debug`, and `trace`. `http`, `verbose`, and `silly` are gone.
+- 789f17a: **BREAKING:** `@seedcord/types` no longer depends on discord.js. `ReplyResponse` and its parts are structural types over `discord-api-types`.
 
-- 25b58be: The `Plugin` base and the `attach` host machinery moved to `@seedcord/core`. Plugin authors import the base from `@seedcord/core/plugin`. A host whose startup failed throws on a second `start()`, construct a new instance.
-
-    **BREAKING (`@seedcord/gateway`):** `attach(key, Plugin, ...args)` no longer takes a `startupPhase` argument, plugin init runs during startup. `shutdownEnabled` is removed, coordinated shutdown is always on. `healthCheck` is `false | true | HealthCheckConfig` (omit for the defaults) and the health server's default path is `/health`. `runtime` accepts only `'server'`.
-
-    **BREAKING (`@seedcord/types`):** `Config` removes `shutdownEnabled` and `healthCheck` (each transport config declares its own) and adds `runtime?: 'server' | 'edge'`.
-
-## 0.8.0-next.6
-
-### Minor Changes
-
-- c959e1a: Add `errors.logSilences` (default `true`) to turn off the per-`Silence` debug line.
-- 137e641: Add `SendOpts` and `DeferOpts`, the reply-surface per-method options.
+    **BREAKING:** `ReplyFile` is now `{ data: Uint8Array; name: string; description?; title? }`, which sends on either transport. the Gateway transport does still accept Djs' `AttachmentBuilder` though.
 
 ### Patch Changes
 
-- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
-
-## 0.8.0-next.5
-
-### Minor Changes
-
-- cd3ee0f: **BREAKING:** `ILogger` no longer has `http`, `verbose`, and `silly` levels. The new levels are `error`, `warn`, `info`, `debug`, and `trace`.
-- cd3ee0f: `Config.logger?: LoggerConfig` configures logging on any transport, the gateway constructor reads it. The logger seam (`LogLevel`, `LogRecord`, `ILogSink`, `LoggerConfig`, `LogSinkHandle`) is exported from `@seedcord/types/internal` and re-exported by `@seedcord/logger`.
-- 93544a8: Export `HmrEventType`, `HmrUpdateEvent`, and `HmrAware` from the package root, for typing `onHmr` implementations.
-
-## 0.8.0-next.4
-
-### Patch Changes
-
-- d1cb181: Add optional `config.store` to supply a durable rate-limiter backend, replacing the in-memory default.
-- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
-
-## 0.8.0-next.3
-
-### Minor Changes
-
-- 7174db3: New `CoreBase` in `@seedcord/core` with `config` and `rateLimiter`. The gateway `Core` extends it. `core.rateLimiter` is an async `IRateLimiter` backed by `MemoryRateLimiter`. `seedcord` re-exports `@seedcord/rate-limiter`. `SeedcordInstance` adds `version` and moves to `@seedcord/types/internal`.
-
-    **BREAKING:** `@seedcord/types` no longer depends on discord.js. `clientOptions` and `events` move from `BotConfig` to `GatewayBotConfig` in `seedcord`, and the `Seedcord` constructor takes `GatewayConfig`. `Config.botColor` is a `BotColor`.
-
-    **BREAKING:** `@seedcord/services` no longer exports `RateLimiter`, `RateLimitWindow`, or `RateLimitResult`. Use `MemoryRateLimiter` from `@seedcord/rate-limiter` and the types from `@seedcord/types`. `hit` is replaced by the async `charge`, and results carry `resetAt`, `remaining`, `retryAfterMs`.
-
-- 7174db3: New `@seedcord/rate-limiter` package: `MemoryRateLimiter` (exact sliding window, in-memory) and `buildKey`. `IRateLimiter` (`charge`/`peek`/`reset`) and `RateLimitWindow`/`RateLimitResult` are in `@seedcord/types`.
-
-## 0.8.0-next.2
-
-### Minor Changes
-
-- 993f609: **BREAKING:** The codegen registry types (`SlashOptionRegistry`, `SlashOption`, `OptionKind`, `UserContextMenuRegistry`, `MessageContextMenuRegistry`) move from `@seedcord/types` to `@seedcord/core`.
-
-## 0.8.0-next.1
-
-### Minor Changes
-
-- d8b91f5: Make `ReplyResponse` djs-free. `V2Component`, `ReplyFile`, and the new `ReplyAllowedMentions` are structural types backed by `discord-api-types`, so the reply types no longer import `discord.js`.
-
-    **BREAKING:** `files` now takes only `{ attachment: Buffer | string; name?; description? }`. A discord.js `AttachmentBuilder` or `Attachment`, or a node `Stream`, no longer assigns, so pass the plain object instead.
-
-- c046193: **BREAKING:** require Node 24. `engines.node` moves to `>=24` so the framework can use Node 24 APIs like `Error.isError` and `RegExp.escape`. Upgrade your runtime to Node 24 or newer.
+- 789f17a: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
 
 ## 0.7.2-next.0
 

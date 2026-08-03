@@ -1,171 +1,46 @@
 # seedcord
 
-## 0.16.0-next.11
-
-### Patch Changes
-
-- Updated dependencies [5ea2d74]
-- Updated dependencies [b586a14]
-- Updated dependencies [5ea2d74]
-- Updated dependencies [58ee649]
-- Updated dependencies [b586a14]
-- Updated dependencies [c26ec13]
-- Updated dependencies [597add8]
-- Updated dependencies [58ee649]
-    - @seedcord/core@0.1.0-next.8
-    - @seedcord/errors@0.3.0-next.7
-    - @seedcord/utils@0.8.0-next.9
-    - @seedcord/logger@0.1.0-next.4
-
-## 0.16.0-next.10
+## 0.16.0
 
 ### Minor Changes
 
-- f0ba9f3: Framework log lines carry a per-subsystem channel. `config.logger.channels` is typed by the `FrameworkChannel` set and still accepts any string.
-- 464438f: `seedcord codegen` now writes the `Core` augmentation for every attached plugin, so `this.core.db` types without a hand-written `declare module` block. A bot with no plugins emits nothing new.
+- 789f17a: `seedcord codegen` writes the `Core` augmentation for every attached plugin, so `this.core.db` types with no hand-written `declare module`. It resolves each key off your bot's default export, which needs `moduleResolution: bundler`.
+- 789f17a: `seedcord dev` renders each log line as a level chip, a clock, a channel dot, and a label.
 
-    The generated file imports your bot's default export and resolves each key off it, which needs `moduleResolution: bundler`.
+    The layout adapts to the terminal size. A short terminal collapses the filter chips, and a shorter one replaces the sidebar with a status line.
 
-### Patch Changes
-
-- 2b326b2: `seedcord dev` adapts to the terminal size. A short terminal collapses the filter chips, and a shorter one replaces the sidebar with a single status line.
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [44b6d72]
-- Updated dependencies [9dba6ea]
-- Updated dependencies [44b6d72]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [53d5cac]
-- Updated dependencies [6c35827]
-- Updated dependencies [479ed72]
-- Updated dependencies [464438f]
-- Updated dependencies [4f11816]
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [4f11816]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [44b6d72]
-    - @seedcord/core@0.1.0-next.7
-    - @seedcord/errors@0.3.0-next.6
-    - @seedcord/types@0.8.0-next.8
-    - @seedcord/logger@0.1.0-next.3
-    - @seedcord/utils@0.8.0-next.8
-
-## 0.16.0-next.9
+- 789f17a: **BREAKING:** `seedcord` is the CLI. The gateway framework moved to `@seedcord/gateway`. Keep importing `defineConfig` from here.
+- 789f17a: **BREAKING:** Node 24.3 or newer is required.
 
 ### Patch Changes
 
-- Updated dependencies [25b58be]
-- Updated dependencies [8e33bf4]
-- Updated dependencies [25b58be]
-    - @seedcord/core@0.1.0-next.6
-    - @seedcord/types@0.8.0-next.7
-    - @seedcord/errors@0.3.0-next.5
-    - @seedcord/logger@0.1.0-next.2
-    - @seedcord/utils@0.8.0-next.7
-
-## 0.16.0-next.8
-
-### Patch Changes
-
-- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
-- 701b669: Require envapt 8.1. A bot declaring its own envapt needs `^8.1.0` there too, an older pin installs a second copy whose `Envapter` state (the bound source, the detected environment) splits from the framework's.
-- 48d735c: confirm login on the actual ready event
-- Updated dependencies [3817214]
-- Updated dependencies [137e641]
-- Updated dependencies [b03c8cd]
+- 789f17a: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- 701b669: Require envapt `^8.1.0`. An older pin in your own bot installs a second copy whose `Envapter` state splits from the framework's.
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
 - Updated dependencies [701b669]
-- Updated dependencies [c959e1a]
-- Updated dependencies [e17f818]
-- Updated dependencies [c959e1a]
-- Updated dependencies [5ec46ca]
-- Updated dependencies [b03c8cd]
-- Updated dependencies [c89adde]
-- Updated dependencies [701b669]
-- Updated dependencies [c959e1a]
-- Updated dependencies [701b669]
-- Updated dependencies [137e641]
-- Updated dependencies [137e641]
-- Updated dependencies [3817214]
-- Updated dependencies [c959e1a]
-- Updated dependencies [5ec46ca]
-- Updated dependencies [5ec46ca]
-    - @seedcord/errors@0.3.0-next.4
-    - @seedcord/core@0.1.0-next.5
-    - @seedcord/types@0.8.0-next.6
-    - @seedcord/utils@0.8.0-next.6
-    - @seedcord/logger@0.1.0-next.1
-    - @seedcord/event-emitter@0.1.0-next.0
-
-## 0.16.0-next.7
-
-### Minor Changes
-
-- cd3ee0f: The dev TUI renders each log line as a level chip, a 24h clock, a channel dot, and the label, over the styled message body. Channel colors are assigned in first-seen order from a curated palette.
-
-### Patch Changes
-
-- cd3ee0f: Add a channel and level filter picker to the dev TUI, opened with f, with wrapped colored chips plus solo and toggle. A new truecolor palette keeps the TUI's own colors consistent across terminals.
-- cd3ee0f: Bracket dev-TUI log blocks with full-width rules.
-- f011978: upgrade envapt to v8
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
 - Updated dependencies [93544a8]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [cd3ee0f]
-- Updated dependencies [93544a8]
-- Updated dependencies [93544a8]
-    - @seedcord/core@0.1.0-next.4
-    - @seedcord/types@0.8.0-next.5
-    - @seedcord/logger@0.1.0-next.0
-    - @seedcord/utils@0.8.0-next.5
-
-## 0.16.0-next.6
-
-### Minor Changes
-
-- 42fd262: Codegen captures a slash channel option's declared `addChannelTypes` into `SlashOptionRegistry`. The gateway `getChannel` narrows to the matching channel subtype, so a text-only option returns `TextChannel` with no cast.
-
-### Patch Changes
-
-- e60fcf7: New `@seedcord/event-emitter` package, a pure-JS `TypedEventEmitter` with typed per-event tuples and zero runtime dep (no `node:events`). `waitFor(event, { filter, signal, timeoutMs })` resolves on the first matching payload, and rejects with a `WaitForError` whose `reason` is `'aborted'` or `'timeout'`. `EventMap`, `NoEvents`, and `WaitForOptions` are exported. `@seedcord/gateway` re-exports the package.
-
-    `TypedEventEmitter` does not bind `this` to the emitter inside a listener (use an arrow or a bound method), and a bare `error` event with no listener no longer throws.
-
-    An `any:interaction` or `any:event` observer that throws no longer aborts the interaction or event dispatch. The dispatcher passes the error to the emitter's `onListenerError` hook, which logs it.
-
-    **BREAKING:** `@seedcord/services` no longer exports `StrictEventEmitter` or the `SE*` types. Extend `TypedEventEmitter` and use `EventMap` / `NoEvents` for the event-map constraint.
-
-    **BREAKING:** the `Plugin` and `Pluggable` bases extend `TypedEventEmitter`. `setMaxListeners` and the `addListener` alias are removed, use `on`.
-
-    **BREAKING:** `@seedcord/errors` no longer defines the `EventEmitterWaitForAborted` (1501) and `EventEmitterWaitForTimeout` (1502) codes.
-
-- 42fd262: Some smol internal refactors. `seedcord` uses `using` in the `confirm` prompt and an async generator for the codegen directory walk. `@seedcord/plugins` uses `await using` for the pg pool and clients in the database bootstrapper.
-- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
-- Updated dependencies [42fd262]
-- Updated dependencies [d1cb181]
-- Updated dependencies [42fd262]
-- Updated dependencies [42fd262]
-- Updated dependencies [e60fcf7]
-- Updated dependencies [e60fcf7]
-    - @seedcord/core@0.1.0-next.3
-    - @seedcord/types@0.8.0-next.4
-    - @seedcord/event-emitter@0.1.0-next.0
-    - @seedcord/services@0.9.0-next.5
-    - @seedcord/errors@0.3.0-next.3
-    - @seedcord/utils@0.8.0-next.4
-
-## 0.16.0-next.5
-
-### Minor Changes
-
-- 8cb06e1: **BREAKING:** The gateway framework moves from `seedcord` to `@seedcord/gateway`, and the CLI from `@seedcord/cli` to `seedcord`. Import the framework from `@seedcord/gateway`, and `defineConfig` from `seedcord`.
+    - @seedcord/core@0.1.0
+    - @seedcord/types@0.8.0
+    - @seedcord/utils@0.8.0
+    - @seedcord/logger@0.1.0
+    - @seedcord/errors@0.3.0
+    - @seedcord/event-emitter@0.1.0
 
 ## 0.4.0-next.4
 

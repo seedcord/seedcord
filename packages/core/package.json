@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/core",
     "type": "module",
-    "version": "0.1.0-next.8",
+    "version": "0.1.0",
     "description": "Transport-agnostic core for Seedcord bots",
     "repository": {
         "type": "git",
