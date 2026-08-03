@@ -60,6 +60,27 @@ describe('IndexLoader', () => {
         await expect(loader.load()).rejects.toBeInstanceOf(IndexFetchError);
     });
 
+    it('drops folders the docs no longer document from the loaded index', async () => {
+        // kit is published in R2 but absent from PACKAGE_OVERRIDES, so the engine never sees it
+        const withRemoved: IndexJson = {
+            ...fixture,
+            packages: {
+                ...fixture.packages,
+                kit: {
+                    fullName: '@seedcord/kit',
+                    stable: { latest: '0.2.0', latestByMinor: {}, latestByMajor: {} },
+                    prerelease: null
+                }
+            }
+        };
+        const loader = new IndexLoader(INDEX_URL, okFetcher(withRemoved));
+        const index = await loader.load();
+
+        expect(Object.keys(index.packages)).toEqual(['utils']);
+        expect(loader.getEntry(index, 'kit')).toBeNull();
+        expect(loader.listPackages(index)).toEqual([{ folder: 'utils', fullName: '@seedcord/utils' }]);
+    });
+
     describe('resolveVersion', () => {
         const entry = fixture.packages.utils!;
         const loader = new IndexLoader(INDEX_URL, okFetcher(fixture));
@@ -92,7 +113,7 @@ describe('IndexLoader', () => {
 
         describe('0-stable (prerelease-only) package', () => {
             const prereleaseOnly: PackageIndexEntry = {
-                fullName: '@seedcord/cli',
+                fullName: '@seedcord/gateway',
                 stable: null,
                 prerelease: { latest: '0.11.0-next.0' }
             };
@@ -134,6 +155,7 @@ describe('IndexLoader', () => {
     });
 
     it('validateIndex round-trips a known-good index', () => {
+        // eslint-disable-next-line unicorn/prefer-structured-clone -- exercises the JSON wire round-trip the remote docs format uses
         expect(validateIndex(JSON.parse(JSON.stringify(fixture)))).toEqual(fixture);
     });
 });

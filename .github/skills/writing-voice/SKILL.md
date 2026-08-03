@@ -46,47 +46,59 @@ Google's rule: "Don't attribute human qualities to software or hardware." The fi
 
 This list is illustrative, not exhaustive. When a word isn't on it, apply the rule of thumb below and the one-line test at the end.
 
-| Banned                                                              | Why it fails                                                        | Replacement                                                              |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| **powers** ("X powers Y")                                           | anthropomorphizes; hides the mechanism                              | "X sets Y" / "Y reads X" / state the relationship                        |
-| **drives / fuels / underpins**                                      | same                                                                | "determines", "controls", "sets"                                         |
-| **leverage**                                                        | corporate for "use"                                                 | "use"                                                                    |
-| **seamless / seamlessly**                                           | unfalsifiable                                                       | delete, or name the condition                                            |
-| **effortless / effortlessly**                                       | hype                                                                | delete; show the one step it takes                                       |
-| **loud / loudly / fails loudly / throws loudly**                    | intensifier with no measurable meaning; dramatizes the failure      | name the mechanism: "throws `X`", "logs a warning", "exits non-zero"     |
-| **easy / easily / simple / intuitive / fun**                        | reader-relative; what's easy for you may not be for them            | delete, or state the steps it takes                                      |
-| **without any manual wiring / zero config**                         | sells absence of work                                               | state what happens automatically                                         |
-| **robust**                                                          | empty adjective                                                     | name the guarantee: "validates …", "throws on …"                         |
-| **performant**                                                      | vague performance claim                                             | a precise figure: "p99 under 5 ms", "O(1) lookup"                        |
-| **does more than X**                                                | tease, not information                                              | just state what it does                                                  |
-| **under the hood**                                                  | filler                                                              | "internally", or delete                                                  |
-| **out of the box**                                                  | filler                                                              | "by default"                                                             |
-| **first-class**                                                     | jargon                                                              | name the support: "supports gzip and brotli directly"                    |
-| **simply / just**                                                   | minimizes reader effort, often wrong                                | delete                                                                   |
-| **in order to**                                                     | wordiness                                                           | "to"                                                                     |
-| **utilize**                                                         | pompous for "use"                                                   | "use"                                                                    |
-| **please / please note**                                            | filler; never "please note"                                         | delete                                                                   |
-| **allow / allows you to**                                           | feature-centric and wordy                                           | "lets you", or rewrite from the reader's side: "You can …"               |
-| **enable** (= make available)                                       | vague; reserve for feature flags and security                       | "turn on"                                                                |
-| **unlock / enable you to**                                          | hype                                                                | "lets you" / "you can"                                                   |
-| **empower / supercharge / blazing-fast / lightning**                | pure marketing                                                      | delete; if speed matters, give a number                                  |
-| **powerful / flexible / elegant**                                   | self-praise                                                         | show the capability instead                                              |
-| **notably / clearly / of course / actually / essentially**          | editorializing; tells the reader how to feel                        | delete                                                                   |
-| **"some say" / "it is believed" / "research shows"** (unattributed) | weasel; implies a claim without making one                          | name the source, or delete                                               |
-| **handle / handling** (vague)                                       | hides behavior                                                      | name the action: "parses", "coerces", "rejects"                          |
-| **rich set of / suite of**                                          | brochure                                                            | "a set of", or just list them                                            |
-| **magic / magical**                                                 | mystifies behavior                                                  | explain the rule                                                         |
-| **reach for X**                                                     | folksy filler for "use"                                             | "use X", or name the action                                              |
-| **blast radius**                                                    | war metaphor for scope of impact; dramatizes it                     | name what's affected: "every caller of `parse()`", "all rows in `users`" |
-| **lives in / lives on**                                             | folksy for where something is defined; anthropomorphizes a location | "is defined in", "is set on", name the file or element                   |
-| **owns**                                                            | anthropomorphizes; a module isn't an agent with property            | name the relationship: "defines", "sets", "is the only writer of"        |
-| **story / the whole story / tells the story**                       | folksy narrative framing that states no measurable fact             | state the behavior directly, "that render is all the user sees"          |
+<!--prettier-ignore-start-->
+
+| Banned | Why it fails | Replacement |
+|---|---|---|
+| **powers** ("X powers Y") | anthropomorphizes; hides the mechanism | "X sets Y" / "Y reads X" / state the relationship |
+| **drives / fuels / underpins** | same | "determines", "controls", "sets" |
+| **leverage** | corporate for "use" | "use" |
+| **seamless / seamlessly** | unfalsifiable | delete, or name the condition |
+| **effortless / effortlessly** | hype | delete; show the one step it takes |
+| **loud / loudly / fails loudly / throws loudly** | intensifier with no measurable meaning; dramatizes the failure | name the mechanism: "throws `X`", "logs a warning", "exits non-zero" |
+| **easy / easily / simple / intuitive / fun** | reader-relative; what's easy for you may not be for them | delete, or state the steps it takes |
+| **without any manual wiring / zero config** | sells absence of work | state what happens automatically |
+| **robust** | empty adjective | name the guarantee: "validates …", "throws on …" |
+| **performant** | vague performance claim | a precise figure: "p99 under 5 ms", "O(1) lookup" |
+| **harden / hardening** | vague security verb, hides the change | name the change: "make private", "remove the export", "block the write" |
+| **does more than X** | tease, not information | just state what it does |
+| **under the hood** | filler | "internally", or delete |
+| **out of the box** | filler | "by default" |
+| **first-class** | jargon | name the support: "supports gzip and brotli directly" |
+| **simply / just** | minimizes reader effort, often wrong | delete |
+| **in order to** | wordiness | "to" |
+| **utilize** | pompous for "use" | "use" |
+| **please / please note** | filler; never "please note" | delete |
+| **allow / allows you to** | feature-centric and wordy | "lets you", or rewrite from the reader's side: "You can …" |
+| **enable** (= make available) | vague; reserve for feature flags and security | "turn on" |
+| **unlock / enable you to** | hype | "lets you" / "you can" |
+| **empower / supercharge / blazing-fast / lightning** | pure marketing | delete; if speed matters, give a number |
+| **powerful / flexible / elegant** | self-praise | show the capability instead |
+| **notably / clearly / of course / actually / essentially** | editorializing; tells the reader how to feel | delete |
+| **"some say" / "it is believed" / "research shows"** (unattributed) | weasel; implies a claim without making one | name the source, or delete |
+| **handle / handling** (vague) | hides behavior | name the action: "parses", "coerces", "rejects" |
+| **rich set of / suite of** | brochure | "a set of", or just list them |
+| **magic / magical** | mystifies behavior | explain the rule |
+| **reach for X (or variations of reach)** | folksy filler for "use" | "use X", or name the action |
+| **blast radius** | war metaphor for scope of impact; dramatizes it | name what's affected: "every caller of `parse()`", "all rows in `users`" |
+| **lives in / lives on** | folksy for where something is defined; anthropomorphizes a location | "is defined in", "is set on", name the file or element |
+| **owns** | anthropomorphizes; a module isn't an agent with property | name the relationship: "defines", "sets", "is the only writer of" |
+| **drops** ("X drops Y") | anthropomorphizes, a package or type is not an actor that discards | "no longer exports / defines Y", "Y is removed" |
+| **gains** ("X gains Y") | anthropomorphizes, a package or type is not an actor that acquires | "adds Y", "now has Y", "accepts Y" |
+| **exercise / exercised / exercisable** ("the test exercises X") | vague test-jargon for running or calling code | "calls X", "runs X", "tests X" |
+| **names** ("the error names the file", "the row names its export") | anthropomorphizes, a value performs no act of naming | "reports", "includes", "specifies", "contains", "states", or name the mechanism: "the message contains the path" |
+
+<!--prettier-ignore-end-->
 
 Rule of thumb: **if an adjective can't be replaced by a measurable fact or a code reference, delete it.**
 
 ### Banned punctuation
 
-Three marks are banned in prose (comments, commit bodies, docs, PR descriptions, and chat replies): the em-dash `—`, the semicolon `;`, and the colon `:`. They invite two-clause splices and list-y throat-clearing that read as AI prose. Use a comma, parentheses, or two separate sentences instead. This is a prose rule only. Code syntax that requires a colon or semicolon (type annotations, object keys, statement terminators) is exempt.
+The em-dash `—` and en-dash `–` are banned in prose outright, replace them with a hyphen, a comma, parentheses, or two sentences. The colon `:` and semicolon `;` are banned only as a **clause splice**, where the mark joins two independent clauses into one sentence (the AI-prose tell, two thoughts packed behind a mark instead of ended with a period). A colon that introduces a list, a code block, an enumeration, or a short label (a `two forms:` lead-in, an `npm: envapt` label) is standard and clearer than a period there, so keep it and do not flatten it. A semicolon in running prose is almost always a splice, so avoid it, its one legitimate use is separating list items that already contain commas. This is a prose rule only. Code syntax that requires a colon or semicolon (type annotations, object keys, statement terminators) is exempt.
+
+Comma splices are also banned!! A comma cannot join two independent clauses so a comma splice is always a grammar error. Rearrange the sentence into more coherent, natural prose or split as needed with simple punctuation. Comma spliced sentences really confuse the reader because they don't make a lot of sense when read on their own.
+
+**Replace a banned mark with punctuation that does the same grammatical job.** A `;`, `—`, or `–` between two complete clauses is holding two independent thoughts apart. A comma cannot join two independent clauses, so swapping one in makes a comma splice. Use a period and two sentences, or reword the sentence. Read the result back on its own.
 
 ```ts
 // Bad: colon splice + semicolon splice
@@ -95,32 +107,29 @@ Three marks are banned in prose (comments, commit bodies, docs, PR descriptions,
 // out of range would carry into the neighbouring field on decode.
 ```
 
+**Do not reflexively replace a `;` or `:` with ", so".** A semicolon often just sets two related facts side by side, and ", so" asserts a cause the original never claimed. It reads wrong when the real link is a design choice or a plain sequence, and stacking two "so"s in one sentence is a tell. Use ", so" only when the second clause genuinely results from the first. Otherwise use a period, or ", and" for a neutral join.
+
+- BAD, invented cause: "meaningless without a filesystem, so it throws" (the throw is a design choice, and ", so" overstates it as a consequence).
+- GOOD: "it throws because it's meaningless without a filesystem".
+- BAD, stacked "so": "binds a source per file, so restore it after any swap so later tests see a clean default".
+- GOOD: "binds a source per file. Tests here swap it, so restore it afterward for a clean default."
+
 ---
 
 ## 3. BEFORE → AFTER rewrites
 
 The running example is a generic HTTP client. Substitute your own domain; the transformation is the point.
 
-1. BEFORE: "The same base URL POWERS every request, interceptor, and retry helper."
-   AFTER: "The client reads `baseURL` once at construction. Every request method prepends it; pass the `url` option to override it per call." (Prisma)
-2. BEFORE: "A default header does MORE THAN set a value."
-   AFTER: "A default header is sent on every request unless the per-call `headers` option overrides that key." (Stripe)
-3. BEFORE: "retries failed requests WITHOUT ANY MANUAL WIRING."
-   AFTER: "The client retries on 429 and 503 up to `retries` times with exponential backoff. Other status codes are returned as-is." (esbuild)
-4. BEFORE: "the client seamlessly handles JSON out of the box."
-   AFTER: "If the response `Content-Type` is `application/json`, the client parses the body and returns the parsed value. Otherwise it returns the raw text." (Vue)
-5. BEFORE: "Our powerful interceptor layer ensures your requests are always robust."
-   AFTER: "If a request interceptor throws, the request is never sent and the error propagates to the caller." (Prisma)
-6. BEFORE: "The `@retry` decorator empowers you to effortlessly add resilience to any method."
-   AFTER: "Annotate a method with `@retry(3)` to re-invoke it up to three times on a thrown error. It re-throws the last error if every attempt fails." (esbuild)
-7. BEFORE: "Under the hood, the client leverages a smart pool to unlock connection reuse."
-   AFTER: "The client keeps up to `maxSockets` open connections per host and reuses them across requests." (Vue)
-8. BEFORE: "Helper methods like `client.json()` give you a first-class, blazing-fast developer experience."
-   AFTER: "`client.json(url)` is shorthand for `client.get(url)` followed by `.json()` on the response. It returns the parsed body." (Stripe)
-9. BEFORE: "the client simply works with your existing setup, just drop it in."
-   AFTER: "The client reads proxy settings from `HTTP_PROXY` and `NO_PROXY`, so it respects the same environment your shell already uses." (Prisma)
-10. BEFORE: "A rich set of built-in adapters lets you handle any transport with ease."
-    AFTER: "The client ships adapters for `fetch`, `XMLHttpRequest`, and Node's `http`/`https`. You can register your own adapter." (esbuild/Stripe)
+1. BEFORE: "The same base URL POWERS every request, interceptor, and retry helper." AFTER: "The client reads `baseURL` once at construction. Every request method prepends it; pass the `url` option to override it per call." (Prisma)
+2. BEFORE: "A default header does MORE THAN set a value." AFTER: "A default header is sent on every request unless the per-call `headers` option overrides that key." (Stripe)
+3. BEFORE: "retries failed requests WITHOUT ANY MANUAL WIRING." AFTER: "The client retries on 429 and 503 up to `retries` times with exponential backoff. Other status codes are returned as-is." (esbuild)
+4. BEFORE: "the client seamlessly handles JSON out of the box." AFTER: "If the response `Content-Type` is `application/json`, the client parses the body and returns the parsed value. Otherwise it returns the raw text." (Vue)
+5. BEFORE: "Our powerful interceptor layer ensures your requests are always robust." AFTER: "If a request interceptor throws, the request is never sent and the error propagates to the caller." (Prisma)
+6. BEFORE: "The `@retry` decorator empowers you to effortlessly add resilience to any method." AFTER: "Annotate a method with `@retry(3)` to re-invoke it up to three times on a thrown error. It re-throws the last error if every attempt fails." (esbuild)
+7. BEFORE: "Under the hood, the client leverages a smart pool to unlock connection reuse." AFTER: "The client keeps up to `maxSockets` open connections per host and reuses them across requests." (Vue)
+8. BEFORE: "Helper methods like `client.json()` give you a first-class, blazing-fast developer experience." AFTER: "`client.json(url)` is shorthand for `client.get(url)` followed by `.json()` on the response. It returns the parsed body." (Stripe)
+9. BEFORE: "the client simply works with your existing setup, just drop it in." AFTER: "The client reads proxy settings from `HTTP_PROXY` and `NO_PROXY`, so it respects the same environment your shell already uses." (Prisma)
+10. BEFORE: "A rich set of built-in adapters lets you handle any transport with ease." AFTER: "The client ships adapters for `fetch`, `XMLHttpRequest`, and Node's `http`/`https`. You can register your own adapter." (esbuild/Stripe)
 
 ---
 

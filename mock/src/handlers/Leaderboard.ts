@@ -1,9 +1,9 @@
-import { ButtonHandler, ButtonRoute, CustomId, paginate, SlashHandler, SlashRoute } from 'seedcord';
+import { ButtonHandler, ButtonRoute, CustomId, paginate, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import { LeaderboardCard, LeaderboardControls } from '../components/bundles/Leaderboard';
 
 import type { LeaderboardEntry } from '../components/bundles/Leaderboard';
-import type { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from 'discord.js';
+import type { ActionRowBuilder, ButtonBuilder, EmbedBuilder } from '@discordjs/builders';
 
 const PER_PAGE = 5;
 const PAGE_BOUND = 999;
@@ -32,6 +32,7 @@ function renderBoard(page: number): { embeds: EmbedBuilder[]; components: Action
 @SlashRoute('leaderboard')
 export class LeaderboardSlash extends SlashHandler<'leaderboard'> {
     public async execute(): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- ReplyResponse is ComponentsV2-only
         await this.event.reply(renderBoard(0));
     }
 }
@@ -39,6 +40,7 @@ export class LeaderboardSlash extends SlashHandler<'leaderboard'> {
 @ButtonRoute(Board)
 export class LeaderboardNav extends ButtonHandler<[typeof Board]> {
     public async execute(): Promise<void> {
+        // eslint-disable-next-line @seedcord/no-raw-interaction-acks -- ReplyResponse is ComponentsV2-only
         await this.event.update(renderBoard(this.params.page));
     }
 }

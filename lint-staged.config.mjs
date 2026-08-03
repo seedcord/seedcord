@@ -18,7 +18,7 @@ const findNearestPrettierConfig = (filePath) => {
 const quoteFiles = (files) => files.map((file) => JSON.stringify(file)).join(' ');
 
 const runPrettier = (files) => {
-    if (!files.length) return [];
+    if (files.length === 0) return [];
 
     const groups = new Map();
 

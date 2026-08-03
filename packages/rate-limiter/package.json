@@ -1,0 +1,61 @@
+{
+    "name": "@seedcord/rate-limiter",
+    "type": "module",
+    "version": "0.1.0-next.5",
+    "engines": {
+        "node": ">=24.3"
+    },
+    "description": "In-memory rate limiter and key helper for Seedcord bots",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "packages/rate-limiter"
+    },
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@seedcord/types": "workspace:*"
+    },
+    "devDependencies": {
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}

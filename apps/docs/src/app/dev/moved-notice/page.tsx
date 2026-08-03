@@ -21,7 +21,7 @@ function MovedNoticePage(): ReactElement {
                 <h2 className={cn('text-subtle text-xs font-semibold tracking-widest uppercase')}>In context</h2>
                 <div className={cn('space-y-8')}>
                     <Suspense fallback={null}>
-                        <MovedEntityNotice packageLabel="@seedcord/services" />
+                        <MovedEntityNotice packageLabel="@seedcord/logger" />
                     </Suspense>
                     <section className={cn('space-y-3')}>
                         <p className={cn('text-subtle text-xs font-semibold tracking-[0.35em] uppercase')}>

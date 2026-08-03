@@ -1,5 +1,146 @@
 # @seedcord/mock
 
+## 0.2.23-next.11
+
+### Patch Changes
+
+- Updated dependencies [5ea2d74]
+- Updated dependencies [b586a14]
+- Updated dependencies [5ea2d74]
+- Updated dependencies [58ee649]
+- Updated dependencies [40f847b]
+- Updated dependencies [40f847b]
+- Updated dependencies [b586a14]
+- Updated dependencies [597add8]
+- Updated dependencies [58ee649]
+    - @seedcord/gateway@0.1.0-next.6
+    - @seedcord/plugin-mongoose@0.1.0-next.1
+
+## 0.2.23-next.10
+
+### Patch Changes
+
+- Updated dependencies [9dba6ea]
+- Updated dependencies [bce91fc]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [8890a84]
+- Updated dependencies [479ed72]
+- Updated dependencies [464438f]
+- Updated dependencies [2565eba]
+- Updated dependencies [4f11816]
+    - @seedcord/gateway@0.1.0-next.5
+    - @seedcord/plugin-mongoose@0.1.0-next.0
+
+## 0.2.23-next.9
+
+### Patch Changes
+
+- Updated dependencies [25b58be]
+- Updated dependencies [8e33bf4]
+    - @seedcord/gateway@0.1.0-next.4
+    - @seedcord/plugins@0.8.0-next.9
+
+## 0.2.23-next.8
+
+### Patch Changes
+
+- Updated dependencies [b03c8cd]
+- Updated dependencies [701b669]
+- Updated dependencies [701b669]
+- Updated dependencies [c959e1a]
+- Updated dependencies [c89adde]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+- Updated dependencies [5ec46ca]
+    - @seedcord/gateway@0.1.0-next.3
+    - @seedcord/plugins@0.8.0-next.8
+
+## 0.2.23-next.7
+
+### Patch Changes
+
+- Updated dependencies [f011978]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+    - @seedcord/gateway@0.1.0-next.2
+    - @seedcord/plugins@0.8.0-next.7
+
+## 0.2.23-next.6
+
+### Patch Changes
+
+- Updated dependencies [42fd262]
+- Updated dependencies [d1cb181]
+- Updated dependencies [42fd262]
+- Updated dependencies [42fd262]
+- Updated dependencies [e60fcf7]
+- Updated dependencies [42fd262]
+- Updated dependencies [e60fcf7]
+    - @seedcord/gateway@0.1.0-next.1
+    - @seedcord/plugins@0.8.0-next.6
+
+## 0.2.23-next.5
+
+### Patch Changes
+
+- Updated dependencies [8cb06e1]
+    - @seedcord/gateway@0.1.0-next.0
+    - @seedcord/plugins@0.8.0-next.5
+
+## 0.2.23-next.4
+
+### Patch Changes
+
+- Updated dependencies [7174db3]
+- Updated dependencies [7174db3]
+- Updated dependencies [7174db3]
+    - seedcord@0.16.0-next.4
+    - @seedcord/plugins@0.8.0-next.4
+
+## 0.2.23-next.3
+
+### Patch Changes
+
+- Updated dependencies [7f4fb2e]
+- Updated dependencies [b384e8f]
+    - seedcord@0.16.0-next.3
+    - @seedcord/plugins@0.8.0-next.3
+
+## 0.2.23-next.2
+
+### Patch Changes
+
+- Updated dependencies [993f609]
+    - seedcord@0.16.0-next.2
+    - @seedcord/plugins@0.8.0-next.2
+
+## 0.2.23-next.1
+
+### Patch Changes
+
+- Updated dependencies [c046193]
+- Updated dependencies [c046193]
+    - seedcord@0.16.0-next.1
+    - @seedcord/plugins@0.8.0-next.1
+
+## 0.2.23-next.0
+
+### Patch Changes
+
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+- Updated dependencies [8635423]
+    - seedcord@0.16.0-next.0
+    - @seedcord/plugins@0.7.3-next.0
+
 ## 0.2.22
 
 ### Patch Changes

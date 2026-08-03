@@ -1,7 +1,10 @@
 {
     "name": "@seedcord/utils",
     "type": "module",
-    "version": "0.7.0",
+    "version": "0.8.0-next.9",
+    "engines": {
+        "node": ">=24.3"
+    },
     "description": "Utility functions for Seedcord packages",
     "repository": {
         "type": "git",
@@ -29,6 +32,16 @@
                 "types": "./dist/internal.index.d.cts",
                 "default": "./dist/internal.index.cjs"
             }
+        },
+        "./node": {
+            "import": {
+                "types": "./dist/node.d.mts",
+                "default": "./dist/node.mjs"
+            },
+            "require": {
+                "types": "./dist/node.d.cts",
+                "default": "./dist/node.cjs"
+            }
         }
     },
     "files": [
@@ -44,7 +57,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -53,13 +66,16 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/errors": "workspace:*",
         "@seedcord/types": "workspace:*",
-        "discord-api-types": "catalog:deps"
+        "discord-api-types": "catalog:deps",
+        "strip-ansi": "^7.2.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "discord.js": "catalog:peer",
         "type-fest": "catalog:deps"
     },

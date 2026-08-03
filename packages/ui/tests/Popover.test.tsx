@@ -4,13 +4,14 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '../src/Popover';
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from '@/Popover';
 
 import type { ReactElement } from 'react';
 
 // justified: jsdom omits ResizeObserver (PopoverArrow's use-size hook needs it) and PointerEvent (Radix dismissable-layer listens on pointerdown).
 beforeAll(() => {
-    if (typeof globalThis.ResizeObserver === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- jsdom omits ResizeObserver at runtime even though the type says it exists
+    if (globalThis.ResizeObserver === undefined) {
         class StubResizeObserver {
             observe(): void {}
             unobserve(): void {}
@@ -18,7 +19,8 @@ beforeAll(() => {
         }
         (globalThis as unknown as { ResizeObserver: typeof StubResizeObserver }).ResizeObserver = StubResizeObserver;
     }
-    if (typeof globalThis.PointerEvent === 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- jsdom omits PointerEvent at runtime even though the type says it exists
+    if (globalThis.PointerEvent === undefined) {
         (globalThis as unknown as { PointerEvent: typeof MouseEvent }).PointerEvent = MouseEvent;
     }
 });

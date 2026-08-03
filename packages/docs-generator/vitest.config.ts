@@ -1,18 +1,11 @@
-import { defineConfig, mergeConfig } from 'vitest/config';
+import { createVitestConfig } from '@seedcord/vitest-config';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore ts is crying because the import isn't from generators's src dir
-import rootConfig from '../../vitest.config';
-
-export default mergeConfig(
-    rootConfig,
-    defineConfig({
-        test: {
-            globals: true,
-            environment: 'node',
-            testTimeout: 10000,
-            globalSetup: './tests/utils/globalSetup.ts',
-            fileParallelism: false
-        }
-    })
-);
+export default createVitestConfig(import.meta.url, {
+    test: {
+        globals: true,
+        environment: 'node',
+        testTimeout: 10_000,
+        globalSetup: './tests/utils/globalSetup.ts',
+        fileParallelism: false
+    }
+});

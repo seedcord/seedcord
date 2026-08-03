@@ -37,7 +37,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -51,11 +51,13 @@
     ],
     "dependencies": {
         "@microsoft/api-extractor": "7.58.9",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "yaml": "^2.9.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*"
     }
 }

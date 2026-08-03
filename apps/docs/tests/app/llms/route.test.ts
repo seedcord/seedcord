@@ -10,7 +10,7 @@ vi.mock('@lib/docs/catalog', () => ({
 }));
 vi.mock('@lib/docs/resolveEntity', () => ({ resolveEntity: resolveEntityMock }));
 
-const { GET } = await import('../../../src/app/llms/[[...path]]/route');
+const { GET } = await import('@/app/llms/[[...path]]/route');
 
 function call(path: string[]): Promise<Response> {
     return GET(new Request('https://docs.seedcord.org/llms'), { params: Promise.resolve({ path }) });

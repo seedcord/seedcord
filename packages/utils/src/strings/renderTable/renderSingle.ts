@@ -27,7 +27,7 @@ export function renderSingle(data: readonly (readonly string[])[], options?: Tab
     // a raw newline in a cell would split the framed output across physical lines, so collapse it
     const grid = data.map((row) =>
         Array.from({ length: columnCount }, (_, i) => {
-            const cell = (row[i] ?? '').replace(/\r?\n/g, ' ');
+            const cell = (row[i] ?? '').replaceAll(/\r?\n/g, ' ');
             const filled = cell === '' ? emptyCell : cell;
             if (maxWidth === undefined || overflow !== 'truncate') return filled;
             return truncate(filled, maxWidth);

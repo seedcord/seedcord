@@ -1,13 +1,6 @@
-import type {
-    ManifestRepository,
-    PackageSourceIndex,
-    ReexportEntry as DocReexport,
-    SourceEntry as ManifestSourceEntry
-} from '@seedcord/docs-generator';
+import type { ManifestRepository, PackageSourceIndex, ReexportEntry as DocReexport } from '@seedcord/docs-generator';
 import type { GlobalId } from '@src/ids';
 import type { PackageDirectory } from '@src/PackageDirectory';
-
-export type { DocReexport, ManifestRepository, ManifestSourceEntry, PackageSourceIndex };
 
 export type SigPart =
     | { kind: 'text'; text: string }
@@ -290,3 +283,10 @@ export interface DocCollection {
     byKey: Map<GlobalId, DocNode>;
     byGlobalSlug: Map<string, DocNode>;
 }
+
+export {
+    type SourceEntry as ManifestSourceEntry,
+    type ReexportEntry as DocReexport,
+    type PackageSourceIndex,
+    type ManifestRepository
+} from '@seedcord/docs-generator';

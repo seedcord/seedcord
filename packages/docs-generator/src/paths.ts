@@ -6,7 +6,6 @@ const srcDir = path.dirname(currentFile);
 
 const DEFAULT_PACKAGE_ROOT = path.resolve(srcDir, '..');
 const DEFAULT_REPO_ROOT = path.resolve(DEFAULT_PACKAGE_ROOT, '..', '..');
-const DEFAULT_PACKAGES_DIR = path.join(DEFAULT_REPO_ROOT, 'packages');
 const DEFAULT_OUTPUT_DIR = path.join(DEFAULT_PACKAGE_ROOT, 'generated');
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : undefined;
 
@@ -32,7 +31,7 @@ export interface ApiDocsPathConfig {
 export class ApiDocsPaths {
     readonly packageRoot: string;
     readonly repoRoot: string;
-    readonly packagesDir: string;
+    readonly packagesDir: string | undefined;
     readonly outputDir: string;
     readonly manifestPath: string;
 
@@ -45,18 +44,10 @@ export class ApiDocsPaths {
             ? resolveWithBases(config.repoRoot, [INIT_CWD, this.packageRoot, DEFAULT_REPO_ROOT, process.cwd()])
             : DEFAULT_REPO_ROOT;
 
-        if (config.packagesDir) {
-            this.packagesDir = resolveWithBases(config.packagesDir, [
-                this.repoRoot,
-                INIT_CWD,
-                this.packageRoot,
-                process.cwd()
-            ]);
-        } else if (config.repoRoot) {
-            this.packagesDir = path.join(this.repoRoot, 'packages');
-        } else {
-            this.packagesDir = DEFAULT_PACKAGES_DIR;
-        }
+        this.packagesDir = config.packagesDir
+            ? resolveWithBases(config.packagesDir, [this.repoRoot, INIT_CWD, this.packageRoot, process.cwd()])
+            : undefined;
+
         this.outputDir = config.outputDir
             ? resolveWithBases(config.outputDir, [INIT_CWD, this.repoRoot, this.packageRoot, process.cwd()])
             : path.join(this.packageRoot, path.basename(DEFAULT_OUTPUT_DIR));

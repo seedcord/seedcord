@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '../../src/routing/lookup';
-import type { EntityTone } from '../../src/tones';
-import type { DocNode, DocPackageModel, DocReference } from '../../src/types';
+import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '@routing/lookup';
+import type { EntityTone } from '@src/tones';
+import type { DocNode, DocPackageModel, DocReference } from '@src/types';
 
 // justified: stub kindName to echo the fixture's `kind` string so fixtures use kind names directly.
-vi.mock('../../src/kinds', async () => {
-    const actual = await vi.importActual<typeof import('../../src/kinds')>('../../src/kinds');
+vi.mock('@src/kinds', async () => {
+    const actual = await vi.importActual<typeof import('@src/kinds')>('@src/kinds');
     return {
         ...actual,
         kindName: (kind: unknown): string => (typeof kind === 'string' ? kind : String(kind))
     };
 });
 
-const { orderedPackageCandidates } = await import('../../src/routing/resolve-helpers');
-const { AnchorStrategy } = await import('../../src/routing/AnchorStrategy');
-const { ReferenceResolver } = await import('../../src/routing/ReferenceResolver');
+const { orderedPackageCandidates } = await import('@routing/resolve-helpers');
+const { AnchorStrategy } = await import('@routing/AnchorStrategy');
+const { ReferenceResolver } = await import('@routing/ReferenceResolver');
 
 function makeNode(overrides: Partial<DocNode>): DocNode {
     const base: Partial<DocNode> = {
@@ -329,20 +329,20 @@ describe('ReferenceResolver.href', () => {
 });
 
 describe('ReferenceResolver.resolve', () => {
-    const SERVICES_CROSS = {
-        '@seedcord/services': { version: '0.5.0', entities: { logger: 'class' } }
+    const LOGGER_CROSS = {
+        '@seedcord/logger': { version: '0.5.0', entities: { logger: 'class' } }
     } as const;
 
     it('emits a cross-package internal target for a known-but-unloaded entity', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
-            known: ['seedcord', '@seedcord/services'],
-            cross: SERVICES_CROSS
+            known: ['seedcord', '@seedcord/logger'],
+            cross: LOGGER_CROSS
         });
-        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/services', qualifiedName: 'Logger#debug' };
+        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/logger', qualifiedName: 'Logger#debug' };
         expect(resolver.resolve('seedcord', ref)).toEqual({
             kind: 'internal',
-            packageName: '@seedcord/services',
+            packageName: '@seedcord/logger',
             slug: 'logger/debug'
         });
     });
@@ -350,17 +350,17 @@ describe('ReferenceResolver.resolve', () => {
     it('gates a known-but-unverifiable slug (param/predicate) to unresolved', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
-            known: ['seedcord', '@seedcord/services'],
-            cross: SERVICES_CROSS
+            known: ['seedcord', '@seedcord/logger'],
+            cross: LOGGER_CROSS
         });
-        // `Ghost` is not an entity in the services index, so it does not resolve.
-        const ref: DocReference = { name: 'Ghost', packageName: '@seedcord/services', qualifiedName: 'Ghost' };
+        // `Ghost` is not an entity in the logger index, so it does not resolve.
+        const ref: DocReference = { name: 'Ghost', packageName: '@seedcord/logger', qualifiedName: 'Ghost' };
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });
     });
 
     it('falls through to unresolved when crossPackageUrlRef yields nothing (no qualifiedName)', () => {
-        const { resolver } = makeResolver({ loaded: ['seedcord'], known: ['seedcord', '@seedcord/services'] });
-        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/services' };
+        const { resolver } = makeResolver({ loaded: ['seedcord'], known: ['seedcord', '@seedcord/logger'] });
+        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/logger' };
         expect(resolver.resolve('seedcord', ref)).toEqual({ kind: 'unresolved' });
     });
 
@@ -372,31 +372,31 @@ describe('ReferenceResolver.resolve', () => {
 });
 
 describe('ReferenceResolver.href cross-package', () => {
-    const SERVICES_CROSS = {
-        '@seedcord/services': { version: '0.5.0', entities: { logger: 'class' } }
+    const LOGGER_CROSS = {
+        '@seedcord/logger': { version: '0.5.0', entities: { logger: 'class' } }
     } as const;
 
     it('builds a 5-segment tone+version URL with a member fragment for an unloaded entity', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
-            known: ['seedcord', '@seedcord/services'],
-            cross: SERVICES_CROSS
+            known: ['seedcord', '@seedcord/logger'],
+            cross: LOGGER_CROSS
         });
-        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/services', qualifiedName: 'Logger#debug' };
-        expect(resolver.href('seedcord', ref)).toBe('/packages/services/0.5.0/classes/logger#debug');
+        const ref: DocReference = { name: 'Logger', packageName: '@seedcord/logger', qualifiedName: 'Logger#debug' };
+        expect(resolver.href('seedcord', ref)).toBe('/packages/logger/0.5.0/classes/logger#debug');
     });
 
     it('routes a known-package non-entity (EventEmitter) to its node.js docs, not a 404 link', () => {
         const { resolver } = makeResolver({
             loaded: ['seedcord'],
-            known: ['seedcord', '@seedcord/services'],
-            cross: SERVICES_CROSS
+            known: ['seedcord', '@seedcord/logger'],
+            cross: LOGGER_CROSS
         });
-        // EventEmitter is not an entity in the services index, so href falls through to the
+        // EventEmitter is not an entity in the logger index, so href falls through to the
         // external-link table instead of building a 404 internal link.
         const ref: DocReference = {
             name: 'EventEmitter',
-            packageName: '@seedcord/services',
+            packageName: '@seedcord/logger',
             qualifiedName: 'EventEmitter'
         };
         expect(resolver.href('seedcord', ref)).toBe('https://nodejs.org/api/events.html#class-eventemitter');

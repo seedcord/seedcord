@@ -13,6 +13,63 @@
             "inputs": ["scripts/docs/extract-docs.ts", "packages/*/dist/**/*.d.mts", "packages/*/package.json"],
             "outputs": ["generated/**"]
         },
+        "//#check:catalog": {
+            "inputs": ["scripts/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
+        },
+        "//#tc:scripts": {
+            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "inputs": [
+                "scripts/**/*.ts",
+                "scripts/tsconfig.json",
+                "packages/tsconfig/**",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts"
+            ]
+        },
+        "//#tc:root": {
+            "dependsOn": [
+                "@seedcord/docs-engine#build",
+                "@seedcord/docs-generator#build",
+                "@seedcord/vitest-config#build"
+            ],
+            "inputs": [
+                "*.ts",
+                "turbo/**/*.ts",
+                "scripts/**/*.ts",
+                "tsconfig.json",
+                "packages/tsconfig/**",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts",
+                "packages/vitest-config/dist/**/*.d.mts"
+            ]
+        },
+        "//#lint:scripts": {
+            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "inputs": [
+                "scripts/**/*.{ts,tsx}",
+                "scripts/tsconfig.json",
+                "eslint.config.*",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts"
+            ]
+        },
+        "//#lint:md": {
+            "inputs": ["**/*.md", ".markdownlint-cli2.jsonc", ".markdownlint.json"]
+        },
+        "//#test:scripts": {
+            "dependsOn": [
+                "@seedcord/docs-engine#build",
+                "@seedcord/docs-generator#build",
+                "@seedcord/vitest-config#build"
+            ],
+            "inputs": [
+                "scripts/**/*.ts",
+                "vitest.config.ts",
+                "packages/docs-engine/dist/**/*.d.mts",
+                "packages/docs-generator/dist/**/*.d.mts",
+                "packages/vitest-config/dist/**"
+            ]
+        },
         "dev": {
             "cache": false,
             "persistent": true
@@ -32,6 +89,22 @@
         "test": {
             "dependsOn": ["^build"],
             "inputs": ["$TURBO_DEFAULT$", "jest.config.*", "vitest.config.*", "src/**", "tests/**"]
+        },
+        "@seedcord/core#lint": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"]
+        },
+        "@seedcord/core#tc": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "inputs": ["$TURBO_DEFAULT$", "tsconfig*.json"]
+        },
+        "@seedcord/core#test": {
+            "dependsOn": ["^build", "@seedcord/core#build"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
+        },
+        "@seedcord/http#test": {
+            "dependsOn": ["^build", "@seedcord/http#build"],
+            "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "src/**", "tests/**"]
         },
         "@seedcord/docs-engine#test": {
             "dependsOn": ["^build", "@seedcord/docs-generator#test"],

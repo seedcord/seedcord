@@ -1,0 +1,99 @@
+{
+    "name": "@seedcord/http",
+    "type": "module",
+    "version": "0.1.0-next.3",
+    "description": "HTTP-interactions transport for Seedcord bots",
+    "engines": {
+        "node": ">=24.3"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "packages/http"
+    },
+    "types": "./dist/index.d.mts",
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.mts",
+                "default": "./dist/index.mjs"
+            },
+            "require": {
+                "types": "./dist/index.d.cts",
+                "default": "./dist/index.cjs"
+            }
+        },
+        "./edge": {
+            "import": {
+                "types": "./dist/edge.index.d.mts",
+                "default": "./dist/edge.index.mjs"
+            },
+            "require": {
+                "types": "./dist/edge.index.d.cts",
+                "default": "./dist/edge.index.cjs"
+            }
+        },
+        "./manifest": {
+            "import": {
+                "types": "./dist/manifest.index.d.mts",
+                "default": "./dist/manifest.index.mjs"
+            },
+            "require": {
+                "types": "./dist/manifest.index.d.cts",
+                "default": "./dist/manifest.index.cjs"
+            }
+        }
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md",
+        "LICENSE"
+    ],
+    "scripts": {
+        "build": "tsdown",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsgo --noEmit",
+        "test": "vitest run",
+        "test:watch": "vitest dev",
+        "coverage": "vitest run --coverage"
+    },
+    "dependencies": {
+        "@discordjs/core": "^2.6.0",
+        "@discordjs/rest": "catalog:deps",
+        "@seedcord/core": "workspace:*",
+        "@seedcord/errors": "workspace:*",
+        "@seedcord/logger": "workspace:*",
+        "@seedcord/rate-limiter": "workspace:*",
+        "@seedcord/types": "workspace:*",
+        "@seedcord/utils": "workspace:*",
+        "chalk": "catalog:deps",
+        "discord-api-types": "catalog:deps",
+        "envapt": "catalog:deps",
+        "type-fest": "catalog:deps"
+    },
+    "peerDependencies": {
+        "reflect-metadata": "catalog:peer",
+        "typescript": "catalog:peer"
+    },
+    "devDependencies": {
+        "@cloudflare/vitest-pool-workers": "^0.18.4",
+        "@discordjs/builders": "catalog:deps",
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
+        "@vitest/coverage-istanbul": "^4.1.10",
+        "esbuild": "^0.28.1",
+        "reflect-metadata": "catalog:peer",
+        "vitest": "catalog:test"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true
+    }
+}

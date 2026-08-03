@@ -11,7 +11,7 @@ const { engineStub } = vi.hoisted(() => ({
     }
 }));
 
-// justified: stub transitive imports so the test stays hermetic and dodges the '@lib/*' alias vitest can't resolve without vite-tsconfig-paths.
+// stub transitive imports to isolate the test and work around vitest's inability to resolve '@lib/*' alias without vite-tsconfig-paths.
 vi.mock('../../../src/lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve(engineStub)
 }));
@@ -84,7 +84,7 @@ describe('findCatalogVersion', () => {
 describe('loadDocsCatalog version badges', () => {
     it("badges the stable head 'latest' and the prerelease head 'next', keeping the prerelease the default head on a 0-stable package", async () => {
         const prereleaseOnly: PackageIndexEntry = {
-            fullName: '@seedcord/cli',
+            fullName: '@seedcord/gateway',
             stable: null,
             prerelease: { latest: '0.11.0-next.0' }
         };
@@ -93,21 +93,21 @@ describe('loadDocsCatalog version badges', () => {
             stable: { latest: '1.2.0', latestByMinor: { '1.2': '1.2.0' }, latestByMajor: { '1': '1.2.0' } },
             prerelease: { latest: '2.0.0-next.0' }
         };
-        const entries: Record<string, PackageIndexEntry> = { cli: prereleaseOnly, utils: stableAndPre };
+        const entries: Record<string, PackageIndexEntry> = { gateway: prereleaseOnly, utils: stableAndPre };
 
         engineStub.ready.mockResolvedValue(undefined);
         engineStub.listPackages.mockResolvedValue([
-            { folder: 'cli', fullName: '@seedcord/cli' },
+            { folder: 'gateway', fullName: '@seedcord/gateway' },
             { folder: 'utils', fullName: '@seedcord/utils' }
         ]);
         engineStub.getEntry.mockImplementation((folder) => Promise.resolve(entries[folder] ?? null));
 
         const catalog = await loadDocsCatalog();
-        const cli = catalog.find((entry) => entry.manifestName === '@seedcord/cli');
+        const gateway = catalog.find((entry) => entry.manifestName === '@seedcord/gateway');
         const utils = catalog.find((entry) => entry.manifestName === '@seedcord/utils');
 
-        expect(cli?.versions).toHaveLength(1);
-        expect(cli?.versions[0]).toMatchObject({
+        expect(gateway?.versions).toHaveLength(1);
+        expect(gateway?.versions[0]).toMatchObject({
             id: '0.11.0-next.0',
             channel: 'prerelease',
             isLatest: true,
@@ -130,13 +130,13 @@ describe('loadDocsCatalog descriptions', () => {
             prerelease: null,
             description: 'Utility helpers for seedcord packages.'
         };
-        const noDesc: PackageIndexEntry = { fullName: '@seedcord/cli', stable, prerelease: null };
-        const entries: Record<string, PackageIndexEntry> = { utils: withDesc, cli: noDesc };
+        const noDesc: PackageIndexEntry = { fullName: '@seedcord/gateway', stable, prerelease: null };
+        const entries: Record<string, PackageIndexEntry> = { utils: withDesc, gateway: noDesc };
 
         engineStub.ready.mockResolvedValue(undefined);
         engineStub.listPackages.mockResolvedValue([
             { folder: 'utils', fullName: '@seedcord/utils' },
-            { folder: 'cli', fullName: '@seedcord/cli' }
+            { folder: 'gateway', fullName: '@seedcord/gateway' }
         ]);
         engineStub.getEntry.mockImplementation((folder) => Promise.resolve(entries[folder] ?? null));
 
@@ -144,8 +144,8 @@ describe('loadDocsCatalog descriptions', () => {
         expect(catalog.find((entry) => entry.manifestName === '@seedcord/utils')?.description).toBe(
             'Utility helpers for seedcord packages.'
         );
-        expect(catalog.find((entry) => entry.manifestName === '@seedcord/cli')?.description).toBe(
-            'Reference documentation for cli.'
+        expect(catalog.find((entry) => entry.manifestName === '@seedcord/gateway')?.description).toBe(
+            'Reference documentation for gateway.'
         );
     });
 });

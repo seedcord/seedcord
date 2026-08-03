@@ -1,4 +1,4 @@
-import { ButtonRoute, CursorSource, Paginator, SlashHandler, SlashRoute } from 'seedcord';
+import { ButtonRoute, CursorSource, Paginator, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 import { FeedCard } from '../components/bundles/Feed';
 
@@ -30,6 +30,6 @@ export class FeedNav extends Feed.Handler {}
 @SlashRoute('feed')
 export class FeedSlash extends SlashHandler<'feed'> {
     public async execute(): Promise<void> {
-        await Feed.start(this.event);
+        await Feed.start(this);
     }
 }

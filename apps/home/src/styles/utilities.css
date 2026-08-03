@@ -10,11 +10,8 @@
     .marquee-anim {
         animation: marquee-x 240s linear infinite;
     }
-    .marquee-mask:hover .marquee-anim {
-        animation-play-state: paused;
-    }
 
-    /* the poster's playful hard offset block shadow + 3px rule (ink = --seed-dark #2d3328) */
+    /* main poster theme */
     .blk {
         box-shadow: 10px 10px 0 0 var(--seed-dark);
     }

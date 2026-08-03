@@ -1,5 +1,7 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { glob, readFile } from 'node:fs/promises';
 import path from 'node:path';
+
+import { parse } from 'yaml';
 
 import { defaultPaths } from './paths';
 import { normalizeRelativePath, pathExists } from './utils';
@@ -10,19 +12,41 @@ import type { PackageManifest } from './types';
 // Fallback entry when package.json has no seedcordDocs.entryPoints override.
 const DEFAULT_ENTRY_POINTS = ['src/index.ts'];
 
+const WORKSPACE_FILE = 'pnpm-workspace.yaml';
+
+interface WorkspaceFile {
+    packages: string[];
+}
+
 export async function discoverWorkspacePackages(paths: ApiDocsPaths = defaultPaths): Promise<string[]> {
-    const entries = await readdir(paths.packagesDir, { withFileTypes: true });
+    const { packagesDir, repoRoot } = paths;
+    const root = packagesDir ?? repoRoot;
+    const patterns = packagesDir ? ['*'] : await readWorkspacePatterns(repoRoot);
+    const manifestPatterns = patterns.map((pattern) => `${pattern}/package.json`);
     const packageDirs: string[] = [];
 
-    for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
-        const packageDir = path.join(paths.packagesDir, entry.name);
-        const packageJsonPath = path.join(packageDir, 'package.json');
-
-        if (await pathExists(packageJsonPath)) packageDirs.push(packageDir);
+    for await (const match of glob(manifestPatterns, { cwd: root })) {
+        const packageDir = path.resolve(root, path.dirname(match));
+        const { private: isPrivate } = await readPackageManifest(packageDir);
+        if (!isPrivate) packageDirs.push(packageDir);
     }
 
-    return packageDirs;
+    return packageDirs.sort();
+}
+
+async function readWorkspacePatterns(repoRoot: string): Promise<string[]> {
+    const workspacePath = path.join(repoRoot, WORKSPACE_FILE);
+    const parsed: unknown = parse(await readFile(workspacePath, 'utf8'));
+    if (!isWorkspaceFile(parsed)) {
+        throw new Error(`Malformed ${workspacePath}: "packages" must be a list of globs.`);
+    }
+    return parsed.packages;
+}
+
+function isWorkspaceFile(value: unknown): value is WorkspaceFile {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Record<string, unknown>;
+    return Array.isArray(candidate.packages) && candidate.packages.every((entry) => typeof entry === 'string');
 }
 
 export async function readPackageManifest(packageDir: string): Promise<PackageManifest> {

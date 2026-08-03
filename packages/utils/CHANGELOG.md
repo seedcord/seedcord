@@ -1,5 +1,118 @@
 # @seedcord/utils
 
+## 0.8.0-next.9
+
+### Patch Changes
+
+- b586a14: `Commands` replaces `CommandMentions`, keyed by slash route. `ContextMenus` maps each deployed context-menu command, split into `user` and `message`. Both ship from `@seedcord/core` and re-export through each transport.
+
+    **BREAKING:** `bot.emojis`, `bot.commands`, and `bot.mentions` are removed. Import `Emojis`, `Commands`, and `ContextMenus` directly. Reading one before startup resolves it throws.
+
+- Updated dependencies [b586a14]
+- Updated dependencies [58ee649]
+- Updated dependencies [b586a14]
+- Updated dependencies [c26ec13]
+    - @seedcord/errors@0.3.0-next.7
+
+## 0.8.0-next.8
+
+### Minor Changes
+
+- 44b6d72: **BREAKING:** `traverseDirectory` no longer takes a logger. An unreadable directory and a file that throws while importing both reject, reporting the path.
+
+    An unreadable directory previously resolved to an empty list, which started a bot with none of its handlers registered.
+
+### Patch Changes
+
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [44b6d72]
+- Updated dependencies [9ff4e85]
+- Updated dependencies [f0ba9f3]
+- Updated dependencies [53d5cac]
+- Updated dependencies [4f11816]
+- Updated dependencies [9ff4e85]
+    - @seedcord/errors@0.3.0-next.6
+    - @seedcord/types@0.8.0-next.8
+
+## 0.8.0-next.7
+
+### Patch Changes
+
+- Updated dependencies [25b58be]
+    - @seedcord/types@0.8.0-next.7
+
+## 0.8.0-next.6
+
+### Minor Changes
+
+- c959e1a: Add `stripAnsi`, removing ANSI escapes from a string.
+- 5ec46ca: New `timestampFromSnowflake(snowflake)` returns the epoch milliseconds encoded in a Discord snowflake.
+
+### Patch Changes
+
+- b03c8cd: Raise discord.js to `^14.27.0`, `@discordjs/rest` to `^2.6.2`, and discord-api-types to `^0.38.50`.
+- Updated dependencies [b03c8cd]
+- Updated dependencies [c959e1a]
+- Updated dependencies [137e641]
+    - @seedcord/types@0.8.0-next.6
+
+## 0.8.0-next.5
+
+### Minor Changes
+
+- 93544a8: **BREAKING:** `traverseDirectory` and `isTsOrJsFile` moved to the new `@seedcord/utils/node` subpath. `formatFilePath` no longer reads `node:path`, and a path outside the working directory is returned unchanged.
+
+### Patch Changes
+
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [cd3ee0f]
+- Updated dependencies [93544a8]
+    - @seedcord/types@0.8.0-next.5
+
+## 0.8.0-next.4
+
+### Patch Changes
+
+- e60fcf7: Raise `engines.node` to `>=24.3`, the floor for the `Error.isError` calls the framework uses.
+- Updated dependencies [d1cb181]
+- Updated dependencies [e60fcf7]
+    - @seedcord/types@0.8.0-next.4
+
+## 0.8.0-next.3
+
+### Patch Changes
+
+- Updated dependencies [7174db3]
+- Updated dependencies [7174db3]
+    - @seedcord/types@0.8.0-next.3
+
+## 0.8.0-next.2
+
+### Patch Changes
+
+- Updated dependencies [993f609]
+    - @seedcord/types@0.8.0-next.2
+
+## 0.8.0-next.1
+
+### Minor Changes
+
+- c046193: **BREAKING:** require Node 24. `engines.node` moves to `>=24` so the framework can use Node 24 APIs like `Error.isError` and `RegExp.escape`. Upgrade your runtime to Node 24 or newer.
+
+### Patch Changes
+
+- c046193: Modernize internals via the curated eslint-plugin-unicorn rules (modern array, string, and number APIs, and `Error.isError` in error checks). Behavior-preserving, no public API change.
+- Updated dependencies [d8b91f5]
+- Updated dependencies [c046193]
+    - @seedcord/types@0.8.0-next.1
+
+## 0.7.1-next.0
+
+### Patch Changes
+
+- Updated dependencies [8635423]
+    - @seedcord/types@0.7.2-next.0
+
 ## 0.7.0
 
 ### Minor Changes
@@ -15,26 +128,6 @@
 - Updated dependencies [78377fa]
     - @seedcord/types@0.7.1
 
-## 0.7.0-next.1
-
-### Patch Changes
-
-- 0a19719: Remove unused exports.
-
-## 0.7.0-next.0
-
-### Minor Changes
-
-- 78377fa: Rename `generateAsciiTable` to `renderTable` and fold pagination into it. Passing a `budget` returns one `string` per page (header repeated on each, default 2000) instead of a single string, so the separate `paginateAsciiTable` is gone. Fix `numericAlign` to judge a column by its body rows so a numeric column under a text header now right-aligns. Add `fence` to wrap the output in a triple-backtick block for monospace rendering in Discord messages and embeds, counted against `budget`. Default is now a rounded table. And a lot more customization options!
-
-### Patch Changes
-
-- 78377fa: add examples to some utils that should have them
-- 78377fa: update LICENSE copyright year
-- Updated dependencies [78377fa]
-- Updated dependencies [78377fa]
-    - @seedcord/types@0.7.1-next.0
-
 ## 0.6.1
 
 ### Patch Changes
@@ -42,14 +135,6 @@
 - 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
 - Updated dependencies [7121c18]
     - @seedcord/types@0.7.0
-
-## 0.6.1-next.0
-
-### Patch Changes
-
-- 043e2a1: Bump non-breaking runtime dependencies (envapt 6.0.2, discord-api-types 0.38.49, mongoose 9.7.1, ink 7.1.0, typescript-eslint 8.61.1, tailwindcss peer 4.3.1).
-- Updated dependencies [7121c18]
-    - @seedcord/types@0.7.0-next.0
 
 ## 0.6.0
 
@@ -68,24 +153,6 @@
 - Updated dependencies [6e39348]
 - Updated dependencies [6e39348]
     - @seedcord/types@0.6.0
-
-## 0.6.0-next.0
-
-### Minor Changes
-
-- 6e39348: Rename the cooldown store and land the gate leaf prep.
-
-    - In `@seedcord/services`, `CooldownManager` is renamed to `RateLimiter` (`CooldownWindow` and `CooldownResult` become `RateLimitWindow` and `RateLimitResult`), and the `@seedcord/services/internal` subpath is removed. The throw-based `check()` API becomes `hit(key, { delay, limit? })`.
-    - In `seedcord`, the store is reached at `core.rateLimiter`.
-    - In `@seedcord/utils`, add `parseDuration`, the `ValidDuration` template type, and `toEpochSeconds`.
-    - In `@seedcord/types`, add `Config.ownerIds` and the `Epoch` types (`EpochMs` and `EpochSec`).
-
-### Patch Changes
-
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-- Updated dependencies [6e39348]
-    - @seedcord/types@0.6.0-next.0
 
 ## 0.5.0
 
@@ -135,37 +202,6 @@
 - Updated dependencies [fe77998]
 - Updated dependencies [7e6d80e]
     - @seedcord/types@0.4.0
-
-## 0.4.0-next.0
-
-### Minor Changes
-
-- 0083461: seedcord instance brand
-- 7e6d80e: most packages were exporting more than what they should be exporting and now have smaller imports as they should
-
-### Patch Changes
-
-- 225977a: export "version" variable with the actual semantic version of each package
-- 0083461: new method to format a file path relative to the root directory
-- 0083461: new fully typed hasKeys function that can check for the existence of a key and narrow the type based on the distributive union the key is coming from. works with nested keys too
-- 5e4bf42: Reclassify singleton runtime dependencies as peer dependencies so a consumer resolves a single shared instance.
-    - `seedcord`: `discord.js` and `reflect-metadata` are now required peer dependencies.
-    - `@seedcord/plugins`: `mongoose`, `pg`, and `kysely` are optional peer dependencies (install only the backend your plugin uses); `reflect-metadata` and `seedcord` are required peers.
-    - `@seedcord/types`: `discord.js` is now an optional peer dependency.
-    - `@seedcord/services` and `@seedcord/utils`: `type-fest` moved to `devDependencies` (its types are inlined into the published declarations).
-
-- 7308d36: `filterCirculars` now returns a serializable `{ '[unserializable]': reason }` placeholder when a value cannot be made JSON-safe, instead of returning the original value (which would re-throw in the caller's own `JSON.stringify`). `traverseDirectory` logs the directory path and cause on a read failure.
-- fe77998: build pipeline migrated from `tsup` to `tsdown`. each published package now ships `dist/index.d.mts` + `dist/index.d.cts` (cjs is a one-line re-export stub) with a per-condition `exports` map. source-level public API unchanged. `@seedcord/tsup-config` renamed to `@seedcord/tsdown-config` and made private.
-- fe77998: bump peer floor: typescript `^6.0.3`, node `^22.13`. shared `tsconfig/base.json` now sets `esModuleInterop: true` and `types: ["node"]` for ts6's removed implicit defaults. no public API changes.
-- Updated dependencies [225977a]
-- Updated dependencies [a34366b]
-- Updated dependencies [5e4bf42]
-- Updated dependencies [7308d36]
-- Updated dependencies [fe77998]
-- Updated dependencies [a34366b]
-- Updated dependencies [fe77998]
-- Updated dependencies [7e6d80e]
-    - @seedcord/types@0.4.0-next.0
 
 ## 0.3.8
 
@@ -242,8 +278,7 @@
 
 ### Minor Changes
 
-- daf5dd9: new function called filterCirculars that cleans up objects with circular refs
-  new ILogger interface defining logging methods for various log levels so packages that would normally have a circular dependency on services can just depend on types instead
+- daf5dd9: new function called filterCirculars that cleans up objects with circular refs new ILogger interface defining logging methods for various log levels so packages that would normally have a circular dependency on services can just depend on types instead
 
 ### Patch Changes
 

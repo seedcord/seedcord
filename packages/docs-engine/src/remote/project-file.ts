@@ -22,8 +22,8 @@ export function serializeProject(model: DocPackageModel): DocProjectFile {
         schemaVersion: 1,
         package: { name: model.manifest.name, version: model.manifest.version },
         root: model.root,
-        ...(model.manifest.readme ? { readme: model.manifest.readme } : {}),
-        ...(model.manifest.changelogUrl ? { changelogUrl: model.manifest.changelogUrl } : {})
+        ...(model.manifest.readme && { readme: model.manifest.readme }),
+        ...(model.manifest.changelogUrl && { changelogUrl: model.manifest.changelogUrl })
     };
 }
 
@@ -56,8 +56,8 @@ export function validateProjectFile(value: unknown): DocProjectFile {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },
         root: root.root as DocNode,
-        ...(typeof root.readme === 'string' ? { readme: root.readme } : {}),
-        ...(typeof root.changelogUrl === 'string' ? { changelogUrl: root.changelogUrl } : {})
+        ...(typeof root.readme === 'string' && { readme: root.readme }),
+        ...(typeof root.changelogUrl === 'string' && { changelogUrl: root.changelogUrl })
     };
 }
 
@@ -74,7 +74,7 @@ function manifestShell(pkg: DocProjectFile['package'], readme?: string, changelo
         warningCount: 0,
         errorCount: 0,
         succeeded: true,
-        ...(readme ? { readme } : {}),
-        ...(changelogUrl ? { changelogUrl } : {})
+        ...(readme && { readme }),
+        ...(changelogUrl && { changelogUrl })
     };
 }

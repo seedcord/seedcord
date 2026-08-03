@@ -33,7 +33,7 @@ export interface R2Config {
 export function r2ConfigFromEnv(bucketOverride?: string): R2Config {
     const bucket = bucketOverride?.trim();
 
-    const read = (key: string): string => Envapter.getUsing(key, { converter: Converters.String, required: true });
+    const read = (key: string): string => Envapter.getRequired(key, Converters.String);
     return {
         accountId: read('R2_ACCOUNT_ID'),
         accessKeyId: read('R2_ACCESS_KEY_ID'),

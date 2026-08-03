@@ -52,7 +52,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md,css}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -76,6 +76,7 @@
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",
         "@testing-library/user-event": "^14.6.1",

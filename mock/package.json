@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/mock",
     "type": "module",
-    "version": "0.2.22",
+    "version": "0.2.23-next.11",
     "private": true,
     "description": "Mock bot for demonstration and testing purposes",
     "repository": {
@@ -18,22 +18,23 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "tc:watch": "tsc --noEmit --watch"
     },
     "peerDependencies": {
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/plugins": "workspace:*",
+        "@discordjs/builders": "catalog:deps",
+        "@seedcord/gateway": "workspace:*",
+        "@seedcord/plugin-mongoose": "workspace:*",
         "discord.js": "catalog:peer",
         "envapt": "catalog:deps",
         "mongoose": "catalog:peer",
-        "reflect-metadata": "catalog:peer",
-        "seedcord": "workspace:*"
+        "reflect-metadata": "catalog:peer"
     },
     "devDependencies": {
-        "@seedcord/cli": "workspace:*",
+        "seedcord": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*"
     }

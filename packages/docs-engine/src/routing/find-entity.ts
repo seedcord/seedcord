@@ -26,7 +26,7 @@ function matchesKind(node: DocNode, kind: EntityTone | null): boolean {
 }
 
 function pickPreferredNode(nodes: DocNode[]): DocNode | null {
-    if (!nodes.length) {
+    if (nodes.length === 0) {
         return null;
     }
 
@@ -59,7 +59,7 @@ function listPackageNodes(engine: LookupEngine, manifestPackage: string): DocNod
         return [];
     }
 
-    return Array.from(pkg.nodes.values());
+    return [...pkg.nodes.values()];
 }
 
 function findNodeByName(
@@ -72,12 +72,12 @@ function findNodeByName(
 
     if (kind) {
         const kindMatches = nodes.filter((candidate) => matchesKind(candidate, kind));
-        if (kindMatches.length) {
+        if (kindMatches.length > 0) {
             return pickPreferredNode(kindMatches);
         }
     }
 
-    if (nodes.length) {
+    if (nodes.length > 0) {
         return pickPreferredNode(nodes);
     }
 

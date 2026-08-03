@@ -1,27 +1,28 @@
 {
     "$schema": "https://json.schemastore.org/tsconfig",
-    "extends": "@seedcord/tsconfig/node",
+    "extends": "../tsconfig/node.json",
     "compilerOptions": {
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@src/*": ["./src/*"],
-            "@bot/*": ["./src/bot/*"],
-            "@subscribers/*": ["./src/subscribers/*"],
-            "@hmr/*": ["./src/hmr/*"],
-            "@interfaces/*": ["./src/interfaces/*"],
-            "@handlers/*": ["./src/handlers/*"],
-            "@inputs/*": ["./src/inputs/*"],
-            "@pagination/*": ["./src/pagination/*"],
-            "@miscellaneous/*": ["./src/miscellaneous/*"],
-
-            // Paths inside src/bot
-            "@bUtilities/*": ["./src/bot/utilities/*"],
-            "@bControllers/*": ["./src/bot/controllers/*"],
-            "@bDecorators/*": ["./src/bot/decorators/*"]
+            "@ui/*": ["./src/ui/*"],
+            "@core/*": ["./src/core/*"],
+            "@commands/*": ["./src/commands/*"],
+            "@utils/*": ["./src/utils/*"],
+            "@api/*": ["./src/api/*"]
         },
-        "types": ["vite/client"]
+        "types": ["react"],
+        "jsx": "react"
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "tsup.config.ts", "vitest.config.ts"],
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "tests/**/*.ts",
+        "tests/**/*.tsx",
+        "playground/**/*.ts",
+        "playground/**/*.tsx",
+        "tsdown.config.ts",
+        "vitest.config.ts"
+    ],
     "exclude": ["node_modules", "dist"]
 }

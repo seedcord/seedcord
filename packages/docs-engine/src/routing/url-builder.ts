@@ -56,7 +56,7 @@ export function parseEntityPathSegments(segments?: string[] | null): ParsedEntit
     const tone = first ? resolveEntityToneStrict(first) : null;
     const slugSegments = tone || !first ? rest : segments;
 
-    if (!slugSegments.length) {
+    if (slugSegments.length === 0) {
         return {
             tone,
             slug: null,

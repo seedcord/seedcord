@@ -1,21 +1,4 @@
-/** Type of HMR event. */
-export type HmrEventType = 'create' | 'createDir' | 'update' | 'delete' | 'deleteDir';
-
-/** Payload for an HMR update event. */
-export interface HmrUpdateEvent {
-    file: string;
-    type: HmrEventType;
-    /** Files affected by this update, such as importers. Only populated for `update` events. */
-    affectedModules?: string[];
-}
-
-/** A module that processes hot updates. */
-export interface HmrAware {
-    /** Identifies the module in HMR logs. */
-    readonly name: string;
-    /** Called on an HMR update with the full event. */
-    onHmr(event: HmrUpdateEvent): Promise<void>;
-}
+import type { HmrUpdateEvent } from './Types/Hmr';
 
 /**
  * HMR events the framework (client) sends to the CLI (server).
@@ -35,4 +18,15 @@ export interface SeedcordFrameworkEvents {
 export interface SeedcordCliEvents {
     'seedcord:hmr': HmrUpdateEvent;
     'seedcord:refresh-commands': { shouldRefresh: boolean };
+}
+
+/**
+ * A typed dev channel over a raw vite hot object, carrying the framework and CLI HMR wire so neither
+ * side needs the ambient `vite-hmr.d.ts` augmentation.
+ *
+ * @internal
+ */
+export interface DevChannel<TSend, TRecv> {
+    send<Key extends keyof TSend & string>(event: Key, data: TSend[Key]): void;
+    on<Key extends keyof TRecv & string>(event: Key, cb: (data: TRecv[Key]) => void): void;
 }

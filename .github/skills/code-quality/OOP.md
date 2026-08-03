@@ -11,6 +11,8 @@ The repo's rule (from AGENTS.md): **OOP for complex domain logic** (inheritance 
 
 ## Rule 1 — When to use a class vs a function
 
+<!--prettier-ignore-start-->
+
 | Situation | Use |
 |---|---|
 | Stateful domain logic (lifecycle, encapsulated state, polymorphism) | Class |
@@ -19,6 +21,8 @@ The repo's rule (from AGENTS.md): **OOP for complex domain logic** (inheritance 
 | Simple transform, formatter, predicate, or one-off utility | Function |
 | React hook | Function |
 | Module-level configuration or constants | Named exports |
+
+<!--prettier-ignore-end-->
 
 ```ts
 // Bad — class wrapping a single stateless transform
@@ -110,8 +114,12 @@ interface Repository<T> {
 }
 
 // Good — segregated interfaces
-interface Readable<T> { findById(id: string): Promise<T>; }
-interface Writable<T> { save(entity: T): Promise<void>; }
+interface Readable<T> {
+    findById(id: string): Promise<T>;
+}
+interface Writable<T> {
+    save(entity: T): Promise<void>;
+}
 ```
 
 ### Dependency Inversion
@@ -139,16 +147,22 @@ Inheritance is appropriate for genuine "is-a" relationships (a `PulsesProduct` i
 ```ts
 // Fragile inheritance — adding behavior by subclassing
 class BaseService {
-    protected log(msg: string): void { console.log(msg); }
+    protected log(msg: string): void {
+        console.log(msg);
+    }
 }
 class OrderService extends BaseService {
-    fetch() { this.log('fetching'); }
+    fetch() {
+        this.log('fetching');
+    }
 }
 
 // Better — compose the logger in
 class OrderService {
     constructor(private readonly logger: Logger) {}
-    fetch() { this.logger.info('fetching'); }
+    fetch() {
+        this.logger.info('fetching');
+    }
 }
 ```
 
@@ -182,9 +196,13 @@ export class ProductService {
 class AuthSession {
     #token: string; // truly private at runtime
 
-    constructor(token: string) { this.#token = token; }
+    constructor(token: string) {
+        this.#token = token;
+    }
 
-    getAuthHeader(): string { return `Bearer ${this.#token}`; }
+    getAuthHeader(): string {
+        return `Bearer ${this.#token}`;
+    }
 }
 ```
 

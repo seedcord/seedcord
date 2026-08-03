@@ -34,7 +34,7 @@
         "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",
         "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
         "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -43,7 +43,7 @@
         "tsdown": "catalog:deps"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@types/node": "catalog:deps",
         "typescript": "catalog:peer"

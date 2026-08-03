@@ -82,8 +82,10 @@ describe('PackageDirectory', () => {
         expect(snapshot.functions).not.toContain('async-mock-function');
         expect(snapshot.interfaces).not.toContain('recursive-interface');
 
-        expect((await getNodeBySlug('async-mock-function')).slug).toBe('async-mock-function');
-        expect((await getNodeBySlug('recursive-interface')).slug).toBe('recursive-interface');
+        const asyncMockNode = await getNodeBySlug('async-mock-function');
+        expect(asyncMockNode.slug).toBe('async-mock-function');
+        const recursiveInterfaceNode = await getNodeBySlug('recursive-interface');
+        expect(recursiveInterfaceNode.slug).toBe('recursive-interface');
     });
 
     it('exposes iterable entries', async () => {

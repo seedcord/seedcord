@@ -4,6 +4,24 @@
 
 ---
 
+## Grounding (read this first)
+
+Most of this framework's design is already settled. Unverified claims produce confident-looking but incorrect output that wastes hours to debug.
+
+Common failure mode: **grounding on the immediate context, then inferring how it connects elsewhere.** Examples: asserting that duplicate call sites share identical implementations without checking their bodies; implementing a hot-reload method without reading the dispatcher; labeling something a contradiction when a decision record already resolved it.
+
+1. **Cite or flag every load-bearing sentence.** Each claim must carry a `file:line` reference from this session, or the word "assumption". Nothing unlabeled. Labeled guesses add one line of reading; unlabeled ones waste hours.
+
+2. **Open both ends before designing APIs.** Before writing an interface, method, type, or claim "X must be Y", read the module that implements or consumes it. A design sketch is unverified until you verify the code.
+
+3. **Check decision records first.** Before claiming a gap, contradiction, or unresolved issue, search the project's decision records and checklists (authority, with later entries superseding earlier ones in the same file). Assume the maintainer already decided it.
+
+4. **One hop out.** For claims depending on how two things connect, open both ends, including the one you are not editing.
+
+Same standard applies to delegated work. Reopen any citation yourself before relaying it—a wrong finding reported with confidence is the same defect with an added layer.
+
+---
+
 ## Repository Policy
 
 **Zero Technical Debt.** No workarounds, hacks, or temporary compatibility layers. Choose the cleanest architecture; break things if needed to get it right. After making changes that affect the framework's public surface, regenerate docs (`pnpm docs:extract`, or `pnpm docs:smoke` to extract + run the docs-engine smoke pass).
@@ -28,51 +46,19 @@ const x: NoteForAgentAddedByTheUser = 42; // forces a type error
 
 ## Design Patterns
 
-- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface (`packages/seedcord`, `packages/services`, `packages/plugins`) leans on classes — extend or compose them rather than re-implementing parallel function pipelines.
-
-```ts
-// Bad
-export function createUser() {}
-export function updateUser() {}
-
-// Good
-export class UserService {
-    create() {}
-    update() {}
-}
-```
+- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface leans on classes — extend or compose them rather than re-implementing parallel function pipelines.
 
 - **No static-only classes as namespaces.** Use named exports instead.
 
-```ts
-// Bad
-export class Utils {
-    static foo() {}
-}
-
-// Good
-export function foo() {}
-```
-
 - **Function declarations for complex exported functions.** Arrow expressions for inline callbacks and short utilities only — no block-bodied exported arrows.
-
-```ts
-// Bad
-export const compute = () => {
-    /* large */
-};
-
-// Good
-export function compute() {
-    /* large */
-}
-```
 
 - **DRY and SOLID.** No premature abstractions — three similar lines is better than a wrong abstraction. Wait for the third use before extracting.
 
 - **YAGNI (You Aren't Gonna Need It).** Don't add features, config, abstractions, or infrastructure for hypothetical future requirements. Ship what the task requires; surface everything else as a question first.
 
 - **No premature optimization.** Don't optimize for performance without a measured bottleneck. Readable, correct code first — profile, then optimize. Adding memoization, caching, or batching "just in case" creates complexity without verified benefit.
+
+- **Style log messages with `@seedcord/logger`.** Interpolated values in a framework log line (routes, class names, ids, paths) get the truecolor tones defined in `paint`, never default chalk colors (`chalk.cyan`, `chalk.red`, and the rest are banned in log lines). Multi-line output goes through `logger.utils` (`summary`, `block`, `entries`). Unstyled interpolation in a framework log line is a bug.
 
 - **Split large files** (~200+ lines or multiple unrelated responsibilities) into focused modules.
 
@@ -86,8 +72,10 @@ export function compute() {
 - **Prefer `?.` and `??`** for genuinely optional branches — not to suppress errors or hide broken assumptions. See `.github/skills/code-quality/FAIL-FAST-RULES.md` for when NOT to reach for them.
 - **Prefer `import type { T } from 'pkg'`** for type-only imports. Avoid inline `import('pkg').T`.
 - **Use `type-fest` utility types** (available via the workspace catalog) for structural transforms rather than casts. The shared `@seedcord/types` package re-exports project-specific aliases — check there first.
+- **Derive types from their source, never restate them.** A ctor shape is `TypedConstructor<typeof X>` (see `gateway/src/handlers/constructors.ts`), a member union comes from `keyof`, `TypedExtract`/`TypedExclude`, indexed access, or a template-literal map over the owning enum, a narrowed copy from `Pick`/`TypedOmit`. A hand-written structural duplicate drifts from its source.
 - **Tests may use pragmatic fixture casts** (`as unknown as Test`) — always include a short justification comment. Tests must not use `as any`; ESLint replaces `any` with `unknown` automatically and that will surface real type errors if the cast wasn't justified.
 - **To disable an ESLint rule inline:** `// eslint-disable-next-line <rule> -- <reason>`. Never file-wide or project-wide.
+- **Never throw a raw error.** Framework code throws `SeedcordError`, `SeedcordTypeError`, or `SeedcordRangeError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw into one of the three before it propagates to the consumer.
 
 ```ts
 // Bad
@@ -126,7 +114,7 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 - **Verify paths** with `pwd` and `ls` when hitting "No such file or directory."
 - **Use package `scripts`** for common tasks; add and document new scripts when needed. Check the closest `package.json` first — don't assume scripts exist.
 - **Prefer changing file extension to `.txt`** to preserve files marked for deletion (preserves git history).
-- **When a shared package changes, rebuild it** (`pnpm -C packages/<name> build`) and re-run `tc` on the dependents (e.g. `pnpm -C packages/seedcord tc`, `pnpm -C apps/docs tc`).
+- **When a shared package changes, rebuild it** (`pnpm -C packages/<name> build`) and re-run `tc` on the dependents (e.g. `pnpm -C packages/gateway tc`, `pnpm -C apps/docs tc`).
 - **Run `pnpm prePush`** before pushing — it runs `build && tc && lint && test` across the whole workspace and is what husky's pre-push hook gates on.
 - **For published packages**, add a `changeset` (`pnpm cs`) so the release pipeline can publish the new version and changelog entry. `pnpm cs:status` shows pending changesets.
 
@@ -134,21 +122,9 @@ import type { Foo } from 'pkg'; // not import('pkg').Foo
 
 ## Repo Surface (where things live)
 
-A monorepo of focused leaf packages under `packages/`, Next.js docs apps under `apps/`, and a mock bot. Read a package's own barrel and `package.json` for its current surface, not a list here.
+A monorepo of focused leaf packages under `packages/`, Next.js apps under `apps/`, and a mock Discord bot under `mock/` consumed by tests. Read a package's own barrel and `package.json` for its current surface.
 
-- `packages/seedcord` — the core framework orchestrator and bot host.
-- `packages/services` — shared runtime services (logging, lifecycle, health, rate limiting, events).
-- `packages/utils` — small stateless helpers.
-- `packages/types` — shared types and interfaces. Import from here before redefining locally.
-- `packages/kit` — component builders, the error/`Notice` tree, and the typed customId codec.
-- `packages/errors` — the chalk-only `SeedcordError` tree.
-- `packages/cli` — the `seedcord` CLI.
-- `packages/plugins` — the plugin contract and first-party plugins.
-- `packages/docs-engine`, `packages/docs-generator` — the docs extraction and rendering pipeline.
-- the `*-config` packages — workspace-internal config (not published).
-- `apps/*` — the Next.js documentation surfaces.
-- `mock/` — a mock Discord bot consumed by tests.
-- `.github/agents`, `.github/prompts`, `.github/skills` — agent prompts, slash prompts, and skill libraries. `.claude/skills` symlinks to `.github/skills`, and `CLAUDE.md` symlinks to this file.
+`.github/skills` holds the skill libraries. `.claude/skills` symlinks to it, and `CLAUDE.md` symlinks to this file.
 
 ---
 
@@ -170,7 +146,7 @@ When a mock or design reference is provided for an app, it is visual ground trut
 
 ## React / Next.js Patterns
 
-These apply to `apps/{docs,guide,home}` and to the Ink-based React surface in `packages/cli/src`. They are review-enforced today (no react-doctor installed yet):
+These apply to `apps/{docs,guide,home}` and to the Ink-based React surface in `packages/seedcord/src`. `react-doctor` catches many of them (`pnpm react-doctor`, run deliberately, off `prePush`), and the rest are review-enforced:
 
 - **`.filter().map()`** → combine into a single `.reduce()` — never iterate twice.
 - **`array.includes()` in a loop** → `new Set()` for O(1) membership; build it once outside the loop.
@@ -192,7 +168,8 @@ See `.github/skills/code-quality/REACT19.md` and `.github/skills/code-quality/TA
 
 - **YAGNI on deps.** Never `pnpm add` a package until the code using it is written in the same commit. Unused deps are dead code — remove them, don't leave them as "future prereqs."
 - **Dead exports.** Before adding `export` to a symbol, verify it is consumed outside the file. Unused exports are dead code — remove the `export` keyword.
-- **Run a dead-code sweep before committing** (see `.github/skills/code-quality/SKILL.md` for the manual `rg` checklist; a `knip` integration is a worthwhile follow-up but is not wired up yet).
+- **Export what callers name.** Add `export` to a symbol only when a consumer might have to reference it by name, whether in a variable annotation, a function parameter or return type, or an `extends`/`implements` clause. A helper type that appears only as the structural shape of another exported type's field stays internal. The parent's own declaration still resolves it in the emitted `.d.ts`, and api-extractor rolls it into the docs with a link (no sidebar entry), so the public surface stays limited to what callers actually write.
+- **Run a dead-code sweep before committing** with `pnpm knip` from the repo root (configured via `knip.json`), plus the manual `rg` checklist in `.github/skills/code-quality/SKILL.md`.
 
 ---
 

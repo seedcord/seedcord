@@ -1,9 +1,9 @@
 import { assertType, describe, expect, expectTypeOf, it } from 'vitest';
 
-import { SeedcordErrorCode, isSeedcordError } from '../src';
-import { SeedcordError, SeedcordTypeError } from '../src/internal.index';
+import { SeedcordErrorCode, isSeedcordError } from '@src/index';
+import { SeedcordError, SeedcordTypeError } from '@src/internal.index';
 
-import type { SeedcordErrorTypeString } from '../src';
+import type { SeedcordErrorTypeString } from '@src/index';
 
 // never run, the invalid cases would throw, but tc checks the body anyway
 function errorTypeContracts(): void {
@@ -41,10 +41,10 @@ function errorTypeContracts(): void {
     }
 
     function narrowByCode(error: unknown): void {
-        if (isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginKeyExists)) {
-            expectTypeOf(error).toHaveProperty('type').toEqualTypeOf<SeedcordErrorTypeString>();
-            expectTypeOf(error.code).toEqualTypeOf<SeedcordErrorCode.CorePluginKeyExists>();
-        }
+        if (!isSeedcordError(error, undefined, SeedcordErrorCode.CorePluginKeyExists)) return;
+
+        expectTypeOf(error).toHaveProperty('type').toEqualTypeOf<SeedcordErrorTypeString>();
+        expectTypeOf(error.code).toEqualTypeOf<SeedcordErrorCode.CorePluginKeyExists>();
     }
 
     narrowByCode(new SeedcordError(SeedcordErrorCode.CorePluginKeyExists, ['logger']));

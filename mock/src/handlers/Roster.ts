@@ -1,4 +1,4 @@
-import { ArraySource, ButtonRoute, Paginator, SlashHandler, SlashRoute } from 'seedcord';
+import { ArraySource, ButtonRoute, Paginator, SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 const MEMBERS = Array.from({ length: 37 }, (_, index) => `Member ${index + 1}`);
 
@@ -16,6 +16,6 @@ export class RosterNav extends Roster.Handler {}
 @SlashRoute('roster')
 export class RosterSlash extends SlashHandler<'roster'> {
     public async execute(): Promise<void> {
-        await Roster.start(this.event);
+        await Roster.start(this);
     }
 }

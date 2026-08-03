@@ -1,7 +1,8 @@
-import { ButtonBuilder, ButtonStyle } from 'discord.js';
-import { BuilderComponent, RowComponent } from 'seedcord';
+import { ButtonBuilder } from '@discordjs/builders';
+import { BuilderComponent, RowComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
 
-import type { PageView } from 'seedcord';
+import type { PageView } from '@seedcord/gateway';
 
 /** One leaderboard row. */
 export interface LeaderboardEntry {

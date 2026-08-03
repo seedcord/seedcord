@@ -1,99 +1,90 @@
-- name: pkg:seedcord
-  color: ff6b6b
-  description: Changes related to the seedcord package
-- name: pkg:mock
-  color: 8d6e63
-  description: Changes related to the mock package
-- name: pkg:services
-  color: 45b7d1
-  description: Changes related to shared services
-- name: pkg:plugins
-  color: 02796b
-  description: Changes related to plugins
-- name: pkg:errors
-  color: e74c3c
-  description: Changes related to the errors package
-- name: pkg:kit
-  color: 16a085
-  description: Changes related to the kit package
-- name: pkg:ui
-  color: f39c12
-  description: Changes related to the UI package
-- name: pkg:types
-  color: ffeaa7
-  description: Changes related to shared types
-- name: pkg:utils
-  color: dda0dd
-  description: Changes related to utilities
-- name: pkg:eslint-config
-  color: 78597d
-  description: Changes related to ESLint config package
-- name: pkg:tsconfig
-  color: 196699
-  description: Changes related to TSConfig package
-- name: pkg:tsdown-config
-  color: 196699
-  description: Changes related to tsdown config package
-- name: pkg:cli
-  color: 4a90e2
-  description: Changes related to the Seedcord CLI package
-- name: pkg:docs-generator
-  color: 85c1e9
-  description: Changes related to API docs tooling
-- name: pkg:docs-engine
-  color: 9b59b6
-  description: Changes related to the documentation engine package
-- name: app:home
-  color: e17055
-  description: Changes related to the home marketing site
-- name: app:guide
-  color: 6c5ce7
-  description: Changes related to the guide site
-- name: area:docs
-  color: 28a745
-  description: Documentation updates
-- name: area:tests
-  color: ffc107
-  description: Test updates
-- name: area:ci
-  color: 007bff
-  description: Continuous integration and automation changes
-- name: area:config
-  color: 6c757d
-  description: Repository configuration updates
-- name: area:assets
-  color: fd7e14
-  description: Static asset updates
-- name: type:bug
-  color: dc3545
-  description: Bug fix
-- name: type:feature
-  color: 17a2b8
-  description: New feature or enhancement
-- name: type:chore
-  color: ffc107
-  description: Maintenance tasks
-- name: type:refactor
-  color: 6c757d
-  description: Refactoring work
-- name: type:docs
-  color: 28a745
-  description: Documentation only changes
-- name: priority:high
-  color: dc3545
-  description: Needs urgent attention
-- name: priority:medium
-  color: fd7e14
-  description: Address in the near future
-- name: priority:low
-  color: ffc107
-  description: Nice to have changes
-- name: status:needs-triage
-  color: 6f42c1
-  description: Awaiting triage
-- name: status:blocked
-  color: dc3545
-  description: Blocked by another task or dependency
+- name: '📦 gateway'
+  color: bc6262
+  description: Discord gateway transport
+- name: '📦 core'
+  color: bc8362
+  description: transport-agnostic core
+- name: '📦 http'
+  color: 62aabc
+  description: HTTP-interactions transport
+- name: '📦 mock'
+  color: bca562
+- name: '📦 plugin-mongoose'
+  color: 7fbc62
+- name: '📦 plugin-kysely-postgres'
+  color: 6fbc62
+- name: '📦 errors'
+  color: 6ebc62
+- name: '📦 rate-limiter'
+  color: 62bc6a
+  description: in-memory rate limiter and key helper
+- name: '📦 event-emitter'
+  color: 62bcaa
+  description: typed cross-runtime event emitter
+- name: '📦 logger'
+  color: 6a8fbc
+  description: logging core and winston node sink
+- name: '📦 ui'
+  color: 62bc9b
+- name: '📦 types'
+  color: 62bcbc
+- name: '📦 utils'
+  color: 629bbc
+- name: '📦 eslint-config'
+  color: 6278bc
+- name: '📦 eslint-config-base'
+  color: 6278bc
+  description: Internal ESLint config content bundled into eslint-config
+- name: '📦 eslint-plugin'
+  color: 6272bc
+  description: ESLint plugin for seedcord and discord.js bots
+- name: '📦 eslint-plugin-discordjs'
+  color: 6272bc
+  description: ESLint rules for discord.js bots
+- name: '📦 eslint-utils'
+  color: 6278bc
+  description: Internal shared utilities for the eslint plugins
+- name: '📦 tsconfig'
+  color: 6e62bc
+- name: '📦 tsdown-config'
+  color: 8f62bc
+- name: '📦 seedcord'
+  color: b062bc
+  description: framework orchestrator and bot host
+- name: '📦 docs-generator'
+  color: bc62a5
+  description: API model generation
+- name: '📦 docs-engine'
+  color: bc6283
+  description: docs parser, renderer, explorer
+- name: '🏠 home'
+  color: bc9662
+- name: '🎓 guide'
+  color: 6296bc
+- name: '📚 docs'
+  color: 8762bc
+- name: '🧪 tests'
+  color: 62bc80
+- name: '🤖 ci'
+  color: 6287bc
+- name: '🔍 triage'
+  color: a269b5
+  description: not yet reviewed
+- name: '🔧 build'
+  color: f9b233
+  description: build and config changes
+- name: '🔗 deps'
+  color: 9e7cb5
+  description: dependency changes
+- name: '🩹 patch'
+  color: 59c58f
+  description: semver patch bump
+- name: '✨ minor'
+  color: c5a459
+  description: semver minor bump
+- name: '💥 major'
+  color: c55d59
+  description: semver major bump, breaking
 - name: good first issue
-  color: 28a745
-  description: Great for newcomers to the project
+  color: 7057ff
+  description: great for newcomers to the project

@@ -14,7 +14,7 @@ import type { CommandAction } from './types';
 import type { CommandPaletteController } from './useCommandPaletteController';
 import type { KeyboardEvent, ReactElement } from 'react';
 
-const HEIGHT_ANIMATION_S = 1;
+const HEIGHT_ANIMATION_S = 0.2;
 
 function optionId(id: string): string {
     return `command-option-${id}`;

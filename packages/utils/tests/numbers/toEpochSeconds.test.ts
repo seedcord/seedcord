@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { toEpochSeconds } from '../../src/numbers/toEpochSeconds';
+import { toEpochSeconds } from '@src/numbers/toEpochSeconds';
 
 import type { EpochMs, EpochSec } from '@seedcord/types';
 

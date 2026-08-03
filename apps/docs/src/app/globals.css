@@ -5,6 +5,7 @@
 /* one knob for all docs rounding. chips need to be 2px tighter */
 :root {
     --radius-surface: 0.375rem;
+    --nav-h: 4.5rem; /* fallback until the navbar measures its own height */
 }
 @theme {
     --radius-sm: calc(var(--radius-surface) - 0.125rem);
@@ -30,11 +31,7 @@
     }
 }
 
-/* Shiki dual-theme. Shiki renders TWO <pre> blocks per code chunk (one per theme) wrapped in
- * `.shiki-theme-group` (or `.shiki-inline-group` for inline). Each pre has fully-resolved inline
- * `color:#X` per span, no CSS-variable indirection (which Safari fails to resolve from inline
- * declarations). We just toggle visibility. Light is the default so SSR-rendered HTML always
- * has the correct pre visible before next-themes' inline script flips `data-theme`. */
+/* Safari fails to resolve CSS variables from inline declarations, so we toggle visibility instead. */
 .shiki-theme-group .shiki-dark,
 .shiki-inline-group .shiki-dark {
     display: none;
@@ -56,8 +53,22 @@
     display: inline;
 }
 
+/* need to make sure both are using 'inline' otherwise the logo shifts when switching modes */
+.readme-img-light {
+    display: inline;
+}
+.readme-img-dark {
+    display: none;
+}
+[data-theme='dark'] .readme-img-light {
+    display: none;
+}
+[data-theme='dark'] .readme-img-dark {
+    display: inline;
+}
+
 /* Cross-package/external indicator, emitted by decorateProseLinks (prose) and the SeeAlso /
- * inheritedFrom anchors; code-block links open in a new tab without this glyph. nowrap keeps the
+ * inheritedFrom anchors. code-block links open in a new tab without this glyph. nowrap keeps the
  * glyph on the link's last line. */
 a.cross-ref {
     white-space: nowrap;

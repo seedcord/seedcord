@@ -4,6 +4,7 @@ import {
     DEFAULT_MANIFEST_PACKAGE,
     DEFAULT_VERSION,
     formatDisplayPackageName,
+    isDocumentedPackage,
     resolveExternalPackageUrl,
     resolvePackageIdentity
 } from '@packages/identity';
@@ -22,9 +23,9 @@ describe('packages module constants', () => {
 
 describe('formatDisplayPackageName', () => {
     it('strips the @seedcord scope for known overrides', () => {
-        expect(formatDisplayPackageName('@seedcord/plugins')).toBe('plugins');
-        expect(formatDisplayPackageName('@seedcord/services')).toBe('services');
-        expect(formatDisplayPackageName('@seedcord/cli')).toBe('cli');
+        expect(formatDisplayPackageName('@seedcord/plugin-mongoose')).toBe('plugin-mongoose');
+        expect(formatDisplayPackageName('@seedcord/logger')).toBe('logger');
+        expect(formatDisplayPackageName('@seedcord/gateway')).toBe('gateway');
     });
 
     it('keeps the canonical core name', () => {
@@ -34,6 +35,26 @@ describe('formatDisplayPackageName', () => {
     it('returns the input verbatim for unknown manifest names', () => {
         expect(formatDisplayPackageName('@scope/unknown')).toBe('@scope/unknown');
         expect(formatDisplayPackageName('mystery')).toBe('mystery');
+    });
+});
+
+describe('isDocumentedPackage', () => {
+    it('accepts folders of registered packages', () => {
+        for (const folder of ['core', 'gateway', 'seedcord', 'eslint-plugin', 'eslint-plugin-discordjs', 'types']) {
+            expect(isDocumentedPackage(folder)).toBe(true);
+        }
+    });
+
+    it('rejects removed packages that linger in the additive index', () => {
+        expect(isDocumentedPackage('cli')).toBe(false);
+        expect(isDocumentedPackage('kit')).toBe(false);
+        expect(isDocumentedPackage('services')).toBe(false);
+    });
+
+    it('rejects the legacy mis-keyed eslint-plugin folder', () => {
+        // the display override makes the correct folder 'eslint-plugin'. '@seedcord/eslint-plugin' is stale
+        expect(isDocumentedPackage('@seedcord/eslint-plugin')).toBe(false);
+        expect(isDocumentedPackage('eslint-plugin')).toBe(true);
     });
 });
 
@@ -109,6 +130,10 @@ describe('resolveExternalPackageUrl', () => {
         expect(resolveExternalPackageUrl('@discordjs/util')).toBe('https://discord.js.org/docs');
     });
 
+    it('maps @typescript-eslint/utils (the TSESLint namespace) to the typescript-eslint docs', () => {
+        expect(resolveExternalPackageUrl('@typescript-eslint/utils')).toBe('https://typescript-eslint.io');
+    });
+
     it('does not lowercase-match Map (mixed case lookup keys are preserved)', () => {
         expect(resolveExternalPackageUrl('MAP')).toBeNull();
     });
@@ -121,28 +146,28 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('falls back to seedcord when present and no request was made', () => {
-        const list = ids('@seedcord/services', 'seedcord', '@seedcord/plugins');
+        const list = ids('@seedcord/logger', 'seedcord', '@seedcord/types');
         expect(resolvePackageIdentity(list, null)?.fullName).toBe('seedcord');
         expect(resolvePackageIdentity(list, '')?.fullName).toBe('seedcord');
     });
 
     it('falls back to the first package when seedcord is absent and no request', () => {
-        const list = ids('@seedcord/services', '@seedcord/plugins');
-        expect(resolvePackageIdentity(list, null)?.fullName).toBe('@seedcord/services');
+        const list = ids('@seedcord/logger', '@seedcord/types');
+        expect(resolvePackageIdentity(list, null)?.fullName).toBe('@seedcord/logger');
     });
 
     it('resolves a scoped name directly', () => {
-        const list = ids('seedcord', '@seedcord/services');
-        expect(resolvePackageIdentity(list, '@seedcord/services')?.fullName).toBe('@seedcord/services');
+        const list = ids('seedcord', '@seedcord/logger');
+        expect(resolvePackageIdentity(list, '@seedcord/logger')?.fullName).toBe('@seedcord/logger');
     });
 
     it('resolves the display alias to the identity (folder + fullName)', () => {
-        const list = ids('seedcord', '@seedcord/services', '@seedcord/plugins');
-        expect(resolvePackageIdentity(list, 'services')).toEqual({
-            folder: 'services',
-            fullName: '@seedcord/services'
+        const list = ids('seedcord', '@seedcord/logger', '@seedcord/plugin-mongoose');
+        expect(resolvePackageIdentity(list, 'logger')).toEqual({
+            folder: 'logger',
+            fullName: '@seedcord/logger'
         });
-        expect(resolvePackageIdentity(list, 'plugins')?.fullName).toBe('@seedcord/plugins');
+        expect(resolvePackageIdentity(list, 'mongoose')?.fullName).toBe('@seedcord/plugin-mongoose');
     });
 
     it('resolves last-segment alias for scoped packages', () => {
@@ -155,17 +180,17 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('is case-insensitive on the requested name', () => {
-        const list = ids('seedcord', '@seedcord/services');
-        expect(resolvePackageIdentity(list, 'SERVICES')?.fullName).toBe('@seedcord/services');
-        expect(resolvePackageIdentity(list, '  Services  ')?.fullName).toBe('@seedcord/services');
-        expect(resolvePackageIdentity(list, '@SEEDCORD/Services')?.fullName).toBe('@seedcord/services');
+        const list = ids('seedcord', '@seedcord/logger');
+        expect(resolvePackageIdentity(list, 'LOGGER')?.fullName).toBe('@seedcord/logger');
+        expect(resolvePackageIdentity(list, '  Logger  ')?.fullName).toBe('@seedcord/logger');
+        expect(resolvePackageIdentity(list, '@SEEDCORD/Logger')?.fullName).toBe('@seedcord/logger');
     });
 
     it('resolves explicit override aliases', () => {
-        const list = ids('seedcord', '@seedcord/eslint-config', '@seedcord/cli');
-        expect(resolvePackageIdentity(list, 'eslint')?.fullName).toBe('@seedcord/eslint-config');
-        expect(resolvePackageIdentity(list, 'cli')?.fullName).toBe('@seedcord/cli');
-        expect(resolvePackageIdentity(list, 'core')?.fullName).toBe('seedcord');
+        const list = ids('@seedcord/gateway', '@seedcord/core', '@seedcord/eslint-config', 'seedcord');
+        expect(resolvePackageIdentity(list, 'eslint-config')?.fullName).toBe('@seedcord/eslint-config');
+        expect(resolvePackageIdentity(list, 'cli')?.fullName).toBe('seedcord');
+        expect(resolvePackageIdentity(list, 'core')?.fullName).toBe('@seedcord/core');
     });
 
     it('synthesises an @seedcord/<name> alias for unscoped manifest names', () => {
@@ -175,12 +200,12 @@ describe('resolvePackageIdentity', () => {
     });
 
     it('falls back to the default when the requested name is unknown', () => {
-        const list = ids('seedcord', '@seedcord/services');
+        const list = ids('seedcord', '@seedcord/logger');
         expect(resolvePackageIdentity(list, 'no-such-package')?.fullName).toBe('seedcord');
     });
 
     it('falls back to the first package when seedcord is absent and request is unknown', () => {
-        const list = ids('@seedcord/services', '@seedcord/plugins');
-        expect(resolvePackageIdentity(list, 'no-such-package')?.fullName).toBe('@seedcord/services');
+        const list = ids('@seedcord/logger', '@seedcord/types');
+        expect(resolvePackageIdentity(list, 'no-such-package')?.fullName).toBe('@seedcord/logger');
     });
 });

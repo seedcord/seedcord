@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
-import { routeLeavesOf } from '../../src/strings/routeLeavesOf';
+import { routeLeavesOf } from '@src/strings/routeLeavesOf';
 
 import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord-api-types/v10';
 

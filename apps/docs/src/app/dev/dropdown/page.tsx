@@ -17,10 +17,10 @@ function DevSection({ title, children }: { title: string; children: ReactNode })
 
 const PACKAGE_OPTIONS: DropdownOption[] = [
     { value: 'seedcord', label: 'seedcord' },
-    { value: 'services', label: '@seedcord/services' },
+    { value: 'logger', label: '@seedcord/logger' },
     { value: 'utils', label: '@seedcord/utils' },
     { value: 'types', label: '@seedcord/types' },
-    { value: 'plugins', label: '@seedcord/plugins' }
+    { value: 'plugin-mongoose', label: '@seedcord/plugin-mongoose' }
 ];
 
 const VERSION_OPTIONS: DropdownOption[] = [
@@ -180,7 +180,7 @@ function LongListRow(): ReactElement {
 const SCOPE_OPTIONS: DropdownOption[] = [
     { value: 'all', label: 'All packages' },
     { value: 'seedcord', label: 'seedcord' },
-    { value: 'services', label: '@seedcord/services' }
+    { value: 'logger', label: '@seedcord/logger' }
 ];
 
 const KIND_OPTIONS: DropdownOption[] = [

@@ -23,7 +23,7 @@ interface MockResult extends CommandAction {
     pkg: Pkg;
 }
 
-const PACKAGES = ['seedcord', 'services', 'plugins', 'utils', 'types'] as const;
+const PACKAGES = ['seedcord', 'services', 'plugins', 'utils', 'types', 'rate-limiter', 'event-emitter'] as const;
 type Pkg = (typeof PACKAGES)[number];
 
 const PACKAGE_OPTIONS: SegmentedControlOption<Pkg>[] = PACKAGES.map((pkg) => ({ value: pkg, label: pkg }));
@@ -64,7 +64,7 @@ function entry(pkg: Pkg, label: string, kind: SearchResultKind, qualified = labe
 }
 
 // A spread across packages, kinds, and members, with cross-package duplicates (Logger, BotConfig) so the
-// scope + kind filters and the active-first grouping are all exercisable.
+// scope + kind filters and the active-first grouping can all be triggered.
 const MOCK: MockResult[] = [
     entry('seedcord', 'Seedcord', 'class'),
     entry('seedcord', 'Plugin', 'class'),
@@ -76,20 +76,20 @@ const MOCK: MockResult[] = [
     entry('seedcord', 'debug', 'method', 'Logger#debug'),
     entry(
         'seedcord',
-        'PluginKpgServiceDecoratorMissing',
+        'PluginKyselyServiceDecoratorMissing',
         'enumMember',
-        'SeedcordErrorCode.PluginKpgServiceDecoratorMissing'
+        'SeedcordErrorCode.PluginKyselyServiceDecoratorMissing'
     ),
     entry('services', 'Logger', 'class'),
-    entry('services', 'RateLimiter', 'class'),
+    entry('rate-limiter', 'MemoryRateLimiter', 'class'),
     entry('services', 'HealthCheck', 'class'),
-    entry('services', 'StrictEventEmitter', 'class'),
+    entry('event-emitter', 'TypedEventEmitter', 'class'),
     entry('services', 'LogLevel', 'enum'),
-    entry('services', 'hit', 'method', 'RateLimiter#hit'),
-    entry('plugins', 'Mongo', 'class'),
-    entry('plugins', 'KpgService', 'class'),
+    entry('rate-limiter', 'charge', 'method', 'MemoryRateLimiter#charge'),
+    entry('plugins', 'Mongoose', 'class'),
+    entry('plugins', 'KyselyService', 'class'),
     entry('plugins', 'PluginConfig', 'interface'),
-    entry('plugins', 'query', 'method', 'KpgService#query'),
+    entry('plugins', 'query', 'method', 'KyselyService#query'),
     entry('utils', 'formatLog', 'function'),
     entry('utils', 'prettify', 'function'),
     entry('utils', 'isObject', 'function'),

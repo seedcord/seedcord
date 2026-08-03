@@ -8,3 +8,10 @@ node_modules/
 .env
 
 turbo/generators/templates
+
+**/.next/
+**/dist/
+**/.turbo/
+**/coverage/
+
+pnpm-lock.yaml

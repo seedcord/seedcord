@@ -8,10 +8,10 @@ import { tw } from './lib/tw';
 
 import type { ButtonHTMLAttributes, ComponentPropsWithoutRef, HTMLAttributes, ReactElement, ReactNode } from 'react';
 
-const disclosureTriggerBaseClassName = [
+const disclosureTriggerBaseClassName = cn(
     tw`flex w-full cursor-pointer items-center gap-2 text-left`,
     tw`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)`
-].join(' ');
+);
 
 const disclosureChevronBaseClassName = tw`shrink-0 text-(--text-muted) transition-transform duration-200 ease-out data-[state=closed]:-rotate-90`;
 
@@ -65,7 +65,7 @@ export function Disclosure({
     useEffect(() => {
         if (!storageKey || isControlled) return;
         try {
-            const saved = window.localStorage.getItem(storageKey);
+            const saved = globalThis.localStorage.getItem(storageKey);
             if (saved !== null) setInternalOpen(saved === 'true');
         } catch {
             // localStorage can throw in private mode + SSR fallback; ignore.
@@ -76,9 +76,9 @@ export function Disclosure({
         (next: boolean): void => {
             if (!isControlled) setInternalOpen(next);
             onOpenChange?.(next);
-            if (storageKey && !isControlled && typeof window !== 'undefined') {
+            if (storageKey && !isControlled) {
                 try {
-                    window.localStorage.setItem(storageKey, String(next));
+                    globalThis.localStorage.setItem(storageKey, String(next));
                 } catch {
                     // same swallow reason as the read above
                 }

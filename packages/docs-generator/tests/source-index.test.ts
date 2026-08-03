@@ -2,8 +2,9 @@ import path from 'node:path';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { buildSourceIndex } from '@src/source-index';
+
 import { PACKAGES_DIR } from './utils/constants';
-import { buildSourceIndex } from '../src/source-index';
 
 const REPO_ROOT = path.resolve(PACKAGES_DIR, '../../..');
 const MOCK_DIR = path.resolve(PACKAGES_DIR, 'mock');
@@ -20,7 +21,7 @@ describe('buildSourceIndex', () => {
     beforeAll(() => {
         withBase = scan();
         withoutBase = scan('');
-    }, 60000);
+    }, 60_000);
 
     it('records the exact src line and column of a top-level export', () => {
         const [source] = withBase.sources.MockClass ?? [];

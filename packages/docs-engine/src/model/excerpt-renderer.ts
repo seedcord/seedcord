@@ -53,7 +53,7 @@ function tokenizeContent(text: string, parts: SigPart[]): void {
     for (const char of text) {
         if (/\s/.test(char)) {
             flush();
-            if (parts[parts.length - 1]?.kind !== 'space') parts.push({ kind: 'space' });
+            if (parts.at(-1)?.kind !== 'space') parts.push({ kind: 'space' });
             continue;
         }
         const charMode = IDENTIFIER.test(char) || char === '.' ? 'word' : 'punct';

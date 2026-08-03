@@ -120,13 +120,16 @@ describe('buildUnionInputs', () => {
         const remote = remoteWith({ folder: 'seedcord', fullName: 'seedcord', versions: ['0.10.6'] });
 
         const inputs = buildUnionInputs(remote, [
-            emit('plugins', '0.1.0', { fullName: '@seedcord/plugins', entities: { mongo: 'class' } })
+            emit('plugin-mongoose', '0.1.0', {
+                fullName: '@seedcord/plugin-mongoose',
+                entities: { mongoose: 'class' }
+            })
         ]);
 
-        expect(inputs.find((input) => input.folder === 'plugins')).toMatchObject({
-            fullName: '@seedcord/plugins',
+        expect(inputs.find((input) => input.folder === 'plugin-mongoose')).toMatchObject({
+            fullName: '@seedcord/plugin-mongoose',
             versions: ['0.1.0'],
-            entities: { mongo: 'class' }
+            entities: { mongoose: 'class' }
         });
         expect(versionSet(inputs, 'seedcord')).toEqual(new Set(['0.10.6']));
     });

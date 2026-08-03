@@ -25,7 +25,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 // default to a fresh per-engine cache so tests stay isolated while the model-cache test shares one.
 function makeEngine(fetcher: Fetcher, modelCache = new Map<string, DocPackageModel>()): VersionedDocsEngine {
-    return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher), fetcher, modelCache);
+    return new VersionedDocsEngine(new IndexLoader(INDEX_URL, fetcher, () => true), fetcher, modelCache);
 }
 
 function fixtureFetcher(): Fetcher {
@@ -54,15 +54,15 @@ describe('VersionedDocsEngine', () => {
                 },
                 // In the index but never loaded: the known-but-unloaded cross-package case. The gate
                 // reads its entity map to build a correct URL without loading it.
-                services: {
-                    fullName: '@seedcord/services',
+                logger: {
+                    fullName: '@seedcord/logger',
                     stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
                     prerelease: null,
                     entities: { logger: 'class' }
                 },
                 // Known but declares no entities here: a ref mis-attributed to it re-homes elsewhere.
-                plugins: {
-                    fullName: '@seedcord/plugins',
+                types: {
+                    fullName: '@seedcord/types',
                     stable: { latest: '0.0.0', latestByMinor: { '0.0': '0.0.0' }, latestByMajor: {} },
                     prerelease: null,
                     entities: {}
@@ -75,7 +75,7 @@ describe('VersionedDocsEngine', () => {
         const engine = makeEngine(fixtureFetcher());
         const packages = await engine.listPackages();
         expect(packages).toContainEqual({ folder: MOCK_FOLDER, fullName: MOCK_PACKAGE_FULL_NAME });
-        expect(packages).toContainEqual({ folder: 'services', fullName: '@seedcord/services' });
+        expect(packages).toContainEqual({ folder: 'logger', fullName: '@seedcord/logger' });
         expect(engine.loadedPackages()).toEqual([]);
     });
 
@@ -134,7 +134,7 @@ describe('VersionedDocsEngine', () => {
             expect(engine.getNodeByQualifiedName(MOCK_PACKAGE_FULL_NAME, node.qualifiedName)?.name).toBe('MockClass');
         }
 
-        expect(engine.getNodeByGlobalSlug('@seedcord/services', 'logger')).toBeNull();
+        expect(engine.getNodeByGlobalSlug('@seedcord/logger', 'logger')).toBeNull();
         expect(engine.getNodeByQualifiedName(MOCK_PACKAGE_FULL_NAME, 'DoesNotExist')).toBeNull();
     });
 
@@ -144,18 +144,16 @@ describe('VersionedDocsEngine', () => {
 
         const ref = {
             name: 'Logger',
-            packageName: '@seedcord/services',
+            packageName: '@seedcord/logger',
             qualifiedName: 'Logger#debug',
-            targetKey: 'services!Logger#debug:member(1)'
+            targetKey: 'logger!Logger#debug:member(1)'
         };
         expect(engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, ref)).toEqual({
             kind: 'internal',
-            packageName: '@seedcord/services',
+            packageName: '@seedcord/logger',
             slug: 'logger/debug'
         });
-        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe(
-            '/packages/services/0.0.0/classes/logger#debug'
-        );
+        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe('/packages/logger/0.0.0/classes/logger#debug');
     });
 
     it('points a cross-package parameter ref at its owning member anchor, not the parameter', async () => {
@@ -164,26 +162,24 @@ describe('VersionedDocsEngine', () => {
 
         // `Logger#debug.arg` -> slug `logger/debug/arg`; the fragment must be the member `debug`,
         // matching AnchorStrategy.buildParameterAnchor for loaded packages (not the param `arg`).
-        const ref = { name: 'arg', packageName: '@seedcord/services', qualifiedName: 'Logger#debug.arg' };
+        const ref = { name: 'arg', packageName: '@seedcord/logger', qualifiedName: 'Logger#debug.arg' };
         expect(engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, ref)).toEqual({
             kind: 'internal',
-            packageName: '@seedcord/services',
+            packageName: '@seedcord/logger',
             slug: 'logger/debug/arg'
         });
-        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe(
-            '/packages/services/0.0.0/classes/logger#debug'
-        );
+        expect(engine.resolver().href(MOCK_PACKAGE_FULL_NAME, ref)).toBe('/packages/logger/0.0.0/classes/logger#debug');
     });
 
     it('gates a known-but-unloaded non-entity reference to unresolved', async () => {
         const engine = makeEngine(fixtureFetcher());
         await engine.setVersion(MOCK_FOLDER, 'latest');
 
-        // `Ghost` is attributed to services but absent from its entity map, so it does not resolve.
+        // `Ghost` is attributed to logger but absent from its entity map, so it does not resolve.
         expect(
             engine.resolver().resolve(MOCK_PACKAGE_FULL_NAME, {
                 name: 'Ghost',
-                packageName: '@seedcord/services',
+                packageName: '@seedcord/logger',
                 qualifiedName: 'Ghost'
             })
         ).toEqual({ kind: 'unresolved' });

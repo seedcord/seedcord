@@ -1,0 +1,80 @@
+import { asError } from '@stops/asError';
+import { PublishDefault } from '@subscribers/publishDefault';
+
+import type { ReplyMethod } from './ackLegality';
+import type { Bus } from '@subscribers/Bus';
+import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
+
+/** What `publishResponse` requires. Without it the call returns without publishing. */
+export interface ReplyTelemetry {
+    readonly bus: Bus;
+    readonly interactionId: string;
+}
+
+/** The reply verbs plus the autocomplete choices callback, which runs outside the ack state machine. */
+export type WriteMethod = ReplyMethod | 'respond';
+
+/** What one write reports once it settles. */
+export interface ResponseReport {
+    readonly routeId: string;
+    readonly method: WriteMethod;
+    /** `performance.now()` captured before the write began. */
+    readonly startedAt: number;
+    readonly outcome: ResponseOutcome;
+    readonly messageId: string | null;
+    readonly error?: Error;
+}
+
+/** @internal */
+export function publishResponse(telemetry: ReplyTelemetry | undefined, report: ResponseReport): void {
+    if (!telemetry) return;
+    telemetry.bus[PublishDefault]('responseAttempted', {
+        routeId: report.routeId,
+        interactionId: telemetry.interactionId,
+        method: report.method,
+        outcome: report.outcome,
+        durationMs: performance.now() - report.startedAt,
+        messageId: report.messageId,
+        ...(report.error && { error: report.error })
+    });
+}
+
+/**
+ * Runs a write that returns no message and publishes whichever arm it takes.
+ *
+ * @internal
+ */
+export async function reportedWrite<Result>(
+    telemetry: ReplyTelemetry | undefined,
+    routeId: string,
+    method: WriteMethod,
+    write: () => Promise<Result>
+): Promise<Result> {
+    const startedAt = performance.now();
+    const result = await attemptWrite(telemetry, routeId, method, startedAt, write);
+    publishResponse(telemetry, { routeId, method, startedAt, outcome: 'sent', messageId: null });
+    return result;
+}
+
+/**
+ * Runs a wire write and publishes the `failed` arm when it throws, since the caller's success report
+ * sits after the write and a throw skips it.
+ *
+ * @internal
+ */
+export async function attemptWrite<Result>(
+    telemetry: ReplyTelemetry | undefined,
+    routeId: string,
+    method: WriteMethod,
+    startedAt: number,
+    write: () => Promise<Result>
+): Promise<Result> {
+    try {
+        return await write();
+    } catch (caught) {
+        const error = asError(caught);
+        publishResponse(telemetry, { routeId, method, startedAt, outcome: 'failed', messageId: null, error });
+        // rethrown raw, so the caller catches the value the write threw
+        throw caught;
+    }
+}

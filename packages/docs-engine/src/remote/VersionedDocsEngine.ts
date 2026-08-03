@@ -90,7 +90,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     }
 
     loadedPackages(): string[] {
-        return Array.from(this.models.keys());
+        return [...this.models.keys()];
     }
 
     getPackage(packageName: string): DocPackageModel | null {
@@ -174,7 +174,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
     }
 
     private collection(): DocCollection {
-        const packages = Array.from(this.models.values());
+        const packages = [...this.models.values()];
         return {
             manifest: emptyManifest(packages.map((pkg) => pkg.manifest)),
             packages,

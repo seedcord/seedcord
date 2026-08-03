@@ -27,7 +27,7 @@ function transformMock(reexports: DocManifestPackage['reexports']): DocNode {
         warningCount: 0,
         errorCount: 0,
         succeeded: true,
-        ...(reexports ? { reexports } : {})
+        ...(reexports && { reexports })
     };
     return new ApiAdapter(manifest, model).transform(pkg);
 }

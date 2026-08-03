@@ -1,5 +1,5 @@
+import { EventMiddleware, Middleware, MiddlewareType } from '@seedcord/gateway';
 import { Events } from 'discord.js';
-import { EventMiddleware, Middleware, MiddlewareType } from 'seedcord';
 
 /**
  * Reacts to new messages before the message handlers run. A single-event middleware, so `this.event` is the

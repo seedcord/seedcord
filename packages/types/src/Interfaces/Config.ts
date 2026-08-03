@@ -1,13 +1,14 @@
 import type { CustomIdMatcher } from './CustomId';
 import type { EmojiConfig } from './EmojiMap';
 import type { ErrorsConfig } from './Errors';
-import type { ClientOptions, ColorResolvable } from 'discord.js';
+import type { LoggerConfig } from './LogSink';
+import type { Store } from './Store';
+import type { BotColor } from '../Types/Colors';
 
-// interactions, events, commands, services, bus subscribers
+// interactions, commands, services, bus subscribers
 
 /**
- * Djs Interactions handlers
- *
+ * Interaction handlers configuration
  */
 export type InteractionsConfig =
     | {
@@ -17,7 +18,7 @@ export type InteractionsConfig =
           path: string;
           /**
            * Component customIds the controller skips instead of routing. A real `CustomId` (from
-           * `@seedcord/kit`) satisfies {@link CustomIdMatcher}, matched against the raw customId wire.
+           * `@seedcord/core`) satisfies {@link CustomIdMatcher}, matched against the raw customId wire.
            */
           ignoreCustomIds?: CustomIdMatcher[];
           /**
@@ -31,26 +32,7 @@ export type InteractionsConfig =
       };
 
 /**
- * Djs Events handlers
- */
-export type EventsConfig =
-    | {
-          /**
-           * Path to dir containing event handlers.
-           */
-          path: string;
-          /**
-           * Optional path to event middleware directory
-           */
-          middlewares?: string;
-      }
-    | {
-          /** No events configured */
-          path: null;
-      };
-
-/**
- * Djs SlashCommands and ContextMenuCommands
+ * Slash commands and context menu commands
  */
 export type CommandsConfig =
     | {
@@ -84,13 +66,7 @@ export type SubscribersConfig =
  */
 export interface BotConfig {
     interactions: InteractionsConfig;
-    events: EventsConfig;
     commands: CommandsConfig;
-
-    /**
-     * Discord.js ClientOptions passed directly to the Client constructor
-     */
-    clientOptions: ClientOptions;
 
     /**
      * Optional emoji map. Each value is an emoji name loaded from your application emojis, or a
@@ -109,6 +85,12 @@ export interface BotConfig {
 }
 
 /**
+ * The transport configs' `healthCheck` field. `false` disables the health server, `true` and
+ * `undefined` use the defaults, an object supplies {@link HealthCheckConfig} options.
+ */
+export type HealthCheckOption = boolean | HealthCheckConfig;
+
+/**
  * Health-check HTTP server settings.
  */
 export interface HealthCheckConfig {
@@ -121,7 +103,7 @@ export interface HealthCheckConfig {
     /**
      * Path the health-check server responds on.
      *
-     * @defaultValue `'/healthcheck'`
+     * @defaultValue `'/health'`
      */
     path?: string;
     /**
@@ -148,6 +130,14 @@ export interface Config {
     subscribers: SubscribersConfig;
 
     /**
+     * Deployment target. `seedcord build` reads it from the constructed instance. `'server'` is a
+     * long-running node process, `'edge'` is a bundled isolate.
+     *
+     * @defaultValue `'server'`
+     */
+    runtime?: 'server' | 'edge';
+
+    /**
      * Settings for how the framework renders errors and reports faults.
      */
     errors?: ErrorsConfig;
@@ -157,19 +147,7 @@ export interface Config {
      *
      * Omit for Discord's default color.
      */
-    botColor?: ColorResolvable;
-
-    /**
-     * Whether coordinated shutdown registers OS signal handlers and runs teardown tasks.
-     *
-     * @defaultValue `true`
-     */
-    shutdownEnabled?: boolean;
-
-    /**
-     * Health-check HTTP server settings.
-     */
-    healthCheck?: HealthCheckConfig;
+    botColor?: BotColor;
 
     /**
      * Settings for framework-sent error notifications.
@@ -180,4 +158,15 @@ export interface Config {
      * User ids the `OwnerOnly` gate treats as bot owners.
      */
     ownerIds?: string[];
+
+    /**
+     * The in-memory default resets on restart and is per-isolate on serverless. Pass a durable store
+     * to keep framework state across restarts and isolates.
+     */
+    store?: Store<'charge'>;
+
+    /**
+     * Logging level, sinks, and per-channel overrides. Omitted fields keep the transport's defaults.
+     */
+    logger?: LoggerConfig;
 }

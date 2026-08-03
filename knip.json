@@ -1,41 +1,116 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
-    "ignoreBinaries": ["seedcord", "continue"],
-    "ignoreWorkspaces": ["mock"],
+    "ignoreBinaries": [
+        "seedcord",
+        "continue"
+    ],
+    "ignoreDependencies": [
+        "fallow"
+    ],
+    "ignoreWorkspaces": [
+        "mock"
+    ],
     "rules": {
         "optionalPeerDependencies": "off"
     },
     "workspaces": {
         ".": {
-            "entry": ["scripts/**/*.ts", "turbo/generators/**/*.ts"],
-            "project": ["scripts/**/*.ts", "turbo/generators/**/*.ts"]
+            "entry": [
+                "scripts/**/*.ts",
+                "turbo/generators/**/*.ts"
+            ],
+            "project": [
+                "scripts/**/*.ts",
+                "turbo/generators/**/*.ts"
+            ]
         },
-        "packages/seedcord": {},
-        "packages/services": {},
-        "packages/utils": {},
-        "packages/types": {},
-        "packages/plugins": {},
-        "packages/errors": {},
-        "packages/kit": {},
-        "packages/cli": {
-            "ignoreDependencies": ["fix-esm-import-path", "@seedcord/tsconfig"]
-        },
-        "packages/docs-engine": {},
-        "packages/docs-generator": {
-            "ignore": ["tests/mock/**"]
-        },
-        "packages/eslint-config": {
-            "ignoreDependencies": ["@typescript-eslint/eslint-plugin", "@typescript-eslint/parser"]
-        },
-        "packages/tsdown-config": {},
-        "packages/tsconfig": {},
         "apps/docs": {
-            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx}"]
+            "entry": [
+                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
+            ],
+            "project": [
+                "src/**/*.{ts,tsx}"
+            ]
         },
         "apps/home": {
-            "entry": ["src/app/**/{page,layout,route,not-found}.{ts,tsx}"],
-            "project": ["src/**/*.{ts,tsx}"]
-        }
+            "entry": [
+                "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
+            ],
+            "project": [
+                "src/**/*.{ts,tsx}"
+            ]
+        },
+        "packages/core": {},
+        "packages/docs-engine": {},
+        "packages/docs-generator": {
+            "ignore": [
+                "tests/mock/**"
+            ]
+        },
+        "packages/errors": {},
+        "packages/eslint-config": {
+            "ignoreDependencies": [
+                "@types/eslint-plugin-security",
+                "@typescript-eslint/parser",
+                "eslint-config-prettier",
+                "eslint-plugin-better-tailwindcss",
+                "eslint-plugin-mdx",
+                "eslint-plugin-prettier",
+                "eslint-plugin-security",
+                "eslint-plugin-tailwind-canonical-classes",
+                "eslint-plugin-tsdoc",
+                "eslint-plugin-unicorn",
+                "lodash.merge"
+            ]
+        },
+        "packages/eslint-config-base": {
+            "ignoreDependencies": [
+                "@typescript-eslint/parser"
+            ]
+        },
+        "packages/eslint-plugin": {
+            "ignore": [
+                "tests/fixtures/**"
+            ],
+            "ignoreDependencies": [
+                "discord.js"
+            ]
+        },
+        "packages/eslint-plugin-discordjs": {
+            "ignore": [
+                "tests/fixtures/**"
+            ],
+            "ignoreDependencies": [
+                "discord.js"
+            ]
+        },
+        "packages/eslint-utils": {},
+        "packages/event-emitter": {},
+        "packages/gateway": {},
+        "packages/http": {
+            "ignore": [
+                "tests/node/commands/fixtures/**",
+                "tests/node/discovery/fixtures/**",
+                "tests/node/discovery/duplicates/**"
+            ]
+        },
+        "packages/logger": {},
+        "packages/rate-limiter": {},
+        "packages/seedcord": {
+            "ignoreDependencies": [
+                "fix-esm-import-path",
+                "@seedcord/tsconfig"
+            ]
+        },
+        "packages/tsconfig": {},
+        "packages/tsdown-config": {},
+        "packages/types": {},
+        "packages/utils": {
+            "ignore": [
+                "tests/node/fixtures/**"
+            ]
+        },
+        "plugins/kysely-postgres": {},
+        "plugins/mongoose": {}
     }
 }

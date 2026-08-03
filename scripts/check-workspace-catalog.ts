@@ -19,8 +19,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const WORKSPACE_GLOBS = ['apps', 'packages', 'mock'];
+const WORKSPACE_GLOBS = ['apps', 'packages', 'plugins', 'mock'];
 const DEP_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const;
+
+// Deps exempt from the catalog rule. eslint is intentionally split for the eslint 10 migration.
+// The framework and cli run catalog eslint 10 while the Next apps pin eslint 9 until
+// eslint-config-next supports 10.
+const IGNORED_DEPS: ReadonlySet<string> = new Set(['eslint']);
 
 interface DepRef {
     packageJsonPath: string;
@@ -98,7 +103,7 @@ function parseCatalogEntries(): Set<string> {
             continue;
         }
         const match = /^\s+('[^']+'|"[^"]+"|[^:\s]+)\s*:\s*\S/.exec(line);
-        if (match?.[1]) entries.add(match[1].replace(/^['"]|['"]$/g, ''));
+        if (match?.[1]) entries.add(match[1].replaceAll(/^['"]|['"]$/g, ''));
     }
 
     return entries;
@@ -140,6 +145,7 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
     const seen = new Set<string>();
 
     for (const [depName, refs] of byName.entries()) {
+        if (IGNORED_DEPS.has(depName)) continue;
         // The rule counts distinct package.json files, not raw refs: a dep listed in both
         // peerDependencies and devDependencies of one package (the optional-peer-plus-dev pattern)
         // is a single consumer, not a cross-package duplicate.
@@ -162,6 +168,7 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
 
     // Skip catalog entries already flagged above (don't double-report).
     for (const entryName of catalogEntries) {
+        if (IGNORED_DEPS.has(entryName)) continue;
         if (seen.has(entryName)) continue;
         const allRefs = byName.get(entryName) ?? [];
         const catalogRefs = allRefs.filter((r) => r.version.startsWith('catalog:'));

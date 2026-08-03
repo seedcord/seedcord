@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { SeedcordErrorCode, isSeedcordError } from '../src';
-import { SeedcordError, SeedcordTypeError, SeedcordRangeError } from '../src/internal.index';
+import { SeedcordErrorCode, isSeedcordError } from '@src/index';
+import { SeedcordError, SeedcordTypeError, SeedcordRangeError } from '@src/internal.index';
 
 describe('Seedcord error constructors', () => {
     it('preserves metadata for parameterless codes', () => {
@@ -32,7 +32,7 @@ describe('Seedcord error constructors', () => {
 
     it('supports SeedcordTypeError and SeedcordRangeError variants', () => {
         const typeError = new SeedcordTypeError(SeedcordErrorCode.DecoratorInvalidMiddlewarePriority);
-        const rangeError = new SeedcordRangeError(SeedcordErrorCode.PluginKpgInvalidMigrationModule, ['foo.ts']);
+        const rangeError = new SeedcordRangeError(SeedcordErrorCode.PluginKyselyInvalidMigrationModule, ['foo.ts']);
 
         expect(typeError).toBeInstanceOf(TypeError);
         expect(typeError.type).toBe('SeedcordTypeError');

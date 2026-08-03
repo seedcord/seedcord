@@ -1,7 +1,10 @@
 {
     "name": "@seedcord/errors",
     "type": "module",
-    "version": "0.2.1",
+    "version": "0.3.0-next.7",
+    "engines": {
+        "node": ">=24.3"
+    },
     "description": "Framework error classes for Seedcord packages",
     "repository": {
         "type": "git",
@@ -44,7 +47,7 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
@@ -58,7 +61,8 @@
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*"
+        "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*"
     },
     "publishConfig": {
         "access": "public",

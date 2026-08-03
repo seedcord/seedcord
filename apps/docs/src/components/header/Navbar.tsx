@@ -3,6 +3,7 @@
 import { Button, GithubIcon, Icon, cn } from '@seedcord/ui';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
+import { useLayoutEffect, useRef } from 'react';
 
 import { useUIStore } from '@store/ui';
 
@@ -15,9 +16,24 @@ import type { ReactElement } from 'react';
 export function Navbar(): ReactElement {
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
+    const ref = useRef<HTMLElement>(null);
+
+    // the fixed navbar reserves its height as --nav-h for the content offset and the sidebar top
+    useLayoutEffect(() => {
+        const measure = (): void => {
+            const height = ref.current?.getBoundingClientRect().height ?? 0;
+            if (height > 0) document.documentElement.style.setProperty('--nav-h', `${height}px`);
+        };
+        measure();
+        window.addEventListener('resize', measure);
+        return () => window.removeEventListener('resize', measure);
+    }, []);
 
     return (
-        <header className={cn('border-border sticky top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}>
+        <header
+            ref={ref}
+            className={cn('border-border fixed inset-x-0 top-0 z-50 border-b bg-(--bg-navbar) backdrop-blur')}
+        >
             <div className={cn('mx-auto flex max-w-7xl flex-col gap-3 p-4 md:px-6')}>
                 <div className={cn('flex items-center justify-between gap-3')}>
                     <div className={cn('flex items-center gap-3')}>

@@ -1,7 +1,7 @@
 import { cn } from '@seedcord/ui';
 
 import { CodeCard } from '@components/code/CodeCard';
-import { Eyebrow, Section } from '@components/home/Section';
+import { Section } from '@components/home/Section';
 import { Code } from '@components/ui/Code';
 import { gatesSample } from '@lib/code/samples';
 
@@ -17,7 +17,6 @@ export function Gates(): ReactNode {
         <Section ground="rind">
             <div className={cn('grid items-center gap-10 lg:grid-cols-[1fr_1.1fr]')}>
                 <div>
-                    <Eyebrow ground="rind">04 / COMPOSABLE GATES</Eyebrow>
                     <h2
                         className={cn(
                             'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'

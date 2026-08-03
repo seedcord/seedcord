@@ -1,8 +1,9 @@
-import { ActionRowBuilder, ButtonStyle, TextDisplayBuilder } from 'discord.js';
-import { BuilderComponent } from 'seedcord';
+import { ActionRowBuilder, TextDisplayBuilder } from '@discordjs/builders';
+import { BuilderComponent } from '@seedcord/gateway';
+import { ButtonStyle } from 'discord.js';
 
-import type { ButtonBuilder } from 'discord.js';
-import type { PageView, PaginatorControls } from 'seedcord';
+import type { ButtonBuilder } from '@discordjs/builders';
+import type { PageView, PaginatorControls } from '@seedcord/gateway';
 
 /** One paginated activity event. */
 export interface FeedEvent {
@@ -23,9 +24,9 @@ export class FeedCard extends BuilderComponent<'container'> {
             )
             .addActionRowComponents(
                 new ActionRowBuilder<ButtonBuilder>().addComponents(
-                    controls.button('prev', { style: ButtonStyle.Primary, emoji: '⬅️' }),
+                    controls.button('prev', { style: ButtonStyle.Primary, emoji: { name: '⬅️' } }),
                     controls.button('indicator'),
-                    controls.button('next', { style: ButtonStyle.Primary, emoji: '➡️' })
+                    controls.button('next', { style: ButtonStyle.Primary, emoji: { name: '➡️' } })
                 )
             );
     }

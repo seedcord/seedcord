@@ -5,7 +5,7 @@ export type PurgeBody = { purge_everything: true } | { files: string[] } | { pre
 
 function parseListArg(argv: readonly string[], flag: string): string[] {
     const index = argv.indexOf(flag);
-    if (index < 0) return [];
+    if (index === -1) return [];
     return argv.slice(index + 1).filter((value) => !value.startsWith('--'));
 }
 

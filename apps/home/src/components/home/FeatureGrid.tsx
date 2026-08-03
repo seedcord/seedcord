@@ -26,7 +26,7 @@ import {
     Wrench
 } from 'lucide-react';
 
-import { Eyebrow, Section } from '@components/home/Section';
+import { Section } from '@components/home/Section';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -138,7 +138,6 @@ function pad(count: number): string {
 export function FeatureGrid(): ReactNode {
     return (
         <Section ground="cream">
-            <Eyebrow ground="cream">05 / EVERYTHING ELSE</Eyebrow>
             <h2
                 className={cn(
                     'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'

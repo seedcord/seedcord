@@ -7,14 +7,14 @@ import type { ReactElement } from 'react';
 const SNIPPETS: { title: string; code: string }[] = [
     {
         title: 'Decorated handler class',
-        code: `import { SlashRoute, SlashHandler, Gated, GuildOnly } from 'seedcord';
+        code: `import { SlashRoute, SlashHandler, Gated, GuildOnly } from '@seedcord/gateway';
 
 @Gated(GuildOnly())
 @SlashRoute('library/search')
 export class SearchHandler extends SlashHandler<'library/search'> {
     public async execute(): Promise<void> {
         const query = this.options.getString('query');
-        await this.event.reply(\`Searching for \${query}\`);
+        await this.reply(\`Searching for \${query}\`);
     }
 }`
     },
@@ -109,7 +109,7 @@ function resolveEmoji(name: string): Emoji | null {
     },
     {
         title: 'Module augmentation / declare',
-        code: `declare module 'seedcord' {
+        code: `declare module '@seedcord/gateway' {
     interface SlashOptionRegistry {
         search: {
             category: { kind: 'string'; required: true; choices: ['books', 'films'] };

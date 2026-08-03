@@ -15,15 +15,15 @@ export const DocKind = {
     Method: 2048,
     CallSignature: 4096,
     IndexSignature: 8192,
-    ConstructorSignature: 16384,
-    Parameter: 32768,
-    TypeLiteral: 65536,
-    TypeParameter: 131072,
-    Accessor: 262144,
-    GetSignature: 524288,
-    SetSignature: 1048576,
-    TypeAlias: 2097152,
-    Reference: 4194304
+    ConstructorSignature: 16_384,
+    Parameter: 32_768,
+    TypeLiteral: 65_536,
+    TypeParameter: 131_072,
+    Accessor: 262_144,
+    GetSignature: 524_288,
+    SetSignature: 1_048_576,
+    TypeAlias: 2_097_152,
+    Reference: 4_194_304
 } as const;
 
 const KIND_LABEL: Readonly<Record<number, string>> = {
@@ -41,15 +41,15 @@ const KIND_LABEL: Readonly<Record<number, string>> = {
     2048: 'kind_method',
     4096: 'kind_call_signature',
     8192: 'kind_index_signature',
-    16384: 'kind_constructor_signature',
-    32768: 'kind_parameter',
-    65536: 'kind_type_literal',
-    131072: 'kind_type_parameter',
-    262144: 'kind_accessor',
-    524288: 'kind_get_signature',
-    1048576: 'kind_set_signature',
-    2097152: 'kind_type_alias',
-    4194304: 'kind_reference'
+    16_384: 'kind_constructor_signature',
+    32_768: 'kind_parameter',
+    65_536: 'kind_type_literal',
+    131_072: 'kind_type_parameter',
+    262_144: 'kind_accessor',
+    524_288: 'kind_get_signature',
+    1_048_576: 'kind_set_signature',
+    2_097_152: 'kind_type_alias',
+    4_194_304: 'kind_reference'
 };
 
 export function frozenKindLabel(kind: number): string {

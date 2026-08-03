@@ -1,5 +1,4 @@
-import { MessageFlags } from 'discord.js';
-import { SlashRoute, SlashHandler } from 'seedcord';
+import { SlashHandler, SlashRoute } from '@seedcord/gateway';
 
 @SlashRoute('probe')
 export class Probe extends SlashHandler<'probe'> {
@@ -8,9 +7,6 @@ export class Probe extends SlashHandler<'probe'> {
         const count = this.options.getInteger('count'); // number | null
         const category = this.options.getString('category'); // 'books' | 'films' | null
 
-        await this.event.reply({
-            content: `Searched ${query} (count ${count ?? 'all'}, category ${category ?? 'any'}).`,
-            flags: MessageFlags.Ephemeral
-        });
+        await this.reply(`Searched ${query} (count ${count ?? 'all'}, category ${category ?? 'any'}).`);
     }
 }

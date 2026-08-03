@@ -68,9 +68,6 @@ export function CommandListItem({
     const activeHighlight = toneStyles?.active ?? ACCENT_ACTIVE;
 
     return (
-        // In the WAI-ARIA combobox/listbox pattern, options are not individually focusable and take no key
-        // handlers: focus stays on the input and keyboard selection runs there via aria-activedescendant + Enter.
-        // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/interactive-supports-focus
         <div
             id={optionId}
             role="option"

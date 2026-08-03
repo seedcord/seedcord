@@ -10,41 +10,64 @@ interface PackageOverride {
 }
 
 const PACKAGE_OVERRIDES: Record<string, PackageOverride> = {
-    seedcord: {
-        displayName: 'seedcord',
-        aliases: ['@seedcord', 'core']
+    '@seedcord/gateway': {
+        displayName: 'gateway',
+        aliases: ['gateway', 'ws']
     },
-    '@seedcord/plugins': {
-        displayName: 'plugins',
-        aliases: ['@seedcord/plugins']
+    '@seedcord/core': {
+        displayName: 'core',
+        aliases: ['core']
     },
-    '@seedcord/services': {
-        displayName: 'services',
-        aliases: ['@seedcord/services']
+    '@seedcord/http': {
+        displayName: 'http',
+        aliases: ['http', 'edge']
+    },
+    '@seedcord/plugin-mongoose': {
+        displayName: 'plugin-mongoose',
+        aliases: ['plugin-mongoose', 'mongoose', 'mongo']
+    },
+    '@seedcord/plugin-kysely-postgres': {
+        displayName: 'plugin-kysely-postgres',
+        aliases: ['plugin-kysely-postgres', 'kysely', 'postgres', 'pg']
     },
     '@seedcord/types': {
         displayName: 'types',
-        aliases: ['@seedcord/types']
+        aliases: ['types']
     },
     '@seedcord/utils': {
         displayName: 'utils',
-        aliases: ['@seedcord/utils']
+        aliases: ['utils']
     },
     '@seedcord/eslint-config': {
         displayName: 'eslint-config',
-        aliases: ['eslint', '@seedcord/eslint-config']
+        aliases: ['eslint-config']
     },
-    '@seedcord/cli': {
-        displayName: 'cli',
-        aliases: ['cli', '@seedcord/cli']
+    '@seedcord/eslint-plugin': {
+        displayName: 'eslint-plugin',
+        aliases: ['eslint-plugin']
     },
-    '@seedcord/kit': {
-        displayName: 'kit',
-        aliases: ['kit', '@seedcord/kit']
+    seedcord: {
+        displayName: 'seedcord',
+        aliases: ['cli', 'seedcord']
     },
     '@seedcord/errors': {
         displayName: 'errors',
-        aliases: ['errors', '@seedcord/errors']
+        aliases: ['errors']
+    },
+    '@seedcord/rate-limiter': {
+        displayName: 'rate-limiter',
+        aliases: ['rate-limiter']
+    },
+    '@seedcord/event-emitter': {
+        displayName: 'event-emitter',
+        aliases: ['event-emitter']
+    },
+    '@seedcord/logger': {
+        displayName: 'logger',
+        aliases: ['logger']
+    },
+    'eslint-plugin-discordjs': {
+        aliases: ['eslint-plugin-discordjs', 'eslint-plugin-djs']
     }
 };
 
@@ -57,9 +80,9 @@ function sanitizeExternalKey(value: string): string {
     if (!value) return '';
     return value
         .replace(/^@types\//, '') // DefinitelyTyped (@types/pg) documents the runtime package (pg)
-        .replace(/<.*>/g, '')
-        .replace(/\[\]/g, '')
-        .replace(/\|.*/g, '')
+        .replaceAll(/<.*>/g, '')
+        .replaceAll('[]', '')
+        .replaceAll(/\|.*/g, '')
         .trim();
 }
 
@@ -79,7 +102,7 @@ export function resolveExternalPackageUrl(packageName?: string | null): string |
     }
     const stripped = packageName
         .trim()
-        .replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
+        .replaceAll(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, '')
         .trim();
     if (stripped) candidates.add(sanitizeExternalKey(stripped));
 
@@ -94,6 +117,16 @@ export function resolveExternalPackageUrl(packageName?: string | null): string |
 export function formatDisplayPackageName(manifestName: string): string {
     const override = PACKAGE_OVERRIDES[manifestName]?.displayName;
     return override ?? manifestName;
+}
+
+// the R2 index.json is additive, a folder published once stays, so removed and mis-keyed folders linger.
+// a folder is formatDisplayPackageName(name), so a scoped key here needs a displayName matching its folder.
+const DOCUMENTED_PACKAGE_FOLDERS: ReadonlySet<string> = new Set(
+    Object.keys(PACKAGE_OVERRIDES).map((name) => formatDisplayPackageName(name))
+);
+
+export function isDocumentedPackage(folder: string): boolean {
+    return DOCUMENTED_PACKAGE_FOLDERS.has(folder);
 }
 
 function computePackageAliases(available: readonly string[]): Map<string, string> {
@@ -140,11 +173,7 @@ export interface PackageIdentity {
     fullName: string;
 }
 
-/**
- * Resolve a requested package string (folder, scoped name, last segment, or override alias) to its
- * index identity. Defaults to `seedcord` when present, else the first package; returns null only for
- * an empty list.
- */
+// Resolves a package request, falling back to `seedcord` or the first available package.
 export function resolvePackageIdentity(
     packages: readonly PackageIdentity[],
     requested?: string | null

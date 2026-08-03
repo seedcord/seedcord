@@ -8,17 +8,23 @@ import { decorateProseLinks } from './decorateProseLinks';
 
 import type { FormatContext, CommentParagraph, CommentDisplayPart } from '@lib/docs/types';
 import type { DocComment } from '@seedcord/docs-engine';
+import type { Tokens } from 'marked';
+import type { BundledLanguage } from 'shiki';
 
 marked.use({
     async: true,
     walkTokens: async (token) => {
         if (token.type === 'code') {
-            const html = await highlightToHtml(token.text, token.lang);
+            // Narrow token type from any. Shiki validates language at runtime.
+            const { text, lang } = token as Tokens.Code;
+            // an untagged fence gives an empty lang, which the || sends to the helper's ts default
+            const html = await highlightToHtml(text, (lang || undefined) as BundledLanguage | undefined);
             if (html) {
                 Object.assign(token, { type: 'html', text: html });
             }
         } else if (token.type === 'codespan') {
-            const html = await highlightInlineToHtml(token.text);
+            const { text } = token as Tokens.Codespan;
+            const html = await highlightInlineToHtml(text);
             if (html) {
                 Object.assign(token, { type: 'html', text: html });
             }

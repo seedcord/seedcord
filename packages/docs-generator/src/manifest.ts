@@ -17,7 +17,7 @@ export async function writeManifest(
         tool: 'api-extractor',
         apiExtractorVersion: Extractor.version,
         outputDir: paths.toRepoRelative(paths.outputDir),
-        ...(repository ? { repository } : {}),
+        ...(repository && { repository }),
         packages: results.map((result) => ({
             name: result.name,
             version: result.version,
@@ -28,11 +28,11 @@ export async function writeManifest(
             warnings: result.warnings,
             errors: result.errors,
             succeeded: result.succeeded,
-            ...(result.sources ? { sources: result.sources } : {}),
-            ...(result.reexports ? { reexports: result.reexports } : {}),
-            ...(result.readme ? { readme: result.readme } : {}),
-            ...(result.changelogUrl ? { changelogUrl: result.changelogUrl } : {}),
-            ...(result.description ? { description: result.description } : {})
+            ...(result.sources && { sources: result.sources }),
+            ...(result.reexports && { reexports: result.reexports }),
+            ...(result.readme && { readme: result.readme }),
+            ...(result.changelogUrl && { changelogUrl: result.changelogUrl }),
+            ...(result.description && { description: result.description })
         }))
     };
 

@@ -1,83 +1,102 @@
-pkg:seedcord:
+'📦 gateway':
   - changed-files:
-      - any-glob-to-any-file: 'packages/seedcord/**'
-      - any-glob-to-any-file: 'seedcord/**'
-pkg:mock:
+      - any-glob-to-any-file: 'packages/gateway/**'
+'📦 core':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/core/**'
+'📦 http':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/http/**'
+'📦 mock':
   - changed-files:
       - any-glob-to-any-file: 'mock/**'
-pkg:services:
+'📦 plugin-mongoose':
   - changed-files:
-      - any-glob-to-any-file: 'packages/services/**'
-pkg:plugins:
+      - any-glob-to-any-file: 'plugins/mongoose/**'
+'📦 plugin-kysely-postgres':
   - changed-files:
-      - any-glob-to-any-file: 'packages/plugins/**'
-pkg:errors:
+      - any-glob-to-any-file: 'plugins/kysely-postgres/**'
+'📦 errors':
   - changed-files:
       - any-glob-to-any-file: 'packages/errors/**'
-pkg:kit:
+'📦 rate-limiter':
   - changed-files:
-      - any-glob-to-any-file: 'packages/kit/**'
-pkg:ui:
+      - any-glob-to-any-file: 'packages/rate-limiter/**'
+'📦 event-emitter':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/event-emitter/**'
+'📦 logger':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/logger/**'
+'📦 ui':
   - changed-files:
       - any-glob-to-any-file: 'packages/ui/**'
-pkg:types:
+'📦 types':
   - changed-files:
       - any-glob-to-any-file: 'packages/types/**'
-pkg:utils:
+'📦 utils':
   - changed-files:
       - any-glob-to-any-file: 'packages/utils/**'
-pkg:eslint-config:
+'📦 eslint-config':
   - changed-files:
       - any-glob-to-any-file: 'packages/eslint-config/**'
-pkg:tsconfig:
+'📦 eslint-config-base':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-config-base/**'
+'📦 eslint-plugin':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-plugin/**'
+'📦 eslint-plugin-discordjs':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-plugin-discordjs/**'
+'📦 eslint-utils':
+  - changed-files:
+      - any-glob-to-any-file: 'packages/eslint-utils/**'
+'📦 tsconfig':
   - changed-files:
       - any-glob-to-any-file: 'packages/tsconfig/**'
-pkg:tsdown-config:
+'📦 tsdown-config':
   - changed-files:
       - any-glob-to-any-file: 'packages/tsdown-config/**'
-pkg:cli:
+'📦 seedcord':
   - changed-files:
-      - any-glob-to-any-file: 'packages/cli/**'
-pkg:docs-generator:
+      - any-glob-to-any-file: 'packages/seedcord/**'
+'📦 docs-generator':
   - changed-files:
       - any-glob-to-any-file: 'packages/docs-generator/**'
-pkg:docs-engine:
+'📦 docs-engine':
   - changed-files:
       - any-glob-to-any-file: 'packages/docs-engine/**'
-app:home:
+'🏠 home':
   - changed-files:
       - any-glob-to-any-file: 'apps/home/**'
-app:guide:
+'🎓 guide':
   - changed-files:
       - any-glob-to-any-file: 'apps/guide/**'
-area:docs:
+'📚 docs':
   - changed-files:
-      - any-glob-to-any-file: 'docs/**'
-      - any-glob-to-any-file: '**/*.md'
-area:tests:
+      - any-glob-to-any-file: 'apps/docs/**'
+'🧪 tests':
   - changed-files:
       - any-glob-to-any-file: '**/*.test.ts'
       - any-glob-to-any-file: '**/*.spec.ts'
       - any-glob-to-any-file: '**/__tests__/**/*'
-area:ci:
+'🤖 ci':
   - changed-files:
-      - any-glob-to-any-file: '.github/**'
-      - any-glob-to-any-file: turbo.json
-      - any-glob-to-any-file: turbo.jsonc
-      - any-glob-to-any-file: pnpm-workspace.yaml
-      - any-glob-to-any-file: pnpm-lock.yaml
-area:config:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - '.github/actions/**'
+          - '.github/labeler.yml'
+'🔧 build':
   - changed-files:
-      - any-glob-to-any-file: '**/*.mjs'
-      - any-glob-to-any-file: '**/*.cjs'
-      - any-glob-to-any-file: '**/*.json'
-      - any-glob-to-any-file: tsconfig.json
-      - any-glob-to-any-file: 'tsconfig/**'
-      - any-glob-to-any-file: eslint.config.mjs
-      - any-glob-to-any-file: vitest.config.ts
-area:assets:
+      - any-glob-to-any-file:
+          - 'turbo.json'
+          - 'turbo.jsonc'
+          - '**/tsconfig*.json'
+          - '**/tsdown.config.*'
+          - '**/eslint.config.*'
+          - '**/vitest*.config.*'
+          - 'pnpm-workspace.yaml'
+'🔗 deps':
   - changed-files:
-      - any-glob-to-any-file: 'assets/**'
-      - any-glob-to-any-file: '**/*.png'
-      - any-glob-to-any-file: '**/*.svg'
-      - any-glob-to-any-file: '**/*.jpg'
+      - any-glob-to-any-file: 'pnpm-lock.yaml'

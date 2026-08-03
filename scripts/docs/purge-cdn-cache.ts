@@ -14,7 +14,7 @@ import { buildPurgeBody } from './purge-args';
 const CF_API = 'https://api.cloudflare.com/client/v4';
 
 function read(key: string): string {
-    return Envapter.getUsing(key, { converter: Converters.String, required: true });
+    return Envapter.getRequired(key, Converters.String);
 }
 
 async function main(): Promise<void> {

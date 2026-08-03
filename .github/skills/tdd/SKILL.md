@@ -41,7 +41,7 @@ RIGHT (vertical):
 
 ## Where tests live in this repo
 
-Tests sit in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/services/src/CooldownManager.ts` is `packages/services/tests/cooldown-manager.test.ts`.
+Tests sit in `<package>/tests/`, mirroring `src/`. Never `src/**/*.test.ts`. A test for `packages/rate-limiter/src/MemoryRateLimiter.ts` is `packages/rate-limiter/tests/memory-rate-limiter.test.ts`.
 
 Vitest is the runner. `pnpm -C <pkg> test` runs the suite once. `pnpm -C <pkg> test:watch` watches and reruns on change, which is the loop you want during a TDD cycle.
 

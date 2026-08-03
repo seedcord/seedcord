@@ -84,7 +84,7 @@ export class MockClass<TypeT, TypeU extends number> extends BaseClass {
             return param * 2;
         }
         void this.privateMethod(param);
-        return MockClass.privateStaticProp;
+        return MockClass.privateStaticProp; // eslint-disable-line @typescript-eslint/no-deprecated -- deprecated on purpose, the fixture tests deprecation rendering
     }
 
     /**

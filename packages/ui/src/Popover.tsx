@@ -7,19 +7,19 @@ import { tw } from './lib/tw';
 
 import type { ComponentPropsWithoutRef, ReactElement } from 'react';
 
-const popoverContentBaseClassName = [
+const popoverContentBaseClassName = cn(
     // z-70 so popovers render above the MobilePanelDialog
     tw`z-70`,
     tw`rounded-md`,
     tw`border border-(--border) bg-(--bg-popover) text-(--text)`,
     tw`p-4 shadow-(--shadow-card)`,
-    // scale from the radix-injected trigger anchor, not the panel center
+    // scale from the radix-injected trigger anchor
     tw`origin-(--radix-popover-content-transform-origin)`,
     tw`data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95`,
     tw`data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95`,
     tw`data-[state=closed]:duration-100 data-[state=open]:duration-150`,
     tw`data-[state=open]:ease-(--ease-out-strong)`
-].join(' ');
+);
 
 // Use for floating anchored content (menus, settings panels). Don't roll Radix Popover by hand.
 export const Popover = PopoverPrimitive.Root;

@@ -1,7 +1,10 @@
 {
     "name": "@seedcord/types",
     "type": "module",
-    "version": "0.7.1",
+    "version": "0.8.0-next.8",
+    "engines": {
+        "node": ">=24.3"
+    },
     "description": "Types for Seedcord packages",
     "repository": {
         "type": "git",
@@ -44,24 +47,22 @@
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
         "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
-        "tc": "tsc --noEmit",
+        "tc": "tsgo --noEmit",
         "test": "vitest run",
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
     },
-    "peerDependencies": {
-        "discord.js": "catalog:peer",
-        "typescript": "catalog:peer"
+    "dependencies": {
+        "discord-api-types": "catalog:deps"
     },
-    "peerDependenciesMeta": {
-        "discord.js": {
-            "optional": true
-        }
+    "peerDependencies": {
+        "typescript": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/vitest-config": "workspace:*",
         "discord.js": "catalog:peer",
         "type-fest": "catalog:deps"
     },

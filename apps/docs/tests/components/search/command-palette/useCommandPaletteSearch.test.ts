@@ -117,7 +117,7 @@ describe('useCommandPaletteSearch', () => {
 
         expect(fetchMock).toHaveBeenCalledTimes(1);
         const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
-        // Off a package route the scope defaults to seedcord@latest; the filters ride along as all/all.
+        // scope defaults to seedcord@latest when off a package route
         expect(url).toBe('/search?q=foo&pkg=seedcord&version=latest&scope=all&kind=all&prerelease=0');
         expect(result.current.status).toBe('loading');
 

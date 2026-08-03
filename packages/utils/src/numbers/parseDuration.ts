@@ -1,6 +1,6 @@
 const UNIT_MS = {
     ms: 1,
-    s: 1_000,
+    s: 1000,
     m: 60_000,
     h: 3_600_000,
     d: 86_400_000
@@ -11,7 +11,7 @@ type DurationUnit = keyof typeof UNIT_MS;
 /** A duration literal like `30m`, `24h`, or `500ms`, a number followed by a unit (`ms`, `s`, `m`, `h`, `d`). */
 export type ValidDuration = `${number}${DurationUnit}`;
 
-const DURATION_PATTERN = new RegExp(`^(\\d+)(${Object.keys(UNIT_MS).join('|')})$`);
+const DURATION_PATTERN = new RegExp(String.raw`^(\d+)(${Object.keys(UNIT_MS).join('|')})$`);
 
 /**
  * Parses a short duration string like `24h`, `30m`, `90s`, `7d`, or `500ms` into milliseconds.
