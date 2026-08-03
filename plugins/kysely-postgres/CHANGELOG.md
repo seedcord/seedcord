@@ -1,42 +1,26 @@
 # @seedcord/plugin-kysely-postgres
 
-## 0.1.0-next.1
-
-### Patch Changes
-
-- Updated dependencies [b586a14]
-- Updated dependencies [58ee649]
-- Updated dependencies [b586a14]
-- Updated dependencies [c26ec13]
-    - @seedcord/errors@0.3.0-next.7
-    - @seedcord/utils@0.8.0-next.9
-    - @seedcord/logger@0.1.0-next.4
-
-## 0.1.0-next.0
+## 0.1.0
 
 ### Minor Changes
 
-- 53d5cac: The kysely Postgres plugin ships as its own package, and it attaches to a gateway bot and to an http server bot. It replaces the kysely surface from `@seedcord/plugins`, where the class was `KyselyPg` and every export carried a `Kpg` prefix.
+- 53d5cac: New `@seedcord/plugin-kysely-postgres`, replacing the kysely surface from `@seedcord/plugins`. It attaches to a gateway bot and to an http server bot.
 
-    **BREAKING:** augment `KyselyDatabase` with your schema once. `KyselyPostgres` takes no type argument, `KyselyService<MyDatabase, 'users'>` becomes `KyselyService<'users'>`, and a table disagreeing with the one `@RegisterKyselyService` resolves to is a compile error.
-
-    **BREAKING:** `stop()` is now `dispose()`. The plugin declares its shutdown step, so the host runs it only when `init()` resolved.
-
-    **BREAKING:** `KyselyService` takes `CoreBase` as its second constructor parameter.
-
-    A failure after the pool opens closes it before `init()` rejects.
+    Augment `KyselyDatabase` with your schema once, then `KyselyService<'users'>` resolves against it. A failure after the pool opens closes it before `init()` rejects.
 
 ### Patch Changes
 
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [44b6d72]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [f0ba9f3]
-- Updated dependencies [53d5cac]
-- Updated dependencies [4f11816]
-- Updated dependencies [9ff4e85]
-- Updated dependencies [44b6d72]
-    - @seedcord/errors@0.3.0-next.6
-    - @seedcord/types@0.8.0-next.8
-    - @seedcord/logger@0.1.0-next.3
-    - @seedcord/utils@0.8.0-next.8
+- Updated dependencies [789f17a]
+- Updated dependencies [701b669]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [789f17a]
+- Updated dependencies [93544a8]
+    - @seedcord/types@0.8.0
+    - @seedcord/utils@0.8.0
+    - @seedcord/logger@0.1.0
+    - @seedcord/errors@0.3.0
