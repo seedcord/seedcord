@@ -15,10 +15,10 @@ export function isDiscordWebhookUrl(value: string): boolean {
 
 export function jsonAttachment(name: string, description: string, data: unknown): WebhookFile {
     const content = filterCirculars(data);
-    return { name, description, data: JSON.stringify(content, undefined, 2) };
+    return { name, description, data: new TextEncoder().encode(JSON.stringify(content, undefined, 2)) };
 }
 
-// the report renders inside a ``` fence, break any triple-backtick run to keep it from closing early
+// the report renders inside a ``` fence, so break any triple-backtick run to keep it from closing early
 export function neutralizeFences(text: string): string {
     return text.replaceAll('```', '`​`​`');
 }

@@ -17,15 +17,16 @@ export interface InteractionRef {
 /** The created message an http reply resolves to (the http `SentMessage` lens). */
 export type SentMessage = APIMessage;
 
-// the framework's allowedMentions keys are camelCase, the wire reads replied_user
+// the framework's allowedMentions keys are camelCase, and the wire reads replied_user
 type WireAllowedMentions = TypedOmit<NonNullable<ReplyResponse['allowedMentions']>, 'repliedUser'> & {
     replied_user?: boolean;
 };
 
 interface WireAttachment {
     id: number;
-    filename?: string;
+    filename: string;
     description?: string;
+    title?: string;
 }
 
 interface MessageBody {
@@ -42,11 +43,12 @@ function wireAllowedMentions(mentions: NonNullable<ReplyResponse['allowedMention
 
 // RawFile has no description field, so alt text goes on the wire attachments entries
 function wireAttachments(files: SerializedReply['files']): WireAttachment[] | null {
-    if (!files?.some((file) => file.description)) return null;
+    if (!files?.some((file) => file.description ?? file.title)) return null;
     return files.map((file, index) => ({
         id: index,
-        ...(file.name && { filename: file.name }),
-        ...(file.description && { description: file.description })
+        filename: file.name,
+        ...(file.description && { description: file.description }),
+        ...(file.title && { title: file.title })
     }));
 }
 
@@ -104,8 +106,8 @@ export class ReplySender extends BaseReplySender<SentMessage> {
 
     protected async writeFollowUp(response: ReplyResponse | string, opts?: SendOpts): Promise<SentMessage> {
         const reply = this.serialize(response);
-        // discord returns the created message for interaction-token followups either way, wait=true
-        // pins that contract explicitly and matches the djs webhook client
+        // discord returns the created message for interaction-token followups either way. wait=true pins
+        // that contract and matches the djs webhook client
         const result = await this.rest.post(Routes.webhook(this.ref.application_id, this.ref.token), {
             body: callbackData(reply, sendFlags(opts)),
             query: new URLSearchParams({ wait: 'true' }),
@@ -163,7 +165,7 @@ export class ReplySender extends BaseReplySender<SentMessage> {
     }
 
     private rawFiles(files: NonNullable<SerializedReply['files']>): RawFile[] {
-        return files.map((file, index) => ({ name: file.name ?? `file-${index}`, data: file.attachment }));
+        return files.map((file) => ({ name: file.name, data: file.data }));
     }
 
     private createdMessage(result: unknown): SentMessage | undefined {

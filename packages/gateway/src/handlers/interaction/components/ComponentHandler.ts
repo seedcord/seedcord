@@ -5,6 +5,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 
 import type { SentMessage } from '@bot/ReplySender';
+import type { GatewayReplyResponse } from '@interfaces/ReplyResponse';
 import type {
     AnyCustomId,
     DecodedComponentRoute,
@@ -12,7 +13,6 @@ import type {
     MatchArms,
     SingleParams
 } from '@seedcord/core/internal';
-import type { ReplyResponse } from '@seedcord/types';
 import type { AnySelectMenuInteraction, ButtonInteraction, ModalSubmitInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
@@ -36,7 +36,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     declare readonly __componentDefs?: Defs;
 
     /** Rewrite the source message this component interaction came from. */
-    protected update(response: ReplyResponse | string): Promise<SentMessage> {
+    protected update(response: GatewayReplyResponse | string): Promise<SentMessage> {
         return this.sender.update(response);
     }
 
@@ -92,7 +92,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      */
     protected async match<Ret>(arms: MatchArms<Defs, Ret>): Promise<Ret> {
         const { prefix, params } = this.route;
-        // justified: MatchArms is keyed by prefix literals, the Record cast indexes it with the runtime prefix.
+        // justified: MatchArms is keyed by prefix literals, so the Record cast indexes it with the runtime prefix
         const arm = Object.hasOwn(arms, prefix)
             ? (arms as Record<string, (params: Record<string, unknown>) => Promisable<Ret>>)[prefix]
             : undefined;

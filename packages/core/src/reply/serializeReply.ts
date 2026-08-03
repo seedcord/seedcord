@@ -6,14 +6,17 @@ import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 /** Serialized message data the transport wire writers consume. */
-export interface SerializedReply {
+export interface SerializedReply<TNative = never> {
     readonly components: APIMessageTopLevelComponent[];
     readonly allowedMentions?: ReplyResponse['allowedMentions'];
-    readonly files?: ReplyResponse['files'];
+    readonly files?: ReplyResponse<TNative>['files'];
 }
 
 /** Wraps a string in a TextDisplay component. */
-export function serializeReply(response: ReplyResponse | string, routeId: string): SerializedReply {
+export function serializeReply<TNative>(
+    response: ReplyResponse<TNative> | string,
+    routeId: string
+): SerializedReply<TNative> {
     if (typeof response === 'string') {
         try {
             return { components: [new TextDisplayBuilder().setContent(response).toJSON()] };
