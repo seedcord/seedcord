@@ -1,6 +1,6 @@
 ---
 name: writing-voice
-description: Use this when writing or reviewing any prose in a repo - reference docs, conceptual guides, READMEs, code comments, commit messages, or PR descriptions. Defines a precise, anti-marketing voice - a ban-list of hype words (powers, seamless, loudly, robust, leverage, easy, ...), an anthropomorphism verb-swap, before/after rewrites, worked comment and commit examples, and a one-line test for whether a sentence states a behavior or just sells one.
+description: Use this when writing or reviewing any prose in a repo - reference docs, conceptual guides, READMEs, code comments, commit messages, or PR descriptions. Defines a precise, anti-marketing voice - a ban-list of hype words (powers, seamless, loudly, robust, leverage, easy, ...), an anthropomorphism verb-swap, before/after rewrites, worked comment examples, and a one-line test for whether a sentence states a behavior or just sells one.
 ---
 
 # Writing Voice
@@ -171,18 +171,9 @@ This skill governs how a comment reads once you've decided to write it. For whet
 
 ## 5. Commit and PR voice
 
-A PR description is prose: the full ban-list and every principle above apply, no hype, no narrating the diff. Commit _subjects_ add one rule on top: **imperative mood**.
+A PR description is prose, so the full ban-list and every principle above apply. No hype, no narrating the diff.
 
-- **The test (cbeams):** a subject must complete the sentence "If applied, this commit will \_\_\_." "Add", "Fix", "Drop", "Rename" pass; "Added", "Fixes", "Changing", and noun phrases like "Sweet new API methods" fail.
-- **The Conventional Commits type prefix is orthogonal to mood.** `feat: add retry backoff`, not `feat: adds retry backoff` and not `feat: blazing-fast retries`.
-- **Bodies state what changed and why, plainly.** The reasons, the old behavior and what was wrong with it, the new behavior. The diff already shows the how.
-
-Bad → good subjects:
-
-- "Fixed bug with retries" → "Fix retry loop hang on an empty 503 body"
-- "Massive perf win on the hot path" → "Cache compiled regexes to avoid recompiling per call"
-- "Sweet new API methods" → "Add list and get methods to the Widgets API"
-- "Changing behavior of parse()" → "Make parse() reject negative offsets"
+Subject-line form (mood, scopes, length) is a per-author preference, so it lives in the author's global rules and not here.
 
 ---
 
@@ -196,11 +187,10 @@ Bad → good subjects:
 4. Tailwind, names the precise condition: "Notice how this class does nothing _unless_ the element is hovered?" <https://tailwindcss.com/docs/styling-with-utility-classes>
 5. Vue, present-tense mechanism: "When you use a ref in a template, and change the ref's value later, Vue automatically detects the change and updates the DOM accordingly." <https://vuejs.org/guide/essentials/reactivity-fundamentals.html>
 
-### Comments and commits
+### Comments
 
 1. Clean Code (Martin), on redundant comments: "Redundant comments are just places to collect lies and misinformation." <https://www.goodreads.com/quotes/909630-redundant-comments-are-just-places-to-collect-lies-and-misinformation>
 2. Google Python style guide, on what a comment is for: "never describe the code. Assume the person reading the code knows the language (though not what you're trying to do) better than you do." <https://google.github.io/styleguide/pyguide.html>
-3. cbeams, on commit subjects: "A properly formed Git commit subject line should always be able to complete the following sentence: If applied, this commit will _your subject line here_." <https://cbea.ms/git-commit/>
 
 ---
 
@@ -208,4 +198,4 @@ Bad → good subjects:
 
 Can a reader predict the exact behavior from this sentence, or are they just being told it's good? If the latter, rewrite it as a fact, a step, or a failure mode. A sharper variant for the subtle cases: does the word only create an impression that something was said (weasel, puffery), or does it assign a human act to code (anthropomorphism)? If so, cut it.
 
-Sources: Tailwind, React, Vite, Prisma, esbuild, Stripe, Vue (voice models); the Google, GitLab, and Microsoft developer style guides and Wikipedia "Words to watch" (word bans); Google's anthropomorphism page and Dijkstra's EWD854 (anthropomorphism); Clean Code, the Google Python style guide, and the cbeams / Angular commit conventions (comments and commits). Drizzle and Astro rejected as too marketing-voiced.
+Sources: Tailwind, React, Vite, Prisma, esbuild, Stripe, Vue (voice models); the Google, GitLab, and Microsoft developer style guides and Wikipedia "Words to watch" (word bans); Google's anthropomorphism page and Dijkstra's EWD854 (anthropomorphism); Clean Code and the Google Python style guide (comments). Drizzle and Astro rejected as too marketing-voiced.

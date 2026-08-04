@@ -27,6 +27,7 @@ Do not add comments for:
 - Obvious control flow.
 - Repeating a method or variable name in sentence form.
 - General TypeScript or Node.js basics the code already expresses clearly.
+- A test stub or fixture whose shape the literal already shows.
 
 Bad:
 
@@ -45,9 +46,9 @@ user.displayName = payload.name;
 ## Preferred Comment Style
 
 - Keep comments short and local.
-- Prefer `//` inline comments over JSDoc for implementation details.
-- Use JSDoc (`/** */`) only on public API surfaces where callers need context; keep them minimal.
-- **Public-facing TSDoc (`/** \*/`on exported API) uses proper capitalization and complete sentences.** Inline`//` implementation comments stay lowercase fragments. Both still follow the writing-voice punctuation ban (no em-dash, and no colon or semicolon splicing two clauses, though a colon before a list or code block is fine).
+- Prefer `//` inline comments over TSDoc for implementation details.
+- **A TSDoc block needs a caller who would read the signature and still guess wrong.** `export` is not that test. A symbol reachable only through a package's `./internal` entry has no such caller, so it takes a `//` line or nothing. See the internal-code failure pattern below.
+- **Public TSDoc uses capitals and complete sentences.** Inline `//` comments stay lowercase fragments. Both follow the writing-voice punctuation ban (no em-dash, no colon or semicolon splicing two clauses, a colon before a list or code block is fine).
 - Put the comment immediately above the line or block whose intent is non-obvious.
 - Explain why the rule exists or what breaks if it changes.
 
@@ -112,8 +113,6 @@ const BUTTON_STYLE_LINK = 5; // stable Discord wire value for a link button
 ## Connect Clauses The Way You'd Say Them
 
 Once a comment earns its place, it should read like you explaining the code to someone next to you, not a telegram. Join cause and effect with the ordinary words you would use out loud, so, and, because, but, then, instead of clipping every thought into its own stiff fragment or stacking formal clauses. The punctuation ban from the `writing-voice` skill (no `—`, and no clause-splicing `;` or `:`) already pushes you here, and a connector word is almost always the replacement that reads best.
-
-Pick the connector that matches the real relation, and do not default to ", so". Use ", so" only for a genuine cause, ", and" for a neutral join, and a period for a plain sequence, because a reflexive ", so" invents a cause the code never had. This mirrors the writing-voice ", so" rule.
 
 Read the comment out loud. If it sounds like something you would say to a colleague at the keyboard, keep it. If it sounds like a spec sheet, you are probably missing the connector that ties the facts together.
 
@@ -197,16 +196,12 @@ setActive(value: boolean) {
 }
 ```
 
-## Review Checklist
+## The two-pass cut, run it while you type
 
-Before adding a comment, ask:
+1. Cover the comment and read the code. Would a careful reader get it wrong? If no, delete the comment and move on.
+2. Cover the code and read the comment. Every word the code already showed comes out. What survives is the why.
 
-1. Does this explain a hidden rule, guardrail, or non-obvious consequence?
-2. Would a future engineer likely misread this code without the comment?
-3. Is the comment shorter and clearer than extracting another method right now?
-4. Does the comment avoid repeating what the code already says?
-
-If the answer to the first two questions is no, do not add the comment.
+Run both passes on the block you just wrote, before the diff leaves your hands. A later audit catches the same thing at the cost of a full re-read of every file you touched.
 
 ## Failure Patterns To Avoid
 
@@ -230,6 +225,10 @@ BaseClass._strict = value;
 
 ### Type-system paraphrase
 
+`@returns` and `@param` are where this hides. `@returns Whether the check passed` next to a declared `boolean` says what the signature already showed. Delete the tag. When every tag on a block is that, delete the block.
+
+A tag earns its place by mapping inputs onto outcomes the signature cannot express, for example which of `undefined`, `true`, and an object each produces which return value.
+
 If a comment explains a TYPE definition that's two lines above, the comment is redundant. Either the type is sufficient on its own, or the type needs a better name. Rewriting the type is almost always the right fix.
 
 ```ts
@@ -251,9 +250,11 @@ Multiple overload signatures next to short `//` comments labeling each one ("Tim
 
 Every refactor invalidates some "why" comments. When you delete an overload, change a return type, or revert a design, **grep for the names you removed and clean up every comment that references them**. A stale comment is worse than a missing one: it actively misleads.
 
-### JSDoc on `@internal` helpers
+### TSDoc on internal code
 
-Internal helpers don't need IDE-hover documentation. Use a single `//` line when a why exists, and zero comments when the function's name + body are self-explanatory. The four-line `/** ... */` block on a one-line accessor is signal that the function name is too thin or the block is decoration.
+Internal code gets no IDE-hover documentation. Two things count as internal, whatever the `@internal` tag marks, and whatever is reachable only through a package's `./internal` entry point. The tag covers the first and says nothing about the second, so read the `exports` map in `package.json` to tell. Use a single `//` line when a why exists, and zero comments when the name and body are self-explanatory. A four-line `/** ... */` block on a one-line accessor is signal that the name is too thin or the block is decoration.
+
+Do not tag a member `@internal` when its whole class is already internal-only. The entry map states it, and no consumer reads the tag.
 
 ### "I'm doing X" wrapper
 
@@ -264,6 +265,8 @@ Comments that lead `// We do X here because...` always contain redundancy: the n
 // Good: NO comment. The three function calls below are self-evident.
 ```
 
-## Why "Drop the comment" is usually right
+## Fixing a bloated comment
 
-When in doubt: delete the comment, re-read the code without it, and ask "would a careful reader misunderstand this?" If the answer is no, the comment was decoration. The bar is "would mislead without it," not "would be slightly faster to read with it." Speed gains from prose-restating-code are smaller than the maintenance cost of keeping the comment honest across refactors.
+The bar is "would mislead without it". "Would be slightly faster to read with it" fails it, because prose restating code costs more to keep honest across refactors than it saves on a read.
+
+When told a comment is bloated, cut it down. A four-sentence block that restates the code three times usually still carries one real why. Keep that clause as a lowercase `//` line and drop the rest. A TSDoc block cut down to one clause becomes a `//` line too. Deleting the whole block throws the why away, a second defect on top of the first.
