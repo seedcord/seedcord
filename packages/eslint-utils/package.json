@@ -2,6 +2,9 @@
     "name": "@seedcord/eslint-utils",
     "type": "module",
     "version": "0.0.1",
+    "engines": {
+        "node": ">=24.3"
+    },
     "private": true,
     "description": "Internal shared utilities for the seedcord eslint plugins",
     "types": "./dist/index.d.mts",

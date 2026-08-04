@@ -2,6 +2,9 @@
     "name": "@seedcord/eslint-plugin",
     "type": "module",
     "version": "0.1.0",
+    "engines": {
+        "node": ">=24.3"
+    },
     "description": "ESLint rules for seedcord bots",
     "repository": {
         "type": "git",

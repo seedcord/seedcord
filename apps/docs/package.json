@@ -1,6 +1,9 @@
 {
     "name": "@seedcord/docs",
     "version": "0.1.6",
+    "engines": {
+        "node": ">=24.3"
+    },
     "private": true,
     "scripts": {
         "dev": "next dev",

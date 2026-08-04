@@ -1,6 +1,9 @@
 {
     "name": "@seedcord/docs-generator",
     "version": "0.2.4",
+    "engines": {
+        "node": ">=24.3"
+    },
     "private": true,
     "description": "Internal tooling to generate seedcord API model JSON files",
     "type": "module",

@@ -2,6 +2,9 @@
     "name": "@seedcord/mock",
     "type": "module",
     "version": "0.2.23",
+    "engines": {
+        "node": ">=24.3"
+    },
     "private": true,
     "description": "Mock bot for demonstration and testing purposes",
     "repository": {

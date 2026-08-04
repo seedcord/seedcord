@@ -2,6 +2,9 @@
     "name": "@seedcord/core",
     "type": "module",
     "version": "0.1.0",
+    "engines": {
+        "node": ">=24.3"
+    },
     "description": "Transport-agnostic core for Seedcord bots",
     "repository": {
         "type": "git",

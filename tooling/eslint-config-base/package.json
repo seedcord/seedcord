@@ -2,6 +2,9 @@
     "name": "@seedcord/eslint-config-base",
     "type": "module",
     "version": "0.0.1",
+    "engines": {
+        "node": ">=24.3"
+    },
     "private": true,
     "description": "Internal ESLint config content, bundled into @seedcord/eslint-config",
     "types": "./dist/index.d.mts",

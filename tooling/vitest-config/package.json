@@ -2,6 +2,9 @@
     "name": "@seedcord/vitest-config",
     "type": "module",
     "version": "0.0.1",
+    "engines": {
+        "node": ">=24.3"
+    },
     "private": true,
     "description": "Internal vitest preset for seedcord packages",
     "main": "./dist/index.cjs",
