@@ -81,7 +81,7 @@
         "typescript": "catalog:peer"
     },
     "devDependencies": {
-        "@cloudflare/vitest-pool-workers": "^0.18.4",
+        "@cloudflare/vitest-pool-workers": "^0.20.1",
         "@discordjs/builders": "catalog:deps",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",

@@ -52,7 +52,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@clack/prompts": "^1.6.0",
+        "@clack/prompts": "^1.7.0",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:*",
@@ -66,16 +66,16 @@
         "discord-api-types": "catalog:deps",
         "envapt": "catalog:deps",
         "fix-esm-import-path": "^1.10.3",
-        "ink": "^7.1.0",
+        "ink": "^7.1.1",
         "ink-spinner": "^5.0.0",
         "jiti": "^2.7.0",
-        "minimatch": "^10.2.5",
+        "minimatch": "^10.2.6",
         "react": "catalog:react",
         "tsx": "catalog:deps",
         "vite": "catalog:deps"
     },
     "devDependencies": {
-        "@eslint-react/eslint-plugin": "^5.10.0",
+        "@eslint-react/eslint-plugin": "^5.18.1",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",

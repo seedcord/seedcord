@@ -104,9 +104,9 @@ describe('responseAttempted', () => {
         let clock = 500;
         vi.spyOn(performance, 'now').mockImplementation(() => clock);
         vi.spyOn(sender as unknown as { writeReply: () => Promise<TestMessage> }, 'writeReply').mockImplementation(
-            async () => {
+            () => {
                 clock += 250;
-                return await Promise.resolve(created);
+                return Promise.resolve(created);
             }
         );
 

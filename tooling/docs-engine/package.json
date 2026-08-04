@@ -60,7 +60,7 @@
         "@microsoft/api-extractor-model": "7.33.8",
         "@microsoft/tsdoc": "^0.16.0",
         "prettier": "catalog:deps",
-        "semver": "^7.8.4"
+        "semver": "^7.8.5"
     },
     "devDependencies": {
         "@seedcord/docs-generator": "workspace:*",
@@ -68,6 +68,6 @@
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
-        "@types/semver": "^7.7.1"
+        "@types/semver": "^7.8.0"
     }
 }

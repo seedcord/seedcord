@@ -38,6 +38,6 @@
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",
-        "wrangler": "^4.103.0"
+        "wrangler": "^4.118.0"
     }
 }

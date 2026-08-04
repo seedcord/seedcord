@@ -5,7 +5,7 @@ inputs:
     node-version:
         description: 'Node.js version'
         required: false
-        default: '24'
+        default: '26'
     registry-url:
         description: 'Optional npm registry URL (set for publish jobs)'
         required: false
@@ -22,7 +22,7 @@ runs:
           uses: pnpm/action-setup@v6
 
         - name: Set up Node.js
-          uses: actions/setup-node@v6
+          uses: actions/setup-node@v7
           with:
               node-version: ${{ inputs.node-version }}
               cache: pnpm

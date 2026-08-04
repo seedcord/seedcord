@@ -25,9 +25,8 @@ const INDEX_URL = process.env.SEEDCORD_DOCS_INDEX_URL ?? LOCAL_INDEX_URL;
 
 // Per-request via React cache(): the engine carries mutable per-package active-version state and
 // must not be shared across requests.
-export const getDocsEngine = cache(
-    (): Promise<VersionedDocsEngine> =>
-        Promise.resolve(new VersionedDocsEngine(new IndexLoader(INDEX_URL, protocolFetcher), protocolFetcher))
+export const getDocsEngine = cache((): Promise<VersionedDocsEngine> =>
+    Promise.resolve(new VersionedDocsEngine(new IndexLoader(INDEX_URL, protocolFetcher), protocolFetcher))
 );
 
 export type { VersionedDocsEngine };

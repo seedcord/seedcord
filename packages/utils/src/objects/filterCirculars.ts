@@ -33,14 +33,13 @@ export type JsonifyWithCirculars<BaseType, Marker extends string = '[Circular]'>
  * @internal
  */
 export type JsonifyObject<BaseType, Marker extends string> = {
-    [K in keyof BaseType as K extends symbol
-        ? never
-        : BaseType[K] extends (...args: unknown[]) => unknown
-          ? never
-          : K]:
-        | JsonifyWithCirculars<Exclude<BaseType[K], undefined>, Marker>
-        | Extract<BaseType[K], undefined>
-        | Marker;
+    [
+        K in keyof BaseType as K extends symbol
+            ? never
+            : BaseType[K] extends (...args: unknown[]) => unknown
+              ? never
+              : K
+    ]: JsonifyWithCirculars<Exclude<BaseType[K], undefined>, Marker> | Extract<BaseType[K], undefined> | Marker;
 };
 
 /**

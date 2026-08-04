@@ -31,7 +31,7 @@
         "src"
     ],
     "scripts": {
-        "build": "tsdown --config-loader tsx",
+        "build": "tsdown",
         "clean": "rm -rf dist",
         "lint": "eslint '*.{mjs,ts}' --cache",
         "lint:fix": "eslint '*.{mjs,ts}' --fix --cache",

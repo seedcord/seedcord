@@ -31,7 +31,7 @@
         "src"
     ],
     "scripts": {
-        "build": "tsdown --config-loader tsx",
+        "build": "tsdown",
         "clean": "rm -rf dist",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
@@ -43,7 +43,7 @@
         "coverage": "vitest run --coverage"
     },
     "dependencies": {
-        "get-tsconfig": "^4.14.0",
+        "get-tsconfig": "^4.14.1",
         "vitest": "catalog:test"
     },
     "devDependencies": {

@@ -37,8 +37,8 @@
         "reflect-metadata": "catalog:peer"
     },
     "devDependencies": {
-        "seedcord": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*"
+        "@seedcord/tsconfig": "workspace:*",
+        "seedcord": "workspace:*"
     }
 }

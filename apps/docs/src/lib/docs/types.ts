@@ -50,8 +50,7 @@ export interface SeeAlsoEntry {
 export type SeeAlsoEntryWithoutTarget = Except<SeeAlsoEntry, 'target'>;
 
 export type DeprecationStatus =
-    | { isDeprecated: false }
-    | { isDeprecated: true; deprecationMessage: CommentParagraph[] | undefined };
+    { isDeprecated: false } | { isDeprecated: true; deprecationMessage: CommentParagraph[] | undefined };
 
 type WithSourceUrl = Pick<DocNode, 'sourceUrl'>;
 
