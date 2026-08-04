@@ -39,7 +39,7 @@ export function pruneSupersededPrereleases(changelog: string): string {
 function pruneAllPackages(): void {
     const repoRoot = resolve(import.meta.dirname, '..', '..');
     let prunedAny = false;
-    for (const root of ['packages', 'plugins']) {
+    for (const root of ['packages', 'plugins', 'cli', 'tooling']) {
         const rootDir = resolve(repoRoot, root);
         if (!fs.existsSync(rootDir)) continue;
         for (const entry of fs.readdirSync(rootDir, { withFileTypes: true })) {

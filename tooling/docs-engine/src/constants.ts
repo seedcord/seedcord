@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const GENERATED_RELATIVE_PATH = '../../../packages/docs-generator/generated';
+const GENERATED_RELATIVE_PATH = '../../../tooling/docs-generator/generated';
 const MODULE_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 export const MANIFEST_FILENAME = 'manifest.json';

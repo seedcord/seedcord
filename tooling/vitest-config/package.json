@@ -1,15 +1,16 @@
 {
-    "name": "@seedcord/docs-engine",
-    "version": "0.3.2",
-    "private": true,
-    "description": "Documentation parser, renderer, and explorer for Seedcord",
+    "name": "@seedcord/vitest-config",
     "type": "module",
+    "version": "0.0.1",
+    "private": true,
+    "description": "Internal vitest preset for seedcord packages",
+    "main": "./dist/index.cjs",
+    "types": "./dist/index.d.mts",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/docs-engine"
+        "directory": "tooling/vitest-config"
     },
-    "types": "./dist/index.d.mts",
     "exports": {
         ".": {
             "import": {
@@ -20,22 +21,15 @@
                 "types": "./dist/index.d.cts",
                 "default": "./dist/index.cjs"
             }
-        },
-        "./client": {
-            "import": {
-                "types": "./dist/client.d.mts",
-                "default": "./dist/client.mjs"
-            },
-            "require": {
-                "types": "./dist/client.d.cts",
-                "default": "./dist/client.cjs"
-            }
         }
     },
+    "files": [
+        "dist",
+        "src"
+    ],
     "scripts": {
-        "build": "tsdown",
+        "build": "tsdown --config-loader tsx",
         "clean": "rm -rf dist",
-        "smoke": "tsx src/smoke.ts",
         "lint": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' 'tests/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' 'tests/**/*.{ts,tsx,json,md}' --cache",
@@ -45,26 +39,15 @@
         "test:watch": "vitest dev",
         "coverage": "vitest run --coverage"
     },
-    "files": [
-        "dist",
-        "src",
-        "package.json",
-        "README.md",
-        "LICENSE"
-    ],
     "dependencies": {
-        "@leeoniya/ufuzzy": "^1.0.19",
-        "@microsoft/api-extractor-model": "7.33.8",
-        "@microsoft/tsdoc": "^0.16.0",
-        "prettier": "catalog:deps",
-        "semver": "^7.8.4"
+        "get-tsconfig": "^4.14.0",
+        "vitest": "catalog:test"
     },
     "devDependencies": {
-        "@seedcord/docs-generator": "workspace:*",
-        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
-        "@types/semver": "^7.7.1"
+        "@types/node": "catalog:deps",
+        "typescript": "catalog:peer"
     }
 }

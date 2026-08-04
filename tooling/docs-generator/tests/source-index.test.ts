@@ -8,7 +8,7 @@ import { PACKAGES_DIR } from './utils/constants';
 
 const REPO_ROOT = path.resolve(PACKAGES_DIR, '../../..');
 const MOCK_DIR = path.resolve(PACKAGES_DIR, 'mock');
-const MOCK_CLASS = 'packages/docs-generator/tests/mock/class.ts';
+const MOCK_CLASS = 'tooling/docs-generator/tests/mock/class.ts';
 
 function scan(githubBase = 'https://github.com/seedcord/seedcord'): ReturnType<typeof buildSourceIndex> {
     return buildSourceIndex({ packageDir: MOCK_DIR, repoRoot: REPO_ROOT, githubBase, ref: 'next', entry: 'index.ts' });

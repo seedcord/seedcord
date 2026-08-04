@@ -1,6 +1,6 @@
 # Package generator
 
-`turbo gen package` scaffolds a new published `@seedcord/<name>` leaf package under `<dir>/<name>/`, where `dir` is `packages` for a framework package and `plugins` for an ecosystem plugin.
+`turbo gen package` scaffolds a new published `@seedcord/<name>` leaf package under `<dir>/<name>/`. `dir` is `packages` for a framework package, `plugins` for an ecosystem plugin, `cli` for a command-line package, and `tooling` for a shared build or lint config.
 
 ```sh
 turbo gen package
@@ -14,7 +14,7 @@ Under `packages/` the folder basename matches the unscoped package name. Under `
 
 Every tool that walks the workspace reads each package's name from its `package.json`, so the folder name stays a human-facing label. The globs below are the exception and name the folder directly.
 
-A new workspace root (a sibling of `packages/` and `plugins/`) goes in `pnpm-workspace.yaml` first. Docs extraction reads its package roots from there and skips every package marked `private`. `scripts/check-workspace-catalog.ts` lists the roots separately in `WORKSPACE_GLOBS`, so add the root there too.
+A new workspace root (a sibling of `packages/`, `plugins/`, `cli/`, and `tooling/`) goes in `pnpm-workspace.yaml` first. Docs extraction reads its package roots from there and skips every package marked `private`. `scripts/check-workspace-catalog.ts` lists the roots separately in `WORKSPACE_GLOBS`, so add the root there too.
 
 A minimal published scoped package, `version` `0.0.0`, no runtime dependencies, only the three internal config devDeps plus the `typescript` peer (`catalog:peer`), a single `.` export with one tsdown entry, `publishConfig` access public with provenance, tsconfig extending `@seedcord/tsconfig/node`, tsdown via `createTsdownConfig`, and the `version` export line.
 
@@ -26,7 +26,7 @@ Finish these after generating, none of them are automated.
 2. `.github/labeler.yml`, add a `'📦 <name>'` glob block matching `<dir>/<name>/**`.
 3. `.github/labels.yml`, add the `📦 <name>` label entry (name, a muted color).
 4. `knip.json`, add `"<dir>/<name>": {}` to the `workspaces` map.
-5. `packages/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry (`displayName` plus any `aliases`) for `@seedcord/<name>`. Without it the docs site renders the full scoped name. The override sets the short display name (`core`) and extra search aliases. Skip for a package with no documented entry point, it never shows in the docs site.
+5. `tooling/docs-engine/src/packages/identity.ts`, add a `PACKAGE_OVERRIDES` entry (`displayName` plus any `aliases`) for `@seedcord/<name>`. Without it the docs site renders the full scoped name. The override sets the short display name (`core`) and extra search aliases. Skip for a package with no documented entry point, it never shows in the docs site.
 6. `pnpm-workspace.yaml` catalogs, move any dependency now used by two or more packages into the matching catalog bucket (`deps`, `peer`, `test`, `react`) and reference it as `catalog:<bucket>`. `check:catalog` gates prePush on this.
 7. The package's own `package.json`, set the real `version`, add runtime `dependencies` (`catalog:deps` or `workspace:*`), any extra `peerDependencies` with `peerDependenciesMeta` (for example `discord.js` as `catalog:peer`), extra `devDependencies`, and the `./internal` export block plus a second tsdown entry plus `src/internal.index.ts` if the package ships an internal surface.
 8. For a private package, drop `publishConfig`, add `"private": true`, and skip step 1, 9, and 10. For a public package, set the `version` first (the changeset pre-mode flow, or by hand), build, then publish from the package folder.

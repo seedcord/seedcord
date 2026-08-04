@@ -194,19 +194,19 @@ importers:
         version: 21.0.2
       '@seedcord/docs-engine':
         specifier: workspace:*
-        version: link:packages/docs-engine
+        version: link:tooling/docs-engine
       '@seedcord/docs-generator':
         specifier: workspace:*
-        version: link:packages/docs-generator
+        version: link:tooling/docs-generator
       '@seedcord/eslint-config':
         specifier: workspace:*
-        version: link:packages/eslint-config
+        version: link:tooling/eslint-config
       '@seedcord/tsconfig':
         specifier: workspace:*
-        version: link:packages/tsconfig
+        version: link:tooling/tsconfig
       '@seedcord/vitest-config':
         specifier: workspace:*
-        version: link:packages/vitest-config
+        version: link:tooling/vitest-config
       '@turbo/gen':
         specifier: ^2.9.18
         version: 2.9.18(@types/node@25.9.3)
@@ -278,10 +278,10 @@ importers:
         version: 1.1.17(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@seedcord/docs-engine':
         specifier: workspace:*
-        version: link:../../packages/docs-engine
+        version: link:../../tooling/docs-engine
       '@seedcord/eslint-config':
         specifier: workspace:*
-        version: link:../../packages/eslint-config
+        version: link:../../tooling/eslint-config
       '@seedcord/rate-limiter':
         specifier: workspace:*
         version: link:../../packages/rate-limiter
@@ -290,7 +290,7 @@ importers:
         version: link:../../packages/types
       '@seedcord/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../tooling/ui
       '@shikijs/langs':
         specifier: ^4.2.0
         version: 4.2.0
@@ -348,10 +348,10 @@ importers:
     devDependencies:
       '@seedcord/tsconfig':
         specifier: workspace:*
-        version: link:../../packages/tsconfig
+        version: link:../../tooling/tsconfig
       '@seedcord/vitest-config':
         specifier: workspace:*
-        version: link:../../packages/vitest-config
+        version: link:../../tooling/vitest-config
       '@testing-library/jest-dom':
         specifier: catalog:test
         version: 6.9.1
@@ -393,7 +393,7 @@ importers:
     dependencies:
       '@seedcord/ui':
         specifier: workspace:*
-        version: link:../../packages/ui
+        version: link:../../tooling/ui
       lucide-react:
         specifier: catalog:deps
         version: 1.21.0(react@19.2.7)
@@ -412,10 +412,10 @@ importers:
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*
-        version: link:../../packages/eslint-config
+        version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
         specifier: workspace:*
-        version: link:../../packages/tsconfig
+        version: link:../../tooling/tsconfig
       '@tailwindcss/postcss':
         specifier: catalog:deps
         version: 4.3.1
@@ -450,6 +450,103 @@ importers:
         specifier: ^4.103.0
         version: 4.103.0(@types/node@25.9.3)
 
+  cli/seedcord:
+    dependencies:
+      '@clack/prompts':
+        specifier: ^1.6.0
+        version: 1.6.0
+      '@commander-js/extra-typings':
+        specifier: ^15.0.0
+        version: 15.0.0(commander@15.0.0)
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.2
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../../packages/event-emitter
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      commander:
+        specifier: ^15.0.0
+        version: 15.0.0
+      discord-api-types:
+        specifier: ^0.38.51
+        version: 0.38.51
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      fix-esm-import-path:
+        specifier: ^1.10.3
+        version: 1.10.3
+      ink:
+        specifier: ^7.1.0
+        version: 7.1.1(@types/react@19.2.17)(react@19.2.7)
+      ink-spinner:
+        specifier: ^5.0.0
+        version: 5.0.0(ink@7.1.1(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
+      jiti:
+        specifier: ^2.7.0
+        version: 2.7.0
+      minimatch:
+        specifier: ^10.2.5
+        version: 10.2.5
+      react:
+        specifier: catalog:react
+        version: 19.2.7
+      tsx:
+        specifier: catalog:deps
+        version: 4.22.4
+      vite:
+        specifier: catalog:deps
+        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
+    devDependencies:
+      '@eslint-react/eslint-plugin':
+        specifier: ^5.10.0
+        version: 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      '@types/react':
+        specifier: catalog:react
+        version: 19.2.17
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
+      eslint-plugin-react-hooks:
+        specifier: ^7.1.1
+        version: 7.1.1(eslint@10.7.0(jiti@2.7.0))
+      ink-testing-library:
+        specifier: ^4.0.0
+        version: 4.0.0(@types/react@19.2.17)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+
   mock:
     dependencies:
       '@discordjs/builders':
@@ -479,13 +576,13 @@ importers:
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*
-        version: link:../packages/eslint-config
+        version: link:../tooling/eslint-config
       '@seedcord/tsconfig':
         specifier: workspace:*
-        version: link:../packages/tsconfig
+        version: link:../tooling/tsconfig
       seedcord:
         specifier: workspace:*
-        version: link:../packages/seedcord
+        version: link:../cli/seedcord
 
   packages/core:
     dependencies:
@@ -525,19 +622,19 @@ importers:
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*
-        version: link:../eslint-config
+        version: link:../../tooling/eslint-config
       '@seedcord/rate-limiter':
         specifier: workspace:*
         version: link:../rate-limiter
       '@seedcord/tsconfig':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
         specifier: workspace:*
-        version: link:../tsdown-config
+        version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
         specifier: workspace:*
-        version: link:../vitest-config
+        version: link:../../tooling/vitest-config
       reflect-metadata:
         specifier: catalog:peer
         version: 0.2.2
@@ -548,7 +645,518 @@ importers:
         specifier: catalog:deps
         version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
 
-  packages/docs-engine:
+  packages/errors:
+    dependencies:
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+
+  packages/eslint-plugin:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
+      eslint-plugin-discordjs:
+        specifier: workspace:*
+        version: link:../eslint-plugin-discordjs
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config-base
+      '@seedcord/eslint-utils':
+        specifier: workspace:*
+        version: link:../eslint-utils
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      '@typescript-eslint/rule-tester':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
+      dedent:
+        specifier: catalog:test
+        version: 1.7.2
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
+      eslint:
+        specifier: catalog:eslint
+        version: 10.7.0(jiti@2.7.0)
+
+  packages/eslint-plugin-discordjs:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config-base
+      '@seedcord/eslint-utils':
+        specifier: workspace:*
+        version: link:../eslint-utils
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      '@typescript-eslint/rule-tester':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
+      dedent:
+        specifier: catalog:test
+        version: 1.7.2
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
+      eslint:
+        specifier: catalog:eslint
+        version: 10.7.0(jiti@2.7.0)
+
+  packages/eslint-utils:
+    dependencies:
+      '@typescript-eslint/utils':
+        specifier: catalog:eslint
+        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config-base':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config-base
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      eslint:
+        specifier: catalog:eslint
+        version: 10.7.0(jiti@2.7.0)
+
+  packages/event-emitter:
+    dependencies:
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+
+  packages/gateway:
+    dependencies:
+      '@discordjs/builders':
+        specifier: catalog:deps
+        version: 1.14.1
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.2
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../core
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@seedcord/event-emitter':
+        specifier: workspace:*
+        version: link:../event-emitter
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@seedcord/rate-limiter':
+        specifier: workspace:*
+        version: link:../rate-limiter
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+
+  packages/http:
+    dependencies:
+      '@discordjs/core':
+        specifier: ^2.6.0
+        version: 2.6.0
+      '@discordjs/rest':
+        specifier: catalog:deps
+        version: 2.6.2
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../core
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../logger
+      '@seedcord/rate-limiter':
+        specifier: workspace:*
+        version: link:../rate-limiter
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      discord-api-types:
+        specifier: ^0.38.51
+        version: 0.38.51
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@cloudflare/vitest-pool-workers':
+        specifier: ^0.18.4
+        version: 0.18.4(@types/node@25.9.3)(@vitest/runner@4.1.10)(@vitest/snapshot@4.1.10)(vitest@4.1.10)
+      '@discordjs/builders':
+        specifier: catalog:deps
+        version: 1.14.1
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      '@vitest/coverage-istanbul':
+        specifier: ^4.1.10
+        version: 4.1.10(vitest@4.1.10)
+      esbuild:
+        specifier: ^0.28.1
+        version: 0.28.1
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      vitest:
+        specifier: catalog:test
+        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(vite@8.1.5(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+
+  packages/logger:
+    dependencies:
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+      winston:
+        specifier: ^3.19.0
+        version: 3.19.0
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+
+  packages/rate-limiter:
+    dependencies:
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+
+  packages/types:
+    dependencies:
+      discord-api-types:
+        specifier: ^0.38.51
+        version: 0.38.51
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+
+  packages/utils:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../types
+      discord-api-types:
+        specifier: ^0.38.51
+        version: 0.38.51
+      strip-ansi:
+        specifier: ^7.2.0
+        version: 7.2.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      discord.js:
+        specifier: catalog:peer
+        version: 14.27.0
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+
+  plugins/kysely-postgres:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/gateway':
+        specifier: workspace:*
+        version: link:../../packages/gateway
+      '@seedcord/http':
+        specifier: workspace:*
+        version: link:../../packages/http
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      '@types/pg':
+        specifier: ^8.20.0
+        version: 8.20.0
+      kysely:
+        specifier: ^0.29.2
+        version: 0.29.2
+      pg:
+        specifier: ^8.21.0
+        version: 8.21.0
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+
+  plugins/mongoose:
+    dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../../packages/errors
+      '@seedcord/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@seedcord/types':
+        specifier: workspace:*
+        version: link:../../packages/types
+      '@seedcord/utils':
+        specifier: workspace:*
+        version: link:../../packages/utils
+      chalk:
+        specifier: catalog:deps
+        version: 5.6.2
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/gateway':
+        specifier: workspace:*
+        version: link:../../packages/gateway
+      '@seedcord/http':
+        specifier: workspace:*
+        version: link:../../packages/http
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@seedcord/tsdown-config':
+        specifier: workspace:*
+        version: link:../../tooling/tsdown-config
+      '@seedcord/vitest-config':
+        specifier: workspace:*
+        version: link:../../tooling/vitest-config
+      mongoose:
+        specifier: catalog:peer
+        version: 9.7.1
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      type-fest:
+        specifier: catalog:deps
+        version: 5.7.0
+
+  tooling/docs-engine:
     dependencies:
       '@leeoniya/ufuzzy':
         specifier: ^1.0.19
@@ -564,7 +1172,7 @@ importers:
         version: 3.8.4
       semver:
         specifier: ^7.8.4
-        version: 7.8.4
+        version: 7.8.5
     devDependencies:
       '@seedcord/docs-generator':
         specifier: workspace:*
@@ -585,7 +1193,7 @@ importers:
         specifier: ^7.7.1
         version: 7.7.1
 
-  packages/docs-generator:
+  tooling/docs-generator:
     dependencies:
       '@microsoft/api-extractor':
         specifier: 7.58.9
@@ -610,33 +1218,11 @@ importers:
         specifier: workspace:*
         version: link:../vitest-config
 
-  packages/errors:
-    dependencies:
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-
-  packages/eslint-config:
+  tooling/eslint-config:
     dependencies:
       '@seedcord/eslint-plugin':
         specifier: workspace:*
-        version: link:../eslint-plugin
+        version: link:../../packages/eslint-plugin
       '@types/eslint-plugin-security':
         specifier: catalog:eslint
         version: 3.0.1
@@ -654,7 +1240,7 @@ importers:
         version: 4.6.0(eslint@10.7.0(jiti@2.7.0))(oxlint@1.74.0)(tailwindcss@4.3.1)(typescript@6.0.3)
       eslint-plugin-discordjs:
         specifier: workspace:*
-        version: link:../eslint-plugin-discordjs
+        version: link:../../packages/eslint-plugin-discordjs
       eslint-plugin-import-x:
         specifier: catalog:eslint
         version: 4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.7.0(jiti@2.7.0))
@@ -708,7 +1294,7 @@ importers:
         specifier: catalog:eslint
         version: 10.7.0(jiti@2.7.0)
 
-  packages/eslint-config-base:
+  tooling/eslint-config-base:
     dependencies:
       '@types/eslint-plugin-security':
         specifier: catalog:eslint
@@ -775,414 +1361,9 @@ importers:
         specifier: catalog:eslint
         version: 10.7.0(jiti@2.7.0)
 
-  packages/eslint-plugin:
-    dependencies:
-      '@typescript-eslint/utils':
-        specifier: catalog:eslint
-        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      eslint-plugin-discordjs:
-        specifier: workspace:*
-        version: link:../eslint-plugin-discordjs
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config-base':
-        specifier: workspace:*
-        version: link:../eslint-config-base
-      '@seedcord/eslint-utils':
-        specifier: workspace:*
-        version: link:../eslint-utils
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      '@typescript-eslint/rule-tester':
-        specifier: catalog:eslint
-        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      dedent:
-        specifier: catalog:test
-        version: 1.7.2
-      discord.js:
-        specifier: catalog:peer
-        version: 14.27.0
-      eslint:
-        specifier: catalog:eslint
-        version: 10.7.0(jiti@2.7.0)
+  tooling/tsconfig: {}
 
-  packages/eslint-plugin-discordjs:
-    dependencies:
-      '@typescript-eslint/utils':
-        specifier: catalog:eslint
-        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config-base':
-        specifier: workspace:*
-        version: link:../eslint-config-base
-      '@seedcord/eslint-utils':
-        specifier: workspace:*
-        version: link:../eslint-utils
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      '@typescript-eslint/rule-tester':
-        specifier: catalog:eslint
-        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      dedent:
-        specifier: catalog:test
-        version: 1.7.2
-      discord.js:
-        specifier: catalog:peer
-        version: 14.27.0
-      eslint:
-        specifier: catalog:eslint
-        version: 10.7.0(jiti@2.7.0)
-
-  packages/eslint-utils:
-    dependencies:
-      '@typescript-eslint/utils':
-        specifier: catalog:eslint
-        version: 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config-base':
-        specifier: workspace:*
-        version: link:../eslint-config-base
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      eslint:
-        specifier: catalog:eslint
-        version: 10.7.0(jiti@2.7.0)
-
-  packages/event-emitter:
-    dependencies:
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-
-  packages/gateway:
-    dependencies:
-      '@discordjs/builders':
-        specifier: catalog:deps
-        version: 1.14.1
-      '@discordjs/rest':
-        specifier: catalog:deps
-        version: 2.6.2
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../core
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/event-emitter':
-        specifier: workspace:*
-        version: link:../event-emitter
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../logger
-      '@seedcord/rate-limiter':
-        specifier: workspace:*
-        version: link:../rate-limiter
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      discord.js:
-        specifier: catalog:peer
-        version: 14.27.0
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-
-  packages/http:
-    dependencies:
-      '@discordjs/core':
-        specifier: ^2.6.0
-        version: 2.6.0
-      '@discordjs/rest':
-        specifier: catalog:deps
-        version: 2.6.2
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../core
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../logger
-      '@seedcord/rate-limiter':
-        specifier: workspace:*
-        version: link:../rate-limiter
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      discord-api-types:
-        specifier: ^0.38.51
-        version: 0.38.51
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@cloudflare/vitest-pool-workers':
-        specifier: ^0.18.4
-        version: 0.18.4(@types/node@25.9.3)(@vitest/runner@4.1.10)(@vitest/snapshot@4.1.10)(vitest@4.1.10)
-      '@discordjs/builders':
-        specifier: catalog:deps
-        version: 1.14.1
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      '@vitest/coverage-istanbul':
-        specifier: ^4.1.10
-        version: 4.1.10(vitest@4.1.10)
-      esbuild:
-        specifier: ^0.28.1
-        version: 0.28.1
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
-      vitest:
-        specifier: catalog:test
-        version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(jsdom@29.1.1)(vite@8.1.5(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
-
-  packages/logger:
-    dependencies:
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-      winston:
-        specifier: ^3.19.0
-        version: 3.19.0
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-
-  packages/rate-limiter:
-    dependencies:
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-
-  packages/seedcord:
-    dependencies:
-      '@clack/prompts':
-        specifier: ^1.6.0
-        version: 1.6.0
-      '@commander-js/extra-typings':
-        specifier: ^15.0.0
-        version: 15.0.0(commander@15.0.0)
-      '@discordjs/rest':
-        specifier: catalog:deps
-        version: 2.6.2
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../core
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/event-emitter':
-        specifier: workspace:*
-        version: link:../event-emitter
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../logger
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      commander:
-        specifier: ^15.0.0
-        version: 15.0.0
-      discord-api-types:
-        specifier: ^0.38.51
-        version: 0.38.51
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
-      fix-esm-import-path:
-        specifier: ^1.10.3
-        version: 1.10.3
-      ink:
-        specifier: ^7.1.0
-        version: 7.1.0(@types/react@19.2.17)(react@19.2.7)
-      ink-spinner:
-        specifier: ^5.0.0
-        version: 5.0.0(ink@7.1.0(@types/react@19.2.17)(react@19.2.7))(react@19.2.7)
-      jiti:
-        specifier: ^2.7.0
-        version: 2.7.0
-      minimatch:
-        specifier: ^10.2.5
-        version: 10.2.5
-      react:
-        specifier: catalog:react
-        version: 19.2.7
-      tsx:
-        specifier: catalog:deps
-        version: 4.22.4
-      vite:
-        specifier: catalog:deps
-        version: 8.0.16(@types/node@25.9.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0)
-    devDependencies:
-      '@eslint-react/eslint-plugin':
-        specifier: ^5.10.0
-        version: 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      '@types/react':
-        specifier: catalog:react
-        version: 19.2.17
-      discord.js:
-        specifier: catalog:peer
-        version: 14.27.0
-      eslint-plugin-react-hooks:
-        specifier: ^7.1.1
-        version: 7.1.1(eslint@10.7.0(jiti@2.7.0))
-      ink-testing-library:
-        specifier: ^4.0.0
-        version: 4.0.0(@types/react@19.2.17)
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-
-  packages/tsconfig: {}
-
-  packages/tsdown-config:
+  tooling/tsdown-config:
     dependencies:
       tsdown:
         specifier: catalog:deps
@@ -1201,35 +1382,7 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
 
-  packages/types:
-    dependencies:
-      discord-api-types:
-        specifier: ^0.38.51
-        version: 0.38.51
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      discord.js:
-        specifier: catalog:peer
-        version: 14.27.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-
-  packages/ui:
+  tooling/ui:
     dependencies:
       '@radix-ui/react-popover':
         specifier: ^1.1.17
@@ -1302,44 +1455,7 @@ importers:
         specifier: catalog:deps
         version: 4.3.1
 
-  packages/utils:
-    dependencies:
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../errors
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../types
-      discord-api-types:
-        specifier: ^0.38.51
-        version: 0.38.51
-      strip-ansi:
-        specifier: ^7.2.0
-        version: 7.2.0
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../vitest-config
-      discord.js:
-        specifier: catalog:peer
-        version: 14.27.0
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-
-  packages/vitest-config:
+  tooling/vitest-config:
     dependencies:
       get-tsconfig:
         specifier: ^4.14.0
@@ -1363,122 +1479,6 @@ importers:
       typescript:
         specifier: catalog:peer
         version: 6.0.3
-
-  plugins/kysely-postgres:
-    dependencies:
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../../packages/types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@seedcord/gateway':
-        specifier: workspace:*
-        version: link:../../packages/gateway
-      '@seedcord/http':
-        specifier: workspace:*
-        version: link:../../packages/http
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../../packages/tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../../packages/vitest-config
-      '@types/pg':
-        specifier: ^8.20.0
-        version: 8.20.0
-      kysely:
-        specifier: ^0.29.2
-        version: 0.29.2
-      pg:
-        specifier: ^8.21.0
-        version: 8.21.0
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
-
-  plugins/mongoose:
-    dependencies:
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
-      '@seedcord/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
-      '@seedcord/types':
-        specifier: workspace:*
-        version: link:../../packages/types
-      '@seedcord/utils':
-        specifier: workspace:*
-        version: link:../../packages/utils
-      chalk:
-        specifier: catalog:deps
-        version: 5.6.2
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.0
-      typescript:
-        specifier: catalog:peer
-        version: 6.0.3
-    devDependencies:
-      '@seedcord/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@seedcord/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@seedcord/gateway':
-        specifier: workspace:*
-        version: link:../../packages/gateway
-      '@seedcord/http':
-        specifier: workspace:*
-        version: link:../../packages/http
-      '@seedcord/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      '@seedcord/tsdown-config':
-        specifier: workspace:*
-        version: link:../../packages/tsdown-config
-      '@seedcord/vitest-config':
-        specifier: workspace:*
-        version: link:../../packages/vitest-config
-      mongoose:
-        specifier: catalog:peer
-        version: 9.7.1
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
-      type-fest:
-        specifier: catalog:deps
-        version: 5.7.0
 
 packages:
 
@@ -5454,11 +5454,6 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
-  baseline-browser-mapping@2.10.37:
-    resolution: {integrity: sha512-girxaJ7WZssDOFhzCGZTDKoTa1gk6A1TbflaYTpykLJ4UU9Fz9kx1aREM8JCuoVHbL8X8T/mJg7w2oYSq72Oig==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
-
   baseline-browser-mapping@2.10.42:
     resolution: {integrity: sha512-c/jurFrDLyui7o1J86yLkRu4LMsTYcBohveus7/I2Hzdn9KIP2bdJPTue/lR1KH46enoPbD77GKeSYNdyPoD3Q==}
     engines: {node: '>=6.0.0'}
@@ -5490,11 +5485,6 @@ packages:
   braces@3.0.3:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
-
-  browserslist@4.28.2:
-    resolution: {integrity: sha512-48xSriZYYg+8qXna9kwqjIVzuQxi+KYWp2+5nCYnYKPTr0LvD89Jqk2Or5ogxz0NUMfIjhh2lIUX/LyX9B4oIg==}
-    engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
-    hasBin: true
 
   browserslist@4.28.5:
     resolution: {integrity: sha512-Cu2E6QejHWzuDMTkuwgpABFgDfZrXLQq5V13YOACZx4mFAG4IwGTbTfHPMr4WtxlHoXSM8FIuRwYYCz5XiabaQ==}
@@ -5531,9 +5521,6 @@ packages:
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
-
-  caniuse-lite@1.0.30001799:
-    resolution: {integrity: sha512-hG1bReV+OUU+MOqK4t/ZWI0tZOyz3rqS9XuhOUz1cIcbwBKjOyJEJuw9ER5JuNyqxNk8u/JUVbGibBOL1yrjFw==}
 
   caniuse-lite@1.0.30001803:
     resolution: {integrity: sha512-g/uHREV2ZpK9qMalCsWaxmA6ol+DX8GYhuf3T40RKoP+oL7vhRJh8LNt73PCjpnR6l14FzfPrB5Yux4PKm2meg==}
@@ -5600,10 +5587,6 @@ packages:
   cli-truncate@5.2.0:
     resolution: {integrity: sha512-xRwvIOMGrfOAnM1JYtqQImuaNtDEv9v6oIYAs4LIHwTiKee8uwvIi363igssOC0O5U04i4AlENs79LQLu9tEMw==}
     engines: {node: '>=20'}
-
-  cli-truncate@6.0.0:
-    resolution: {integrity: sha512-3+YKIUFsohD9MIoOFPFBldjAlnfCmCDcqe6aYGFqlDTRKg80p4wg35L+j83QQ63iOlKRccEkbn8IuM++HsgEjA==}
-    engines: {node: '>=22'}
 
   cli-truncate@6.1.1:
     resolution: {integrity: sha512-06p9vyLahLa4zkGcgsGxU6iEkSOiuI4fhCH6Emhe2lPAcoUv73n72DnODsnHA+5wwXGnV0n9M9/qOQJSjYhFhw==}
@@ -5892,9 +5875,6 @@ packages:
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
-
-  electron-to-chromium@1.5.372:
-    resolution: {integrity: sha512-M3yhbAlilnwqC8D21t28UCDGHyitShTmmLRU/H+b74P6Ski16Nb9HONYEaVpMj/pwC7BEo5B95FpjODLCWbtfA==}
 
   electron-to-chromium@1.5.389:
     resolution: {integrity: sha512-cEto7aeOqBfU1D+c5py5pE+ooscKE75JifxLBdFUZsqAxRS6y7kebtxAZvICszSl05gPjYHDTjY+lXpyGvpJbg==}
@@ -6734,19 +6714,6 @@ packages:
       '@types/react': '>=18.0.0'
     peerDependenciesMeta:
       '@types/react':
-        optional: true
-
-  ink@7.1.0:
-    resolution: {integrity: sha512-VWE6/yeLtFCJBNLflyI2OSylyXK1Rc24LuXup8Qt+icwkmmycFNdbn8IkSp6Frc0h1iA0NOvvi1ajW44U/w3Qg==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      '@types/react': '>=19.2.0'
-      react: '>=19.2.0'
-      react-devtools-core: '>=6.1.2'
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
-      react-devtools-core:
         optional: true
 
   ink@7.1.1:
@@ -7676,10 +7643,6 @@ packages:
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
 
-  node-releases@2.0.47:
-    resolution: {integrity: sha512-Uzmd6LXpouKo8EUK68IjH4+E01w/hXyV3R3g/geCJo+rXLNfh1xucB+LOzYEOQPSiUK3h/xZf0cQGcSsmyL2Og==}
-    engines: {node: '>=18'}
-
   node-releases@2.0.51:
     resolution: {integrity: sha512-wRNIrw4DmVLKQlbgOMdkMx27Wrpzes2hh5Jtbi2bjPd+4wJstWIqP5A+lscnqbm0xxmT5Bpg8Lec5ItEBwx6BQ==}
     engines: {node: '>=18'}
@@ -8533,10 +8496,6 @@ packages:
 
   string-width@8.1.0:
     resolution: {integrity: sha512-Kxl3KJGb/gxkaUMOjRsQ8IrXiGW75O4E3RPjFIINOVH8AMl2SQ/yWdTzWwF3FevIX9LcMAjJW+GRwAlAbTSXdg==}
-    engines: {node: '>=20'}
-
-  string-width@8.2.1:
-    resolution: {integrity: sha512-IIaP0g3iy9Cyy18w3M9YcaDudujEAVHKt3a3QJg1+sr/oX96TbaGUubG0hJyCjCBThFH+tFpcIyoUHUn1ogaLA==}
     engines: {node: '>=20'}
 
   string-width@8.2.2:
@@ -9910,7 +9869,7 @@ snapshots:
       outdent: 0.5.0
       prettier: 2.8.8
       resolve-from: 5.0.0
-      semver: 7.8.4
+      semver: 7.8.5
 
   '@changesets/assemble-release-plan@6.0.10':
     dependencies:
@@ -9919,7 +9878,7 @@ snapshots:
       '@changesets/should-skip-package': 0.1.2
       '@changesets/types': 6.1.0
       '@manypkg/get-packages': 1.1.3
-      semver: 7.8.4
+      semver: 7.8.5
 
   '@changesets/changelog-git@0.2.1':
     dependencies:
@@ -9976,7 +9935,7 @@ snapshots:
       '@changesets/types': 6.1.0
       '@manypkg/get-packages': 1.1.3
       picocolors: 1.1.1
-      semver: 7.8.4
+      semver: 7.8.5
 
   '@changesets/get-release-plan@4.0.16':
     dependencies:
@@ -10203,7 +10162,7 @@ snapshots:
     dependencies:
       '@commitlint/config-validator': 21.0.1
       '@commitlint/types': 21.0.1
-      es-toolkit: 1.47.1
+      es-toolkit: 1.50.0
       global-directory: 5.0.0
       resolve-from: 5.0.0
 
@@ -10323,7 +10282,7 @@ snapshots:
       '@vladfrangu/async_event_emitter': 2.4.7
       discord-api-types: 0.38.51
       tslib: 2.8.1
-      ws: 8.21.0
+      ws: 8.21.1
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -10338,7 +10297,7 @@ snapshots:
       '@vladfrangu/async_event_emitter': 2.4.7
       discord-api-types: 0.38.51
       tslib: 2.8.1
-      ws: 8.21.0
+      ws: 8.21.1
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -10567,7 +10526,7 @@ snapshots:
 
   '@eslint-react/ast@5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/typescript-estree': 8.62.1(typescript@6.0.3)
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
@@ -10584,7 +10543,7 @@ snapshots:
       '@eslint-react/shared': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/var': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/scope-manager': 8.62.1
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
       ts-pattern: 5.9.0
@@ -10620,7 +10579,7 @@ snapshots:
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/shared': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/var': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
       ts-pattern: 5.9.0
@@ -10644,7 +10603,7 @@ snapshots:
       '@eslint-react/ast': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/scope-manager': 8.62.1
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
       ts-pattern: 5.9.0
@@ -11117,6 +11076,13 @@ snapshots:
       '@emnapi/core': 1.11.0
       '@emnapi/runtime': 1.11.0
       '@tybys/wasm-util': 0.10.2
+    optional: true
+
+  '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+    dependencies:
+      '@emnapi/core': 1.10.0
+      '@emnapi/runtime': 1.10.0
+      '@tybys/wasm-util': 0.10.3
     optional: true
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)':
@@ -12550,7 +12516,7 @@ snapshots:
   '@typescript-eslint/project-service@8.56.1(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.56.1
+      '@typescript-eslint/types': 8.65.0
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -12559,7 +12525,7 @@ snapshots:
   '@typescript-eslint/project-service@8.61.1(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.61.1
+      '@typescript-eslint/types': 8.65.0
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -12568,7 +12534,7 @@ snapshots:
   '@typescript-eslint/project-service@8.62.1(typescript@6.0.3)':
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.62.1(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       debug: 4.4.3
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -12926,7 +12892,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.1.5(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@unrs/resolver-binding-win32-arm64-msvc@1.12.2':
@@ -13223,8 +13189,6 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
-  baseline-browser-mapping@2.10.37: {}
-
   baseline-browser-mapping@2.10.42: {}
 
   better-path-resolve@1.0.0:
@@ -13250,14 +13214,6 @@ snapshots:
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
-
-  browserslist@4.28.2:
-    dependencies:
-      baseline-browser-mapping: 2.10.37
-      caniuse-lite: 1.0.30001799
-      electron-to-chromium: 1.5.372
-      node-releases: 2.0.47
-      update-browserslist-db: 1.2.3(browserslist@4.28.2)
 
   browserslist@4.28.5:
     dependencies:
@@ -13293,8 +13249,6 @@ snapshots:
       get-intrinsic: 1.3.0
 
   callsites@3.1.0: {}
-
-  caniuse-lite@1.0.30001799: {}
 
   caniuse-lite@1.0.30001803: {}
 
@@ -13342,12 +13296,7 @@ snapshots:
   cli-truncate@5.2.0:
     dependencies:
       slice-ansi: 8.0.0
-      string-width: 8.2.1
-
-  cli-truncate@6.0.0:
-    dependencies:
-      slice-ansi: 9.0.0
-      string-width: 8.2.1
+      string-width: 8.2.2
 
   cli-truncate@6.1.1:
     dependencies:
@@ -13450,7 +13399,7 @@ snapshots:
 
   core-js-compat@3.49.0:
     dependencies:
-      browserslist: 4.28.2
+      browserslist: 4.28.5
 
   cosmiconfig-typescript-loader@6.3.0(@types/node@25.9.3)(cosmiconfig@9.0.2(typescript@6.0.3))(typescript@6.0.3):
     dependencies:
@@ -13633,8 +13582,6 @@ snapshots:
       gopd: 1.2.0
 
   eastasianwidth@0.2.0: {}
-
-  electron-to-chromium@1.5.372: {}
 
   electron-to-chromium@1.5.389: {}
 
@@ -13988,14 +13935,14 @@ snapshots:
 
   eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@10.7.0(jiti@2.7.0)):
     dependencies:
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       comment-parser: 1.4.7
       debug: 4.4.3
       eslint: 10.7.0(jiti@2.7.0)
       eslint-import-context: 0.1.9(unrs-resolver@1.12.2)
       is-glob: 4.0.3
       minimatch: 10.2.5
-      semver: 7.8.4
+      semver: 7.8.5
       stable-hash-x: 0.2.0
       unrs-resolver: 1.12.2
     optionalDependencies:
@@ -14006,14 +13953,14 @@ snapshots:
 
   eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.62.1(eslint@9.39.4(jiti@2.7.0))(typescript@6.0.3))(eslint-import-resolver-node@0.3.10)(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       comment-parser: 1.4.7
       debug: 4.4.3
       eslint: 9.39.4(jiti@2.7.0)
       eslint-import-context: 0.1.9(unrs-resolver@1.12.2)
       is-glob: 4.0.3
       minimatch: 10.2.5
-      semver: 7.8.4
+      semver: 7.8.5
       stable-hash-x: 0.2.0
       unrs-resolver: 1.12.2
     optionalDependencies:
@@ -14145,7 +14092,7 @@ snapshots:
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/jsx': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/shared': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       compare-versions: 6.1.1
       eslint: 10.7.0(jiti@2.7.0)
@@ -14182,7 +14129,7 @@ snapshots:
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/jsx': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/shared': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
       typescript: 6.0.3
@@ -14195,7 +14142,7 @@ snapshots:
       '@eslint-react/core': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/var': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
       ts-pattern: 5.9.0
@@ -14210,7 +14157,7 @@ snapshots:
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/shared': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/var': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       eslint: 10.7.0(jiti@2.7.0)
       typescript: 6.0.3
@@ -14224,7 +14171,7 @@ snapshots:
       '@eslint-react/eslint': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/shared': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@eslint-react/var': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       birecord: 0.1.1
       eslint: 10.7.0(jiti@2.7.0)
@@ -14243,7 +14190,7 @@ snapshots:
       '@eslint-react/var': 5.10.0(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       '@typescript-eslint/scope-manager': 8.62.1
       '@typescript-eslint/type-utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/types': 8.62.1
+      '@typescript-eslint/types': 8.65.0
       '@typescript-eslint/typescript-estree': 8.62.1(typescript@6.0.3)
       '@typescript-eslint/utils': 8.62.1(eslint@10.7.0(jiti@2.7.0))(typescript@6.0.3)
       compare-versions: 6.1.1
@@ -14301,7 +14248,7 @@ snapshots:
     dependencies:
       '@babel/helper-validator-identifier': 7.29.7
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.7.0(jiti@2.7.0))
-      browserslist: 4.28.2
+      browserslist: 4.28.5
       change-case: 5.4.4
       ci-info: 4.4.0
       core-js-compat: 3.49.0
@@ -14314,7 +14261,7 @@ snapshots:
       jsesc: 3.1.0
       pluralize: 8.0.0
       regjsparser: 0.13.2
-      semver: 7.8.4
+      semver: 7.8.5
       strip-indent: 4.1.1
 
   eslint-scope@8.4.0:
@@ -14852,55 +14799,21 @@ snapshots:
 
   ini@6.0.0: {}
 
-  ink-spinner@5.0.0(ink@7.1.0(@types/react@19.2.17)(react@19.2.7))(react@19.2.7):
-    dependencies:
-      cli-spinners: 2.9.2
-      ink: 7.1.0(@types/react@19.2.17)(react@19.2.7)
-      react: 19.2.7
-
   ink-spinner@5.0.0(ink@7.1.1(@types/react@19.2.17)(react@19.2.5))(react@19.2.5):
     dependencies:
       cli-spinners: 2.9.2
       ink: 7.1.1(@types/react@19.2.17)(react@19.2.5)
       react: 19.2.5
 
+  ink-spinner@5.0.0(ink@7.1.1(@types/react@19.2.17)(react@19.2.7))(react@19.2.7):
+    dependencies:
+      cli-spinners: 2.9.2
+      ink: 7.1.1(@types/react@19.2.17)(react@19.2.7)
+      react: 19.2.7
+
   ink-testing-library@4.0.0(@types/react@19.2.17):
     optionalDependencies:
       '@types/react': 19.2.17
-
-  ink@7.1.0(@types/react@19.2.17)(react@19.2.7):
-    dependencies:
-      '@alcalzone/ansi-tokenize': 0.3.0
-      ansi-escapes: 7.3.0
-      ansi-styles: 6.2.3
-      auto-bind: 5.0.1
-      chalk: 5.6.2
-      cli-boxes: 4.0.1
-      cli-cursor: 4.0.0
-      cli-truncate: 6.0.0
-      code-excerpt: 4.0.0
-      es-toolkit: 1.47.1
-      indent-string: 5.0.0
-      is-in-ci: 2.0.0
-      patch-console: 2.0.0
-      react: 19.2.7
-      react-reconciler: 0.33.0(react@19.2.7)
-      scheduler: 0.27.0
-      signal-exit: 3.0.7
-      slice-ansi: 9.0.0
-      stack-utils: 2.0.6
-      string-width: 8.2.1
-      terminal-size: 4.0.1
-      type-fest: 5.7.0
-      widest-line: 6.0.0
-      wrap-ansi: 10.0.0
-      ws: 8.21.0
-      yoga-layout: 3.2.1
-    optionalDependencies:
-      '@types/react': 19.2.17
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   ink@7.1.1(@types/react@19.2.17)(react@19.2.5):
     dependencies:
@@ -14919,6 +14832,40 @@ snapshots:
       patch-console: 2.0.0
       react: 19.2.5
       react-reconciler: 0.33.0(react@19.2.5)
+      scheduler: 0.27.0
+      signal-exit: 3.0.7
+      slice-ansi: 9.0.0
+      stack-utils: 2.0.6
+      string-width: 8.2.2
+      terminal-size: 4.0.1
+      type-fest: 5.8.0
+      widest-line: 6.0.0
+      wrap-ansi: 10.0.0
+      ws: 8.21.1
+      yoga-layout: 3.2.1
+    optionalDependencies:
+      '@types/react': 19.2.17
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  ink@7.1.1(@types/react@19.2.17)(react@19.2.7):
+    dependencies:
+      '@alcalzone/ansi-tokenize': 0.3.0
+      ansi-escapes: 7.3.0
+      ansi-styles: 6.2.3
+      auto-bind: 5.0.1
+      chalk: 5.6.2
+      cli-boxes: 4.0.1
+      cli-cursor: 4.0.0
+      cli-truncate: 6.1.1
+      code-excerpt: 4.0.0
+      es-toolkit: 1.50.0
+      indent-string: 5.0.0
+      is-in-ci: 2.0.0
+      patch-console: 2.0.0
+      react: 19.2.7
+      react-reconciler: 0.33.0(react@19.2.7)
       scheduler: 0.27.0
       signal-exit: 3.0.7
       slice-ansi: 9.0.0
@@ -14980,7 +14927,7 @@ snapshots:
 
   is-bun-module@2.0.0:
     dependencies:
-      semver: 7.8.4
+      semver: 7.8.5
 
   is-callable@1.2.7: {}
 
@@ -16032,8 +15979,6 @@ snapshots:
 
   node-fetch-native@1.6.7: {}
 
-  node-releases@2.0.47: {}
-
   node-releases@2.0.51: {}
 
   nopt@7.2.1:
@@ -17068,11 +17013,6 @@ snapshots:
       get-east-asian-width: 1.6.0
       strip-ansi: 7.2.0
 
-  string-width@8.2.1:
-    dependencies:
-      get-east-asian-width: 1.6.0
-      strip-ansi: 7.2.0
-
   string-width@8.2.2:
     dependencies:
       get-east-asian-width: 1.6.0
@@ -17615,12 +17555,6 @@ snapshots:
       '@unrs/resolver-binding-win32-ia32-msvc': 1.12.2
       '@unrs/resolver-binding-win32-x64-msvc': 1.12.2
 
-  update-browserslist-db@1.2.3(browserslist@4.28.2):
-    dependencies:
-      browserslist: 4.28.2
-      escalade: 3.2.0
-      picocolors: 1.1.1
-
   update-browserslist-db@1.2.3(browserslist@4.28.5):
     dependencies:
       browserslist: 4.28.5
@@ -17886,7 +17820,7 @@ snapshots:
 
   widest-line@6.0.0:
     dependencies:
-      string-width: 8.2.1
+      string-width: 8.2.2
 
   winston-transport@4.9.0:
     dependencies:
@@ -17963,7 +17897,7 @@ snapshots:
   wrap-ansi@10.0.0:
     dependencies:
       ansi-styles: 6.2.3
-      string-width: 8.2.1
+      string-width: 8.2.2
       strip-ansi: 7.2.0
 
   wrap-ansi@6.2.0:

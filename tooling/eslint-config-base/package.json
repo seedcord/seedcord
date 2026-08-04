@@ -8,7 +8,7 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "packages/eslint-config-base"
+        "directory": "tooling/eslint-config-base"
     },
     "exports": {
         ".": {

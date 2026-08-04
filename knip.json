@@ -41,33 +41,7 @@
             ]
         },
         "packages/core": {},
-        "packages/docs-engine": {},
-        "packages/docs-generator": {
-            "ignore": [
-                "tests/mock/**"
-            ]
-        },
         "packages/errors": {},
-        "packages/eslint-config": {
-            "ignoreDependencies": [
-                "@types/eslint-plugin-security",
-                "@typescript-eslint/parser",
-                "eslint-config-prettier",
-                "eslint-plugin-better-tailwindcss",
-                "eslint-plugin-mdx",
-                "eslint-plugin-prettier",
-                "eslint-plugin-security",
-                "eslint-plugin-tailwind-canonical-classes",
-                "eslint-plugin-tsdoc",
-                "eslint-plugin-unicorn",
-                "lodash.merge"
-            ]
-        },
-        "packages/eslint-config-base": {
-            "ignoreDependencies": [
-                "@typescript-eslint/parser"
-            ]
-        },
         "packages/eslint-plugin": {
             "ignore": [
                 "tests/fixtures/**"
@@ -96,14 +70,6 @@
         },
         "packages/logger": {},
         "packages/rate-limiter": {},
-        "packages/seedcord": {
-            "ignoreDependencies": [
-                "fix-esm-import-path",
-                "@seedcord/tsconfig"
-            ]
-        },
-        "packages/tsconfig": {},
-        "packages/tsdown-config": {},
         "packages/types": {},
         "packages/utils": {
             "ignore": [
@@ -111,6 +77,41 @@
             ]
         },
         "plugins/kysely-postgres": {},
-        "plugins/mongoose": {}
+        "plugins/mongoose": {},
+        "cli/seedcord": {
+            "ignoreDependencies": [
+                "fix-esm-import-path"
+            ]
+        },
+        "tooling/docs-engine": {},
+        "tooling/docs-generator": {
+            "ignore": [
+                "tests/mock/**"
+            ]
+        },
+        "tooling/eslint-config": {
+            "ignoreDependencies": [
+                "@types/eslint-plugin-security",
+                "@typescript-eslint/parser",
+                "eslint-config-prettier",
+                "eslint-plugin-better-tailwindcss",
+                "eslint-plugin-mdx",
+                "eslint-plugin-prettier",
+                "eslint-plugin-security",
+                "eslint-plugin-tailwind-canonical-classes",
+                "eslint-plugin-tsdoc",
+                "eslint-plugin-unicorn",
+                "lodash.merge"
+            ]
+        },
+        "tooling/eslint-config-base": {
+            "ignoreDependencies": [
+                "@typescript-eslint/parser"
+            ]
+        },
+        "tooling/tsconfig": {},
+        "tooling/tsdown-config": {},
+        "tooling/ui": {},
+        "tooling/vitest-config": {}
     }
 }

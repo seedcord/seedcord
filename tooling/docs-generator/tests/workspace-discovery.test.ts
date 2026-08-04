@@ -17,11 +17,13 @@ describe('workspace discovery', () => {
         const dirs = await discover();
         expect(dirs).toContain('packages/gateway');
         expect(dirs).toContain('plugins/kysely-postgres');
+        expect(dirs).toContain('cli/seedcord');
+        expect(dirs).toContain('tooling/eslint-config');
     });
 
     it('skips private packages', async () => {
         const dirs = await discover();
-        expect(dirs).not.toContain('packages/docs-generator');
+        expect(dirs).not.toContain('tooling/docs-generator');
         expect(dirs).not.toContain('apps/docs');
         expect(dirs).not.toContain('mock');
     });

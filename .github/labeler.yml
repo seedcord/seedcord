@@ -30,7 +30,7 @@
       - any-glob-to-any-file: 'packages/logger/**'
 '📦 ui':
   - changed-files:
-      - any-glob-to-any-file: 'packages/ui/**'
+      - any-glob-to-any-file: 'tooling/ui/**'
 '📦 types':
   - changed-files:
       - any-glob-to-any-file: 'packages/types/**'
@@ -39,10 +39,10 @@
       - any-glob-to-any-file: 'packages/utils/**'
 '📦 eslint-config':
   - changed-files:
-      - any-glob-to-any-file: 'packages/eslint-config/**'
+      - any-glob-to-any-file: 'tooling/eslint-config/**'
 '📦 eslint-config-base':
   - changed-files:
-      - any-glob-to-any-file: 'packages/eslint-config-base/**'
+      - any-glob-to-any-file: 'tooling/eslint-config-base/**'
 '📦 eslint-plugin':
   - changed-files:
       - any-glob-to-any-file: 'packages/eslint-plugin/**'
@@ -54,19 +54,19 @@
       - any-glob-to-any-file: 'packages/eslint-utils/**'
 '📦 tsconfig':
   - changed-files:
-      - any-glob-to-any-file: 'packages/tsconfig/**'
+      - any-glob-to-any-file: 'tooling/tsconfig/**'
 '📦 tsdown-config':
   - changed-files:
-      - any-glob-to-any-file: 'packages/tsdown-config/**'
+      - any-glob-to-any-file: 'tooling/tsdown-config/**'
 '📦 seedcord':
   - changed-files:
-      - any-glob-to-any-file: 'packages/seedcord/**'
+      - any-glob-to-any-file: 'cli/seedcord/**'
 '📦 docs-generator':
   - changed-files:
-      - any-glob-to-any-file: 'packages/docs-generator/**'
+      - any-glob-to-any-file: 'tooling/docs-generator/**'
 '📦 docs-engine':
   - changed-files:
-      - any-glob-to-any-file: 'packages/docs-engine/**'
+      - any-glob-to-any-file: 'tooling/docs-engine/**'
 '🏠 home':
   - changed-files:
       - any-glob-to-any-file: 'apps/home/**'
