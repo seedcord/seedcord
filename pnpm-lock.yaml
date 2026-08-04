@@ -547,17 +547,17 @@ importers:
         specifier: catalog:peer
         version: 6.0.3
 
-  mock:
+  mocks/gateway:
     dependencies:
       '@discordjs/builders':
         specifier: catalog:deps
         version: 1.14.1
       '@seedcord/gateway':
         specifier: workspace:*
-        version: link:../packages/gateway
+        version: link:../../packages/gateway
       '@seedcord/plugin-mongoose':
         specifier: workspace:*
-        version: link:../plugins/mongoose
+        version: link:../../plugins/mongoose
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
@@ -576,13 +576,41 @@ importers:
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*
-        version: link:../tooling/eslint-config
+        version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
         specifier: workspace:*
-        version: link:../tooling/tsconfig
+        version: link:../../tooling/tsconfig
       seedcord:
         specifier: workspace:*
-        version: link:../cli/seedcord
+        version: link:../../cli/seedcord
+
+  mocks/http:
+    dependencies:
+      '@discordjs/builders':
+        specifier: catalog:deps
+        version: 1.14.1
+      '@seedcord/http':
+        specifier: workspace:*
+        version: link:../../packages/http
+      envapt:
+        specifier: catalog:deps
+        version: 8.1.0
+      reflect-metadata:
+        specifier: catalog:peer
+        version: 0.2.2
+      typescript:
+        specifier: catalog:peer
+        version: 6.0.3
+    devDependencies:
+      '@seedcord/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint-config
+      '@seedcord/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      seedcord:
+        specifier: workspace:*
+        version: link:../../cli/seedcord
 
   packages/core:
     dependencies:

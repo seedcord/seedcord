@@ -9,7 +9,7 @@
       - any-glob-to-any-file: 'packages/http/**'
 '📦 mock':
   - changed-files:
-      - any-glob-to-any-file: 'mock/**'
+      - any-glob-to-any-file: 'mocks/**'
 '📦 plugin-mongoose':
   - changed-files:
       - any-glob-to-any-file: 'plugins/mongoose/**'

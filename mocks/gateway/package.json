@@ -1,0 +1,44 @@
+{
+    "name": "@seedcord/mock-gateway",
+    "type": "module",
+    "version": "0.2.23",
+    "engines": {
+        "node": ">=24.3"
+    },
+    "private": true,
+    "description": "Gateway-transport mock bot for demonstration and testing",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/seedcord/seedcord.git",
+        "directory": "mocks/gateway"
+    },
+    "scripts": {
+        "dev": "seedcord dev",
+        "build": "seedcord build",
+        "start": "pnpm build && node --enable-source-maps dist/index.mjs",
+        "clean": "rm -rf dist",
+        "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
+        "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
+        "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md}' --cache",
+        "fmt:check": "prettier --check 'src/**/*.{ts,tsx,json,md}' --cache",
+        "tc": "tsgo --noEmit",
+        "tc:watch": "tsc --noEmit --watch"
+    },
+    "peerDependencies": {
+        "typescript": "catalog:peer"
+    },
+    "dependencies": {
+        "@discordjs/builders": "catalog:deps",
+        "@seedcord/gateway": "workspace:*",
+        "@seedcord/plugin-mongoose": "workspace:*",
+        "discord.js": "catalog:peer",
+        "envapt": "catalog:deps",
+        "mongoose": "catalog:peer",
+        "reflect-metadata": "catalog:peer"
+    },
+    "devDependencies": {
+        "seedcord": "workspace:*",
+        "@seedcord/eslint-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:*"
+    }
+}

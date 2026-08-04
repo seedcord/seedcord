@@ -8,7 +8,7 @@
         "fallow"
     ],
     "ignoreWorkspaces": [
-        "mock"
+        "mocks/*"
     ],
     "rules": {
         "optionalPeerDependencies": "off"

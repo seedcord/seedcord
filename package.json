@@ -22,7 +22,7 @@
         "lint:md": "markdownlint-cli2",
         "lint:fix:md": "markdownlint-cli2 --fix",
         "check:catalog": "tsx scripts/check-workspace-catalog.ts",
-        "codegen:check": "pnpm -C mock exec seedcord codegen --check",
+        "codegen:check": "pnpm -C mocks/gateway exec seedcord codegen --check && pnpm -C mocks/http exec seedcord codegen --check",
         "prePush": "pnpm build && pnpm codegen:check && turbo check:catalog tc:scripts tc:root lint:scripts lint:md test:scripts && pnpm tc && pnpm lint && pnpm fmt:check && pnpm test",
         "prePush:affected": "pnpm build && pnpm codegen:check && turbo check:catalog tc:scripts tc:root lint:scripts lint:md test:scripts && turbo tc --affected && turbo lint --affected && turbo fmt:check --affected && turbo test --affected",
         "lint-staged": "lint-staged",

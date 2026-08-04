@@ -1,4 +1,4 @@
-# @seedcord/mock
+# @seedcord/mock-gateway
 
 ## 0.2.23
 

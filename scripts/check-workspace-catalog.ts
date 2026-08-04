@@ -19,7 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const WORKSPACE_GLOBS = ['apps', 'packages', 'plugins', 'cli', 'tooling', 'mock'];
+const WORKSPACE_GLOBS = ['apps', 'packages', 'plugins', 'cli', 'tooling', 'mocks'];
 const DEP_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const;
 
 // Deps exempt from the catalog rule. eslint is intentionally split for the eslint 10 migration.
@@ -51,12 +51,6 @@ function findPackageJsons(): string[] {
     for (const root of WORKSPACE_GLOBS) {
         const rootPath = path.join(REPO_ROOT, root);
         if (!safeIsDir(rootPath)) continue;
-
-        if (root === 'mock') {
-            const pkg = path.join(rootPath, 'package.json');
-            if (safeIsFile(pkg)) out.push(pkg);
-            continue;
-        }
 
         for (const entry of readdirSync(rootPath)) {
             const pkg = path.join(rootPath, entry, 'package.json');

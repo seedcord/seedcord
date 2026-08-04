@@ -1,16 +1,16 @@
 {
-    "name": "@seedcord/mock",
+    "name": "@seedcord/mock-http",
     "type": "module",
-    "version": "0.2.23",
+    "version": "0.0.1",
     "engines": {
         "node": ">=24.3"
     },
     "private": true,
-    "description": "Mock bot for demonstration and testing purposes",
+    "description": "Http-transport mock bot for demonstration and testing",
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
-        "directory": "mock"
+        "directory": "mocks/http"
     },
     "scripts": {
         "dev": "seedcord dev",
@@ -29,11 +29,8 @@
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
-        "@seedcord/gateway": "workspace:*",
-        "@seedcord/plugin-mongoose": "workspace:*",
-        "discord.js": "catalog:peer",
+        "@seedcord/http": "workspace:*",
         "envapt": "catalog:deps",
-        "mongoose": "catalog:peer",
         "reflect-metadata": "catalog:peer"
     },
     "devDependencies": {
