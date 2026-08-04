@@ -1,10 +1,10 @@
 packages:
-  - mocks/*
-  - packages/*
-  - plugins/*
-  - cli/*
-  - tooling/*
-  - apps/*
+- mocks/*
+- packages/*
+- plugins/*
+- cli/*
+- tooling/*
+- apps/*
 
 embedReadme: true
 
@@ -30,9 +30,9 @@ overrides:
 
 supportedArchitectures:
   libc:
-    - current
-    - glibc
-    - musl
+  - current
+  - glibc
+  - musl
 
 allowBuilds:
   '@swc/core': true
@@ -48,7 +48,7 @@ catalogs:
     '@discordjs/builders': ^1.14.1
     '@discordjs/rest': ^2.6.3
     '@tailwindcss/postcss': ^4.3.3
-    '@types/node': ^25.9.3
+    '@types/node': ^26.1.2
     chalk: ^6.0.0
     discord-api-types: ^0.38.52
     envapt: ^8.1.1

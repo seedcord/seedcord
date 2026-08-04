@@ -3,7 +3,7 @@
     "type": "module",
     "version": "0.0.1",
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     },
     "private": true,
     "description": "Internal shared utilities for the seedcord eslint plugins",

@@ -2,7 +2,7 @@
     "name": "@seedcord/docs",
     "version": "0.1.6",
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     },
     "private": true,
     "scripts": {

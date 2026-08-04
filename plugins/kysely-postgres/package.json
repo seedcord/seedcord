@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "description": "Kysely Postgres database plugin for Seedcord",
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     },
     "repository": {
         "type": "git",

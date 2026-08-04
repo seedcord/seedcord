@@ -2,7 +2,7 @@
     "name": "@seedcord/ui",
     "version": "0.2.0",
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     },
     "private": true,
     "type": "module",

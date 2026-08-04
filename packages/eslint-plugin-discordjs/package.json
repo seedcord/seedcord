@@ -3,7 +3,7 @@
     "type": "module",
     "version": "0.1.0",
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     },
     "description": "ESLint rules for discord.js bots",
     "repository": {

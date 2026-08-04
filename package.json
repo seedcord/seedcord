@@ -97,6 +97,6 @@
         "vitest": "catalog:test"
     },
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     }
 }
