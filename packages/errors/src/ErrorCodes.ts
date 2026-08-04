@@ -242,5 +242,7 @@ export enum SeedcordErrorCode {
     /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
     CliCleanApplyNeedsYes = 3130,
     /** Config hmr rollback flag must be a boolean when provided. */
-    CliConfigInvalidHmrRollback = 3131
+    CliConfigInvalidHmrRollback = 3131,
+    /** Config tunnel flag must be a boolean when provided. */
+    CliConfigInvalidTunnel = 3132
 }

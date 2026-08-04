@@ -63,6 +63,13 @@ export interface SeedcordDevConfig {
      */
     entry: string;
     /**
+     * Whether `seedcord dev` opens a cloudflared tunnel for an http bot and points the Discord
+     * application's interactions endpoint at it. A gateway bot ignores this.
+     *
+     * @defaultValue `true`
+     */
+    tunnel?: boolean;
+    /**
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;

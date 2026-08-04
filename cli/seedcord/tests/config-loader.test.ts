@@ -38,6 +38,39 @@ describe('ConfigLoader', () => {
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 
+    it('defaults tunnel on and carries an explicit opt-out', async () => {
+        const load = async (config: SeedcordDevConfig): Promise<boolean> => {
+            const moduleLoader: ModuleLoader = {
+                importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                    return Promise.resolve({ default: config } as TModule);
+                }
+            };
+            const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
+                join(process.cwd(), 'seedcord.config.ts')
+            );
+            return resolved.tunnel;
+        };
+
+        await expect(load({ instance: './bot.ts', entry: './index.ts' })).resolves.toBe(true);
+        await expect(load({ instance: './bot.ts', entry: './index.ts', tunnel: false })).resolves.toBe(false);
+    });
+
+    it('throws when tunnel is not a boolean', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts', tunnel: 'yes' }
+                } as TModule);
+            }
+        };
+
+        const loader = new ConfigLoader(moduleLoader, silentLogger);
+
+        await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
+            'Config `tunnel` must be a boolean when provided.'
+        );
+    });
+
     it('throws when instance is missing', async () => {
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {

@@ -40,6 +40,7 @@ describe('HmrPlugin', () => {
         entry: 'src/index.ts',
         instance: 'src/Seedcord.ts',
         tsconfig: 'tsconfig.json',
+        tunnel: true,
         build: {
             outDir: 'dist',
             bootstrap: 'bootstrap.js'

@@ -55,6 +55,9 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
         throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
     }
     if (!isOptionalString(raw.root)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
+    if (raw.tunnel !== undefined && typeof raw.tunnel !== 'boolean') {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTunnel);
+    }
     validateBuild(raw.build);
     validateHmr(raw.hmr);
 }
@@ -94,6 +97,7 @@ export class ConfigLoader {
             entry,
             build,
             tsconfig,
+            tunnel: config.tunnel ?? true,
             hmr: config.hmr
         } satisfies ResolvedSeedcordDevConfig;
     }

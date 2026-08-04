@@ -224,7 +224,8 @@ const messages = {
     [SeedcordErrorCode.CliCleanLargeBotUnconfirmed]: (count: number) =>
         `Refusing to scan ${count} guilds without confirmation. Re-run with --yes, or name specific guilds with --guild <ids>.`,
     [SeedcordErrorCode.CliCleanApplyNeedsYes]: () =>
-        'Refusing to delete without confirmation in a non-interactive environment. Re-run with --yes.'
+        'Refusing to delete without confirmation in a non-interactive environment. Re-run with --yes.',
+    [SeedcordErrorCode.CliConfigInvalidTunnel]: () => 'Config `tunnel` must be a boolean when provided.'
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */
