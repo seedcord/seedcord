@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { CommandInjector, HmrManager, setBotColor } from '@seedcord/core/internal';
+import { CommandInjector, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     CommandRegistry,
     CoordinatedShutdown,
@@ -252,6 +252,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.boundPort = (server.address() as AddressInfo).port;
         const health = this.health ? `, health on ${paint.sky(this.health.path)}` : '';
         this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}${health}`);
+        getDevChannel()?.send('seedcord:server-listening', { port: this.boundPort });
 
         this.shutdown.addTask(
             ShutdownPhase.Unbind,
