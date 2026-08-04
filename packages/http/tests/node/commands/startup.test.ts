@@ -26,8 +26,7 @@ function config(commandsPath: string | null, interactionsPath: string | null = n
             interactions: interactionsPath === null ? { path: null } : { path: interactionsPath },
             commands: commandsPath === null ? { path: null } : { path: commandsPath }
         },
-        subscribers: { path: null },
-        healthCheck: false
+        subscribers: { path: null }
     };
 }
 

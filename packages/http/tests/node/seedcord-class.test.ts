@@ -16,8 +16,7 @@ const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 function config(): HttpConfig {
     return {
         bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
-        subscribers: { path: null },
-        healthCheck: false
+        subscribers: { path: null }
     };
 }
 

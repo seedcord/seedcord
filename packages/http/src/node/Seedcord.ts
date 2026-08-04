@@ -35,7 +35,7 @@ import { version as packageVersion } from '../version';
 
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
-import type { HealthCheckOption, IRateLimiter } from '@seedcord/types';
+import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -45,11 +45,6 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
 const DRAIN_TIMEOUT_MS = 10_000;
 
 type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ? 'edge' : 'server';
-
-function healthResponderFor(option: HealthCheckOption | undefined): HealthResponder | undefined {
-    if (option === false) return undefined;
-    return new HealthResponder(typeof option === 'object' ? option.path : undefined);
-}
 
 /**
  * The HTTP-interactions bot host, a long-running node server around the engine.
@@ -127,7 +122,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.bus = new Bus(this);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
         // edge types healthCheck never, and a dev run of an edge config still constructs this host
-        this.health = config.runtime === 'edge' ? undefined : healthResponderFor(config.healthCheck);
+        this.health = config.runtime === 'edge' ? undefined : new HealthResponder(config.healthCheck?.path);
 
         this.registerStartupTasks();
     }

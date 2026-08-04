@@ -26,8 +26,7 @@ function config(): HttpConfig {
             commands: { path: null },
             emojis: { Confirm: 'confirm' }
         },
-        subscribers: { path: null },
-        healthCheck: false
+        subscribers: { path: null }
     };
 }
 

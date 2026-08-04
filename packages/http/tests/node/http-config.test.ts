@@ -10,18 +10,18 @@ function base(): Pick<Config, 'bot' | 'subscribers'> {
 
 describe('HttpConfig', () => {
     it('the server arm carries healthCheck', () => {
-        const config: HttpConfig = { ...base(), healthCheck: false };
-        expect(config.healthCheck).toBe(false);
+        const config: HttpConfig = { ...base(), healthCheck: { path: '/healthz' } };
+        expect(config.healthCheck).toMatchObject({ path: '/healthz' });
     });
 
     it('the explicit server runtime carries healthCheck', () => {
-        const config: HttpConfig = { ...base(), runtime: 'server', healthCheck: { port: 7000 } };
+        const config: HttpConfig = { ...base(), runtime: 'server', healthCheck: { path: '/healthz' } };
         expect(config.runtime).toBe('server');
     });
 
     it('the edge arm rejects healthCheck', () => {
-        // @ts-expect-error healthCheck is a node-server option, the edge arm has no health server
-        const config: HttpConfig = { ...base(), runtime: 'edge', healthCheck: false };
+        // @ts-expect-error healthCheck is a node-server option, the edge arm has no health endpoint
+        const config: HttpConfig = { ...base(), runtime: 'edge', healthCheck: { path: '/healthz' } };
         expect(config.runtime).toBe('edge');
     });
 });
