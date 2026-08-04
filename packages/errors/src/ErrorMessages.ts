@@ -227,7 +227,9 @@ const messages = {
         'Refusing to delete without confirmation in a non-interactive environment. Re-run with --yes.',
     [SeedcordErrorCode.CliConfigInvalidTunnel]: () => 'Config `tunnel` must be a boolean when provided.',
     [SeedcordErrorCode.CliTunnelUrlUnavailable]: (seconds: number) =>
-        `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`
+        `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
+    [SeedcordErrorCode.CliTunnelNotRouting]: (url: string, seconds: number) =>
+        `${url} did not reach the interactions server within ${seconds}s.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */
