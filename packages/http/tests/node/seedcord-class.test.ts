@@ -16,7 +16,8 @@ const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 function config(): HttpConfig {
     return {
         bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
-        subscribers: { path: null }
+        subscribers: { path: null },
+        port: 0
     };
 }
 
@@ -37,7 +38,7 @@ async function readyHost(): Promise<{ signer: Signer; url: string; host: Seedcor
     );
     const host = new Seedcord(config());
     live = host;
-    await host.start(0);
+    await host.start();
     return { signer, url: `http://127.0.0.1:${String(host.port)}`, host };
 }
 

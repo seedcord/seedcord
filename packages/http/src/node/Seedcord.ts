@@ -87,7 +87,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     private server?: Server;
     private boundPort?: number;
-    private requestedPort = DEFAULT_PORT;
     private fetchedUsername?: string | undefined;
 
     constructor(public readonly config: Cfg) {
@@ -139,11 +138,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     /**
      * Starts the host and runs the startup tasks.
-     *
-     * @param port - The port the interaction server binds. {@default `3000` }
      */
-    public async start(port = DEFAULT_PORT): Promise<this> {
-        this.requestedPort = port;
+    public async start(): Promise<this> {
         try {
             await super.init();
         } catch (caught) {
@@ -250,7 +246,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         });
         this.server = server;
 
-        server.listen(this.requestedPort);
+        server.listen(this.config.port ?? DEFAULT_PORT);
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         this.boundPort = (server.address() as AddressInfo).port;

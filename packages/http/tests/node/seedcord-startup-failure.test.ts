@@ -16,7 +16,8 @@ const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 function config(): HttpServerConfig {
     return {
         bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
-        subscribers: { path: null }
+        subscribers: { path: null },
+        port: 0
     };
 }
 
@@ -68,7 +69,7 @@ describe('http Seedcord startup failure', () => {
         host.attach('failing', FailsReadyOnce);
         live = host;
 
-        await expect(host.start(0)).rejects.toThrow();
+        await expect(host.start()).rejects.toThrow();
         expect(host.port).toBeDefined();
 
         await expect(fetch(`http://127.0.0.1:${String(host.port)}`, { method: 'POST' })).rejects.toThrow();
@@ -80,10 +81,10 @@ describe('http Seedcord startup failure', () => {
         const host = new Seedcord(config());
         host.attach('failing', FailsReadyOnce);
         live = host;
-        await expect(host.start(0)).rejects.toThrow();
+        await expect(host.start()).rejects.toThrow();
 
         // ready resolves from here on, so only the restart guard can reject this
-        await expect(host.start(0)).rejects.toThrow(/new instance/);
+        await expect(host.start()).rejects.toThrow(/new instance/);
 
         const fresh = new Seedcord(config());
         live = fresh;

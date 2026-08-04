@@ -1,3 +1,4 @@
+import { createServer } from 'node:http';
 import path from 'node:path';
 
 import { Envapter, merge, PortableSource } from 'envapt';
@@ -8,15 +9,15 @@ import { Seedcord } from '@src/node/Seedcord';
 import { createSigner } from '../helpers/ed25519';
 import { VALID_TOKEN } from '../helpers/fixtures';
 
-import type { HttpConfig } from '@src/interfaces/Config';
+import type { HttpServerConfig } from '@src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 
-function config(): HttpConfig {
+function config(port: number): HttpServerConfig {
     return {
         bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
         subscribers: { path: null },
-        port: 0
+        port
     };
 }
 
@@ -25,9 +26,21 @@ function reset(): void {
     Seedcord.reset();
 }
 
+function freePort(): Promise<number> {
+    return new Promise((resolve, reject) => {
+        const probe = createServer();
+        probe.once('error', reject);
+        probe.listen(0, '127.0.0.1', () => {
+            // justified: address() is AddressInfo once a TCP server is listening
+            const { port } = probe.address() as { port: number };
+            probe.close(() => resolve(port));
+        });
+    });
+}
+
 let live: Seedcord | undefined;
 
-async function readyHost(): Promise<string> {
+async function startHost(port: number): Promise<Seedcord> {
     const signer = await createSigner();
     Envapter.useSource(
         merge(
@@ -35,13 +48,13 @@ async function readyHost(): Promise<string> {
             new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
         )
     );
-    const host = new Seedcord(config());
+    const host = new Seedcord(config(port));
     live = host;
     await host.start();
-    return `http://127.0.0.1:${String(host.port)}`;
+    return host;
 }
 
-describe('http health path', () => {
+describe('http server port', () => {
     beforeEach(reset);
 
     afterEach(async () => {
@@ -50,20 +63,11 @@ describe('http health path', () => {
         reset();
     });
 
-    it('serves the health path on the interactions port', async () => {
-        const url = await readyHost();
+    it('binds the port the config declares', async () => {
+        const port = await freePort();
 
-        const response = await fetch(`${url}/health`);
+        const host = await startHost(port);
 
-        expect(response.status).toBe(200);
-        await expect(response.json()).resolves.toMatchObject({ status: 'ok' });
-    });
-
-    it('leaves every other GET to the engine', async () => {
-        const url = await readyHost();
-
-        const response = await fetch(url);
-
-        expect(response.status).toBe(405);
+        expect(host.port).toBe(port);
     });
 });

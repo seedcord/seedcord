@@ -26,7 +26,8 @@ function config(): HttpConfig {
             commands: { path: null },
             emojis: { Confirm: 'confirm' }
         },
-        subscribers: { path: null }
+        subscribers: { path: null },
+        port: 0
     };
 }
 
@@ -60,7 +61,7 @@ describe('emoji injection during startup', () => {
         });
         vi.spyOn(host.rest, 'get').mockImplementation(get as never);
 
-        await host.start(0);
+        await host.start();
 
         expect(emojis.Confirm?.id).toBe('111');
         expect(host.port).toBeGreaterThan(0);
