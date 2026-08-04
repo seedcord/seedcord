@@ -8,7 +8,7 @@ import {
     CommandRegistry,
     CoordinatedShutdown,
     CoordinatedStartup,
-    HealthCheck,
+    HealthResponder,
     Pluggable,
     ShutdownPhase,
     StartupPhase,
@@ -35,7 +35,7 @@ import { version as packageVersion } from '../version';
 
 import type { HttpConfig } from '@interfaces/Config';
 import type { Core } from '@interfaces/Core';
-import type { IRateLimiter } from '@seedcord/types';
+import type { HealthCheckOption, IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -45,6 +45,11 @@ const SERVER_SHUTDOWN_TIMEOUT_MS = 5000;
 const DRAIN_TIMEOUT_MS = 10_000;
 
 type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ? 'edge' : 'server';
+
+function healthResponderFor(option: HealthCheckOption | undefined): HealthResponder | undefined {
+    if (option === false) return undefined;
+    return new HealthResponder(typeof option === 'object' ? option.path : undefined);
+}
 
 /**
  * The HTTP-interactions bot host, a long-running node server around the engine.
@@ -81,7 +86,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private appId?: string;
     private appIdPromise?: Promise<string>;
     private readonly emojiInjector = new EmojiInjector(this, () => this.applicationId());
-    private readonly healthCheck?: HealthCheck | undefined;
+    private readonly health?: HealthResponder | undefined;
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
 
@@ -121,9 +126,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(this);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
-        // the edge arm types healthCheck never, and a dev run of an edge config needs no health server
-        this.healthCheck =
-            config.runtime === 'edge' ? undefined : HealthCheck.fromOption(this.shutdown, config.healthCheck);
+        // edge types healthCheck never, and a dev run of an edge config still constructs this host
+        this.health = config.runtime === 'edge' ? undefined : healthResponderFor(config.healthCheck);
 
         this.registerStartupTasks();
     }
@@ -204,15 +208,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.fetchUsername());
         }
-
-        const { healthCheck } = this;
-        if (healthCheck) {
-            this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
-                healthCheck.logger.utils.initialization('HealthCheck', 'start');
-                await healthCheck.init();
-                healthCheck.logger.utils.initialization('HealthCheck', 'end');
-            });
-        }
     }
 
     private registerHmrAwareModules(): void {
@@ -248,6 +243,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         const { handle, inFlight } = buildEngine(this, maps);
 
         const server = createServer((incoming, outgoing) => {
+            if (this.health?.tryRespond(incoming, outgoing)) return;
+
             void (async () => {
                 const response = await handle(await toWebRequest(incoming));
                 await writeWebResponse(response, outgoing);
@@ -262,7 +259,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         this.boundPort = (server.address() as AddressInfo).port;
-        this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}`);
+        const health = this.health ? `, health on ${paint.sky(this.health.path)}` : '';
+        this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}${health}`);
 
         this.shutdown.addTask(
             ShutdownPhase.Unbind,

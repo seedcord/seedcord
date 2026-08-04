@@ -1,25 +1,38 @@
-import { createServer } from 'node:http';
 import path from 'node:path';
 
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { Seedcord } from '@src/node/Seedcord';
+import { Plugin } from '@src/plugin';
 
 import { createSigner } from '../helpers/ed25519';
 import { VALID_TOKEN } from '../helpers/fixtures';
 
-import type { HttpConfig } from '@src/interfaces/Config';
-import type { Server } from 'node:http';
+import type { HttpServerConfig } from '@src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 
-function config(healthCheckPort: number): HttpConfig {
+function config(): HttpServerConfig {
     return {
         bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
-        subscribers: { path: null },
-        healthCheck: { port: healthCheckPort }
+        subscribers: { path: null }
     };
+}
+
+// ready runs in the same phase as the server bind so the rejection happens after the port is held
+class FailsReadyOnce extends Plugin {
+    private failed = false;
+
+    public init(): Promise<void> {
+        return Promise.resolve();
+    }
+
+    public override ready(): Promise<void> {
+        if (this.failed) return Promise.resolve();
+        this.failed = true;
+        return Promise.reject(new Error('ready failed'));
+    }
 }
 
 function reset(): void {
@@ -27,19 +40,17 @@ function reset(): void {
     Seedcord.reset();
 }
 
-function occupyPort(): Promise<{ server: Server; port: number }> {
-    return new Promise((resolveListen) => {
-        const server = createServer();
-        server.listen(0, () => {
-            // justified: address() is AddressInfo once a TCP server is listening
-            const { port } = server.address() as { port: number };
-            resolveListen({ server, port });
-        });
-    });
+async function bindEnv(): Promise<void> {
+    const signer = await createSigner();
+    Envapter.useSource(
+        merge(
+            new PortableSource(process.env),
+            new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
+        )
+    );
 }
 
 let live: Seedcord | undefined;
-let blocker: Server | undefined;
 
 describe('http Seedcord startup failure', () => {
     beforeEach(reset);
@@ -47,27 +58,16 @@ describe('http Seedcord startup failure', () => {
     afterEach(async () => {
         await live?.shutdown.run(0, false);
         live = undefined;
-        const server = blocker;
-        if (server) await new Promise((resolveClose) => server.close(() => resolveClose(undefined)));
-        blocker = undefined;
         reset();
     });
 
     it('closes the interaction server when a later startup task rejects', async () => {
-        const signer = await createSigner();
-        Envapter.useSource(
-            merge(
-                new PortableSource(process.env),
-                new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-            )
-        );
-        const occupied = await occupyPort();
-        blocker = occupied.server;
+        await bindEnv();
 
-        const host = new Seedcord(config(occupied.port));
+        const host = new Seedcord(config());
+        host.attach('failing', FailsReadyOnce);
         live = host;
 
-        // the server task binds before the health task hits the occupied port
         await expect(host.start(0)).rejects.toThrow();
         expect(host.port).toBeDefined();
 
@@ -75,28 +75,17 @@ describe('http Seedcord startup failure', () => {
     });
 
     it('rejects a restart of a failed host, the rollback removed its signal handlers', async () => {
-        const signer = await createSigner();
-        Envapter.useSource(
-            merge(
-                new PortableSource(process.env),
-                new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
-            )
-        );
-        const occupied = await occupyPort();
-        blocker = occupied.server;
+        await bindEnv();
 
-        const host = new Seedcord(config(occupied.port));
+        const host = new Seedcord(config());
+        host.attach('failing', FailsReadyOnce);
         live = host;
         await expect(host.start(0)).rejects.toThrow();
 
-        // the health port is free now, a restart would bind and run without coordinated shutdown
-        await new Promise((resolveClose) => occupied.server.close(() => resolveClose(undefined)));
-        blocker = undefined;
-
+        // ready resolves from here on, so only the restart guard can reject this
         await expect(host.start(0)).rejects.toThrow(/new instance/);
 
-        // the failure released the singleton, the replacement the error directs to must construct
-        const fresh = new Seedcord(config(occupied.port));
+        const fresh = new Seedcord(config());
         live = fresh;
         expect(fresh).toBeInstanceOf(Seedcord);
     });
