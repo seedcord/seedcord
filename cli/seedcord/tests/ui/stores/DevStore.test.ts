@@ -106,6 +106,13 @@ describe('DevStore', () => {
         expect(store.getState().commandUpdatePrompt).toEqual(files);
     });
 
+    it('apply reduces server-listening into the bound port', () => {
+        const store = new DevStore();
+        store.apply({ type: 'server-listening', port: 4000 });
+
+        expect(store.getState().port).toBe(4000);
+    });
+
     it('clearPrompt drops the pending prompt with one change', () => {
         const store = new DevStore();
         store.apply({ type: 'command-update-prompt', files: ['a.ts'] });

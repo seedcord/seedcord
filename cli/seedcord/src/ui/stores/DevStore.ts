@@ -12,6 +12,7 @@ export interface DevState {
     readonly frameworkVersion: string | null;
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
+    readonly port: number | null;
 }
 
 const INITIAL: DevState = {
@@ -21,7 +22,8 @@ const INITIAL: DevState = {
     isBusy: true,
     frameworkVersion: null,
     restartRequired: false,
-    commandUpdatePrompt: null
+    commandUpdatePrompt: null,
+    port: null
 };
 
 // Single source of truth for the dev UI. The runner pushes scalar updates through the setters, and runtime
@@ -90,6 +92,10 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
             }
             case 'command-update-prompt': {
                 this.patch({ commandUpdatePrompt: event.files });
+                break;
+            }
+            case 'server-listening': {
+                this.patch({ port: event.port });
                 break;
             }
             case 'module-loading':

@@ -5,6 +5,7 @@ import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HmrPlugin } from '@commands/dev/runtime/HmrPlugin';
 
+import type { DevEvent } from '@commands/dev/runtime/events';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 
@@ -75,6 +76,30 @@ describe('HmrPlugin', () => {
         watcher.emit('add', file);
 
         expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, { file, type: 'create', rollback: false });
+    });
+
+    it('relays the bound port the framework reports', () => {
+        const plugin = new HmrPlugin(mockConfig);
+        const listeners = new Map<string, (data: unknown) => void>();
+        // justified: spy on the private `hot` getter, which the public type does not expose
+        const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
+            send: vi.fn(),
+            on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
+        });
+
+        const events: DevEvent[] = [];
+        plugin.on('event', (event: DevEvent) => events.push(event));
+
+        const server = {
+            watcher: new EventEmitter(),
+            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+        } as unknown as ViteDevServer;
+        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+        listeners.get('seedcord:server-listening')?.({ port: 4000 });
+
+        expect(events).toContainEqual({ type: 'server-listening', port: 4000 });
     });
 
     describe('configureServer (File Events)', () => {
