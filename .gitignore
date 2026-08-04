@@ -5,7 +5,8 @@ node_modules/
 npm-debug.*
 
 # local env files
-.env
+.env*
+!.env.example
 
 # typescript
 *.tsbuildinfo

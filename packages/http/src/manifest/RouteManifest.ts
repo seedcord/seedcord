@@ -4,9 +4,7 @@ import type { ApplicationCommandType } from 'discord-api-types/v10';
 
 /** The command kinds a manifest row registers, the wire enum's other members have no handler base. */
 type RegistrableCommandType =
-    | ApplicationCommandType.ChatInput
-    | ApplicationCommandType.User
-    | ApplicationCommandType.Message;
+    ApplicationCommandType.ChatInput | ApplicationCommandType.User | ApplicationCommandType.Message;
 
 /** One file may export several handlers, so the row states which export it registers. */
 export interface RouteModule {

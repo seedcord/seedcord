@@ -3,9 +3,9 @@ builder = "RAILPACK"
 buildCommand = "pnpm -w turbo run build --filter=@seedcord/docs && cp -r apps/docs/.next/static apps/docs/.next/standalone/apps/docs/.next/static && cp -r apps/docs/public apps/docs/.next/standalone/apps/docs/public"
 watchPatterns = [
     "apps/docs/**",
-    "packages/docs-engine/**",
-    "packages/docs-generator/**",
-    "packages/ui/**",
+    "tooling/docs-engine/**",
+    "tooling/docs-generator/**",
+    "tooling/ui/**",
     "packages/types/**",
     "pnpm-lock.yaml"
 ]

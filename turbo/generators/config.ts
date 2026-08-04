@@ -28,7 +28,7 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
                 type: 'list',
                 name: 'dir',
                 message: 'Workspace folder',
-                choices: ['packages', 'plugins'],
+                choices: ['packages', 'plugins', 'cli', 'tooling'],
                 default: 'packages'
             }
         ],

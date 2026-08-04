@@ -10,7 +10,17 @@
         },
         "//#docs:extract": {
             "dependsOn": ["@seedcord/docs-generator#build"],
-            "inputs": ["scripts/docs/extract-docs.ts", "packages/*/dist/**/*.d.mts", "packages/*/package.json"],
+            "inputs": [
+                "scripts/docs/extract-docs.ts",
+                "packages/*/dist/**/*.d.mts",
+                "packages/*/package.json",
+                "plugins/*/dist/**/*.d.mts",
+                "plugins/*/package.json",
+                "cli/*/dist/**/*.d.mts",
+                "cli/*/package.json",
+                "tooling/*/dist/**/*.d.mts",
+                "tooling/*/package.json"
+            ],
             "outputs": ["generated/**"]
         },
         "//#check:catalog": {
@@ -21,9 +31,9 @@
             "inputs": [
                 "scripts/**/*.ts",
                 "scripts/tsconfig.json",
-                "packages/tsconfig/**",
-                "packages/docs-engine/dist/**/*.d.mts",
-                "packages/docs-generator/dist/**/*.d.mts"
+                "tooling/tsconfig/**",
+                "tooling/docs-engine/dist/**/*.d.mts",
+                "tooling/docs-generator/dist/**/*.d.mts"
             ]
         },
         "//#tc:root": {
@@ -37,10 +47,10 @@
                 "turbo/**/*.ts",
                 "scripts/**/*.ts",
                 "tsconfig.json",
-                "packages/tsconfig/**",
-                "packages/docs-engine/dist/**/*.d.mts",
-                "packages/docs-generator/dist/**/*.d.mts",
-                "packages/vitest-config/dist/**/*.d.mts"
+                "tooling/tsconfig/**",
+                "tooling/docs-engine/dist/**/*.d.mts",
+                "tooling/docs-generator/dist/**/*.d.mts",
+                "tooling/vitest-config/dist/**/*.d.mts"
             ]
         },
         "//#lint:scripts": {
@@ -49,8 +59,8 @@
                 "scripts/**/*.{ts,tsx}",
                 "scripts/tsconfig.json",
                 "eslint.config.*",
-                "packages/docs-engine/dist/**/*.d.mts",
-                "packages/docs-generator/dist/**/*.d.mts"
+                "tooling/docs-engine/dist/**/*.d.mts",
+                "tooling/docs-generator/dist/**/*.d.mts"
             ]
         },
         "//#lint:md": {
@@ -65,9 +75,9 @@
             "inputs": [
                 "scripts/**/*.ts",
                 "vitest.config.ts",
-                "packages/docs-engine/dist/**/*.d.mts",
-                "packages/docs-generator/dist/**/*.d.mts",
-                "packages/vitest-config/dist/**"
+                "tooling/docs-engine/dist/**/*.d.mts",
+                "tooling/docs-generator/dist/**/*.d.mts",
+                "tooling/vitest-config/dist/**"
             ]
         },
         "dev": {

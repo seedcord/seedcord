@@ -162,8 +162,7 @@ describe('InteractionDispatcher Integration', () => {
         });
 
         const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-            | ((i: unknown) => void)
-            | undefined;
+            ((i: unknown) => void) | undefined;
 
         expect(fire).toBeDefined();
         expect(() => fire?.(fakeSlash('ping'))).not.toThrow();
@@ -855,8 +854,7 @@ describe('InteractionDispatcher Integration', () => {
             await controller.init();
 
             const fire = onSpy.mock.calls.find(([event]) => event === 'interactionCreate')?.[1] as
-                | ((i: unknown) => void)
-                | undefined;
+                ((i: unknown) => void) | undefined;
             expect(fire).toBeDefined();
             return { controller, fire };
         }

@@ -4,7 +4,7 @@
     "version": "0.1.0",
     "description": "HTTP-interactions transport for Seedcord bots",
     "engines": {
-        "node": ">=24.3"
+        "node": ">=24.11"
     },
     "repository": {
         "type": "git",
@@ -81,7 +81,7 @@
         "typescript": "catalog:peer"
     },
     "devDependencies": {
-        "@cloudflare/vitest-pool-workers": "^0.18.4",
+        "@cloudflare/vitest-pool-workers": "^0.20.1",
         "@discordjs/builders": "catalog:deps",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
