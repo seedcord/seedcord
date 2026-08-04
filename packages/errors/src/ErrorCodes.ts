@@ -244,5 +244,7 @@ export enum SeedcordErrorCode {
     /** Config hmr rollback flag must be a boolean when provided. */
     CliConfigInvalidHmrRollback = 3131,
     /** Config tunnel flag must be a boolean when provided. */
-    CliConfigInvalidTunnel = 3132
+    CliConfigInvalidTunnel = 3132,
+    /** The cloudflared metrics server never reported a quick-tunnel hostname. */
+    CliTunnelUrlUnavailable = 3133
 }
