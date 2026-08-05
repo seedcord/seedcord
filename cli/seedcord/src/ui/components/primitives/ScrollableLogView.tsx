@@ -80,8 +80,8 @@ function HeadLine({ log, text, labelWidth }: LineProps): ReactElement {
 function HeadTail({ text, labelWidth }: Omit<LineProps, 'log'>): ReactElement {
     return (
         <Text wrap="truncate">
-            {' '.repeat(messageColumn(labelWidth))}
-            {text}
+            {' '.repeat(messageColumn(labelWidth) - 2)}
+            <Text dimColor>{GUIDE}</Text> {text}
         </Text>
     );
 }
@@ -93,7 +93,7 @@ function ContinuationLine({ log, text, labelWidth }: LineProps): ReactElement {
                 <Text color={LEVEL_COLOR.error} bold>
                     {BAR}
                 </Text>
-                <Text dimColor>{text}</Text>
+                <Text dimColor={log.frame}>{text}</Text>
             </Text>
         );
     }
