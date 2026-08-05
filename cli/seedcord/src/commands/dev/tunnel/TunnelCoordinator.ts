@@ -9,7 +9,6 @@ export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 export interface CoordinatorDeps {
     readonly makeTunnel: () => CoordinatorTunnel;
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
-    readonly waitForRouting: (url: string, signal: AbortSignal) => Promise<void>;
     readonly onUrl: (url: string | null) => void;
     readonly logger: ILogger;
 }
@@ -38,10 +37,7 @@ export class TunnelCoordinator {
             const url = await tunnel.open(port, attempt.signal);
             if (superseded(attempt)) return;
 
-            await this.deps.waitForRouting(url, attempt.signal);
-            if (superseded(attempt)) return;
-
-            await this.deps.endpoint.set(url);
+            await this.deps.endpoint.set(url, attempt.signal);
             if (superseded(attempt)) return;
 
             this.deps.onUrl(url);

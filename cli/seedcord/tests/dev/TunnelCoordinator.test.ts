@@ -14,7 +14,6 @@ function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
     return {
         makeTunnel: () => ({ open: (port) => Promise.resolve(urlFor(port)), stop: () => undefined }),
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve() },
-        waitForRouting: () => Promise.resolve(),
         onUrl: () => undefined,
         logger: silentLogger,
         ...overrides
@@ -22,7 +21,7 @@ function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
 }
 
 describe('TunnelCoordinator', () => {
-    it('opens, waits for routing, then writes the endpoint', async () => {
+    it('opens the tunnel, then writes the endpoint', async () => {
         const order: string[] = [];
         const coordinator = new TunnelCoordinator(
             deps({
@@ -33,10 +32,6 @@ describe('TunnelCoordinator', () => {
                     },
                     stop: () => undefined
                 }),
-                waitForRouting: () => {
-                    order.push('wait');
-                    return Promise.resolve();
-                },
                 endpoint: {
                     set: () => {
                         order.push('set');
@@ -49,7 +44,7 @@ describe('TunnelCoordinator', () => {
 
         await coordinator.onPort(3000);
 
-        expect(order).toEqual(['open', 'wait', 'set']);
+        expect(order).toEqual(['open', 'set']);
     });
 
     it('writes the endpoint the tunnel reported', async () => {
@@ -58,7 +53,7 @@ describe('TunnelCoordinator', () => {
 
         await coordinator.onPort(4321);
 
-        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321));
+        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal));
     });
 
     it('leaves the tunnel alone when the port is unchanged', async () => {

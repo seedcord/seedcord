@@ -247,6 +247,6 @@ export enum SeedcordErrorCode {
     CliConfigInvalidTunnel = 3132,
     /** The cloudflared metrics server never reported a quick-tunnel hostname. */
     CliTunnelUrlUnavailable = 3133,
-    /** Requests through the tunnel URL never reached the interactions server. */
-    CliTunnelNotRouting = 3134
+    /** Discord kept refusing to verify the tunnel URL as an interactions endpoint. */
+    CliTunnelNotVerified = 3134
 }

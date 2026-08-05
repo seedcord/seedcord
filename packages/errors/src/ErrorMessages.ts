@@ -228,8 +228,8 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidTunnel]: () => 'Config `tunnel` must be a boolean when provided.',
     [SeedcordErrorCode.CliTunnelUrlUnavailable]: (seconds: number) =>
         `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
-    [SeedcordErrorCode.CliTunnelNotRouting]: (url: string, seconds: number) =>
-        `${url} did not reach the interactions server within ${seconds}s.`
+    [SeedcordErrorCode.CliTunnelNotVerified]: (url: string, seconds: number) =>
+        `Discord did not verify ${url} within ${seconds}s. A fresh tunnel hostname can take that long to resolve on Discord's side.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

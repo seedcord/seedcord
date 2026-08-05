@@ -5,7 +5,6 @@ import { findCloudflared, installHint, systemLookup } from './cloudflared';
 import { CloudflaredTunnel, systemTunnelDeps } from './CloudflaredTunnel';
 import { InteractionsEndpoint } from './InteractionsEndpoint';
 import { TunnelCoordinator } from './TunnelCoordinator';
-import { waitForEngine } from './waitForEngine';
 
 import type { ILogger } from '@seedcord/types';
 
@@ -24,8 +23,7 @@ export function createTunnelCoordinator(
     const deps = systemTunnelDeps();
     return new TunnelCoordinator({
         makeTunnel: () => new CloudflaredTunnel(deps, binary),
-        endpoint: InteractionsEndpoint.create(() => validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'))),
-        waitForRouting: (url, signal) => waitForEngine(url, deps, signal),
+        endpoint: InteractionsEndpoint.create(() => validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')), deps.wait),
         onUrl,
         logger
     });
