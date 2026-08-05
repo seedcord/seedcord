@@ -18,7 +18,8 @@ const loggerSpies = {
     debug: vi.fn()
 };
 
-vi.mock('@seedcord/logger', () => ({
+vi.mock('@seedcord/logger', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@seedcord/logger')>()),
     Logger: class {
         public info = loggerSpies.info;
         public warn = loggerSpies.warn;
@@ -144,7 +145,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/ping.ts');
             watcher.emit('add', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('CREATE'));
+            expect(loggerSpies.debug).toHaveBeenCalledWith(expect.stringContaining('CREATE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'create',
@@ -156,7 +157,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/ping.ts');
             watcher.emit('unlink', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('DELETE'));
+            expect(loggerSpies.debug).toHaveBeenCalledWith(expect.stringContaining('DELETE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'delete',
@@ -168,7 +169,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/group');
             watcher.emit('addDir', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
+            expect(loggerSpies.debug).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'createDir',
@@ -180,7 +181,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/group');
             watcher.emit('unlinkDir', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
+            expect(loggerSpies.debug).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'deleteDir',
@@ -249,7 +250,7 @@ describe('HmrPlugin', () => {
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('UPDATE'));
+            expect(loggerSpies.debug).toHaveBeenCalledWith(expect.stringContaining('UPDATE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'update',
@@ -328,7 +329,7 @@ describe('HmrPlugin', () => {
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
-            expect(loggerSpies.info).toHaveBeenCalledTimes(1);
+            expect(loggerSpies.debug).toHaveBeenCalledTimes(1);
             expect(hotSendMock).toHaveBeenCalledTimes(1);
         });
 
@@ -353,7 +354,7 @@ describe('HmrPlugin', () => {
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
-            expect(loggerSpies.info).toHaveBeenCalledTimes(2);
+            expect(loggerSpies.debug).toHaveBeenCalledTimes(2);
             expect(hotSendMock).toHaveBeenCalledTimes(2);
             vi.useRealTimers();
         });

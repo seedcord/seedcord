@@ -82,7 +82,6 @@ export class ViteDevRuntime implements DevRuntime {
 
         const { instance: entryPath } = this.context.config;
         const projectRoot = this.context.config.root;
-        const startTime = performance.now();
 
         this.emit({ type: 'module-loading', path: entryPath });
 
@@ -90,16 +89,10 @@ export class ViteDevRuntime implements DevRuntime {
             const moduleId = toModuleId(projectRoot, entryPath);
 
             const module = await this.moduleRunner.import<unknown>(moduleId);
-            const loadTime = performance.now() - startTime;
 
             this.emit({ type: 'module-loaded', path: entryPath });
 
-            return {
-                module,
-                metadata: {
-                    loadTime
-                }
-            };
+            return { module };
         } catch (error: unknown) {
             this.emit({ type: 'module-error', path: entryPath, error });
             throw error;

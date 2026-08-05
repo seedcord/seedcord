@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { paint } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
-import chalk from 'chalk';
 
 import type { Logger } from '@seedcord/logger';
 import type { HmrUpdateEvent } from '@seedcord/types';
@@ -69,7 +69,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
         if (type === 'update' && !existsSync(file)) {
             if (this.isTracked(file)) {
-                logger.info(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
+                logger.debug(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
                 this.unload(file);
             }
             return;
@@ -108,7 +108,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
         // a typo keeps them live until the next good save
         this.restoreUnits(file, snapshot);
-        logger.warn(`${chalk.yellow.bold('Rolled back')} ${chalk.gray(formatFilePath(file))} to the last-good version`);
+        logger.warn(`${paint.amber.bold('Rolled back')} ${paint.mute(formatFilePath(file))} to the last-good version`);
     }
 
     /** Links the handler to its source file so a later update can unload it. */
@@ -149,9 +149,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
                 this.options.unregisterHandler(handler, artifacts);
                 this.store.handlerArtifacts.delete(handler);
                 const name = displayName(handler, 'Handler');
-                logger.info(
-                    `${chalk.red.bold('Unloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
-                );
+                logger.debug(`Unloaded ${paint.sky.bold(name)} from ${paint.mute(formatFilePath(file))}`);
             }
             this.store.fileToHandlers.delete(file);
         }
@@ -161,9 +159,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             for (const middleware of middlewares) {
                 this.options.unregisterMiddleware?.(middleware);
                 const name = displayName(middleware, 'Middleware');
-                logger.info(
-                    `${chalk.red.bold('Unloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
-                );
+                logger.debug(`Unloaded ${paint.sky.bold(name)} from ${paint.mute(formatFilePath(file))}`);
             }
             this.store.fileToMiddlewares.delete(file);
         }
@@ -173,7 +169,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.options;
 
         if (!existsSync(file)) {
-            logger.info(`File does not exist, skipping reload: ${formatFilePath(file)}`);
+            logger.debug(`File does not exist, skipping reload: ${formatFilePath(file)}`);
             return false;
         }
 
@@ -182,25 +178,28 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             // vitest has no real vite server managing the module graph, so bust the import cache manually.
             if (process.env.VITEST === 'true') fileUrl += `?update=${Date.now()}`;
 
+            const startedAt = Date.now();
             // justified: a dynamic import resolves to an untyped export map
             const imported = (await import(fileUrl)) as Record<string, unknown>;
 
+            const names: string[] = [];
             for (const val of Object.values(imported)) {
                 if (isHandler(val)) {
                     registerHandler(val, file);
                     this.trackHandler(file, val);
-                    const name = displayName(val, 'Handler');
-                    logger.info(
-                        `${chalk.blue.bold('Reloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
-                    );
+                    names.push(displayName(val, 'Handler'));
                 } else if (isMiddleware && registerMiddleware && isMiddleware(val)) {
                     registerMiddleware(val, file);
                     this.trackMiddleware(file, val);
-                    const name = displayName(val, 'Middleware');
-                    logger.info(
-                        `${chalk.blue.bold('Reloaded')} ${chalk.cyan.bold(name)} from ${chalk.gray(formatFilePath(file))}`
-                    );
+                    names.push(displayName(val, 'Middleware'));
                 }
+            }
+
+            if (names.length > 0) {
+                const elapsed = Date.now() - startedAt;
+                logger.debug(
+                    `Reloaded ${paint.sky.bold(names.join(', '))} from ${paint.mute(formatFilePath(file))} ${paint.mute(`in`)} ${`${String(elapsed)}ms`}`
+                );
             }
 
             return true;

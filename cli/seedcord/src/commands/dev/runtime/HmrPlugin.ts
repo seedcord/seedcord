@@ -2,8 +2,7 @@ import { relative, resolve } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-import { Logger } from '@seedcord/logger';
-import chalk from 'chalk';
+import { Logger, paint } from '@seedcord/logger';
 import { minimatch } from 'minimatch';
 
 import type { DevEvent } from './events';
@@ -72,7 +71,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
                 this.dynamicRestartPatterns.add(pattern);
             }
 
-            this.logger.utils.list(data.patterns, 'Registered critical file patterns:');
+            this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
     }
 
@@ -92,12 +91,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const relPath = relative(process.cwd(), file);
         const typeColor =
             type === 'create' || type === 'createDir'
-                ? chalk.green
+                ? paint.mint
                 : type === 'delete' || type === 'deleteDir'
-                  ? chalk.red
-                  : chalk.blue;
+                  ? paint.coral
+                  : paint.sky;
 
-        this.logger.info(`${typeColor(type.toUpperCase())} ${chalk.gray(relPath)}`);
+        this.logger.debug(`${typeColor(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         const payload: HmrUpdateEvent = { file, type, rollback: this.config.hmr?.rollback ?? true };
 
@@ -112,10 +111,10 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
         const relPath = relative(process.cwd(), file);
 
-        this.logger.info(`${chalk.blue(type.toUpperCase())} ${chalk.gray(relPath)}`);
+        this.logger.debug(`${paint.sky(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         if (this.isCriticalFile(file)) {
-            this.logger.warn(`${chalk.red('Critical file changed:')} ${chalk.bold(relPath)}. Restart required.`);
+            this.logger.warn(`${paint.coral('Critical file changed:')} ${paint.sky.bold(relPath)}. Restart required.`);
             this.emit('event', { type: 'restart-required' });
             return [];
         }
