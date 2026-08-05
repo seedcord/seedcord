@@ -110,6 +110,11 @@ const DOCS_BEHAVIORS = [
         href: '/dev/code-palette',
         label: 'Proposed code palette',
         description: 'named warm palette swatches (dark + light) + applied to sample snippets, for theme approval'
+    },
+    {
+        href: '/dev/bg-candidates',
+        label: 'Dark background candidates',
+        description: 'swaps the root --color-bg live across grey candidates, with real docs content on top (pick one)'
     }
 ] as const;
 

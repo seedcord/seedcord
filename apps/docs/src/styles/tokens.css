@@ -29,7 +29,7 @@
 }
 
 :root {
-    --command-overlay: color-mix(in oklab, var(--bg) 55%, #2d3328 45%);
+    --command-overlay: color-mix(in oklab, var(--bg) 55%, var(--seed-dark) 45%);
 
     /* Per-tone Presentation Tokens */
     --tone-class-heading: color-mix(in oklab, var(--entity-class) 80%, var(--color-text));
@@ -120,4 +120,10 @@
     --bg-surface-subtle-transparent: color-mix(in oklab, var(--surface) 96%, transparent);
     --bg-surface-moderate-transparent: color-mix(in oklab, var(--surface) 86%, transparent);
     --bg-transparent-subtle: color-mix(in oklab, var(--bg) 96%, transparent);
+}
+
+[data-theme='dark'] {
+    --command-overlay: color-mix(in oklab, var(--bg) 55%, black 45%);
+    --overlay-dim: color-mix(in oklab, var(--bg) 72%, color-mix(in srgb, black, transparent 20%) 28%);
+    --bg-dim-subtle: color-mix(in oklab, var(--bg) 96%, black 4%);
 }

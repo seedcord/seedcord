@@ -18,7 +18,7 @@
     }
 
     .shadow-soft {
-        box-shadow: 0 10px 30px rgba(45, 51, 40, 0.08);
+        box-shadow: 0 10px 30px color-mix(in oklab, var(--seed-dark) 8%, transparent);
     }
 
     .font-display {
