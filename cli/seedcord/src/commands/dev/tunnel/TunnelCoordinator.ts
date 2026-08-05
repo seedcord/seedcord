@@ -11,7 +11,7 @@ const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https 
 
 export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 
-export type TunnelStatus = 'opening' | 'live';
+export type TunnelStatus = 'opening' | 'live' | 'lost';
 
 export interface CoordinatorDeps {
     readonly makeTunnel: () => CoordinatorTunnel;

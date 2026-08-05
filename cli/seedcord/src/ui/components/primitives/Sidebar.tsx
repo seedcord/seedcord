@@ -55,7 +55,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             {/* only the http host reports a port */}
             {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
             {state.tunnel === null ? null : (
-                <Meta label="tunnel" value={state.tunnel === 'live' ? 'live' : 'opening…'} />
+                <Meta label="tunnel" value={state.tunnel === 'opening' ? 'opening…' : state.tunnel} />
             )}
             <Meta label="logs" value={LOG_DIR} />
         </Box>
