@@ -14,6 +14,7 @@ function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
         },
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve() },
         waitForRouting: () => Promise.resolve(),
+        onUrl: () => undefined,
         logger: silentLogger,
         ...overrides
     };
@@ -108,6 +109,31 @@ describe('TunnelCoordinator', () => {
         await coordinator.onPort(3000);
 
         expect(open).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports the live url, then drops it on stop', async () => {
+        const onUrl = vi.fn();
+        const coordinator = new TunnelCoordinator(deps({ onUrl }));
+
+        await coordinator.onPort(3000);
+        expect(onUrl).toHaveBeenCalledExactlyOnceWith('https://p3000.trycloudflare.com');
+
+        await coordinator.stop();
+        expect(onUrl).toHaveBeenLastCalledWith(null);
+    });
+
+    it('drops the url when the setup fails', async () => {
+        const onUrl = vi.fn();
+        const coordinator = new TunnelCoordinator(
+            deps({
+                endpoint: { set: () => Promise.reject(new Error('403')), clear: () => Promise.resolve() },
+                onUrl
+            })
+        );
+
+        await coordinator.onPort(3000);
+
+        expect(onUrl).toHaveBeenCalledExactlyOnceWith(null);
     });
 
     it('stop kills the tunnel and clears the endpoint', async () => {

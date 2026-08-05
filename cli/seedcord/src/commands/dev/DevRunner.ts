@@ -70,7 +70,9 @@ export class DevRunner {
             store,
             codegen: CodegenRunner.create(codegenLogger),
             codegenLogger,
-            tunnel: createTunnelCoordinator(tunnelLogger),
+            tunnel: createTunnelCoordinator(tunnelLogger, (url) => {
+                store.setTunnelUrl(url);
+            }),
             tunnelLogger
         });
     }

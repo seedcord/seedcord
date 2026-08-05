@@ -43,8 +43,20 @@ function runningState(): DevState {
 }
 const RUNNING = runningState();
 
+// an http run adds the port and url rows, which makes it the tallest the rail gets
+function httpState(): DevState {
+    const store = new DevStore();
+    store.setPhase('running');
+    store.setBusy(false);
+    store.setStatus('Connected as TestBot');
+    store.apply({ type: 'server-listening', port: 4321 });
+    store.setTunnelUrl('https://abc-def-ghi.trycloudflare.com');
+    return store.getState();
+}
+const HTTP = httpState();
+
 // the readout renders outside the measured rail, so it never changes the size it reports
-function Harness({ filtersOpen }: { readonly filtersOpen: boolean }): ReactElement {
+function Harness({ filtersOpen, state }: { readonly filtersOpen: boolean; readonly state: DevState }): ReactElement {
     const railRef = useRef<DOMElement | null>(null);
     const [size, setSize] = useState('pending');
 
@@ -61,7 +73,7 @@ function Harness({ filtersOpen }: { readonly filtersOpen: boolean }): ReactEleme
             <Box flexDirection="row">
                 <Sidebar
                     ref={railRef}
-                    state={RUNNING}
+                    state={state}
                     enabled={new Set()}
                     enabledLevels={new Set()}
                     uptimeMs={12_000}
@@ -97,11 +109,30 @@ describe('Sidebar', () => {
         }
         await LogStore.instance.flush();
 
-        const view = render(<Harness filtersOpen={filtersOpen} />);
+        const view = render(<Harness filtersOpen={filtersOpen} state={HTTP} />);
         await settled(() => expect(read(view.lastFrame()).rows).toBeGreaterThan(0));
         const size = read(view.lastFrame());
         view.unmount();
         return size;
+    }
+
+    function frameFor(state: DevState): string {
+        const view = render(
+            <Sidebar
+                state={state}
+                enabled={new Set()}
+                enabledLevels={new Set()}
+                uptimeMs={12_000}
+                following={true}
+                interactive={true}
+                cursor={INITIAL_CURSOR}
+                width={null}
+                filtersOpen={false}
+            />
+        );
+        const frame = view.lastFrame() ?? '';
+        view.unmount();
+        return frame;
     }
 
     // the tier thresholds are authored constants, and this is what keeps them honest as the rail changes
@@ -115,5 +146,19 @@ describe('Sidebar', () => {
         const { rows } = await measure(false);
 
         expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
+    });
+
+    it('shows the port and the tunnel host on an http run', () => {
+        const frame = frameFor(HTTP);
+
+        expect(frame).toContain('4321');
+        expect(frame).toContain('abc-def-ghi.trycloudflare.com');
+    });
+
+    it('leaves both rows out on a gateway run', () => {
+        const frame = frameFor(RUNNING);
+
+        expect(frame).not.toContain('port');
+        expect(frame).not.toContain('url');
     });
 }, 20_000);

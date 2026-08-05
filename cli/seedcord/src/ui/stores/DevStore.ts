@@ -13,6 +13,7 @@ export interface DevState {
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
     readonly port: number | null;
+    readonly tunnelUrl: string | null;
 }
 
 const INITIAL: DevState = {
@@ -23,7 +24,8 @@ const INITIAL: DevState = {
     frameworkVersion: null,
     restartRequired: false,
     commandUpdatePrompt: null,
-    port: null
+    port: null,
+    tunnelUrl: null
 };
 
 // Single source of truth for the dev UI. The runner pushes scalar updates through the setters, and runtime
@@ -54,6 +56,10 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
 
     public setFrameworkVersion(frameworkVersion: string | null): void {
         this.patch({ frameworkVersion });
+    }
+
+    public setTunnelUrl(tunnelUrl: string | null): void {
+        this.patch({ tunnelUrl });
     }
 
     public clearPrompt(): void {

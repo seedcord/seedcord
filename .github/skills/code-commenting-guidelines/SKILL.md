@@ -200,8 +200,12 @@ setActive(value: boolean) {
 
 1. Cover the comment and read the code. Would a careful reader get it wrong? If no, delete the comment and move on.
 2. Cover the code and read the comment. Every word the code already showed comes out. What survives is the why.
+3. Count the whys. One comment carries one. Two clauses joined by "and" or ", so" means one explains the choice and the other sets a scene the reader can already see. Keep the one.
+4. Count the words. A `//` why lands around ten. Past that you are explaining two things, or explaining one thing twice.
 
-Run both passes on the block you just wrote, before the diff leaves your hands. A later audit catches the same thing at the cost of a full re-read of every file you touched.
+Steps 3 and 4 are arithmetic, so run them even when steps 1 and 2 felt clean. A clause reads as useful context right up until you count it.
+
+Run all four on the block you just wrote, before the diff leaves your hands. A later audit catches the same thing at the cost of a full re-read of every file you touched.
 
 ## Failure Patterns To Avoid
 

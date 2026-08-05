@@ -38,6 +38,10 @@ interface SidebarProps {
     readonly ref?: Ref<DOMElement>;
 }
 
+function hostOf(url: string): string {
+    return url.replace(/^https:\/\//, '');
+}
+
 function Meta({ label, value }: { label: string; value: string }): ReactElement {
     return (
         <Text>
@@ -53,6 +57,10 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             <StatusBadge phase={state.phase} />
             {state.status ? <Text>{state.status}</Text> : null}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
+            {/* only the http host reports a port, so a gateway run shows neither row */}
+            {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
+            {/* sidebar doesn't have too much space so only show the host */}
+            {state.tunnelUrl === null ? null : <Meta label="url" value={hostOf(state.tunnelUrl)} />}
             <Meta label="logs" value={LOG_DIR} />
         </Box>
     );

@@ -8,6 +8,7 @@ export interface CoordinatorDeps {
     readonly tunnel: Pick<CloudflaredTunnel, 'open' | 'stop'>;
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
     readonly waitForRouting: (url: string) => Promise<void>;
+    readonly onUrl: (url: string | null) => void;
     readonly logger: ILogger;
 }
 
@@ -25,11 +26,13 @@ export class TunnelCoordinator {
             const url = await this.deps.tunnel.open(port);
             await this.deps.waitForRouting(url);
             await this.deps.endpoint.set(url);
+            this.deps.onUrl(url);
             this.deps.logger.info(`Interactions endpoint set to ${paint.sky(url)}`);
         } catch (error: unknown) {
             // cleared so the next restart on this port retries
             this.target = undefined;
             this.deps.tunnel.stop();
+            this.deps.onUrl(null);
             this.deps.logger.warn('Tunnel setup failed, the bot runs without a public endpoint', error);
         }
     }
@@ -39,6 +42,7 @@ export class TunnelCoordinator {
 
         this.target = undefined;
         this.deps.tunnel.stop();
+        this.deps.onUrl(null);
         await this.deps.endpoint.clear();
     }
 }

@@ -6,7 +6,13 @@ import { silentLogger } from '../silentLogger';
 
 describe('createTunnelCoordinator', () => {
     it('builds nothing when cloudflared is absent', () => {
-        expect(createTunnelCoordinator(silentLogger, () => undefined)).toBeUndefined();
+        expect(
+            createTunnelCoordinator(
+                silentLogger,
+                () => undefined,
+                () => undefined
+            )
+        ).toBeUndefined();
     });
 });
 

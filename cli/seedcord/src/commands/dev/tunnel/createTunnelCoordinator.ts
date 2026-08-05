@@ -15,6 +15,7 @@ export function missingCloudflaredHint(platform: NodeJS.Platform): string {
 
 export function createTunnelCoordinator(
     logger: ILogger,
+    onUrl: (url: string | null) => void,
     findBinary: () => string | undefined = () => findCloudflared(systemLookup())
 ): TunnelCoordinator | undefined {
     if (!findBinary()) return undefined;
@@ -24,6 +25,7 @@ export function createTunnelCoordinator(
         tunnel: new CloudflaredTunnel(deps),
         endpoint: InteractionsEndpoint.create(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'))),
         waitForRouting: (url) => waitForEngine(url, deps),
+        onUrl,
         logger
     });
 }
