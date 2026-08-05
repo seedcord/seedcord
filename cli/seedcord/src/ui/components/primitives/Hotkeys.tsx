@@ -41,7 +41,7 @@ export function SessionKeys({ phase, interactive, following }: SessionKeysProps)
             <Hotkey keyLabel="q" action="quit" />
             <Hotkey keyLabel="r" action="restart" enabled={interactive} highlight={RESTART_HINT_PHASES.has(phase)} />
             <Hotkey keyLabel="d" action="disconnect" enabled={interactive && isSessionLive(phase)} />
-            <Hotkey keyLabel="l" action="clear" enabled={interactive} />
+            <Hotkey keyLabel="c" action="clear" enabled={interactive} />
             <Hotkey keyLabel="↑↓" action="scroll" />
             <Hotkey keyLabel="t/b" action="top/bottom" highlight={!following} />
         </Box>

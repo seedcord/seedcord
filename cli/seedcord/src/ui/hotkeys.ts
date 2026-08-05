@@ -149,7 +149,7 @@ function handleActions(ctx: HotkeyContext): void {
 
             break;
         }
-        case 'l': {
+        case 'c': {
             LogStore.instance.clear();
             ctx.scroll.toBottom();
 
