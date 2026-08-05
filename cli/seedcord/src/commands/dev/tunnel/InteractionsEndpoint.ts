@@ -6,17 +6,25 @@ import type { RESTGetCurrentApplicationResult, RESTPatchCurrentApplicationJSONBo
 export type EndpointRest = Pick<REST, 'get' | 'patch'>;
 
 export class InteractionsEndpoint {
-    constructor(private readonly rest: EndpointRest) {}
+    private client: EndpointRest | undefined;
 
-    public static create(token: string): InteractionsEndpoint {
-        return new InteractionsEndpoint(new REST({ version: '10' }).setToken(token));
+    constructor(private readonly makeRest: () => EndpointRest) {}
+
+    // the token read waits for a request, since the bot module might repoint envapt while it loads
+    public static create(token: () => string): InteractionsEndpoint {
+        return new InteractionsEndpoint(() => new REST({ version: '10' }).setToken(token()));
     }
 
     public async set(url: string): Promise<void> {
-        const application = (await this.rest.get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
+        const application = (await this.rest().get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
         if (application.interactions_endpoint_url === url) return;
 
         await this.write(url);
+    }
+
+    private rest(): EndpointRest {
+        this.client ??= this.makeRest();
+        return this.client;
     }
 
     public async clear(): Promise<void> {
@@ -25,7 +33,7 @@ export class InteractionsEndpoint {
 
     // discord probes the url on write, so the tunnel and the server must both answer first
     private async write(endpoint: string | null): Promise<void> {
-        await this.rest.patch(Routes.currentApplication(), {
+        await this.rest().patch(Routes.currentApplication(), {
             body: { interactions_endpoint_url: endpoint } satisfies RESTPatchCurrentApplicationJSONBody
         });
     }

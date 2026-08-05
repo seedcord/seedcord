@@ -11,13 +11,8 @@ import { DevRunner } from './DevRunner';
 import type { Command } from '@commander-js/extra-typings';
 
 export class DevCommand extends BaseCommand {
-    private readonly runner: DevRunner;
-    private readonly store: DevStore;
-
     constructor() {
         super('dev', 'Run a Seedcord instance from the config file', 'Dev');
-        this.store = new DevStore();
-        this.runner = DevRunner.create(this.logger, this.store);
     }
 
     public register(program: Command): void {
@@ -25,16 +20,20 @@ export class DevCommand extends BaseCommand {
             .command(this.name)
             .description(this.description)
             .action(async () => {
-                // SIGTERM (and SIGINT when stdin is not raw) trigger a graceful quit; Ink handles the raw-mode
-                // Ctrl-C keypress itself. once() self-removes; the finally removes them on a normal exit.
+                // built here so every other command skips the dev machinery
+                const store = new DevStore();
+                const runner = DevRunner.create(this.logger, store);
+
+                // SIGTERM (and SIGINT when stdin is not raw) trigger a graceful quit. Ink handles the raw-mode
+                // Ctrl-C keypress itself. once() self-removes, and the finally removes them on a normal exit.
                 const onSignal = (): void => {
-                    void this.runner.quit();
+                    void runner.quit();
                 };
                 process.once('SIGINT', onSignal);
                 process.once('SIGTERM', onSignal);
 
                 try {
-                    await this.runDevApp();
+                    await this.runDevApp(store, runner);
                 } catch (error: unknown) {
                     this.logger.error('Seedcord dev failed', error);
                     process.exitCode = 1;
@@ -47,8 +46,8 @@ export class DevCommand extends BaseCommand {
                 // to the log folder since the in-UI logs are gone once the UI unmounts
                 this.printLogLocation();
 
-                // Ink's raw-mode stdin and the Vite dev server keep the event loop alive after teardown;
-                // runDevApp already awaited unmount + shutdown, so exit explicitly instead of hanging.
+                // Ink's raw-mode stdin and the Vite dev server hold the event loop open after teardown.
+                // runDevApp already awaited unmount and shutdown, so exit explicitly.
                 process.exit();
             });
     }
@@ -57,18 +56,18 @@ export class DevCommand extends BaseCommand {
         process.stdout.write('seedcord dev stopped. logs: logs/\n');
     }
 
-    private async runDevApp(): Promise<void> {
+    private async runDevApp(store: DevStore, runner: DevRunner): Promise<void> {
         let runResult: Promise<void> = Promise.resolve();
 
         const { unmount, waitUntilExit } = render(
             React.createElement(DevApp, {
-                store: this.store,
-                onQuit: () => this.runner.quit(),
-                onDisconnect: () => this.runner.disconnect(),
-                onRestart: () => this.runner.restart(),
-                onRefreshCommands: (shouldRefresh: boolean) => this.runner.refreshCommands(shouldRefresh),
+                store,
+                onQuit: () => runner.quit(),
+                onDisconnect: () => runner.disconnect(),
+                onRestart: () => runner.restart(),
+                onRefreshCommands: (shouldRefresh: boolean) => runner.refreshCommands(shouldRefresh),
                 onReady: () => {
-                    runResult = this.runner.run().finally(async () => {
+                    runResult = runner.run().finally(async () => {
                         // Drain buffered logs before unmounting Ink so the final lines aren't dropped.
                         await LogStore.instance.flush();
                         unmount();
@@ -81,7 +80,7 @@ export class DevCommand extends BaseCommand {
         );
 
         await waitUntilExit();
-        // Surface a run-loop rejection through the action's try/catch instead of racing process.exit().
+        // awaited so a run-loop rejection reaches the action's try/catch before process.exit()
         await runResult;
     }
 }
