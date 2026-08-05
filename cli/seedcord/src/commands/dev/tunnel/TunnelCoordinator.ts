@@ -9,48 +9,49 @@ export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 export interface CoordinatorDeps {
     readonly makeTunnel: () => CoordinatorTunnel;
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
-    readonly waitForRouting: (url: string) => Promise<void>;
+    readonly waitForRouting: (url: string, signal: AbortSignal) => Promise<void>;
     readonly onUrl: (url: string | null) => void;
     readonly logger: ILogger;
 }
 
+// inlined because this narrows to false past the first check
+function superseded(attempt: AbortController): boolean {
+    return attempt.signal.aborted;
+}
+
 export class TunnelCoordinator {
     private target: number | undefined;
-    private live: CoordinatorTunnel | undefined;
-    private attempt = 0;
+    private current: AbortController | undefined;
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
     public async onPort(port: number): Promise<void> {
         if (this.target === port) return;
 
-        const started = ++this.attempt;
         this.target = port;
-        this.live?.stop();
-        this.live = undefined;
-
-        // one child per attempt, so a late attempt can stop its own without reaching the live tunnel
+        const attempt = this.begin();
         const tunnel = this.deps.makeTunnel();
-        try {
-            const url = await tunnel.open(port);
-            if (this.superseded(started, tunnel)) return;
-            this.live = tunnel;
+        // a later onPort holds no handle on this tunnel, so abort contains the stop
+        attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
 
-            await this.deps.waitForRouting(url);
-            if (this.superseded(started, tunnel)) return;
+        try {
+            const url = await tunnel.open(port, attempt.signal);
+            if (superseded(attempt)) return;
+
+            await this.deps.waitForRouting(url, attempt.signal);
+            if (superseded(attempt)) return;
 
             await this.deps.endpoint.set(url);
-            if (this.superseded(started, tunnel)) return;
+            if (superseded(attempt)) return;
 
             this.deps.onUrl(url);
-            this.deps.logger.info(`Interactions endpoint set to ${paint.sky(url)}`);
+            this.deps.logger.info(`Interactions endpoint set to ${paint.sky.italic(url)}`);
         } catch (error: unknown) {
-            tunnel.stop();
-            if (started !== this.attempt) return;
+            if (superseded(attempt)) return;
+            attempt.abort();
 
             // cleared so the next restart on this port retries
             this.target = undefined;
-            this.live = undefined;
             this.deps.onUrl(null);
             this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
         }
@@ -59,10 +60,9 @@ export class TunnelCoordinator {
     public async stop(): Promise<void> {
         if (this.target === undefined) return;
 
-        this.attempt++;
         this.target = undefined;
-        this.live?.stop();
-        this.live = undefined;
+        this.current?.abort();
+        this.current = undefined;
         this.deps.onUrl(null);
 
         try {
@@ -73,9 +73,9 @@ export class TunnelCoordinator {
         }
     }
 
-    private superseded(started: number, tunnel: CoordinatorTunnel): boolean {
-        if (started === this.attempt) return false;
-        tunnel.stop();
-        return true;
+    private begin(): AbortController {
+        this.current?.abort();
+        this.current = new AbortController();
+        return this.current;
     }
 }

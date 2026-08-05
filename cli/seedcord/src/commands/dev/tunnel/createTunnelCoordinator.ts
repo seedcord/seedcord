@@ -24,7 +24,7 @@ export function createTunnelCoordinator(
     return new TunnelCoordinator({
         makeTunnel: () => new CloudflaredTunnel(deps),
         endpoint: InteractionsEndpoint.create(() => validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'))),
-        waitForRouting: (url) => waitForEngine(url, deps),
+        waitForRouting: (url, signal) => waitForEngine(url, deps, signal),
         onUrl,
         logger
     });

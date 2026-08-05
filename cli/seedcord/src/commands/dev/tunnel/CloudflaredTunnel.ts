@@ -41,11 +41,11 @@ export function systemTunnelDeps(): TunnelDeps {
 
 export class CloudflaredTunnel {
     private child: ChildProcess | undefined;
-    private spawnError: Error | undefined;
+    private failure: Error | undefined;
 
     constructor(private readonly deps: TunnelDeps) {}
 
-    public async open(targetPort: number): Promise<string> {
+    public async open(targetPort: number, signal: AbortSignal): Promise<string> {
         const metricsPort = await this.deps.freePort();
 
         const child = this.deps.spawn('cloudflared', [
@@ -57,11 +57,16 @@ export class CloudflaredTunnel {
         ]);
         // a spawn failure emits here, and node throws it process-wide with no listener attached
         child.on('error', (error) => {
-            this.spawnError = error;
+            this.failure = error;
+        });
+        // stop() clears this.child before killing, so a deliberate kill skips this
+        child.on('exit', (code) => {
+            if (this.child !== child) return;
+            this.failure = new Error(`cloudflared exited early with code ${String(code)}`);
         });
         this.child = child;
 
-        return `https://${await this.readHostname(metricsPort)}`;
+        return `https://${await this.readHostname(metricsPort, signal)}`;
     }
 
     public stop(): void {
@@ -69,7 +74,7 @@ export class CloudflaredTunnel {
         if (!child) return;
 
         this.child = undefined;
-        this.spawnError = undefined;
+        this.failure = undefined;
         child.kill('SIGTERM');
 
         const escalate = setTimeout(() => child.kill('SIGKILL'), GRACEFUL_EXIT_MS);
@@ -79,14 +84,15 @@ export class CloudflaredTunnel {
         });
     }
 
-    private async readHostname(metricsPort: number): Promise<string> {
-        for (let attempt = 0; attempt < POLL_ATTEMPTS && !this.spawnError; attempt++) {
-            const hostname = await this.pollOnce(metricsPort);
+    private async readHostname(metricsPort: number, signal: AbortSignal): Promise<string> {
+        for (let attempt = 0; attempt < POLL_ATTEMPTS && !this.failure; attempt++) {
+            signal.throwIfAborted();
+            const hostname = await this.pollOnce(metricsPort, signal);
             if (hostname) return hostname;
             await this.deps.wait(POLL_INTERVAL_MS);
         }
 
-        const cause = this.spawnError;
+        const cause = this.failure;
         this.stop();
         throw new SeedcordError(
             SeedcordErrorCode.CliTunnelUrlUnavailable,
@@ -95,9 +101,9 @@ export class CloudflaredTunnel {
         );
     }
 
-    private async pollOnce(metricsPort: number): Promise<string | undefined> {
+    private async pollOnce(metricsPort: number, signal: AbortSignal): Promise<string | undefined> {
         try {
-            const response = await this.deps.fetch(`http://127.0.0.1:${String(metricsPort)}/quicktunnel`);
+            const response = await this.deps.fetch(`http://127.0.0.1:${String(metricsPort)}/quicktunnel`, { signal });
             // justified: the cloudflared metrics route returns this shape
             const { hostname } = (await response.json()) as { hostname?: string };
             return hostname === '' ? undefined : hostname; // empty until the edge assigns one

@@ -83,6 +83,31 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledTimes(2);
     });
 
+    it('stops a superseded attempt before its open settles', async () => {
+        const stopped: string[] = [];
+        const slow = Promise.withResolvers<string>();
+        let made = 0;
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: () => {
+                    const label = `t${String(++made)}`;
+                    return {
+                        open: (port) => (label === 't1' ? slow.promise : Promise.resolve(urlFor(port))),
+                        stop: () => stopped.push(label)
+                    };
+                }
+            })
+        );
+
+        const stale = coordinator.onPort(3000);
+        await coordinator.onPort(3001);
+
+        expect(stopped).toEqual(['t1']);
+
+        slow.resolve(urlFor(3000));
+        await stale;
+    });
+
     it('a superseded attempt stops its own tunnel and reports nothing', async () => {
         const stopped: string[] = [];
         const slow = Promise.withResolvers<string>();
