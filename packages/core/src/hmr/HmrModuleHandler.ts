@@ -57,58 +57,78 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     /** Unloads or reloads the modules affected by an {@link HmrUpdateEvent}, scoped to the handler and middleware directories. */
     public async handle(event: HmrUpdateEvent): Promise<void> {
         const { file, affectedModules, type } = event;
-        const { logger, handlersDir, middlewaresDir } = this.options;
+        const { logger } = this.options;
 
         if (type === 'delete' || type === 'deleteDir') {
-            this.unload(file);
+            this.report('Unloaded', this.unload(file), [file]);
             return;
         }
 
-        // a directory is never importable, its files arrive as their own create events
+        // a directory is never importable. Its files arrive as their own create events
         if (type === 'createDir') return;
 
         if (type === 'update' && !existsSync(file)) {
             if (this.isTracked(file)) {
                 logger.debug(`Received update for non-existent file: ${formatFilePath(file)}, treating as delete`);
-                this.unload(file);
+                this.report('Unloaded', this.unload(file), [file]);
             }
             return;
         }
 
         const rollbackEnabled = event.rollback ?? true;
         const filesToReload = affectedModules && affectedModules.length > 0 ? affectedModules : [file];
-        const absHandlersDir = resolve(process.cwd(), handlersDir);
-        const absMiddlewaresDir = middlewaresDir ? resolve(process.cwd(), middlewaresDir) : null;
+
+        const startedAt = Date.now();
+        const names: string[] = [];
+        const touched: string[] = [];
 
         for (const fileToReload of filesToReload) {
-            // the separator keeps a sibling dir sharing the prefix (commands-extra vs commands) out
-            const isHandler = fileToReload.startsWith(absHandlersDir + sep);
-            const isMiddleware = absMiddlewaresDir ? fileToReload.startsWith(absMiddlewaresDir + sep) : false;
+            if (!this.inScope(fileToReload)) continue;
 
-            if (!isHandler && !isMiddleware) {
-                continue;
-            }
+            const reloaded = await this.reloadWithRollback(fileToReload, rollbackEnabled);
+            if (reloaded.length === 0) continue;
 
-            await this.reloadWithRollback(fileToReload, rollbackEnabled);
+            names.push(...reloaded);
+            touched.push(fileToReload);
         }
+
+        this.report(type === 'create' ? 'Registered' : 'Reloaded', names, touched, Date.now() - startedAt);
     }
 
-    private async reloadWithRollback(file: string, rollbackEnabled: boolean): Promise<void> {
+    private inScope(file: string): boolean {
+        const { handlersDir, middlewaresDir } = this.options;
+
+        // the separator keeps a sibling dir sharing the prefix (commands-extra vs commands) out
+        if (file.startsWith(resolve(process.cwd(), handlersDir) + sep)) return true;
+        return middlewaresDir ? file.startsWith(resolve(process.cwd(), middlewaresDir) + sep) : false;
+    }
+
+    // one line per save, since one edit can reload every module that imports the file
+    private report(verb: string, names: string[], files: string[], elapsedMs?: number): void {
+        if (names.length === 0) return;
+
+        const from = files.length === 1 ? formatFilePath(files[0] ?? '') : `${String(files.length)} files`;
+        const timing = elapsedMs === undefined ? '' : ` ${paint.mute('in')} ${String(elapsedMs)}ms`;
+        this.options.logger.debug(`${verb} ${paint.sky.bold(names.join(', '))} from ${paint.mute(from)}${timing}`);
+    }
+
+    private async reloadWithRollback(file: string, rollbackEnabled: boolean): Promise<string[]> {
         const { logger } = this.options;
         const snapshot = this.snapshotUnits(file);
         this.unload(file);
 
         const reloaded = await this.reloadFile(file);
-        if (reloaded) return;
+        if (reloaded !== null) return reloaded;
 
         // a failed reload can leave a partial registration
         this.unload(file);
-        if (!rollbackEnabled) return;
-        if (snapshot.handlers.length === 0 && snapshot.middlewares.length === 0) return;
+        if (!rollbackEnabled) return [];
+        if (snapshot.handlers.length === 0 && snapshot.middlewares.length === 0) return [];
 
-        // a typo keeps them live until the next good save
+        // a typo keeps the last-good units live until the next good save
         this.restoreUnits(file, snapshot);
         logger.warn(`${paint.amber.bold('Rolled back')} ${paint.mute(formatFilePath(file))} to the last-good version`);
+        return [];
     }
 
     /** Links the handler to its source file so a later update can unload it. */
@@ -140,16 +160,15 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         return this.store.fileToHandlers.has(file) || this.store.fileToMiddlewares.has(file);
     }
 
-    private unload(file: string): void {
-        const { logger } = this.options;
+    private unload(file: string): string[] {
+        const names: string[] = [];
         const handlers = this.store.fileToHandlers.get(file);
         if (handlers) {
             for (const handler of handlers) {
                 const artifacts = this.store.handlerArtifacts.get(handler);
                 this.options.unregisterHandler(handler, artifacts);
                 this.store.handlerArtifacts.delete(handler);
-                const name = displayName(handler, 'Handler');
-                logger.debug(`Unloaded ${paint.sky.bold(name)} from ${paint.mute(formatFilePath(file))}`);
+                names.push(displayName(handler, 'Handler'));
             }
             this.store.fileToHandlers.delete(file);
         }
@@ -158,19 +177,21 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         if (middlewares) {
             for (const middleware of middlewares) {
                 this.options.unregisterMiddleware?.(middleware);
-                const name = displayName(middleware, 'Middleware');
-                logger.debug(`Unloaded ${paint.sky.bold(name)} from ${paint.mute(formatFilePath(file))}`);
+                names.push(displayName(middleware, 'Middleware'));
             }
             this.store.fileToMiddlewares.delete(file);
         }
+
+        return names;
     }
 
-    private async reloadFile(file: string): Promise<boolean> {
+    // only a failed reload returns null
+    private async reloadFile(file: string): Promise<string[] | null> {
         const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.options;
 
         if (!existsSync(file)) {
             logger.debug(`File does not exist, skipping reload: ${formatFilePath(file)}`);
-            return false;
+            return null;
         }
 
         try {
@@ -178,7 +199,6 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             // vitest has no real vite server managing the module graph, so bust the import cache manually.
             if (process.env.VITEST === 'true') fileUrl += `?update=${Date.now()}`;
 
-            const startedAt = Date.now();
             // justified: a dynamic import resolves to an untyped export map
             const imported = (await import(fileUrl)) as Record<string, unknown>;
 
@@ -195,17 +215,10 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
                 }
             }
 
-            if (names.length > 0) {
-                const elapsed = Date.now() - startedAt;
-                logger.debug(
-                    `Reloaded ${paint.sky.bold(names.join(', '))} from ${paint.mute(formatFilePath(file))} ${paint.mute(`in`)} ${`${String(elapsed)}ms`}`
-                );
-            }
-
-            return true;
+            return names;
         } catch (error) {
             logger.error(`Failed to reload file: ${file}`, error);
-            return false;
+            return null;
         }
     }
 

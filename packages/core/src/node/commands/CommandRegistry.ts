@@ -60,7 +60,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
     private readonly ctorToCommand = new Map<CommandCtor, CommandArtifact>();
 
-    // batched during bulk load, hmr registrations log inline
+    // batched during bulk load. A reload reports on the hmr channel instead
     private loading = false;
     private readonly loadedCommands: { name: string; from: string; kind: 'slash command' | 'context menu' }[] = [];
 
@@ -199,10 +199,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
 
         if (this.loading) {
             this.loadedCommands.push({ name: comp.name, from: formatFilePath(rel), kind });
-            return;
         }
-
-        this.logger.utils.registration(comp.name, rel, `${meta.scope} ${kind}`);
     }
 
     private unregisterCommand(ctor: CommandCtor, artifacts?: CommandArtifact): void {

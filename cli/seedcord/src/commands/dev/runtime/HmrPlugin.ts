@@ -75,14 +75,16 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
     }
 
-    // debounce keyed per (file, type), a shared timestamp drops the second of a rapid create-then-update
+    // keyed per type, else an atomic-save rename (unlink then add) loses the add and the handler stays unloaded
     private isDebounced(file: string, type: HmrEventType): boolean {
-        const key = `${file}::${type}`;
-        const now = Date.now();
-        const last = this.lastUpdate.get(key);
-        if (last !== undefined && now - last < DEBOUNCE_MS) return true;
-        this.lastUpdate.set(key, now);
+        if (this.justSaw(file, type)) return true;
+        this.lastUpdate.set(`${file}::${type}`, Date.now());
         return false;
+    }
+
+    private justSaw(file: string, type: HmrEventType): boolean {
+        const last = this.lastUpdate.get(`${file}::${type}`);
+        return last !== undefined && Date.now() - last < DEBOUNCE_MS;
     }
 
     private handleFileEvent(file: string, type: HmrEventType): void {
@@ -96,7 +98,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
                   ? paint.coral
                   : paint.sky;
 
-        this.logger.debug(`${typeColor(type.toUpperCase())} ${paint.mute(relPath)}`);
+        this.logger.trace(`${typeColor(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         const payload: HmrUpdateEvent = { file, type, rollback: this.config.hmr?.rollback ?? true };
 
@@ -107,11 +109,12 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const { file, modules, server } = ctx;
         const type = 'update';
 
-        if (this.isDebounced(file, type)) return [];
+        // vite fires this straight after the watcher's add, and the create already reloaded the file
+        if (this.justSaw(file, 'create') || this.isDebounced(file, type)) return [];
 
         const relPath = relative(process.cwd(), file);
 
-        this.logger.debug(`${paint.sky(type.toUpperCase())} ${paint.mute(relPath)}`);
+        this.logger.trace(`${paint.sky(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         if (this.isCriticalFile(file)) {
             this.logger.warn(`${paint.coral('Critical file changed:')} ${paint.sky.bold(relPath)}. Restart required.`);
