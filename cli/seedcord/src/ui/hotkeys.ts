@@ -61,11 +61,11 @@ function quit(ctx: HotkeyContext): void {
 
 // Ink puts stdin in raw mode, so Ctrl-C arrives as a plain keypress with no SIGINT.
 function handleQuitSignal(ctx: HotkeyContext): boolean {
-    if (ctx.key.ctrl && ctx.input === 'c') {
-        quit(ctx);
-        return true;
-    }
-    return false;
+    if (!ctx.key.ctrl || ctx.input !== 'c') return false;
+
+    if (ctx.state.quitArmed) quit(ctx);
+    else ctx.store.setQuitArmed(true);
+    return true;
 }
 
 function handlePrompt(ctx: HotkeyContext): boolean {
@@ -162,6 +162,7 @@ function handleActions(ctx: HotkeyContext): void {
 // first stage that returns true captures the keypress. the prompt captures all input while open
 export function dispatchHotkey(ctx: HotkeyContext): void {
     if (handleQuitSignal(ctx)) return;
+    if (ctx.state.quitArmed) ctx.store.setQuitArmed(false);
     if (handlePrompt(ctx)) return;
     if (handleFilters(ctx)) return;
     if (handleScroll(ctx)) return;

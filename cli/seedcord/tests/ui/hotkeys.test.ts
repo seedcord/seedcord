@@ -210,3 +210,65 @@ describe('filter cursor keys', () => {
         expect(setCursor).toHaveBeenCalledWith({ group: 'channels', channels: 1, levels: 0 });
     });
 });
+
+// justified: the quit path reads one flag off each, and the rest of both shapes is unreachable here
+function armed(quitArmed: boolean): Ctx['state'] {
+    return { quitArmed } as unknown as Ctx['state'];
+}
+
+function storeSpy(spies: Record<string, unknown>): Ctx['store'] {
+    return spies as unknown as Ctx['store'];
+}
+
+describe('dispatchHotkey quit', () => {
+    it('arms on the first ctrl-c without quitting', () => {
+        const onQuit = vi.fn();
+        const setQuitArmed = vi.fn();
+
+        dispatchHotkey(
+            makeCtx({
+                input: 'c',
+                key: key({ ctrl: true }),
+                state: armed(false),
+                store: storeSpy({ setQuitArmed }),
+                onQuit
+            })
+        );
+
+        expect(setQuitArmed).toHaveBeenCalledWith(true);
+        expect(onQuit).not.toHaveBeenCalled();
+    });
+
+    it('quits on the second ctrl-c', () => {
+        const onQuit = vi.fn();
+        const beginQuit = vi.fn();
+
+        dispatchHotkey(
+            makeCtx({
+                input: 'c',
+                key: key({ ctrl: true }),
+                state: armed(true),
+                store: storeSpy({ beginQuit }),
+                onQuit
+            })
+        );
+
+        expect(beginQuit).toHaveBeenCalledOnce();
+        expect(onQuit).toHaveBeenCalledOnce();
+    });
+
+    it('disarms when any other key follows', () => {
+        const setQuitArmed = vi.fn();
+
+        dispatchHotkey(
+            makeCtx({
+                key: key({ downArrow: true }),
+                state: armed(true),
+                store: storeSpy({ setQuitArmed }),
+                scroll: scrollSpy()
+            })
+        );
+
+        expect(setQuitArmed).toHaveBeenCalledWith(false);
+    });
+});

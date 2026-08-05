@@ -15,6 +15,7 @@ export interface DevState {
     readonly commandUpdatePrompt: string[] | null;
     readonly port: number | null;
     readonly tunnel: TunnelStatus | null;
+    readonly quitArmed: boolean;
 }
 
 const INITIAL: DevState = {
@@ -26,7 +27,8 @@ const INITIAL: DevState = {
     restartRequired: false,
     commandUpdatePrompt: null,
     port: null,
-    tunnel: null
+    tunnel: null,
+    quitArmed: false
 };
 
 export class DevStore extends TypedEventEmitter<{ change: [] }> {
@@ -59,6 +61,10 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
 
     public setTunnel(tunnel: TunnelStatus | null): void {
         this.patch({ tunnel });
+    }
+
+    public setQuitArmed(quitArmed: boolean): void {
+        this.patch({ quitArmed });
     }
 
     public clearPrompt(): void {
