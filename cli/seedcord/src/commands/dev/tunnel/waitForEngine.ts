@@ -3,26 +3,26 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import type { TunnelDeps } from './CloudflaredTunnel';
 
-const METHOD_NOT_ALLOWED = 405;
+const UNAUTHORIZED = 401;
 const POLL_INTERVAL_MS = 500;
-const POLL_ATTEMPTS = 30;
+const POLL_ATTEMPTS = 180;
 
 export type ProbeDeps = Pick<TunnelDeps, 'fetch' | 'wait'>;
 
-// the engine answers 405 to any GET, which no cloudflare edge error can imitate
+// an unsigned POST reaches the engine on any path, since the health responder answers GET alone
 export async function waitForEngine(url: string, deps: ProbeDeps): Promise<void> {
     for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
-        if (await answered(url, deps)) return;
+        if (await refused(url, deps)) return;
         await deps.wait(POLL_INTERVAL_MS);
     }
 
     throw new SeedcordError(SeedcordErrorCode.CliTunnelNotRouting, [url, (POLL_ATTEMPTS * POLL_INTERVAL_MS) / 1000]);
 }
 
-async function answered(url: string, deps: ProbeDeps): Promise<boolean> {
+async function refused(url: string, deps: ProbeDeps): Promise<boolean> {
     try {
-        const response = await deps.fetch(url);
-        return response.status === METHOD_NOT_ALLOWED;
+        const response = await deps.fetch(url, { method: 'POST' });
+        return response.status === UNAUTHORIZED;
     } catch {
         return false;
     }

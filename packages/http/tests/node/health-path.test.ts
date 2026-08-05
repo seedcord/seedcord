@@ -12,11 +12,12 @@ import type { HttpConfig } from '@src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 
-function config(): HttpConfig {
+function config(healthPath?: string): HttpConfig {
     return {
         bot: { interactions: { path: HANDLERS_DIR }, commands: { path: null } },
         subscribers: { path: null },
-        port: 0
+        port: 0,
+        ...(!(healthPath === undefined) && { healthCheck: { path: healthPath } })
     };
 }
 
@@ -27,7 +28,7 @@ function reset(): void {
 
 let live: Seedcord | undefined;
 
-async function readyHost(): Promise<string> {
+async function readyHost(healthPath?: string): Promise<string> {
     const signer = await createSigner();
     Envapter.useSource(
         merge(
@@ -35,7 +36,7 @@ async function readyHost(): Promise<string> {
             new PortableSource({ DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN })
         )
     );
-    const host = new Seedcord(config());
+    const host = new Seedcord(config(healthPath));
     live = host;
     await host.start();
     return `http://127.0.0.1:${String(host.port)}`;
@@ -65,5 +66,20 @@ describe('http health path', () => {
         const response = await fetch(url);
 
         expect(response.status).toBe(405);
+    });
+
+    it('serves a configured path', async () => {
+        const url = await readyHost('/healthz');
+
+        await expect(fetch(`${url}/healthz`).then((r) => r.status)).resolves.toBe(200);
+        await expect(fetch(`${url}/health`).then((r) => r.status)).resolves.toBe(405);
+    });
+
+    // the dev tunnel probes with an unsigned POST, which a health path of '/' would otherwise shadow
+    it('leaves an unsigned POST to the engine even when health owns the root', async () => {
+        const url = await readyHost('/');
+
+        await expect(fetch(url).then((r) => r.status)).resolves.toBe(200);
+        await expect(fetch(url, { method: 'POST' }).then((r) => r.status)).resolves.toBe(401);
     });
 });

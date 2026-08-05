@@ -12,18 +12,18 @@ function deps(fetch: ProbeDeps['fetch']): ProbeDeps {
 }
 
 describe('waitForEngine', () => {
-    it('resolves once the root answers 405', async () => {
-        const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 405 }));
+    it('resolves once an unsigned post is refused', async () => {
+        const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 401 }));
 
         await expect(waitForEngine(URL, deps(fetch))).resolves.toBeUndefined();
-        expect(fetch).toHaveBeenCalledExactlyOnceWith(URL);
+        expect(fetch).toHaveBeenCalledExactlyOnceWith(URL, { method: 'POST' });
     });
 
     it('keeps polling while the edge reports the tunnel is down', async () => {
         const fetch = vi
             .fn<ProbeDeps['fetch']>()
             .mockResolvedValueOnce(new Response(null, { status: 502 }))
-            .mockResolvedValueOnce(new Response(null, { status: 405 }));
+            .mockResolvedValueOnce(new Response(null, { status: 401 }));
 
         await expect(waitForEngine(URL, deps(fetch))).resolves.toBeUndefined();
         expect(fetch).toHaveBeenCalledTimes(2);
@@ -33,7 +33,17 @@ describe('waitForEngine', () => {
         const fetch = vi
             .fn<ProbeDeps['fetch']>()
             .mockRejectedValueOnce(new Error('ECONNREFUSED'))
-            .mockResolvedValueOnce(new Response(null, { status: 405 }));
+            .mockResolvedValueOnce(new Response(null, { status: 401 }));
+
+        await expect(waitForEngine(URL, deps(fetch))).resolves.toBeUndefined();
+        expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('keeps polling when a health endpoint answers the root', async () => {
+        const fetch = vi
+            .fn<ProbeDeps['fetch']>()
+            .mockResolvedValueOnce(new Response(null, { status: 200 }))
+            .mockResolvedValueOnce(new Response(null, { status: 401 }));
 
         await expect(waitForEngine(URL, deps(fetch))).resolves.toBeUndefined();
         expect(fetch).toHaveBeenCalledTimes(2);

@@ -7,12 +7,13 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import type { ChildProcess } from 'node:child_process';
 
 const POLL_INTERVAL_MS = 250;
-const POLL_ATTEMPTS = 60;
+// the create step alone measured around 10s against trycloudflare
+const POLL_ATTEMPTS = 240;
 const GRACEFUL_EXIT_MS = 2000;
 
 export interface TunnelDeps {
     spawn: (command: string, args: string[]) => ChildProcess;
-    fetch: (url: string) => Promise<Response>;
+    fetch: (url: string, init?: RequestInit) => Promise<Response>;
     freePort: () => Promise<number>;
     wait: (ms: number) => Promise<void>;
 }
@@ -32,7 +33,7 @@ function freePort(): Promise<number> {
 export function systemTunnelDeps(): TunnelDeps {
     return {
         spawn: (command, args) => spawn(command, args, { stdio: 'ignore' }),
-        fetch: (url) => fetch(url),
+        fetch: (url, init) => fetch(url, init),
         freePort,
         wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
     };
