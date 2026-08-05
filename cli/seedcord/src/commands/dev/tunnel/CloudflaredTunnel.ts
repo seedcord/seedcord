@@ -43,12 +43,15 @@ export class CloudflaredTunnel {
     private child: ChildProcess | undefined;
     private failure: Error | undefined;
 
-    constructor(private readonly deps: TunnelDeps) {}
+    constructor(
+        private readonly deps: TunnelDeps,
+        private readonly binary: string
+    ) {}
 
     public async open(targetPort: number, signal: AbortSignal): Promise<string> {
         const metricsPort = await this.deps.freePort();
 
-        const child = this.deps.spawn('cloudflared', [
+        const child = this.deps.spawn(this.binary, [
             'tunnel',
             '--url',
             `http://localhost:${String(targetPort)}`,

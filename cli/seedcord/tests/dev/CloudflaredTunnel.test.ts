@@ -10,6 +10,7 @@ import type { ChildProcess } from 'node:child_process';
 
 const METRICS_PORT = 20_500;
 const RUNNING = new AbortController().signal;
+const BINARY = '/usr/local/bin/cloudflared';
 
 function fakeChild(): ChildProcess & { killed: string[] } {
     const child = Object.assign(new EventEmitter(), {
@@ -44,7 +45,8 @@ describe('CloudflaredTunnel', () => {
                     return child;
                 },
                 fetch: () => Promise.reject(new Error('refused'))
-            })
+            }),
+            BINARY
         );
 
         const error: unknown = await tunnel.open(3000, RUNNING).then(
@@ -55,14 +57,23 @@ describe('CloudflaredTunnel', () => {
     });
 
     it('reads the hostname off the metrics server and gives it a scheme', async () => {
-        const tunnel = new CloudflaredTunnel(deps());
+        const tunnel = new CloudflaredTunnel(deps(), BINARY);
 
         await expect(tunnel.open(3000, RUNNING)).resolves.toBe('https://abc.trycloudflare.com');
     });
 
+    it('spawns the binary the PATH scan resolved', async () => {
+        const spawn = vi.fn<TunnelDeps['spawn']>(() => fakeChild());
+        const tunnel = new CloudflaredTunnel(deps({ spawn }), '/opt/homebrew/bin/cloudflared');
+
+        await tunnel.open(3000, RUNNING);
+
+        expect(spawn.mock.calls[0]?.[0]).toBe('/opt/homebrew/bin/cloudflared');
+    });
+
     it('points cloudflared at the bot port and pins its metrics port', async () => {
         const spawn = vi.fn<TunnelDeps['spawn']>(() => fakeChild());
-        const tunnel = new CloudflaredTunnel(deps({ spawn }));
+        const tunnel = new CloudflaredTunnel(deps({ spawn }), BINARY);
 
         await tunnel.open(4321, RUNNING);
 
@@ -80,14 +91,14 @@ describe('CloudflaredTunnel', () => {
             .fn<TunnelDeps['fetch']>()
             .mockResolvedValueOnce(Response.json({ hostname: '' }))
             .mockResolvedValueOnce(Response.json({ hostname: 'late.trycloudflare.com' }));
-        const tunnel = new CloudflaredTunnel(deps({ fetch }));
+        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
 
         await expect(tunnel.open(3000, RUNNING)).resolves.toBe('https://late.trycloudflare.com');
         expect(fetch).toHaveBeenCalledTimes(2);
     });
 
     it('throws when the hostname never arrives', async () => {
-        const tunnel = new CloudflaredTunnel(deps({ fetch: () => Promise.reject(new Error('refused')) }));
+        const tunnel = new CloudflaredTunnel(deps({ fetch: () => Promise.reject(new Error('refused')) }), BINARY);
 
         const error: unknown = await tunnel.open(3000, RUNNING).then(
             () => null,
@@ -102,7 +113,7 @@ describe('CloudflaredTunnel', () => {
             child.emit('exit', 1);
             return Promise.reject(new Error('refused'));
         });
-        const tunnel = new CloudflaredTunnel(deps({ spawn: () => child, fetch }));
+        const tunnel = new CloudflaredTunnel(deps({ spawn: () => child, fetch }), BINARY);
 
         const error: unknown = await tunnel.open(3000, RUNNING).then(
             () => null,
@@ -119,7 +130,7 @@ describe('CloudflaredTunnel', () => {
             attempt.abort();
             return Promise.reject(new Error('refused'));
         });
-        const tunnel = new CloudflaredTunnel(deps({ fetch }));
+        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
 
         await expect(tunnel.open(3000, attempt.signal)).rejects.toThrow();
         expect(fetch).toHaveBeenCalledOnce();
@@ -128,7 +139,7 @@ describe('CloudflaredTunnel', () => {
     it('escalates to SIGKILL when SIGTERM leaves the child running', async () => {
         vi.useFakeTimers();
         const child = fakeChild();
-        const tunnel = new CloudflaredTunnel(deps({ spawn: () => child }));
+        const tunnel = new CloudflaredTunnel(deps({ spawn: () => child }), BINARY);
         await tunnel.open(3000, RUNNING);
 
         tunnel.stop();

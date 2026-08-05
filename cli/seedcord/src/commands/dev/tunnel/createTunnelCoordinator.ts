@@ -18,11 +18,12 @@ export function createTunnelCoordinator(
     onUrl: (url: string | null) => void,
     findBinary: () => string | undefined = () => findCloudflared(systemLookup())
 ): TunnelCoordinator | undefined {
-    if (!findBinary()) return undefined;
+    const binary = findBinary();
+    if (!binary) return undefined;
 
     const deps = systemTunnelDeps();
     return new TunnelCoordinator({
-        makeTunnel: () => new CloudflaredTunnel(deps),
+        makeTunnel: () => new CloudflaredTunnel(deps, binary),
         endpoint: InteractionsEndpoint.create(() => validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN'))),
         waitForRouting: (url, signal) => waitForEngine(url, deps, signal),
         onUrl,
