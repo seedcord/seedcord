@@ -11,6 +11,10 @@ import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vit
 
 const HMR_EVENT_NAME = 'seedcord:hmr';
 
+function watcherMock(): EventEmitter & { add: Mock } {
+    return Object.assign(new EventEmitter(), { add: vi.fn() });
+}
+
 const loggerSpies = {
     info: vi.fn(),
     warn: vi.fn(),
@@ -68,7 +72,7 @@ describe('HmrPlugin', () => {
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
         vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
 
-        const watcher = new EventEmitter();
+        const watcher = watcherMock();
         const server = {
             watcher,
             environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
@@ -79,6 +83,28 @@ describe('HmrPlugin', () => {
         watcher.emit('add', file);
 
         expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, { file, type: 'create', rollback: false });
+    });
+
+    it('asks for a restart when the config file above the vite root changes', () => {
+        const configFile = join(process.cwd(), 'seedcord.config.ts');
+        const plugin = new HmrPlugin({ ...mockConfig, root: join(process.cwd(), 'src'), configFile });
+        // justified: spy on the private `hot` getter
+        const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: vi.fn(), on: vi.fn() });
+
+        const events: DevEvent[] = [];
+        plugin.on('event', (event: DevEvent) => events.push(event));
+
+        const watcher = watcherMock();
+        const server = {
+            watcher,
+            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+        } as unknown as ViteDevServer;
+        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+        watcher.emit('change', configFile);
+
+        expect(events).toContainEqual({ type: 'restart-required' });
     });
 
     it('relays the bound port the framework reports', () => {
@@ -95,7 +121,7 @@ describe('HmrPlugin', () => {
         plugin.on('event', (event: DevEvent) => events.push(event));
 
         const server = {
-            watcher: new EventEmitter(),
+            watcher: watcherMock(),
             environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
         } as unknown as ViteDevServer;
         (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
@@ -111,7 +137,7 @@ describe('HmrPlugin', () => {
         let hotSendMock: Mock;
 
         beforeEach(() => {
-            watcher = new EventEmitter();
+            watcher = watcherMock();
             hotSendMock = vi.fn();
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spy on the private `hot` getter

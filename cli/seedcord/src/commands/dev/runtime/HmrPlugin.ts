@@ -58,6 +58,10 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         server.watcher.on('addDir', (file) => this.handleFileEvent(file, 'createDir'));
         server.watcher.on('unlinkDir', (file) => this.handleFileEvent(file, 'deleteDir'));
 
+        // vite's watcher covers config.root only, which excludes the config file
+        server.watcher.add(this.config.configFile);
+        server.watcher.on('change', (file) => this.handleChange(file));
+
         this.dev?.on('seedcord:commands-update-prompt', (data) => {
             this.emit('event', { type: 'command-update-prompt', files: data.files });
         });
@@ -85,6 +89,18 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private justSaw(file: string, type: HmrEventType): boolean {
         const last = this.lastUpdate.get(`${file}::${type}`);
         return last !== undefined && Date.now() - last < DEBOUNCE_MS;
+    }
+
+    // hotUpdate covers a critical file inside the root
+    private handleChange(file: string): void {
+        if (!this.isCriticalFile(file) || this.isDebounced(file, 'update')) return;
+        this.reportRestartRequired(file);
+    }
+
+    private reportRestartRequired(file: string): void {
+        const relPath = relative(process.cwd(), file);
+        this.logger.warn(`${paint.coral('Critical file changed:')} ${paint.sky.bold(relPath)}. Restart required.`);
+        this.emit('event', { type: 'restart-required' });
     }
 
     private handleFileEvent(file: string, type: HmrEventType): void {
@@ -117,8 +133,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         this.logger.trace(`${paint.sky(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         if (this.isCriticalFile(file)) {
-            this.logger.warn(`${paint.coral('Critical file changed:')} ${paint.sky.bold(relPath)}. Restart required.`);
-            this.emit('event', { type: 'restart-required' });
+            this.reportRestartRequired(file);
             return [];
         }
 
