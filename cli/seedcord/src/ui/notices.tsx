@@ -4,11 +4,12 @@ import { CommandRefreshPrompt } from '@ui/components/CommandRefreshPrompt';
 import { ErrorDisplay } from '@ui/components/ErrorDisplay';
 import { QuitConfirmCard } from '@ui/components/QuitConfirmCard';
 import { RestartRequiredCard } from '@ui/components/RestartRequiredCard';
+import { TunnelOpeningCard } from '@ui/components/TunnelOpeningCard';
 
 import type { DevState } from '@ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
-type NoticeKey = 'quit' | 'commands' | 'error' | 'restart';
+type NoticeKey = 'quit' | 'commands' | 'error' | 'restart' | 'tunnel';
 
 export interface Notice {
     readonly key: NoticeKey;
@@ -50,6 +51,15 @@ export function noticesOf(state: DevState): readonly Notice[] {
 
     if (state.restartRequired) {
         notices.push({ key: 'restart', summary: '', action: RESTART, card: <RestartRequiredCard /> });
+    }
+
+    if (state.tunnel === 'opening') {
+        notices.push({
+            key: 'tunnel',
+            summary: 'Setting up your interactions endpoint',
+            action: 'hold on',
+            card: <TunnelOpeningCard />
+        });
     }
 
     return notices;

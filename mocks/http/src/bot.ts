@@ -19,7 +19,8 @@ export const seedcord = new Seedcord({
     subscribers: {
         path: null
     },
-    botColor: '#fe565a'
+    botColor: '#fe565a',
+    port: 6967
 });
 
 export default seedcord;
