@@ -20,7 +20,7 @@ import type { ReactElement, Ref } from 'react';
 
 export const MAX_RAIL = 40;
 
-const META_LABEL_WIDTH = 5;
+const META_LABEL_WIDTH = 7;
 
 const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
@@ -35,10 +35,6 @@ interface SidebarProps {
     readonly width: number | null;
     readonly filtersOpen: boolean;
     readonly ref?: Ref<DOMElement>;
-}
-
-function hostOf(url: string): string {
-    return new URL(url).host;
 }
 
 function Meta({ label, value }: { label: string; value: string }): ReactElement {
@@ -58,8 +54,9 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {/* only the http host reports a port */}
             {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
-            {/* the sidebar is narrow, so show the host only */}
-            {state.tunnelUrl === null ? null : <Meta label="url" value={hostOf(state.tunnelUrl)} />}
+            {state.tunnel === null ? null : (
+                <Meta label="tunnel" value={state.tunnel === 'live' ? 'live' : 'opening…'} />
+            )}
             <Meta label="logs" value={LOG_DIR} />
         </Box>
     );

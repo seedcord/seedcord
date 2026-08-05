@@ -44,7 +44,7 @@ export class DevRunner {
         const codegenLogger = new Logger('Codegen', { channel: 'cli' });
         const tunnelLogger = new Logger('Tunnel', { channel: 'cli' });
         const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
-            createTunnelCoordinator(tunnelLogger, (url) => store.setTunnelUrl(url), tunnel);
+            createTunnelCoordinator(tunnelLogger, (status) => store.setTunnel(status), tunnel);
 
         return new DevRunner({
             locator: new ConfigLocator(logger),

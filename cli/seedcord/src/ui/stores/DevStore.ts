@@ -3,6 +3,7 @@ import { assertNever } from '@seedcord/utils';
 
 import type { DevPhase } from './devPhase';
 import type { DevEvent } from '@commands/dev/runtime/events';
+import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 
 export interface DevState {
     readonly phase: DevPhase;
@@ -13,7 +14,7 @@ export interface DevState {
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
     readonly port: number | null;
-    readonly tunnelUrl: string | null;
+    readonly tunnel: TunnelStatus | null;
 }
 
 const INITIAL: DevState = {
@@ -25,7 +26,7 @@ const INITIAL: DevState = {
     restartRequired: false,
     commandUpdatePrompt: null,
     port: null,
-    tunnelUrl: null
+    tunnel: null
 };
 
 export class DevStore extends TypedEventEmitter<{ change: [] }> {
@@ -56,8 +57,8 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         this.patch({ frameworkVersion });
     }
 
-    public setTunnelUrl(tunnelUrl: string | null): void {
-        this.patch({ tunnelUrl });
+    public setTunnel(tunnel: TunnelStatus | null): void {
+        this.patch({ tunnel });
     }
 
     public clearPrompt(): void {
@@ -76,7 +77,6 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         });
     }
 
-    // tunnelUrl stays because one tunnel outlives the restart loop
     public beginDisconnect(): void {
         this.patch({
             phase: 'disconnected',

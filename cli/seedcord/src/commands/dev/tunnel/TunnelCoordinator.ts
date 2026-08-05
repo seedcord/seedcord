@@ -11,12 +11,14 @@ const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https 
 
 export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 
+export type TunnelStatus = 'opening' | 'live';
+
 export interface CoordinatorDeps {
     readonly makeTunnel: () => CoordinatorTunnel;
     // a quick hostname is gone after the session, so its endpoint is cleared on quit
     readonly kind: 'quick' | 'configured';
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
-    readonly onUrl: (url: string | null) => void;
+    readonly onStatus: (status: TunnelStatus | null) => void;
     readonly logger: ILogger;
 }
 
@@ -48,6 +50,7 @@ export class TunnelCoordinator {
         let patched = false;
 
         try {
+            this.deps.onStatus('opening');
             this.deps.logger.info(`${opening(this.deps.kind)} ${paint.iris(String(port))}`);
             const url = await tunnel.open(attempt.signal, port);
             if (superseded(attempt)) return;
@@ -57,8 +60,8 @@ export class TunnelCoordinator {
             await this.deps.endpoint.set(url, attempt.signal);
             if (superseded(attempt)) return;
 
-            this.deps.onUrl(url);
-            this.deps.logger.info(`Interactions endpoint set to ${paint.sky.italic(url)} ${since()}`);
+            this.deps.onStatus('live');
+            this.deps.logger.info(`Interactions endpoint set ${since()}`);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
             // stop from attempting a patch because discord refuses a hostname it previously refused
@@ -66,7 +69,7 @@ export class TunnelCoordinator {
 
             // so the next restart on this port retries
             this.target = undefined;
-            this.deps.onUrl(null);
+            this.deps.onStatus(null);
             this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
             // pasting works exactly when the tunnel survived, which is the same condition as the abort above
             if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
@@ -79,7 +82,7 @@ export class TunnelCoordinator {
         this.target = undefined;
         this.current.abort();
         this.current = undefined;
-        this.deps.onUrl(null);
+        this.deps.onStatus(null);
         if (this.deps.kind === 'configured') return;
 
         try {

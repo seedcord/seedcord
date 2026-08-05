@@ -20,7 +20,7 @@ function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
         }),
         kind: 'quick',
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve() },
-        onUrl: () => undefined,
+        onStatus: () => undefined,
         logger: silentLogger,
         ...overrides
     };
@@ -194,7 +194,7 @@ describe('TunnelCoordinator', () => {
     it('a superseded attempt stops its own tunnel and reports nothing', async () => {
         const stopped: string[] = [];
         const slow = Promise.withResolvers<string>();
-        const onUrl = vi.fn();
+        const onStatus = vi.fn();
         let made = 0;
         const coordinator = new TunnelCoordinator(
             deps({
@@ -205,7 +205,7 @@ describe('TunnelCoordinator', () => {
                         stop: () => stopped.push(label)
                     };
                 },
-                onUrl
+                onStatus
             })
         );
 
@@ -215,7 +215,7 @@ describe('TunnelCoordinator', () => {
         await stale;
 
         expect(stopped).toEqual(['t1']);
-        expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3001));
+        expect(onStatus).toHaveBeenLastCalledWith('live');
     });
 
     it('stops a tunnel that opens after stop was called', async () => {
@@ -265,29 +265,29 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledTimes(2);
     });
 
-    it('reports the live url, then drops it on stop', async () => {
-        const onUrl = vi.fn();
-        const coordinator = new TunnelCoordinator(deps({ onUrl }));
+    it('reports opening then live, and drops the status on stop', async () => {
+        const onStatus = vi.fn();
+        const coordinator = new TunnelCoordinator(deps({ onStatus }));
 
         await coordinator.onPort(3000);
-        expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3000));
+        expect(onStatus.mock.calls.flat()).toEqual(['opening', 'live']);
 
         await coordinator.stop();
-        expect(onUrl).toHaveBeenLastCalledWith(null);
+        expect(onStatus).toHaveBeenLastCalledWith(null);
     });
 
-    it('drops the url when the setup fails', async () => {
-        const onUrl = vi.fn();
+    it('drops the status when the setup fails', async () => {
+        const onStatus = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
                 endpoint: { set: () => Promise.reject(new Error('403')), clear: () => Promise.resolve() },
-                onUrl
+                onStatus
             })
         );
 
         await coordinator.onPort(3000);
 
-        expect(onUrl).toHaveBeenCalledExactlyOnceWith(null);
+        expect(onStatus.mock.calls.flat()).toEqual(['opening', null]);
     });
 
     it('stop kills the tunnel and clears the endpoint', async () => {

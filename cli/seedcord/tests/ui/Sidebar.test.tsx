@@ -43,14 +43,14 @@ function runningState(): DevState {
 }
 const RUNNING = runningState();
 
-// an http run adds the port and url rows, which makes it the tallest the rail gets
+// an http run adds the port and tunnel rows, which makes it the tallest the rail gets
 function httpState(): DevState {
     const store = new DevStore();
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
     store.apply({ type: 'server-listening', port: 4321 });
-    store.setTunnelUrl('https://abc-def-ghi.trycloudflare.com');
+    store.setTunnel('live');
     return store.getState();
 }
 const HTTP = httpState();
@@ -148,11 +148,11 @@ describe('Sidebar', () => {
         expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
     });
 
-    it('shows the port and the tunnel host on an http run', () => {
+    it('shows the port and the tunnel status on an http run', () => {
         const frame = frameFor(HTTP);
 
         expect(frame).toContain('4321');
-        expect(frame).toContain('abc-def-ghi.trycloudflare.com');
+        expect(frame).toContain('live');
     });
 
     it('leaves both rows out on a gateway run', () => {

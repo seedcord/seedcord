@@ -26,7 +26,7 @@ describe('DevStore', () => {
         store.setPhase('running');
         store.setError(new Error('boom'));
         store.setFrameworkVersion('1.2.3');
-        store.setTunnelUrl('https://abc.trycloudflare.com');
+        store.setTunnel('live');
 
         const state = store.getState();
         expect(state.status).toBe('running');
@@ -34,7 +34,7 @@ describe('DevStore', () => {
         expect(state.phase).toBe('running');
         expect(state.error).toBeInstanceOf(Error);
         expect(state.frameworkVersion).toBe('1.2.3');
-        expect(state.tunnelUrl).toBe('https://abc.trycloudflare.com');
+        expect(state.tunnel).toBe('live');
         expect(onChange).toHaveBeenCalledTimes(6);
     });
 
