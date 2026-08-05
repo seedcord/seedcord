@@ -33,6 +33,26 @@ function deps(overrides: Partial<TunnelDeps> = {}): TunnelDeps {
 }
 
 describe('CloudflaredTunnel', () => {
+    it('survives a spawn failure', async () => {
+        const child = fakeChild();
+        const tunnel = new CloudflaredTunnel(
+            deps({
+                spawn: () => {
+                    // emitted on the next tick, the way node reports a failed exec
+                    setTimeout(() => child.emit('error', new Error('EACCES')), 0);
+                    return child;
+                },
+                fetch: () => Promise.reject(new Error('refused'))
+            })
+        );
+
+        const error: unknown = await tunnel.open(3000).then(
+            () => null,
+            (caught: unknown) => caught
+        );
+        expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
+    });
+
     it('reads the hostname off the metrics server and gives it a scheme', async () => {
         const tunnel = new CloudflaredTunnel(deps());
 

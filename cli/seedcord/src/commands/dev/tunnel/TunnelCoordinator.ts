@@ -43,6 +43,12 @@ export class TunnelCoordinator {
         this.target = undefined;
         this.deps.tunnel.stop();
         this.deps.onUrl(null);
-        await this.deps.endpoint.clear();
+
+        try {
+            await this.deps.endpoint.clear();
+        } catch (error: unknown) {
+            // every caller of quit() drops the promise, so a rejection here would go unhandled
+            this.deps.logger.warn('Could not clear the interactions endpoint', error);
+        }
     }
 }

@@ -153,6 +153,20 @@ describe('TunnelCoordinator', () => {
         expect(clear).toHaveBeenCalledOnce();
     });
 
+    it('warns and resolves when the clearing patch fails', async () => {
+        const warn = vi.fn();
+        const coordinator = new TunnelCoordinator(
+            deps({
+                endpoint: { set: () => Promise.resolve(), clear: () => Promise.reject(new Error('401')) },
+                logger: { ...silentLogger, warn }
+            })
+        );
+        await coordinator.onPort(3000);
+
+        await expect(coordinator.stop()).resolves.toBeUndefined();
+        expect(warn).toHaveBeenCalledOnce();
+    });
+
     it('stop does nothing when no tunnel opened', async () => {
         const stop = vi.fn();
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();

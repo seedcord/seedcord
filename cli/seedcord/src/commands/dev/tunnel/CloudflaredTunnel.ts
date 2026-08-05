@@ -41,6 +41,7 @@ export function systemTunnelDeps(): TunnelDeps {
 export class CloudflaredTunnel {
     private child: ChildProcess | undefined;
     private hostname: string | undefined;
+    private spawnError: Error | undefined;
 
     constructor(private readonly deps: TunnelDeps) {}
 
@@ -51,13 +52,18 @@ export class CloudflaredTunnel {
     public async open(targetPort: number): Promise<string> {
         const metricsPort = await this.deps.freePort();
 
-        this.child = this.deps.spawn('cloudflared', [
+        const child = this.deps.spawn('cloudflared', [
             'tunnel',
             '--url',
             `http://localhost:${String(targetPort)}`,
             '--metrics',
             `127.0.0.1:${String(metricsPort)}`
         ]);
+        // a spawn failure emits here, and node throws it process-wide with no listener attached
+        child.on('error', (error) => {
+            this.spawnError = error;
+        });
+        this.child = child;
 
         const hostname = await this.readHostname(metricsPort);
         this.hostname = hostname;
@@ -70,6 +76,7 @@ export class CloudflaredTunnel {
 
         this.child = undefined;
         this.hostname = undefined;
+        this.spawnError = undefined;
         child.kill('SIGTERM');
 
         const escalate = setTimeout(() => child.kill('SIGKILL'), GRACEFUL_EXIT_MS);
@@ -80,14 +87,19 @@ export class CloudflaredTunnel {
     }
 
     private async readHostname(metricsPort: number): Promise<string> {
-        for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
+        for (let attempt = 0; attempt < POLL_ATTEMPTS && !this.spawnError; attempt++) {
             const hostname = await this.pollOnce(metricsPort);
             if (hostname) return hostname;
             await this.deps.wait(POLL_INTERVAL_MS);
         }
 
+        const cause = this.spawnError;
         this.stop();
-        throw new SeedcordError(SeedcordErrorCode.CliTunnelUrlUnavailable, [(POLL_ATTEMPTS * POLL_INTERVAL_MS) / 1000]);
+        throw new SeedcordError(
+            SeedcordErrorCode.CliTunnelUrlUnavailable,
+            [(POLL_ATTEMPTS * POLL_INTERVAL_MS) / 1000],
+            { cause }
+        );
     }
 
     private async pollOnce(metricsPort: number): Promise<string | undefined> {
