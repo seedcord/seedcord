@@ -4,13 +4,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { INITIAL_CURSOR } from '@ui/filterCursor';
 import { useDevState } from '@ui/hooks/useDevState';
 import { useLogs } from '@ui/hooks/useLogs';
-import { useMeasuredHeight } from '@ui/hooks/useMeasuredHeight';
+import { useMeasuredBox } from '@ui/hooks/useMeasuredBox';
 import { useRailWidth } from '@ui/hooks/useRailWidth';
 import { useScroll } from '@ui/hooks/useScroll';
 import { useUptime } from '@ui/hooks/useUptime';
 import { dispatchHotkey } from '@ui/hotkeys';
 import { DevLayout } from '@ui/layout/DevLayout';
-import { expandRows, rowKey } from '@ui/logRows';
+import { expandRows, rowKey, wrapRows } from '@ui/logRows';
 import { noticesOf } from '@ui/notices';
 import { LogStore } from '@ui/stores/LogStore';
 import { tierFor } from '@ui/tier';
@@ -39,7 +39,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     const [cursor, setCursor] = useState(INITIAL_CURSOR);
 
     const logBoxRef = useRef<DOMElement | null>(null);
-    const logBoxHeight = useMeasuredHeight(logBoxRef);
+    const logBox = useMeasuredBox(logBoxRef);
 
     const railRef = useRef<DOMElement | null>(null);
     const railWidth = useRailWidth(railRef, state.phase, rows, columns);
@@ -48,8 +48,12 @@ export function DevApp(props: DevAppProps): ReactElement {
     const notices = noticesOf(state);
 
     const logs = useLogs(enabled, enabledLevels);
-    const logRows = useMemo(() => expandRows(logs), [logs]);
-    const viewportHeight = Math.max(1, logBoxHeight);
+    // the label width only grows with a new entry, so the logs dep already covers it
+    const logRows = useMemo(
+        () => wrapRows(expandRows(logs), logBox.width, Math.max(1, LogStore.instance.getLabelWidth())),
+        [logs, logBox.width]
+    );
+    const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
     const uptimeMs = useUptime(state);
 
@@ -102,7 +106,7 @@ export function DevApp(props: DevAppProps): ReactElement {
                 logBoxRef={logBoxRef}
                 scroll={scroll}
                 viewportHeight={viewportHeight}
-                measured={logBoxHeight > 0}
+                measured={logBox.height > 0}
                 columns={columns}
                 enabled={enabled}
                 enabledLevels={enabledLevels}

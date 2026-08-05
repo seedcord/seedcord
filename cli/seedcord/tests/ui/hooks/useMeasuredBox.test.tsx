@@ -3,17 +3,17 @@ import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { useMeasuredHeight } from '@ui/hooks/useMeasuredHeight';
+import { useMeasuredBox } from '@ui/hooks/useMeasuredBox';
 
 import { settled } from '../settled';
 
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 
-// the readout renders outside the measured box, so it never changes the height it reports
+// the readout renders outside the box, so it cannot change the size it reports
 function Harness({ lines, mounted = true }: { readonly lines: number; readonly mounted?: boolean }): ReactElement {
     const boxRef = useRef<DOMElement | null>(null);
-    const height = useMeasuredHeight(boxRef);
+    const box = useMeasuredBox(boxRef);
 
     return (
         <Box flexDirection="column">
@@ -24,12 +24,14 @@ function Harness({ lines, mounted = true }: { readonly lines: number; readonly m
                     ))}
                 </Box>
             ) : null}
-            <Text>h:{height}</Text>
+            <Text>
+                h:{box.height} w:{box.width}
+            </Text>
         </Box>
     );
 }
 
-describe('useMeasuredHeight', () => {
+describe('useMeasuredBox', () => {
     it('holds 0 until the first measurement lands', async () => {
         const { lastFrame, unmount } = render(<Harness lines={3} mounted={false} />);
 
