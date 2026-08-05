@@ -11,6 +11,7 @@ import { COMPACT_ROWS, FULL_ROWS } from '@ui/tier';
 
 import { settled } from './settled';
 
+import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 import type { LogRecord } from '@seedcord/logger';
 import type { DevState } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
@@ -54,6 +55,12 @@ function httpState(): DevState {
     return store.getState();
 }
 const HTTP = httpState();
+
+function tunnelState(status: TunnelStatus): DevState {
+    const store = new DevStore();
+    store.setTunnel(status);
+    return store.getState();
+}
 
 // the readout renders outside the measured rail, so it never changes the size it reports
 function Harness({ filtersOpen, state }: { readonly filtersOpen: boolean; readonly state: DevState }): ReactElement {
@@ -153,6 +160,11 @@ describe('Sidebar', () => {
 
         expect(frame).toContain('4321');
         expect(frame).toContain('live');
+    });
+
+    it('trails the ellipsis only while the tunnel is still opening', () => {
+        expect(frameFor(HTTP)).not.toContain('live…');
+        expect(frameFor(tunnelState('resolving'))).toContain('resolving…');
     });
 
     it('leaves both rows out on a gateway run', () => {

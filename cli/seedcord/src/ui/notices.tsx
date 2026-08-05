@@ -6,6 +6,7 @@ import { QuitConfirmCard } from '@ui/components/QuitConfirmCard';
 import { RestartRequiredCard } from '@ui/components/RestartRequiredCard';
 import { TunnelOpeningCard } from '@ui/components/TunnelOpeningCard';
 
+import type { TunnelPhase, TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 import type { DevState } from '@ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
@@ -21,6 +22,10 @@ export interface Notice {
 }
 
 const RESTART = 'press r to restart';
+
+function openingPhase(status: TunnelStatus | null): TunnelPhase | null {
+    return status === null || status === 'live' || status === 'lost' ? null : status;
+}
 
 /** Every pending notice, ranked with the one that blocks a decision first. */
 export function noticesOf(state: DevState): readonly Notice[] {
@@ -53,12 +58,13 @@ export function noticesOf(state: DevState): readonly Notice[] {
         notices.push({ key: 'restart', summary: '', action: RESTART, card: <RestartRequiredCard /> });
     }
 
-    if (state.tunnel === 'opening') {
+    const phase = openingPhase(state.tunnel);
+    if (phase) {
         notices.push({
             key: 'tunnel',
             summary: 'Setting up your interactions endpoint',
             action: 'hold on',
-            card: <TunnelOpeningCard />
+            card: <TunnelOpeningCard phase={phase} />
         });
     }
 

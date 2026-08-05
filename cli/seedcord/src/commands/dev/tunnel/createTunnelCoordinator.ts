@@ -31,7 +31,8 @@ export function createTunnelCoordinator(
         return new TunnelCoordinator({
             makeTunnel: () => ({
                 // no answer here means your server is down or the url is wrong
-                open: async (signal) => {
+                open: async (signal, _port, onResolving) => {
+                    onResolving?.();
                     if (await awaitReachable(tunnel.url, deps, signal)) return tunnel.url;
                     throw new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, [tunnel.url, PROBE_SECONDS]);
                 },

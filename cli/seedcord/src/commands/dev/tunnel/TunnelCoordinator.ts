@@ -11,7 +11,8 @@ const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https 
 
 export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 
-export type TunnelStatus = 'opening' | 'live' | 'lost';
+export type TunnelPhase = 'opening' | 'resolving' | 'registering';
+export type TunnelStatus = TunnelPhase | 'live' | 'lost';
 
 export interface CoordinatorDeps {
     readonly makeTunnel: () => CoordinatorTunnel;
@@ -52,10 +53,11 @@ export class TunnelCoordinator {
         try {
             this.deps.onStatus('opening');
             this.deps.logger.info(`${opening(this.deps.kind)} ${paint.iris(String(port))}`);
-            const url = await tunnel.open(attempt.signal, port);
+            const url = await tunnel.open(attempt.signal, port, () => this.deps.onStatus('resolving'));
             if (superseded(attempt)) return;
             this.deps.logger.info(`Reachable at ${paint.sky.italic(url)} ${since()}`);
 
+            this.deps.onStatus('registering');
             patched = true;
             await this.deps.endpoint.set(url, attempt.signal);
             if (superseded(attempt)) return;
@@ -66,14 +68,17 @@ export class TunnelCoordinator {
             if (superseded(attempt)) return;
             // stop from attempting a patch because discord refuses a hostname it previously refused
             if (patched) attempt.abort();
-
-            // so the next restart on this port retries
-            this.target = undefined;
-            this.deps.onStatus(null);
-            this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
-            // pasting works exactly when the tunnel survived, which is the same condition as the abort above
-            if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
+            this.reportFailure(error, patched);
         }
+    }
+
+    private reportFailure(error: unknown, patched: boolean): void {
+        // so the next restart on this port retries
+        this.target = undefined;
+        this.deps.onStatus(null);
+        this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
+        // pasting works exactly when the tunnel survived, which is the same condition as the abort above
+        if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
     }
 
     public async stop(): Promise<void> {

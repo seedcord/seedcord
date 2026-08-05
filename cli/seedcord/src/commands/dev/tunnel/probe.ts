@@ -1,6 +1,6 @@
 const UNAUTHORIZED = 401;
 const POLL_INTERVAL_MS = 250;
-const BUDGET_MS = 25_000;
+const BUDGET_MS = 60_000;
 
 export const PROBE_SECONDS = BUDGET_MS / 1000;
 

@@ -265,15 +265,35 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledTimes(2);
     });
 
-    it('reports opening then live, and drops the status on stop', async () => {
+    it('walks the steps to live, and drops the status on stop', async () => {
         const onStatus = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ onStatus }));
 
         await coordinator.onPort(3000);
-        expect(onStatus.mock.calls.flat()).toEqual(['opening', 'live']);
+        expect(onStatus.mock.calls.flat()).toEqual(['opening', 'registering', 'live']);
 
         await coordinator.stop();
         expect(onStatus).toHaveBeenLastCalledWith(null);
+    });
+
+    it('reports resolving once the tunnel hands back its hostname', async () => {
+        const onStatus = vi.fn();
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: () => ({
+                    open: (_signal, port, onResolving) => {
+                        onResolving?.();
+                        return Promise.resolve(urlFor(port));
+                    },
+                    stop: () => undefined
+                }),
+                onStatus
+            })
+        );
+
+        await coordinator.onPort(3000);
+
+        expect(onStatus.mock.calls.flat()).toEqual(['opening', 'resolving', 'registering', 'live']);
     });
 
     it('drops the status when the setup fails', async () => {
@@ -287,7 +307,7 @@ describe('TunnelCoordinator', () => {
 
         await coordinator.onPort(3000);
 
-        expect(onStatus.mock.calls.flat()).toEqual(['opening', null]);
+        expect(onStatus.mock.calls.flat()).toEqual(['opening', 'registering', null]);
     });
 
     it('stop kills the tunnel and clears the endpoint', async () => {

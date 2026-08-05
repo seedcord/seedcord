@@ -12,6 +12,7 @@ import { FilterChips } from './FilterChips';
 import { FilterKeys, SessionKeys } from './Hotkeys';
 import { Rule } from './Rule';
 
+import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 import type { LogLevel } from '@seedcord/logger';
 import type { FilterCursor } from '@ui/filterCursor';
 import type { DevState } from '@ui/stores/DevStore';
@@ -46,6 +47,10 @@ function Meta({ label, value }: { label: string; value: string }): ReactElement 
     );
 }
 
+function tunnelValue(status: TunnelStatus): string {
+    return status === 'live' || status === 'lost' ? status : `${status}…`;
+}
+
 function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
     return (
         <Box flexDirection="column">
@@ -54,9 +59,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {/* only the http host reports a port */}
             {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
-            {state.tunnel === null ? null : (
-                <Meta label="tunnel" value={state.tunnel === 'opening' ? 'opening…' : state.tunnel} />
-            )}
+            {state.tunnel === null ? null : <Meta label="tunnel" value={tunnelValue(state.tunnel)} />}
             <Meta label="logs" value={LOG_DIR} />
         </Box>
     );
