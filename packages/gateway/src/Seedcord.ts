@@ -82,7 +82,8 @@ export class Seedcord extends Pluggable<'gateway', 'server'> implements Core, Se
 
     protected static override reset(): void {
         super.reset();
-        LoggerChannelRegistry.instance.reset();
+        // reset() would drop the dev TUI's log sink
+        LoggerChannelRegistry.instance.configure({});
     }
 
     private registerStartupTasks(): void {
