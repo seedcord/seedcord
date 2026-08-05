@@ -4,14 +4,15 @@ import { TunnelCoordinator } from '@commands/dev/tunnel/TunnelCoordinator';
 
 import { silentLogger } from '../silentLogger';
 
-import type { CoordinatorDeps } from '@commands/dev/tunnel/TunnelCoordinator';
+import type { CoordinatorDeps, CoordinatorTunnel } from '@commands/dev/tunnel/TunnelCoordinator';
+
+function urlFor(port: number): string {
+    return `https://p${String(port)}.trycloudflare.com`;
+}
 
 function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
     return {
-        tunnel: {
-            open: (port) => Promise.resolve(`https://p${String(port)}.trycloudflare.com`),
-            stop: () => undefined
-        },
+        makeTunnel: () => ({ open: (port) => Promise.resolve(urlFor(port)), stop: () => undefined }),
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve() },
         waitForRouting: () => Promise.resolve(),
         onUrl: () => undefined,
@@ -25,13 +26,13 @@ describe('TunnelCoordinator', () => {
         const order: string[] = [];
         const coordinator = new TunnelCoordinator(
             deps({
-                tunnel: {
+                makeTunnel: () => ({
                     open: (port) => {
                         order.push('open');
-                        return Promise.resolve(`https://p${String(port)}.trycloudflare.com`);
+                        return Promise.resolve(urlFor(port));
                     },
                     stop: () => undefined
-                },
+                }),
                 waitForRouting: () => {
                     order.push('wait');
                     return Promise.resolve();
@@ -57,12 +58,12 @@ describe('TunnelCoordinator', () => {
 
         await coordinator.onPort(4321);
 
-        expect(set).toHaveBeenCalledExactlyOnceWith('https://p4321.trycloudflare.com');
+        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321));
     });
 
     it('leaves the tunnel alone when the port is unchanged', async () => {
-        const open = vi.fn<CoordinatorDeps['tunnel']['open']>().mockResolvedValue('https://p3000.trycloudflare.com');
-        const coordinator = new TunnelCoordinator(deps({ tunnel: { open, stop: () => undefined } }));
+        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
+        const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop: () => undefined }) }));
 
         await coordinator.onPort(3000);
         await coordinator.onPort(3000);
@@ -71,9 +72,9 @@ describe('TunnelCoordinator', () => {
     });
 
     it('replaces the tunnel when a restart binds a different port', async () => {
-        const open = vi.fn<CoordinatorDeps['tunnel']['open']>().mockResolvedValue('https://p1.trycloudflare.com');
+        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(1));
         const stop = vi.fn();
-        const coordinator = new TunnelCoordinator(deps({ tunnel: { open, stop } }));
+        const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop }) }));
 
         await coordinator.onPort(3000);
         await coordinator.onPort(3001);
@@ -82,27 +83,72 @@ describe('TunnelCoordinator', () => {
         expect(open).toHaveBeenCalledTimes(2);
     });
 
-    it('warns and keeps the session running when the endpoint write fails', async () => {
-        const warn = vi.fn();
+    it('a superseded attempt stops its own tunnel and reports nothing', async () => {
+        const stopped: string[] = [];
+        const slow = Promise.withResolvers<string>();
+        const onUrl = vi.fn();
+        let made = 0;
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: () => {
+                    const label = `t${String(++made)}`;
+                    return {
+                        open: (port) => (label === 't1' ? slow.promise : Promise.resolve(urlFor(port))),
+                        stop: () => stopped.push(label)
+                    };
+                },
+                onUrl
+            })
+        );
+
+        const stale = coordinator.onPort(3000);
+        await coordinator.onPort(3001);
+        slow.resolve(urlFor(3000));
+        await stale;
+
+        expect(stopped).toEqual(['t1']);
+        expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3001));
+    });
+
+    it('stops a tunnel that opens after stop was called', async () => {
+        const stopped: string[] = [];
+        const slow = Promise.withResolvers<string>();
+        const coordinator = new TunnelCoordinator(
+            deps({ makeTunnel: () => ({ open: () => slow.promise, stop: () => stopped.push('t1') }) })
+        );
+
+        const opening = coordinator.onPort(3000);
+        await coordinator.stop();
+        slow.resolve(urlFor(3000));
+        await opening;
+
+        expect(stopped).toEqual(['t1']);
+    });
+
+    it('logs an error and keeps the session running when the endpoint write fails', async () => {
+        const error = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
                 endpoint: { set: () => Promise.reject(new Error('403')), clear: () => Promise.resolve() },
-                logger: { ...silentLogger, warn }
+                logger: { ...silentLogger, error }
             })
         );
 
         await expect(coordinator.onPort(3000)).resolves.toBeUndefined();
-        expect(warn).toHaveBeenCalledOnce();
+        expect(error).toHaveBeenCalledOnce();
     });
 
     it('retries the same port after a failure', async () => {
-        const open = vi.fn<CoordinatorDeps['tunnel']['open']>().mockResolvedValue('https://p3000.trycloudflare.com');
+        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
         const set = vi
             .fn<CoordinatorDeps['endpoint']['set']>()
             .mockRejectedValueOnce(new Error('403'))
             .mockResolvedValueOnce();
         const coordinator = new TunnelCoordinator(
-            deps({ tunnel: { open, stop: () => undefined }, endpoint: { set, clear: () => Promise.resolve() } })
+            deps({
+                makeTunnel: () => ({ open, stop: () => undefined }),
+                endpoint: { set, clear: () => Promise.resolve() }
+            })
         );
 
         await coordinator.onPort(3000);
@@ -116,7 +162,7 @@ describe('TunnelCoordinator', () => {
         const coordinator = new TunnelCoordinator(deps({ onUrl }));
 
         await coordinator.onPort(3000);
-        expect(onUrl).toHaveBeenCalledExactlyOnceWith('https://p3000.trycloudflare.com');
+        expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3000));
 
         await coordinator.stop();
         expect(onUrl).toHaveBeenLastCalledWith(null);
@@ -141,7 +187,7 @@ describe('TunnelCoordinator', () => {
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(
             deps({
-                tunnel: { open: () => Promise.resolve('https://p.trycloudflare.com'), stop },
+                makeTunnel: () => ({ open: () => Promise.resolve(urlFor(1)), stop }),
                 endpoint: { set: () => Promise.resolve(), clear }
             })
         );
@@ -172,7 +218,7 @@ describe('TunnelCoordinator', () => {
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(
             deps({
-                tunnel: { open: () => Promise.resolve('https://p.trycloudflare.com'), stop },
+                makeTunnel: () => ({ open: () => Promise.resolve(urlFor(1)), stop }),
                 endpoint: { set: () => Promise.resolve(), clear }
             })
         );
