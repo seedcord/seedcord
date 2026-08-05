@@ -61,7 +61,7 @@ export class TunnelCoordinator {
             if (superseded(attempt)) return;
 
             this.deps.onStatus('live');
-            this.deps.logger.info(`Interactions endpoint set ${since()}`);
+            this.deps.logger.info(`Interactions endpoint set on the dev dashboard ${since()}`);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
             // stop from attempting a patch because discord refuses a hostname it previously refused

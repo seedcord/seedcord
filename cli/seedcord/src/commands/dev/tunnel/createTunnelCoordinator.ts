@@ -1,10 +1,11 @@
-import { validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { findCloudflared, installHint, systemLookup } from './cloudflared';
 import { CloudflaredTunnel, systemTunnelDeps } from './CloudflaredTunnel';
 import { InteractionsEndpoint } from './InteractionsEndpoint';
-import { awaitReachable } from './probe';
+import { awaitReachable, PROBE_SECONDS } from './probe';
 import { TunnelCoordinator } from './TunnelCoordinator';
 
 import type { TunnelStatus } from './TunnelCoordinator';
@@ -29,9 +30,10 @@ export function createTunnelCoordinator(
     if (tunnel.mode === 'url') {
         return new TunnelCoordinator({
             makeTunnel: () => ({
+                // no answer here means your server is down or the url is wrong
                 open: async (signal) => {
-                    await awaitReachable(tunnel.url, deps, signal);
-                    return tunnel.url;
+                    if (await awaitReachable(tunnel.url, deps, signal)) return tunnel.url;
+                    throw new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, [tunnel.url, PROBE_SECONDS]);
                 },
                 // the forwarder is the user's process
                 stop: () => undefined

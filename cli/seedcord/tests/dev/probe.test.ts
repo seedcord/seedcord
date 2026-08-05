@@ -1,4 +1,3 @@
-import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
 import { awaitReachable } from '@commands/dev/tunnel/probe';
@@ -12,18 +11,11 @@ function deps(fetch: ProbeDeps['fetch']): ProbeDeps {
     return { fetch, wait: () => Promise.resolve() };
 }
 
-async function caught(promise: Promise<unknown>): Promise<unknown> {
-    return promise.then(
-        () => null,
-        (error: unknown) => error
-    );
-}
-
 describe('awaitReachable', () => {
     it('returns once an unsigned post is refused', async () => {
         const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 401 }));
 
-        await expect(awaitReachable(URL_UNDER_TEST, deps(fetch), RUNNING)).resolves.toBeUndefined();
+        await expect(awaitReachable(URL_UNDER_TEST, deps(fetch), RUNNING)).resolves.toBe(true);
         expect(fetch).toHaveBeenCalledOnce();
     });
 
@@ -58,12 +50,10 @@ describe('awaitReachable', () => {
         expect(fetch).toHaveBeenCalledTimes(2);
     });
 
-    it('throws when nothing answers as this bot', async () => {
+    it('reports false when nothing answers as this bot', async () => {
         const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 502 }));
 
-        const error = await caught(awaitReachable(URL_UNDER_TEST, deps(fetch), RUNNING));
-
-        expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUnreachable)).toBe(true);
+        await expect(awaitReachable(URL_UNDER_TEST, deps(fetch), RUNNING)).resolves.toBe(false);
     });
 
     it('stops polling once the attempt is aborted', async () => {

@@ -120,7 +120,8 @@ describe('CloudflaredTunnel', () => {
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
     });
 
-    it('throws when the hostname never answers as this bot', async () => {
+    // our resolver is not the one discord uses, so a silent probe still gets the url written
+    it('reports the url when the hostname never answers as this bot', async () => {
         const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
             url.startsWith('https://')
                 ? Promise.reject(new Error('ENOTFOUND'))
@@ -128,9 +129,7 @@ describe('CloudflaredTunnel', () => {
         );
         const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
 
-        const error = await caught(tunnel.open(RUNNING, 3000));
-
-        expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUnreachable)).toBe(true);
+        await expect(tunnel.open(RUNNING, 3000)).resolves.toBe('https://abc.trycloudflare.com');
     });
 
     it('gives up when cloudflared exits before reporting a hostname', async () => {

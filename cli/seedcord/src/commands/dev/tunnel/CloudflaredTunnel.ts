@@ -73,6 +73,7 @@ export class CloudflaredTunnel {
         const url = `https://${await this.readHostname(metricsPort, signal)}`;
         // the record lands ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
+        // our dns lagging says nothing about discord's, so the result only shortens the wait
         await awaitReachable(url, this.deps, signal);
         return url;
     }
