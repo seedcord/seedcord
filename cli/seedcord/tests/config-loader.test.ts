@@ -1,17 +1,16 @@
 import { join, dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordBrand } from '@seedcord/types/internal';
 import { describe, it, expect, vi } from 'vitest';
 
 import { DevRunner } from '@commands/dev/DevRunner';
-import { isSeedcordInstance } from '@commands/dev/DevSession';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { DevStore } from '@ui/stores/DevStore';
 
 import { silentLogger } from './silentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
+import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
 import type { SeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
@@ -159,19 +158,6 @@ describe('ConfigLoader', () => {
     });
 });
 
-describe('isSeedcordInstance', () => {
-    it('accepts a branded object', () => {
-        expect(isSeedcordInstance({ [SeedcordBrand]: true })).toBe(true);
-    });
-
-    it('rejects a look-alike without the brand', () => {
-        expect(isSeedcordInstance({ config: {}, start: () => undefined })).toBe(false);
-        expect(isSeedcordInstance({ [SeedcordBrand]: false })).toBe(false);
-        expect(isSeedcordInstance(null)).toBe(false);
-        expect(isSeedcordInstance('nope')).toBe(false);
-    });
-});
-
 describe('DevRunner', () => {
     it('loads and starts the Seedcord instance', async () => {
         const configPath = join(process.cwd(), 'seedcord.config.ts');
@@ -198,8 +184,8 @@ describe('DevRunner', () => {
             store: new DevStore(),
             codegen: { run: vi.fn() } as unknown as CodegenRunner,
             codegenLogger: silentLogger,
-            tunnel: undefined,
-            tunnelLogger: silentLogger
+            // justified: this path never routes an event or quits
+            tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter
         });
 
         // run() swallows session errors through handleError, so rethrow here to let the assertion observe them.

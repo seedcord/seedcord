@@ -41,14 +41,9 @@ export function systemTunnelDeps(): TunnelDeps {
 
 export class CloudflaredTunnel {
     private child: ChildProcess | undefined;
-    private hostname: string | undefined;
     private spawnError: Error | undefined;
 
     constructor(private readonly deps: TunnelDeps) {}
-
-    public get url(): string | undefined {
-        return this.hostname === undefined ? undefined : `https://${this.hostname}`;
-    }
 
     public async open(targetPort: number): Promise<string> {
         const metricsPort = await this.deps.freePort();
@@ -66,9 +61,7 @@ export class CloudflaredTunnel {
         });
         this.child = child;
 
-        const hostname = await this.readHostname(metricsPort);
-        this.hostname = hostname;
-        return `https://${hostname}`;
+        return `https://${await this.readHostname(metricsPort)}`;
     }
 
     public stop(): void {
@@ -76,7 +69,6 @@ export class CloudflaredTunnel {
         if (!child) return;
 
         this.child = undefined;
-        this.hostname = undefined;
         this.spawnError = undefined;
         child.kill('SIGTERM');
 

@@ -9,10 +9,9 @@ import { resetChannelColors } from '@ui/channelColor';
 
 import { DevSession } from './DevSession';
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
-import { createTunnelCoordinator, missingCloudflaredHint } from './tunnel/createTunnelCoordinator';
+import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
+import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { DevEvent } from './runtime/events';
-import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 import type { DevStore } from '@ui/stores/DevStore';
@@ -25,8 +24,7 @@ export interface DevRunnerDeps {
     readonly store: DevStore;
     readonly codegen: CodegenRunner;
     readonly codegenLogger: ILogger;
-    readonly tunnel: TunnelCoordinator | undefined;
-    readonly tunnelLogger: ILogger;
+    readonly tunnel: TunnelRouter;
 }
 
 /**
@@ -39,15 +37,13 @@ export class DevRunner {
     private isDisconnected = false;
     private isRunning = false;
     private isRegenerating = false;
-    private warnedMissingTunnel = false;
 
     private readonly locator: ConfigLocator;
     private readonly configLoader: ConfigLoader;
     private readonly store: DevStore;
     private readonly codegen: CodegenRunner;
     private readonly codegenLogger: ILogger;
-    private readonly tunnel: TunnelCoordinator | undefined;
-    private readonly tunnelLogger: ILogger;
+    private readonly tunnel: TunnelRouter;
 
     constructor(deps: DevRunnerDeps) {
         this.locator = deps.locator;
@@ -56,13 +52,15 @@ export class DevRunner {
         this.codegen = deps.codegen;
         this.codegenLogger = deps.codegenLogger;
         this.tunnel = deps.tunnel;
-        this.tunnelLogger = deps.tunnelLogger;
     }
 
     public static create(logger: Logger, store: DevStore): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const codegenLogger = new Logger('Codegen', { channel: 'cli' });
         const tunnelLogger = new Logger('Tunnel', { channel: 'cli' });
+        const coordinator = createTunnelCoordinator(tunnelLogger, (url) => {
+            store.setTunnelUrl(url);
+        });
 
         return new DevRunner({
             locator: new ConfigLocator(logger),
@@ -70,10 +68,7 @@ export class DevRunner {
             store,
             codegen: CodegenRunner.create(codegenLogger),
             codegenLogger,
-            tunnel: createTunnelCoordinator(tunnelLogger, (url) => {
-                store.setTunnelUrl(url);
-            }),
-            tunnelLogger
+            tunnel: new TunnelRouter(coordinator, tunnelLogger)
         });
     }
 
@@ -119,7 +114,7 @@ export class DevRunner {
         const config = await this.loadConfig();
         const runtime = new ViteDevRuntime();
         this.currentSession = new DevSession(config, runtime, this.store, (event) => {
-            this.routeToTunnel(config.tunnel, event);
+            this.tunnel.route(config.tunnel, event);
         });
 
         try {
@@ -147,22 +142,8 @@ export class DevRunner {
         this.store.setPhase('quitting');
         await this.currentSession?.stop();
         // the endpoint clear is a discord round trip, and process.exit follows this
-        await settleWithin(this.tunnel?.stop() ?? Promise.resolve(), TUNNEL_TEARDOWN_MS);
+        await settleWithin(this.tunnel.stop(), TUNNEL_TEARDOWN_MS);
         this.signalResolve?.();
-    }
-
-    // the http host is the only one that reports a port, so a gateway run never reaches the warn
-    public routeToTunnel(enabled: boolean, event: DevEvent): void {
-        if (event.type !== 'server-listening' || !enabled) return;
-
-        if (!this.tunnel) {
-            if (this.warnedMissingTunnel) return;
-            this.warnedMissingTunnel = true;
-            this.tunnelLogger.warn(missingCloudflaredHint(process.platform));
-            return;
-        }
-
-        void this.tunnel.onPort(event.port);
     }
 
     public async restart(): Promise<void> {
@@ -171,6 +152,7 @@ export class DevRunner {
         this.signalResolve?.();
     }
 
+    // the tunnel stays up here because a disconnect is a short parked state the user presses r out of
     public async disconnect(): Promise<void> {
         // Already parked in the disconnected wait, waking the signal here would fall through and start a
         // fresh session (i.e. behave like restart). No live session means nothing to disconnect.

@@ -15,7 +15,7 @@ import type { DevEventHandler } from './runtime/events';
 import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { DevStore } from '@ui/stores/DevStore';
 
-export function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
+function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
     return typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true;
 }
 
