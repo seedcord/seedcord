@@ -16,6 +16,7 @@ export class InteractionsEndpoint {
     }
 
     public async set(url: string): Promise<void> {
+        // justified: the discord api contract for this route
         const application = (await this.rest().get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
         if (application.interactions_endpoint_url === url) return;
 

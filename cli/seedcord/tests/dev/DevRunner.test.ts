@@ -39,9 +39,14 @@ describe('DevRunner quit', () => {
     });
 
     it('resolves when the teardown outlasts its budget', async () => {
+        vi.useFakeTimers();
         const runner = makeRunner({ run: vi.fn() }, fakeTunnel({ stop: () => new Promise(() => undefined) }));
 
-        await expect(runner.quit()).resolves.toBeUndefined();
+        const quitting = runner.quit();
+        await vi.advanceTimersByTimeAsync(3000);
+
+        await expect(quitting).resolves.toBeUndefined();
+        vi.useRealTimers();
     });
 });
 

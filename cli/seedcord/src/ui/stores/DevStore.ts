@@ -69,16 +69,25 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
     // Optimistic UI transitions: the user pressed r/d, so reset to a busy "reconnecting" state in one atomic
     // patch (one render) before the runner stops the session and starts the next one.
     public beginRestart(): void {
-        this.patch({ phase: 'starting', isBusy: true, restartRequired: false, error: null, status: 'Restarting…' });
+        this.patch({
+            phase: 'starting',
+            isBusy: true,
+            restartRequired: false,
+            error: null,
+            status: 'Restarting…',
+            port: null
+        });
     }
 
+    // the tunnel url survives here because one tunnel outlives the restart loop
     public beginDisconnect(): void {
         this.patch({
             phase: 'disconnected',
             isBusy: true,
             restartRequired: false,
             error: null,
-            status: 'Disconnecting…'
+            status: 'Disconnecting…',
+            port: null
         });
     }
 

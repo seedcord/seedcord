@@ -50,7 +50,7 @@ type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ?
  * The HTTP-interactions bot host, a long-running node server around the engine.
  *
  * Discovers handlers from `config.bot.interactions.path`, verifies and dispatches interactions on
- * `start(port)`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
+ * `start()`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
  * `createSeedcord` from a generated entry.
  */
 export class Seedcord<Cfg extends HttpConfig = HttpConfig>
@@ -120,7 +120,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(this);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
-        // edge types healthCheck never, and a dev run of an edge config still constructs this host
+        // a dev run of an edge config still builds this class, so the arm is checked at runtime too
         this.health = config.runtime === 'edge' ? undefined : new HealthResponder(config.healthCheck?.path);
 
         this.registerStartupTasks();

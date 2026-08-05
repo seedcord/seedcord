@@ -10,6 +10,7 @@ interface Written {
     body?: string;
 }
 
+// justified: the responder reads method and url and writes a status, headers, and a body
 function exchange(method: string, url: string): { req: IncomingMessage; res: ServerResponse; written: Written } {
     const written: Written = {};
     const req = { method, url } as unknown as IncomingMessage;
@@ -34,5 +35,25 @@ describe('HealthResponder', () => {
         expect(responder.tryRespond(req, res)).toBe(true);
         expect(written.status).toBe(200);
         expect(JSON.parse(written.body ?? '')).toMatchObject({ status: 'ok' });
+    });
+
+    it('answers on the configured path', () => {
+        const responder = new HealthResponder('/healthz');
+        const { req, res, written } = exchange('GET', '/healthz');
+
+        expect(responder.tryRespond(req, res)).toBe(true);
+        expect(written.status).toBe(200);
+    });
+
+    it.each([
+        ['a different path', 'GET', '/elsewhere'],
+        ['the default path once a custom one is set', 'GET', '/health'],
+        ['a POST to the health path', 'POST', '/healthz']
+    ])('writes nothing for %s', (_case, method, url) => {
+        const responder = new HealthResponder('/healthz');
+        const { req, res, written } = exchange(method, url);
+
+        expect(responder.tryRespond(req, res)).toBe(false);
+        expect(written.status).toBeUndefined();
     });
 });
