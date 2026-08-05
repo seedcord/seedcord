@@ -78,8 +78,9 @@ describe('TunnelCoordinator', () => {
         expect(order[0]).toBe('url');
     });
 
-    it('kills the tunnel when discord refuses the endpoint', async () => {
+    it('kills the tunnel when discord refuses the endpoint and points at a restart', async () => {
         const stop = vi.fn();
+        const info = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
                 makeTunnel: () => ({ open: (_signal, port) => Promise.resolve(urlFor(port)), stop }),
@@ -87,25 +88,29 @@ describe('TunnelCoordinator', () => {
                     set: () =>
                         Promise.reject(new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [urlFor(3000)])),
                     clear: () => Promise.resolve()
-                }
+                },
+                logger: { ...silentLogger, info }
             })
         );
 
         await coordinator.onPort(3000);
 
         expect(stop).toHaveBeenCalledOnce();
+        expect(info.mock.calls.at(-1)?.[0]).toContain('Restart');
     });
 
-    it('leaves the tunnel running when it never became reachable', async () => {
+    it('leaves the tunnel running when it never became reachable and offers the paste', async () => {
         const stop = vi.fn();
         const set = vi.fn<CoordinatorDeps['endpoint']['set']>().mockResolvedValue();
+        const info = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
                 makeTunnel: () => ({
                     open: () => Promise.reject(new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, ['x', 10])),
                     stop
                 }),
-                endpoint: { set, clear: () => Promise.resolve() }
+                endpoint: { set, clear: () => Promise.resolve() },
+                logger: { ...silentLogger, info }
             })
         );
 
@@ -113,6 +118,7 @@ describe('TunnelCoordinator', () => {
 
         expect(set).not.toHaveBeenCalled();
         expect(stop).not.toHaveBeenCalled();
+        expect(info.mock.calls.at(-1)?.[0]).toContain('pasting');
     });
 
     it('leaves a configured endpoint in place on stop', async () => {

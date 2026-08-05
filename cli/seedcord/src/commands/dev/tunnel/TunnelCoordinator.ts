@@ -6,8 +6,8 @@ import type { CloudflaredTunnel } from './CloudflaredTunnel';
 import type { InteractionsEndpoint } from './InteractionsEndpoint';
 import type { ILogger } from '@seedcord/types';
 
-const STABLE_URL_HINT =
-    'Try pasting that URL in the dashboard, or restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
+const PASTE_HINT = 'The tunnel is still up, so try pasting that URL into the dashboard.';
+const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
 
 export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 
@@ -63,7 +63,8 @@ export class TunnelCoordinator {
             this.target = undefined;
             this.deps.onUrl(null);
             this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
-            if (this.deps.kind === 'quick') this.deps.logger.info(STABLE_URL_HINT);
+            // pasting works exactly when the tunnel survived, which is the same condition as the abort above
+            if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
         }
     }
 
