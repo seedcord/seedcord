@@ -82,11 +82,11 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
     protected async runPhase(phase: TPhase): Promise<void> {
         const tasks = this.tasksMap.get(phase) ?? [];
         if (tasks.length === 0) {
-            this.logger.debug(`No tasks to run in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`);
+            this.logger.trace(`No tasks to run in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`);
             return;
         }
 
-        this.logger.info(
+        this.logger.debug(
             `${chalk.bold.yellow('Running')} ${this.getTaskType()} phase ${chalk.bold.magenta(this.phaseEnum[phase])} with ${chalk.bold.cyan(tasks.length)} tasks`
         );
 
@@ -98,29 +98,34 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
             throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
         }
 
-        this.logger.info(
+        this.logger.debug(
             `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
         );
     }
 
     protected async runTaskWithTimeout(phase: TPhase, task: LifecycleTask): Promise<void> {
-        this.logger.info(
+        this.logger.trace(
             `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
         );
 
         try {
             await withTimeout(task.name, task.task, task.timeout);
 
-            this.logger.info(
+            this.logger.trace(
                 `${chalk.italic('Completed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
             );
         } catch (error) {
+            if (this.isAborted()) return;
             this.logger.error(
                 `${chalk.italic('Failed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}:`,
                 error
             );
             throw error;
         }
+    }
+
+    protected isAborted(): boolean {
+        return false;
     }
 
     protected abstract canAddTask(): boolean;

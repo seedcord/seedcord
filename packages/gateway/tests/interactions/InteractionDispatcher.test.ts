@@ -960,14 +960,14 @@ describe('InteractionDispatcher Integration', () => {
             fire?.(fakeSlash('ping'));
 
             vi.useFakeTimers();
-            const infos = vi.spyOn(Logger.prototype, 'info');
+            const debugs = vi.spyOn(Logger.prototype, 'debug');
             const errors = vi.spyOn(Logger.prototype, 'error');
             const run = seedcord.shutdown.run(0, false);
             await vi.advanceTimersByTimeAsync(10_000);
             await run;
             vi.useRealTimers();
 
-            const finished = infos.mock.calls.some(
+            const finished = debugs.mock.calls.some(
                 ([msg]) => String(msg).includes('Drain') && String(msg).includes('completed successfully')
             );
             expect(finished).toBe(true);
