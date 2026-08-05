@@ -1,4 +1,5 @@
-import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
 
 const BINARY = 'cloudflared';
 const DOWNLOADS = 'https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/';
@@ -9,6 +10,16 @@ export interface PathLookup {
     readonly platform: NodeJS.Platform;
     readonly delimiter: string;
     readonly exists: (candidate: string) => boolean;
+}
+
+export function systemLookup(): PathLookup {
+    return {
+        pathVar: process.env.PATH,
+        pathExt: process.env.PATHEXT,
+        platform: process.platform,
+        delimiter,
+        exists: existsSync
+    };
 }
 
 export function findCloudflared(lookup: PathLookup): string | undefined {

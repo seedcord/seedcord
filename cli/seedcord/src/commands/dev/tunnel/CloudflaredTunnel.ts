@@ -29,20 +29,20 @@ function freePort(): Promise<number> {
     });
 }
 
+export function systemTunnelDeps(): TunnelDeps {
+    return {
+        spawn: (command, args) => spawn(command, args, { stdio: 'ignore' }),
+        fetch: (url) => fetch(url),
+        freePort,
+        wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+    };
+}
+
 export class CloudflaredTunnel {
     private child: ChildProcess | undefined;
     private hostname: string | undefined;
 
     constructor(private readonly deps: TunnelDeps) {}
-
-    public static create(): CloudflaredTunnel {
-        return new CloudflaredTunnel({
-            spawn: (command, args) => spawn(command, args, { stdio: 'ignore' }),
-            fetch: (url) => fetch(url),
-            freePort,
-            wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-        });
-    }
 
     public get url(): string | undefined {
         return this.hostname === undefined ? undefined : `https://${this.hostname}`;

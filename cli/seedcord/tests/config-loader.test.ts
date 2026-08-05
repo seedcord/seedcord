@@ -4,7 +4,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { describe, it, expect, vi } from 'vitest';
 
-import { DevRunner, isSeedcordInstance } from '@commands/dev/DevRunner';
+import { DevRunner } from '@commands/dev/DevRunner';
+import { isSeedcordInstance } from '@commands/dev/DevSession';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { DevStore } from '@ui/stores/DevStore';
 
@@ -191,13 +192,15 @@ describe('DevRunner', () => {
         };
 
         // locator and configLoader are the only doubles exercised here, codegen runs on refresh only.
-        const runner = new DevRunner(
-            locator as unknown as ConfigLocator,
-            configLoader as unknown as ConfigLoader,
-            new DevStore(),
-            { run: vi.fn() } as unknown as CodegenRunner,
-            silentLogger
-        );
+        const runner = new DevRunner({
+            locator: locator as unknown as ConfigLocator,
+            configLoader: configLoader as unknown as ConfigLoader,
+            store: new DevStore(),
+            codegen: { run: vi.fn() } as unknown as CodegenRunner,
+            codegenLogger: silentLogger,
+            tunnel: undefined,
+            tunnelLogger: silentLogger
+        });
 
         // run() swallows session errors through handleError, so rethrow here to let the assertion observe them.
         // @ts-expect-error accessing private method
