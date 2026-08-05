@@ -25,7 +25,7 @@ export class TunnelRouter {
             if (!this.coordinator) this.logger.warn(missingCloudflaredHint(process.platform));
         }
 
-        void this.coordinator?.onPort(event.port);
+        void this.coordinator?.onPort(event.port, event.healthPath);
     }
 
     public stop(): Promise<void> {

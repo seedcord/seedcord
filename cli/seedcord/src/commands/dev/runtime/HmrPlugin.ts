@@ -64,7 +64,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         });
 
         this.dev?.on('seedcord:server-listening', (data) => {
-            this.emit('event', { type: 'server-listening', port: data.port });
+            this.emit('event', { type: 'server-listening', port: data.port, healthPath: data.healthPath });
         });
 
         this.dev?.on('seedcord:register-critical-files', (data) => {

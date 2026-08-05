@@ -25,7 +25,7 @@ export class ConfiguredUrl {
         private readonly deps: ProbeDeps
     ) {}
 
-    public async open(port: number, signal: AbortSignal): Promise<string> {
+    public async open(signal: AbortSignal): Promise<string> {
         for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt++) {
             signal.throwIfAborted();
             if (await refused(this.url, this.deps, signal)) return this.url;
@@ -34,7 +34,6 @@ export class ConfiguredUrl {
 
         throw new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, [
             this.url,
-            port,
             (POLL_ATTEMPTS * POLL_INTERVAL_MS) / 1000
         ]);
     }

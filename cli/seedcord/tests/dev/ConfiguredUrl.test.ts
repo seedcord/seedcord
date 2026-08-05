@@ -16,7 +16,7 @@ describe('ConfiguredUrl', () => {
     it('returns the url once an unsigned post is refused', async () => {
         const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 401 }));
 
-        await expect(new ConfiguredUrl(CONFIGURED, deps(fetch)).open(3000, RUNNING)).resolves.toBe(CONFIGURED);
+        await expect(new ConfiguredUrl(CONFIGURED, deps(fetch)).open(RUNNING)).resolves.toBe(CONFIGURED);
         expect(fetch).toHaveBeenCalledExactlyOnceWith(CONFIGURED, { method: 'POST', signal: RUNNING });
     });
 
@@ -26,14 +26,14 @@ describe('ConfiguredUrl', () => {
             .mockRejectedValueOnce(new Error('ECONNREFUSED'))
             .mockResolvedValueOnce(new Response(null, { status: 401 }));
 
-        await expect(new ConfiguredUrl(CONFIGURED, deps(fetch)).open(3000, RUNNING)).resolves.toBe(CONFIGURED);
+        await expect(new ConfiguredUrl(CONFIGURED, deps(fetch)).open(RUNNING)).resolves.toBe(CONFIGURED);
         expect(fetch).toHaveBeenCalledTimes(2);
     });
 
     it('throws when nothing answers as this bot', async () => {
         const fetch = vi.fn<ProbeDeps['fetch']>().mockResolvedValue(new Response(null, { status: 502 }));
 
-        const error: unknown = await new ConfiguredUrl(CONFIGURED, deps(fetch)).open(3000, RUNNING).then(
+        const error: unknown = await new ConfiguredUrl(CONFIGURED, deps(fetch)).open(RUNNING).then(
             () => null,
             (caught: unknown) => caught
         );
@@ -48,7 +48,7 @@ describe('ConfiguredUrl', () => {
             return Promise.reject(new Error('ECONNREFUSED'));
         });
 
-        await expect(new ConfiguredUrl(CONFIGURED, deps(fetch)).open(3000, attempt.signal)).rejects.toThrow();
+        await expect(new ConfiguredUrl(CONFIGURED, deps(fetch)).open(attempt.signal)).rejects.toThrow();
         expect(fetch).toHaveBeenCalledOnce();
     });
 });

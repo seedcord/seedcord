@@ -7,8 +7,7 @@ import type { CloudflaredTunnel } from './CloudflaredTunnel';
 import type { InteractionsEndpoint } from './InteractionsEndpoint';
 import type { ILogger } from '@seedcord/types';
 
-const STABLE_URL_HINT =
-    'The tunnel is still running, so paste that URL into the dashboard by hand. Setting `tunnel` to a stable https URL in seedcord.config.ts avoids this.';
+const STABLE_URL_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https URL you already serve.';
 
 interface Published {
     readonly url: string;
@@ -37,7 +36,7 @@ export class TunnelCoordinator {
 
     constructor(private readonly deps: CoordinatorDeps) {}
 
-    public async onPort(port: number): Promise<void> {
+    public async onPort(port: number, healthPath: string | undefined): Promise<void> {
         if (this.target === port) return;
 
         this.target = port;
@@ -46,7 +45,7 @@ export class TunnelCoordinator {
         const since = (): string => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
 
         try {
-            const published = await this.publish(port, attempt, since);
+            const published = await this.publish(port, healthPath, attempt, since);
             if (published === undefined) return;
 
             this.deps.onUrl(published.url);
@@ -89,12 +88,17 @@ export class TunnelCoordinator {
         }
     }
 
-    private async publish(port: number, attempt: AbortController, since: () => string): Promise<Published | undefined> {
+    private async publish(
+        port: number,
+        healthPath: string | undefined,
+        attempt: AbortController,
+        since: () => string
+    ): Promise<Published | undefined> {
         const tunnel = this.deps.makeTunnel();
         // a later onPort holds no handle on this tunnel, so abort contains the stop
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
 
-        const url = await tunnel.open(port, attempt.signal);
+        const url = await tunnel.open(attempt.signal, port, healthPath);
         if (superseded(attempt)) return undefined;
         this.deps.logger.info(`Reachable at ${paint.sky.italic(url)} ${since()}`);
 

@@ -49,7 +49,7 @@ function httpState(): DevState {
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
-    store.apply({ type: 'server-listening', port: 4321 });
+    store.apply({ type: 'server-listening', port: 4321, healthPath: '/health' });
     store.setTunnelUrl('https://abc-def-ghi.trycloudflare.com');
     return store.getState();
 }

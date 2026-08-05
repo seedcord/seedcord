@@ -46,21 +46,21 @@ describe('DevSession', () => {
         const seen: DevEvent[] = [];
         const session = new DevSession(
             config(),
-            runtime({}, { type: 'server-listening', port: 4321 }),
+            runtime({}, { type: 'server-listening', port: 4321, healthPath: '/health' }),
             new DevStore(),
             (event) => seen.push(event)
         );
 
         await settle(session, session.start());
 
-        expect(seen).toContainEqual({ type: 'server-listening', port: 4321 });
+        expect(seen).toContainEqual({ type: 'server-listening', port: 4321, healthPath: '/health' });
     });
 
     it('applies the event to the store too', async () => {
         const store = new DevStore();
         const session = new DevSession(
             config(),
-            runtime({}, { type: 'server-listening', port: 4321 }),
+            runtime({}, { type: 'server-listening', port: 4321, healthPath: '/health' }),
             store,
             () => undefined
         );

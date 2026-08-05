@@ -14,7 +14,10 @@ function urlFor(port: number): string {
 
 function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
     return {
-        makeTunnel: () => ({ open: (port) => Promise.resolve(urlFor(port)), stop: () => undefined }),
+        makeTunnel: () => ({
+            open: (_signal, port) => Promise.resolve(urlFor(port)),
+            stop: () => undefined
+        }),
         kind: 'quick',
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve() },
         onUrl: () => undefined,
@@ -29,7 +32,7 @@ describe('TunnelCoordinator', () => {
         const coordinator = new TunnelCoordinator(
             deps({
                 makeTunnel: () => ({
-                    open: (port) => {
+                    open: (_signal, port) => {
                         order.push('open');
                         return Promise.resolve(urlFor(port));
                     },
@@ -45,7 +48,7 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         expect(order).toEqual(['open', 'set']);
     });
@@ -70,7 +73,7 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         expect(order[0]).toBe('url');
     });
@@ -80,7 +83,7 @@ describe('TunnelCoordinator', () => {
         const onUrl = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
-                makeTunnel: () => ({ open: (port) => Promise.resolve(urlFor(port)), stop }),
+                makeTunnel: () => ({ open: (_signal, port) => Promise.resolve(urlFor(port)), stop }),
                 endpoint: {
                     set: () =>
                         Promise.reject(new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [urlFor(3000)])),
@@ -90,7 +93,7 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         expect(stop).not.toHaveBeenCalled();
         expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3000));
@@ -101,7 +104,7 @@ describe('TunnelCoordinator', () => {
         const coordinator = new TunnelCoordinator(
             deps({ kind: 'configured', endpoint: { set: () => Promise.resolve(), clear } })
         );
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         await coordinator.stop();
 
@@ -112,7 +115,7 @@ describe('TunnelCoordinator', () => {
         const set = vi.fn<CoordinatorDeps['endpoint']['set']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(deps({ endpoint: { set, clear: () => Promise.resolve() } }));
 
-        await coordinator.onPort(4321);
+        await coordinator.onPort(4321, '/health');
 
         expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal));
     });
@@ -121,8 +124,8 @@ describe('TunnelCoordinator', () => {
         const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
         const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop: () => undefined }) }));
 
-        await coordinator.onPort(3000);
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
+        await coordinator.onPort(3000, '/health');
 
         expect(open).toHaveBeenCalledOnce();
     });
@@ -132,8 +135,8 @@ describe('TunnelCoordinator', () => {
         const stop = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ makeTunnel: () => ({ open, stop }) }));
 
-        await coordinator.onPort(3000);
-        await coordinator.onPort(3001);
+        await coordinator.onPort(3000, '/health');
+        await coordinator.onPort(3001, '/health');
 
         expect(stop).toHaveBeenCalledOnce();
         expect(open).toHaveBeenCalledTimes(2);
@@ -148,15 +151,15 @@ describe('TunnelCoordinator', () => {
                 makeTunnel: () => {
                     const label = `t${String(++made)}`;
                     return {
-                        open: (port) => (label === 't1' ? slow.promise : Promise.resolve(urlFor(port))),
+                        open: (_signal, port) => (label === 't1' ? slow.promise : Promise.resolve(urlFor(port))),
                         stop: () => stopped.push(label)
                     };
                 }
             })
         );
 
-        const stale = coordinator.onPort(3000);
-        await coordinator.onPort(3001);
+        const stale = coordinator.onPort(3000, '/health');
+        await coordinator.onPort(3001, '/health');
 
         expect(stopped).toEqual(['t1']);
 
@@ -174,7 +177,7 @@ describe('TunnelCoordinator', () => {
                 makeTunnel: () => {
                     const label = `t${String(++made)}`;
                     return {
-                        open: (port) => (label === 't1' ? slow.promise : Promise.resolve(urlFor(port))),
+                        open: (_signal, port) => (label === 't1' ? slow.promise : Promise.resolve(urlFor(port))),
                         stop: () => stopped.push(label)
                     };
                 },
@@ -182,8 +185,8 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        const stale = coordinator.onPort(3000);
-        await coordinator.onPort(3001);
+        const stale = coordinator.onPort(3000, '/health');
+        await coordinator.onPort(3001, '/health');
         slow.resolve(urlFor(3000));
         await stale;
 
@@ -198,7 +201,7 @@ describe('TunnelCoordinator', () => {
             deps({ makeTunnel: () => ({ open: () => slow.promise, stop: () => stopped.push('t1') }) })
         );
 
-        const opening = coordinator.onPort(3000);
+        const opening = coordinator.onPort(3000, '/health');
         await coordinator.stop();
         slow.resolve(urlFor(3000));
         await opening;
@@ -215,7 +218,7 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        await expect(coordinator.onPort(3000)).resolves.toBeUndefined();
+        await expect(coordinator.onPort(3000, '/health')).resolves.toBeUndefined();
         expect(error).toHaveBeenCalledOnce();
     });
 
@@ -232,8 +235,8 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        await coordinator.onPort(3000);
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
+        await coordinator.onPort(3000, '/health');
 
         expect(open).toHaveBeenCalledTimes(2);
     });
@@ -242,7 +245,7 @@ describe('TunnelCoordinator', () => {
         const onUrl = vi.fn();
         const coordinator = new TunnelCoordinator(deps({ onUrl }));
 
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
         expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3000));
 
         await coordinator.stop();
@@ -258,7 +261,7 @@ describe('TunnelCoordinator', () => {
             })
         );
 
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         expect(onUrl).toHaveBeenCalledExactlyOnceWith(null);
     });
@@ -272,7 +275,7 @@ describe('TunnelCoordinator', () => {
                 endpoint: { set: () => Promise.resolve(), clear }
             })
         );
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         await coordinator.stop();
 
@@ -288,7 +291,7 @@ describe('TunnelCoordinator', () => {
                 logger: { ...silentLogger, warn }
             })
         );
-        await coordinator.onPort(3000);
+        await coordinator.onPort(3000, '/health');
 
         await expect(coordinator.stop()).resolves.toBeUndefined();
         expect(warn).toHaveBeenCalledOnce();

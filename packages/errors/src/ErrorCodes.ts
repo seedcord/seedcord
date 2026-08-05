@@ -249,6 +249,6 @@ export enum SeedcordErrorCode {
     CliTunnelUrlUnavailable = 3133,
     /** Discord rejected the tunnel URL as an interactions endpoint. */
     CliTunnelNotVerified = 3134,
-    /** The configured tunnel URL never answered a probe. */
+    /** The tunnel URL never answered its health probe. */
     CliTunnelUnreachable = 3135
 }
