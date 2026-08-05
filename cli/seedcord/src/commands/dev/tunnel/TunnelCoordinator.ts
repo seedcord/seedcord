@@ -25,6 +25,10 @@ function superseded(attempt: AbortController): boolean {
     return attempt.signal.aborted;
 }
 
+function opening(kind: CoordinatorDeps['kind']): string {
+    return kind === 'quick' ? 'Requesting a cloudflared tunnel to port' : 'Checking if your tunnel reaches port';
+}
+
 export class TunnelCoordinator {
     private target: number | undefined;
     private current: AbortController | undefined;
@@ -44,6 +48,7 @@ export class TunnelCoordinator {
         let patched = false;
 
         try {
+            this.deps.logger.info(`${opening(this.deps.kind)} ${paint.iris(String(port))}`);
             const url = await tunnel.open(attempt.signal, port);
             if (superseded(attempt)) return;
             this.deps.logger.info(`Reachable at ${paint.sky.italic(url)} ${since()}`);

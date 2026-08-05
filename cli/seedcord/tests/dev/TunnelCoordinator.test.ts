@@ -53,6 +53,15 @@ describe('TunnelCoordinator', () => {
         expect(order).toEqual(['open', 'set']);
     });
 
+    it('names the port it is opening before the wait starts', async () => {
+        const info = vi.fn();
+        const coordinator = new TunnelCoordinator(deps({ logger: { ...silentLogger, info } }));
+
+        await coordinator.onPort(4321);
+
+        expect(info.mock.calls[0]?.[0]).toContain('4321');
+    });
+
     it('logs the tunnel url before the endpoint write', async () => {
         const order: string[] = [];
         const coordinator = new TunnelCoordinator(
