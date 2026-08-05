@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '@commands/dev/DevRunner';
 import { DevStore } from '@ui/stores/DevStore';
@@ -29,6 +29,11 @@ function fakeTunnel(overrides: Partial<TunnelRouter> = {}): TunnelRouter {
 }
 
 describe('DevRunner quit', () => {
+    // a failing assertion under fake timers would otherwise leave them faked for the next test
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     it('tears the tunnel down', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
         const runner = makeRunner({ run: vi.fn() }, fakeTunnel({ stop }));
@@ -36,6 +41,30 @@ describe('DevRunner quit', () => {
         await runner.quit();
 
         expect(stop).toHaveBeenCalledOnce();
+    });
+
+    it('holds the run loop open until the teardown settles', async () => {
+        vi.useFakeTimers();
+        const order: string[] = [];
+        const runner = makeRunner(
+            { run: vi.fn() },
+            fakeTunnel({
+                stop: () =>
+                    new Promise<void>((resolve) => {
+                        setTimeout(() => {
+                            order.push('teardown');
+                            resolve();
+                        }, 100);
+                    })
+            })
+        );
+
+        void runner.quit();
+        const running = runner.run().then(() => order.push('run'));
+        await vi.advanceTimersByTimeAsync(100);
+        await running;
+
+        expect(order).toStrictEqual(['teardown', 'run']);
     });
 
     it('resolves when the teardown outlasts its budget', async () => {
@@ -46,7 +75,6 @@ describe('DevRunner quit', () => {
         await vi.advanceTimersByTimeAsync(3000);
 
         await expect(quitting).resolves.toBeUndefined();
-        vi.useRealTimers();
     });
 });
 

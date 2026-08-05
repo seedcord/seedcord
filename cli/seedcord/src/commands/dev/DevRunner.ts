@@ -34,6 +34,7 @@ export class DevRunner {
     private currentSession: DevSession | null = null;
     private signalResolve?: () => void;
     private shouldQuit = false;
+    private quitting?: Promise<void>;
     private isDisconnected = false;
     private isRunning = false;
     private isRegenerating = false;
@@ -93,6 +94,7 @@ export class DevRunner {
             }
         } finally {
             this.isRunning = false;
+            await this.quitting; // process.exit follows run() resolving
         }
     }
 
@@ -137,11 +139,17 @@ export class DevRunner {
         this.store.setBusy(true);
     }
 
+    // every caller drops this promise, so run() awaits it
     public async quit(): Promise<void> {
+        this.quitting ??= this.runQuit();
+        return this.quitting;
+    }
+
+    private async runQuit(): Promise<void> {
         this.shouldQuit = true;
         this.store.setPhase('quitting');
         await this.currentSession?.stop();
-        // the endpoint clear is a discord round trip, and process.exit follows this
+        // the endpoint clear is a discord round trip
         await settleWithin(this.tunnel.stop(), TUNNEL_TEARDOWN_MS);
         this.signalResolve?.();
     }
