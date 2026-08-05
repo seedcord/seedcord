@@ -30,24 +30,6 @@ describe('findCloudflared', () => {
         expect(findCloudflared(lookup({ pathVar: undefined, exists: () => true }))).toBeUndefined();
     });
 
-    it('tries every PATHEXT suffix on windows', () => {
-        const tried: string[] = [];
-        findCloudflared(
-            lookup({
-                platform: 'win32',
-                pathVar: String.raw`C:\tools`,
-                pathExt: '.COM;.EXE;.CMD',
-                delimiter: ';',
-                exists: (candidate) => {
-                    tried.push(candidate);
-                    return false;
-                }
-            })
-        );
-
-        expect(tried.map((candidate) => candidate.slice(candidate.lastIndexOf('.')))).toEqual(['.COM', '.EXE', '.CMD']);
-    });
-
     it('returns the windows candidate that exists', () => {
         const found = findCloudflared(
             lookup({

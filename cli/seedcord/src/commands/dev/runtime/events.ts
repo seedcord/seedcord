@@ -7,6 +7,6 @@ export type DevEvent =
     | { type: 'restart-required' }
     | { type: 'ready' }
     | { type: 'command-update-prompt'; files: string[] }
-    | { type: 'server-listening'; port: number; healthPath: string | undefined };
+    | { type: 'server-listening'; port: number };
 
 export type DevEventHandler = (event: DevEvent) => void;

@@ -53,6 +53,6 @@ describe('http dev channel', () => {
         live = host;
         await host.start();
 
-        expect(sent).toContainEqual(['seedcord:server-listening', { port: host.port, healthPath: '/health' }]);
+        expect(sent).toContainEqual(['seedcord:server-listening', { port: host.port }]);
     });
 });

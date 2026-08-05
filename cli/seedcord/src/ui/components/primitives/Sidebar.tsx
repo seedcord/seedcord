@@ -38,7 +38,7 @@ interface SidebarProps {
 }
 
 function hostOf(url: string): string {
-    return url.replace(/^https:\/\//, '');
+    return new URL(url).host;
 }
 
 function Meta({ label, value }: { label: string; value: string }): ReactElement {

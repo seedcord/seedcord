@@ -8,7 +8,6 @@ import {
     CommandRegistry,
     CoordinatedShutdown,
     CoordinatedStartup,
-    HealthResponder,
     Pluggable,
     ShutdownPhase,
     StartupPhase,
@@ -81,7 +80,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private appId?: string;
     private appIdPromise?: Promise<string>;
     private readonly emojiInjector = new EmojiInjector(this, () => this.applicationId());
-    private readonly health?: HealthResponder | undefined;
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
 
@@ -120,8 +118,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(this);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
-        // a dev run of an edge config still builds this class, so the arm is checked at runtime too
-        this.health = config.runtime === 'edge' ? undefined : new HealthResponder(config.healthCheck?.path);
 
         this.registerStartupTasks();
     }
@@ -234,8 +230,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         const { handle, inFlight } = buildEngine(this, maps);
 
         const server = createServer((incoming, outgoing) => {
-            if (this.health?.tryRespond(incoming, outgoing)) return;
-
             void (async () => {
                 const response = await handle(await toWebRequest(incoming));
                 await writeWebResponse(response, outgoing);
@@ -250,12 +244,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         this.boundPort = (server.address() as AddressInfo).port;
-        const health = this.health ? `, health on ${paint.sky(this.health.path)}` : '';
-        this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}${health}`);
-        getDevChannel()?.send('seedcord:server-listening', {
-            port: this.boundPort,
-            healthPath: this.health?.path
-        });
+        this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}`);
+        getDevChannel()?.send('seedcord:server-listening', { port: this.boundPort });
 
         this.shutdown.addTask(
             ShutdownPhase.Unbind,

@@ -4,20 +4,19 @@ import { createServer } from 'node:net';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import { awaitReachable } from './probe';
+
+import type { ProbeDeps } from './probe';
 import type { ChildProcess } from 'node:child_process';
 
 const POLL_INTERVAL_MS = 250;
 const HOSTNAME_ATTEMPTS = 240;
 const SETTLE_MS = 4000;
-const HEALTH_BUDGET_MS = 10_000;
-const HEALTH_ATTEMPTS = HEALTH_BUDGET_MS / POLL_INTERVAL_MS;
 const GRACEFUL_EXIT_MS = 2000;
 
-export interface TunnelDeps {
+export interface TunnelDeps extends ProbeDeps {
     spawn: (command: string, args: string[]) => ChildProcess;
-    fetch: (url: string, init?: RequestInit) => Promise<Response>;
     freePort: () => Promise<number>;
-    wait: (ms: number) => Promise<void>;
 }
 
 function freePort(): Promise<number> {
@@ -50,7 +49,7 @@ export class CloudflaredTunnel {
         private readonly binary: string
     ) {}
 
-    public async open(signal: AbortSignal, targetPort: number, healthPath?: string): Promise<string> {
+    public async open(signal: AbortSignal, targetPort: number): Promise<string> {
         const metricsPort = await this.deps.freePort();
 
         const child = this.deps.spawn(this.binary, [
@@ -74,7 +73,7 @@ export class CloudflaredTunnel {
         const url = `https://${await this.readHostname(metricsPort, signal)}`;
         // the record lands ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
-        if (healthPath !== undefined) await this.awaitHealth(`${url}${healthPath}`, signal);
+        await awaitReachable(url, this.deps, signal);
         return url;
     }
 
@@ -108,25 +107,6 @@ export class CloudflaredTunnel {
             [(HOSTNAME_ATTEMPTS * POLL_INTERVAL_MS) / 1000],
             { cause }
         );
-    }
-
-    // one budget shared by every request, so a slow answer still gets the time left in it
-    private async awaitHealth(probe: string, signal: AbortSignal): Promise<void> {
-        const budget = AbortSignal.any([signal, AbortSignal.timeout(HEALTH_BUDGET_MS)]);
-
-        for (let attempt = 0; attempt < HEALTH_ATTEMPTS && !this.failure; attempt++) {
-            try {
-                const response = await this.deps.fetch(probe, { signal: budget });
-                if (response.ok) return;
-            } catch {
-                signal.throwIfAborted();
-            }
-            await this.deps.wait(POLL_INTERVAL_MS);
-        }
-
-        throw new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, [probe, HEALTH_BUDGET_MS / 1000], {
-            cause: this.failure
-        });
     }
 
     private async pollOnce(metricsPort: number, signal: AbortSignal): Promise<string | undefined> {

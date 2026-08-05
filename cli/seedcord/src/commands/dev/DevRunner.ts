@@ -37,21 +37,7 @@ export class DevRunner {
     private isRunning = false;
     private isRegenerating = false;
 
-    private readonly locator: ConfigLocator;
-    private readonly configLoader: ConfigLoader;
-    private readonly store: DevStore;
-    private readonly codegen: CodegenRunner;
-    private readonly codegenLogger: ILogger;
-    private readonly tunnel: TunnelRouter;
-
-    constructor(deps: DevRunnerDeps) {
-        this.locator = deps.locator;
-        this.configLoader = deps.configLoader;
-        this.store = deps.store;
-        this.codegen = deps.codegen;
-        this.codegenLogger = deps.codegenLogger;
-        this.tunnel = deps.tunnel;
-    }
+    constructor(private readonly deps: DevRunnerDeps) {}
 
     public static create(logger: Logger, store: DevStore): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
@@ -96,11 +82,11 @@ export class DevRunner {
     }
 
     private async handleDisconnected(): Promise<void> {
-        this.store.setPhase('disconnected');
-        this.store.setStatus('Disconnected. Press r to restart.');
-        this.store.setBusy(false);
+        this.deps.store.setPhase('disconnected');
+        this.deps.store.setStatus('Disconnected. Press r to restart.');
+        this.deps.store.setBusy(false);
         await this.waitForSignal();
-        this.store.setBusy(true);
+        this.deps.store.setBusy(true);
         if (!this.shouldQuit) {
             this.isDisconnected = false;
         }
@@ -108,32 +94,32 @@ export class DevRunner {
 
     private async runSession(): Promise<void> {
         resetChannelColors();
-        this.store.setPhase('starting');
-        this.store.setBusy(true);
+        this.deps.store.setPhase('starting');
+        this.deps.store.setBusy(true);
         const config = await this.loadConfig();
         const runtime = new ViteDevRuntime();
-        this.currentSession = new DevSession(config, runtime, this.store, (event) => {
-            this.tunnel.route(config.tunnel, event);
+        this.currentSession = new DevSession(config, runtime, this.deps.store, (event) => {
+            this.deps.tunnel.route(config.tunnel, event);
         });
 
         try {
             await this.currentSession.start(() => {
-                this.store.setBusy(false);
+                this.deps.store.setBusy(false);
             });
         } finally {
-            this.store.setBusy(true);
+            this.deps.store.setBusy(true);
             await this.currentSession.dispose();
             this.currentSession = null;
         }
     }
 
     private async handleError(error: unknown): Promise<void> {
-        this.store.setPhase('error');
-        this.store.setError(Error.isError(error) ? error : new Error(String(error)));
-        this.store.setStatus('Press r to restart.');
-        this.store.setBusy(false);
+        this.deps.store.setPhase('error');
+        this.deps.store.setError(Error.isError(error) ? error : new Error(String(error)));
+        this.deps.store.setStatus('Press r to restart.');
+        this.deps.store.setBusy(false);
         await this.waitForSignal();
-        this.store.setBusy(true);
+        this.deps.store.setBusy(true);
     }
 
     // every caller drops this promise, so run() awaits it
@@ -144,10 +130,10 @@ export class DevRunner {
 
     private async runQuit(): Promise<void> {
         this.shouldQuit = true;
-        this.store.setPhase('quitting');
+        this.deps.store.setPhase('quitting');
         await this.currentSession?.stop();
         // the endpoint clear is a discord round trip
-        await settleWithin(this.tunnel.stop(), TUNNEL_TEARDOWN_MS);
+        await settleWithin(this.deps.tunnel.stop(), TUNNEL_TEARDOWN_MS);
         this.signalResolve?.();
     }
 
@@ -176,10 +162,10 @@ export class DevRunner {
         if (this.isRegenerating) return;
         this.isRegenerating = true;
         try {
-            await this.codegen.run(false);
+            await this.deps.codegen.run(false);
         } catch (error: unknown) {
             // a codegen throw must not take the dev session down
-            this.codegenLogger.error('Command registry regeneration failed', error);
+            this.deps.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
             this.isRegenerating = false;
         }
@@ -192,7 +178,7 @@ export class DevRunner {
     }
 
     public async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
-        const configPath = this.locator.locate();
-        return this.configLoader.load(configPath);
+        const configPath = this.deps.locator.locate();
+        return this.deps.configLoader.load(configPath);
     }
 }

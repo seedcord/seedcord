@@ -24,7 +24,7 @@ export class InteractionsEndpoint {
 
     constructor(private readonly makeRest: () => EndpointRest) {}
 
-    // the token is read per request, since the bot module can repoint envapt while it loads
+    // the token is read on the first request, since the bot module can repoint envapt while it loads
     public static create(token: () => string): InteractionsEndpoint {
         // without this the client silently waits out an exhausted bucket and the cli looks frozen
         const rest = new REST({ version: '10', rejectOnRateLimit: ['/applications'] });

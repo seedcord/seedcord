@@ -11,7 +11,6 @@ import type { ChildProcess } from 'node:child_process';
 const METRICS_PORT = 20_500;
 const RUNNING = new AbortController().signal;
 const BINARY = '/usr/local/bin/cloudflared';
-const HEALTH_PATH = '/health';
 
 function fakeChild(): ChildProcess & { killed: string[] } {
     const child = Object.assign(new EventEmitter(), {
@@ -25,14 +24,27 @@ function fakeChild(): ChildProcess & { killed: string[] } {
     return child as unknown as ChildProcess & { killed: string[] };
 }
 
+// the metrics server hands over a hostname, and the public url answers the probe as a seedcord bot
+function answering(hostname = 'abc.trycloudflare.com'): TunnelDeps['fetch'] {
+    return (url) =>
+        Promise.resolve(url.startsWith('https://') ? new Response(null, { status: 401 }) : Response.json({ hostname }));
+}
+
 function deps(overrides: Partial<TunnelDeps> = {}): TunnelDeps {
     return {
         spawn: () => fakeChild(),
-        fetch: () => Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' })),
+        fetch: answering(),
         freePort: () => Promise.resolve(METRICS_PORT),
         wait: () => Promise.resolve(),
         ...overrides
     };
+}
+
+async function caught(promise: Promise<unknown>): Promise<unknown> {
+    return promise.then(
+        () => null,
+        (error: unknown) => error
+    );
 }
 
 describe('CloudflaredTunnel', () => {
@@ -50,24 +62,22 @@ describe('CloudflaredTunnel', () => {
             BINARY
         );
 
-        const error: unknown = await tunnel.open(RUNNING, 3000, HEALTH_PATH).then(
-            () => null,
-            (caught: unknown) => caught
-        );
+        const error = await caught(tunnel.open(RUNNING, 3000));
+
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
     });
 
     it('reads the hostname off the metrics server and gives it a scheme', async () => {
         const tunnel = new CloudflaredTunnel(deps(), BINARY);
 
-        await expect(tunnel.open(RUNNING, 3000, HEALTH_PATH)).resolves.toBe('https://abc.trycloudflare.com');
+        await expect(tunnel.open(RUNNING, 3000)).resolves.toBe('https://abc.trycloudflare.com');
     });
 
     it('spawns the binary the PATH scan resolved', async () => {
         const spawn = vi.fn<TunnelDeps['spawn']>(() => fakeChild());
         const tunnel = new CloudflaredTunnel(deps({ spawn }), '/opt/homebrew/bin/cloudflared');
 
-        await tunnel.open(RUNNING, 3000, HEALTH_PATH);
+        await tunnel.open(RUNNING, 3000);
 
         expect(spawn.mock.calls[0]?.[0]).toBe('/opt/homebrew/bin/cloudflared');
     });
@@ -76,7 +86,7 @@ describe('CloudflaredTunnel', () => {
         const spawn = vi.fn<TunnelDeps['spawn']>(() => fakeChild());
         const tunnel = new CloudflaredTunnel(deps({ spawn }), BINARY);
 
-        await tunnel.open(RUNNING, 4321, HEALTH_PATH);
+        await tunnel.open(RUNNING, 4321);
 
         expect(spawn.mock.calls[0]?.[1]).toEqual([
             'tunnel',
@@ -92,26 +102,25 @@ describe('CloudflaredTunnel', () => {
         const quick = vi.fn(() => Response.json({ hostname: pending.shift() ?? 'late.trycloudflare.com' }));
         const tunnel = new CloudflaredTunnel(
             deps({
-                fetch: (url) => Promise.resolve(url.startsWith('https://') ? Response.json({ status: 'ok' }) : quick())
+                fetch: (url) =>
+                    Promise.resolve(url.startsWith('https://') ? new Response(null, { status: 401 }) : quick())
             }),
             BINARY
         );
 
-        await expect(tunnel.open(RUNNING, 3000, HEALTH_PATH)).resolves.toBe('https://late.trycloudflare.com');
+        await expect(tunnel.open(RUNNING, 3000)).resolves.toBe('https://late.trycloudflare.com');
         expect(quick).toHaveBeenCalledTimes(2);
     });
 
     it('throws when the hostname never arrives', async () => {
         const tunnel = new CloudflaredTunnel(deps({ fetch: () => Promise.reject(new Error('refused')) }), BINARY);
 
-        const error: unknown = await tunnel.open(RUNNING, 3000, HEALTH_PATH).then(
-            () => null,
-            (caught: unknown) => caught
-        );
+        const error = await caught(tunnel.open(RUNNING, 3000));
+
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
     });
 
-    it('throws when the health path never answers', async () => {
+    it('throws when the hostname never answers as this bot', async () => {
         const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
             url.startsWith('https://')
                 ? Promise.reject(new Error('ENOTFOUND'))
@@ -119,90 +128,9 @@ describe('CloudflaredTunnel', () => {
         );
         const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
 
-        const error: unknown = await tunnel.open(RUNNING, 3000, HEALTH_PATH).then(
-            () => null,
-            (caught: unknown) => caught
-        );
+        const error = await caught(tunnel.open(RUNNING, 3000));
+
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUnreachable)).toBe(true);
-    });
-
-    it('probes the health path until it answers', async () => {
-        let resolved = false;
-        const health = vi.fn(() => {
-            const answer = resolved
-                ? Promise.resolve(Response.json({ status: 'ok' }))
-                : Promise.reject(new Error('ENOTFOUND'));
-            resolved = true;
-            return answer;
-        });
-        const tunnel = new CloudflaredTunnel(
-            deps({
-                fetch: (url) =>
-                    url.startsWith('https://')
-                        ? health()
-                        : Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }))
-            }),
-            BINARY
-        );
-
-        await tunnel.open(RUNNING, 3000, HEALTH_PATH);
-
-        expect(health).toHaveBeenCalledTimes(2);
-    });
-
-    it('probes the health path the bot reported', async () => {
-        const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
-            url.startsWith('https://')
-                ? Promise.resolve(Response.json({ status: 'ok' }))
-                : Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }))
-        );
-        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
-
-        await tunnel.open(RUNNING, 3000, '/alive');
-
-        expect(fetch.mock.calls.at(-1)?.[0]).toBe('https://abc.trycloudflare.com/alive');
-    });
-
-    it('keeps probing while the edge answers without reaching the bot', async () => {
-        const health = vi
-            .fn<() => Promise<Response>>()
-            .mockResolvedValueOnce(new Response(null, { status: 502 }))
-            .mockResolvedValueOnce(Response.json({ status: 'ok' }));
-        const tunnel = new CloudflaredTunnel(
-            deps({
-                fetch: (url) =>
-                    url.startsWith('https://')
-                        ? health()
-                        : Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }))
-            }),
-            BINARY
-        );
-
-        await tunnel.open(RUNNING, 3000, HEALTH_PATH);
-
-        expect(health).toHaveBeenCalledTimes(2);
-    });
-
-    it('skips the probe when the bot serves no health path', async () => {
-        const fetch = vi.fn<TunnelDeps['fetch']>(() => Promise.resolve(Response.json({ hostname: 'abc.tld' })));
-        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
-
-        await expect(tunnel.open(RUNNING, 3000)).resolves.toBe('https://abc.tld');
-        expect(fetch).toHaveBeenCalledOnce();
-    });
-
-    // the raw attempt signal would let a hung request outlive the whole budget
-    it('gives each probe request the timed budget signal', async () => {
-        const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
-            Promise.resolve(
-                url.startsWith('https://') ? Response.json({ status: 'ok' }) : Response.json({ hostname: 'abc.tld' })
-            )
-        );
-        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
-
-        await tunnel.open(RUNNING, 3000, HEALTH_PATH);
-
-        expect(fetch.mock.calls.at(-1)?.[1]?.signal).not.toBe(RUNNING);
     });
 
     it('gives up when cloudflared exits before reporting a hostname', async () => {
@@ -213,10 +141,7 @@ describe('CloudflaredTunnel', () => {
         });
         const tunnel = new CloudflaredTunnel(deps({ spawn: () => child, fetch }), BINARY);
 
-        const error: unknown = await tunnel.open(RUNNING, 3000, HEALTH_PATH).then(
-            () => null,
-            (caught: unknown) => caught
-        );
+        const error = await caught(tunnel.open(RUNNING, 3000));
 
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
         expect(fetch).toHaveBeenCalledOnce();
@@ -238,7 +163,7 @@ describe('CloudflaredTunnel', () => {
         vi.useFakeTimers();
         const child = fakeChild();
         const tunnel = new CloudflaredTunnel(deps({ spawn: () => child }), BINARY);
-        await tunnel.open(RUNNING, 3000, HEALTH_PATH);
+        await tunnel.open(RUNNING, 3000);
 
         tunnel.stop();
         expect(child.killed).toEqual(['SIGTERM']);

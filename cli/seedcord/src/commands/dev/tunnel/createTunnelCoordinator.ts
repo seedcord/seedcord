@@ -3,8 +3,8 @@ import { Envapter } from 'envapt';
 
 import { findCloudflared, installHint, systemLookup } from './cloudflared';
 import { CloudflaredTunnel, systemTunnelDeps } from './CloudflaredTunnel';
-import { ConfiguredUrl } from './ConfiguredUrl';
 import { InteractionsEndpoint } from './InteractionsEndpoint';
+import { awaitReachable } from './probe';
 import { TunnelCoordinator } from './TunnelCoordinator';
 
 import type { ResolvedTunnel } from '@core/config/schema';
@@ -27,7 +27,14 @@ export function createTunnelCoordinator(
 
     if (tunnel.mode === 'url') {
         return new TunnelCoordinator({
-            makeTunnel: () => new ConfiguredUrl(tunnel.url, deps),
+            makeTunnel: () => ({
+                open: async (signal) => {
+                    await awaitReachable(tunnel.url, deps, signal);
+                    return tunnel.url;
+                },
+                // the forwarder is the user's process
+                stop: () => undefined
+            }),
             kind: 'configured',
             endpoint,
             onUrl,

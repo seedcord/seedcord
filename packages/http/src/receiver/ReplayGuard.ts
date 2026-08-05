@@ -8,14 +8,14 @@ export class ReplayGuard {
     private readonly seen = new Map<string, number>();
     private lastSweep = Date.now();
 
-    public fresh(timestampHeader: string): boolean {
-        if (!TIMESTAMP_PATTERN.test(timestampHeader)) return false;
+    // the parsed value feeds unseen(), which only ever sees timestamps this already accepted
+    public fresh(timestampHeader: string): number | null {
+        if (!TIMESTAMP_PATTERN.test(timestampHeader)) return null;
         const timestampMs = Number(timestampHeader) * MS_PER_SECOND;
-        return Math.abs(Date.now() - timestampMs) <= REPLAY_WINDOW_MS;
+        return Math.abs(Date.now() - timestampMs) <= REPLAY_WINDOW_MS ? timestampMs : null;
     }
 
-    // runs after fresh() and after signature verification, so the map stores only fresh discord-signed values
-    public unseen(signatureHex: string, timestampHeader: string): boolean {
+    public unseen(signatureHex: string, timestampMs: number): boolean {
         const now = Date.now();
         this.maybeSweep(now);
 
@@ -24,7 +24,7 @@ export class ReplayGuard {
         if (rejectUntil !== undefined && rejectUntil >= now) return false;
 
         // expires when the freshness check starts rejecting this timestamp
-        this.seen.set(signatureHex, Number(timestampHeader) * MS_PER_SECOND + REPLAY_WINDOW_MS);
+        this.seen.set(signatureHex, timestampMs + REPLAY_WINDOW_MS);
         return true;
     }
 

@@ -26,11 +26,10 @@ describe('TunnelRouter', () => {
 
         router(fakeCoordinator({ onPort })).route(QUICK, {
             type: 'server-listening',
-            port: 4321,
-            healthPath: '/health'
+            port: 4321
         });
 
-        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321, '/health');
+        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321);
     });
 
     it('stays out of the way when the config turns the tunnel off', () => {
@@ -39,8 +38,7 @@ describe('TunnelRouter', () => {
 
         router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(OFF, {
             type: 'server-listening',
-            port: 4321,
-            healthPath: '/health'
+            port: 4321
         });
 
         expect(onPort).not.toHaveBeenCalled();
@@ -59,8 +57,8 @@ describe('TunnelRouter', () => {
         const warn = vi.fn();
         const routing = router(undefined, { ...silentLogger, warn });
 
-        routing.route(QUICK, { type: 'server-listening', port: 1, healthPath: '/health' });
-        routing.route(QUICK, { type: 'server-listening', port: 2, healthPath: '/health' });
+        routing.route(QUICK, { type: 'server-listening', port: 1 });
+        routing.route(QUICK, { type: 'server-listening', port: 2 });
 
         expect(warn).toHaveBeenCalledOnce();
     });
@@ -72,7 +70,7 @@ describe('TunnelRouter', () => {
     it('stop reaches the coordinator', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
         const routing = router(fakeCoordinator({ stop }));
-        routing.route(QUICK, { type: 'server-listening', port: 1, healthPath: '/health' });
+        routing.route(QUICK, { type: 'server-listening', port: 1 });
 
         await routing.stop();
 
@@ -83,8 +81,8 @@ describe('TunnelRouter', () => {
         const make = vi.fn(() => fakeCoordinator());
         const routing = new TunnelRouter(make, silentLogger);
 
-        routing.route(QUICK, { type: 'server-listening', port: 1, healthPath: '/health' });
-        routing.route(QUICK, { type: 'server-listening', port: 2, healthPath: '/health' });
+        routing.route(QUICK, { type: 'server-listening', port: 1 });
+        routing.route(QUICK, { type: 'server-listening', port: 2 });
 
         expect(make).toHaveBeenCalledOnce();
     });
@@ -96,11 +94,10 @@ describe('TunnelRouter', () => {
 
         router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(configured, {
             type: 'server-listening',
-            port: 4321,
-            healthPath: '/health'
+            port: 4321
         });
 
-        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321, '/health');
+        expect(onPort).toHaveBeenCalledExactlyOnceWith(4321);
         expect(warn).not.toHaveBeenCalled();
     });
 });

@@ -85,8 +85,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
 
     const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
         const [response, outcome] = await respond(request, ctx);
-        const { pathname } = new URL(request.url);
-        logger.debug(`${request.method} ${paint.iris(pathname)} ${outcome} ${paint.amber(String(response.status))}`);
+        logger.debug(`${request.method} ${outcome} ${paint.amber(String(response.status))}`);
         return response;
     };
 
@@ -99,7 +98,8 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
         if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];
 
-        if (!replays.fresh(timestamp)) return [new Response(null, { status: UNAUTHORIZED }), 'stale'];
+        const timestampMs = replays.fresh(timestamp);
+        if (timestampMs === null) return [new Response(null, { status: UNAUTHORIZED }), 'stale'];
 
         const body = new Uint8Array(await request.arrayBuffer());
         if (!(await verifier.verify(signature, timestamp, body))) {
@@ -119,7 +119,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
             return [Response.json({ type: InteractionResponseType.Pong }), 'ping'];
         }
 
-        if (!replays.unseen(signature, timestamp)) return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
+        if (!replays.unseen(signature, timestampMs)) return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
 
         try {
             // justified: the payload is signed by Discord, and the type field anchors the discriminated union

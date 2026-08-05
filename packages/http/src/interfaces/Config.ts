@@ -1,4 +1,4 @@
-import type { Config, HealthCheckConfig, TypedOmit } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
 
 /**
  * Config for a long-running node server. Pass to `new Seedcord(config).start()`.
@@ -12,13 +12,6 @@ export interface HttpServerConfig extends Config {
      * @defaultValue `3000`
      */
     port?: number;
-
-    /**
-     * The health endpoint, served by the interactions server on the path given here.
-     *
-     * @defaultValue `'/health'`
-     */
-    healthCheck?: TypedOmit<HealthCheckConfig, 'port' | 'host'>;
 }
 
 /**
@@ -28,7 +21,6 @@ export interface HttpServerConfig extends Config {
 export interface HttpEdgeConfig extends Config {
     runtime: 'edge';
     port?: never;
-    healthCheck?: never;
 }
 
 /**

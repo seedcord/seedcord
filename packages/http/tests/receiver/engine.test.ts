@@ -49,19 +49,11 @@ const unrecognized = '{"type":99}';
 describe('createSeedcord request logging', () => {
     it('names why each request got its status', async () => {
         const debug = vi.spyOn(Logger.prototype, 'debug').mockReturnValue(undefined);
-        const { signer, handle } = await readySeedcord();
+        const { handle } = await readySeedcord();
 
         await handle(new Request('https://bot.example/interactions', { method: 'POST' }));
-        const signed = await signedRequest(signer, ping);
-        await handle(signed.clone());
-        await handle(signed);
 
-        const lines = debug.mock.calls.map(([message]) => message);
-        expect(lines[0]).toContain('unsigned');
-        expect(lines[1]).toContain('ping');
-        // discord resends during verification, and a second answer of 401 reads as a broken endpoint
-        expect(lines[2]).toContain('ping');
-        expect(lines.join('\n')).toContain('/interactions');
+        expect(debug.mock.calls[0]?.[0]).toContain('unsigned');
         debug.mockRestore();
     });
 });
@@ -74,6 +66,18 @@ describe('createSeedcord', () => {
 
         expect(response.status).toBe(200);
         await expect(response.json()).resolves.toEqual({ type: 1 });
+    });
+
+    // discord resends the same signed ping while verifying an endpoint, and a 401 reads as a broken endpoint
+    it('answers a resent PING instead of rejecting it as a replay', async () => {
+        const { signer, handle } = await readySeedcord();
+        const signed = await signedRequest(signer, ping);
+
+        await handle(signed.clone());
+        const resent = await handle(signed);
+
+        expect(resent.status).toBe(200);
+        await expect(resent.json()).resolves.toEqual({ type: 1 });
     });
 
     it('acks an unrecognized interaction shape with an empty 202', async () => {
