@@ -1,7 +1,8 @@
 import type { Config } from '@seedcord/types';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 
-export const VALID_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAA.BBBBBB.CCCCCCCCCCCCCCCCCCCCCCCCCCC';
+// eslint-disable-next-line no-magic-numbers -- mimic valid token shape
+export const VALID_TOKEN = `${'a'.repeat(24)}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
 
 export const nullPathConfig: Config = {
     bot: { interactions: { path: null }, commands: { path: null } },
