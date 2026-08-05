@@ -26,7 +26,7 @@ export function StatusLine({ state, notices, columns }: StatusLineProps): ReactE
     const [top, ...rest] = notices;
 
     return (
-        <Box flexShrink={0} justifyContent="space-between">
+        <Box flexShrink={0} justifyContent="space-between" paddingX={1}>
             <Box flexShrink={1} overflow="hidden">
                 <Text wrap="truncate">
                     <Banner version={null} /> <StatusBadge phase={state.phase} glyph="live" />

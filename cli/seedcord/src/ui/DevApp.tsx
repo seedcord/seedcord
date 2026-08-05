@@ -1,6 +1,7 @@
 import { Box, useInput, useWindowSize } from 'ink';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
+import { Rule } from '@ui/components/primitives/Rule';
 import { INITIAL_CURSOR } from '@ui/filterCursor';
 import { useDevState } from '@ui/hooks/useDevState';
 import { useLogs } from '@ui/hooks/useLogs';
@@ -97,6 +98,8 @@ export function DevApp(props: DevAppProps): ReactElement {
 
     return (
         <Box flexDirection="column" width={columns} height={rows} overflow="hidden">
+            {/* need the rule for some padding at the top */}
+            <Rule />
             <DevLayout
                 state={state}
                 tier={tier}

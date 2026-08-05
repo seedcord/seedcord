@@ -72,4 +72,9 @@ describe('StatusLine', () => {
     it('renders on one row', () => {
         expect(frameOf(running()).split('\n')).toHaveLength(1);
     });
+
+    // paddingX reserves the right column too which ink trims off the captured frame
+    it('holds the row off the terminal edge', () => {
+        expect(frameOf(running()).startsWith(' ')).toBe(true);
+    });
 });

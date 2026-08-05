@@ -30,6 +30,26 @@ describe('LogStore', () => {
         expect(heads.slice(1).every((h) => !h)).toBe(true);
     });
 
+    it('marks the stack frames of an error, leaving its message unmarked', async () => {
+        store.onLog(record({ level: 'error', message: 'boom', args: [new Error('the message')] }));
+        await store.flush();
+
+        const logs = store.getLogs();
+        const message = logs.find((entry) => entry.text.includes('the message'));
+        const frames = logs.filter((entry) => entry.text.includes(' at '));
+
+        expect(message?.frame).toBe(false);
+        expect(frames.length).toBeGreaterThan(0);
+        expect(frames.every((entry) => entry.frame)).toBe(true);
+    });
+
+    it('leaves a block continuation unmarked', async () => {
+        store.onLog(record({ message: 'Loaded handlers\nFeedNav' }));
+        await store.flush();
+
+        expect(store.getLogs().every((entry) => !entry.frame)).toBe(true);
+    });
+
     it('caps the widest-label width for the right-aligned column', async () => {
         store.onLog(record({ label: 'Bot', message: 'a' }));
         store.onLog(record({ label: 'CoordinatedShutdown', message: 'b' }));

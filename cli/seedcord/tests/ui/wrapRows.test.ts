@@ -9,7 +9,17 @@ const LABEL_WIDTH = 3;
 const COLUMN = messageColumn(LABEL_WIDTH);
 
 function entry(over: Partial<LogEntry>): LogEntry {
-    return { id: 0, channel: 'default', level: 'info', label: 'Bot', text: '', timestamp: 0, head: true, ...over };
+    return {
+        id: 0,
+        channel: 'default',
+        level: 'info',
+        label: 'Bot',
+        text: '',
+        timestamp: 0,
+        head: true,
+        frame: false,
+        ...over
+    };
 }
 
 function wrap(logs: readonly LogEntry[], width: number): ReturnType<typeof wrapRows> {
