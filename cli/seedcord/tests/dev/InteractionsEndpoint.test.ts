@@ -10,6 +10,7 @@ import type { EndpointRest } from '@commands/dev/tunnel/InteractionsEndpoint';
 const TUNNEL = 'https://abc.trycloudflare.com';
 const RUNNING = new AbortController().signal;
 const skipWait = (): Promise<void> => Promise.resolve();
+const noRetry = (): void => undefined;
 
 function rest(current: string | null): { rest: EndpointRest; patch: ReturnType<typeof vi.fn> } {
     const patch = vi.fn().mockResolvedValue({});
@@ -57,8 +58,8 @@ describe('InteractionsEndpoint', () => {
 
         expect(makeRest).not.toHaveBeenCalled();
 
-        await endpoint.set(TUNNEL, RUNNING);
-        await endpoint.set(TUNNEL, RUNNING);
+        await endpoint.set(TUNNEL, RUNNING, noRetry);
+        await endpoint.set(TUNNEL, RUNNING, noRetry);
 
         expect(makeRest).toHaveBeenCalledOnce();
     });
@@ -66,7 +67,7 @@ describe('InteractionsEndpoint', () => {
     it('patches the application when the endpoint differs', async () => {
         const { rest: client, patch } = rest('https://stale.trycloudflare.com');
 
-        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING);
+        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING, noRetry);
 
         expect(patch).toHaveBeenCalledExactlyOnceWith(Routes.currentApplication(), {
             body: { interactions_endpoint_url: TUNNEL }
@@ -76,7 +77,7 @@ describe('InteractionsEndpoint', () => {
     it('skips the patch when the endpoint already matches', async () => {
         const { rest: client, patch } = rest(TUNNEL);
 
-        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING);
+        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING, noRetry);
 
         expect(patch).not.toHaveBeenCalled();
     });
@@ -84,7 +85,7 @@ describe('InteractionsEndpoint', () => {
     it('patches an application that has no endpoint set', async () => {
         const { rest: client, patch } = rest(null);
 
-        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING);
+        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING, noRetry);
 
         expect(patch).toHaveBeenCalledOnce();
     });
@@ -93,7 +94,7 @@ describe('InteractionsEndpoint', () => {
         const { rest: client, patch } = rest(null);
         patch.mockRejectedValueOnce(unverifiable()).mockResolvedValueOnce({});
 
-        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING);
+        await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING, noRetry);
 
         expect(patch).toHaveBeenCalledTimes(2);
     });
@@ -102,7 +103,9 @@ describe('InteractionsEndpoint', () => {
         const { rest: client, patch } = rest(null);
         patch.mockRejectedValue(new Error('401 Unauthorized'));
 
-        await expect(new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING)).rejects.toThrow('401');
+        await expect(new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING, noRetry)).rejects.toThrow(
+            '401'
+        );
         expect(patch).toHaveBeenCalledOnce();
     });
 
@@ -110,10 +113,12 @@ describe('InteractionsEndpoint', () => {
         const { rest: client, patch } = rest(null);
         patch.mockRejectedValue(unverifiable());
 
-        const error: unknown = await new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, RUNNING).then(
-            () => null,
-            (caught: unknown) => caught
-        );
+        const error: unknown = await new InteractionsEndpoint(() => client, skipWait)
+            .set(TUNNEL, RUNNING, noRetry)
+            .then(
+                () => null,
+                (caught: unknown) => caught
+            );
 
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelNotVerified)).toBe(true);
     });
@@ -123,7 +128,9 @@ describe('InteractionsEndpoint', () => {
         const attempt = new AbortController();
         attempt.abort();
 
-        await expect(new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, attempt.signal)).rejects.toThrow();
+        await expect(
+            new InteractionsEndpoint(() => client, skipWait).set(TUNNEL, attempt.signal, noRetry)
+        ).rejects.toThrow();
         expect(patch).not.toHaveBeenCalled();
     });
 

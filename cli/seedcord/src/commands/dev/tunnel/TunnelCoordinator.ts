@@ -1,5 +1,7 @@
 import { paint } from '@seedcord/logger';
 
+import { formatUptime } from '@ui/format';
+
 import type { CloudflaredTunnel } from './CloudflaredTunnel';
 import type { InteractionsEndpoint } from './InteractionsEndpoint';
 import type { ILogger } from '@seedcord/types';
@@ -33,15 +35,24 @@ export class TunnelCoordinator {
         // a later onPort holds no handle on this tunnel, so abort contains the stop
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
 
+        const startedAt = Date.now();
+        const since = (): string => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
+
         try {
+            this.deps.logger.info(`Opening a cloudflared tunnel to port ${paint.iris(String(port))}`);
             const url = await tunnel.open(port, attempt.signal);
             if (superseded(attempt)) return;
 
-            await this.deps.endpoint.set(url, attempt.signal);
+            this.deps.logger.info(`Tunnel is up at ${paint.sky.italic(url)} ${since()}`);
+            await this.deps.endpoint.set(url, attempt.signal, (retry) => {
+                this.deps.logger.debug(
+                    `Discord has not verified the endpoint yet, try ${paint.amber(String(retry))} ${since()}`
+                );
+            });
             if (superseded(attempt)) return;
 
             this.deps.onUrl(url);
-            this.deps.logger.info(`Interactions endpoint set to ${paint.sky.italic(url)}`);
+            this.deps.logger.info(`Interactions endpoint set to ${paint.sky.italic(url)} ${since()}`);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
             attempt.abort();

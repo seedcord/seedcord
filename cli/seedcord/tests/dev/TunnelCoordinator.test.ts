@@ -47,13 +47,59 @@ describe('TunnelCoordinator', () => {
         expect(order).toEqual(['open', 'set']);
     });
 
+    it('logs the tunnel url before the endpoint write', async () => {
+        const order: string[] = [];
+        const coordinator = new TunnelCoordinator(
+            deps({
+                endpoint: {
+                    set: () => {
+                        order.push('set');
+                        return Promise.resolve();
+                    },
+                    clear: () => Promise.resolve()
+                },
+                logger: {
+                    ...silentLogger,
+                    info: (message: string) => {
+                        if (message.includes(urlFor(3000))) order.push('url');
+                    }
+                }
+            })
+        );
+
+        await coordinator.onPort(3000);
+
+        expect(order[0]).toBe('url');
+    });
+
+    it('reports every verify attempt discord rejects', async () => {
+        const debug = vi.fn();
+        const coordinator = new TunnelCoordinator(
+            deps({
+                endpoint: {
+                    set: (_url, _signal, onRetry) => {
+                        onRetry(1);
+                        onRetry(2);
+                        return Promise.resolve();
+                    },
+                    clear: () => Promise.resolve()
+                },
+                logger: { ...silentLogger, debug }
+            })
+        );
+
+        await coordinator.onPort(3000);
+
+        expect(debug).toHaveBeenCalledTimes(2);
+    });
+
     it('writes the endpoint the tunnel reported', async () => {
         const set = vi.fn<CoordinatorDeps['endpoint']['set']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(deps({ endpoint: { set, clear: () => Promise.resolve() } }));
 
         await coordinator.onPort(4321);
 
-        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal));
+        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal), expect.any(Function));
     });
 
     it('leaves the tunnel alone when the port is unchanged', async () => {

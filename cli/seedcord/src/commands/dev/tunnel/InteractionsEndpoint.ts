@@ -34,12 +34,12 @@ export class InteractionsEndpoint {
         return new InteractionsEndpoint(() => new REST({ version: '10' }).setToken(token()), wait);
     }
 
-    public async set(url: string, signal: AbortSignal): Promise<void> {
+    public async set(url: string, signal: AbortSignal, onRetry: (attempt: number) => void): Promise<void> {
         // justified: the discord api contract for this route
         const application = (await this.rest().get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
         if (application.interactions_endpoint_url === url) return;
 
-        for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+        for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
             signal.throwIfAborted();
             try {
                 await this.write(url);
@@ -47,6 +47,7 @@ export class InteractionsEndpoint {
             } catch (error: unknown) {
                 if (!unverified(error)) throw error;
             }
+            onRetry(attempt);
             await this.wait(RETRY_INTERVAL_MS);
         }
 
