@@ -6,8 +6,6 @@ import { RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 import type { RESTGetCurrentApplicationResult, RESTPatchCurrentApplicationJSONBody } from 'discord-api-types/v10';
 
 const FIELD = 'interactions_endpoint_url';
-const RETRY_INTERVAL_MS = 3000;
-const RETRY_ATTEMPTS = 40;
 
 export type EndpointRest = Pick<REST, 'get' | 'patch'>;
 
@@ -24,37 +22,27 @@ function unverified(error: unknown): boolean {
 export class InteractionsEndpoint {
     private client: EndpointRest | undefined;
 
-    constructor(
-        private readonly makeRest: () => EndpointRest,
-        private readonly wait: (ms: number) => Promise<void>
-    ) {}
+    constructor(private readonly makeRest: () => EndpointRest) {}
 
-    // the token read waits for a request, since the bot module might repoint envapt while it loads
-    public static create(token: () => string, wait: (ms: number) => Promise<void>): InteractionsEndpoint {
-        return new InteractionsEndpoint(() => new REST({ version: '10' }).setToken(token()), wait);
+    // the token is read per request, since the bot module can repoint envapt while it loads
+    public static create(token: () => string): InteractionsEndpoint {
+        // without this the client silently waits out an exhausted bucket and the cli looks frozen
+        const rest = new REST({ version: '10', rejectOnRateLimit: ['/applications'] });
+        return new InteractionsEndpoint(() => rest.setToken(token()));
     }
 
-    public async set(url: string, signal: AbortSignal, onRetry: (attempt: number) => void): Promise<void> {
+    public async set(url: string, signal: AbortSignal): Promise<void> {
         // justified: the discord api contract for this route
         const application = (await this.rest().get(Routes.currentApplication())) as RESTGetCurrentApplicationResult;
         if (application.interactions_endpoint_url === url) return;
 
-        for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
-            signal.throwIfAborted();
-            try {
-                await this.write(url);
-                return;
-            } catch (error: unknown) {
-                if (!unverified(error)) throw error;
-            }
-            onRetry(attempt);
-            await this.wait(RETRY_INTERVAL_MS);
+        signal.throwIfAborted();
+        try {
+            await this.write(url);
+        } catch (error: unknown) {
+            if (!unverified(error)) throw error;
+            throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [url]);
         }
-
-        throw new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [
-            url,
-            (RETRY_ATTEMPTS * RETRY_INTERVAL_MS) / 1000
-        ]);
     }
 
     private rest(): EndpointRest {

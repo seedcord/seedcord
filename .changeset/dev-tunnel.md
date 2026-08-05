@@ -4,4 +4,4 @@
 'seedcord': minor
 ---
 
-`seedcord dev` opens a cloudflared tunnel for an http bot and sets the Discord application's interactions endpoint to the tunnel URL. Set `tunnel: false` in the dev config to turn it off.
+`seedcord dev` exposes an http bot's interactions server through the `tunnel` dev config field. `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run. An https URL is one you already serve, and the CLI checks it reaches the bot, writes the endpoint when the stored value differs, then leaves it in place.

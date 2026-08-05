@@ -87,14 +87,18 @@ describe('CloudflaredTunnel', () => {
     });
 
     it('polls until the metrics server reports a hostname', async () => {
-        const fetch = vi
-            .fn<TunnelDeps['fetch']>()
-            .mockResolvedValueOnce(Response.json({ hostname: '' }))
-            .mockResolvedValueOnce(Response.json({ hostname: 'late.trycloudflare.com' }));
-        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
+        const pending = [''];
+        const quick = vi.fn(() => Response.json({ hostname: pending.shift() ?? 'late.trycloudflare.com' }));
+        const tunnel = new CloudflaredTunnel(
+            deps({
+                fetch: (url) =>
+                    Promise.resolve(url.startsWith('https://') ? new Response(null, { status: 405 }) : quick())
+            }),
+            BINARY
+        );
 
         await expect(tunnel.open(3000, RUNNING)).resolves.toBe('https://late.trycloudflare.com');
-        expect(fetch).toHaveBeenCalledTimes(2);
+        expect(quick).toHaveBeenCalledTimes(2);
     });
 
     it('throws when the hostname never arrives', async () => {
@@ -105,6 +109,54 @@ describe('CloudflaredTunnel', () => {
             (caught: unknown) => caught
         );
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelUrlUnavailable)).toBe(true);
+    });
+
+    it('reports the url even when the health probe never answers', async () => {
+        const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
+            url.startsWith('https://')
+                ? Promise.reject(new Error('ENOTFOUND'))
+                : Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }))
+        );
+        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
+
+        await expect(tunnel.open(3000, RUNNING)).resolves.toBe('https://abc.trycloudflare.com');
+    });
+
+    it('probes the health path until it answers', async () => {
+        let resolved = false;
+        const health = vi.fn(() => {
+            const answer = resolved
+                ? Promise.resolve(Response.json({ status: 'ok' }))
+                : Promise.reject(new Error('ENOTFOUND'));
+            resolved = true;
+            return answer;
+        });
+        const tunnel = new CloudflaredTunnel(
+            deps({
+                fetch: (url) =>
+                    url.startsWith('https://')
+                        ? health()
+                        : Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }))
+            }),
+            BINARY
+        );
+
+        await tunnel.open(3000, RUNNING);
+
+        expect(health).toHaveBeenCalledTimes(2);
+    });
+
+    it('probes the health path on the public hostname', async () => {
+        const fetch = vi.fn<TunnelDeps['fetch']>((url) =>
+            url.startsWith('https://')
+                ? Promise.resolve(Response.json({ status: 'ok' }))
+                : Promise.resolve(Response.json({ hostname: 'abc.trycloudflare.com' }))
+        );
+        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
+
+        await tunnel.open(3000, RUNNING);
+
+        expect(fetch.mock.calls.at(-1)?.[0]).toBe('https://abc.trycloudflare.com/health');
     });
 
     it('gives up when cloudflared exits before reporting a hostname', async () => {

@@ -10,8 +10,7 @@ import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
 import type { ConfigLoader } from '@core/config/ConfigLoader';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
 
-// justified: these paths reach the codegen, the store, and the tunnel, so the locator and config loader
-// stay empty stand-ins.
+// justified: these paths never touch the locator or the config loader
 function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRouter = fakeTunnel()): DevRunner {
     return new DevRunner({
         locator: {} as unknown as ConfigLocator,
@@ -23,13 +22,13 @@ function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRo
     });
 }
 
-// justified: the runner reads only stop off the router
+// justified: the runner reads only route and stop off the router
 function fakeTunnel(overrides: Partial<TunnelRouter> = {}): TunnelRouter {
     return { route: () => undefined, stop: () => Promise.resolve(), ...overrides } as TunnelRouter;
 }
 
 describe('DevRunner quit', () => {
-    // a failing assertion under fake timers would otherwise leave them faked for the next test
+    // a failing assertion mid-test would otherwise leave timers faked for the next one
     afterEach(() => {
         vi.useRealTimers();
     });

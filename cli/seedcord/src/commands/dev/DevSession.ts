@@ -87,7 +87,7 @@ export class DevSession {
             this.store.setStatus(`${chalk.bold(instance.username ?? 'Bot')} is ready!`);
             onReady?.();
 
-            // resolved by stop(). no process-signal handlers here (DevCommand registers the single one), so restarts never accumulate listeners.
+            // resolved by stop(), and no signal handlers here so restarts never accumulate listeners
             await new Promise<void>((resolve) => {
                 this.stopResolve = resolve;
             });
@@ -97,7 +97,7 @@ export class DevSession {
         }
     }
 
-    // quit/restart/disconnect and dispose() all call stop() so it should only run once
+    // quit, restart, disconnect, and dispose all call this
     public async stop(): Promise<void> {
         this.stopPromise ??= this.runStop();
         return this.stopPromise;
@@ -109,7 +109,7 @@ export class DevSession {
         this.instance?.startup.abort();
 
         if (this.startupPromise) {
-            // suppress the abort rejection to keep shutdown ordered
+            // so the shutdown below still runs
             try {
                 await this.startupPromise;
             } catch {

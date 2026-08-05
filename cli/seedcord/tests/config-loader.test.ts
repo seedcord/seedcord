@@ -12,7 +12,7 @@ import { silentLogger } from './silentLogger';
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
-import type { SeedcordDevConfig } from '@core/config/schema';
+import type { ResolvedTunnel, SeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 
 describe('ConfigLoader', () => {
@@ -38,8 +38,8 @@ describe('ConfigLoader', () => {
         expect(resolved.build.tsconfig).toBeUndefined();
     });
 
-    it('defaults tunnel on and carries an explicit opt-out', async () => {
-        const load = async (config: SeedcordDevConfig): Promise<boolean> => {
+    it('resolves each tunnel shape into a mode', async () => {
+        const load = async (config: SeedcordDevConfig): Promise<ResolvedTunnel> => {
             const moduleLoader: ModuleLoader = {
                 importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
                     return Promise.resolve({ default: config } as TModule);
@@ -51,15 +51,22 @@ describe('ConfigLoader', () => {
             return resolved.tunnel;
         };
 
-        await expect(load({ instance: './bot.ts', entry: './index.ts' })).resolves.toBe(true);
-        await expect(load({ instance: './bot.ts', entry: './index.ts', tunnel: false })).resolves.toBe(false);
+        const base = { instance: './bot.ts', entry: './index.ts' };
+
+        await expect(load(base)).resolves.toEqual({ mode: 'quick' });
+        await expect(load({ ...base, tunnel: true })).resolves.toEqual({ mode: 'quick' });
+        await expect(load({ ...base, tunnel: false })).resolves.toEqual({ mode: 'off' });
+        await expect(load({ ...base, tunnel: 'https://bot.example.com' })).resolves.toEqual({
+            mode: 'url',
+            url: 'https://bot.example.com'
+        });
     });
 
-    it('throws when tunnel is not a boolean', async () => {
+    it.each([['yes'], ['http://bot.example.com'], [42]])('rejects %s as a tunnel', async (tunnel) => {
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
                 return Promise.resolve({
-                    default: { instance: './bot.ts', entry: './index.ts', tunnel: 'yes' }
+                    default: { instance: './bot.ts', entry: './index.ts', tunnel }
                 } as TModule);
             }
         };
@@ -67,7 +74,7 @@ describe('ConfigLoader', () => {
         const loader = new ConfigLoader(moduleLoader, silentLogger);
 
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
-            'Config `tunnel` must be a boolean when provided.'
+            'Config `tunnel` must be a boolean or an https URL.'
         );
     });
 
@@ -177,7 +184,7 @@ describe('DevRunner', () => {
             }))
         };
 
-        // locator and configLoader are the only doubles exercised here, codegen runs on refresh only.
+        // justified: only the locator and the config loader are called here, codegen runs on refresh only
         const runner = new DevRunner({
             locator: locator as unknown as ConfigLocator,
             configLoader: configLoader as unknown as ConfigLoader,
@@ -188,7 +195,7 @@ describe('DevRunner', () => {
             tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter
         });
 
-        // run() swallows session errors through handleError, so rethrow here to let the assertion observe them.
+        // run() swallows session errors through handleError, so rethrow for the assertion
         // @ts-expect-error accessing private method
         vi.spyOn(runner, 'handleError').mockImplementation((error: unknown) => {
             throw error;

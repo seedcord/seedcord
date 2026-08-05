@@ -63,12 +63,16 @@ export interface SeedcordDevConfig {
      */
     entry: string;
     /**
-     * Whether `seedcord dev` opens a cloudflared tunnel for an http bot and points the Discord
-     * application's interactions endpoint at it. A gateway bot ignores this.
+     * How `seedcord dev` exposes an http bot's interactions server. This has no effect on a gateway bot.
+     *
+     * `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run,
+     * since the hostname changes each time. An https URL is one you already serve, through a named
+     * cloudflared tunnel, a tailscale funnel, or any reverse proxy. The CLI checks that URL reaches
+     * this process, writes the endpoint when the stored value differs, and leaves it in place.
      *
      * @defaultValue `true`
      */
-    tunnel?: boolean;
+    tunnel?: boolean | string;
     /**
      * Optional build configuration overrides.
      */
@@ -79,6 +83,8 @@ export interface SeedcordDevConfig {
     hmr?: SeedcordHmrConfig;
 }
 
+export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'; url: string };
+
 export interface ResolvedSeedcordBuildConfig {
     outDir: string;
     bootstrap: string;
@@ -88,7 +94,8 @@ export interface ResolvedSeedcordBuildConfig {
 /**
  * Fully resolved configuration with absolute file system paths.
  */
-export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'hmr'>> {
+export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConfig, 'build' | 'hmr' | 'tunnel'>> {
+    tunnel: ResolvedTunnel;
     /**
      * Absolute path to the config file that produced this resolution.
      */

@@ -7,8 +7,10 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import type { ChildProcess } from 'node:child_process';
 
 const POLL_INTERVAL_MS = 250;
-// the create step alone measured around 10s against trycloudflare
-const POLL_ATTEMPTS = 240;
+const HOSTNAME_ATTEMPTS = 240;
+const SETTLE_MS = 4000;
+const HEALTH_ATTEMPTS = 20;
+const HEALTH_PATH = '/health';
 const GRACEFUL_EXIT_MS = 2000;
 
 export interface TunnelDeps {
@@ -58,18 +60,22 @@ export class CloudflaredTunnel {
             '--metrics',
             `127.0.0.1:${String(metricsPort)}`
         ]);
-        // a spawn failure emits here, and node throws it process-wide with no listener attached
+        // without a listener node throws a spawn failure process-wide
         child.on('error', (error) => {
             this.failure = error;
         });
-        // stop() clears this.child before killing, so a deliberate kill skips this
+        // stop() clears this.child first, so a deliberate kill skips this
         child.on('exit', (code) => {
             if (this.child !== child) return;
             this.failure = new Error(`cloudflared exited early with code ${String(code)}`);
         });
         this.child = child;
 
-        return `https://${await this.readHostname(metricsPort, signal)}`;
+        const url = `https://${await this.readHostname(metricsPort, signal)}`;
+        // the record lands ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
+        await this.deps.wait(SETTLE_MS);
+        await this.awaitHealth(url, signal);
+        return url;
     }
 
     public stop(): void {
@@ -88,7 +94,7 @@ export class CloudflaredTunnel {
     }
 
     private async readHostname(metricsPort: number, signal: AbortSignal): Promise<string> {
-        for (let attempt = 0; attempt < POLL_ATTEMPTS && !this.failure; attempt++) {
+        for (let attempt = 0; attempt < HOSTNAME_ATTEMPTS && !this.failure; attempt++) {
             signal.throwIfAborted();
             const hostname = await this.pollOnce(metricsPort, signal);
             if (hostname) return hostname;
@@ -99,9 +105,22 @@ export class CloudflaredTunnel {
         this.stop();
         throw new SeedcordError(
             SeedcordErrorCode.CliTunnelUrlUnavailable,
-            [(POLL_ATTEMPTS * POLL_INTERVAL_MS) / 1000],
+            [(HOSTNAME_ATTEMPTS * POLL_INTERVAL_MS) / 1000],
             { cause }
         );
+    }
+
+    // a timeout here is fine, discord's own verification is the gate that matters
+    private async awaitHealth(url: string, signal: AbortSignal): Promise<void> {
+        for (let attempt = 0; attempt < HEALTH_ATTEMPTS && !this.failure; attempt++) {
+            signal.throwIfAborted();
+            try {
+                await this.deps.fetch(`${url}${HEALTH_PATH}`, { signal });
+                return;
+            } catch {
+                await this.deps.wait(POLL_INTERVAL_MS);
+            }
+        }
     }
 
     private async pollOnce(metricsPort: number, signal: AbortSignal): Promise<string | undefined> {

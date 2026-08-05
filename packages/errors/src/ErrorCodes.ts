@@ -243,10 +243,12 @@ export enum SeedcordErrorCode {
     CliCleanApplyNeedsYes = 3130,
     /** Config hmr rollback flag must be a boolean when provided. */
     CliConfigInvalidHmrRollback = 3131,
-    /** Config tunnel flag must be a boolean when provided. */
+    /** Config tunnel must be a boolean or an https URL when provided. */
     CliConfigInvalidTunnel = 3132,
     /** The cloudflared metrics server never reported a quick-tunnel hostname. */
     CliTunnelUrlUnavailable = 3133,
-    /** Discord kept refusing to verify the tunnel URL as an interactions endpoint. */
-    CliTunnelNotVerified = 3134
+    /** Discord rejected the tunnel URL as an interactions endpoint. */
+    CliTunnelNotVerified = 3134,
+    /** The configured tunnel URL never answered a probe. */
+    CliTunnelUnreachable = 3135
 }

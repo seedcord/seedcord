@@ -22,8 +22,7 @@ export const MAX_RAIL = 40;
 
 const META_LABEL_WIDTH = 5;
 
-// the dev default writes one combined file into this folder
-const LOG_DIR = 'logs/';
+const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
 interface SidebarProps {
     readonly state: DevState;
@@ -57,7 +56,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             <StatusBadge phase={state.phase} />
             {state.status ? <Text>{state.status}</Text> : null}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
-            {/* only the http host reports a port, so a gateway run shows neither row */}
+            {/* only the http host reports a port */}
             {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
             {/* the sidebar is narrow, so show the host only */}
             {state.tunnelUrl === null ? null : <Meta label="url" value={hostOf(state.tunnelUrl)} />}

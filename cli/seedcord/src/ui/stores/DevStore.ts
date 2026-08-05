@@ -28,12 +28,10 @@ const INITIAL: DevState = {
     tunnelUrl: null
 };
 
-// Single source of truth for the dev UI. The runner pushes scalar updates through the setters, and runtime
-// events reduce through `apply`. `getState` returns a stable reference between mutations, which
-// `useSyncExternalStore` requires to avoid render loops.
 export class DevStore extends TypedEventEmitter<{ change: [] }> {
     private state: DevState = INITIAL;
 
+    // a stable reference between mutations, which useSyncExternalStore needs to avoid render loops
     public getState(): DevState {
         return this.state;
     }
@@ -66,8 +64,7 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         this.patch({ commandUpdatePrompt: null });
     }
 
-    // Optimistic UI transitions: the user pressed r/d, so reset to a busy "reconnecting" state in one atomic
-    // patch (one render) before the runner stops the session and starts the next one.
+    // one patch, so the r/d press costs a single render before the runner swaps sessions
     public beginRestart(): void {
         this.patch({
             phase: 'starting',
@@ -79,7 +76,7 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         });
     }
 
-    // the tunnel url survives here because one tunnel outlives the restart loop
+    // tunnelUrl stays because one tunnel outlives the restart loop
     public beginDisconnect(): void {
         this.patch({
             phase: 'disconnected',

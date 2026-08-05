@@ -225,11 +225,12 @@ const messages = {
         `Refusing to scan ${count} guilds without confirmation. Re-run with --yes, or name specific guilds with --guild <ids>.`,
     [SeedcordErrorCode.CliCleanApplyNeedsYes]: () =>
         'Refusing to delete without confirmation in a non-interactive environment. Re-run with --yes.',
-    [SeedcordErrorCode.CliConfigInvalidTunnel]: () => 'Config `tunnel` must be a boolean when provided.',
+    [SeedcordErrorCode.CliConfigInvalidTunnel]: () => 'Config `tunnel` must be a boolean or an https URL.',
     [SeedcordErrorCode.CliTunnelUrlUnavailable]: (seconds: number) =>
         `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
-    [SeedcordErrorCode.CliTunnelNotVerified]: (url: string, seconds: number) =>
-        `Discord did not verify ${url} within ${seconds}s. A fresh tunnel hostname can take that long to resolve on Discord's side.`
+    [SeedcordErrorCode.CliTunnelNotVerified]: (url: string) => `Discord rejected ${url} as an interactions endpoint.`,
+    [SeedcordErrorCode.CliTunnelUnreachable]: (url: string, port: number, seconds: number) =>
+        `${url} did not answer within ${seconds}s. Check that your tunnel is running and forwards to port ${port}.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

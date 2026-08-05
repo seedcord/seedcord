@@ -12,7 +12,8 @@ import { ViteDevRuntime } from './runtime/ViteDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
+import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 import type { DevStore } from '@ui/stores/DevStore';
 
@@ -27,9 +28,6 @@ export interface DevRunnerDeps {
     readonly tunnel: TunnelRouter;
 }
 
-/**
- * Coordinates config discovery, loading, and starting a Seedcord instance.
- */
 export class DevRunner {
     private currentSession: DevSession | null = null;
     private signalResolve?: () => void;
@@ -59,9 +57,8 @@ export class DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const codegenLogger = new Logger('Codegen', { channel: 'cli' });
         const tunnelLogger = new Logger('Tunnel', { channel: 'cli' });
-        const coordinator = createTunnelCoordinator(tunnelLogger, (url) => {
-            store.setTunnelUrl(url);
-        });
+        const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
+            createTunnelCoordinator(tunnelLogger, (url) => store.setTunnelUrl(url), tunnel);
 
         return new DevRunner({
             locator: new ConfigLocator(logger),
@@ -69,7 +66,7 @@ export class DevRunner {
             store,
             codegen: CodegenRunner.create(codegenLogger),
             codegenLogger,
-            tunnel: new TunnelRouter(coordinator, tunnelLogger)
+            tunnel: new TunnelRouter(makeCoordinator, tunnelLogger)
         });
     }
 
@@ -87,7 +84,7 @@ export class DevRunner {
 
                     await this.runSession();
                 } catch (error: unknown) {
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- quit() flips shouldQuit during the awaited session. TS narrows it to false from the loop guard and can't see the async cross-method mutation
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- quit() flips shouldQuit during the awaited session, which TS cannot see from the loop guard
                     if (this.shouldQuit) break;
                     await this.handleError(error);
                 }
@@ -162,8 +159,7 @@ export class DevRunner {
 
     // the tunnel stays up here because a disconnect is a short parked state the user presses r out of
     public async disconnect(): Promise<void> {
-        // Already parked in the disconnected wait, waking the signal here would fall through and start a
-        // fresh session (i.e. behave like restart). No live session means nothing to disconnect.
+        // waking the signal while already parked would fall through and start a fresh session
         if (this.isDisconnected) return;
         this.isDisconnected = true;
         await this.currentSession?.stop();
@@ -182,7 +178,7 @@ export class DevRunner {
         try {
             await this.codegen.run(false);
         } catch (error: unknown) {
-            // codegen throws, so log here and keep the dev session running
+            // a codegen throw must not take the dev session down
             this.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
             this.isRegenerating = false;

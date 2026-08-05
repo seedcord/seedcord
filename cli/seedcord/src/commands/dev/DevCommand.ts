@@ -24,8 +24,7 @@ export class DevCommand extends BaseCommand {
                 const store = new DevStore();
                 const runner = DevRunner.create(this.logger, store);
 
-                // SIGTERM (and SIGINT when stdin is not raw) trigger a graceful quit. Ink handles the raw-mode
-                // Ctrl-C keypress itself. once() self-removes, and the finally removes them on a normal exit.
+                // SIGINT reaches here only when stdin is not raw, Ink handles the raw-mode Ctrl-C itself
                 const onSignal = (): void => {
                     void runner.quit();
                 };
@@ -42,12 +41,10 @@ export class DevCommand extends BaseCommand {
                     process.off('SIGTERM', onSignal);
                 }
 
-                // the alternate screen is restored by now, so this prints to the normal terminal, a pointer
-                // to the log folder since the in-UI logs are gone once the UI unmounts
+                // the in-UI logs are gone once the UI unmounts, so point at the folder on the normal terminal
                 this.printLogLocation();
 
-                // Ink's raw-mode stdin and the Vite dev server hold the event loop open after teardown.
-                // runDevApp already awaited unmount and shutdown, so exit explicitly.
+                // Ink's raw-mode stdin and the Vite dev server hold the event loop open after teardown
                 process.exit();
             });
     }
@@ -68,14 +65,13 @@ export class DevCommand extends BaseCommand {
                 onRefreshCommands: (shouldRefresh: boolean) => runner.refreshCommands(shouldRefresh),
                 onReady: () => {
                     runResult = runner.run().finally(async () => {
-                        // Drain buffered logs before unmounting Ink so the final lines aren't dropped.
+                        // unmounting first would drop the buffered lines
                         await LogStore.instance.flush();
                         unmount();
                     });
                 }
             }),
-            // Alternate screen (like vim/lazygit): the original terminal + scrollback are restored on quit,
-            // and Ink's ESC[3J scrollback purge never fires.
+            // the alternate screen restores the terminal and scrollback on quit, and Ink's ESC[3J purge never fires
             { exitOnCtrlC: false, alternateScreen: true }
         );
 

@@ -1,7 +1,7 @@
 import { asError, PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import { InteractionResponseType, InteractionType } from 'discord-api-types/v10';
 import { Converters, Envapter } from 'envapt';
 
@@ -27,6 +27,9 @@ const METHOD_NOT_ALLOWED = 405;
 const PING: number = InteractionType.Ping;
 
 const decoder = new TextDecoder();
+
+type Outcome = 'not-post' | 'unsigned' | 'stale' | 'bad-signature' | 'bad-body' | 'ping' | 'replay' | 'dispatched';
+type Answer = readonly [Response, Outcome];
 
 function hasInteractionType(payload: unknown): payload is { type: number } {
     return typeof payload === 'object' && payload !== null && 'type' in payload && typeof payload.type === 'number';
@@ -81,31 +84,42 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
     }
 
     const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
+        const [response, outcome] = await respond(request, ctx);
+        const { pathname } = new URL(request.url);
+        logger.debug(`${request.method} ${paint.iris(pathname)} ${outcome} ${paint.amber(String(response.status))}`);
+        return response;
+    };
+
+    const respond = async (request: Request, ctx?: EngineContext): Promise<Answer> => {
         if (request.method !== 'POST') {
-            return new Response(null, { status: METHOD_NOT_ALLOWED, headers: { allow: 'POST' } });
+            return [new Response(null, { status: METHOD_NOT_ALLOWED, headers: { allow: 'POST' } }), 'not-post'];
         }
 
         const signature = request.headers.get(SIGNATURE_HEADER);
         const timestamp = request.headers.get(TIMESTAMP_HEADER);
-        if (signature === null || timestamp === null) return new Response(null, { status: UNAUTHORIZED });
+        if (signature === null || timestamp === null) return [new Response(null, { status: UNAUTHORIZED }), 'unsigned'];
+
+        if (!replays.fresh(timestamp)) return [new Response(null, { status: UNAUTHORIZED }), 'stale'];
 
         const body = new Uint8Array(await request.arrayBuffer());
         if (!(await verifier.verify(signature, timestamp, body))) {
-            return new Response(null, { status: UNAUTHORIZED });
+            return [new Response(null, { status: UNAUTHORIZED }), 'bad-signature'];
         }
-        if (!replays.accepts(signature, timestamp)) return new Response(null, { status: UNAUTHORIZED });
 
         let payload: unknown;
         try {
             payload = JSON.parse(decoder.decode(body));
         } catch {
-            return new Response(null, { status: BAD_REQUEST });
+            return [new Response(null, { status: BAD_REQUEST }), 'bad-body'];
         }
-        if (!hasInteractionType(payload)) return new Response(null, { status: BAD_REQUEST });
+        if (!hasInteractionType(payload)) return [new Response(null, { status: BAD_REQUEST }), 'bad-body'];
 
+        // discord resends the same signed ping while verifying an endpoint, and a 401 there reads as a broken endpoint
         if (payload.type === PING) {
-            return Response.json({ type: InteractionResponseType.Pong });
+            return [Response.json({ type: InteractionResponseType.Pong }), 'ping'];
         }
+
+        if (!replays.unseen(signature, timestamp)) return [new Response(null, { status: UNAUTHORIZED }), 'replay'];
 
         try {
             // justified: the payload is signed by Discord, and the type field anchors the discriminated union
@@ -117,7 +131,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
             rootFault(caught);
         }
 
-        return new Response(null, { status: ACCEPTED });
+        return [new Response(null, { status: ACCEPTED }), 'dispatched'];
     };
 
     return { handle, inFlight };

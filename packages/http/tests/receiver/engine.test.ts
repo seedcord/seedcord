@@ -1,6 +1,7 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createSeedcord } from '@src/createSeedcord';
 
@@ -44,6 +45,26 @@ async function signedRequest(signer: Signer, payload: string, init: SignedReques
 const ping = '{"type":1}';
 // a type resolve() does not recognize, the one payload class the engine acks without dispatching
 const unrecognized = '{"type":99}';
+
+describe('createSeedcord request logging', () => {
+    it('names why each request got its status', async () => {
+        const debug = vi.spyOn(Logger.prototype, 'debug').mockReturnValue(undefined);
+        const { signer, handle } = await readySeedcord();
+
+        await handle(new Request('https://bot.example/interactions', { method: 'POST' }));
+        const signed = await signedRequest(signer, ping);
+        await handle(signed.clone());
+        await handle(signed);
+
+        const lines = debug.mock.calls.map(([message]) => message);
+        expect(lines[0]).toContain('unsigned');
+        expect(lines[1]).toContain('ping');
+        // discord resends during verification, and a second answer of 401 reads as a broken endpoint
+        expect(lines[2]).toContain('ping');
+        expect(lines.join('\n')).toContain('/interactions');
+        debug.mockRestore();
+    });
+});
 
 describe('createSeedcord', () => {
     it('answers a signed PING with an in-body PONG', async () => {

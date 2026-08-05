@@ -35,8 +35,7 @@ export class HealthCheck {
         return this.responder.path;
     }
 
-    // resolves the `healthCheck` option. `undefined` and `true` build the defaults.
-    // an object uses its config and `false` returns `undefined`.
+    // `undefined` and `true` both build the defaults, only `false` opts out
     public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
         if (option === false) return undefined;
         return new HealthCheck(shutdown, typeof option === 'object' ? option : undefined);

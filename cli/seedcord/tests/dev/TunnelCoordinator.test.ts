@@ -1,3 +1,5 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it, vi } from 'vitest';
 
 import { TunnelCoordinator } from '@commands/dev/tunnel/TunnelCoordinator';
@@ -13,6 +15,7 @@ function urlFor(port: number): string {
 function deps(overrides: Partial<CoordinatorDeps> = {}): CoordinatorDeps {
     return {
         makeTunnel: () => ({ open: (port) => Promise.resolve(urlFor(port)), stop: () => undefined }),
+        kind: 'quick',
         endpoint: { set: () => Promise.resolve(), clear: () => Promise.resolve() },
         onUrl: () => undefined,
         logger: silentLogger,
@@ -72,25 +75,37 @@ describe('TunnelCoordinator', () => {
         expect(order[0]).toBe('url');
     });
 
-    it('reports every verify attempt discord rejects', async () => {
-        const debug = vi.fn();
+    it('keeps the tunnel running when discord refuses the endpoint', async () => {
+        const stop = vi.fn();
+        const onUrl = vi.fn();
         const coordinator = new TunnelCoordinator(
             deps({
+                makeTunnel: () => ({ open: (port) => Promise.resolve(urlFor(port)), stop }),
                 endpoint: {
-                    set: (_url, _signal, onRetry) => {
-                        onRetry(1);
-                        onRetry(2);
-                        return Promise.resolve();
-                    },
+                    set: () =>
+                        Promise.reject(new SeedcordError(SeedcordErrorCode.CliTunnelNotVerified, [urlFor(3000)])),
                     clear: () => Promise.resolve()
                 },
-                logger: { ...silentLogger, debug }
+                onUrl
             })
         );
 
         await coordinator.onPort(3000);
 
-        expect(debug).toHaveBeenCalledTimes(2);
+        expect(stop).not.toHaveBeenCalled();
+        expect(onUrl).toHaveBeenCalledExactlyOnceWith(urlFor(3000));
+    });
+
+    it('leaves a configured endpoint in place on stop', async () => {
+        const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
+        const coordinator = new TunnelCoordinator(
+            deps({ kind: 'configured', endpoint: { set: () => Promise.resolve(), clear } })
+        );
+        await coordinator.onPort(3000);
+
+        await coordinator.stop();
+
+        expect(clear).not.toHaveBeenCalled();
     });
 
     it('writes the endpoint the tunnel reported', async () => {
@@ -99,7 +114,7 @@ describe('TunnelCoordinator', () => {
 
         await coordinator.onPort(4321);
 
-        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal), expect.any(Function));
+        expect(set).toHaveBeenCalledExactlyOnceWith(urlFor(4321), expect.any(AbortSignal));
     });
 
     it('leaves the tunnel alone when the port is unchanged', async () => {
