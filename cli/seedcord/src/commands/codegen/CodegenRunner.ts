@@ -136,7 +136,7 @@ export class CodegenRunner {
     ): Promise<TypedOmit<ScanResult, 'commands'> & { commandsDir: string | undefined }> {
         // loading the instance constructs the bot to read commands.path and emojis, so its lifecycle and plugin
         // setup logs follow this line. codegen never starts the bot, nothing logs in or connects.
-        this.logger.info('Loading instance to resolve the commands directory');
+        this.logger.debug('Loading instance to resolve the commands directory');
         const module = await this.moduleLoader.importModule(config.instance);
         const instance = resolveDefaultExport(module);
         if (!this.isSeedcordInstance(instance)) {

@@ -32,7 +32,7 @@ export class TscRunner {
             args.push('--project', this.tsconfigPath);
         }
 
-        this.logger.info('Starting tsc --watch...');
+        this.logger.debug('Starting tsc --watch...');
 
         this.process = spawn(process.execPath, args, {
             cwd: this.cwd ?? process.cwd(),
@@ -43,7 +43,7 @@ export class TscRunner {
             const lines = data.toString().split('\n');
             for (const line of lines) {
                 if (line.trim()) {
-                    this.logger.info(line.trimEnd());
+                    this.logger.debug(line.trimEnd());
                 }
             }
         });
@@ -65,7 +65,7 @@ export class TscRunner {
             if (code !== 0 && code !== null) {
                 this.logger.error(`tsc exited with code ${code}`);
             } else {
-                this.logger.info('tsc exited.');
+                this.logger.debug('tsc exited.');
             }
             this.process = null;
         });
@@ -75,7 +75,7 @@ export class TscRunner {
         const child = this.process;
         if (!child) return;
 
-        this.logger.info('Stopping tsc...');
+        this.logger.debug('Stopping tsc...');
         child.kill('SIGTERM');
 
         // justified: tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds); escalate to SIGKILL after a grace window. unref so the timer never holds the event loop open.
