@@ -10,15 +10,14 @@ import type { EndpointRest } from '@commands/dev/tunnel/InteractionsEndpoint';
 const TUNNEL = 'https://abc.trycloudflare.com';
 const RUNNING = new AbortController().signal;
 
-function rest(current: string | null): { rest: EndpointRest; patch: ReturnType<typeof vi.fn> } {
+function rest(current: string | null): {
+    rest: EndpointRest;
+    get: ReturnType<typeof vi.fn>;
+    patch: ReturnType<typeof vi.fn>;
+} {
+    const get = vi.fn().mockResolvedValue({ interactions_endpoint_url: current });
     const patch = vi.fn().mockResolvedValue({});
-    return {
-        rest: {
-            get: vi.fn().mockResolvedValue({ interactions_endpoint_url: current }),
-            patch
-        },
-        patch
-    };
+    return { rest: { get, patch }, get, patch };
 }
 
 // the rejection discord returns while the tunnel hostname is still unresolvable on its side
@@ -118,6 +117,13 @@ describe('InteractionsEndpoint', () => {
 
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelNotVerified)).toBe(true);
         expect(patch).toHaveBeenCalledOnce();
+    });
+
+    it('spends no request when the attempt is already cancelled', async () => {
+        const { rest: client, get } = rest(null);
+
+        await expect(new InteractionsEndpoint(() => client).set(TUNNEL, AbortSignal.abort())).rejects.toThrow();
+        expect(get).not.toHaveBeenCalled();
     });
 
     it('rethrows a refusal whose errors field is null', async () => {
