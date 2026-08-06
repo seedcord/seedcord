@@ -12,7 +12,10 @@ export interface LogEntry {
     text: string;
     timestamp: number;
     head: boolean; // false for continuation lines (stack frames, wrapped text)
+    frame: boolean;
 }
+
+const STACK_FRAME = /^\s+at\s/;
 
 interface LogStoreEvents {
     change: [];
@@ -67,13 +70,15 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
         const lines = formatBody(record).split(/\r\n|\r|\n/);
 
         for (const [index, line] of lines.entries()) {
+            const text = line.replaceAll(/\p{Cc}/gu, (char) => (char === ESC ? char : ''));
             this.buffer.push({
                 id: this.nextId++,
                 channel: record.channel,
                 level: record.level,
                 label: record.label,
                 head: index === 0,
-                text: line.replaceAll(/\p{Cc}/gu, (char) => (char === ESC ? char : '')),
+                frame: index > 0 && STACK_FRAME.test(text),
+                text,
                 timestamp: record.timestamp
             });
         }

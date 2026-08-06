@@ -61,7 +61,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private readonly inFlight = new Set<Promise<void>>();
     private draining = false;
 
-    // batched during bulk load, hmr registrations log inline
+    // batched during bulk load. A reload reports on the hmr channel instead
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
     private readonly loadedMiddlewares: { name: string; from: string }[] = [];
@@ -220,14 +220,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
                 name: `${middlewareCtor.name} (${metadata.priority})`,
                 from: formatFilePath(relativePath)
             });
-            return;
         }
-
-        this.logger.utils.registration(
-            `${middlewareCtor.name} ${paint.mute(`(${metadata.priority})`)}`,
-            relativePath,
-            'event middleware'
-        );
     }
 
     private async runMiddlewares<KeyOfEvents extends keyof ClientEvents>(
@@ -295,7 +288,6 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         const from = formatFilePath(relativePath);
         if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
-        else this.logger.utils.registration(handlerClass.name, from);
     }
 
     private attachToClient(): void {
@@ -353,9 +345,9 @@ export class EventDispatcher implements Initializeable, HmrAware {
         if (!shouldContinue) return;
 
         for (const entry of handlersToExecute) {
-            // mark a 'once' handler spent before running so a rethrow can't re-fire it. the has() re-check
-            // closes the window where a concurrent fire claimed it during the runMiddlewares await
+            // marked spent before running so a rethrow can't re-fire it
             if (entry.frequency === 'once') {
+                // a concurrent fire could have claimed it during the runMiddlewares await
                 if (this.executedOnceHandlers.has(entry.ctor)) continue;
                 this.executedOnceHandlers.add(entry.ctor);
             }

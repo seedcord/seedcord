@@ -11,6 +11,7 @@ import { COMPACT_ROWS, FULL_ROWS } from '@ui/tier';
 
 import { settled } from './settled';
 
+import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 import type { LogRecord } from '@seedcord/logger';
 import type { DevState } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
@@ -43,17 +44,23 @@ function runningState(): DevState {
 }
 const RUNNING = runningState();
 
-// an http run adds the port and url rows, which makes it the tallest the rail gets
+// an http run adds the port and tunnel rows, which makes it the tallest the rail gets
 function httpState(): DevState {
     const store = new DevStore();
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
     store.apply({ type: 'server-listening', port: 4321 });
-    store.setTunnelUrl('https://abc-def-ghi.trycloudflare.com');
+    store.setTunnel('live');
     return store.getState();
 }
 const HTTP = httpState();
+
+function tunnelState(status: TunnelStatus): DevState {
+    const store = new DevStore();
+    store.setTunnel(status);
+    return store.getState();
+}
 
 // the readout renders outside the measured rail, so it never changes the size it reports
 function Harness({ filtersOpen, state }: { readonly filtersOpen: boolean; readonly state: DevState }): ReactElement {
@@ -148,11 +155,16 @@ describe('Sidebar', () => {
         expect(rows).toBeLessThanOrEqual(COMPACT_ROWS);
     });
 
-    it('shows the port and the tunnel host on an http run', () => {
+    it('shows the port and the tunnel status on an http run', () => {
         const frame = frameFor(HTTP);
 
         expect(frame).toContain('4321');
-        expect(frame).toContain('abc-def-ghi.trycloudflare.com');
+        expect(frame).toContain('live');
+    });
+
+    it('trails the ellipsis only while the tunnel is still opening', () => {
+        expect(frameFor(HTTP)).not.toContain('live…');
+        expect(frameFor(tunnelState('resolving'))).toContain('resolving…');
     });
 
     it('leaves both rows out on a gateway run', () => {

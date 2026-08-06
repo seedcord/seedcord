@@ -5,30 +5,46 @@ import type { DevEvent } from '../runtime/events';
 import type { ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
+function same(a: ResolvedTunnel | undefined, b: ResolvedTunnel): boolean {
+    if (a?.mode !== b.mode) return false;
+    return a.mode === 'url' && b.mode === 'url' ? a.url === b.url : true;
+}
+
 export class TunnelRouter {
     private coordinator: TunnelCoordinator | undefined;
-    private built = false;
+    private built: ResolvedTunnel | undefined;
 
     constructor(
         private readonly make: (tunnel: ResolvedTunnel) => TunnelCoordinator | undefined,
         private readonly logger: ILogger
     ) {}
 
-    // the http host is the only one reporting a port so a gateway run should never show the warn
-    public route(tunnel: ResolvedTunnel, event: DevEvent): void {
-        if (event.type !== 'server-listening' || tunnel.mode === 'off') return;
+    // the dev session calls this from a sync callback where a rejection would end up unhandled
+    public route(tunnel: ResolvedTunnel, event: DevEvent): Promise<void> {
+        if (event.type !== 'server-listening') return Promise.resolve();
+        return this.routeTo(tunnel, event.port).catch((error: unknown) => {
+            this.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
+        });
+    }
 
-        // the config loads per session, after the runner built this
-        if (!this.built) {
-            this.coordinator = this.make(tunnel);
-            this.built = true;
-            if (!this.coordinator) this.logger.warn(missingCloudflaredHint(process.platform));
+    private async routeTo(tunnel: ResolvedTunnel, port: number): Promise<void> {
+        // each restart reloads the config, so the tunnel can differ from the built one
+        if (!same(this.built, tunnel)) {
+            // clearing the old endpoint must finish before the replacement sets its own
+            await this.stop();
+            this.built = tunnel;
+            this.coordinator = tunnel.mode === 'off' ? undefined : this.make(tunnel);
+            if (tunnel.mode !== 'off' && !this.coordinator) {
+                this.logger.warn(missingCloudflaredHint(process.platform));
+            }
         }
 
-        void this.coordinator?.onPort(event.port);
+        await this.coordinator?.onPort(port);
     }
 
     public stop(): Promise<void> {
-        return this.coordinator?.stop() ?? Promise.resolve();
+        const running = this.coordinator;
+        this.coordinator = undefined;
+        return running?.stop() ?? Promise.resolve();
     }
 }

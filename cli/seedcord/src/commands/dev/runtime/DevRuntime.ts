@@ -24,8 +24,4 @@ export interface DevRuntime {
 
 export interface DevRuntimeLoadResult<TModule = unknown> {
     readonly module: TModule;
-    readonly metadata?: {
-        readonly loadTime?: number;
-        readonly dependencies?: string[];
-    };
 }

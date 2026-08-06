@@ -21,10 +21,26 @@ function router(coordinator: TunnelCoordinator | undefined, logger: ILogger = si
 }
 
 describe('TunnelRouter', () => {
-    it('hands the bound port to the coordinator', () => {
+    it('reports a coordinator that fails to build and resolves', async () => {
+        const error = vi.fn();
+        const boom = new Error('cloudflared lookup exploded');
+        const routing = new TunnelRouter(
+            () => {
+                throw boom;
+            },
+            { ...silentLogger, error }
+        );
+
+        await expect(routing.route(QUICK, { type: 'server-listening', port: 1 })).resolves.toBeUndefined();
+
+        expect(error).toHaveBeenCalledOnce();
+        expect(error.mock.calls[0]?.[1]).toBe(boom);
+    });
+
+    it('hands the bound port to the coordinator', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
 
-        router(fakeCoordinator({ onPort })).route(QUICK, {
+        await router(fakeCoordinator({ onPort })).route(QUICK, {
             type: 'server-listening',
             port: 4321
         });
@@ -32,11 +48,11 @@ describe('TunnelRouter', () => {
         expect(onPort).toHaveBeenCalledExactlyOnceWith(4321);
     });
 
-    it('stays out of the way when the config turns the tunnel off', () => {
+    it('stays out of the way when the config turns the tunnel off', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
         const warn = vi.fn();
 
-        router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(OFF, {
+        await router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(OFF, {
             type: 'server-listening',
             port: 4321
         });
@@ -45,20 +61,20 @@ describe('TunnelRouter', () => {
         expect(warn).not.toHaveBeenCalled();
     });
 
-    it('ignores every event that is not a bound port', () => {
+    it('ignores every event that is not a bound port', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
 
-        router(fakeCoordinator({ onPort })).route(QUICK, { type: 'ready' });
+        await router(fakeCoordinator({ onPort })).route(QUICK, { type: 'ready' });
 
         expect(onPort).not.toHaveBeenCalled();
     });
 
-    it('names the install command once when cloudflared is absent', () => {
+    it('names the install command once when cloudflared is absent', async () => {
         const warn = vi.fn();
         const routing = router(undefined, { ...silentLogger, warn });
 
-        routing.route(QUICK, { type: 'server-listening', port: 1 });
-        routing.route(QUICK, { type: 'server-listening', port: 2 });
+        await routing.route(QUICK, { type: 'server-listening', port: 1 });
+        await routing.route(QUICK, { type: 'server-listening', port: 2 });
 
         expect(warn).toHaveBeenCalledOnce();
     });
@@ -70,29 +86,57 @@ describe('TunnelRouter', () => {
     it('stop reaches the coordinator', async () => {
         const stop = vi.fn().mockResolvedValue(undefined);
         const routing = router(fakeCoordinator({ stop }));
-        routing.route(QUICK, { type: 'server-listening', port: 1 });
+        await routing.route(QUICK, { type: 'server-listening', port: 1 });
 
         await routing.stop();
 
         expect(stop).toHaveBeenCalledOnce();
     });
 
-    it('builds the coordinator once across restarts', () => {
+    it('builds the coordinator once across restarts', async () => {
         const make = vi.fn(() => fakeCoordinator());
         const routing = new TunnelRouter(make, silentLogger);
 
-        routing.route(QUICK, { type: 'server-listening', port: 1 });
-        routing.route(QUICK, { type: 'server-listening', port: 2 });
+        await routing.route(QUICK, { type: 'server-listening', port: 1 });
+        await routing.route(QUICK, { type: 'server-listening', port: 2 });
 
         expect(make).toHaveBeenCalledOnce();
     });
 
-    it('routes a configured url without asking for cloudflared', () => {
+    it('rebuilds on a restart that changed the url', async () => {
+        const stopStale = vi.fn().mockResolvedValue(undefined);
+        const onFreshPort = vi.fn().mockResolvedValue(undefined);
+        const make = vi
+            .fn()
+            .mockReturnValueOnce(fakeCoordinator({ stop: stopStale }))
+            .mockReturnValueOnce(fakeCoordinator({ onPort: onFreshPort }));
+        const routing = new TunnelRouter(make, silentLogger);
+
+        await routing.route({ mode: 'url', url: 'https://stale.example.com' }, { type: 'server-listening', port: 1 });
+        await routing.route({ mode: 'url', url: 'https://fresh.example.com' }, { type: 'server-listening', port: 2 });
+
+        expect(make).toHaveBeenCalledTimes(2);
+        expect(make.mock.calls[1]?.[0]).toEqual({ mode: 'url', url: 'https://fresh.example.com' });
+        expect(stopStale).toHaveBeenCalledOnce();
+        expect(onFreshPort).toHaveBeenCalledExactlyOnceWith(2);
+    });
+
+    it('drops the running tunnel when a restart turns it off', async () => {
+        const stop = vi.fn().mockResolvedValue(undefined);
+        const routing = new TunnelRouter(() => fakeCoordinator({ stop }), silentLogger);
+
+        await routing.route({ mode: 'url', url: 'https://stale.example.com' }, { type: 'server-listening', port: 1 });
+        await routing.route(OFF, { type: 'server-listening', port: 2 });
+
+        expect(stop).toHaveBeenCalledOnce();
+    });
+
+    it('routes a configured url without asking for cloudflared', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
         const warn = vi.fn();
         const configured: ResolvedTunnel = { mode: 'url', url: 'https://bot.example.com' };
 
-        router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(configured, {
+        await router(fakeCoordinator({ onPort }), { ...silentLogger, warn }).route(configured, {
             type: 'server-listening',
             port: 4321
         });

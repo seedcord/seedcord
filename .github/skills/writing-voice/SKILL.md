@@ -98,6 +98,30 @@ The em-dash `—` and en-dash `–` are banned in prose outright, replace them w
 
 Comma splices are also banned!! A comma cannot join two independent clauses so a comma splice is always a grammar error. Rearrange the sentence into more coherent, natural prose or split as needed with simple punctuation. Comma spliced sentences really confuse the reader because they don't make a lot of sense when read on their own.
 
+**The comma gets no carve-out.** The colon exemption above covers the colon and nothing else. A comma joining two clauses in parallel shape (`A is X, B is Y`), a two-item enumeration, a pair of contrasting cases, or a before-and-after is still a splice. Matching structure only makes the error easier to miss. If you catch yourself arguing that a particular splice reads fine, that argument is the tell. Rewrite it.
+
+**Fix a splice by rewriting it shorter, in this order.**
+
+1. **Collapse to one clause.** Most splices are one fact stretched over two. This is almost always the best result and the one to try first.
+2. **Add the connector that names the real relation** (`because`, `since`, `and`, `then`, `so`). Keeps one sentence when both halves genuinely earn their place.
+3. **Two sentences.** The fallback when the halves are independent facts that both matter.
+
+Reaching for a period first produces two stubby sentences carrying what one short line said better.
+
+```ts
+// Bad: parallel shape, still a splice
+// null is a failed reload, [] is a file that registered nothing
+// Good (1): one clause carries it, the empty array needs no gloss
+// only a failed reload returns null
+```
+
+```ts
+// Bad: two facts jammed with a comma
+// the cache is keyed by file, a rename lands as a fresh entry
+// Good (2): the connector names the relation
+// the cache is keyed by file, so a rename lands as a fresh entry
+```
+
 **Replace a banned mark with punctuation that does the same grammatical job.** A `;`, `—`, or `–` between two complete clauses is holding two independent thoughts apart. A comma cannot join two independent clauses, so swapping one in makes a comma splice. Use a period and two sentences, or reword the sentence. Read the result back on its own.
 
 ```ts

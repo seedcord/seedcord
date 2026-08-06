@@ -42,7 +42,8 @@ export class KyselyServiceRegistry {
             for (const Service of Object.values(mod)) {
                 if (!this.isServiceClass(Service)) continue;
 
-                this.initializeService(Service, rel);
+                this.initializeService(Service);
+                this.logger.utils.registration(Service.name, rel);
                 this.plugin.trackServiceFile(fullPath, Service);
             }
         });
@@ -60,9 +61,9 @@ export class KyselyServiceRegistry {
         }
     }
 
-    public initializeService(Service: KyselyServiceConstructor, relativePath: string): void {
-        const instance = new Service(this.plugin, this.core);
-        this.logger.utils.registration(instance.constructor.name, relativePath);
+    public initializeService(Service: KyselyServiceConstructor): void {
+        // eslint-disable-next-line no-new -- the base ctor calls _register, so constructing is the registration
+        new Service(this.plugin, this.core);
     }
 
     public isServiceClass(obj: unknown): obj is KyselyServiceConstructor {

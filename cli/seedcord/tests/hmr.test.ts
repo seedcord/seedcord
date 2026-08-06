@@ -11,19 +11,26 @@ import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vit
 
 const HMR_EVENT_NAME = 'seedcord:hmr';
 
+function watcherMock(): EventEmitter & { add: Mock } {
+    return Object.assign(new EventEmitter(), { add: vi.fn() });
+}
+
 const loggerSpies = {
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),
-    debug: vi.fn()
+    debug: vi.fn(),
+    trace: vi.fn()
 };
 
-vi.mock('@seedcord/logger', () => ({
+vi.mock('@seedcord/logger', async (importOriginal) => ({
+    ...(await importOriginal<typeof import('@seedcord/logger')>()),
     Logger: class {
         public info = loggerSpies.info;
         public warn = loggerSpies.warn;
         public error = loggerSpies.error;
         public debug = loggerSpies.debug;
+        public trace = loggerSpies.trace;
     }
 }));
 
@@ -65,7 +72,7 @@ describe('HmrPlugin', () => {
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
         vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
 
-        const watcher = new EventEmitter();
+        const watcher = watcherMock();
         const server = {
             watcher,
             environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
@@ -76,6 +83,28 @@ describe('HmrPlugin', () => {
         watcher.emit('add', file);
 
         expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, { file, type: 'create', rollback: false });
+    });
+
+    it('asks for a restart when the config file above the vite root changes', () => {
+        const configFile = join(process.cwd(), 'seedcord.config.ts');
+        const plugin = new HmrPlugin({ ...mockConfig, root: join(process.cwd(), 'src'), configFile });
+        // justified: spy on the private `hot` getter
+        const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: vi.fn(), on: vi.fn() });
+
+        const events: DevEvent[] = [];
+        plugin.on('event', (event: DevEvent) => events.push(event));
+
+        const watcher = watcherMock();
+        const server = {
+            watcher,
+            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+        } as unknown as ViteDevServer;
+        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+        watcher.emit('change', configFile);
+
+        expect(events).toContainEqual({ type: 'restart-required' });
     });
 
     it('relays the bound port the framework reports', () => {
@@ -92,7 +121,7 @@ describe('HmrPlugin', () => {
         plugin.on('event', (event: DevEvent) => events.push(event));
 
         const server = {
-            watcher: new EventEmitter(),
+            watcher: watcherMock(),
             environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
         } as unknown as ViteDevServer;
         (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
@@ -108,7 +137,7 @@ describe('HmrPlugin', () => {
         let hotSendMock: Mock;
 
         beforeEach(() => {
-            watcher = new EventEmitter();
+            watcher = watcherMock();
             hotSendMock = vi.fn();
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spy on the private `hot` getter
@@ -144,7 +173,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/ping.ts');
             watcher.emit('add', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('CREATE'));
+            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('CREATE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'create',
@@ -152,11 +181,79 @@ describe('HmrPlugin', () => {
             });
         });
 
+        it('sends nothing for the update vite fires right after a create', async () => {
+            const file = join(process.cwd(), 'src/commands/ping.ts');
+            watcher.emit('add', file);
+            hotSendMock.mockClear();
+
+            const ctx: HotUpdateOptions = {
+                type: 'update',
+                file,
+                server: {
+                    ...serverMock,
+                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
+                } as unknown as ViteDevServer,
+                modules: [],
+                timestamp: Date.now(),
+                read: vi.fn()
+            };
+            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
+
+            expect(hotSendMock).not.toHaveBeenCalled();
+        });
+
+        it('sends the update when the content save follows the create past the debounce', async () => {
+            vi.useFakeTimers();
+            const file = join(process.cwd(), 'src/commands/ping.ts');
+            watcher.emit('add', file);
+            hotSendMock.mockClear();
+
+            vi.advanceTimersByTime(300);
+
+            const ctx: HotUpdateOptions = {
+                type: 'update',
+                file,
+                server: {
+                    ...serverMock,
+                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
+                } as unknown as ViteDevServer,
+                modules: [],
+                timestamp: Date.now(),
+                read: vi.fn()
+            };
+            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
+
+            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, type: 'update' }));
+            vi.useRealTimers();
+        });
+
+        it('sends a save that lands inside the create window', async () => {
+            const file = join(process.cwd(), 'src/commands/ping.ts');
+            watcher.emit('add', file);
+            hotSendMock.mockClear();
+
+            const ctx: HotUpdateOptions = {
+                type: 'update',
+                file,
+                server: {
+                    ...serverMock,
+                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
+                } as unknown as ViteDevServer,
+                modules: [],
+                timestamp: Date.now(),
+                read: vi.fn()
+            };
+            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
+            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
+
+            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, type: 'update' }));
+        });
+
         it('should handle "unlink" event as "delete"', () => {
             const file = join(process.cwd(), 'src/commands/ping.ts');
             watcher.emit('unlink', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('DELETE'));
+            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('DELETE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'delete',
@@ -168,7 +265,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/group');
             watcher.emit('addDir', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
+            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('CREATEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'createDir',
@@ -180,7 +277,7 @@ describe('HmrPlugin', () => {
             const file = join(process.cwd(), 'src/commands/group');
             watcher.emit('unlinkDir', file);
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
+            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('DELETEDIR'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'deleteDir',
@@ -249,7 +346,7 @@ describe('HmrPlugin', () => {
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
-            expect(loggerSpies.info).toHaveBeenCalledWith(expect.stringContaining('UPDATE'));
+            expect(loggerSpies.trace).toHaveBeenCalledWith(expect.stringContaining('UPDATE'));
             expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, {
                 file,
                 type: 'update',
@@ -328,7 +425,7 @@ describe('HmrPlugin', () => {
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
-            expect(loggerSpies.info).toHaveBeenCalledTimes(1);
+            expect(loggerSpies.trace).toHaveBeenCalledTimes(1);
             expect(hotSendMock).toHaveBeenCalledTimes(1);
         });
 
@@ -353,7 +450,7 @@ describe('HmrPlugin', () => {
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
-            expect(loggerSpies.info).toHaveBeenCalledTimes(2);
+            expect(loggerSpies.trace).toHaveBeenCalledTimes(2);
             expect(hotSendMock).toHaveBeenCalledTimes(2);
             vi.useRealTimers();
         });

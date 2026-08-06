@@ -46,10 +46,11 @@ export class CloudflaredTunnel {
 
     constructor(
         private readonly deps: TunnelDeps,
-        private readonly binary: string
+        private readonly binary: string,
+        private readonly onLost: () => void
     ) {}
 
-    public async open(signal: AbortSignal, targetPort: number): Promise<string> {
+    public async open(signal: AbortSignal, targetPort: number, onResolving?: () => void): Promise<string> {
         const metricsPort = await this.deps.freePort();
 
         const child = this.deps.spawn(this.binary, [
@@ -71,9 +72,14 @@ export class CloudflaredTunnel {
         this.child = child;
 
         const url = `https://${await this.readHostname(metricsPort, signal)}`;
+        onResolving?.();
         // the record lands ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
+        // our dns lagging says nothing about discord's, so the result only shortens the wait
         await awaitReachable(url, this.deps, signal);
+        child.once('exit', () => {
+            if (this.child === child) this.onLost();
+        });
         return url;
     }
 

@@ -5,7 +5,17 @@ import { filterLogs } from '@ui/hooks/useLogs';
 import type { LogEntry } from '@ui/stores/LogStore';
 
 function entry(over: Partial<LogEntry>): LogEntry {
-    return { id: 0, channel: 'default', level: 'info', label: 'Bot', text: '', timestamp: 0, head: true, ...over };
+    return {
+        id: 0,
+        channel: 'default',
+        level: 'info',
+        label: 'Bot',
+        text: '',
+        timestamp: 0,
+        head: true,
+        frame: false,
+        ...over
+    };
 }
 
 describe('filterLogs', () => {

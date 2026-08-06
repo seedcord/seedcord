@@ -149,7 +149,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     protected static override reset(): void {
         super.reset();
-        LoggerChannelRegistry.instance.reset();
+        // reset() would drop the dev TUI's log sink
+        LoggerChannelRegistry.instance.configure({});
     }
 
     private registerStartupTasks(): void {

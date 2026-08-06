@@ -17,8 +17,10 @@ interface StatusBadgeProps {
 function Glyph({ phase, glyph }: Required<StatusBadgeProps>): ReactElement {
     const meta = PHASE_META[phase];
     if (glyph === 'live') return isStreaming(phase) ? <BlinkDot /> : <Text>{meta.icon}</Text>;
-    if (meta.kind === 'spinner') return <Spinner type="balloon2" />;
-    if (meta.kind === 'arc') return <Spinner type="toggle4" />;
+    // ink-spinner keeps its frame index across a type swap and wraps on equality, so a 7-frame
+    // index carried into a 4-frame set renders nothing forever. The key forces a fresh mount.
+    if (meta.kind === 'spinner') return <Spinner key="balloon2" type="balloon2" />;
+    if (meta.kind === 'arc') return <Spinner key="toggle4" type="toggle4" />;
     return <Text>{meta.icon}</Text>;
 }
 

@@ -113,6 +113,15 @@ describe('DevApp tiers', () => {
         view.unmount();
     });
 
+    it('opens with a rule across the whole terminal, so nothing sits on the top edge', async () => {
+        const app = renderAt(<DevApp store={runningStore()} onReady={() => undefined} />, FULL);
+        const frame = await stableFrame(app.lastFrame);
+
+        expect(frame.split('\n')[0]).toBe('─'.repeat(FULL.columns));
+
+        app.unmount();
+    });
+
     // the stack can take every row the log column has, so the pane keeps one back for its own message
     it('always says something in the log pane', async () => {
         const store = squeezedStore();

@@ -19,6 +19,27 @@ describe('noticesOf', () => {
         expect(noticesOf(running().getState())).toHaveLength(0);
     });
 
+    it('ranks an armed quit first and gives it a card', () => {
+        const store = running();
+        store.setError(new Error('boom'));
+        store.setQuitArmed(true);
+
+        const [top] = noticesOf(store.getState());
+
+        expect(top?.key).toBe('quit');
+        expect(top?.card).toBeDefined();
+    });
+
+    it('reports an opening tunnel and clears once it is live', () => {
+        const store = running();
+        store.setTunnel('opening');
+
+        expect(keysOf(store.getState())).toContain('tunnel');
+
+        store.setTunnel('live');
+        expect(keysOf(store.getState())).not.toContain('tunnel');
+    });
+
     it('words the command prompt with its count and its keys', () => {
         const store = running();
         store.apply({ type: 'command-update-prompt', files: ['a.ts', 'b.ts', 'c.ts', 'd.ts'] });

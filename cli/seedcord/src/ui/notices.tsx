@@ -2,12 +2,15 @@ import React from 'react';
 
 import { CommandRefreshPrompt } from '@ui/components/CommandRefreshPrompt';
 import { ErrorDisplay } from '@ui/components/ErrorDisplay';
+import { QuitConfirmCard } from '@ui/components/QuitConfirmCard';
 import { RestartRequiredCard } from '@ui/components/RestartRequiredCard';
+import { TunnelOpeningCard } from '@ui/components/TunnelOpeningCard';
 
+import type { TunnelPhase, TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 import type { DevState } from '@ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
-type NoticeKey = 'commands' | 'error' | 'restart';
+type NoticeKey = 'quit' | 'commands' | 'error' | 'restart' | 'tunnel';
 
 export interface Notice {
     readonly key: NoticeKey;
@@ -20,9 +23,17 @@ export interface Notice {
 
 const RESTART = 'press r to restart';
 
+function openingPhase(status: TunnelStatus | null): TunnelPhase | null {
+    return status === null || status === 'live' || status === 'lost' ? null : status;
+}
+
 /** Every pending notice, ranked with the one that blocks a decision first. */
 export function noticesOf(state: DevState): readonly Notice[] {
     const notices: Notice[] = [];
+
+    if (state.quitArmed) {
+        notices.push({ key: 'quit', summary: 'Quit?', action: 'press Ctrl-C again', card: <QuitConfirmCard /> });
+    }
 
     if (state.commandUpdatePrompt) {
         const count = state.commandUpdatePrompt.length;
@@ -45,6 +56,16 @@ export function noticesOf(state: DevState): readonly Notice[] {
 
     if (state.restartRequired) {
         notices.push({ key: 'restart', summary: '', action: RESTART, card: <RestartRequiredCard /> });
+    }
+
+    const phase = openingPhase(state.tunnel);
+    if (phase) {
+        notices.push({
+            key: 'tunnel',
+            summary: 'Setting up your interactions endpoint',
+            action: 'hold on',
+            card: <TunnelOpeningCard phase={phase} />
+        });
     }
 
     return notices;

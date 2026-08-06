@@ -1,12 +1,14 @@
-import { validateDiscordToken } from '@seedcord/errors/internal';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
 import { findCloudflared, installHint, systemLookup } from './cloudflared';
 import { CloudflaredTunnel, systemTunnelDeps } from './CloudflaredTunnel';
 import { InteractionsEndpoint } from './InteractionsEndpoint';
-import { awaitReachable } from './probe';
+import { awaitReachable, PROBE_SECONDS } from './probe';
 import { TunnelCoordinator } from './TunnelCoordinator';
 
+import type { TunnelStatus } from './TunnelCoordinator';
 import type { ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
@@ -16,7 +18,7 @@ export function missingCloudflaredHint(platform: NodeJS.Platform): string {
 
 export function createTunnelCoordinator(
     logger: ILogger,
-    onUrl: (url: string | null) => void,
+    onStatus: (status: TunnelStatus | null) => void,
     tunnel: ResolvedTunnel,
     findBinary: () => string | undefined = () => findCloudflared(systemLookup())
 ): TunnelCoordinator | undefined {
@@ -28,16 +30,18 @@ export function createTunnelCoordinator(
     if (tunnel.mode === 'url') {
         return new TunnelCoordinator({
             makeTunnel: () => ({
-                open: async (signal) => {
-                    await awaitReachable(tunnel.url, deps, signal);
-                    return tunnel.url;
+                // no answer here means your server is down or the url is wrong
+                open: async (signal, _port, onResolving) => {
+                    onResolving?.();
+                    if (await awaitReachable(tunnel.url, deps, signal)) return tunnel.url;
+                    throw new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, [tunnel.url, PROBE_SECONDS]);
                 },
                 // the forwarder is the user's process
                 stop: () => undefined
             }),
             kind: 'configured',
             endpoint,
-            onUrl,
+            onStatus,
             logger
         });
     }
@@ -46,10 +50,10 @@ export function createTunnelCoordinator(
     if (!binary) return undefined;
 
     return new TunnelCoordinator({
-        makeTunnel: () => new CloudflaredTunnel(deps, binary),
+        makeTunnel: (onLost) => new CloudflaredTunnel(deps, binary, onLost),
         kind: 'quick',
         endpoint,
-        onUrl,
+        onStatus,
         logger
     });
 }

@@ -11,18 +11,25 @@ const RESTART_HINT = 'Restart for a fresh hostname, or set `tunnel` to an https 
 
 export type CoordinatorTunnel = Pick<CloudflaredTunnel, 'open' | 'stop'>;
 
+export type TunnelPhase = 'opening' | 'resolving' | 'registering';
+export type TunnelStatus = TunnelPhase | 'live' | 'lost';
+
 export interface CoordinatorDeps {
-    readonly makeTunnel: () => CoordinatorTunnel;
+    readonly makeTunnel: (onLost: () => void) => CoordinatorTunnel;
     // a quick hostname is gone after the session, so its endpoint is cleared on quit
     readonly kind: 'quick' | 'configured';
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
-    readonly onUrl: (url: string | null) => void;
+    readonly onStatus: (status: TunnelStatus | null) => void;
     readonly logger: ILogger;
 }
 
 // a call, because a direct read of signal.aborted narrows to false past the first check
 function superseded(attempt: AbortController): boolean {
     return attempt.signal.aborted;
+}
+
+function opening(kind: CoordinatorDeps['kind']): string {
+    return kind === 'quick' ? 'Requesting a cloudflared tunnel to port' : 'Checking if your tunnel reaches port';
 }
 
 export class TunnelCoordinator {
@@ -38,34 +45,48 @@ export class TunnelCoordinator {
         const attempt = this.begin();
         const startedAt = Date.now();
         const since = (): string => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
-        const tunnel = this.deps.makeTunnel();
+        const tunnel = this.deps.makeTunnel(() => this.reportLost(attempt));
         // a later onPort holds no handle on this tunnel, so abort contains the stop
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
         let patched = false;
 
         try {
-            const url = await tunnel.open(attempt.signal, port);
+            this.deps.onStatus('opening');
+            this.deps.logger.info(`${opening(this.deps.kind)} ${paint.iris(String(port))}`);
+            const url = await tunnel.open(attempt.signal, port, () => this.deps.onStatus('resolving'));
             if (superseded(attempt)) return;
             this.deps.logger.info(`Reachable at ${paint.sky.italic(url)} ${since()}`);
 
+            this.deps.onStatus('registering');
             patched = true;
             await this.deps.endpoint.set(url, attempt.signal);
             if (superseded(attempt)) return;
 
-            this.deps.onUrl(url);
-            this.deps.logger.info(`Interactions endpoint set to ${paint.sky.italic(url)} ${since()}`);
+            this.deps.onStatus('live');
+            this.deps.logger.info(`Interactions endpoint set on the dev dashboard ${since()}`);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
             // stop from attempting a patch because discord refuses a hostname it previously refused
             if (patched) attempt.abort();
-
-            // so the next restart on this port retries
-            this.target = undefined;
-            this.deps.onUrl(null);
-            this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
-            // pasting works exactly when the tunnel survived, which is the same condition as the abort above
-            if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
+            this.reportFailure(error, patched);
         }
+    }
+
+    private reportLost(attempt: AbortController): void {
+        if (superseded(attempt)) return;
+
+        this.target = undefined;
+        this.deps.onStatus('lost');
+        this.deps.logger.error('cloudflared exited, so the bot has no public endpoint');
+    }
+
+    private reportFailure(error: unknown, patched: boolean): void {
+        // so the next restart on this port retries
+        this.target = undefined;
+        this.deps.onStatus(null);
+        this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
+        // pasting works exactly when the tunnel survived, which is the same condition as the abort above
+        if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
     }
 
     public async stop(): Promise<void> {
@@ -74,7 +95,7 @@ export class TunnelCoordinator {
         this.target = undefined;
         this.current.abort();
         this.current = undefined;
-        this.deps.onUrl(null);
+        this.deps.onStatus(null);
         if (this.deps.kind === 'configured') return;
 
         try {

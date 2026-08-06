@@ -6,7 +6,7 @@ import { TunnelCoordinator } from '@commands/dev/tunnel/TunnelCoordinator';
 
 import { silentLogger } from '../silentLogger';
 
-const VALID_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAAA.BBBBBB.CCCCCCCCCCCCCCCCCCCCCCCCCCC';
+const VALID_TOKEN = `${'a'.repeat(24)}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
 
 describe('createTunnelCoordinator', () => {
     it('builds nothing when the tunnel is off', () => {

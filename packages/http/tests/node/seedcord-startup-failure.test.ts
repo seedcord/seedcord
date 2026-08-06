@@ -1,5 +1,6 @@
 import path from 'node:path';
 
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -9,6 +10,7 @@ import { Plugin } from '@src/plugin';
 import { createSigner } from '../helpers/ed25519';
 import { VALID_TOKEN } from '../helpers/fixtures';
 
+import type { LogRecord } from '@seedcord/logger';
 import type { HttpServerConfig } from '@src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
@@ -73,6 +75,24 @@ describe('http Seedcord startup failure', () => {
         expect(host.port).toBeDefined();
 
         await expect(fetch(`http://127.0.0.1:${String(host.port)}`, { method: 'POST' })).rejects.toThrow();
+    });
+
+    // the dev TUI's capture outlives the instance that failed
+    it('keeps an installed capture sink across the reset', async () => {
+        await bindEnv();
+        const records: LogRecord[] = [];
+        const handle = LoggerChannelRegistry.instance.installSink({ kind: 'capture', onLog: (r) => records.push(r) });
+
+        const host = new Seedcord(config());
+        host.attach('failing', FailsReadyOnce);
+        live = host;
+        await expect(host.start()).rejects.toThrow();
+
+        records.length = 0;
+        new Logger('X').info('after the failure');
+        handle.dispose();
+
+        expect(records).toHaveLength(1);
     });
 
     it('rejects a restart of a failed host, the rollback removed its signal handlers', async () => {

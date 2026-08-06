@@ -96,8 +96,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly userContextMenuMap = new Map<string, HandlerConstructor>();
     private readonly autocompleteMap = new Map<string, HandlerConstructor>();
 
-    // the duplicate-route error reports the file the existing class came from. A stale hmr artifact list can
-    // leave a class in a route map after its entry here is gone, hence the fallback at the read site
+    // the duplicate-route error reports the file the existing class came from
     private readonly handlerFiles = new Map<HandlerConstructor, string>();
 
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
@@ -106,7 +105,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly inFlight = new Set<Promise<void>>();
     private draining = false;
 
-    // batched during bulk load, hmr registrations log inline
+    // batched during bulk load. A reload reports on the hmr channel instead
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
     private readonly loadedMiddlewares: { name: string; from: string }[] = [];
@@ -303,14 +302,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 name: `${middlewareCtor.name} (${metadata.priority})`,
                 from: formatFilePath(relativePath)
             });
-            return;
         }
-
-        this.logger.utils.registration(
-            `${middlewareCtor.name} ${paint.mute(`(${metadata.priority})`)}`,
-            relativePath,
-            'middleware'
-        );
     }
 
     private isHandlerClass(obj: unknown): obj is HandlerConstructor {
@@ -341,6 +333,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
                 if (existing && existing !== handlerClass) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         `${routeType}:${route}`,
+                        // a stale hmr artifact list can leave a class in a route map after its entry here is gone
                         `${existing.name} (${this.handlerFiles.get(existing) ?? 'unknown file'})`,
                         `${handlerClass.name} (${from})`
                     ]);
@@ -354,7 +347,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.handlerFiles.set(handlerClass, from);
 
         if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
-        else this.logger.utils.registration(handlerClass.name, from);
     }
 
     /** @internal For use in dev mode */
@@ -420,9 +412,9 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if ([...this.keysToIgnore].some((matcher) => matcher.owns(interaction.customId))) return;
 
         // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
-        // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies.
-        // an empty prefix matches no route, so the unhandled default replies to it the way http does
+        // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies
         const prefix = prefixOf(interaction.customId);
+        // an empty prefix matches no route, so the unhandled default replies to it the way http does
         if (!prefix)
             this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
 
@@ -451,8 +443,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // below reads whichever one is current when it publishes. an empty key means a customId
         // seedcord never minted, since a minted routeKey always outlives its 3-char hash
         let routeId = `${kind}:${key || 'unrouted'}`;
-        // the key fires once per dispatch, and a throw from the boundary itself reaches the catch below
-        // after the refusal already reported
+        // one report per dispatch, since a throw while answering a refusal reaches the catch and answers again
         let reported = false;
         const report = (outcome: DispatchOutcome): void => {
             if (reported) return;
@@ -481,7 +472,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             routeId = dispatch.routeId ?? routeId;
             const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
             if (handler instanceof RepliableHandler) sender = handler.getSender();
-            // autocomplete has no reply target, @Gated rejects it at compile time, this is the runtime backstop
+            // @Gated rejects autocomplete at compile time, since it has no reply target. This is the runtime backstop
             const refusal = interaction.isAutocomplete()
                 ? null
                 : await this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch.routeId);
@@ -551,7 +542,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         } catch (caught) {
             return { caught };
         } finally {
-            // a refusing gate ate budget too, report either way
+            // a refusing gate spent budget too
             monitor?.report(routeId);
         }
     }

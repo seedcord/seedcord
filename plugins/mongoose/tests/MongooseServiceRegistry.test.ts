@@ -42,7 +42,7 @@ describe('MongooseServiceRegistry model ownership', () => {
         const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
 
         // justified: discovery erases the document type which the type predicate hides in prod
-        registry.initializeService(Adopted as unknown as MongooseServiceConstructor, 'Adopted.ts');
+        registry.initializeService(Adopted as unknown as MongooseServiceConstructor);
         registry.clearModels();
 
         expect(vi.mocked(mongoose.deleteModel)).not.toHaveBeenCalledWith('adopted');
@@ -52,7 +52,7 @@ describe('MongooseServiceRegistry model ownership', () => {
         mongoose.model('adopted', Adopted.schema);
         const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
         // justified: discovery erases the document type, which the type predicate hides in production
-        registry.initializeService(Adopted as unknown as MongooseServiceConstructor, 'Adopted.ts');
+        registry.initializeService(Adopted as unknown as MongooseServiceConstructor);
 
         registry.unregister(Adopted as unknown as MongooseServiceConstructor);
 
@@ -62,7 +62,7 @@ describe('MongooseServiceRegistry model ownership', () => {
     it('deletes its own model when HMR unregisters the service', () => {
         const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
         // justified: discovery erases the document type, which the type predicate hides in production
-        registry.initializeService(Adopted as unknown as MongooseServiceConstructor, 'Adopted.ts');
+        registry.initializeService(Adopted as unknown as MongooseServiceConstructor);
 
         registry.unregister(Adopted as unknown as MongooseServiceConstructor);
 
@@ -73,7 +73,7 @@ describe('MongooseServiceRegistry model ownership', () => {
         const registry = new MongooseServiceRegistry(plugin, core, new Logger('test'));
 
         // justified: discovery erases the document type which the type predicate hides in prod
-        registry.initializeService(Adopted as unknown as MongooseServiceConstructor, 'Adopted.ts');
+        registry.initializeService(Adopted as unknown as MongooseServiceConstructor);
         registry.clearModels();
 
         expect(vi.mocked(mongoose.deleteModel)).toHaveBeenCalledWith('adopted');

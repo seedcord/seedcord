@@ -1,8 +1,6 @@
 // scoped here so import.meta.hot stays untyped in the rest of the package
 /// <reference types="vite/client" />
-import { Logger } from '@seedcord/logger';
-import { formatFilePath } from '@seedcord/utils';
-import chalk from 'chalk';
+import { Logger, paint } from '@seedcord/logger';
 import { Envapter } from 'envapt';
 
 import { setDevChannel } from './devChannel';
@@ -23,21 +21,8 @@ export class HmrManager {
         setDevChannel(channel);
 
         if (Envapter.isDevelopment || Envapter.isTest) {
-            this.logger.info('Enabled');
-
-            channel.on('seedcord:hmr', (payload) => {
-                const affected = payload.affectedModules?.length ?? 0;
-                this.logger.info(`${chalk.bold('1')} module changed, ${chalk.bold(affected)} affected modules`);
-
-                if (payload.affectedModules) {
-                    this.logger.utils.list(
-                        payload.affectedModules.map((mod) => formatFilePath(mod)),
-                        'Affected modules: '
-                    );
-                }
-
-                void this.handleUpdate(payload);
-            });
+            this.logger.debug('Enabled');
+            channel.on('seedcord:hmr', (payload) => void this.handleUpdate(payload));
         }
     }
 
@@ -56,7 +41,7 @@ export class HmrManager {
             try {
                 await listener.onHmr(event);
             } catch (error) {
-                this.logger.error(`Error handling HMR update in ${chalk.bold(listener.constructor.name)}: `, error);
+                this.logger.error(`Error handling HMR update in ${paint.sky.bold(listener.constructor.name)}`, error);
             }
         });
 

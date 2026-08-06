@@ -159,7 +159,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             for (const key of keys) {
                 const routeId = `${target.kind}:${key}`;
                 const existing = this.rowOwners.get(routeId);
-                // a different class on the same route would silently shadow (last write wins), so this throws
+                // a different class on the same route would silently shadow (last write wins)
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         routeId,
@@ -179,7 +179,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
 
         if (this.loading) this.loadedHandlers.push({ name: ctor.name, from });
-        else this.logger.utils.registration(ctor.name, from);
     }
 
     private unregisterHandler(ctor: HandlerConstructor, artifacts?: string[]): void {

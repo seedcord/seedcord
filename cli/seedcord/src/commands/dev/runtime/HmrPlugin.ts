@@ -2,8 +2,7 @@ import { relative, resolve } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-import { Logger } from '@seedcord/logger';
-import chalk from 'chalk';
+import { Logger, paint } from '@seedcord/logger';
 import { minimatch } from 'minimatch';
 
 import type { DevEvent } from './events';
@@ -24,6 +23,7 @@ const DEBOUNCE_MS = 250;
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
+    private readonly awaitingCreateEcho = new Set<string>();
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
 
@@ -59,6 +59,10 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         server.watcher.on('addDir', (file) => this.handleFileEvent(file, 'createDir'));
         server.watcher.on('unlinkDir', (file) => this.handleFileEvent(file, 'deleteDir'));
 
+        // vite's watcher covers config.root only, which excludes the config file
+        server.watcher.add(this.config.configFile);
+        server.watcher.on('change', (file) => this.handleChange(file));
+
         this.dev?.on('seedcord:commands-update-prompt', (data) => {
             this.emit('event', { type: 'command-update-prompt', files: data.files });
         });
@@ -72,32 +76,47 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
                 this.dynamicRestartPatterns.add(pattern);
             }
 
-            this.logger.utils.list(data.patterns, 'Registered critical file patterns:');
+            this.logger.debug(`Registered ${String(data.patterns.length)} critical file patterns`);
         });
     }
 
-    // debounce keyed per (file, type), a shared timestamp drops the second of a rapid create-then-update
+    // keyed per type, else an atomic-save rename (unlink then add) loses the add and the handler stays unloaded
     private isDebounced(file: string, type: HmrEventType): boolean {
-        const key = `${file}::${type}`;
-        const now = Date.now();
-        const last = this.lastUpdate.get(key);
-        if (last !== undefined && now - last < DEBOUNCE_MS) return true;
-        this.lastUpdate.set(key, now);
+        if (this.justSaw(file, type)) return true;
+        this.lastUpdate.set(`${file}::${type}`, Date.now());
         return false;
+    }
+
+    private justSaw(file: string, type: HmrEventType): boolean {
+        const last = this.lastUpdate.get(`${file}::${type}`);
+        return last !== undefined && Date.now() - last < DEBOUNCE_MS;
+    }
+
+    // hotUpdate covers a critical file inside the root
+    private handleChange(file: string): void {
+        if (!this.isCriticalFile(file) || this.isDebounced(file, 'update')) return;
+        this.reportRestartRequired(file);
+    }
+
+    private reportRestartRequired(file: string): void {
+        const relPath = relative(process.cwd(), file);
+        this.logger.warn(`${paint.coral('Critical file changed:')} ${paint.sky.bold(relPath)}. Restart required.`);
+        this.emit('event', { type: 'restart-required' });
     }
 
     private handleFileEvent(file: string, type: HmrEventType): void {
         if (this.isDebounced(file, type)) return;
+        if (type === 'create') this.awaitingCreateEcho.add(file);
 
         const relPath = relative(process.cwd(), file);
         const typeColor =
             type === 'create' || type === 'createDir'
-                ? chalk.green
+                ? paint.mint
                 : type === 'delete' || type === 'deleteDir'
-                  ? chalk.red
-                  : chalk.blue;
+                  ? paint.coral
+                  : paint.sky;
 
-        this.logger.info(`${typeColor(type.toUpperCase())} ${chalk.gray(relPath)}`);
+        this.logger.trace(`${typeColor(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         const payload: HmrUpdateEvent = { file, type, rollback: this.config.hmr?.rollback ?? true };
 
@@ -108,15 +127,16 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const { file, modules, server } = ctx;
         const type = 'update';
 
-        if (this.isDebounced(file, type)) return [];
+        // vite fires one update straight after the watcher's add, and the create already reloaded the file
+        const isCreateEcho = this.awaitingCreateEcho.delete(file) && this.justSaw(file, 'create');
+        if (isCreateEcho || this.isDebounced(file, type)) return [];
 
         const relPath = relative(process.cwd(), file);
 
-        this.logger.info(`${chalk.blue(type.toUpperCase())} ${chalk.gray(relPath)}`);
+        this.logger.trace(`${paint.sky(type.toUpperCase())} ${paint.mute(relPath)}`);
 
         if (this.isCriticalFile(file)) {
-            this.logger.warn(`${chalk.red('Critical file changed:')} ${chalk.bold(relPath)}. Restart required.`);
-            this.emit('event', { type: 'restart-required' });
+            this.reportRestartRequired(file);
             return [];
         }
 

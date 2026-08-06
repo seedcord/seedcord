@@ -3,7 +3,7 @@ import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { NO_ROOM, ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
-import { expandRows } from '@ui/logRows';
+import { expandRows, messageColumn, wrapRows } from '@ui/logRows';
 import { LogStore } from '@ui/stores/LogStore';
 
 import type { LogRecord } from '@seedcord/logger';
@@ -61,7 +61,6 @@ describe('ScrollableLogView', () => {
             ).lastFrame() ?? '';
         const ruleLines = frame.split('\n').filter((line) => line.includes('─'));
         expect(ruleLines.length).toBeGreaterThanOrEqual(2);
-        // the top rule stays its own row, never merged onto the head text
         const merged = frame.split('\n').some((line) => line.includes('Loaded handlers') && line.includes('─'));
         expect(merged).toBe(false);
     });
@@ -86,6 +85,20 @@ describe('ScrollableLogView', () => {
                 <ScrollableLogView visible={expandRows(store.getLogs())} viewportHeight={10} measured />
             ).lastFrame() ?? '';
         expect(frame).not.toContain('─');
+    });
+
+    it('carries a long message onto a second line with no second prefix', async () => {
+        store.onLog(record({ label: 'Bot', message: 'alpha bravo charlie delta echo foxtrot golf hotel india' }));
+        await store.flush();
+
+        const width = messageColumn(3) + 20;
+        const rows = wrapRows(expandRows(store.getLogs()), width, 3);
+        const frame = render(<ScrollableLogView visible={rows} viewportHeight={10} measured />).lastFrame() ?? '';
+        const lines = frame.split('\n').filter((line) => line.trim() !== '');
+
+        expect(lines).toHaveLength(3);
+        expect(lines.filter((line) => line.includes('⏺'))).toHaveLength(1);
+        expect(frame).toContain('india');
     });
 
     it('renders nothing until measured', () => {

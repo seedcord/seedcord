@@ -39,8 +39,7 @@ export class MongooseServiceRegistry {
         for (const key of Object.keys(this.services)) Reflect.deleteProperty(this.services, key);
     }
 
-    // scoped to this plugin's own models because the mongoose registry is global and shared with
-    // everything else in the process
+    // only this plugin's own models, since the mongoose registry is global to the process
     public clearModels(): void {
         if (this.ownModels.size === 0) return;
 
@@ -59,7 +58,8 @@ export class MongooseServiceRegistry {
             for (const Service of Object.values(mod)) {
                 if (!this.isServiceClass(Service)) continue;
 
-                this.initializeService(Service, rel);
+                this.initializeService(Service);
+                this.logger.utils.registration(Service.name, rel);
                 track(fullPath, Service);
             }
         });
@@ -70,12 +70,11 @@ export class MongooseServiceRegistry {
         );
     }
 
-    public initializeService(Service: MongooseServiceConstructor, relativePath: string): void {
+    public initializeService(Service: MongooseServiceConstructor): void {
         // isServiceClass gates every caller on ServiceMetadataKey, and the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
-        // mongoose returns an existing model when the schema instance matches, and that one belongs
-        // to whoever registered it first, so it should stay out of this plugin's cleanup
+        // mongoose returns an existing model when the schema matches. That one is not this plugin's to delete
         const preexisting = modelName in mongoose.models;
 
         let model;
@@ -90,8 +89,8 @@ export class MongooseServiceRegistry {
         // tracked before construction so a throw below still leaves the model reachable for cleanup
         if (!preexisting) this.ownModels.add(model.modelName);
 
-        const instance = new Service(this.plugin, this.core, model);
-        this.logger.utils.registration(instance.constructor.name, relativePath);
+        // eslint-disable-next-line no-new -- the base ctor calls _register, so constructing is the registration
+        new Service(this.plugin, this.core, model);
     }
 
     public unregister(Service: MongooseServiceConstructor, artifacts?: MongooseArtifact): void {

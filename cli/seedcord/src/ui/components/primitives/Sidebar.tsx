@@ -12,6 +12,7 @@ import { FilterChips } from './FilterChips';
 import { FilterKeys, SessionKeys } from './Hotkeys';
 import { Rule } from './Rule';
 
+import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 import type { LogLevel } from '@seedcord/logger';
 import type { FilterCursor } from '@ui/filterCursor';
 import type { DevState } from '@ui/stores/DevStore';
@@ -20,7 +21,7 @@ import type { ReactElement, Ref } from 'react';
 
 export const MAX_RAIL = 40;
 
-const META_LABEL_WIDTH = 5;
+const META_LABEL_WIDTH = 7;
 
 const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
@@ -37,10 +38,6 @@ interface SidebarProps {
     readonly ref?: Ref<DOMElement>;
 }
 
-function hostOf(url: string): string {
-    return new URL(url).host;
-}
-
 function Meta({ label, value }: { label: string; value: string }): ReactElement {
     return (
         <Text>
@@ -48,6 +45,10 @@ function Meta({ label, value }: { label: string; value: string }): ReactElement 
             {value}
         </Text>
     );
+}
+
+function tunnelValue(status: TunnelStatus): string {
+    return status === 'live' || status === 'lost' ? status : `${status}…`;
 }
 
 function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
@@ -58,8 +59,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {/* only the http host reports a port */}
             {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
-            {/* the sidebar is narrow, so show the host only */}
-            {state.tunnelUrl === null ? null : <Meta label="url" value={hostOf(state.tunnelUrl)} />}
+            {state.tunnel === null ? null : <Meta label="tunnel" value={tunnelValue(state.tunnel)} />}
             <Meta label="logs" value={LOG_DIR} />
         </Box>
     );
