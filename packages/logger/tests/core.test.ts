@@ -277,3 +277,39 @@ describe('disposable handle', () => {
         expect(capture.records.map((r) => r.message)).toEqual(['inside']);
     });
 });
+
+class ThrowingSink implements ILogSink {
+    public calls = 0;
+    public constructor(public readonly kind: ILogSink['kind'] = 'console') {}
+    public onLog(): void {
+        this.calls++;
+        throw new Error('sink exploded');
+    }
+}
+
+describe('a sink that throws', () => {
+    it('keeps the throw away from whatever logged', () => {
+        registry.configure({ level: 'trace', sinks: [new ThrowingSink()] });
+
+        expect(() => new Logger('Bot').info('ping')).not.toThrow();
+    });
+
+    it('still reaches the sinks after it', () => {
+        const healthy = new FakeSink();
+        registry.configure({ level: 'trace', sinks: [new ThrowingSink(), healthy] });
+
+        new Logger('Bot').info('ping');
+
+        expect(healthy.records.map((r) => r.message)).toEqual(['ping']);
+    });
+
+    it('keeps a throwing config sink away from the captures', () => {
+        const capture = new FakeSink('capture');
+        registry.configure({ level: 'trace', sinks: [new ThrowingSink()] });
+        registry.installSink(capture);
+
+        new Logger('Bot').info('ping');
+
+        expect(capture.records).toHaveLength(1);
+    });
+});
