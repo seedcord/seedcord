@@ -1,7 +1,7 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createSeedcord } from '@src/createSeedcord';
 
@@ -47,6 +47,10 @@ const ping = '{"type":1}';
 const unrecognized = '{"type":99}';
 
 describe('createSeedcord request logging', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
     it('names why each request got its status', async () => {
         const debug = vi.spyOn(Logger.prototype, 'debug').mockReturnValue(undefined);
         const { handle } = await readySeedcord();
@@ -54,7 +58,6 @@ describe('createSeedcord request logging', () => {
         await handle(new Request('https://bot.example/interactions', { method: 'POST' }));
 
         expect(debug.mock.calls[0]?.[0]).toContain('unsigned');
-        debug.mockRestore();
     });
 });
 
