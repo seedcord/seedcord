@@ -2,11 +2,10 @@ import { DiscordAPIError, REST } from '@discordjs/rest';
 import { BaseHandler, Bus, DispatchContext, Fault, Notice, Silence } from '@seedcord/core';
 import {
     asError,
-    dispatchedPayload,
     outcomeFor,
     queuedMsFor,
+    reportDispatch,
     reportedWrite,
-    PublishDefault,
     runHandlerGates,
     slowGateMonitor
 } from '@seedcord/core/internal';
@@ -193,18 +192,15 @@ function dispatchReporter(
     // read here, since a read at publish time would count the handler run into the queue too
     const queuedMs = queuedMsFor(payload.id);
     return (outcome) => {
-        core.bus[PublishDefault](
-            'interactionDispatched',
-            dispatchedPayload({
-                routeId: unhandledRouteId(match),
-                interactionId: payload.id,
-                kind: match.kind,
-                outcome,
-                fallback: match.routeId === null,
-                startedAt,
-                queuedMs
-            })
-        );
+        reportDispatch(core.bus, {
+            routeId: unhandledRouteId(match),
+            interactionId: payload.id,
+            kind: match.kind,
+            outcome,
+            fallback: match.routeId === null,
+            startedAt,
+            queuedMs
+        });
     };
 }
 

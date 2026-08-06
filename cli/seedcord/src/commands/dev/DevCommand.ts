@@ -54,6 +54,7 @@ export class DevCommand extends BaseCommand {
     }
 
     private async runDevApp(store: DevStore, runner: DevRunner): Promise<void> {
+        let failure: { error: unknown } | undefined;
         let runResult: Promise<void> = Promise.resolve();
 
         const { unmount, waitUntilExit } = render(
@@ -64,11 +65,17 @@ export class DevCommand extends BaseCommand {
                 onRestart: () => runner.restart(),
                 onRefreshCommands: (shouldRefresh: boolean) => runner.refreshCommands(shouldRefresh),
                 onReady: () => {
-                    runResult = runner.run().finally(async () => {
-                        // unmounting first would drop the buffered lines
-                        await LogStore.instance.flush();
-                        unmount();
-                    });
+                    runResult = runner
+                        .run()
+                        .finally(async () => {
+                            // unmounting first would drop the buffered lines
+                            await LogStore.instance.flush();
+                            unmount();
+                        })
+                        // node kills the process over an unwatched rejection while the ui is still up
+                        .catch((error: unknown) => {
+                            failure = { error };
+                        });
                 }
             }),
             // the alternate screen restores the terminal and scrollback on quit, and Ink's ESC[3J purge never fires
@@ -76,7 +83,8 @@ export class DevCommand extends BaseCommand {
         );
 
         await waitUntilExit();
-        // awaited so a run-loop rejection reaches the action's try/catch before process.exit()
+        // awaited so a run-loop failure reaches the action's try/catch before process.exit()
         await runResult;
+        if (failure) throw failure.error;
     }
 }

@@ -1,9 +1,16 @@
 import { Fault, Notice, Silence } from '@seedcord/core';
-import { dispatchedPayload, InteractionRoutes, outcomeFor, queuedMsFor } from '@seedcord/core/internal';
+import { InteractionRoutes, outcomeFor, queuedMsFor } from '@seedcord/core/internal';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
+import { reportDispatch } from '@src/dispatch/dispatchReport';
+import { Bus } from '@subscribers/Bus';
+
+import type { CoreBase } from '@interfaces/CoreBase';
+import type { LogRecord } from '@seedcord/logger';
 import type { ReplyResponse } from '@seedcord/types';
+import type { SubscriptionData } from '@subscribers/types/Subscriptions';
 
 // 2022-01-01, so the gap to now is always positive
 const SNOWFLAKE = '926845371392000000';
@@ -19,7 +26,7 @@ class Refusal extends Notice {
     }
 }
 
-function reportFor(queuedMs = 0): Parameters<typeof dispatchedPayload>[0] {
+function reportFor(queuedMs = 0): Parameters<typeof reportDispatch>[1] {
     return {
         routeId: 'slash:ping',
         interactionId: 'i1',
@@ -31,9 +38,72 @@ function reportFor(queuedMs = 0): Parameters<typeof dispatchedPayload>[0] {
     };
 }
 
-describe('dispatchedPayload', () => {
+// justified: the Bus only stores core, no member is read during publish
+function publishedFor(report: Parameters<typeof reportDispatch>[1]): SubscriptionData<'interactionDispatched'> {
+    const bus = new Bus({} as unknown as CoreBase);
+    const published: SubscriptionData<'interactionDispatched'>[] = [];
+    bus.on('interactionDispatched', (payload) => published.push(payload));
+    reportDispatch(bus, report);
+    const first = published[0];
+    if (!first) throw new Error('nothing published');
+    return first;
+}
+
+function traceSpy(): MockInstance<Logger['trace']> {
+    return vi.spyOn(Logger.prototype, 'trace').mockImplementation(() => undefined);
+}
+
+afterEach(() => {
+    vi.restoreAllMocks();
+    LoggerChannelRegistry.instance.configure({});
+});
+
+describe('dispatch timing', () => {
+    it('puts the line on the interactions channel at trace', () => {
+        const records: LogRecord[] = [];
+        LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
+        const handle = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: (record) => records.push(record)
+        });
+
+        publishedFor(reportFor());
+        handle.dispose();
+
+        expect(records.find((record) => record.label === 'Dispatch')).toMatchObject({
+            channel: 'interactions',
+            level: 'trace'
+        });
+    });
+
+    it('traces the route, the outcome, and the elapsed dispatch', () => {
+        const trace = traceSpy();
+        let clock = 1000;
+        vi.spyOn(performance, 'now').mockImplementation(() => clock);
+        const startedAt = performance.now();
+        clock += 142;
+
+        publishedFor({ ...reportFor(), startedAt });
+
+        expect(trace).toHaveBeenCalledTimes(1);
+        const message = trace.mock.calls[0]?.[0] ?? '';
+        expect(message).toContain('slash:ping');
+        expect(message).toContain('handled');
+        expect(message).toContain('142ms');
+    });
+
+    it('traces the outcome a refused dispatch carries', () => {
+        const trace = traceSpy();
+
+        publishedFor({ ...reportFor(), outcome: 'refused' });
+
+        expect(trace.mock.calls[0]?.[0] ?? '').toContain('refused');
+    });
+});
+
+describe('reportDispatch', () => {
     it('forwards the queue time measured at entry', () => {
-        const payload = dispatchedPayload(reportFor(1234));
+        const payload = publishedFor(reportFor(1234));
 
         expect(payload.queuedMs).toBe(1234);
         expect(payload.routeId).toBe('slash:ping');
@@ -48,10 +118,9 @@ describe('durationMs', () => {
 
         const startedAt = performance.now();
         clock += 250;
-        const payload = dispatchedPayload({ ...reportFor(), startedAt });
+        const payload = publishedFor({ ...reportFor(), startedAt });
 
         expect(payload.durationMs).toBe(250);
-        vi.restoreAllMocks();
     });
 });
 
@@ -64,10 +133,9 @@ describe('queuedMsFor', () => {
         const queuedMs = queuedMsFor(SNOWFLAKE);
         // the handler chain runs for five seconds before the report publishes
         now += 5000;
-        const payload = dispatchedPayload({ ...reportFor(), queuedMs });
+        const payload = publishedFor({ ...reportFor(), queuedMs });
 
         expect(payload.queuedMs).toBe(1234);
-        vi.restoreAllMocks();
     });
 
     it('reports a zero queue time for an id that is not a snowflake', () => {

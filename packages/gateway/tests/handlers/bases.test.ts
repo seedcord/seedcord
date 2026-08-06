@@ -8,6 +8,7 @@ import { ModalHandler } from '@handlers/interaction/components/ModalHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
 import { mockInteraction, message } from '../utils/senderMock';
+import { stubBus } from '../utils/stubBus';
 
 import type { SentMessage } from '@bot/ReplySender';
 import type { Core } from '@interfaces/Core';
@@ -29,8 +30,8 @@ function asModal(mock: ReturnType<typeof mockInteraction>): Modal {
     return mock as unknown as Modal;
 }
 
-// justified: the bases read only the interaction and a Logger name off core, the rest of Core is unused here.
-const core = {} as Core;
+// justified: the bases read the interaction, a Logger name, and the bus
+const core = { bus: stubBus() } as Core;
 
 const reply = { components: [new TextDisplayBuilder().setContent('hi')] };
 const serialized = reply.components.map((c) => c.toJSON());

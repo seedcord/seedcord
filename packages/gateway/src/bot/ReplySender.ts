@@ -57,9 +57,9 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
     public constructor(
         private readonly interaction: Repliables,
         routeId: string,
-        bus?: Bus
+        bus: Bus
     ) {
-        super(routeId, seedState(interaction), bus && { bus, interactionId: interaction.id });
+        super(routeId, { bus, interactionId: interaction.id }, seedState(interaction));
     }
 
     protected async writeReply(

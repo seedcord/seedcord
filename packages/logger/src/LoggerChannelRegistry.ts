@@ -32,6 +32,7 @@ export class LoggerChannelRegistry {
 
     private nextCaptureId = 1;
     private readonly captures = new Map<number, CaptureEntry>();
+    private readonly broken = new WeakSet<ILogSink>();
 
     public static get instance(): LoggerChannelRegistry {
         return (this._instance ??= new LoggerChannelRegistry());
@@ -58,11 +59,22 @@ export class LoggerChannelRegistry {
         const muted = this.isConsoleMuted();
         for (const sink of override?.sinks ?? this.sinks) {
             if (muted && sink.kind === 'console') continue;
-            sink.onLog(record);
+            this.emit(sink, record);
         }
         // eslint-disable-next-line unicorn/no-useless-spread -- snapshot so a capture installed mid-dispatch is skipped this pass
         for (const { sink } of [...this.captures.values()]) {
+            this.emit(sink, record);
+        }
+    }
+
+    private emit(sink: ILogSink, record: LogRecord): void {
+        try {
             sink.onLog(record);
+        } catch (error: unknown) {
+            if (this.broken.has(sink)) return;
+            this.broken.add(sink);
+            // eslint-disable-next-line no-console -- console because the log pipeline is the thing that broke
+            console.error('[seedcord] a log sink threw, dropping its output for this process', error);
         }
     }
 

@@ -55,4 +55,15 @@ describe('missingCloudflaredHint', () => {
     it('carries the platform install command', () => {
         expect(missingCloudflaredHint('darwin')).toContain('brew install cloudflared');
     });
+
+    it('offers a url you already serve alongside the install', () => {
+        const hint = missingCloudflaredHint('darwin');
+
+        expect(hint).toContain('tunnel');
+        expect(hint).toContain('https://bot.example.com');
+    });
+
+    it('is a block', () => {
+        expect(missingCloudflaredHint('linux').split('\n')).toHaveLength(3);
+    });
 });

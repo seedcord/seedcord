@@ -1,5 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/logger';
 import { Envapter } from 'envapt';
 
 import { findCloudflared, installHint, systemLookup } from './cloudflared';
@@ -13,7 +14,12 @@ import type { ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 export function missingCloudflaredHint(platform: NodeJS.Platform): string {
-    return `cloudflared is missing, so an http bot has no public interactions endpoint. Install it with ${installHint(platform)}`;
+    const arrow = paint.mute('→');
+    return [
+        `${paint.sky.bold('cloudflared')} is missing, so a tunnel can't be set up for you. Discord won't have any url to reach this bot`,
+        `${arrow} install it with ${paint.mint.bold(installHint(platform))}`,
+        `${arrow} or set ${paint.amber('tunnel')} to an https url you already serve, like ${paint.sky.italic('https://bot.example.com')}`
+    ].join('\n');
 }
 
 export function createTunnelCoordinator(

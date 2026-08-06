@@ -1,3 +1,5 @@
+import { Logger, paint } from '@seedcord/logger';
+
 import { asError } from '@stops/asError';
 import { PublishDefault } from '@subscribers/publishDefault';
 
@@ -5,7 +7,13 @@ import type { ReplyMethod } from './ackLegality';
 import type { Bus } from '@subscribers/Bus';
 import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 
-/** What `publishResponse` requires. Without it the call returns without publishing. */
+let replyLogger: Logger | undefined;
+function logger(): Logger {
+    replyLogger ??= new Logger('Reply', { channel: 'interactions' });
+    return replyLogger;
+}
+
+/** The bus a write publishes on, and the interaction it belongs to. */
 export interface ReplyTelemetry {
     readonly bus: Bus;
     readonly interactionId: string;
@@ -26,17 +34,22 @@ export interface ResponseReport {
 }
 
 /** @internal */
-export function publishResponse(telemetry: ReplyTelemetry | undefined, report: ResponseReport): void {
-    if (!telemetry) return;
+export function publishResponse(telemetry: ReplyTelemetry, report: ResponseReport): void {
+    const durationMs = performance.now() - report.startedAt;
     telemetry.bus[PublishDefault]('responseAttempted', {
         routeId: report.routeId,
         interactionId: telemetry.interactionId,
         method: report.method,
         outcome: report.outcome,
-        durationMs: performance.now() - report.startedAt,
+        durationMs,
         messageId: report.messageId,
         ...(report.error && { error: report.error })
     });
+
+    // after publish so a throwing sink doesn't reach the publish above
+    logger().trace(
+        `${paint.mint.bold(report.routeId)} ${report.method} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+    );
 }
 
 /**
@@ -45,7 +58,7 @@ export function publishResponse(telemetry: ReplyTelemetry | undefined, report: R
  * @internal
  */
 export async function reportedWrite<Result>(
-    telemetry: ReplyTelemetry | undefined,
+    telemetry: ReplyTelemetry,
     routeId: string,
     method: WriteMethod,
     write: () => Promise<Result>
@@ -63,7 +76,7 @@ export async function reportedWrite<Result>(
  * @internal
  */
 export async function attemptWrite<Result>(
-    telemetry: ReplyTelemetry | undefined,
+    telemetry: ReplyTelemetry,
     routeId: string,
     method: WriteMethod,
     startedAt: number,

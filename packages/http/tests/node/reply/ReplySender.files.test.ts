@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ReplySender } from '@reply/ReplySender';
 
+import { stubBus } from '../../helpers/fixtures';
+
 import type { RawFile, REST } from '@discordjs/rest';
 import type { InteractionRef } from '@reply/ReplySender';
 import type { ReplyResponse } from '@seedcord/types';
@@ -27,7 +29,7 @@ function restMock(): RestMock {
 
 // justified: the fixture implements only the REST surface ReplySender reads
 function senderFor(rest: RestMock): ReplySender {
-    return new ReplySender(ref, rest as unknown as REST, 'slash:ban');
+    return new ReplySender(ref, rest as unknown as REST, 'slash:ban', stubBus());
 }
 
 function sentFiles(rest: RestMock): RawFile[] | undefined {

@@ -7,6 +7,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ReplySender } from '@reply/ReplySender';
 
+import { stubBus } from '../../helpers/fixtures';
+
 import type { REST } from '@discordjs/rest';
 import type { InteractionRef, SentMessage } from '@reply/ReplySender';
 import type { ReplyResponse } from '@seedcord/types';
@@ -44,7 +46,7 @@ const ref: InteractionRef = { application_id: APP_ID, id: INTERACTION_ID, token:
 
 // justified: the fixture implements only the REST surface ReplySender reads.
 function senderFor(rest: RestMock): ReplySender {
-    return new ReplySender(ref, rest as unknown as REST, ROUTE);
+    return new ReplySender(ref, rest as unknown as REST, ROUTE, stubBus());
 }
 
 const reply: ReplyResponse = { components: [new TextDisplayBuilder().setContent('hi')] };

@@ -6,6 +6,8 @@ import { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
 import { ModalHandler } from '@handlers/interaction/components/ModalHandler';
 import { SlashHandler } from '@handlers/interaction/SlashHandler';
 
+import { stubBus } from '../../helpers/fixtures';
+
 import type { REST } from '@discordjs/rest';
 import type { Core } from '@interfaces/Core';
 import type { SentMessage } from '@reply/ReplySender';
@@ -37,8 +39,8 @@ function restMock(): RestMock {
 }
 
 function coreWith(rest: RestMock): Core {
-    // justified: the bases read only core.rest, the rest of Core is unused in these unit tests.
-    return { rest: rest as unknown as REST } as unknown as Core;
+    // justified: the bases read core.rest and the bus
+    return { rest: rest as unknown as REST, bus: stubBus() } as unknown as Core;
 }
 
 function baseEvent(): { application_id: string; id: string; token: string; type: number } {

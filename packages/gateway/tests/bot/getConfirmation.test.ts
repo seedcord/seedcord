@@ -6,6 +6,8 @@ import { getConfirmation } from '@bot/confirm';
 import { CONFIRM_DEF } from '@bot/confirm/reserved';
 import { ReplySender } from '@bot/ReplySender';
 
+import { stubBus } from '../utils/stubBus';
+
 import type { DefaultConfirmOptions } from '@bot/confirm';
 import type { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
 import type { ModalHandler } from '@handlers/interaction/components/ModalHandler';
@@ -72,7 +74,11 @@ describe('getConfirmation', () => {
     });
 
     // justified: the fixture implements only the surface getConfirmation reads off a handler
-    function handlerFor(source: object, routeId = 'confirm-test', bus?: Bus): RepliableHandler<NonModalInteraction> {
+    function handlerFor(
+        source: object,
+        routeId = 'confirm-test',
+        bus: Bus = stubBus()
+    ): RepliableHandler<NonModalInteraction> {
         const interaction = source as NonModalInteraction;
         const sender = new ReplySender(interaction, routeId, bus);
         return {

@@ -15,8 +15,8 @@ interface TestMessage {
 const created: TestMessage = { id: 'm1' };
 
 class TestSender extends BaseReplySender<TestMessage> {
-    public constructor(bus?: Bus) {
-        super('slash:ping', 'unacked', bus && { bus, interactionId: 'i1' });
+    public constructor(bus: Bus) {
+        super('slash:ping', { bus, interactionId: 'i1' });
     }
 
     protected writeReply(): Promise<TestMessage> {
@@ -156,11 +156,6 @@ describe('responseAttempted', () => {
         expect(sent).toHaveLength(1);
         expect(sent[0]).toMatchObject({ method: 'reply', outcome: 'failed', messageId: null });
         expect(sent[0]?.error?.message).toBe('discord said no');
-    });
-
-    it('stays silent with no bus, the getConfirmation path', async () => {
-        const sender = new TestSender();
-        await expect(sender.reply(response)).resolves.toBe(created);
     });
 
     it('reports deferUpdate and the update that rewrites through it', async () => {
