@@ -89,6 +89,6 @@ export { serializeReply, type SerializedReply } from '@reply/serializeReply';
 export { type StoredSubscriberCtor, type SubscriberRegistration } from '@subscribers/Bus';
 export { FaultThrottle } from '@subscribers/FaultThrottle';
 export { PublishDefault } from '@subscribers/publishDefault';
-export { dispatchedPayload, outcomeFor, queuedMsFor } from '@src/dispatch/dispatchReport';
+export { outcomeFor, queuedMsFor, reportDispatch } from '@src/dispatch/dispatchReport';
 // the transports' augmentation target for their own default keys
 export type { DefaultSubscriptions } from '@subscribers/types/Subscriptions';

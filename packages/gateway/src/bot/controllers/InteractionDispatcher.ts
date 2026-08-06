@@ -6,9 +6,9 @@ import {
     InteractionRouteKeys,
     InteractionRoutes,
     asError,
-    dispatchedPayload,
     outcomeFor,
     queuedMsFor,
+    reportDispatch,
     MiddlewareMetadataKey,
     prefixOf,
     PublishDefault,
@@ -453,18 +453,15 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         const report = (outcome: DispatchOutcome): void => {
             if (reported) return;
             reported = true;
-            this.core.bus[PublishDefault](
-                'interactionDispatched',
-                dispatchedPayload({
-                    routeId,
-                    interactionId: interaction.id,
-                    kind,
-                    outcome,
-                    startedAt,
-                    fallback: !matched,
-                    queuedMs
-                })
-            );
+            reportDispatch(this.core.bus, {
+                routeId,
+                interactionId: interaction.id,
+                kind,
+                outcome,
+                startedAt,
+                fallback: !matched,
+                queuedMs
+            });
         };
 
         // declared outside the try so the fault boundary replies through the handler's exact ack state

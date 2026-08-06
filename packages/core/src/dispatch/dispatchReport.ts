@@ -1,10 +1,19 @@
+import { Logger, paint } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
 import { Notice } from '@stops/Notice';
 import { Silence } from '@stops/Silence';
+import { PublishDefault } from '@subscribers/publishDefault';
 
 import type { InteractionRoutes } from '@src/metadataKeys';
-import type { DispatchOutcome, SubscriptionData } from '@subscribers/types/Subscriptions';
+import type { Bus } from '@subscribers/Bus';
+import type { DispatchOutcome } from '@subscribers/types/Subscriptions';
+
+let dispatchLogger: Logger | undefined;
+function logger(): Logger {
+    dispatchLogger ??= new Logger('Dispatch', { channel: 'interactions' });
+    return dispatchLogger;
+}
 
 /**
  * Classifies a caught stop for `interactionDispatched` so a gate and a
@@ -48,19 +57,23 @@ export function queuedMsFor(interactionId: string): number {
 }
 
 /**
- * Builds the `interactionDispatched` payload both transports publish, so the two clocks are read the
- * same way on each.
+ * Traces the settled dispatch and publishes `interactionDispatched`, so both transports report it the
+ * same way.
  *
  * @internal
  */
-export function dispatchedPayload(report: DispatchReport): SubscriptionData<'interactionDispatched'> {
-    return {
+export function reportDispatch(bus: Bus, report: DispatchReport): void {
+    const durationMs = performance.now() - report.startedAt;
+    logger().trace(
+        `${paint.mint.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+    );
+    bus[PublishDefault]('interactionDispatched', {
         routeId: report.routeId,
         interactionId: report.interactionId,
         kind: report.kind,
         outcome: report.outcome,
         fallback: report.fallback,
-        durationMs: performance.now() - report.startedAt,
+        durationMs,
         queuedMs: report.queuedMs
-    };
+    });
 }
