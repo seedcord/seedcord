@@ -1,16 +1,17 @@
-import type { Config, HealthCheckOption } from '@seedcord/types';
+import type { Config } from '@seedcord/types';
 
 /**
- * Config for a long-running node server. Pass to `new Seedcord(config).start(port)`.
+ * Config for a long-running node server. Pass to `new Seedcord(config).start()`.
  */
 export interface HttpServerConfig extends Config {
     runtime?: 'server';
 
     /**
-     * The health-check server. `false` disables it, `true` or omit for the defaults, an object
-     * configures it.
+     * Port the interactions server uses.
+     *
+     * @defaultValue `3000`
      */
-    healthCheck?: HealthCheckOption;
+    port?: number;
 }
 
 /**
@@ -19,7 +20,7 @@ export interface HttpServerConfig extends Config {
  */
 export interface HttpEdgeConfig extends Config {
     runtime: 'edge';
-    healthCheck?: never;
+    port?: never;
 }
 
 /**

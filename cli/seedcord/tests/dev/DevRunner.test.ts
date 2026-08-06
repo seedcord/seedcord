@@ -1,25 +1,81 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DevRunner } from '@commands/dev/DevRunner';
+import { DevStore } from '@ui/stores/DevStore';
 
 import { silentLogger } from '../silentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
+import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
 import type { ConfigLoader } from '@core/config/ConfigLoader';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
-import type { DevStore } from '@ui/stores/DevStore';
 
-// justified: refreshCommands only reads the injected codegen and the (null) session, so the locator, config
-// loader, and store are never touched and can be empty stand-ins.
-function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }): DevRunner {
-    return new DevRunner(
-        {} as unknown as ConfigLocator,
-        {} as unknown as ConfigLoader,
-        {} as unknown as DevStore,
-        codegen as unknown as CodegenRunner,
-        silentLogger
-    );
+// justified: these paths never touch the locator or the config loader
+function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRouter = fakeTunnel()): DevRunner {
+    return new DevRunner({
+        locator: {} as unknown as ConfigLocator,
+        configLoader: {} as unknown as ConfigLoader,
+        store: new DevStore(),
+        codegen: codegen as unknown as CodegenRunner,
+        codegenLogger: silentLogger,
+        tunnel
+    });
 }
+
+// justified: the runner reads only route and stop off the router
+function fakeTunnel(overrides: Partial<TunnelRouter> = {}): TunnelRouter {
+    return { route: () => undefined, stop: () => Promise.resolve(), ...overrides } as TunnelRouter;
+}
+
+describe('DevRunner quit', () => {
+    // a failing assertion mid-test would otherwise leave timers faked for the next one
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('tears the tunnel down', async () => {
+        const stop = vi.fn().mockResolvedValue(undefined);
+        const runner = makeRunner({ run: vi.fn() }, fakeTunnel({ stop }));
+
+        await runner.quit();
+
+        expect(stop).toHaveBeenCalledOnce();
+    });
+
+    it('holds the run loop open until the teardown settles', async () => {
+        vi.useFakeTimers();
+        const order: string[] = [];
+        const runner = makeRunner(
+            { run: vi.fn() },
+            fakeTunnel({
+                stop: () =>
+                    new Promise<void>((resolve) => {
+                        setTimeout(() => {
+                            order.push('teardown');
+                            resolve();
+                        }, 100);
+                    })
+            })
+        );
+
+        void runner.quit();
+        const running = runner.run().then(() => order.push('run'));
+        await vi.advanceTimersByTimeAsync(100);
+        await running;
+
+        expect(order).toStrictEqual(['teardown', 'run']);
+    });
+
+    it('resolves when the teardown outlasts its budget', async () => {
+        vi.useFakeTimers();
+        const runner = makeRunner({ run: vi.fn() }, fakeTunnel({ stop: () => new Promise(() => undefined) }));
+
+        const quitting = runner.quit();
+        await vi.advanceTimersByTimeAsync(3000);
+
+        await expect(quitting).resolves.toBeUndefined();
+    });
+});
 
 describe('DevRunner command refresh', () => {
     it('regenerates the registry when a refresh is accepted', async () => {

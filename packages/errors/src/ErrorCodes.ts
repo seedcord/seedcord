@@ -242,5 +242,13 @@ export enum SeedcordErrorCode {
     /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
     CliCleanApplyNeedsYes = 3130,
     /** Config hmr rollback flag must be a boolean when provided. */
-    CliConfigInvalidHmrRollback = 3131
+    CliConfigInvalidHmrRollback = 3131,
+    /** Config tunnel must be a boolean or an https URL when provided. */
+    CliConfigInvalidTunnel = 3132,
+    /** The cloudflared metrics server never reported a quick-tunnel hostname. */
+    CliTunnelUrlUnavailable = 3133,
+    /** Discord rejected the tunnel URL as an interactions endpoint. */
+    CliTunnelNotVerified = 3134,
+    /** The tunnel URL never answered its health probe. */
+    CliTunnelUnreachable = 3135
 }

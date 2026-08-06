@@ -63,6 +63,10 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
             this.emit('event', { type: 'command-update-prompt', files: data.files });
         });
 
+        this.dev?.on('seedcord:server-listening', (data) => {
+            this.emit('event', { type: 'server-listening', port: data.port });
+        });
+
         this.dev?.on('seedcord:register-critical-files', (data) => {
             for (const pattern of data.patterns) {
                 this.dynamicRestartPatterns.add(pattern);

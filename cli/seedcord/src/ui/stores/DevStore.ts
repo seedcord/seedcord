@@ -12,6 +12,8 @@ export interface DevState {
     readonly frameworkVersion: string | null;
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
+    readonly port: number | null;
+    readonly tunnelUrl: string | null;
 }
 
 const INITIAL: DevState = {
@@ -21,15 +23,15 @@ const INITIAL: DevState = {
     isBusy: true,
     frameworkVersion: null,
     restartRequired: false,
-    commandUpdatePrompt: null
+    commandUpdatePrompt: null,
+    port: null,
+    tunnelUrl: null
 };
 
-// Single source of truth for the dev UI. The runner pushes scalar updates through the setters, and runtime
-// events reduce through `apply`. `getState` returns a stable reference between mutations, which
-// `useSyncExternalStore` requires to avoid render loops.
 export class DevStore extends TypedEventEmitter<{ change: [] }> {
     private state: DevState = INITIAL;
 
+    // a stable reference between mutations, which useSyncExternalStore needs to avoid render loops
     public getState(): DevState {
         return this.state;
     }
@@ -54,23 +56,35 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         this.patch({ frameworkVersion });
     }
 
+    public setTunnelUrl(tunnelUrl: string | null): void {
+        this.patch({ tunnelUrl });
+    }
+
     public clearPrompt(): void {
         this.patch({ commandUpdatePrompt: null });
     }
 
-    // Optimistic UI transitions: the user pressed r/d, so reset to a busy "reconnecting" state in one atomic
-    // patch (one render) before the runner stops the session and starts the next one.
+    // one patch, so the r/d press costs a single render before the runner swaps sessions
     public beginRestart(): void {
-        this.patch({ phase: 'starting', isBusy: true, restartRequired: false, error: null, status: 'Restarting…' });
+        this.patch({
+            phase: 'starting',
+            isBusy: true,
+            restartRequired: false,
+            error: null,
+            status: 'Restarting…',
+            port: null
+        });
     }
 
+    // tunnelUrl stays because one tunnel outlives the restart loop
     public beginDisconnect(): void {
         this.patch({
             phase: 'disconnected',
             isBusy: true,
             restartRequired: false,
             error: null,
-            status: 'Disconnecting…'
+            status: 'Disconnecting…',
+            port: null
         });
     }
 
@@ -90,6 +104,10 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
             }
             case 'command-update-prompt': {
                 this.patch({ commandUpdatePrompt: event.files });
+                break;
+            }
+            case 'server-listening': {
+                this.patch({ port: event.port });
                 break;
             }
             case 'module-loading':

@@ -5,12 +5,12 @@ import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HmrPlugin } from '@commands/dev/runtime/HmrPlugin';
 
+import type { DevEvent } from '@commands/dev/runtime/events';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 
 const HMR_EVENT_NAME = 'seedcord:hmr';
 
-// Mock Logger
 const loggerSpies = {
     info: vi.fn(),
     warn: vi.fn(),
@@ -39,6 +39,7 @@ describe('HmrPlugin', () => {
         entry: 'src/index.ts',
         instance: 'src/Seedcord.ts',
         tsconfig: 'tsconfig.json',
+        tunnel: { mode: 'quick' } as const,
         build: {
             outDir: 'dist',
             bootstrap: 'bootstrap.js'
@@ -60,7 +61,7 @@ describe('HmrPlugin', () => {
     it('carries the config rollback flag onto the hmr payload', () => {
         const plugin = new HmrPlugin({ ...mockConfig, hmr: { rollback: false } });
         const hotSend = vi.fn();
-        // justified: spy on the private `hot` getter, which the public type does not expose
+        // justified: spy on the private `hot` getter
         const hotHost = plugin as unknown as { hot: { send: typeof hotSend; on: ReturnType<typeof vi.fn> } };
         vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({ send: hotSend, on: vi.fn() });
 
@@ -77,6 +78,30 @@ describe('HmrPlugin', () => {
         expect(hotSend).toHaveBeenCalledWith(HMR_EVENT_NAME, { file, type: 'create', rollback: false });
     });
 
+    it('relays the bound port the framework reports', () => {
+        const plugin = new HmrPlugin(mockConfig);
+        const listeners = new Map<string, (data: unknown) => void>();
+        // justified: spy on the private `hot` getter
+        const hotHost = plugin as unknown as { hot: { send: Mock; on: Mock } };
+        vi.spyOn(hotHost, 'hot', 'get').mockReturnValue({
+            send: vi.fn(),
+            on: vi.fn((event: string, cb: (data: unknown) => void) => listeners.set(event, cb))
+        });
+
+        const events: DevEvent[] = [];
+        plugin.on('event', (event: DevEvent) => events.push(event));
+
+        const server = {
+            watcher: new EventEmitter(),
+            environments: { ssr: { hot: { send: vi.fn(), on: vi.fn() } } }
+        } as unknown as ViteDevServer;
+        (plugin.plugin.configureServer as (s: ViteDevServer) => void)(server);
+
+        listeners.get('seedcord:server-listening')?.({ port: 4000 });
+
+        expect(events).toContainEqual({ type: 'server-listening', port: 4000 });
+    });
+
     describe('configureServer (File Events)', () => {
         let serverMock: ViteDevServer;
         let watcher: EventEmitter;
@@ -86,8 +111,7 @@ describe('HmrPlugin', () => {
             watcher = new EventEmitter();
             hotSendMock = vi.fn();
 
-            // Mock this.hot
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spy on the private `hot` getter
             vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({
                 send: hotSendMock,
                 on: vi.fn()
@@ -104,15 +128,14 @@ describe('HmrPlugin', () => {
                     }
                 },
                 hot: {
-                    send: vi.fn(), // Fallback
+                    send: vi.fn(),
                     on: vi.fn()
                 }
             } as unknown as ViteDevServer;
 
-            // Initialize hooks
             const plugin = hmrPlugin.plugin;
             if (typeof plugin.configureServer === 'function') {
-                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Vite's Plugin.configureServer is a method with a `this` context type that resists direct invocation; the cast strips that without losing runtime semantics
+                // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Vite types configureServer with a `this` context, which blocks a direct call
                 (plugin.configureServer as (server: ViteDevServer) => void)(serverMock);
             }
         });
@@ -173,8 +196,7 @@ describe('HmrPlugin', () => {
         beforeEach(() => {
             hotSendMock = vi.fn();
 
-            // Mock this.hot
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- spy on the private `hot` getter
             vi.spyOn(hmrPlugin as any, 'hot', 'get').mockReturnValue({
                 send: hotSendMock,
                 on: vi.fn()
@@ -252,7 +274,6 @@ describe('HmrPlugin', () => {
                 environment: 'client'
             } as unknown as EnvironmentModuleNode;
 
-            // Mock moduleGraph
             const getModulesByFileMock = vi.fn().mockImplementation((f) => {
                 if (f === file) return new Set([fileNode]);
                 if (f === importerFile) return new Set([importerNode]);
@@ -269,7 +290,7 @@ describe('HmrPlugin', () => {
                 type: 'update',
                 file,
                 server: serverMock,
-                modules: [], // Empty from context
+                modules: [],
                 timestamp: Date.now(),
                 read: vi.fn()
             };
@@ -303,10 +324,7 @@ describe('HmrPlugin', () => {
 
             const plugin = hmrPlugin.plugin;
             if (typeof plugin.hotUpdate === 'function') {
-                // First call
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
-
-                // Second call immediately
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
@@ -328,13 +346,10 @@ describe('HmrPlugin', () => {
 
             const plugin = hmrPlugin.plugin;
             if (typeof plugin.hotUpdate === 'function') {
-                // First call
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
 
-                // Advance time by 300ms (debounce is 250ms)
-                vi.advanceTimersByTime(300);
+                vi.advanceTimersByTime(300); // past the 250ms debounce
 
-                // Second call
                 await (plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
             }
 
@@ -359,7 +374,6 @@ describe('HmrPlugin', () => {
                 environment: 'client'
             } as unknown as EnvironmentModuleNode;
 
-            // A imports B, B imports A
             modA.importers.add(modB);
             modB.importers.add(modA);
 

@@ -107,7 +107,7 @@ Comma splices are also banned!! A comma cannot join two independent clauses so a
 // out of range would carry into the neighbouring field on decode.
 ```
 
-**Do not reflexively replace a `;` or `:` with ", so".** A semicolon often just sets two related facts side by side, and ", so" asserts a cause the original never claimed. It reads wrong when the real link is a design choice or a plain sequence, and stacking two "so"s in one sentence is a tell. Use ", so" only when the second clause genuinely results from the first. Otherwise use a period, or ", and" for a neutral join.
+**Do not reflexively replace a `;` or `:` with ", so".** A semicolon often just sets two related facts side by side, and ", so" asserts a cause the original never claimed. It reads wrong when the real link is a design choice or a plain sequence, and stacking two "so"s in one sentence is a tell. Use ", so" only when the second clause genuinely results from the first. Otherwise name the real relation with the connector that fits, `because` or `since` for a reason, `, and` for a neutral join, a period when there is no relation at all. Rejecting one connector never licenses dropping the connector, because the bare comma left behind is the splice banned above.
 
 - BAD, invented cause: "meaningless without a filesystem, so it throws" (the throw is a design choice, and ", so" overstates it as a consequence).
 - GOOD: "it throws because it's meaningless without a filesystem".

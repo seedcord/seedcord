@@ -3,12 +3,11 @@ import { createServer } from 'node:http';
 
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { CommandInjector, HmrManager, setBotColor } from '@seedcord/core/internal';
+import { CommandInjector, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     CommandRegistry,
     CoordinatedShutdown,
     CoordinatedStartup,
-    HealthCheck,
     Pluggable,
     ShutdownPhase,
     StartupPhase,
@@ -50,7 +49,7 @@ type RuntimeOfConfig<Cfg extends HttpConfig> = Cfg extends { runtime: 'edge' } ?
  * The HTTP-interactions bot host, a long-running node server around the engine.
  *
  * Discovers handlers from `config.bot.interactions.path`, verifies and dispatches interactions on
- * `start(port)`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
+ * `start()`, and runs coordinated shutdown with an in-flight drain. The edge deploy path calls
  * `createSeedcord` from a generated entry.
  */
 export class Seedcord<Cfg extends HttpConfig = HttpConfig>
@@ -81,13 +80,11 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
     private appId?: string;
     private appIdPromise?: Promise<string>;
     private readonly emojiInjector = new EmojiInjector(this, () => this.applicationId());
-    private readonly healthCheck?: HealthCheck | undefined;
     private readonly hmrManager: HmrManager;
     private readonly logger = new Logger('Server', { channel: 'bot' });
 
     private server?: Server;
     private boundPort?: number;
-    private requestedPort = DEFAULT_PORT;
     private fetchedUsername?: string | undefined;
 
     constructor(public readonly config: Cfg) {
@@ -121,9 +118,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.rateLimiter = config.store ?? new MemoryRateLimiter();
         this.bus = new Bus(this);
         this.subscribers = new SubscriberLoader(this.bus, config.subscribers.path);
-        // the edge arm types healthCheck never, and a dev run of an edge config needs no health server
-        this.healthCheck =
-            config.runtime === 'edge' ? undefined : HealthCheck.fromOption(this.shutdown, config.healthCheck);
 
         this.registerStartupTasks();
     }
@@ -140,11 +134,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     /**
      * Starts the host and runs the startup tasks.
-     *
-     * @param port - The port the interaction server binds. {@default `3000` }
      */
-    public async start(port = DEFAULT_PORT): Promise<this> {
-        this.requestedPort = port;
+    public async start(): Promise<this> {
         try {
             await super.init();
         } catch (caught) {
@@ -204,15 +195,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         if (!Envapter.isTest) {
             this.startup.addTask(StartupPhase.Ready, 'identity', () => this.fetchUsername());
         }
-
-        const { healthCheck } = this;
-        if (healthCheck) {
-            this.startup.addTask(StartupPhase.Ready, 'health-check', async () => {
-                healthCheck.logger.utils.initialization('HealthCheck', 'start');
-                await healthCheck.init();
-                healthCheck.logger.utils.initialization('HealthCheck', 'end');
-            });
-        }
     }
 
     private registerHmrAwareModules(): void {
@@ -258,11 +240,12 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         });
         this.server = server;
 
-        server.listen(this.requestedPort);
+        server.listen(this.config.port ?? DEFAULT_PORT);
         await once(server, 'listening');
         // justified: address() is AddressInfo once a TCP server is listening
         this.boundPort = (server.address() as AddressInfo).port;
         this.logger.info(`Interactions server listening on port ${paint.sky.bold(String(this.boundPort))}`);
+        getDevChannel()?.send('seedcord:server-listening', { port: this.boundPort });
 
         this.shutdown.addTask(
             ShutdownPhase.Unbind,

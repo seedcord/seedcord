@@ -8,6 +8,7 @@ import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
+    ResolvedTunnel,
     SeedcordBuildConfig,
     SeedcordDevConfig
 } from './schema';
@@ -46,6 +47,20 @@ function validateHmr(value: unknown): void {
     }
 }
 
+function validateTunnel(value: unknown): void {
+    if (value === undefined || typeof value === 'boolean') return;
+    // discord only accepts an https interactions endpoint
+    if (typeof value !== 'string' || URL.parse(value)?.protocol !== 'https:') {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTunnel);
+    }
+}
+
+function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
+    if (value === false) return { mode: 'off' };
+    if (typeof value === 'string') return { mode: 'url', url: value };
+    return { mode: 'quick' };
+}
+
 function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
     if (typeof raw.instance !== 'string' || raw.instance.length === 0) {
@@ -55,6 +70,7 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
         throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
     }
     if (!isOptionalString(raw.root)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
+    validateTunnel(raw.tunnel);
     validateBuild(raw.build);
     validateHmr(raw.hmr);
 }
@@ -94,6 +110,7 @@ export class ConfigLoader {
             entry,
             build,
             tsconfig,
+            tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
         } satisfies ResolvedSeedcordDevConfig;
     }

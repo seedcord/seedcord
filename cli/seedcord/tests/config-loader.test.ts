@@ -1,18 +1,18 @@
 import { join, dirname, resolve } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordBrand } from '@seedcord/types/internal';
 import { describe, it, expect, vi } from 'vitest';
 
-import { DevRunner, isSeedcordInstance } from '@commands/dev/DevRunner';
+import { DevRunner } from '@commands/dev/DevRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { DevStore } from '@ui/stores/DevStore';
 
 import { silentLogger } from './silentLogger';
 
 import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
+import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
 import type { ConfigLocator } from '@core/config/ConfigLocator';
-import type { SeedcordDevConfig } from '@core/config/schema';
+import type { ResolvedTunnel, SeedcordDevConfig } from '@core/config/schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 
 describe('ConfigLoader', () => {
@@ -36,6 +36,46 @@ describe('ConfigLoader', () => {
         expect(resolved.build.outDir).toBe(resolve(process.cwd(), 'dist'));
         expect(resolved.build.bootstrap).toBe(resolve(process.cwd(), 'dist/index.mjs'));
         expect(resolved.build.tsconfig).toBeUndefined();
+    });
+
+    it('resolves each tunnel shape into a mode', async () => {
+        const load = async (config: SeedcordDevConfig): Promise<ResolvedTunnel> => {
+            const moduleLoader: ModuleLoader = {
+                importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                    return Promise.resolve({ default: config } as TModule);
+                }
+            };
+            const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
+                join(process.cwd(), 'seedcord.config.ts')
+            );
+            return resolved.tunnel;
+        };
+
+        const base = { instance: './bot.ts', entry: './index.ts' };
+
+        await expect(load(base)).resolves.toEqual({ mode: 'quick' });
+        await expect(load({ ...base, tunnel: true })).resolves.toEqual({ mode: 'quick' });
+        await expect(load({ ...base, tunnel: false })).resolves.toEqual({ mode: 'off' });
+        await expect(load({ ...base, tunnel: 'https://bot.example.com' })).resolves.toEqual({
+            mode: 'url',
+            url: 'https://bot.example.com'
+        });
+    });
+
+    it.each([['yes'], ['http://bot.example.com'], [42]])('rejects %s as a tunnel', async (tunnel) => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts', tunnel }
+                } as TModule);
+            }
+        };
+
+        const loader = new ConfigLoader(moduleLoader, silentLogger);
+
+        await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
+            'Config `tunnel` must be a boolean or an https URL.'
+        );
     });
 
     it('throws when instance is missing', async () => {
@@ -125,19 +165,6 @@ describe('ConfigLoader', () => {
     });
 });
 
-describe('isSeedcordInstance', () => {
-    it('accepts a branded object', () => {
-        expect(isSeedcordInstance({ [SeedcordBrand]: true })).toBe(true);
-    });
-
-    it('rejects a look-alike without the brand', () => {
-        expect(isSeedcordInstance({ config: {}, start: () => undefined })).toBe(false);
-        expect(isSeedcordInstance({ [SeedcordBrand]: false })).toBe(false);
-        expect(isSeedcordInstance(null)).toBe(false);
-        expect(isSeedcordInstance('nope')).toBe(false);
-    });
-});
-
 describe('DevRunner', () => {
     it('loads and starts the Seedcord instance', async () => {
         const configPath = join(process.cwd(), 'seedcord.config.ts');
@@ -157,16 +184,18 @@ describe('DevRunner', () => {
             }))
         };
 
-        // locator and configLoader are the only doubles exercised here, codegen runs on refresh only.
-        const runner = new DevRunner(
-            locator as unknown as ConfigLocator,
-            configLoader as unknown as ConfigLoader,
-            new DevStore(),
-            { run: vi.fn() } as unknown as CodegenRunner,
-            silentLogger
-        );
+        // justified: only the locator and the config loader are called here, codegen runs on refresh only
+        const runner = new DevRunner({
+            locator: locator as unknown as ConfigLocator,
+            configLoader: configLoader as unknown as ConfigLoader,
+            store: new DevStore(),
+            codegen: { run: vi.fn() } as unknown as CodegenRunner,
+            codegenLogger: silentLogger,
+            // justified: this path never routes an event or quits
+            tunnel: { route: () => undefined, stop: () => Promise.resolve() } as unknown as TunnelRouter
+        });
 
-        // run() swallows session errors through handleError, so rethrow here to let the assertion observe them.
+        // run() swallows session errors through handleError, so rethrow for the assertion
         // @ts-expect-error accessing private method
         vi.spyOn(runner, 'handleError').mockImplementation((error: unknown) => {
             throw error;

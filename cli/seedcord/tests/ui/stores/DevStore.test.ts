@@ -26,6 +26,7 @@ describe('DevStore', () => {
         store.setPhase('running');
         store.setError(new Error('boom'));
         store.setFrameworkVersion('1.2.3');
+        store.setTunnelUrl('https://abc.trycloudflare.com');
 
         const state = store.getState();
         expect(state.status).toBe('running');
@@ -33,7 +34,8 @@ describe('DevStore', () => {
         expect(state.phase).toBe('running');
         expect(state.error).toBeInstanceOf(Error);
         expect(state.frameworkVersion).toBe('1.2.3');
-        expect(onChange).toHaveBeenCalledTimes(5);
+        expect(state.tunnelUrl).toBe('https://abc.trycloudflare.com');
+        expect(onChange).toHaveBeenCalledTimes(6);
     });
 
     it('getState returns a stable reference until the next mutation', () => {
@@ -104,6 +106,22 @@ describe('DevStore', () => {
         store.apply({ type: 'command-update-prompt', files });
 
         expect(store.getState().commandUpdatePrompt).toEqual(files);
+    });
+
+    it.each(['beginRestart', 'beginDisconnect'] as const)('%s drops the port of the run that ended', (method) => {
+        const store = new DevStore();
+        store.apply({ type: 'server-listening', port: 4321 });
+
+        store[method]();
+
+        expect(store.getState().port).toBeNull();
+    });
+
+    it('apply reduces server-listening into the bound port', () => {
+        const store = new DevStore();
+        store.apply({ type: 'server-listening', port: 4000 });
+
+        expect(store.getState().port).toBe(4000);
     });
 
     it('clearPrompt drops the pending prompt with one change', () => {

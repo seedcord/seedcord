@@ -1,6 +1,7 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createSeedcord } from '@src/createSeedcord';
 
@@ -45,6 +46,21 @@ const ping = '{"type":1}';
 // a type resolve() does not recognize, the one payload class the engine acks without dispatching
 const unrecognized = '{"type":99}';
 
+describe('createSeedcord request logging', () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it('names why each request got its status', async () => {
+        const debug = vi.spyOn(Logger.prototype, 'debug').mockReturnValue(undefined);
+        const { handle } = await readySeedcord();
+
+        await handle(new Request('https://bot.example/interactions', { method: 'POST' }));
+
+        expect(debug.mock.calls[0]?.[0]).toContain('unsigned');
+    });
+});
+
 describe('createSeedcord', () => {
     it('answers a signed PING with an in-body PONG', async () => {
         const { signer, handle } = await readySeedcord();
@@ -53,6 +69,18 @@ describe('createSeedcord', () => {
 
         expect(response.status).toBe(200);
         await expect(response.json()).resolves.toEqual({ type: 1 });
+    });
+
+    // discord resends the same signed ping while verifying an endpoint, and a 401 reads as a broken endpoint
+    it('answers a resent PING instead of rejecting it as a replay', async () => {
+        const { signer, handle } = await readySeedcord();
+        const signed = await signedRequest(signer, ping);
+
+        await handle(signed.clone());
+        const resent = await handle(signed);
+
+        expect(resent.status).toBe(200);
+        await expect(resent.json()).resolves.toEqual({ type: 1 });
     });
 
     it('acks an unrecognized interaction shape with an empty 202', async () => {

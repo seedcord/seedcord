@@ -1,167 +1,59 @@
-import { existsSync } from 'node:fs';
-import { dirname } from 'node:path';
-
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { settleWithin } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
-import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
-import chalk from 'chalk';
 
 import { CodegenRunner } from '@commands/codegen/CodegenRunner';
 import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
 import { resetChannelColors } from '@ui/channelColor';
-import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
+import { DevSession } from './DevSession';
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
-import { TscRunner } from './TscRunner';
+import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
+import { TunnelRouter } from './tunnel/TunnelRouter';
 
-import type { DevRuntime } from './runtime/DevRuntime';
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
+import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 import type { DevStore } from '@ui/stores/DevStore';
 
-export function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
-    return typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true;
+const TUNNEL_TEARDOWN_MS = 3000;
+
+export interface DevRunnerDeps {
+    readonly locator: ConfigLocator;
+    readonly configLoader: ConfigLoader;
+    readonly store: DevStore;
+    readonly codegen: CodegenRunner;
+    readonly codegenLogger: ILogger;
+    readonly tunnel: TunnelRouter;
 }
 
-class SeedcordDevSession {
-    private stopResolve?: () => void;
-    private instance?: SeedcordInstance;
-    private isStopped = false;
-    private startupPromise?: Promise<unknown>;
-    private tscRunner?: TscRunner;
-    private stopPromise?: Promise<void>;
-
-    constructor(
-        private readonly config: ResolvedSeedcordDevConfig,
-        private readonly runtime: DevRuntime,
-        private readonly store: DevStore
-    ) {}
-
-    private async loadInstanceModule(): Promise<unknown> {
-        await this.runtime.start({
-            config: this.config,
-            onEvent: (event) => {
-                this.store.apply(event);
-            }
-        });
-
-        // vite's missing-entry message changed across a minor and broke detection, so check the path directly
-        if (!existsSync(this.config.instance)) {
-            throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.config.instance]);
-        }
-
-        try {
-            const { module } = await this.runtime.loadEntry();
-            return module;
-        } catch (error: unknown) {
-            const message = Error.isError(error) ? error.message : String(error);
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, message]);
-        }
-    }
-
-    public async start(onReady?: () => void): Promise<void> {
-        const cwd = dirname(this.config.configFile);
-        this.tscRunner = new TscRunner(this.config.tsconfig, cwd);
-        this.tscRunner.start();
-
-        const module = await this.loadInstanceModule();
-        const exported = resolveDefaultExport(module);
-        const instance = await Promise.resolve(exported);
-
-        if (!isSeedcordInstance(instance)) {
-            throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
-        }
-
-        this.instance = instance;
-        this.store.setFrameworkVersion(instance.version);
-
-        try {
-            this.store.setPhase('starting');
-            this.store.setStatus('Starting Seedcord instance…');
-            this.startupPromise = Promise.resolve(instance.start());
-            await this.startupPromise;
-
-            if (this.isStopped) {
-                return;
-            }
-
-            this.store.setPhase('running');
-            this.store.setStatus(`${chalk.bold(instance.username ?? 'Bot')} is ready!`);
-            onReady?.();
-
-            // resolved by stop(). no process-signal handlers here (DevCommand registers the single one), so restarts never accumulate listeners.
-            await new Promise<void>((resolve) => {
-                this.stopResolve = resolve;
-            });
-        } catch (error: unknown) {
-            const reason = Error.isError(error) ? error.message : 'Unknown error';
-            throw new SeedcordError(SeedcordErrorCode.CliStartFailed, [this.config.instance, reason]);
-        }
-    }
-
-    // quit/restart/disconnect and dispose() all call stop() so it should only run once
-    public async stop(): Promise<void> {
-        this.stopPromise ??= this.runStop();
-        return this.stopPromise;
-    }
-
-    private async runStop(): Promise<void> {
-        this.isStopped = true;
-        this.tscRunner?.stop();
-        this.instance?.startup.abort();
-
-        if (this.startupPromise) {
-            // suppress the abort rejection to keep shutdown ordered
-            try {
-                await this.startupPromise;
-            } catch {
-                /* suppressed */
-            }
-        }
-
-        await this.instance?.shutdown.run(0, false);
-        this.stopResolve?.();
-    }
-
-    public async dispose(): Promise<void> {
-        await this.stop();
-        await this.runtime.dispose();
-    }
-
-    public refreshCommands(shouldRefresh: boolean): void {
-        this.runtime.refreshCommands?.(shouldRefresh);
-    }
-}
-
-/**
- * Coordinates config discovery, loading, and starting a Seedcord instance.
- */
 export class DevRunner {
-    private currentSession: SeedcordDevSession | null = null;
+    private currentSession: DevSession | null = null;
     private signalResolve?: () => void;
     private shouldQuit = false;
+    private quitting?: Promise<void>;
     private isDisconnected = false;
     private isRunning = false;
     private isRegenerating = false;
 
-    constructor(
-        private readonly locator: ConfigLocator,
-        private readonly configLoader: ConfigLoader,
-        private readonly store: DevStore,
-        private readonly codegen: CodegenRunner,
-        private readonly codegenLogger: ILogger
-    ) {}
+    constructor(private readonly deps: DevRunnerDeps) {}
 
     public static create(logger: Logger, store: DevStore): DevRunner {
         const moduleLoader = new RuntimeModuleLoader();
         const codegenLogger = new Logger('Codegen', { channel: 'cli' });
-        const locator = new ConfigLocator(logger);
-        const configLoader = new ConfigLoader(moduleLoader, logger);
+        const tunnelLogger = new Logger('Tunnel', { channel: 'cli' });
+        const makeCoordinator = (tunnel: ResolvedTunnel): TunnelCoordinator | undefined =>
+            createTunnelCoordinator(tunnelLogger, (url) => store.setTunnelUrl(url), tunnel);
 
-        return new DevRunner(locator, configLoader, store, CodegenRunner.create(codegenLogger), codegenLogger);
+        return new DevRunner({
+            locator: new ConfigLocator(logger),
+            configLoader: new ConfigLoader(moduleLoader, logger),
+            store,
+            codegen: CodegenRunner.create(codegenLogger),
+            codegenLogger,
+            tunnel: new TunnelRouter(makeCoordinator, tunnelLogger)
+        });
     }
 
     public async run(): Promise<void> {
@@ -178,22 +70,23 @@ export class DevRunner {
 
                     await this.runSession();
                 } catch (error: unknown) {
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- quit() flips shouldQuit during the awaited session. TS narrows it to false from the loop guard and can't see the async cross-method mutation
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- quit() flips shouldQuit during the awaited session, which TS cannot see from the loop guard
                     if (this.shouldQuit) break;
                     await this.handleError(error);
                 }
             }
         } finally {
             this.isRunning = false;
+            await this.quitting; // process.exit follows run() resolving
         }
     }
 
     private async handleDisconnected(): Promise<void> {
-        this.store.setPhase('disconnected');
-        this.store.setStatus('Disconnected. Press r to restart.');
-        this.store.setBusy(false);
+        this.deps.store.setPhase('disconnected');
+        this.deps.store.setStatus('Disconnected. Press r to restart.');
+        this.deps.store.setBusy(false);
         await this.waitForSignal();
-        this.store.setBusy(true);
+        this.deps.store.setBusy(true);
         if (!this.shouldQuit) {
             this.isDisconnected = false;
         }
@@ -201,36 +94,46 @@ export class DevRunner {
 
     private async runSession(): Promise<void> {
         resetChannelColors();
-        this.store.setPhase('starting');
-        this.store.setBusy(true);
+        this.deps.store.setPhase('starting');
+        this.deps.store.setBusy(true);
         const config = await this.loadConfig();
         const runtime = new ViteDevRuntime();
-        this.currentSession = new SeedcordDevSession(config, runtime, this.store);
+        this.currentSession = new DevSession(config, runtime, this.deps.store, (event) => {
+            this.deps.tunnel.route(config.tunnel, event);
+        });
 
         try {
             await this.currentSession.start(() => {
-                this.store.setBusy(false);
+                this.deps.store.setBusy(false);
             });
         } finally {
-            this.store.setBusy(true);
+            this.deps.store.setBusy(true);
             await this.currentSession.dispose();
             this.currentSession = null;
         }
     }
 
     private async handleError(error: unknown): Promise<void> {
-        this.store.setPhase('error');
-        this.store.setError(Error.isError(error) ? error : new Error(String(error)));
-        this.store.setStatus('Press r to restart.');
-        this.store.setBusy(false);
+        this.deps.store.setPhase('error');
+        this.deps.store.setError(Error.isError(error) ? error : new Error(String(error)));
+        this.deps.store.setStatus('Press r to restart.');
+        this.deps.store.setBusy(false);
         await this.waitForSignal();
-        this.store.setBusy(true);
+        this.deps.store.setBusy(true);
     }
 
+    // every caller drops this promise, so run() awaits it
     public async quit(): Promise<void> {
+        this.quitting ??= this.runQuit();
+        return this.quitting;
+    }
+
+    private async runQuit(): Promise<void> {
         this.shouldQuit = true;
-        this.store.setPhase('quitting');
+        this.deps.store.setPhase('quitting');
         await this.currentSession?.stop();
+        // the endpoint clear is a discord round trip
+        await settleWithin(this.deps.tunnel.stop(), TUNNEL_TEARDOWN_MS);
         this.signalResolve?.();
     }
 
@@ -240,9 +143,9 @@ export class DevRunner {
         this.signalResolve?.();
     }
 
+    // the tunnel stays up here because a disconnect is a short parked state the user presses r out of
     public async disconnect(): Promise<void> {
-        // Already parked in the disconnected wait, waking the signal here would fall through and start a
-        // fresh session (i.e. behave like restart). No live session means nothing to disconnect.
+        // waking the signal while already parked would fall through and start a fresh session
         if (this.isDisconnected) return;
         this.isDisconnected = true;
         await this.currentSession?.stop();
@@ -259,10 +162,10 @@ export class DevRunner {
         if (this.isRegenerating) return;
         this.isRegenerating = true;
         try {
-            await this.codegen.run(false);
+            await this.deps.codegen.run(false);
         } catch (error: unknown) {
-            // codegen throws, so log here and keep the dev session running
-            this.codegenLogger.error('Command registry regeneration failed', error);
+            // a codegen throw must not take the dev session down
+            this.deps.codegenLogger.error('Command registry regeneration failed', error);
         } finally {
             this.isRegenerating = false;
         }
@@ -275,7 +178,7 @@ export class DevRunner {
     }
 
     public async loadConfig(): Promise<ResolvedSeedcordDevConfig> {
-        const configPath = this.locator.locate();
-        return this.configLoader.load(configPath);
+        const configPath = this.deps.locator.locate();
+        return this.deps.configLoader.load(configPath);
     }
 }

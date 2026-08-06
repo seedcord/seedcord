@@ -27,7 +27,7 @@ function config(commandsPath: string | null, interactionsPath: string | null = n
             commands: commandsPath === null ? { path: null } : { path: commandsPath }
         },
         subscribers: { path: null },
-        healthCheck: false
+        port: 0
     };
 }
 
@@ -69,7 +69,7 @@ describe('command deploy during http startup', () => {
         live = host;
         const { put } = stubRest(host);
 
-        await host.start(0);
+        await host.start();
 
         expect(put).toHaveBeenCalledOnce();
         expect(put.mock.calls[0]?.[0]).toBe(Routes.applicationCommands(APP));
@@ -81,7 +81,7 @@ describe('command deploy during http startup', () => {
         live = host;
         stubRest(host);
 
-        await host.start(0);
+        await host.start();
 
         expect(commands.ping?.id).toBe('cmd-1');
         expect(commands.ping?.mention).toBe('</ping:cmd-1>');
@@ -92,7 +92,7 @@ describe('command deploy during http startup', () => {
         live = host;
         const { get } = stubRest(host);
 
-        await host.start(0);
+        await host.start();
 
         expect(get).toHaveBeenCalledWith(Routes.currentApplication());
     });
@@ -104,7 +104,7 @@ describe('command deploy during http startup', () => {
         live = host;
         stubRest(host);
 
-        await host.start(0);
+        await host.start();
 
         expect([...(slash.mock.calls[0]?.[0] ?? [])]).toContain('ping');
         expect(menus).toHaveBeenCalledOnce();
@@ -118,7 +118,7 @@ describe('command deploy during http startup', () => {
         live = host;
         const { get } = stubRest(host);
 
-        await host.start(0);
+        await host.start();
 
         expect(get.mock.calls.filter((call) => call[0] === Routes.currentApplication())).toHaveLength(1);
     });
@@ -128,7 +128,7 @@ describe('command deploy during http startup', () => {
         live = host;
         const { get, put } = stubRest(host);
 
-        await host.start(0);
+        await host.start();
 
         expect(put).not.toHaveBeenCalled();
         expect(get).not.toHaveBeenCalledWith(Routes.currentApplication());

@@ -198,10 +198,19 @@ setActive(value: boolean) {
 
 ## The two-pass cut, run it while you type
 
-1. Cover the comment and read the code. Would a careful reader get it wrong? If no, delete the comment and move on.
+1. Cover the comment and read the code. Would a careful reader get it wrong? If no, delete the comment and move on. If yes, try a better name or a smaller function first, and keep the comment only for what the code still cannot say.
 2. Cover the code and read the comment. Every word the code already showed comes out. What survives is the why.
+3. Count the whys. One comment carries one. Two clauses joined by "and" or ", so" means one explains the choice and the other sets a scene the reader can already see. Keep the one.
+4. Count the words. A `//` why lands around ten. Past that you are explaining two things, or explaining one thing twice.
+5. Look at each comma. A connector follows it, or it separates list items, or it becomes a period. A comma holding two standalone clauses apart is a splice.
 
-Run both passes on the block you just wrote, before the diff leaves your hands. A later audit catches the same thing at the cost of a full re-read of every file you touched.
+Steps 3 to 5 are arithmetic, so run them even when steps 1 and 2 felt clean. A clause reads as useful context right up until you count it, and a missing connector is invisible until you look for the word.
+
+Step 5 exists because obeying one rule can break another. The ban on a reflexive `", so"` rejects a connector, and dropping the word leaves the comma doing a job it cannot do. Every rule that rejects a connector still owes you the one that fits.
+
+Step 1's rename branch reaches a _what_ and stops there. A name can carry what the code does, so `// the item count` dies the moment the variable is called `itemCount`. A _why_ survives every refactor, because no identifier holds an external contract, a workaround, an ordering the code depends on, or the reason a threshold is that number. Renaming until the comment looks removable is how a load-bearing why gets deleted.
+
+Run all five on the block you just wrote, before the diff leaves your hands. A later audit catches the same thing at the cost of a full re-read of every file you touched.
 
 ## Failure Patterns To Avoid
 

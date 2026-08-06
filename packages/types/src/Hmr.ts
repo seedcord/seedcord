@@ -8,6 +8,7 @@ import type { HmrUpdateEvent } from './Types/Hmr';
 export interface SeedcordFrameworkEvents {
     'seedcord:register-critical-files': { patterns: string[] };
     'seedcord:commands-update-prompt': { files: string[] };
+    'seedcord:server-listening': { port: number };
 }
 
 /**
