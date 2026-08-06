@@ -227,6 +227,28 @@ describe('HmrPlugin', () => {
             vi.useRealTimers();
         });
 
+        it('sends a save that lands inside the create window', async () => {
+            const file = join(process.cwd(), 'src/commands/ping.ts');
+            watcher.emit('add', file);
+            hotSendMock.mockClear();
+
+            const ctx: HotUpdateOptions = {
+                type: 'update',
+                file,
+                server: {
+                    ...serverMock,
+                    moduleGraph: { getModulesByFile: vi.fn(), invalidateModule: vi.fn() }
+                } as unknown as ViteDevServer,
+                modules: [],
+                timestamp: Date.now(),
+                read: vi.fn()
+            };
+            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
+            await (hmrPlugin.plugin.hotUpdate as (ctx: HotUpdateOptions) => Promise<void>)(ctx);
+
+            expect(hotSendMock).toHaveBeenCalledWith(HMR_EVENT_NAME, expect.objectContaining({ file, type: 'update' }));
+        });
+
         it('should handle "unlink" event as "delete"', () => {
             const file = join(process.cwd(), 'src/commands/ping.ts');
             watcher.emit('unlink', file);

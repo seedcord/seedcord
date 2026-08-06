@@ -23,6 +23,7 @@ const DEBOUNCE_MS = 250;
 export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
     private readonly logger: Logger;
     private readonly lastUpdate = new Map<string, number>();
+    private readonly awaitingCreateEcho = new Set<string>();
     private server: ViteDevServer | null = null;
     private readonly dynamicRestartPatterns = new Set<string>();
 
@@ -105,6 +106,7 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
 
     private handleFileEvent(file: string, type: HmrEventType): void {
         if (this.isDebounced(file, type)) return;
+        if (type === 'create') this.awaitingCreateEcho.add(file);
 
         const relPath = relative(process.cwd(), file);
         const typeColor =
@@ -125,8 +127,9 @@ export class HmrPlugin extends TypedEventEmitter<{ event: [DevEvent] }> {
         const { file, modules, server } = ctx;
         const type = 'update';
 
-        // vite fires this straight after the watcher's add, and the create already reloaded the file
-        if (this.justSaw(file, 'create') || this.isDebounced(file, type)) return [];
+        // vite fires one update straight after the watcher's add, and the create already reloaded the file
+        const isCreateEcho = this.awaitingCreateEcho.delete(file) && this.justSaw(file, 'create');
+        if (isCreateEcho || this.isDebounced(file, type)) return [];
 
         const relPath = relative(process.cwd(), file);
 
