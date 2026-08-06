@@ -46,6 +46,18 @@ function unverifiable(): DiscordAPIError {
     );
 }
 
+function refusalWith(errors: unknown): DiscordAPIError {
+    return new DiscordAPIError(
+        // justified: the field is typed as an optional object, and a null arrives on the wire
+        { code: RESTJSONErrorCodes.InvalidFormBodyOrContentType, message: 'Invalid Form Body', errors } as never,
+        RESTJSONErrorCodes.InvalidFormBodyOrContentType,
+        400,
+        'PATCH',
+        'https://discord.com/api/v10/applications/@me',
+        { body: undefined, files: undefined }
+    );
+}
+
 describe('InteractionsEndpoint', () => {
     // the bot module points envapt at its own .env while loading, so the token is read per request
     it('builds its rest client on the first request', async () => {
@@ -106,6 +118,14 @@ describe('InteractionsEndpoint', () => {
 
         expect(isSeedcordError(error, undefined, SeedcordErrorCode.CliTunnelNotVerified)).toBe(true);
         expect(patch).toHaveBeenCalledOnce();
+    });
+
+    it('rethrows a refusal whose errors field is null', async () => {
+        const { rest: client, patch } = rest(null);
+        const refusal = refusalWith(null);
+        patch.mockRejectedValue(refusal);
+
+        await expect(new InteractionsEndpoint(() => client).set(TUNNEL, RUNNING)).rejects.toBe(refusal);
     });
 
     it('surfaces a rate limit rather than reading it as a refusal', async () => {

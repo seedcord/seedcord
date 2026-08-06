@@ -16,7 +16,11 @@ function unverified(error: unknown): boolean {
     }
 
     const { rawError } = error;
-    return 'errors' in rawError && typeof rawError.errors === 'object' && FIELD in rawError.errors;
+    return 'errors' in rawError && containsField(rawError.errors);
+}
+
+function containsField(errors: unknown): boolean {
+    return typeof errors === 'object' && errors !== null && FIELD in errors;
 }
 
 export class InteractionsEndpoint {
