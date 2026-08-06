@@ -148,6 +148,44 @@ describe('TunnelCoordinator', () => {
         expect(stop).toHaveBeenCalledOnce();
     });
 
+    it('opens a replacement after a loss on the same port', async () => {
+        const open = vi.fn<CoordinatorTunnel['open']>().mockResolvedValue(urlFor(3000));
+        let lose = (): void => undefined;
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: (onLost) => {
+                    lose = onLost;
+                    return { open, stop: () => undefined };
+                }
+            })
+        );
+
+        await coordinator.onPort(3000);
+        lose();
+        await coordinator.onPort(3000);
+
+        expect(open).toHaveBeenCalledTimes(2);
+    });
+
+    it('reports a lost tunnel', async () => {
+        const onStatus = vi.fn();
+        let lose = (): void => undefined;
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: (onLost) => {
+                    lose = onLost;
+                    return { open: (_signal, port) => Promise.resolve(urlFor(port)), stop: () => undefined };
+                },
+                onStatus
+            })
+        );
+        await coordinator.onPort(3000);
+
+        lose();
+
+        expect(onStatus).toHaveBeenLastCalledWith('lost');
+    });
+
     it('leaves a configured endpoint in place on stop', async () => {
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(

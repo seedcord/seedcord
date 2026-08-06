@@ -99,7 +99,7 @@ export class DevRunner {
         const config = await this.loadConfig();
         const runtime = new ViteDevRuntime();
         this.currentSession = new DevSession(config, runtime, this.deps.store, (event) => {
-            this.deps.tunnel.route(config.tunnel, event);
+            void this.deps.tunnel.route(config.tunnel, event);
         });
 
         try {

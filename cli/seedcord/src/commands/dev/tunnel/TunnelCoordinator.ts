@@ -15,7 +15,7 @@ export type TunnelPhase = 'opening' | 'resolving' | 'registering';
 export type TunnelStatus = TunnelPhase | 'live' | 'lost';
 
 export interface CoordinatorDeps {
-    readonly makeTunnel: () => CoordinatorTunnel;
+    readonly makeTunnel: (onLost: () => void) => CoordinatorTunnel;
     // a quick hostname is gone after the session, so its endpoint is cleared on quit
     readonly kind: 'quick' | 'configured';
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
@@ -45,7 +45,7 @@ export class TunnelCoordinator {
         const attempt = this.begin();
         const startedAt = Date.now();
         const since = (): string => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
-        const tunnel = this.deps.makeTunnel();
+        const tunnel = this.deps.makeTunnel(() => this.reportLost(attempt));
         // a later onPort holds no handle on this tunnel, so abort contains the stop
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
         let patched = false;
@@ -70,6 +70,14 @@ export class TunnelCoordinator {
             if (patched) attempt.abort();
             this.reportFailure(error, patched);
         }
+    }
+
+    private reportLost(attempt: AbortController): void {
+        if (superseded(attempt)) return;
+
+        this.target = undefined;
+        this.deps.onStatus('lost');
+        this.deps.logger.error('cloudflared exited, so the bot has no public endpoint');
     }
 
     private reportFailure(error: unknown, patched: boolean): void {

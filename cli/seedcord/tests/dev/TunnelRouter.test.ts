@@ -21,6 +21,22 @@ function router(coordinator: TunnelCoordinator | undefined, logger: ILogger = si
 }
 
 describe('TunnelRouter', () => {
+    it('reports a coordinator that fails to build and resolves', async () => {
+        const error = vi.fn();
+        const boom = new Error('cloudflared lookup exploded');
+        const routing = new TunnelRouter(
+            () => {
+                throw boom;
+            },
+            { ...silentLogger, error }
+        );
+
+        await expect(routing.route(QUICK, { type: 'server-listening', port: 1 })).resolves.toBeUndefined();
+
+        expect(error).toHaveBeenCalledOnce();
+        expect(error.mock.calls[0]?.[1]).toBe(boom);
+    });
+
     it('hands the bound port to the coordinator', async () => {
         const onPort = vi.fn().mockResolvedValue(undefined);
 

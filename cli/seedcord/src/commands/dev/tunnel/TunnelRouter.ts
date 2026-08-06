@@ -19,9 +19,12 @@ export class TunnelRouter {
         private readonly logger: ILogger
     ) {}
 
+    // the dev session calls this from a sync callback where a rejection would end up unhandled
     public route(tunnel: ResolvedTunnel, event: DevEvent): Promise<void> {
         if (event.type !== 'server-listening') return Promise.resolve();
-        return this.routeTo(tunnel, event.port);
+        return this.routeTo(tunnel, event.port).catch((error: unknown) => {
+            this.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
+        });
     }
 
     private async routeTo(tunnel: ResolvedTunnel, port: number): Promise<void> {

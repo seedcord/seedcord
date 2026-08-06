@@ -50,11 +50,7 @@ export function createTunnelCoordinator(
     if (!binary) return undefined;
 
     return new TunnelCoordinator({
-        makeTunnel: () =>
-            new CloudflaredTunnel(deps, binary, () => {
-                logger.error('cloudflared exited, so the bot has no public endpoint');
-                onStatus('lost');
-            }),
+        makeTunnel: (onLost) => new CloudflaredTunnel(deps, binary, onLost),
         kind: 'quick',
         endpoint,
         onStatus,
