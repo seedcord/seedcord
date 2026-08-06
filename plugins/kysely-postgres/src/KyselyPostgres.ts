@@ -179,7 +179,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         this.pool = null;
         this.migrationManager = null;
 
-        this.logger.info(chalk.gray('Closing Postgres pool.'));
+        this.logger.debug(chalk.gray('Closing Postgres pool.'));
         await pool.end().catch((err: unknown) => {
             const error = Error.isError(err) ? err : new Error(String(err));
             this.logger.error(`Could not close pg pool: ${error.message}`);
@@ -262,7 +262,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         const { pool: providedPool, connectionString } = this.options;
 
         if (providedPool instanceof Pool) {
-            this.logger.info(chalk.gray('Reusing provided Postgres pool instance.'));
+            this.logger.debug(chalk.gray('Reusing provided Postgres pool instance.'));
             this.databaseName = this.databaseBootstrapper.resolveDatabaseFromPool(providedPool);
             return providedPool;
         }
@@ -271,7 +271,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         await this.databaseBootstrapper.ensure(baseConfig);
         this.databaseName = this.databaseBootstrapper.resolveDatabaseName(baseConfig);
 
-        this.logger.info(chalk.gray('Creating new Postgres pool.'));
+        this.logger.debug(chalk.gray('Creating new Postgres pool.'));
         return new Pool(baseConfig);
     }
 

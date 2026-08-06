@@ -234,31 +234,36 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private reportLoad(): void {
         const { utils } = this.logger;
 
-        utils.summary('Loaded', {
-            'interaction handlers': this.loadedHandlers.length,
-            middlewares: this.loadedMiddlewares.length
-        });
+        utils.summary(
+            'Loaded',
+            { 'interaction handlers': this.loadedHandlers.length, middlewares: this.loadedMiddlewares.length },
+            'debug'
+        );
 
         if (this.loadedMiddlewares.length > 0) {
-            utils.block('Loaded middlewares', utils.entries(this.loadedMiddlewares));
+            utils.block('Loaded middlewares', utils.entries(this.loadedMiddlewares), 'debug');
         }
 
-        utils.block('Loaded interaction handlers', [
-            ...utils.entries(this.loadedHandlers),
-            ...utils.counts({
-                slash: this.slashMap.size,
-                buttons: this.buttonMap.size,
-                modals: this.modalMap.size,
-                'string selects': this.stringSelectMap.size,
-                'user selects': this.userSelectMap.size,
-                'role selects': this.roleSelectMap.size,
-                'channel selects': this.channelSelectMap.size,
-                'mentionable selects': this.mentionableSelectMap.size,
-                'message menus': this.messageContextMenuMap.size,
-                'user menus': this.userContextMenuMap.size,
-                autocomplete: this.autocompleteMap.size
-            })
-        ]);
+        utils.block(
+            'Loaded interaction handlers',
+            [
+                ...utils.entries(this.loadedHandlers),
+                ...utils.counts({
+                    slash: this.slashMap.size,
+                    buttons: this.buttonMap.size,
+                    modals: this.modalMap.size,
+                    'string selects': this.stringSelectMap.size,
+                    'user selects': this.userSelectMap.size,
+                    'role selects': this.roleSelectMap.size,
+                    'channel selects': this.channelSelectMap.size,
+                    'mentionable selects': this.mentionableSelectMap.size,
+                    'message menus': this.messageContextMenuMap.size,
+                    'user menus': this.userContextMenuMap.size,
+                    autocomplete: this.autocompleteMap.size
+                })
+            ],
+            'debug'
+        );
     }
 
     private async loadHandlers(dir: string): Promise<void> {

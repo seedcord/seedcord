@@ -36,21 +36,22 @@ export class KyselyServiceRegistry {
     }
 
     public async loadFromDirectory(dir: string): Promise<void> {
-        this.logger.info(chalk.bold(dir));
+        this.logger.debug(chalk.bold(dir));
 
         await traverseDirectory(dir, (fullPath, rel, mod) => {
             for (const Service of Object.values(mod)) {
                 if (!this.isServiceClass(Service)) continue;
 
                 this.initializeService(Service);
-                this.logger.utils.registration(Service.name, rel);
+                this.logger.utils.registration(Service.name, rel, undefined, 'trace');
                 this.plugin.trackServiceFile(fullPath, Service);
             }
         });
 
         this.logger.utils.list(
             [`${chalk.magenta(Object.keys(this.services).length)} services`],
-            chalk.bold.green('Loaded')
+            chalk.bold.green('Loaded'),
+            'debug'
         );
     }
 

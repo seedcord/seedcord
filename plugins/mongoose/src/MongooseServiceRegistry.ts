@@ -43,7 +43,7 @@ export class MongooseServiceRegistry {
     public clearModels(): void {
         if (this.ownModels.size === 0) return;
 
-        this.logger.debug(`Clearing ${this.ownModels.size} mongoose models`);
+        this.logger.trace(`Clearing ${this.ownModels.size} mongoose models`);
         for (const name of this.ownModels) mongoose.deleteModel(name);
         this.ownModels.clear();
     }
@@ -52,21 +52,22 @@ export class MongooseServiceRegistry {
         dir: string,
         track: (file: string, ctor: MongooseServiceConstructor) => void
     ): Promise<void> {
-        this.logger.info(chalk.bold(dir));
+        this.logger.debug(chalk.bold(dir));
 
         await traverseDirectory(dir, (fullPath, rel, mod) => {
             for (const Service of Object.values(mod)) {
                 if (!this.isServiceClass(Service)) continue;
 
                 this.initializeService(Service);
-                this.logger.utils.registration(Service.name, rel);
+                this.logger.utils.registration(Service.name, rel, undefined, 'trace');
                 track(fullPath, Service);
             }
         });
 
         this.logger.utils.list(
             [`${chalk.magenta(Object.keys(this.services).length)} services`],
-            chalk.bold.green('Loaded')
+            chalk.bold.green('Loaded'),
+            'debug'
         );
     }
 

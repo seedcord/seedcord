@@ -50,11 +50,12 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
         const { directory } = this;
         if (directory) {
-            this.bus.logger.info(chalk.bold(directory));
+            this.bus.logger.debug(chalk.bold(directory));
             await this.load(directory);
             this.bus.logger.utils.list(
                 [`${chalk.bold.magenta(this.bus.registeredCount)} subscribers`],
-                chalk.bold.green('Loaded')
+                chalk.bold.green('Loaded'),
+                'debug'
             );
         }
 
@@ -74,7 +75,7 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
                 this.registerSubscriber(value);
                 this.hmrHandler?.trackHandler(fullPath, value);
-                this.bus.logger.utils.registration(value.name, relativePath);
+                this.bus.logger.utils.registration(value.name, relativePath, undefined, 'trace');
             }
         });
     }

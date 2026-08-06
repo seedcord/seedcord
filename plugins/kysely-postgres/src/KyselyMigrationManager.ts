@@ -98,7 +98,7 @@ export class KyselyMigrationManager {
         runner: (migrator: Migrator) => Promise<MigrationResultSet>,
         runningMessage = 'Running migrations...'
     ): Promise<void> {
-        this.ctx.logger.info(chalk.gray('Preparing migrations...'));
+        this.ctx.logger.debug(chalk.gray('Preparing migrations...'));
         const migrator = await this.createMigrator();
 
         this.ctx.logger.info(chalk.gray(runningMessage));
@@ -116,7 +116,7 @@ export class KyselyMigrationManager {
         direction: 'up' | 'down',
         runner: (migrator: Migrator) => Promise<MigrationResultSet>
     ): Promise<void> {
-        this.ctx.logger.info(chalk.gray('Preparing migrations...'));
+        this.ctx.logger.debug(chalk.gray('Preparing migrations...'));
         const migrator = await this.createMigrator();
 
         const directionLabel = direction === 'up' ? 'Running' : 'Reverting';
@@ -182,7 +182,7 @@ export class KyselyMigrationManager {
 
         if (migrationStat?.isDirectory()) {
             const directory = this.relativePath(resolvedTarget);
-            this.ctx.logger.info(chalk.gray(`Loading migrations directory ${chalk.yellow(directory)}`));
+            this.ctx.logger.debug(chalk.gray(`Loading migrations directory ${chalk.yellow(directory)}`));
             return new FileMigrationProvider({ fs, path, migrationFolder: resolvedTarget });
         }
 
@@ -240,24 +240,24 @@ export class KyselyMigrationManager {
     private logMigrationFiles(files: readonly string[]): void {
         if (files.length === 0) return;
 
-        this.ctx.logger.info('Loading migration file(s):');
+        this.ctx.logger.debug('Loading migration file(s):');
         for (const file of files) {
-            this.ctx.logger.utils.item(`${chalk.yellow(this.relativePath(file))}`);
+            this.ctx.logger.utils.item(`${chalk.yellow(this.relativePath(file))}`, 'debug');
         }
     }
 
     private logPreparedMigrations(entries: readonly (readonly [string, Migration])[]): void {
         if (entries.length === 0) return;
 
-        this.ctx.logger.info('Prepared migrations:');
+        this.ctx.logger.debug('Prepared migrations:');
         for (const [name] of entries) {
-            this.ctx.logger.utils.item(`${chalk.green(name)}`);
+            this.ctx.logger.utils.item(`${chalk.green(name)}`, 'debug');
         }
     }
 
     private logMigrationResults(results: readonly MigrationResult[]): void {
         if (results.length === 0) {
-            this.ctx.logger.info(chalk.gray('No migrations executed.'));
+            this.ctx.logger.debug(chalk.gray('No migrations executed.'));
             return;
         }
 

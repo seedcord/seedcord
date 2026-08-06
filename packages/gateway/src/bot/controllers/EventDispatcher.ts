@@ -137,19 +137,24 @@ export class EventDispatcher implements Initializeable, HmrAware {
     private reportLoad(): void {
         const { utils } = this.logger;
 
-        utils.summary('Loaded', {
-            'event handlers': this.loadedHandlers.length,
-            middlewares: this.loadedMiddlewares.length
-        });
+        utils.summary(
+            'Loaded',
+            { 'event handlers': this.loadedHandlers.length, middlewares: this.loadedMiddlewares.length },
+            'debug'
+        );
 
         if (this.loadedMiddlewares.length > 0) {
-            utils.block('Loaded event middlewares', utils.entries(this.loadedMiddlewares));
+            utils.block('Loaded event middlewares', utils.entries(this.loadedMiddlewares), 'debug');
         }
 
         const perEvent: Record<string, number> = {};
         for (const [event, handlers] of this.eventMap) perEvent[event] = handlers.length;
 
-        utils.block('Loaded event handlers', [...utils.entries(this.loadedHandlers), ...utils.counts(perEvent)]);
+        utils.block(
+            'Loaded event handlers',
+            [...utils.entries(this.loadedHandlers), ...utils.counts(perEvent)],
+            'debug'
+        );
     }
 
     private async loadHandlers(dir: string): Promise<void> {
