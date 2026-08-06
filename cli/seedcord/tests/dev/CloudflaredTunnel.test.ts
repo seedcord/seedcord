@@ -159,6 +159,16 @@ describe('CloudflaredTunnel', () => {
         expect(fetch).toHaveBeenCalledOnce();
     });
 
+    // the raw attempt signal would allow a hung metrics request to persist beyond the poll window
+    it('gives each metrics request the timed budget signal', async () => {
+        const fetch = vi.fn<TunnelDeps['fetch']>(answering());
+        const tunnel = new CloudflaredTunnel(deps({ fetch }), BINARY);
+
+        await tunnel.open(RUNNING, 3000);
+
+        expect(fetch.mock.calls[0]?.[1]?.signal).not.toBe(RUNNING);
+    });
+
     it('escalates to SIGKILL when SIGTERM leaves the child running', async () => {
         vi.useFakeTimers();
         const child = fakeChild();

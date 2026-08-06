@@ -93,9 +93,12 @@ export class CloudflaredTunnel {
     }
 
     private async readHostname(metricsPort: number, signal: AbortSignal): Promise<string> {
+        const budget = AbortSignal.any([signal, AbortSignal.timeout(HOSTNAME_ATTEMPTS * POLL_INTERVAL_MS)]);
+
         for (let attempt = 0; attempt < HOSTNAME_ATTEMPTS && !this.failure; attempt++) {
             signal.throwIfAborted();
-            const hostname = await this.pollOnce(metricsPort, signal);
+            if (budget.aborted) break;
+            const hostname = await this.pollOnce(metricsPort, budget);
             if (hostname) return hostname;
             await this.deps.wait(POLL_INTERVAL_MS);
         }
