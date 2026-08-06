@@ -1,5 +1,15 @@
 # @seedcord/eslint-config
 
+## 1.5.1
+
+### Patch Changes
+
+- c567fea: Bump deps.
+- c567fea: Set all packages' node floor to LTS.
+- Updated dependencies [c567fea]
+    - @seedcord/eslint-plugin@0.1.1
+    - eslint-plugin-discordjs@0.1.1
+
 ## 1.5.1-next.0
 
 ### Patch Changes

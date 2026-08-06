@@ -1,5 +1,11 @@
 # @seedcord/event-emitter
 
+## 0.1.1
+
+### Patch Changes
+
+- c567fea: Set all packages' node floor to LTS.
+
 ## 0.1.1-next.0
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @seedcord/utils
 
+## 0.8.1
+
+### Patch Changes
+
+- c567fea: Bump deps.
+- c567fea: Set all packages' node floor to LTS.
+- Updated dependencies [c567fea]
+- Updated dependencies [0642de5]
+- Updated dependencies [c567fea]
+    - @seedcord/errors@0.3.1
+    - @seedcord/types@0.8.1
+
 ## 0.8.1-next.0
 
 ### Patch Changes
