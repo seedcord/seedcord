@@ -36,9 +36,6 @@ export interface ResponseReport {
 /** @internal */
 export function publishResponse(telemetry: ReplyTelemetry, report: ResponseReport): void {
     const durationMs = performance.now() - report.startedAt;
-    logger().trace(
-        `${paint.mint.bold(report.routeId)} ${report.method} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
-    );
     telemetry.bus[PublishDefault]('responseAttempted', {
         routeId: report.routeId,
         interactionId: telemetry.interactionId,
@@ -48,6 +45,11 @@ export function publishResponse(telemetry: ReplyTelemetry, report: ResponseRepor
         messageId: report.messageId,
         ...(report.error && { error: report.error })
     });
+
+    // after publish so a throwing sink doesn't reach the publish above
+    logger().trace(
+        `${paint.mint.bold(report.routeId)} ${report.method} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+    );
 }
 
 /**

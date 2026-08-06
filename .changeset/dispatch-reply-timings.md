@@ -4,4 +4,4 @@
 '@seedcord/http': patch
 ---
 
-A dispatched interaction and every reply write now log how long they took, at trace on both transports.
+Both transports now trace the elapsed time of each dispatched interaction and each reply write.

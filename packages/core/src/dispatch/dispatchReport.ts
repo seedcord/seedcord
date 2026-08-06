@@ -56,17 +56,8 @@ export function queuedMsFor(interactionId: string): number {
     }
 }
 
-/**
- * Traces the settled dispatch and publishes `interactionDispatched`, so both transports report it the
- * same way.
- *
- * @internal
- */
 export function reportDispatch(bus: Bus, report: DispatchReport): void {
     const durationMs = performance.now() - report.startedAt;
-    logger().trace(
-        `${paint.mint.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
-    );
     bus[PublishDefault]('interactionDispatched', {
         routeId: report.routeId,
         interactionId: report.interactionId,
@@ -76,4 +67,9 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
         durationMs,
         queuedMs: report.queuedMs
     });
+
+    // after publish so a throwing sink doesn't reach the publish above
+    logger().trace(
+        `${paint.mint.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+    );
 }

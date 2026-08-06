@@ -1,6 +1,6 @@
 import { Fault, Notice, Silence } from '@seedcord/core';
 import { InteractionRoutes, outcomeFor, queuedMsFor } from '@seedcord/core/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
@@ -8,6 +8,7 @@ import { reportDispatch } from '@src/dispatch/dispatchReport';
 import { Bus } from '@subscribers/Bus';
 
 import type { CoreBase } from '@interfaces/CoreBase';
+import type { LogRecord } from '@seedcord/logger';
 import type { ReplyResponse } from '@seedcord/types';
 import type { SubscriptionData } from '@subscribers/types/Subscriptions';
 
@@ -54,9 +55,27 @@ function traceSpy(): MockInstance<Logger['trace']> {
 
 afterEach(() => {
     vi.restoreAllMocks();
+    LoggerChannelRegistry.instance.configure({});
 });
 
 describe('dispatch timing', () => {
+    it('puts the line on the interactions channel at trace', () => {
+        const records: LogRecord[] = [];
+        LoggerChannelRegistry.instance.configure({ level: 'trace', sinks: [] });
+        const handle = LoggerChannelRegistry.instance.installSink({
+            kind: 'capture',
+            onLog: (record) => records.push(record)
+        });
+
+        publishedFor(reportFor());
+        handle.dispose();
+
+        expect(records.find((record) => record.label === 'Dispatch')).toMatchObject({
+            channel: 'interactions',
+            level: 'trace'
+        });
+    });
+
     it('traces the route, the outcome, and the elapsed dispatch', () => {
         const trace = traceSpy();
         let clock = 1000;
