@@ -14,7 +14,7 @@ import type { ReplyResponse } from '@seedcord/types';
 import type { ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type { AutocompleteInteraction } from 'discord.js';
 
-const logger = new Logger('InteractionBoundary', { channel: 'errors' });
+const logger = new Logger('Faults', { channel: 'errors' });
 
 /**
  * The interaction controller boundary. Sorts a throw from any handler-lifecycle phase into the right

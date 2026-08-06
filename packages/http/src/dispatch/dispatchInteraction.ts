@@ -259,7 +259,10 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const ctor = await loadHandlerCtor(match, payload, core, report);
     if (!ctor) return null;
 
-    const dispatch = new DispatchContext(unhandledRouteId(match));
+    const routeId = unhandledRouteId(match);
+    logger().debug(`Processing ${paint.mint.bold(routeId)} with ${paint.mute(ctor.name)}`);
+
+    const dispatch = new DispatchContext(routeId);
     let handler: HttpHandler;
     try {
         handler = new ctor(payload, core, dispatch);
@@ -270,7 +273,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     const scope: FaultScope = {
         core,
         payload,
-        routeId: unhandledRouteId(match),
+        routeId,
         sender: handler instanceof RepliableHandler ? handler.getSender() : null
     };
 

@@ -16,7 +16,7 @@ export class ConfigLocator {
         for (const candidate of SEEDCORD_CONFIG_FILENAMES) {
             const fullPath = join(normalizedBase, candidate);
             if (existsSync(fullPath)) {
-                this.logger.debug(`Found config at ${fullPath}`);
+                this.logger.trace(`Found config at ${fullPath}`);
                 return fullPath;
             }
         }

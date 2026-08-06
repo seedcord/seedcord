@@ -52,12 +52,12 @@ export class PostgresDatabaseBootstrapper {
     public async ensure(baseConfig: PoolConfig): Promise<void> {
         const targetDb = this.resolveDatabaseName(baseConfig);
         if (!targetDb) {
-            this.logger.info(chalk.gray('Skipping database existence check (no database specified).'));
+            this.logger.debug(chalk.gray('Skipping database existence check (no database specified).'));
             return;
         }
 
         if (targetDb === PostgresDatabaseBootstrapper.ADMIN_DB) {
-            this.logger.info(chalk.gray('Target database is postgres; skipping creation.'));
+            this.logger.debug(chalk.gray('Target database is postgres, so skipping creation.'));
             return;
         }
 
@@ -67,14 +67,14 @@ export class PostgresDatabaseBootstrapper {
             return;
         }
 
-        this.logger.info(chalk.gray(`Ensuring database ${chalk.yellow(targetDb)} exists...`));
+        this.logger.debug(chalk.gray(`Ensuring database ${chalk.yellow(targetDb)} exists...`));
 
         await using adminPool = disposablePool(new Pool(adminConfig));
 
         try {
             const exists = await this.databaseExists(adminPool, targetDb);
             if (exists) {
-                this.logger.info(chalk.gray(`Database ${chalk.yellow(targetDb)} already exists.`));
+                this.logger.debug(chalk.gray(`Database ${chalk.yellow(targetDb)} already exists.`));
                 return;
             }
 
@@ -119,7 +119,7 @@ export class PostgresDatabaseBootstrapper {
         } catch (error) {
             // another process created it first, and the database exists either way
             if (!isDuplicateDatabase(error)) throw error;
-            this.logger.info(chalk.gray(`Database ${chalk.yellow(database)} was created concurrently.`));
+            this.logger.debug(chalk.gray(`Database ${chalk.yellow(database)} was created concurrently.`));
         }
     }
 

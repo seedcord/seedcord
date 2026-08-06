@@ -5,7 +5,7 @@
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
+import { Logger, paint } from '@seedcord/logger';
 import chalk from 'chalk';
 
 import { withTimeout } from './withTimeout';
@@ -48,7 +48,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
         tasks.push({ name: taskName, task, timeout: timeoutMs });
         this.logger.debug(
-            `${chalk.italic('Added')} ${this.getTaskType()} task ${chalk.bold.cyan(taskName)} to phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
+            `${chalk.italic('Added')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} to phase ${paint.iris.bold(this.phaseEnum[phase])}`
         );
     }
 
@@ -72,7 +72,7 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         const removed = initialLength !== filteredTasks.length;
         if (removed) {
             this.logger.debug(
-                `${chalk.italic('Removed')} ${this.getTaskType()} task ${chalk.bold.cyan(taskName)} from phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
+                `${chalk.italic('Removed')} ${this.getTaskType()} task ${paint.sky.bold(taskName)} from phase ${paint.iris.bold(this.phaseEnum[phase])}`
             );
         }
 
@@ -82,12 +82,12 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
     protected async runPhase(phase: TPhase): Promise<void> {
         const tasks = this.tasksMap.get(phase) ?? [];
         if (tasks.length === 0) {
-            this.logger.debug(`No tasks to run in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`);
+            this.logger.trace(`No tasks to run in phase ${paint.iris.bold(this.phaseEnum[phase])}`);
             return;
         }
 
-        this.logger.info(
-            `${chalk.bold.yellow('Running')} ${this.getTaskType()} phase ${chalk.bold.magenta(this.phaseEnum[phase])} with ${chalk.bold.cyan(tasks.length)} tasks`
+        this.logger.debug(
+            `${paint.amber.bold('Running')} ${this.getTaskType()} phase ${paint.iris.bold(this.phaseEnum[phase])} with ${paint.sky.bold(String(tasks.length))} tasks`
         );
 
         const results: PromiseSettledResult<void>[] = await this.executeTasksInPhase(phase, tasks);
@@ -98,29 +98,34 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
             throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
         }
 
-        this.logger.info(
-            `Phase ${chalk.bold.magenta(this.phaseEnum[phase])} ${chalk.bold.green('completed successfully')}`
+        this.logger.debug(
+            `Phase ${paint.iris.bold(this.phaseEnum[phase])} ${paint.mint.bold('completed successfully')}`
         );
     }
 
     protected async runTaskWithTimeout(phase: TPhase, task: LifecycleTask): Promise<void> {
-        this.logger.info(
-            `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
+        this.logger.trace(
+            `${chalk.italic('Starting')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
         );
 
         try {
             await withTimeout(task.name, task.task, task.timeout);
 
-            this.logger.info(
-                `${chalk.italic('Completed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}`
+            this.logger.trace(
+                `${chalk.italic('Completed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}`
             );
         } catch (error) {
+            if (this.isAborted()) return;
             this.logger.error(
-                `${chalk.italic('Failed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(this.phaseEnum[phase])}:`,
+                `${chalk.italic('Failed')} task ${paint.sky.bold(task.name)} in phase ${paint.iris.bold(this.phaseEnum[phase])}:`,
                 error
             );
             throw error;
         }
+    }
+
+    protected isAborted(): boolean {
+        return false;
     }
 
     protected abstract canAddTask(): boolean;

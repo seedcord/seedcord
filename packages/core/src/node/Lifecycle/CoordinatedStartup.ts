@@ -5,7 +5,6 @@ import chalk from 'chalk';
 import { StartupPhase } from '@src/lifecycle/phases';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
-import { withTimeout } from './withTimeout';
 
 import type { LifecycleTask } from './LifecycleTypes';
 
@@ -116,28 +115,8 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         }
     }
 
-    protected override async runTaskWithTimeout(phase: StartupPhase, task: LifecycleTask): Promise<void> {
-        this.logger.info(
-            `${chalk.italic('Starting')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}`
-        );
-
-        try {
-            await withTimeout(task.name, task.task, task.timeout);
-
-            this.logger.info(
-                `${chalk.italic('Completed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}`
-            );
-        } catch (error) {
-            if (!this.isStartingUp) {
-                return;
-            }
-
-            this.logger.error(
-                `${chalk.italic('Failed')} task ${chalk.bold.cyan(task.name)} in phase ${chalk.bold.magenta(StartupPhase[phase])}:`,
-                error
-            );
-            throw error;
-        }
+    protected override isAborted(): boolean {
+        return !this.isStartingUp;
     }
 
     /**

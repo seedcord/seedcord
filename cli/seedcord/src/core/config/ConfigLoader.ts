@@ -94,14 +94,14 @@ export class ConfigLoader {
         const build = this.resolveBuildOptions(configDir, config.build);
         const tsconfig = config.hmr?.tsconfig ? resolve(root, config.hmr.tsconfig) : undefined;
 
-        this.logger.info(`Loaded configuration from ${configPath}`);
-        this.logger.debug(`Resolved root: ${root}`);
-        this.logger.debug(`Resolved instance: ${instance}`);
-        this.logger.debug(`Resolved entry: ${entry}`);
-        this.logger.debug(`Resolved build outDir: ${build.outDir}`);
-        if (build.tsconfig) this.logger.debug(`Resolved build tsconfig: ${build.tsconfig}`);
-        if (tsconfig) this.logger.debug(`Resolved dev tsconfig: ${tsconfig}`);
-        this.logger.debug(`Resolved bootstrap: ${build.bootstrap}`);
+        this.logger.debug(`Loaded configuration from ${configPath}`);
+        this.logger.trace(`Resolved root: ${root}`);
+        this.logger.trace(`Resolved instance: ${instance}`);
+        this.logger.trace(`Resolved entry: ${entry}`);
+        this.logger.trace(`Resolved build outDir: ${build.outDir}`);
+        if (build.tsconfig) this.logger.trace(`Resolved build tsconfig: ${build.tsconfig}`);
+        if (tsconfig) this.logger.trace(`Resolved dev tsconfig: ${tsconfig}`);
+        this.logger.trace(`Resolved bootstrap: ${build.bootstrap}`);
 
         return {
             instance,

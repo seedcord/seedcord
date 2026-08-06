@@ -150,12 +150,12 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         } finally {
             this.hasShutdown = true;
             if (exitProcess) {
-                this.logger.info(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);
+                this.logger.debug(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);
                 setTimeout(() => {
                     process.exit(this.exitCode);
                 }, LOG_FLUSH_DELAY_MS);
             } else {
-                this.logger.info(`${chalk.bold.yellow('Skipping')} process exit (dev mode)`);
+                this.logger.debug(`${chalk.bold.yellow('Skipping')} process exit (dev mode)`);
                 this.isShuttingDown = false;
             }
         }

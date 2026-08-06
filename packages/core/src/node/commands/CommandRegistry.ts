@@ -110,10 +110,11 @@ export class CommandRegistry implements Initializeable, HmrAware {
     private reportLoad(): void {
         const { utils } = this.logger;
 
-        utils.summary('Loaded commands', {
-            global: this.globalCommands.length,
-            'guild groups': this.guildCommands.size
-        });
+        utils.summary(
+            'Loaded commands',
+            { global: this.globalCommands.length, 'guild groups': this.guildCommands.size },
+            'debug'
+        );
 
         let slash = 0;
         let menu = 0;
@@ -122,21 +123,25 @@ export class CommandRegistry implements Initializeable, HmrAware {
             else menu++;
         }
 
-        utils.block('Loaded commands', [
-            ...utils.entries(this.loadedCommands),
-            ...utils.counts({ 'slash commands': slash, 'context menus': menu })
-        ]);
+        utils.block(
+            'Loaded commands',
+            [
+                ...utils.entries(this.loadedCommands),
+                ...utils.counts({ 'slash commands': slash, 'context menus': menu })
+            ],
+            'debug'
+        );
     }
 
     /** @internal */
     public async refresh(shouldRefresh = true): Promise<void> {
         if (!shouldRefresh) {
-            this.logger.info(chalk.italic('Command refresh cancelled.'));
+            this.logger.debug(chalk.italic('Command refresh cancelled.'));
             this.pendingEvents.clear();
             return;
         }
 
-        this.logger.info(chalk.italic('Refreshing commands...'));
+        this.logger.debug(chalk.italic('Refreshing commands...'));
         for (const event of this.pendingEvents.values()) {
             await this.hmrHandler?.handle(event);
         }

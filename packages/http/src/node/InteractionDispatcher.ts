@@ -82,10 +82,14 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             this.loading = false;
         }
 
-        this.logger.utils.block('Loaded handlers', [
-            ...this.logger.utils.entries(this.loadedHandlers),
-            ...this.logger.utils.counts({ routes: this.rowOwners.size })
-        ]);
+        this.logger.utils.block(
+            'Loaded handlers',
+            [
+                ...this.logger.utils.entries(this.loadedHandlers),
+                ...this.logger.utils.counts({ routes: this.rowOwners.size })
+            ],
+            'debug'
+        );
     }
 
     /** @internal */
