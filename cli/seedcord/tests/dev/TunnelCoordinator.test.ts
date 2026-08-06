@@ -121,6 +121,24 @@ describe('TunnelCoordinator', () => {
         expect(info.mock.calls.at(-1)?.[0]).toContain('pasting');
     });
 
+    it('stops a tunnel that survived a failed attempt', async () => {
+        const stop = vi.fn();
+        const coordinator = new TunnelCoordinator(
+            deps({
+                makeTunnel: () => ({
+                    open: () => Promise.reject(new SeedcordError(SeedcordErrorCode.CliTunnelUnreachable, ['x', 10])),
+                    stop
+                })
+            })
+        );
+        await coordinator.onPort(3000);
+        expect(stop).not.toHaveBeenCalled();
+
+        await coordinator.stop();
+
+        expect(stop).toHaveBeenCalledOnce();
+    });
+
     it('leaves a configured endpoint in place on stop', async () => {
         const clear = vi.fn<CoordinatorDeps['endpoint']['clear']>().mockResolvedValue();
         const coordinator = new TunnelCoordinator(

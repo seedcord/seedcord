@@ -56,7 +56,7 @@ export class TunnelCoordinator {
             this.deps.logger.info(`Interactions endpoint set to ${paint.sky.italic(url)} ${since()}`);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
-            // discord burns the hostname it refused, and a tunnel it never saw stays usable
+            // stop from attempting a patch because discord refuses a hostname it previously refused
             if (patched) attempt.abort();
 
             // so the next restart on this port retries
@@ -69,10 +69,10 @@ export class TunnelCoordinator {
     }
 
     public async stop(): Promise<void> {
-        if (this.target === undefined) return;
+        if (!this.current) return;
 
         this.target = undefined;
-        this.current?.abort();
+        this.current.abort();
         this.current = undefined;
         this.deps.onUrl(null);
         if (this.deps.kind === 'configured') return;
