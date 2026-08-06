@@ -1,5 +1,15 @@
 # @seedcord/rate-limiter
 
+## 0.1.1-next.0
+
+### Patch Changes
+
+- c567fea: Set all packages' node floor to LTS.
+- Updated dependencies [c567fea]
+- Updated dependencies [0642de5]
+- Updated dependencies [c567fea]
+    - @seedcord/types@0.8.1-next.0
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @seedcord/types
 
+## 0.8.1-next.0
+
+### Patch Changes
+
+- c567fea: Bump deps.
+- 0642de5: `seedcord dev` exposes an http bot's interactions server through the `tunnel` dev config field. `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run. An https URL is one you already serve, and the CLI checks it reaches the bot, writes the endpoint when the stored value differs, then leaves it in place.
+- c567fea: Set all packages' node floor to LTS.
+
 ## 0.8.0
 
 ### Minor Changes

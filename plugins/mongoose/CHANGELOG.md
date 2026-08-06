@@ -1,5 +1,28 @@
 # @seedcord/plugin-mongoose
 
+## 0.1.1-next.0
+
+### Patch Changes
+
+- c567fea: Bump deps.
+- c567fea: Set all packages' node floor to LTS.
+- 5b57bda: A hot reload now logs one line worded by what changed, `Unloaded` on a delete, `Registered` on a new file, and `Reloaded` with a duration on an edit.
+- d470ad4: Now uses the appropriate log levels for logs across the lifecycle of the transports and plugins.
+- Updated dependencies [c567fea]
+- Updated dependencies [0642de5]
+- Updated dependencies [814902a]
+- Updated dependencies [c567fea]
+- Updated dependencies [5b57bda]
+- Updated dependencies [0642de5]
+- Updated dependencies [d470ad4]
+- Updated dependencies [d470ad4]
+- Updated dependencies [814902a]
+    - @seedcord/core@0.1.1-next.0
+    - @seedcord/errors@0.3.1-next.0
+    - @seedcord/logger@0.1.1-next.0
+    - @seedcord/types@0.8.1-next.0
+    - @seedcord/utils@0.8.1-next.0
+
 ## 0.1.0
 
 ### Minor Changes
