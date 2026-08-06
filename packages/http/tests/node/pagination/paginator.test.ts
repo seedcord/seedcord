@@ -6,6 +6,8 @@ import { ButtonRoute } from '@src/index';
 import { Paginator } from '@src/pagination/Paginator';
 import { ArraySource } from '@src/pagination/sources';
 
+import { stubBus } from '../../helpers/fixtures';
+
 import type { REST } from '@discordjs/rest';
 import type { RepliableHandler } from '@handlers/RepliableHandler';
 import type { Core } from '@interfaces/Core';
@@ -46,9 +48,9 @@ function dmPayload(): Repliables {
 }
 
 function stubHandler(post: ReturnType<typeof vi.fn>, interaction = guildPayload()): RepliableHandler<Repliables> {
+    const core = { bus: stubBus() } as Core;
     // justified: the fixture implements only the REST surface ReplySender reads
-    const sender = new ReplySender(ref, { post } as unknown as REST, 'slash:page');
-    const core = {} as Core;
+    const sender = new ReplySender(ref, { post } as unknown as REST, 'slash:page', core.bus);
     // justified: start reads only these three members off the handler
     return {
         core,
@@ -154,8 +156,8 @@ describe('http Paginator nav handler', () => {
     it('acks with a deferred update, then rewrites @original with the page off the wire', async () => {
         const post = vi.fn().mockResolvedValue({});
         const patch = vi.fn().mockResolvedValue({ id: 'm-1' });
-        // justified: the nav handler reads only rest off core
-        const core = { rest: { post, patch } } as unknown as Core;
+        // justified: the nav handler reads rest and the bus
+        const core = { rest: { post, patch }, bus: stubBus() } as unknown as Core;
 
         await new LettersNav(navEvent(pager.cursor.encode({ page: 2, slot: 0 })), core).execute();
 

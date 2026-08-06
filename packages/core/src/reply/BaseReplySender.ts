@@ -34,9 +34,8 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
 
     protected constructor(
         protected readonly routeId: string,
-        initialState: AckState = 'unacked',
-        // absent for getConfirmation, which builds a sender from an interaction alone and reaches no core
-        private readonly telemetry?: ReplyTelemetry
+        private readonly telemetry: ReplyTelemetry,
+        initialState: AckState = 'unacked'
     ) {
         this.state = initialState;
     }

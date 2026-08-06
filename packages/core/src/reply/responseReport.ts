@@ -5,7 +5,7 @@ import type { ReplyMethod } from './ackLegality';
 import type { Bus } from '@subscribers/Bus';
 import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 
-/** What `publishResponse` requires. Without it the call returns without publishing. */
+/** The bus a write publishes on, and the interaction it belongs to. */
 export interface ReplyTelemetry {
     readonly bus: Bus;
     readonly interactionId: string;
@@ -26,8 +26,7 @@ export interface ResponseReport {
 }
 
 /** @internal */
-export function publishResponse(telemetry: ReplyTelemetry | undefined, report: ResponseReport): void {
-    if (!telemetry) return;
+export function publishResponse(telemetry: ReplyTelemetry, report: ResponseReport): void {
     telemetry.bus[PublishDefault]('responseAttempted', {
         routeId: report.routeId,
         interactionId: telemetry.interactionId,
@@ -45,7 +44,7 @@ export function publishResponse(telemetry: ReplyTelemetry | undefined, report: R
  * @internal
  */
 export async function reportedWrite<Result>(
-    telemetry: ReplyTelemetry | undefined,
+    telemetry: ReplyTelemetry,
     routeId: string,
     method: WriteMethod,
     write: () => Promise<Result>
@@ -63,7 +62,7 @@ export async function reportedWrite<Result>(
  * @internal
  */
 export async function attemptWrite<Result>(
-    telemetry: ReplyTelemetry | undefined,
+    telemetry: ReplyTelemetry,
     routeId: string,
     method: WriteMethod,
     startedAt: number,

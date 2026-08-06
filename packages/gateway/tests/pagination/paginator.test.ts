@@ -14,14 +14,16 @@ import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
 import { Paginator } from '@pagination/Paginator';
 import { ArraySource } from '@pagination/sources';
 
+import { stubBus } from '../utils/stubBus';
+
 import type { RepliableHandler } from '@handlers/RepliableHandler';
 import type { Core } from '@interfaces/Core';
 import type { PageContext } from '@pagination/PageContext';
 import type { Repliables } from '@src/handlers/interactionTypes';
 import type { APIContainerComponent, ButtonInteraction } from 'discord.js';
 
-// justified: the paginator reads only the interaction, the rest of Core is unused here.
-const core = {} as unknown as Core;
+// justified: the paginator reads the interaction and the bus every write reports on
+const core = { bus: stubBus() } as unknown as Core;
 const letters = ['a', 'b', 'c', 'd', 'e'];
 
 const pager = new Paginator({

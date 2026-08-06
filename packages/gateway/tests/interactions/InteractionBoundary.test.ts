@@ -8,6 +8,7 @@ import { handleInteractionFault as boundary } from '@bot/handleInteractionFault'
 import { ReplySender } from '@bot/ReplySender';
 
 import { harmlessError } from '../utils/harmlessError';
+import { stubBus } from '../utils/stubBus';
 import { TestNotice } from '../utils/TestNotice';
 
 import type { Core } from '@interfaces/Core';
@@ -68,7 +69,7 @@ function handleInteractionFault(
 
 function senderFor(mock: ReturnType<typeof mockInteraction>, routeId: string): ReplySender {
     // justified: the fixture implements only the Repliables surface the sender reads.
-    return new ReplySender(mock as unknown as Repliables, routeId);
+    return new ReplySender(mock as unknown as Repliables, routeId, stubBus());
 }
 
 describe('handleInteractionFault', () => {
