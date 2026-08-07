@@ -36,7 +36,7 @@ export const CAPABILITIES = [
         label: 'Member joins and leaves',
         hint: 'privileged. also covers nickname and role changes',
         intents: ['GuildMembers'],
-        partials: []
+        partials: ['GuildMember']
     },
     {
         id: 'presence',
@@ -62,9 +62,10 @@ export const CAPABILITIES = [
     {
         id: 'scheduled-events',
         label: 'Scheduled events',
-        hint: 'know when a server event is created, updated, or starts',
+        hint: 'know when a server event is made, changed, or starts, and when people sign up',
         intents: ['GuildScheduledEvents'],
-        partials: []
+        // only the sign-up events read the user cache
+        partials: ['User']
     },
     {
         id: 'automod',
@@ -78,7 +79,8 @@ export const CAPABILITIES = [
         label: 'Polls',
         hint: 'know when someone votes in a poll',
         intents: ['GuildMessagePolls', 'DirectMessagePolls'],
-        partials: []
+        // getPoll returns null on a partial message unless both Poll and PollAnswer are set
+        partials: ['Message', 'Channel', 'Poll', 'PollAnswer']
     }
 ] as const;
 

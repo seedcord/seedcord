@@ -46,8 +46,26 @@ describe('partialsFor', () => {
         expect(partialsFor(['reactions'])).toEqual(['Message', 'Channel', 'Reaction']);
     });
 
+    it('takes the member partial a leave needs', () => {
+        expect(partialsFor(['members'])).toEqual(['GuildMember']);
+    });
+
+    it('takes the four a poll vote needs', () => {
+        expect(partialsFor(['polls'])).toEqual(['Message', 'Channel', 'Poll', 'PollAnswer']);
+    });
+
+    it('takes the user partial an event sign-up needs', () => {
+        expect(partialsFor(['scheduled-events'])).toEqual(['User']);
+    });
+
     it('lists a shared partial once', () => {
         const partials = partialsFor(['reactions', 'direct-messages']);
+
+        expect(new Set(partials).size).toBe(partials.length);
+    });
+
+    it('lists a shared partial once across reactions and polls', () => {
+        const partials = partialsFor(['reactions', 'polls']);
 
         expect(new Set(partials).size).toBe(partials.length);
     });

@@ -317,9 +317,6 @@ importers:
       '@clack/prompts':
         specifier: catalog:deps
         version: 1.7.0
-      '@seedcord/errors':
-        specifier: workspace:*
-        version: link:../../packages/errors
       '@seedcord/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint-config
