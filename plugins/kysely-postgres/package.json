@@ -46,7 +46,6 @@
         "@seedcord/core": "workspace:^",
         "kysely": "^0.29.2",
         "pg": "^8.21.0",
-        "reflect-metadata": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "devDependencies": {
@@ -60,7 +59,6 @@
         "@types/pg": "^8.20.3",
         "kysely": "^0.29.4",
         "pg": "^8.22.0",
-        "reflect-metadata": "catalog:peer",
         "type-fest": "catalog:deps"
     },
     "publishConfig": {
@@ -73,6 +71,7 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "envapt": "catalog:deps"
+        "envapt": "catalog:deps",
+        "reflect-metadata": "catalog:deps"
     }
 }

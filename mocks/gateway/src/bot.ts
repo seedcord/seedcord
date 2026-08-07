@@ -1,5 +1,3 @@
-import 'reflect-metadata';
-
 import { resolve } from 'node:path';
 
 import { Seedcord } from '@seedcord/gateway';

@@ -45,6 +45,9 @@ catalogs:
     prettier-plugin-tailwindcss:
       specifier: ^0.8.1
       version: 0.8.1
+    reflect-metadata:
+      specifier: ^0.2.2
+      version: 0.2.2
     shiki:
       specifier: ^4.4.1
       version: 4.4.1
@@ -125,9 +128,6 @@ catalogs:
     mongoose:
       specifier: ^9.9.1
       version: 9.9.1
-    reflect-metadata:
-      specifier: ^0.2.2
-      version: 0.2.2
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
@@ -610,9 +610,6 @@ importers:
       mongoose:
         specifier: catalog:peer
         version: 9.9.1
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -638,9 +635,6 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 8.1.1
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -687,6 +681,9 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 8.1.1
+      reflect-metadata:
+        specifier: catalog:deps
+        version: 0.2.2
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -706,9 +703,6 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -891,6 +885,9 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 8.1.1
+      reflect-metadata:
+        specifier: catalog:deps
+        version: 0.2.2
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -910,9 +907,6 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -955,6 +949,9 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 8.1.1
+      reflect-metadata:
+        specifier: catalog:deps
+        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -986,9 +983,6 @@ importers:
       esbuild:
         specifier: ^0.28.1
         version: 0.28.1
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       vitest:
         specifier: catalog:test
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@25.9.3)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1)(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))
@@ -1134,6 +1128,9 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 8.1.1
+      reflect-metadata:
+        specifier: catalog:deps
+        version: 0.2.2
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1168,9 +1165,6 @@ importers:
       pg:
         specifier: ^8.22.0
         version: 8.22.0
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -1195,6 +1189,9 @@ importers:
       envapt:
         specifier: catalog:deps
         version: 8.1.1
+      reflect-metadata:
+        specifier: catalog:deps
+        version: 0.2.2
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1223,9 +1220,6 @@ importers:
       mongoose:
         specifier: catalog:peer
         version: 9.9.1
-      reflect-metadata:
-        specifier: catalog:peer
-        version: 0.2.2
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
