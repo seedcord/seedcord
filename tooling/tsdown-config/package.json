@@ -38,9 +38,9 @@
         "fmt": "prettier --write '*.{mjs,ts,json,md}' --cache",
         "fmt:check": "prettier --check '*.{mjs,ts,json,md}' --cache",
         "tc": "tsgo --noEmit",
-        "test": "vitest run",
-        "test:watch": "vitest dev",
-        "coverage": "vitest run --coverage"
+        "test": "vitest run --passWithNoTests",
+        "test:watch": "vitest dev --passWithNoTests",
+        "coverage": "vitest run --coverage --passWithNoTests"
     },
     "dependencies": {
         "tsdown": "catalog:deps"

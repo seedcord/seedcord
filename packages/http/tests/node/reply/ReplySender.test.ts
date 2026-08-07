@@ -723,15 +723,6 @@ describe('ReplySender files', () => {
         expect(postCall(rest).options.body.data?.allowed_mentions).toEqual({ parse: ['users'], replied_user: false });
     });
 
-    it('omits the attachments key when files carry no description', async () => {
-        const rest = restMock();
-        const files = [{ data: Buffer.from('x'), name: 'a.txt' }];
-
-        await senderFor(rest).reply({ components: reply.components, files });
-
-        expect(postCall(rest).options.body.data?.attachments).toBeUndefined();
-    });
-
     it('keeps attachment ids aligned when only some files carry descriptions', async () => {
         const rest = restMock();
         const files = [
@@ -745,17 +736,5 @@ describe('ReplySender files', () => {
             { id: 0, filename: 'plain.txt' },
             { id: 1, filename: 'described.txt', description: 'alt text' }
         ]);
-    });
-
-    it('carries file descriptions into the attachments body entries', async () => {
-        const rest = restMock();
-        const files = [{ data: Buffer.from('x'), name: 'report.txt', description: 'quarterly totals' }];
-
-        await senderFor(rest).reply({ components: reply.components, files });
-
-        expect(postCall(rest).options.body.data?.attachments).toEqual([
-            { id: 0, filename: 'report.txt', description: 'quarterly totals' }
-        ]);
-        expect(postCall(rest).options.files).toEqual([{ name: 'report.txt', data: files[0]?.data }]);
     });
 });

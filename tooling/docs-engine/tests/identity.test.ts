@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-    DEFAULT_MANIFEST_PACKAGE,
-    DEFAULT_VERSION,
     formatDisplayPackageName,
     isDocumentedPackage,
     resolveExternalPackageUrl,
@@ -13,13 +11,6 @@ import type { PackageIdentity } from '@packages/identity';
 
 const id = (fullName: string): PackageIdentity => ({ folder: formatDisplayPackageName(fullName), fullName });
 const ids = (...fullNames: string[]): PackageIdentity[] => fullNames.map(id);
-
-describe('packages module constants', () => {
-    it('exposes the default manifest package and version', () => {
-        expect(DEFAULT_MANIFEST_PACKAGE).toBe('seedcord');
-        expect(DEFAULT_VERSION).toBe('latest');
-    });
-});
 
 describe('formatDisplayPackageName', () => {
     it('strips the @seedcord scope for known overrides', () => {

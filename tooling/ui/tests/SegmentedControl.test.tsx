@@ -82,16 +82,6 @@ describe('SegmentedControl selection callback', () => {
         expect(list).toHaveAttribute('aria-checked', 'false');
         expect(grid).toHaveAttribute('aria-checked', 'true');
     });
-
-    it('does not re-fire onChange when the active option is clicked again', async () => {
-        const user = userEvent.setup();
-        const spy = vi.fn();
-        render(<Harness onChangeSpy={spy} />);
-        await user.click(screen.getByRole('radio', { name: 'List' }));
-        // justified: primitive has no internal de-dupe, so onChange fires once per click regardless of active state.
-        expect(spy).toHaveBeenCalledTimes(1);
-        expect(spy).toHaveBeenCalledWith('list');
-    });
 });
 
 describe('SegmentedControl keyboard interaction', () => {

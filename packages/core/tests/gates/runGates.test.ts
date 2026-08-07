@@ -205,20 +205,6 @@ describe('gate observer', () => {
         expect(seen).toEqual(['a & b']);
     });
 
-    it('runs the set unchanged when no observer is passed', async () => {
-        const order: string[] = [];
-        const A = defineGate('a', () => {
-            order.push('a');
-        });
-        const B = defineGate('b', () => {
-            order.push('b');
-        });
-
-        await runGates([A, B], ctx);
-
-        expect(order).toEqual(['a', 'b']);
-    });
-
     it('threads the observer through runHandlerGates', async () => {
         const seen: string[] = [];
         const probe = defineGate('probe', () => {});

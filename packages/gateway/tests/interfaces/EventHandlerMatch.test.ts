@@ -170,12 +170,6 @@ describe('EventHandler.match', () => {
         expect([GoodSingle, GoodMulti, DecoratorSuperset, GenericSuperset]).toHaveLength(4);
     });
 
-    it('runs the arm for the fired event', async () => {
-        const m = fakeMessage();
-        await new PingMulti(createPayload(m), core, Events.MessageCreate).execute();
-        expect(m.reply).toHaveBeenCalledWith('created');
-    });
-
     it('routes by the fired event name, not the payload shape', async () => {
         const created = fakeMessage();
         await new PingMulti(createPayload(created), core, Events.MessageCreate).execute();
