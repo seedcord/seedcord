@@ -74,6 +74,21 @@ Scan a draft for words ending in `-tion`, `-ment`, `-ance`, and `-ility`. Most o
 
 Cut "there is" and "there are" openers. Start with the subject or the verb.
 
+### Lead with who does what
+
+The other way a verb goes missing is a split sentence, where one clause becomes two and the real verb sits behind an `is`. It feels like emphasis while you write it. It costs the reader a whole clause to unpack. Don't write cleft sentences, basically.
+
+<!--prettier-ignore-start-->
+
+| Split | Direct |
+|---|---|
+| an empty target is what lets the cleanup work | scaffold deletes the directory when a step fails |
+| what this does is reset the cache | this resets the cache |
+| it is the config that sets the port | the config sets the port |
+| the reason it fails is the missing shebang | it fails because the shebang is missing |
+
+<!--prettier-ignore-end-->
+
 ---
 
 ## 3. Anthropomorphism, with a test you can apply
