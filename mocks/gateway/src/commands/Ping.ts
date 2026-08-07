@@ -1,4 +1,4 @@
-import { BuilderComponent, RegisterCommand } from '@seedcord/http';
+import { BuilderComponent, RegisterCommand } from '@seedcord/gateway';
 
 @RegisterCommand('global')
 export class Ping extends BuilderComponent<'command'> {
