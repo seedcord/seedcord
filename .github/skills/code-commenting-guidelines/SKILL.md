@@ -152,6 +152,12 @@ If you measured something and cannot explain it, say that. "4s works, 2s does no
 
 A comment can address the reader directly. "if you change this, change X too" is a real comment and often the most useful one on the page. Vary the grammar, sentence structure, and voice in comments, like you would in a conversation.
 
+### Write to the next editor, never to a reviewer
+
+The reader is whoever changes this line six months from now. They want the fact.
+
+A reviewer asking "why is this comment here" is a different person asking a different question. Answering that question inside the comment makes that comment fail it's own test and purpose.
+
 ---
 
 ## 4. Write the fact, then stop
@@ -171,6 +177,18 @@ Add a consequence only when a reader would misread the code without it. Usually 
 ```
 
 Keep both halves when the first carries something the reader has no other way to get. "cloudflare publishes the record 2.5s late" earns its place. "the loop collects failures" does not, because the loop is right there.
+
+**When you catch yourself explaining why the comment is there, delete the comment.** The urge to justify is the tell that it never earned its place. Catch the urge and you catch every version of the shape, whichever connective you reached for.
+
+```ts
+// two candidate comments welded together. either half alone would do
+// every bot gets Guilds, which is why it is absent below
+
+// two unrelated facts, joined by a connective that implies one follows from the other
+// a type test pins these against the real enums, which keeps discord.js out of the build
+```
+
+Both were written by someone unsure the comment belonged. The comment on the same page with a hard external fact behind it came out in one clause with no connective at all.
 
 ---
 

@@ -27,8 +27,8 @@ export async function discoverWorkspacePackages(paths: ApiDocsPaths = defaultPat
 
     for await (const match of glob(manifestPatterns, { cwd: root })) {
         const packageDir = path.resolve(root, path.dirname(match));
-        const { private: isPrivate } = await readPackageManifest(packageDir);
-        if (!isPrivate) packageDirs.push(packageDir);
+        const { private: isPrivate, seedcordDocs } = await readPackageManifest(packageDir);
+        if (!isPrivate && seedcordDocs?.skip !== true) packageDirs.push(packageDir);
     }
 
     return packageDirs.sort();

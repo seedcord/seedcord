@@ -3,6 +3,8 @@
  */
 export interface SeedcordDocsConfig {
     entryPoints?: string[];
+    /** Keeps a published package out of the docs */
+    skip?: boolean;
 }
 
 export interface PackageManifest {
@@ -55,7 +57,7 @@ export interface PackageDocResult {
     name: string;
     version: string;
     entryPoints: string[];
-    /** Primary `src` entry (relative to the package dir) the source pass walks; matches AE's entry. */
+    /** Primary `src` entry (relative to the package dir) the source pass walks. this matches AE's entry. */
     sourceEntry?: string;
     outputPath: string | null;
     warnings: string[];

@@ -27,4 +27,9 @@ describe('workspace discovery', () => {
         expect(dirs).not.toContain('apps/docs');
         expect(dirs).not.toContain('mock');
     });
+
+    it('skips a published package that opts out through seedcordDocs.skip', async () => {
+        const dirs = await discover();
+        expect(dirs).not.toContain('cli/create-seedcord');
+    });
 });
