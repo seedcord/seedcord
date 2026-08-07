@@ -1,4 +1,6 @@
 import { text } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -6,7 +8,10 @@ import type { Step } from '../types';
 
 function parseDirectory(raw: string): string {
     const value = raw.trim();
-    if (value === '') throw new Error('The project directory cannot be empty.');
+    if (value === '') {
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, ['dir', 'A project directory cannot be empty.']);
+    }
+
     return value;
 }
 

@@ -1,4 +1,6 @@
 import { password } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -12,7 +14,10 @@ function parseToken(raw: string): string {
     const parts = value.split('.');
 
     if (parts.length !== TOKEN_PARTS || parts.includes('')) {
-        throw new Error('That does not look like a bot token. Copy it from the Bot page of your app.');
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'token',
+            'That does not look like a bot token. Copy it from the Bot page of your app.'
+        ]);
     }
 
     return value;

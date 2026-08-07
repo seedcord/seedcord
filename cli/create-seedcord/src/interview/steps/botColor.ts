@@ -1,4 +1,6 @@
 import { autocomplete } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -54,7 +56,13 @@ function parseColor(raw: string): Answers['botColor'] {
 
     const value = raw.trim().toLowerCase();
     const match = COLOR_NAMES.find((name) => name.toLowerCase() === value);
-    if (!match) throw new Error(`Unknown color "${raw}". Use a color name or a six-digit hex.`);
+    if (!match) {
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'color',
+            `Unknown color "${raw}". Use a color name or a six-digit hex.`
+        ]);
+    }
+
     return match;
 }
 

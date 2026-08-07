@@ -250,5 +250,12 @@ export enum SeedcordErrorCode {
     /** Discord rejected the tunnel URL as an interactions endpoint. */
     CliTunnelNotVerified = 3134,
     /** The tunnel URL never answered its health probe. */
-    CliTunnelUnreachable = 3135
+    CliTunnelUnreachable = 3135,
+
+    /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
+    CreateCancelled = 3201,
+    /** A flag supplied an answer for a question the earlier answers skip. */
+    CreateFlagNotApplicable = 3202,
+    /** A flag carried a value its question rejects. */
+    CreateInvalidAnswer = 3203
 }

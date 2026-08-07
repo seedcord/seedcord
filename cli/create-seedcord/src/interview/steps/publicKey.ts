@@ -1,4 +1,6 @@
 import { text } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -12,7 +14,10 @@ function parsePublicKey(raw: string): string {
     const value = raw.trim();
 
     if (value.length !== PUBLIC_KEY_CHARS || !HEX.test(value)) {
-        throw new Error(`A public key is ${PUBLIC_KEY_CHARS} hex characters. Copy it from your app's main page.`);
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'public-key',
+            `A public key is ${PUBLIC_KEY_CHARS} hex characters. Copy it from your app's main page.`
+        ]);
     }
 
     return value.toLowerCase();

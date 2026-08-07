@@ -230,7 +230,11 @@ const messages = {
         `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
     [SeedcordErrorCode.CliTunnelNotVerified]: (url: string) => `Discord rejected ${url} as an interactions endpoint.`,
     [SeedcordErrorCode.CliTunnelUnreachable]: (url: string, seconds: number) =>
-        `${url} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`
+        `${url} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`,
+    [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
+    [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
+        `The --${flag} flag does not apply to the answers you gave.`,
+    [SeedcordErrorCode.CreateInvalidAnswer]: (flag: string, reason: string) => `--${flag}: ${reason}`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

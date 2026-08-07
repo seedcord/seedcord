@@ -1,3 +1,6 @@
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import type { AnyStep, Answers } from './types';
 
 export async function runFlow(steps: AnyStep[], supplied: Partial<Answers>): Promise<Partial<Answers>> {
@@ -6,7 +9,7 @@ export async function runFlow(steps: AnyStep[], supplied: Partial<Answers>): Pro
     for (const step of steps) {
         if (step.skip?.(answers)) {
             if (step.key in supplied) {
-                throw new Error(`The --${step.flag.name} flag does not apply to the answers you gave.`);
+                throw new SeedcordError(SeedcordErrorCode.CreateFlagNotApplicable, [step.flag.name]);
             }
             continue;
         }
