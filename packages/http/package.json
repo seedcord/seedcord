@@ -67,6 +67,7 @@
         "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:*",
         "@seedcord/errors": "workspace:*",
+        "@seedcord/event-emitter": "workspace:*",
         "@seedcord/logger": "workspace:*",
         "@seedcord/rate-limiter": "workspace:*",
         "@seedcord/types": "workspace:*",

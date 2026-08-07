@@ -15,7 +15,12 @@ export { Emojis } from '@src/emojis/EmojiInjector';
 export type { InjectedEmojiMap, ResolvedEmoji } from '@src/emojis/EmojiInjector';
 
 export * from '@seedcord/core';
+export * from '@seedcord/errors';
+export * from '@seedcord/event-emitter';
+export * from '@seedcord/logger';
+export * from '@seedcord/rate-limiter';
 export type * from '@seedcord/types';
+export * from '@seedcord/utils';
 
 export * from './handlers';
 // two `export *` both re-export RepliableHandler, so export it explicitly to resolve to the http subclass
