@@ -21,10 +21,6 @@ export interface FormatFileOptions {
  *
  * A path outside the working directory, or any path on a runtime without `process`, is returned unchanged.
  *
- * @param filePath - The file path to format.
- * @param options - Formatting options.
- * @returns The formatted file path.
- *
  * @example
  * ```ts
  * // cwd is /repo

@@ -78,13 +78,13 @@ export class TscRunner {
         this.logger.debug('Stopping tsc...');
         child.kill('SIGTERM');
 
-        // justified: tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds); escalate to SIGKILL after a grace window. unref so the timer never holds the event loop open.
+        // justified: tsc --watch can ignore SIGTERM when stdin is detached (Windows/some Node builds), so escalate to SIGKILL after a grace window. unref so the timer never holds the event loop open.
         const killTimer = setTimeout(() => child.kill('SIGKILL'), TSC_GRACEFUL_EXIT_MS);
         killTimer.unref();
         child.once('exit', () => {
             clearTimeout(killTimer);
         });
-        // The handle is nulled by the 'exit' listener in start(); leaving it set until exit prevents start() from spawning a second tsc over a still-dying one.
+        // start()'s 'exit' listener is what nulls the handle, so it stays set until then and blocks a second tsc spawning over the dying one
     }
 
     private resolveProjectTsc(): string | null {

@@ -3,8 +3,7 @@ import { AST_NODE_TYPES, ESLintUtils } from '@typescript-eslint/utils';
 
 import { createRule } from '../createRule';
 
-// client meta and lifecycle events, plus interactionCreate (routed through the interaction dispatcher).
-// a raw client.on for these is allowed.
+// client lifecycle and meta events, plus interactionCreate which the interaction dispatcher handles separately
 const NON_GATEWAY_EVENTS = new Set([
     'ready',
     'clientReady',
@@ -62,7 +61,6 @@ export default createRule({
                     return;
                 }
 
-                // conservative: skip if any member is dynamic or a non-gateway event
                 if (
                     eventType.isUnionOrIntersection() &&
                     eventType.types.every((m) => m.isStringLiteral() && !NON_GATEWAY_EVENTS.has(m.value))

@@ -94,7 +94,7 @@ const SEND_TARGET: Record<AckState, 'reply' | 'edit' | 'followUp'> = {
     replied: 'followUp'
 };
 
-/** Throws before any API call. `ackedBy` becomes the throw cause, its stack points at the first ack. */
+// throws before any API call, and ackedBy becomes the throw cause with its stack pointing at the first ack
 export function checkAckLegality(method: ReplyMethod, state: AckState, routeId: string, ackedBy?: AckTrace): void {
     if (method === 'send') return;
     const illegal = ILLEGAL[method][state];

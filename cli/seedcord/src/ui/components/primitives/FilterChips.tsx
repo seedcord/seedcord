@@ -57,7 +57,6 @@ function Chip({
     );
 }
 
-// empty enabled set means all
 export function FilterChips({
     channels,
     enabledChannels,

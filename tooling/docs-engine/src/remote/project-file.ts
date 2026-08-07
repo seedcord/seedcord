@@ -11,9 +11,9 @@ export interface DocProjectFile {
     schemaVersion: 1;
     package: { name: string; version: string };
     root: DocNode;
-    // This will be absent for versions published before README capture.
+    // absent on project files published before this schema captured the readme
     readme?: string;
-    // Absent for versions published before changelog-url capture.
+    // same, but for the changelog url
     changelogUrl?: string;
 }
 
@@ -50,8 +50,7 @@ export function validateProjectFile(value: unknown): DocProjectFile {
         throw new ProjectFetchError(null, 'project.json.root must be an object');
     }
 
-    // The node tree is trusted from here: it was produced by serializeProject at publish time, so a
-    // deep DocNode validation would be redundant cost on every fetch.
+    // serializeProject already produced this tree at publish time, so deep validation here would be redundant cost on every fetch.
     return {
         schemaVersion: 1,
         package: { name: pkg.name, version: pkg.version },
@@ -61,7 +60,7 @@ export function validateProjectFile(value: unknown): DocProjectFile {
     };
 }
 
-// project.json carries only name + version; the rest of DocManifestPackage describes the extraction
+// project.json carries only name and version. The rest of DocManifestPackage describes the extraction
 // run (entry points, warnings, errors), which the render path never reads.
 function manifestShell(pkg: DocProjectFile['package'], readme?: string, changelogUrl?: string): DocManifestPackage {
     return {

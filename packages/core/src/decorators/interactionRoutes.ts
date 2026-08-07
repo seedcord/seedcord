@@ -25,7 +25,7 @@ export function areRoutes(routes: unknown): routes is string[] {
 }
 
 /**
- * Every stored route kind and its route strings on a decorated constructor. The build's manifest
+ * every stored route kind and its route strings on a decorated constructor. the build's manifest
  * emitter reads the same pairs.
  */
 export function interactionRoutesOf(constructor: RoutableConstructor): [InteractionRoutes, string[]][] {
@@ -50,7 +50,8 @@ export function storeInteractionRoute(
     Reflect.defineMetadata(InteractionMetadataKey, true, constructor);
 }
 
-// each definition's stable prefix is the routing key, the full defs stay on the ctor for decoding
+// each definition's stable prefix is the routing key
+// the full defs stay on the ctor for decoding
 export function storeComponentRoute(
     route: InteractionRoutes,
     defs: readonly AnyCustomId[],

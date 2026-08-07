@@ -69,7 +69,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         this.serviceRegistry = new KyselyServiceRegistry(this, this.core, this.logger);
         this.databaseBootstrapper = new PostgresDatabaseBootstrapper(this.logger);
 
-        if (!Envapter.isDevelopment) return; // HMR only in development
+        if (!Envapter.isDevelopment) return;
 
         const relPaths = this.options.migrations.path;
         super.registerCriticalFiles(Array.isArray(relPaths) ? relPaths : [relPaths]);
@@ -199,8 +199,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
     /**
      * Runs a single upwards migration step unless a custom count is provided.
-     *
-     * @param options - Optional configuration for step-based execution
      */
     public async migrateUp(options?: StepMigrationOptions): Promise<void> {
         await this.getMigrationManager().migrateUp(options);
@@ -208,8 +206,6 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
 
     /**
      * Runs a single downwards migration step unless a custom count is provided.
-     *
-     * @param options - Optional configuration for step-based execution
      */
     public async migrateDown(options?: StepMigrationOptions): Promise<void> {
         await this.getMigrationManager().migrateDown(options);

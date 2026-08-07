@@ -7,13 +7,7 @@ import { resolveColor } from './resolveColor';
 
 import type { BuilderType, InstantiatedActionRow, InstantiatedBuilder, RowType } from './builderTypes';
 
-/**
- * Base class for Discord component wrappers.
- *
- * @typeParam TComponent - The Discord.js component type being wrapped
- *
- * @internal
- */
+/** @internal */
 abstract class BaseComponent<TComponent> {
     private readonly _component: TComponent;
 
@@ -24,8 +18,7 @@ abstract class BaseComponent<TComponent> {
     /**
      * Returns the live builder, ready to send in a Discord message or nest in another component.
      *
-     * Configure it through `this.instance`. Reading this can apply the bot color (see
-     * {@link BuilderComponent}), so it has a side effect.
+     * Reading this can apply the bot color (see {@link BuilderComponent}), so it has a side effect.
      * @example new SomeComponent().component
      */
     public abstract get component(): InstantiatedBuilder<BuilderType> | InstantiatedActionRow<RowType>;

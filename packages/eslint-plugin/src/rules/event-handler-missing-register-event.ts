@@ -47,7 +47,6 @@ export default createRule({
                     if (classType) isBase = extendsSeedcordType(checker, classType, EVENT_HANDLER);
                 }
                 if (!isBase) return;
-                // an abstract subclass becomes a base for later concrete handlers (same-file intermediate)
                 if (node.abstract) {
                     if (node.id) bases.add(node.id.name);
                     return;

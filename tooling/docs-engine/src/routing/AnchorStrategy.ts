@@ -15,8 +15,8 @@ function getParentSlug(slug: string): string | null {
 }
 
 /**
- * Turns a resolved `(packageName, slug)` into a docs URL. An internal href depends only on
- * `packageName`, not the current package.
+ * Turns a resolved `(packageName, slug)` into a docs URL. The href depends only on that
+ * `packageName`, regardless of which package the caller is currently viewing.
  */
 export class AnchorStrategy {
     constructor(private readonly lookup: NodeLookup) {}
@@ -96,8 +96,8 @@ export class AnchorStrategy {
         return '/404';
     }
 
-    // A `@link` to a parameter resolves to the owning method/constructor anchor; parameters render inline
-    // on the parent's signature, not as their own scroll target.
+    // a `@link` to a parameter resolves to the owning method or constructor anchor, since parameters
+    // render inline on the parent's signature
     private buildParameterAnchor(packageName: string, entityHref: string, parentSlug: string): string {
         const parentNode =
             this.lookup.getNodeByGlobalSlug(packageName, parentSlug) ??

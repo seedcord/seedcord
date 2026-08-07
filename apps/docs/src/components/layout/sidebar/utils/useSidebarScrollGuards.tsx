@@ -10,8 +10,8 @@ export function useSidebarScrollGuards(): {
     const handleWheel = useCallback((event: WheelEvent<HTMLDivElement>) => {
         const viewport = event.currentTarget;
 
-        // calling stopPropagation before the scrollable check captures + drops
-        // wheel events on non-scrolling viewports (the "tight spring" bug).
+        // calling stopPropagation before the scrollable check swallows wheel events on
+        // non-scrolling viewports, the tight-spring bug.
         if (viewport.scrollHeight <= viewport.clientHeight) {
             return;
         }

@@ -27,7 +27,6 @@ export const LARGE_BOT_THRESHOLD = 200;
 
 export type EmptyOutcome = 'all-skipped' | 'no-commands' | 'no-globals' | 'no-overlaps';
 
-/** Why a scan found nothing to delete, so the caller can explain it instead of a bare "nothing to clean". */
 export function emptyOutcome(scan: ScanResult, purge: boolean): EmptyOutcome {
     if (scan.scannedGuildCount === 0 && scan.skipped.length > 0) return 'all-skipped';
     if (scan.scannedCommandCount === 0) return 'no-commands';
@@ -35,11 +34,7 @@ export function emptyOutcome(scan: ScanResult, purge: boolean): EmptyOutcome {
     return 'no-overlaps';
 }
 
-/**
- * The dry-run-then-confirm flow for `commands --clean`. Resolves targets, scans, previews, and only deletes
- * once `apply` is set and the presenter confirms. The presenter owns all output and the two confirmations,
- * so the wizard and the flag path share this flow with different presenters.
- */
+/** The wizard and the flag path share this flow through different presenters, which own all output and both confirmations. */
 export async function executeClean(request: CleanRequest): Promise<void> {
     const { runner, scope, apply, token, presenter, knownGuilds } = request;
 

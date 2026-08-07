@@ -38,7 +38,9 @@ export type TypedExclude<Target, UnionKeys extends Target> = Exclude<Target, Uni
 export type TypedExtract<Target, UnionKeys extends Target> = Extract<Target, UnionKeys>;
 
 /**
- * Extracts the constructor signature from a constructor type
+ * Extracts the constructor signature from a constructor type. `typeof` on an abstract class gives an
+ * `abstract new (...)` signature that TypeScript refuses to assign to a plain `new (...)`, and this
+ * drops the modifier so both kinds of class reference resolve to the same newable shape.
  * @typeParam ConstructorType - The constructor type to extract the signature from
  *
  * @example

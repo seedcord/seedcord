@@ -102,11 +102,7 @@ interface DeployedIds {
     readonly warned: Set<string>;
 }
 
-/**
- * Records each deployed command on {@link Commands} and {@link ContextMenus}.
- *
- * @internal
- */
+/** @internal */
 export class CommandInjector {
     private readonly logger = new Logger('Commands', { channel: 'bot' });
 

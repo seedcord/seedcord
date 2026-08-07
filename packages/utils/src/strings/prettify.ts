@@ -10,8 +10,6 @@ export interface PrettifyOptions {
  * Converts a string from any common naming convention to human-readable format.
  * Accepts camelCase, PascalCase, snake_case, and kebab-case input.
  *
- * @param key - The string to convert
- * @param opts - Optional configuration
  * @returns A space-separated, human-readable string
  *
  * @example

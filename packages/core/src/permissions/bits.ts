@@ -7,7 +7,7 @@ import { PermissionFlagsBits } from 'discord-api-types/v10';
  */
 export type PermissionScope = readonly bigint[];
 
-/** Permission bit to its prettified human-readable name. */
+// permission bit to its prettified human-readable name
 export const PermissionNames = new Map<bigint, string>(
     Object.entries(PermissionFlagsBits).map(([key, bit]) => [bit, prettify(key)])
 );

@@ -1,6 +1,5 @@
 import { Linter } from 'eslint';
 
-// General JavaScript rules
 export const GENERAL_RULES: Linter.RulesRecord = {
     'no-console': 'warn',
     'no-debugger': 'error',
@@ -66,7 +65,6 @@ export const GENERAL_RULES: Linter.RulesRecord = {
 
     'func-style': ['error', 'declaration', { allowArrowFunctions: true }],
 
-    // Prefer concise arrow bodies when possible (no unnecessary braces/returns)
     'arrow-body-style': ['error', 'as-needed', { requireReturnForObjectLiteral: false }],
 
     // flat config replaces this rule wholesale when another block also sets no-restricted-syntax, so keep every selector in this one array
@@ -95,14 +93,12 @@ export const GENERAL_RULES: Linter.RulesRecord = {
     ]
 };
 
-// Security rules
 export const SECURITY_RULES = {
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
     'security/detect-non-literal-regexp': 'off'
 };
 
-// Override rules
 export const OVERRIDE_RULES = {
     'no-empty-function': 'off',
     'no-useless-constructor': 'off',

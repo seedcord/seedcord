@@ -1,7 +1,5 @@
 /**
  * One rendered page of a paginated list.
- *
- * @typeParam Item - The item type.
  */
 export interface PageView<Item> {
     items: Item[];

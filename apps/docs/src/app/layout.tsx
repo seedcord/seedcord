@@ -80,7 +80,7 @@ interface RootLayoutProps {
 }
 
 function RootLayout({ children }: RootLayoutProps): ReactNode {
-    // the R2-backed CDN serves the README banner (the page's LCP image), so connect to it early.
+    // the R2-backed CDN serves the README banner, the page's LCP image
     preconnect('https://cdn.seedcord.org');
 
     return (

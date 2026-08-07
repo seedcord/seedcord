@@ -17,7 +17,7 @@ import type { Initializeable } from '@seedcord/core';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 const DISPATCH_DRAIN_TIMEOUT_MS = 5000;
-// headroom so each dispatcher's own timer settles before the outer task timeout fires
+// leaves room for each dispatcher's own timer to settle before the outer timeout fires
 const DRAIN_HEADROOM_MS = 1000;
 const DRAIN_TASK_TIMEOUT_MS = DISPATCH_DRAIN_TIMEOUT_MS + DRAIN_HEADROOM_MS;
 const UNBIND_TIMEOUT_MS = 2000;
@@ -63,10 +63,10 @@ export class Bot implements Initializeable, HmrAware {
         const commandsDir = core.config.bot.commands.path;
         if (commandsDir) {
             const injector = new CommandInjector();
-            // onDeployed only fires at deploy time, so registry is assigned by then
+            // registry is assigned before onDeployed ever fires, since that only happens at deploy time
             const registry: CommandRegistry = new CommandRegistry({
                 dir: commandsDir,
-                // core.rest is this same object, assigned only after this constructor returns
+                // this._client.rest is what core.rest resolves to, but core.bot isn't assigned until this constructor returns
                 rest: this._client.rest,
                 applicationId: () => this.applicationId(),
                 onDeployed: (result) => {
@@ -107,7 +107,7 @@ export class Bot implements Initializeable, HmrAware {
     }
 
     private async drain(): Promise<void> {
-        // allSettled so a rejecting drain does not abort the other dispatcher's drain
+        // runs through allSettled since a rejecting drain must not abort the other dispatcher's drain
         await Promise.allSettled([
             this.interactions?.drain(DISPATCH_DRAIN_TIMEOUT_MS),
             this.events?.drain(DISPATCH_DRAIN_TIMEOUT_MS)

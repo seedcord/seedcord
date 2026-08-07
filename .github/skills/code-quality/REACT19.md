@@ -1,26 +1,26 @@
 ---
 name: react19
-description: Use this when writing React components in seedcord. Covers the React 19 APIs in use here — use() for context, ref as a plain prop, useTransition with async, useActionState, useOptimistic — and what's deprecated or removed. This is a client-only Vite SPA; server actions and RSC do not apply.
+description: Use this when writing React components in seedcord. Covers the React 19 APIs in use here, including use() for context, ref as a plain prop, useTransition with async, useActionState, and useOptimistic, plus what's deprecated or removed. This is a client-only Vite SPA. Server actions and RSC do not apply.
 ---
 
-# React 19 — Seedcord Conventions
+# React 19: Seedcord Conventions
 
-This repo runs **React 19.x.x** across all packages. It is a **client-only Vite SPA** — no server components, no RSC. State: Zustand (client) + TanStack Query (server).
+This repo runs **React 19.x.x** across all packages. It is a **client-only Vite SPA** with no server components and no RSC. State: Zustand (client) + TanStack Query (server).
 
-**Form strategy:** Complex forms (checkout, auth) use `react-hook-form` + Zod for field-level validation and per-input error state. Simple one-action mutations ("set default address", "cancel order") should use `useTransition` with async or `useActionState` — the native React 19 pattern. Don't reach for react-hook-form when there's no validation to manage.
+**Form strategy:** Complex forms (checkout, auth) use `react-hook-form` + Zod for field-level validation and per-input error state. Simple one-action mutations ("set default address", "cancel order") should use `useTransition` with async or `useActionState`, the native React 19 pattern. Don't reach for react-hook-form when there's no validation to manage.
 
 ---
 
-## Rule 1 — `use()` instead of `useContext()`
+## Rule 1: `use()` over `useContext()`
 
 `use()` is React 19's unified primitive for reading context and promises. Unlike hooks, it can appear after early returns and inside conditionals.
 
 ```tsx
-// Bad — useContext (deprecated pattern)
+// Bad: useContext (deprecated pattern)
 import { useContext } from 'react';
 const theme = useContext(ThemeContext);
 
-// Good — use()
+// Good: use()
 import { use } from 'react';
 const theme = use(ThemeContext);
 ```
@@ -51,17 +51,17 @@ function useDrawerContext(): DrawerContextValue {
 
 ---
 
-## Rule 2 — `ref` as a plain prop — no `forwardRef`
+## Rule 2: `ref` as a plain prop, no `forwardRef`
 
 `forwardRef` is deprecated in React 19. Components accept `ref` directly as a prop.
 
 ```tsx
-// Bad — forwardRef (deprecated)
+// Bad: forwardRef (deprecated)
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ placeholder }, ref) => (
     <input ref={ref} placeholder={placeholder} />
 ));
 
-// Good — ref as a plain prop
+// Good: ref as a plain prop
 interface InputProps {
     placeholder?: string;
     ref?: React.Ref<HTMLInputElement>;
@@ -71,12 +71,12 @@ function Input({ placeholder, ref }: InputProps) {
 }
 ```
 
-When you need to forward a ref to multiple targets or call it manually, write a small `assignRef` helper that handles both callback refs and `RefObject` refs (see React 19's ref handling docs). If you need this in more than one app, lift it to a shared package rather than duplicating it.
+When you need to forward a ref to multiple targets or call it manually, write a small `assignRef` helper that handles both callback refs and `RefObject` refs (see React 19's ref handling docs). If you need this in more than one app, lift it to a shared package to avoid duplicating it.
 
 **TypeScript rule:** ref callback implicit arrow returns are now type errors. Use a block body:
 
 ```tsx
-// Bad — TypeScript error in React 19 types
+// Bad: TypeScript error in React 19 types
 <div ref={el => (instance = el)} />
 
 // Good
@@ -86,7 +86,7 @@ When you need to forward a ref to multiple targets or call it manually, write a 
 **`useRef` must always receive an argument:**
 
 ```tsx
-// Bad — TypeScript error
+// Bad: TypeScript error
 const ref = useRef<HTMLDivElement>();
 
 // Good
@@ -95,7 +95,7 @@ const ref = useRef<HTMLDivElement>(null);
 
 ---
 
-## Rule 3 — Ref callback cleanup functions
+## Rule 3: Ref callback cleanup functions
 
 React 19 ref callbacks can return a cleanup function, removing the need for a separate `useEffect`:
 
@@ -112,12 +112,12 @@ React 19 ref callbacks can return a cleanup function, removing the need for a se
 
 ---
 
-## Rule 4 — `useTransition` with async functions
+## Rule 4: `useTransition` with async functions
 
 `useTransition` now accepts async functions. `isPending` stays `true` for the full async duration, making it the standard way to track in-flight mutations without `useState(false)` + manual flag management.
 
 ```tsx
-// Bad — manual pending state
+// Bad: manual pending state
 const [isPending, setIsPending] = useState(false);
 async function handleSubmit() {
     setIsPending(true);
@@ -126,7 +126,7 @@ async function handleSubmit() {
     if (err) setError(err);
 }
 
-// Good — useTransition
+// Good: useTransition
 const [isPending, startTransition] = useTransition();
 function handleSubmit() {
     startTransition(async () => {
@@ -138,7 +138,7 @@ function handleSubmit() {
 
 ---
 
-## Rule 5 — `useActionState` for form submissions
+## Rule 5: `useActionState` for form submissions
 
 Use `useActionState` when a form action has state (errors, success messages, pending). It queues multiple submissions sequentially.
 
@@ -170,7 +170,7 @@ The form resets automatically on successful submission.
 
 ---
 
-## Rule 6 — `useOptimistic` for immediate UI feedback
+## Rule 6: `useOptimistic` for immediate UI feedback
 
 Wrap server mutations that should reflect immediately in the UI. React auto-reverts if the action fails.
 
@@ -188,17 +188,17 @@ function handleLike() {
 }
 ```
 
-`setOptimistic` must be called inside `startTransition` or a form `action` — not in a plain event handler.
+`setOptimistic` must be called inside `startTransition` or a form `action`. Don't call it in a plain event handler.
 
 ---
 
-## Rule 7 — `<Context>` as provider (`<Context.Provider>` deprecated)
+## Rule 7: `<Context>` as provider (`<Context.Provider>` deprecated)
 
 ```tsx
-// Old pattern — still works but deprecated
+// Old pattern: still works but deprecated
 <ThemeContext.Provider value="dark">{children}</ThemeContext.Provider>
 
-// React 19 pattern — prefer for new code
+// React 19 pattern: prefer for new code
 <ThemeContext value="dark">{children}</ThemeContext>
 ```
 
@@ -206,17 +206,17 @@ Existing `<Context.Provider>` usages in the codebase don't need immediate migrat
 
 ---
 
-## Rule 8 — `use()` with Promises (Suspense integration)
+## Rule 8: `use()` with Promises (Suspense integration)
 
 `use()` also unwraps Promises, suspending the component until the Promise resolves. Create the Promise outside the component (not inside render):
 
 ```tsx
-// Bad — Promise created inside component, re-created every render
+// Bad: Promise created inside component, re-created every render
 function Comments() {
     const comments = use(fetchComments()); // new Promise every render
 }
 
-// Good — Promise created outside
+// Good: Promise created outside
 const commentsPromise = fetchComments();
 
 function Comments() {
@@ -235,7 +235,7 @@ function Page() {
 
 ---
 
-## Rule 9 — Document metadata (no `react-helmet` needed)
+## Rule 9: Document metadata (no `react-helmet` needed)
 
 React 19 hoists `<title>`, `<meta>`, and `<link>` to `<head>` automatically. Deduplicates by `name`/`rel`.
 
@@ -253,7 +253,7 @@ function ProductPage({ product }: { product: Product }) {
 
 ---
 
-## What's removed — don't use these
+## What's removed: don't use these
 
 | Removed                               | Use instead                   |
 | ------------------------------------- | ----------------------------- |
@@ -270,9 +270,9 @@ function ProductPage({ product }: { product: Product }) {
 
 ---
 
-## React Compiler (recommended, not yet installed)
+## React Compiler (recommended, pending install)
 
-`eslint-plugin-react-compiler` is **not currently installed** in the seedcord apps. When it is added to `apps/{docs,guide,home}`, run it at warning level and treat its warnings as errors — they indicate components that won't benefit from automatic memoization.
+`eslint-plugin-react-compiler` is **not currently installed** in the seedcord apps. When it is added to `apps/{docs,guide,home}`, run it at warning level and treat its warnings as errors. They indicate components that won't benefit from automatic memoization.
 
 Key rules the compiler enforces:
 
@@ -280,4 +280,4 @@ Key rules the compiler enforces:
 - Hooks called in consistent order (no conditional hooks)
 - Stable identities for values used in deps arrays
 
-Once the compiler is installed, **do not** add `useMemo` or `useCallback` manually unless the compiler flags a specific case — the compiler handles memoization automatically for compliant components. Until then, prefer simple, correctly-shaped components over scattering manual memo hooks "just in case."
+Once the compiler is installed, **do not** add `useMemo` or `useCallback` manually unless the compiler flags a specific case. The compiler handles memoization automatically for compliant components. Until then, prefer simple, correctly-shaped components over scattering manual memo hooks "just in case."

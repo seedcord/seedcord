@@ -6,12 +6,7 @@ import type { Bus } from '@seedcord/core';
 import type { StoredSubscriberCtor, SubscriberRegistration } from '@seedcord/core/internal';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 
-/**
- * Registers a manifest's subscribers on the bus without importing them. Each row's module loads on
- * the first publish of one of its keys, which keeps an isolate that never publishes free of the cost.
- *
- * @internal
- */
+// an idle isolate that never publishes pays nothing for this
 export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {
     for (const row of manifest.subscriberRoutes) {
         bus.register({

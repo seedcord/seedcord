@@ -13,7 +13,7 @@ export class ProbeAutocomplete extends AutocompleteHandler<'probe'> {
                 const scoped = category ? matches.map((fruit) => `${category}:${fruit}`) : matches;
                 return respond(scoped.map((suggestion) => ({ name: suggestion, value: suggestion })));
             },
-            // value is the raw partial string even for a number option, so coerce it and drop a NaN mid-edit
+            // value is the raw partial string even for a number option
             count: (value, respond) => {
                 const n = Number.parseInt(value, 10);
                 return respond(Number.isNaN(n) ? [] : [{ name: `${n}`, value: n }]);

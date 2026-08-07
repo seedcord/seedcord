@@ -43,7 +43,7 @@ export class DevSession {
             }
         });
 
-        // vite's missing-entry message changed across a minor and broke detection, so check the path directly
+        // vite's missing-entry message changed across a minor and broke detection
         if (!existsSync(this.config.instance)) {
             throw new SeedcordError(SeedcordErrorCode.CliEntryNotFound, [this.config.instance]);
         }
@@ -112,9 +112,7 @@ export class DevSession {
             // so the shutdown below still runs
             try {
                 await this.startupPromise;
-            } catch {
-                /* suppressed */
-            }
+            } catch {}
         }
 
         await this.instance?.shutdown.run(0, false);

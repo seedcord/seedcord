@@ -22,8 +22,7 @@ interface Bound {
     site: TSESTree.Node;
 }
 
-// a chained setter runs after the constructor, so it wins over the data key. discord.js also
-// accepts the camelCase key and snake_cases it at construction
+// discord.js also accepts the camelCase key and snake_cases it at construction
 function boundOf(
     calls: TSESTree.CallExpression[],
     data: TSESTree.ObjectExpression | undefined,
@@ -57,7 +56,6 @@ export default createRule({
         const checker = services.program.getTypeChecker();
 
         function check(calls: TSESTree.CallExpression[], root: TSESTree.Node): void {
-            // both bounds must be present from some source before the type lookup
             const rawData = constructorData(root);
             if (boundOf(calls, rawData, 'setMinValues', 'min_values', 'minValues') === undefined) return;
             if (boundOf(calls, rawData, 'setMaxValues', 'max_values', 'maxValues') === undefined) return;

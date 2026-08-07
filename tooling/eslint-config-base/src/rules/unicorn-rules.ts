@@ -3,7 +3,6 @@ import { Linter } from 'eslint';
 // a curated subset. unicorn's recommended set enables rules that fight our conventions (no-null,
 // no-array-reduce, filename-case, catch-error-name).
 export const UNICORN_RULES: Linter.RulesRecord = {
-    // correctness / bug-prevention
     'unicorn/error-message': 'error',
     'unicorn/new-for-builtins': 'error',
     'unicorn/throw-new-error': 'error',
@@ -25,7 +24,6 @@ export const UNICORN_RULES: Linter.RulesRecord = {
     'unicorn/require-number-to-fixed-digits-argument': 'error',
     'unicorn/prefer-error-is-error': 'error',
 
-    // modern API (Node 24 / ESNext)
     'unicorn/prefer-node-protocol': 'error',
     'unicorn/prefer-string-slice': 'error',
     'unicorn/prefer-string-starts-ends-with': 'error',
@@ -64,7 +62,6 @@ export const UNICORN_RULES: Linter.RulesRecord = {
     'unicorn/prefer-promise-with-resolvers': 'error',
     'unicorn/prefer-promise-try': 'error',
 
-    // clarity / dead-code
     'unicorn/numeric-separators-style': 'error',
     'unicorn/number-literal-case': 'error',
     'unicorn/no-zero-fractions': 'error',

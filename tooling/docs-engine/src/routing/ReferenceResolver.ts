@@ -9,7 +9,7 @@ import type { DocReference } from '@src/types';
 
 /**
  * Turns a `DocReference` into a target, composed over a {@link NodeLookup} and a {@link PackageRegistry}
- * (which packages exist vs are loaded), both from the engine. `resolve` yields a {@link RefTarget};
+ * (which packages exist vs are loaded), both from the engine. `resolve` yields a {@link RefTarget}.
  * `href` adds the {@link AnchorStrategy}, the external-link table, and the qualified-name fallback.
  */
 export class ReferenceResolver {
@@ -47,10 +47,8 @@ export class ReferenceResolver {
         return this.resolveCrossPackage(reference) ?? { kind: 'unresolved' };
     }
 
-    // Emit a cross-package ref only for a known package whose index lists the target as a real entity.
-    // The lazy engine does not load the package to check, so without this gate it builds 404 links for
-    // params/predicates. An unknown package (discord.js) or an unverifiable slug returns null, falling
-    // through to the external-URL table.
+    // the lazy engine never loads the package to check, so without this gate a param or predicate ref
+    // builds a 404 link
     private resolveCrossPackage(reference: DocReference): RefTarget | null {
         if (!reference.packageName || !this.registry.isKnownPackage(reference.packageName)) return null;
 
@@ -62,8 +60,6 @@ export class ReferenceResolver {
             : null;
     }
 
-    // The cross-package entity's tone (its kind / dot color) for a reference, null when it resolves to
-    // no known cross-package entity. Used by the umbrella overview to tint each re-export chip.
     crossPackageTone(reference: DocReference): EntityTone | null {
         if (!reference.packageName) return null;
         const { slug } = crossPackageUrlRef(reference);
@@ -78,8 +74,8 @@ export class ReferenceResolver {
 
         if (!reference) return null;
 
-        // The owning package first (e.g. `mongoose` for `mongoose.Schema`), then the symbol name
-        // (e.g. `Writable`, keyed directly in the external-link table): a single `??` covers only one.
+        // the table keys a package (`mongoose` for `mongoose.Schema`) and a bare symbol (`Writable`), so
+        // try both
         const fallbackUrl =
             resolveExternalPackageUrl(reference.packageName) ?? resolveExternalPackageUrl(reference.name);
         if (fallbackUrl) return fallbackUrl;
@@ -92,8 +88,8 @@ export class ReferenceResolver {
         return null;
     }
 
-    // A loaded node gets the member-aware anchor; an unloaded cross-package target builds its URL from
-    // the index entity map so it carries the right tone directory + concrete version (not /latest).
+    // an unloaded target's url comes from the index entry, the only place carrying its tone directory
+    // and a pinned version
     private internalHref(packageName: string, slug: string): string {
         const loaded =
             this.lookup.getNodeByGlobalSlug(packageName, slug) ?? this.lookup.getNodeBySlug(packageName, slug);

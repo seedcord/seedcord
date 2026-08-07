@@ -21,9 +21,9 @@ export interface ModalLike {
 
 /**
  * Tracks acknowledgement state and throws a translated `SeedcordError` on an illegal verb before any
- * transport call. Verbs execute the legality check, control the transport wire writer, then update the
- * state and ack trace. Each transport binds `TMessage` to its created-message lens and supplies the
- * writers.
+ * transport call. Every verb runs the legality check, calls the transport's wire writer, then updates
+ * the state and the ack trace. Each transport binds `TMessage` to its own created-message type and
+ * supplies the writers.
  */
 export abstract class BaseReplySender<TMessage extends { id: string }, TNative = never> {
     private state: AckState;
@@ -80,7 +80,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
     }
 
     /**
-     * After a deferUpdate the state stays deferred-update, so the rewrite repeats. The returned message
+     * After a deferUpdate the state stays deferred-update. Calling this again rewrites. The returned message
      * is the source message, editable only through a bare `update` or `edit`. A targeted `edit` or `delete`
      * of it throws the foreign-target error.
      */
@@ -190,7 +190,7 @@ export abstract class BaseReplySender<TMessage extends { id: string }, TNative =
         return created;
     }
 
-    // a with_response callback always returns the created message, so this guards a wire-contract gap
+    // a with_response callback always returns the created message. this only trips if the wire says otherwise
     private requireMessage(created: TMessage | undefined, method: 'reply' | 'update'): TMessage {
         if (!created) throw new SeedcordError(SeedcordErrorCode.ReplyCallbackMissingMessage, [method, this.routeId]);
         return created;

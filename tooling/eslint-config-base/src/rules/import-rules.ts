@@ -3,7 +3,6 @@ import path from 'node:path';
 import { Linter } from 'eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 
-// Import plugin configuration
 export const createImportSettings = (rootDir: string) => ({
     'import-x/resolver-next': [
         createTypeScriptImportResolver({

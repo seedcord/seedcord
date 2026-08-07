@@ -40,7 +40,7 @@ type EventMatchArms<Names extends ValidNonInteractionKeys, Ret> = {
 export abstract class EventHandler<in out Names extends ValidNonInteractionKeys> extends BaseHandler<
     ClientEvents[Names]
 > {
-    // the fired event name, threaded by the controller. undefined when constructed directly, e.g. in a test.
+    // the controller threads this in, undefined when a test constructs the handler directly
     private readonly firedEvent: Names | undefined;
 
     constructor(event: ClientEvents[Names], core: Core, eventName?: Names) {
@@ -48,7 +48,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
         this.firedEvent = eventName;
     }
 
-    // a concrete tuple for one event, never for several, so reading it on a multi-event handler is a compile error
+    // never for a multi-event handler. reading it there is a compile error
     declare protected readonly event: SingleEventPayload<Names>;
 
     /**
@@ -83,8 +83,7 @@ export abstract class EventHandler<in out Names extends ValidNonInteractionKeys>
         // the arm as unknown keyed by the runtime event name, then narrow to a function before calling it.
         const arm = (arms as Record<string, unknown>)[name];
         if (typeof arm !== 'function') throw new SeedcordError(SeedcordErrorCode.EventMatchArmMissing, [name]);
-        // getEvent() carries the real payload tuple, this.event is narrowed to never for the multi-event view.
-        // spread it so the arm receives the same named params its type declares.
+        // this.event narrows to never on a multi-event handler. getEvent() returns the real tuple, spread so each arm gets its named params.
         return await (arm as (...args: unknown[]) => Promisable<Ret>)(...this.getEvent());
     }
 }

@@ -28,7 +28,7 @@ const toOption = (version: PackageVersionCatalog): DropdownOption => ({
     ...(version.badge ? { trailing: BADGES[version.badge] } : {})
 });
 
-// Does not sort; callers must pass versions in the order they should render.
+// doesn't sort, so callers must already order versions before passing them in
 export function buildVersionGroups(versions: readonly PackageVersionCatalog[]): DropdownGroup[] {
     const byChannel = versions.reduce<Record<'stable' | 'prerelease', DropdownOption[]>>(
         (acc, version) => {

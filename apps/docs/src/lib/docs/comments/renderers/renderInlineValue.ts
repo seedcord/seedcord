@@ -6,7 +6,6 @@ import { decorateProseLinks } from './decorateProseLinks';
 
 import type { CommentParagraph, FormatContext } from '@lib/docs/types';
 
-// renders a short inline markdown value (a default value, a label) to a single CommentParagraph
 export async function renderInlineValue(
     markdown: string,
     context: FormatContext
@@ -14,7 +13,7 @@ export async function renderInlineValue(
     const trimmed = markdown.trim();
     if (!trimmed) return undefined;
 
-    // inline, not block, so the value renders on the same line as a "Default:" label
+    // parseInline skips the wrapping paragraph tag so the value sits inline next to the "Default:" label
     const parsed = await marked.parseInline(trimmed, { async: true });
     const html = sanitizeHtml(decorateProseLinks(parsed, context.manifestPackage));
 

@@ -4,8 +4,7 @@ import { createRule } from '../createRule';
 
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
-// discord.js re-exports a separate CJS copy of these builders, which breaks instanceof and toJSON when one
-// is nested in a seedcord (ESM) component. they must come from @discordjs/builders.
+// discord.js re-exports a separate CJS copy of these builders, so instanceof and toJSON break when one nests in an ESM seedcord component
 const BUILDERS = new Set([
     'ActionRowBuilder',
     'ButtonBuilder',
@@ -67,7 +66,6 @@ function reportObjectPattern(pattern: TSESTree.ObjectPattern, report: Report): v
     }
 }
 
-// first param of a `.then(callback)` on the module, either destructured or a named alias
 function thenCallbackParam(
     consumer: TSESTree.MemberExpression
 ): TSESTree.ObjectPattern | TSESTree.Identifier | undefined {
@@ -84,7 +82,6 @@ function thenCallbackParam(
     return undefined;
 }
 
-// a destructure or member access off require('discord.js') / import('discord.js')
 function checkModuleConsumer(moduleExpr: TSESTree.Node, report: Report, bindings: Set<TSESTree.Node>): void {
     let consumer = moduleExpr.parent;
     if (consumer?.type === AST_NODE_TYPES.AwaitExpression) consumer = consumer.parent;
@@ -92,7 +89,7 @@ function checkModuleConsumer(moduleExpr: TSESTree.Node, report: Report, bindings
 
     if (consumer.type === AST_NODE_TYPES.VariableDeclarator) {
         if (consumer.id.type === AST_NODE_TYPES.ObjectPattern) reportObjectPattern(consumer.id, report);
-        // `const djs = require('discord.js')`, track the alias so the MemberExpression visitor catches djs.Builder
+        // binds an alias like `djs` for require('discord.js'), tracked for the MemberExpression visitor below
         else if (consumer.id.type === AST_NODE_TYPES.Identifier) bindings.add(consumer.id);
         return;
     }
@@ -108,7 +105,7 @@ function checkModuleConsumer(moduleExpr: TSESTree.Node, report: Report, bindings
     if (param.type === AST_NODE_TYPES.ObjectPattern) {
         reportObjectPattern(param, report);
     } else {
-        // named alias: track it so MemberExpression picks up djs.Builder accesses inside the callback
+        // same tracking, for a .then() callback's named alias
         bindings.add(param);
     }
 }

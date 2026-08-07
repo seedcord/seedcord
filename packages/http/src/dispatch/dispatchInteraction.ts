@@ -26,7 +26,7 @@ import type { Core } from '@interfaces/Core';
 import type { DispatchOutcome } from '@seedcord/core';
 import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 
-// lazy because the logger reads the environment, which binds after this module loads
+// lazy, env binds after this module loads
 let dispatchLogger: Logger | undefined;
 function logger(): Logger {
     dispatchLogger ??= new Logger('Dispatcher', { channel: 'interactions' });
@@ -39,7 +39,6 @@ interface HttpHandler {
 
 type HandlerCtor = new (event: ValidInteractionTypes, core: Core, dispatch?: DispatchContext) => HttpHandler;
 
-// a writable view of Core, so the bus assignment below needs no second cast
 type CoreDraft = TypedOmit<Core, 'bus'> & { bus: Bus };
 
 export function createCore(config: HttpConfig, token: string): Core {
@@ -62,14 +61,13 @@ interface FaultScope {
     readonly sender: ReplySender | null;
 }
 
-// these codes from the boundary's own send mean the interaction is gone
+// each one means the interaction is already gone
 const HARMLESS_API_CODES: ReadonlySet<number | string> = new Set([
     RESTJSONErrorCodes.UnknownInteraction,
     RESTJSONErrorCodes.InteractionHasAlreadyBeenAcknowledged,
     RESTJSONErrorCodes.UnknownMessage
 ]);
 
-// never rethrows
 async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promise<void> {
     try {
         await send();
@@ -82,8 +80,7 @@ async function sendGuarded(routeId: string, send: () => Promise<unknown>): Promi
     }
 }
 
-// a Notice is illegal on autocomplete, so empty choices clear the pending state. reports like any
-// other write, so a faulted autocomplete still shows its discord round trip
+// a message reply is illegal on autocomplete, so empty choices are the only way to clear the pending state
 async function respondEmptyChoices(scope: FaultScope): Promise<void> {
     const telemetry = { bus: scope.core.bus, interactionId: scope.payload.id };
     await reportedWrite(telemetry, scope.routeId, 'respond', () =>
@@ -147,7 +144,6 @@ async function handleFault(caught: unknown, scope: FaultScope): Promise<void> {
 
     const error = asError(caught);
 
-    // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(scope.core.config.errors?.ignoreApiCodes ?? []);
     if (error instanceof DiscordAPIError && ignore.has(error.code)) {
         logger().debug(`swallowed api code ${paint.amber(String(error.code))}`);
@@ -170,7 +166,7 @@ function unhandledRouteId(match: ResolvedRoute): string {
     return `${match.kind}:${key.length > 0 ? key : 'unrouted'}`;
 }
 
-// nothing is acked in the pre-handler failure paths, so a fresh sender can reply the card
+// nothing is acked yet here, so a fresh sender can reply the card
 function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: Core): FaultScope {
     const ref = { application_id: payload.application_id, id: payload.id, token: payload.token };
     const routeId = unhandledRouteId(match);
@@ -182,14 +178,13 @@ function freshScope(match: ResolvedRoute, payload: ValidInteractionTypes, core: 
     };
 }
 
-// the clock starts when the reporter is built, which is the first statement of the dispatch
 function dispatchReporter(
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core
 ): (outcome: DispatchOutcome) => void {
     const startedAt = performance.now();
-    // read here, since a read at publish time would count the handler run into the queue too
+    // reading this at publish time would count the handler run into the queue too
     const queuedMs = queuedMsFor(payload.id);
     return (outcome) => {
         reportDispatch(core.bus, {
@@ -204,7 +199,6 @@ function dispatchReporter(
     };
 }
 
-// reports in a finally, so a throw from the boundary still publishes
 async function answer(
     caught: unknown,
     scope: FaultScope,
@@ -218,7 +212,6 @@ async function answer(
     }
 }
 
-// sends a response on either failure, so a null return means nothing can run
 async function loadHandlerCtor(
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
@@ -243,11 +236,7 @@ async function loadHandlerCtor(
     return null;
 }
 
-/**
- * Runs the pre-ack phase for a matched interaction. Loads the route's handler class, constructs it, and
- * runs its gates. The sender posts any refusal. Returns the post-ack execute continuation, or null when a
- * gate refuses or nothing can run.
- */
+// a null return means the refusal is already sent
 export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Promise<void>) | null> {
     const { match, payload, core } = args;
     const report = dispatchReporter(match, payload, core);
@@ -289,16 +278,15 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     };
 }
 
-// autocomplete has no reply target, so @Gated rejects it at compile time and this is the runtime backstop.
-// the caller answers the refusal, so one code path reports and replies
+// autocomplete has no reply target. @Gated rejects it at compile time and this is the runtime backstop
 async function gateRefusal(
     ctor: HandlerCtor,
     match: ResolvedRoute,
     payload: ValidInteractionTypes,
     core: Core
 ): Promise<{ caught: unknown } | null> {
-    // the router derives match.kind from payload.type, so the two would be the same. the payload.type clause narrows
-    // the union to Repliables for interactionGateContext below
+    // match.kind comes from payload.type in the router. the second clause narrows the union to
+    // Repliables for interactionGateContext
     if (match.kind === 'autocomplete' || payload.type === InteractionType.ApplicationCommandAutocomplete) return null;
     const monitor = slowGateMonitor();
     try {
@@ -312,7 +300,7 @@ async function gateRefusal(
     } catch (caught) {
         return { caught };
     } finally {
-        // a refusing gate ate budget too, report either way
+        // a refusing gate spent budget too
         monitor?.report(match.routeId);
     }
 }

@@ -3,21 +3,21 @@ name: typescript
 description: Use this when writing TypeScript in seedcord. Covers type narrowing, generics, utility types, discriminated unions, branded types, const assertions, the satisfies operator, and the type discipline rules that apply across the repo.
 ---
 
-# TypeScript Quality — Seedcord Conventions
+# TypeScript Quality: Seedcord Conventions
 
-This repo runs strict TypeScript. `any` is banned in production code. The goal is types that accurately describe the domain, not types that silence the compiler.
+This repo runs strict TypeScript. `any` is banned in production code. The goal is types that accurately describe the domain. A type that only silences the compiler misses the point.
 
 ---
 
-## Rule 1 — Narrow, don't cast
+## Rule 1: Narrow, don't cast
 
-The first instinct when TypeScript complains should be narrowing, not casting.
+The first instinct when TypeScript complains should be narrowing. Casting is a last resort.
 
 ```ts
-// Bad — casting silences the error but loses safety
+// Bad: casting silences the error but loses safety
 const name = (response as any).user.name;
 
-// Good — narrow with a type guard
+// Good: narrow with a type guard
 function hasName(v: unknown): v is { name: string } {
     return (
         typeof v === 'object' && v !== null && 'name' in v && typeof (v as Record<string, unknown>).name === 'string'
@@ -32,19 +32,19 @@ Use `typeof`, `instanceof`, `in`, and discriminated union checks before reaching
 
 ---
 
-## Rule 2 — Discriminated unions over optional fields
+## Rule 2: Discriminated unions over optional fields
 
-Model state as a discriminated union instead of a flat type with many optionals. It makes exhaustive matching compile-enforced.
+Model state as a discriminated union. The compiler then enforces exhaustive matching, and every impossible combination stops being representable.
 
 ```ts
-// Bad — impossible states are representable
+// Bad: impossible states are representable
 type RequestState = {
     isLoading: boolean;
     data?: User;
     error?: string;
 };
 
-// Good — mutually exclusive states
+// Good: mutually exclusive states
 type RequestState =
     | { status: 'idle' }
     | { status: 'loading' }
@@ -62,17 +62,17 @@ switch (state.status) {
 
 ---
 
-## Rule 3 — Type guards and assertion functions
+## Rule 3: Type guards and assertion functions
 
 Write typed predicates for reusable narrowing:
 
 ```ts
-// Type predicate — returns boolean, narrows in if-block
+// Type predicate: returns boolean, narrows in if-block
 function isString(v: unknown): v is string {
     return typeof v === 'string';
 }
 
-// Assertion function — throws on failure, narrows after call
+// Assertion function: throws on failure, narrows after call
 function assertDefined<T>(v: T | null | undefined, msg: string): asserts v is T {
     if (v == null) throw new Error(msg);
 }
@@ -85,17 +85,17 @@ console.log(user.name);
 
 ---
 
-## Rule 4 — Generics: constrain early, infer where possible
+## Rule 4: Generics, constrain early and infer where possible
 
-Don't write `T extends any` — constrain generics meaningfully. Let TypeScript infer the type argument when the call site makes it unambiguous.
+Don't write `T extends any`. Constrain generics meaningfully instead. Let TypeScript infer the type argument when the call site makes it unambiguous.
 
 ```ts
-// Bad — unconstrained, no information at call site
+// Bad: unconstrained, no information at call site
 function first<T>(arr: T[]): T | undefined {
     return arr[0];
 }
 
-// Good — same, but let inference do the work
+// Good: same, but let inference do the work
 const first = <T>(arr: T[]): T | undefined => arr[0];
 const item = first([1, 2, 3]); // inferred: number | undefined
 
@@ -105,16 +105,16 @@ function getKey<T, K extends keyof T>(obj: T, key: K): T[K] {
 }
 ```
 
-Avoid generic parameter lists longer than 3 — if you need more, your abstraction is probably wrong.
+Avoid generic parameter lists longer than 3. If you need more, your abstraction is probably wrong.
 
 ---
 
-## Rule 5 — Prefer built-in utility types over manual mappings
+## Rule 5: Prefer built-in utility types over manual mappings
 
-TypeScript ships `Partial`, `Required`, `Readonly`, `Pick`, `Omit`, `ReturnType`, `Parameters`, `Awaited`, `NonNullable`, `Extract`, `Exclude`. Use them instead of manual mapped types.
+TypeScript ships `Partial`, `Required`, `Readonly`, `Pick`, `Omit`, `ReturnType`, `Parameters`, `Awaited`, `NonNullable`, `Extract`, `Exclude`. Prefer them over manual mapped types.
 
 ```ts
-// Bad — manual mapped type
+// Bad: manual mapped type
 type PartialUser = { [K in keyof User]?: User[K] };
 
 // Good
@@ -127,23 +127,23 @@ type ApiResult = Awaited<ReturnType<typeof fetchUser>>;
 type UserDraft = Omit<User, 'id'> & Partial<Pick<User, 'id'>>;
 ```
 
-**`type-fest`** is available for transforms that built-in utilities don't cover: `ReadonlyDeep`, `PartialDeep`, `Merge`, `SetRequired`, `SetOptional`, `ConditionalKeys`, `ValueOf`, etc. Use it instead of writing complex mapped types from scratch.
+**`type-fest`** is available for transforms that built-in utilities don't cover: `ReadonlyDeep`, `PartialDeep`, `Merge`, `SetRequired`, `SetOptional`, `ConditionalKeys`, `ValueOf`, etc. Prefer it over writing complex mapped types from scratch.
 
 ---
 
-## Rule 6 — `satisfies` for type-checked literals
+## Rule 6: `satisfies` for type-checked literals
 
 `satisfies` validates a value against a type without widening it. Use it to catch mistakes in constant maps while keeping the literal types.
 
 ```ts
-// Bad — type annotation widens to string, losing literal inference
+// Bad: type annotation widens to string, losing literal inference
 const routes: Record<string, string> = {
     home: '/',
     about: '/about'
     // typo in key: 'abut' would not be caught until runtime
 };
 
-// Good — satisfies validates without widening
+// Good: satisfies validates without widening
 const routes = {
     home: '/',
     about: '/about'
@@ -165,15 +165,15 @@ const statusLabels = {
 
 ---
 
-## Rule 7 — `const` assertions for literal inference
+## Rule 7: `const` assertions for literal inference
 
 Use `as const` to narrow a value to its literal type and make arrays/objects `readonly`.
 
 ```ts
-// Without as const — types are widened
+// Without as const: types are widened
 const directions = ['north', 'south', 'east', 'west']; // string[]
 
-// With as const — literal tuple
+// With as const: literal tuple
 const directions = ['north', 'south', 'east', 'west'] as const;
 // readonly ['north', 'south', 'east', 'west']
 type Direction = (typeof directions)[number]; // 'north' | 'south' | 'east' | 'west'
@@ -190,7 +190,7 @@ const buttonSizes = {
 
 ---
 
-## Rule 8 — Branded types for domain primitives
+## Rule 8: Branded types for domain primitives
 
 Prevent passing the wrong `string` (e.g., a user ID where an order ID is expected) by branding primitive types.
 
@@ -208,19 +208,19 @@ const userId = createUserId('abc');
 getOrder(userId); // TypeScript error — UserId is not OrderId
 ```
 
-Use branded types at domain boundaries: API response IDs, route params, currency amounts. Don't brand everything — only where confusion between same-primitive types causes real bugs.
+Use branded types at domain boundaries: API response IDs, route params, currency amounts. Don't brand everything. Only brand where confusion between same-primitive types causes real bugs.
 
 ---
 
-## Rule 9 — `unknown` at external boundaries, narrow before use
+## Rule 9: `unknown` at external boundaries, narrow before use
 
 At system boundaries (API responses, `JSON.parse`, user input, `localStorage`), the incoming value is `unknown`. Validate it with a type guard or Zod schema before using.
 
 ```ts
-// Bad — trusting unvalidated external data
+// Bad: trusting unvalidated external data
 const user = JSON.parse(raw) as User;
 
-// Good — validate at the boundary with a runtime type guard
+// Good: validate at the boundary with a runtime type guard
 //   (or a Zod schema, if Zod is in use in the consuming package)
 function isUser(v: unknown): v is User {
     return typeof v === 'object' && v !== null && typeof (v as Record<string, unknown>).id === 'string';
@@ -231,11 +231,11 @@ if (!isUser(parsed)) throw new Error('Invalid user data');
 const user = parsed; // User
 ```
 
-Inside the validated boundary, trust the types. Don't add defensive `?.` chains on values you know are non-null — that hides bugs.
+Inside the validated boundary, trust the types. Don't add defensive `?.` chains on values you know are non-null. That hides bugs.
 
 ---
 
-## Rule 10 — Template literal types for string APIs
+## Rule 10: Template literal types for string APIs
 
 Use template literal types to model string patterns:
 

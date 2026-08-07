@@ -5,9 +5,8 @@ import { referenceFromCanonical } from '@model/canonical-ref';
 import type { Excerpt, ExcerptToken } from '@microsoft/api-extractor-model';
 import type { InlineType, SigPart } from '@src/types';
 
-// Intrinsic / global type keywords. The TypeDoc renderer emitted these as `ref` parts so the
-// consumer's resolveHref can link them to MDN / the TS handbook; API Extractor flattens them into
-// plain Content text, so we re-wrap them here to preserve that linking behaviour.
+// api extractor flattens these into plain Content text, so re-wrap them as `ref` parts to keep the
+// consumer's resolveHref linking them to MDN and the TS handbook
 const INTRINSICS = new Set([
     'string',
     'number',
@@ -29,11 +28,6 @@ const IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const textPart = (text: string): SigPart => ({ kind: 'text', text });
 const punctPart = (text: string): SigPart => ({ kind: 'punct', text });
 
-/**
- * Split a Content run into text / punct / space parts. Identifier runs that name an intrinsic become
- * `ref` parts (so they link like the TypeDoc path did); other identifiers stay text. Runs of
- * whitespace collapse to a single `space` part, matching the old renderer's spacing.
- */
 function tokenizeContent(text: string, parts: SigPart[]): void {
     let buffer = '';
     let mode: 'word' | 'punct' | null = null;
@@ -69,10 +63,9 @@ export function tokensToSigParts(tokens: readonly ExcerptToken[]): SigPart[] {
     const parts: SigPart[] = [];
     for (const token of tokens) {
         if (token.kind === ExcerptTokenKind.Reference && token.canonicalReference) {
-            // AE appends a `$N` disambiguation suffix when two same-named symbols are in scope
-            // (e.g. winston `Logger` vs a package `Logger` -> `Logger$1`). Strip it from the
-            // displayed name only; `ref.name` stays byte-exact so it doesn't collide with a
-            // documented same-named node during the resolver's name fallback.
+            // AE appends `$N` when two same-named symbols are in scope (winston `Logger` alongside a
+            // package `Logger` becomes `Logger$1`). strip it from the display text only. `ref.name` stays
+            // byte-exact so the resolver's name fallback never collides with a documented same-named node.
             parts.push({
                 kind: 'ref',
                 text: token.text.replace(/\$\d+$/, ''),

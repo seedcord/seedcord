@@ -25,12 +25,7 @@ export type InjectedEmojiMap = {
  */
 export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
 
-/**
- * Loads and injects emojis based on bot configuration. A guild emoji requires the Guilds intent in the client
- * options.
- *
- * @internal
- */
+// a guild emoji requires the Guilds intent in the client options
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis', { channel: 'bot' });
 
@@ -59,7 +54,6 @@ export class EmojiInjector {
             }
         }
 
-        // surface every unresolved emoji at once so the user fixes the whole config in one pass
         if (failures.length > 0) {
             throw new SeedcordError(SeedcordErrorCode.ConfigEmojiUnresolved, [failures.length, failures.join('\n')]);
         }

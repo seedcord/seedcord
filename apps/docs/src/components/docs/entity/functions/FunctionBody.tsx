@@ -45,7 +45,7 @@ function buildTypeParamMember(tp: FunctionTypeParameterModel): EntityMemberSumma
     };
 }
 
-// Reuses EntityMemberSummary rather than a dedicated FunctionParamMember type, which would cascade into MemberRow's prop signature.
+// this reuses EntityMemberSummary. a dedicated FunctionParamMember type would cascade into MemberRow's prop signature
 function buildParamMember(
     p: FunctionSignatureParameterModel,
     overloadIndex: number,

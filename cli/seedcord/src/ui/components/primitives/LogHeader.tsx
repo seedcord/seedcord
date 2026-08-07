@@ -10,7 +10,6 @@ interface LogHeaderProps {
     readonly below: number;
 }
 
-// the scroll status while scrolled up, nothing while following
 export function LogHeader({ following, below }: LogHeaderProps): ReactElement | null {
     if (following) return null;
     return (

@@ -63,7 +63,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
     return (
         <html lang="en">
             <body
-                // browser extensions mutate body attributes before hydration, this avoids a false mismatch warning
+                // this avoids a false mismatch warning because browser extensions mutate body attributes before hydration
                 suppressHydrationWarning
                 className={cn(sans.variable, display.variable, monoCode.variable, 'antialiased')}
             >

@@ -1,6 +1,5 @@
 import { Linter } from 'eslint';
 
-// TSDoc rules for enforcing documentation standards
 export const TSDOC_RULES: Linter.RulesRecord = {
     'tsdoc/syntax': 'warn'
 };

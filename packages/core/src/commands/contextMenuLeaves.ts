@@ -3,16 +3,15 @@ import { ApplicationCommandType } from 'discord-api-types/v10';
 
 import type { SlashCommandBuilder } from '@discordjs/builders';
 
-/** The registered context-menu command names, split by kind. @internal */
+/** @internal */
 export interface ContextMenuLeaves {
     readonly user: Set<string>;
     readonly message: Set<string>;
 }
 
 /**
- * Collects the names of every registered context-menu command across a set of command builders, deduplicated
- * because the same builder appears once per guild. A user and a message command can share a name, so the two
- * kinds stay in separate sets.
+ * dedupes names across builders, since the same builder repeats once per guild.
+ * a user and a message command can share a name.
  *
  * @internal
  */

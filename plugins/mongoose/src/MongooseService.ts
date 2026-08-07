@@ -48,7 +48,6 @@ export abstract class MongooseService<Doc extends MongooseDocument = MongooseDoc
     }
 }
 
-/** Constructor type for {@link MongooseService} classes */
 export type MongooseServiceConstructor = TypedConstructor<typeof MongooseService> & {
     schema: mongoose.Schema<MongooseDocument>;
 };

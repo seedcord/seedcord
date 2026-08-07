@@ -27,8 +27,9 @@ export async function resolveEntity(params: PageParams): Promise<ResolvedEntity 
     const parsed = parseEntityPathSegments(segments);
     if (!parsed.slug) return null;
 
-    // one engine instance for setVersion and the lookup. The OG route handler doesn't get React cache()
-    // dedup the way a page render does, so a second getDocsEngine() would read a version that was never set.
+    // this keeps one engine instance for setVersion and the lookup. og route handlers skip react's
+    // per-request cache() dedup that a page render gets, so a second getDocsEngine() call would read
+    // a version that was never set.
     const engine = await getDocsEngine();
     try {
         await engine.setVersion(entry.id, version.id);

@@ -1,7 +1,6 @@
 /**
  * Function takes an array of strings or numbers and returns the number of characters in the longest string/number
  *
- * @param arr - The array of strings or numbers
  * @returns The length of the longest element when converted to string
  *
  * @example

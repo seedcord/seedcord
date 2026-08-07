@@ -10,9 +10,6 @@ import type { LifecycleTask } from './LifecycleTypes';
 
 const PHASE_ORDER: StartupPhase[] = [StartupPhase.Configuration, StartupPhase.Login, StartupPhase.Ready];
 
-/**
- * Runs registered startup tasks across `StartupPhase` in order. Tasks within a phase run in parallel.
- */
 export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
     private isStartingUp = false;
     private hasStarted = false;
@@ -21,14 +18,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         super('Startup', PHASE_ORDER, StartupPhase);
     }
 
-    /**
-     * Adds a startup-phase task.
-     *
-     * @param phase - The startup phase to run the task in.
-     * @param taskName - A descriptive name for the task.
-     * @param task - The async function to run.
-     * @param timeoutMs - Task timeout in ms. {@default `10000` }
-     */
     public override addTask(
         phase: StartupPhase,
         taskName: string,
@@ -70,12 +59,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         return Promise.allSettled(promises);
     }
 
-    /**
-     * Runs the registered tasks across startup phases in `StartupPhase` order. Each phase completes
-     * before the next begins, and tasks within a phase run concurrently.
-     *
-     * @throws {@link SeedcordError} if a startup task throws.
-     */
+    // each phase completes fully before the next begins
     public async run(): Promise<void> {
         if (this.hasStarted) {
             this.logger.warn('Startup sequence has already completed');
@@ -119,9 +103,6 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         return !this.isStartingUp;
     }
 
-    /**
-     * Aborts the startup sequence if it is currently running.
-     */
     public abort(): void {
         if (!this.isStartingUp) return;
 

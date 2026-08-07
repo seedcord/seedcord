@@ -28,7 +28,6 @@ export function MemberRow({ member, prefix, isLast, parentDeprecationStatus }: M
         Boolean(member.tags?.includes('deprecated')) ||
         Boolean(member.deprecationStatus?.isDeprecated);
 
-    // A deprecated member with no message of its own inherits the parent entity's deprecation message.
     let deprecationStatus: DeprecationStatus =
         member.deprecationStatus ??
         (isDeprecated

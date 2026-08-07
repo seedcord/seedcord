@@ -55,7 +55,6 @@ export default createRule({
             return { isSubscriber, isWebhook };
         }
 
-        // same-file bases, cross-file chains resolve through the type checker
         function trackAbstractBase(node: TSESTree.ClassDeclaration, kind: Kind): void {
             if (!node.id) return;
             subscriberBases.add(node.id.name);

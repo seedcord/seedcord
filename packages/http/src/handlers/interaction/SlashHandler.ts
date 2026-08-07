@@ -39,7 +39,7 @@ export abstract class SlashHandler<
      */
     protected get options(): SlashOptions<Route> {
         this.resolver ??= new HttpSlashOptions(this.event.data);
-        // the reader exposes every getter, SlashOptions is the registry-typed view over it.
+        // SlashOptions is just the registry-typed view over the getters the reader already exposes
         return this.resolver as SlashOptions<Route>;
     }
 

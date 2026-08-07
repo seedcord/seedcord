@@ -1,11 +1,10 @@
 import { useState } from 'react';
 
 export interface ScrollApi<Item> {
-    // Oldest-first; consumers render in array order.
+    // oldest first, consumers render in array order
     readonly visible: readonly Item[];
     readonly following: boolean;
     readonly atTop: boolean;
-    // Count of hidden entries above (older) and below (newer) the current window.
     readonly above: number;
     readonly below: number;
     readonly up: (lines?: number) => void;
@@ -27,10 +26,9 @@ interface ScrollView<Item> {
     readonly below: number;
 }
 
-// Pure, side-effect free (exported for unit tests). A null anchor follows the tail (newest). A non-null
-// anchor pins the window's top to that entry's CURRENT index, so the visible lines stay put when the buffer
-// trims its head or new lines append while scrolled up; if the anchored entry was trimmed away, it falls
-// back to the oldest line.
+// a null anchor follows the newest line. a key anchor pins the top row to that entry's current index, so
+// the visible lines stay put while LogStore trims its head or appends. a trimmed-away anchor falls back to
+// the oldest line.
 export function computeScrollView<Item>(
     items: readonly Item[],
     viewportHeight: number,
@@ -61,7 +59,6 @@ export function computeScrollView<Item>(
     };
 }
 
-// A virtualized scroll window over an append-mostly list, anchored to an entry KEY (see computeScrollView).
 export function useScroll<Item>(
     items: readonly Item[],
     viewportHeight: number,
@@ -73,7 +70,6 @@ export function useScroll<Item>(
     const maxTop = Math.max(0, items.length - height);
     const view = computeScrollView(items, viewportHeight, anchor, getKey);
 
-    // Reaching the tail clears the anchor (back to follow mode) so new lines auto-show again.
     const anchorAt = (nextTop: number): void => {
         const clamped = Math.min(Math.max(0, nextTop), maxTop);
         if (clamped >= maxTop) {

@@ -20,13 +20,12 @@ export interface CodeLink {
     href: string;
     start: number;
     end: number;
-    // True when the link points outside the current package (cross-package or external), which sets
-    // target="_blank". When undefined, applyLinkMarkers falls back to the href protocol.
+    // undefined falls back to the href protocol in applyLinkMarkers
     external?: boolean;
 }
 
-// Explicit langs + themes (not shiki's barrel registry) so only what's listed gets traced into the
-// standalone bundle. Oniguruma engine kept so tokenization matches the barrel build the transformers expect.
+// listing the langs and themes here keeps the standalone trace down to what's below. oniguruma matches
+// the tokenization the transformers were written against.
 let highlighterPromise: Promise<HighlighterCore> | null = null;
 function ensureHighlighter(): Promise<HighlighterCore> {
     highlighterPromise ??= createHighlighterCore({
@@ -106,14 +105,14 @@ function dropPrefix(line: HastElement, prefix: string): void {
     }
 }
 
-// Ref weaving via PUA Unicode sentinels (U+E000 range): shiki's decorations API requires
-// token-boundary alignment the TS grammar doesn't always give (e.g. a return-type `: Foo`
-// tokenizes as one segment). Sentinels are treated as identifier-continuation chars by the
-// grammar; we swap them post-render for `<a href>`. Layout per ref:
-// `<OPEN><index><BOUND>name<CLOSE><index><BOUND>` so a regex can extract both index and content.
+// refs are woven in as PUA unicode sentinels (U+E000 range). shiki's decorations API requires
+// token-boundary alignment the TS grammar doesn't always give (a return-type `: Foo` tokenizes as one
+// segment). the grammar treats the sentinels as identifier-continuation chars, and a post-render pass
+// swaps them for `<a href>`. the layout per ref is `<OPEN><index><BOUND>name<CLOSE><index><BOUND>`,
+// which lets one regex pull out the index and the content together.
 
-// `\uXXXX` escapes (not raw chars): macOS's font fallback maps the U+E000 PUA range to
-// internal Apple glyphs, so raw literals render as Dock/iMessage icons in IDEs.
+// macos font fallback maps the U+E000 range onto apple's private glyphs, so raw literals here would
+// render as dock and imessage icons in an editor
 const LINK_OPEN = '\uE000';
 const LINK_OPEN_BOUND = '\uE001';
 const LINK_CLOSE = '\uE002';
@@ -138,7 +137,7 @@ interface SentinelLink {
     href: string;
 }
 
-// Shiki escapes the PUA chars as numeric entities; decode them back before the post-render scan.
+// shiki writes the PUA chars out as numeric entities. decode first.
 function normalizeSentinels(html: string): string {
     return html.replace(/&#(x?)([0-9a-fA-F]+);/g, (match, isHex: string, value: string) => {
         const code = Number.parseInt(value, isHex ? HEX_RADIX : DECIMAL_RADIX);
@@ -182,9 +181,8 @@ function applyLinkMarkers(html: string, markers: readonly SentinelLink[], links:
     if (markers.length === 0) return html;
 
     let result = normalizeSentinels(html);
-    // Sentinels sometimes land alone inside their own <span> (when shiki tokenizes them as
-    // standalone punctuation/identifier). Unwrap those single-sentinel spans first so the
-    // open/close regex matches the bare sentinels.
+    // shiki sometimes tokenizes a lone sentinel into a span of its own, which leaves the open/close
+    // regex below nothing to match until the span is unwrapped
     result = result.replace(/<span[^>]*>\s*([-])\s*<\/span>/g, '$1');
 
     for (let i = 0; i < markers.length; i += 1) {
@@ -242,11 +240,10 @@ const stripMemberWrap: ShikiTransformer = {
     }
 };
 
-// Dual-render: shiki's CSS-variable dual-theme mode (`themes: {…}` + `defaultColor: false`)
-// breaks in Safari because per-span `color: var(--shiki-dark)` against an inline custom property
-// on the SAME span does not resolve in WebKit. Fix: render twice with a single `theme:` each, tag
-// each `<pre>` with `shiki-light`/`shiki-dark`, wrap in `.shiki-theme-group`, and toggle visibility
-// from globals.css. Each pre has fully-resolved inline `color:#X`.
+// shiki's dual-theme mode (`themes: {…}` + `defaultColor: false`) breaks in safari, because webkit
+// does not resolve a span's `color: var(--shiki-dark)` against an inline custom property on that same
+// span. rendering once per theme gives each `<pre>` a resolved `color:#X`, and globals.css switches
+// the `shiki-light`/`shiki-dark` pair by visibility.
 
 function decorateBlock(html: string, variant: 'light' | 'dark'): string {
     return html.replace('<pre class="shiki', `<pre class="shiki shiki-${variant}`);
@@ -288,10 +285,9 @@ export async function highlightToHtml(
     }
 }
 
-// Method-shape signatures aren't valid top-level TS: shiki's grammar tokenizes `extends`
-// inside `<T extends X>` as a keyword only when a leading statement-context anchor is present.
-// Wrap as a top-level function declaration (which also supports multi-line type-param
-// constraints, unlike `class _ {…}`), then strip the wrap structurally via a transformer.
+// shiki reads `extends` inside `<T extends X>` as a keyword only with a statement-context anchor in
+// front of it, hence the function wrap. a `class _ {…}` wrap also breaks multi-line type-param
+// constraints.
 export async function highlightSignatureToHtml(code: string, links: readonly CodeLink[] = []): Promise<string | null> {
     if (!code) return '';
 
@@ -310,8 +306,7 @@ export async function highlightSignatureToHtml(code: string, links: readonly Cod
     }
 }
 
-// Property declarations need a class-body wrap so shiki recognizes modifier keywords
-// (`protected`, `readonly`): they enter `storage.modifier` scope only inside a class body.
+// `protected` and `readonly` enter storage.modifier scope only inside a class body
 export async function highlightMemberToHtml(code: string, links: readonly CodeLink[] = []): Promise<string | null> {
     if (!code) return '';
 
@@ -330,10 +325,9 @@ export async function highlightMemberToHtml(code: string, links: readonly CodeLi
     }
 }
 
-// Type-parameter rows like `TPluggableEvents extends X = Y` need a TYPE-PARAMETER declaration
-// context: class-body wrap doesn't work because shiki's grammar tokenizes `<X extends Y = Z>`
-// only when it sits inside actual generic `<…>` brackets. Wrap as `type _<row> = unknown` and
-// strip the surrounding text from the hast tree.
+// a type-param row like `TPluggableEvents extends X = Y` goes through `type _<row> = unknown` because
+// shiki tokenizes `<X extends Y = Z>` only inside real generic brackets, which a class-body wrap
+// can't give it
 const stripTypeParamWrap: ShikiTransformer = {
     name: 'seedcord-strip-type-param-wrap',
     code(codeEl) {
@@ -373,8 +367,7 @@ export async function highlightTypeParamToHtml(code: string, links: readonly Cod
 
 const CODE_INNER_RE = /<code[^>]*>([\s\S]*?)<\/code>/;
 
-// Inline form of `renderDual`: the same per-theme single-render to avoid the WebKit bug, emitting a
-// `shiki-light`/`shiki-dark` sibling pair that globals.css switches via `display`.
+// per-theme render again, same webkit reason as renderDual. globals.css switches this pair on `display`.
 export async function highlightInlineToHtml(code: string, lang: BundledLanguage = 'ts'): Promise<string | null> {
     if (!code) return '';
 

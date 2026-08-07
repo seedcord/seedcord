@@ -259,7 +259,7 @@ export function buildPackageFromApi(pkg: DocManifestPackage, apiPackage: ApiPack
     return buildPackageFromModel(pkg, new ApiAdapter(pkg, model).transform(apiPackage));
 }
 
-// The node-free half of buildPackageFromApi: the remote project.json loader reuses it without the AE adapter.
+// buildPackageFromApi runs this after adapting, and the remote project.json loader reuses it directly with no AE adapter.
 export function buildPackageFromModel(pkg: DocManifestPackage, root: DocNode): DocPackageModel {
     const indexes = buildIndexes(root, pkg);
     const directory = PackageDirectory.fromIndexes(indexes);

@@ -47,7 +47,7 @@ export abstract class Notice extends Error {
     public report = false;
 
     /**
-     * Whether the reply is ephemeral, so only the invoking user sees it. Set it false for a refusal the
+     * Whether the reply is ephemeral, seen only by the invoking user. Set it false for a refusal the
      * whole channel should see.
      *
      * @defaultValue `true`
@@ -56,7 +56,7 @@ export abstract class Notice extends Error {
 
     /**
      * A short one-line reason. When every arm of an `or` gate refuses and each refusal sets this, `or`
-     * lists them instead of showing a neutral message.
+     * lists them as the reply.
      */
     public summary?: string;
 
@@ -70,7 +70,7 @@ export abstract class Notice extends Error {
 
     /**
      * Builds what the user sees. Called fresh each time the denial is shown, so the builders are new
-     * and the bot color resolves at render time rather than at construction time.
+     * and the bot color resolves at render time.
      */
     public abstract render(ctx: RenderContext): ReplyResponse;
 }

@@ -58,9 +58,8 @@ function pluginBlock(params: {
 }
 
 /**
- * Creates a comprehensive ESLint configuration tailored for JavaScript and TypeScript projects.
- *
- * @param options - Configuration options to customize the ESLint setup.
+ * Builds an ESLint flat config, composing the shared JS/TS rule sets with the plugin blocks
+ * (security, import, prettier, tsdoc, unicorn, tailwind, mdx) that `options` toggles on or off.
  */
 function createConfig(options: CreateConfigOptions = {}): FlatConfig {
     const {
@@ -164,7 +163,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             rules: UNICORN_RULES
         }),
 
-        // Opt-in via tailwindEntryPoint; off when omitted (see CreateConfigOptions.tailwindEntryPoint).
+        // Opt-in via tailwindEntryPoint, off when omitted (see CreateConfigOptions.tailwindEntryPoint).
         tailwindBlock({
             files: [...TS_FILES],
             entryPoint: tailwindEntryPoint,
@@ -172,7 +171,7 @@ function createConfig(options: CreateConfigOptions = {}): FlatConfig {
             taggedTemplates: tailwindTaggedTemplates
         }),
 
-        // Opt-in via mdxFiles; the spread drops the block entirely when omitted.
+        // Opt-in via mdxFiles, the spread drops the block entirely when omitted.
         ...(mdxFiles ? [mdxBlock(mdxFiles)] : []),
 
         {

@@ -58,7 +58,7 @@ export class CommandsCommand extends BaseCommand {
         try {
             await this.dispatch(options);
         } catch (error: unknown) {
-            // a cancelled prompt is a clean abort, not a failure
+            // a cancelled prompt exits quietly here because it's an intentional abort
             if (isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.CliCancelled)) return;
 
             this.logger.error('seedcord commands failed', error);

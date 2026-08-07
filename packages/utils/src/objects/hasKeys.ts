@@ -25,11 +25,9 @@ export type PathToObj<Path extends string, Value> = Path extends `${infer Head}.
     : { [K in Path]: Value };
 
 /**
- * Checks for the presence of nested keys in an object that's possibly a distributed union, narrowing the object type accordingly.
+ * Checks that the specified nested keys exist on a possibly distributed union object and are not null or
+ * undefined, narrowing the object type to reflect those keys with their types from the original union.
  *
- * Checks if an object has the specified nested keys and that their values are not null or undefined. If they are not, the object type is narrowed to reflect the presence of these keys with their respective types from the original distributed union object.
- *
- * @param obj - The object to check.
  * @param keys - An array of dot-notation paths to check.
  * @returns True if all keys exist and are non-null/defined, narrowing the object type.
  *
@@ -52,8 +50,8 @@ export type PathToObj<Path extends string, Value> = Path extends `${infer Head}.
  *   //   a: { b: { c: string } };
  *   //   x: number;
  *   // }
- *   console.log(obj.a.b.c.toUpperCase()); // Safe to access and use
- *   console.log(obj.x.toFixed(2)); // Safe to access and use
+ *   console.log(obj.a.b.c.toUpperCase());
+ *   console.log(obj.x.toFixed(2));
  * }
  * ```
  */

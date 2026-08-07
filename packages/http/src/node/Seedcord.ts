@@ -103,7 +103,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         const commandsDir = this.config.bot.commands.path;
         if (commandsDir) {
             const injector = new CommandInjector();
-            // onDeployed only fires at deploy time, so registry is assigned by then
+            // onDeployed only fires at deploy time, long after registry is assigned
             const registry: CommandRegistry = new CommandRegistry({
                 dir: commandsDir,
                 rest: this.rest,
@@ -139,7 +139,6 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         try {
             await super.init();
         } catch (caught) {
-            // shutdown releases any resource opened before the failure, then rethrow
             await this.shutdown.run(1, false);
             Seedcord.reset();
             throw caught;
@@ -149,7 +148,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
     protected static override reset(): void {
         super.reset();
-        // reset() would drop the dev TUI's log sink
+        // super.reset() drops the dev TUI's log sink
         LoggerChannelRegistry.instance.configure({});
     }
 
@@ -181,7 +180,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
 
         const { commandRegistry } = this;
         if (commandRegistry) {
-            // one task, because tasks within a phase run concurrently and the deploy reads the id
+            // one task because tasks in a phase run concurrently and the deploy reads the id
             this.startup.addTask(StartupPhase.Login, 'command-deploy', async () => {
                 await commandRegistry.init();
                 this.appId = await this.applicationId();
@@ -214,13 +213,12 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         this.rest.setToken(validateDiscordToken(Envapter.get('DISCORD_BOT_TOKEN')));
     }
 
-    // the promise is stored, so two concurrent Login tasks share one fetch
     private applicationId(): Promise<string> {
         this.appIdPromise ??= fetchApplicationId(this.rest);
         return this.appIdPromise;
     }
 
-    // the registry deploys on a hot reload too, after the startup task resolved this
+    // the registry redeploys on a hot reload, after the startup task resolved this
     private requireApplicationId(): string {
         if (!this.appId) throw new SeedcordError(SeedcordErrorCode.CoreApplicationUnavailable);
         return this.appId;
@@ -235,7 +233,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                 const response = await handle(await toWebRequest(incoming));
                 await writeWebResponse(response, outgoing);
             })().catch((error: unknown) => {
-                // a swallowed throw would hang the client request with no cause
+                // a swallowed throw would hang the client with no cause
                 outgoing.destroy(Error.isError(error) ? error : new Error(String(error)));
             });
         });
@@ -272,7 +270,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             this.fetchedUsername = me.username;
             if (me.username) this.logger.info(`Running as ${paint.iris.bold(me.username)}`);
         } catch (caught) {
-            // a bad token errors on the first real send. The identity fetch stays non-fatal
+            // a bad token errors on the first real send anyway
             this.logger.warn('could not fetch the bot identity', caught);
         }
     }
@@ -290,8 +288,8 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
                 this.logger.info(paint.coral.bold('Interactions server stopped'));
                 resolveClose();
             });
-            // idle keep-alive sockets would stall close() past the task timeout. Active responses
-            // still flush, and the task timeout bounds a hung one
+            // close() waits on idle keep-alive sockets. active responses still flush, and the task
+            // timeout bounds a hung one
             server.closeIdleConnections();
         });
     }

@@ -19,14 +19,14 @@ async function raceTimer(
     }
 }
 
-/** @internal rejects with a `LifecycleTaskTimeout` when `run` outlasts the bound. */
+// rejects with a LifecycleTaskTimeout when run outlasts the bound
 export function withTimeout(name: string, run: () => Promise<void>, timeoutMs: number): Promise<void> {
     return raceTimer(run(), timeoutMs, (_, reject) => {
         reject(new SeedcordError(SeedcordErrorCode.LifecycleTaskTimeout, [name, timeoutMs]));
     });
 }
 
-/** @internal resolves when `work` settles or the bound elapses, whichever is first. */
+// resolves when work settles or the bound elapses, whichever is first
 export function settleWithin(work: Promise<unknown>, timeoutMs: number): Promise<void> {
     return raceTimer(work, timeoutMs, (resolve) => resolve());
 }

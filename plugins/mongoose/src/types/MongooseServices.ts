@@ -16,7 +16,4 @@
  */
 export interface MongooseServices {}
 
-/**
- * Helper type to extract service keys from the Services interface.
- */
 export type MongooseServiceKeys = keyof MongooseServices;

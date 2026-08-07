@@ -1,11 +1,6 @@
 /**
  * Takes two numbers and returns the percentage of the first number in the second number with two decimal places.
  *
- * @param num1 - The first number.
- * @param num2 - The second number.
- *
- * @returns The percentage of the first number in the second number with two decimal places.
- *
  * @example
  * ```ts
  * percentage(25, 200); // 12.5

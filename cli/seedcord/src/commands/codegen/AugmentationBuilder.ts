@@ -12,16 +12,13 @@ import type {
     RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from 'discord-api-types/v10';
 
-/** One leaf's option set, keyed by option name. */
 export type RouteOptions = Record<string, SlashOption>;
 
-/** The slash tables, keyed by route string (`cmd`, `cmd/sub`, or `cmd/group/sub`). */
+// keyed by route string (`cmd`, `cmd/sub`, or `cmd/group/sub`)
 export type SlashTables = Record<string, RouteOptions>;
 
-/** Each configured emoji key mapped to its config form, so the generated EmojiMap row types the right value. */
 export type EmojiKinds = Record<string, 'string' | 'tuple'>;
 
-/** Everything codegen emits into the generated file, the slash option tables, the context-menu name sets, and the emoji keys. */
 export interface Augmentation {
     slash: SlashTables;
     userContextMenus: string[];
@@ -29,7 +26,6 @@ export interface Augmentation {
     emojis: EmojiKinds;
 }
 
-/** A command discovered by the codegen scan, paired with its source path for diagnostics. */
 export interface ScannedCommand {
     sourceFile: string;
     json: RESTPostAPIApplicationCommandsJSONBody;
@@ -41,8 +37,7 @@ type BasicOption = Exclude<
     { type: ApplicationCommandOptionType.Subcommand | ApplicationCommandOptionType.SubcommandGroup }
 >;
 
-// keyed by the djs enum so a renamed member breaks here, and constrained to the full set of basic option
-// types so a new upstream option kind fails to satisfy until it is mapped.
+// discord-api-types renaming or adding a basic option type breaks this object
 const KIND_BY_TYPE = {
     [ApplicationCommandOptionType.String]: 'string',
     [ApplicationCommandOptionType.Integer]: 'integer',
@@ -63,12 +58,7 @@ function mapEmojis(emojiConfig: EmojiConfig): EmojiKinds {
     return emojis;
 }
 
-/**
- * Builds the generated augmentations from each command's `toJSON()` plus the emoji config. Chat-input
- * commands become the slash-option tables, context-menu commands contribute their name to the user or
- * message set, and each emoji key becomes a kind tag. Reads the builder back because djs erases option
- * names at the type level.
- */
+// reads each builder back through toJSON() because djs erases option names at the type level
 export class AugmentationBuilder {
     constructor(private readonly logger: ILogger) {}
 
@@ -115,7 +105,7 @@ export class AugmentationBuilder {
     ): void {
         this.warnEmptyGroups(json);
         for (const leaf of routeLeavesOf(json)) {
-            // an interface registry merges duplicate keys silently, so the route collision must be caught here.
+            // declaration merging folds a duplicate route in silently
             const firstFile = sourceByRoute.get(leaf.route);
             if (firstFile !== undefined) {
                 throw new SeedcordError(SeedcordErrorCode.CliCodegenDuplicateRoute, [
@@ -129,7 +119,6 @@ export class AugmentationBuilder {
         }
     }
 
-    // each kind dedupes against its own map, a same-kind clash would merge silently
     private collectContextMenu(
         kind: 'user' | 'message',
         json: RESTPostAPIContextMenuApplicationCommandsJSONBody,
@@ -148,8 +137,8 @@ export class AugmentationBuilder {
         sourceByName.set(json.name, sourceFile);
     }
 
-    // routeLeavesOf drops an empty group silently because it has no route. toJSON() allows one, but Discord
-    // rejects it at deploy, so surface it here where the command's source file is known.
+    // toJSON() allows an empty subcommand group though discord rejects it at deploy. routeLeavesOf gives it
+    // no route, so it never reaches the tables
     private warnEmptyGroups(json: RESTPostAPIChatInputApplicationCommandsJSONBody): void {
         for (const option of json.options ?? []) {
             if (option.type === ApplicationCommandOptionType.SubcommandGroup && (option.options ?? []).length === 0) {
@@ -179,7 +168,7 @@ export class AugmentationBuilder {
                 ? option.choices.map((choice) => choice.value)
                 : undefined;
         const autocomplete = 'autocomplete' in option && option.autocomplete === true ? true : undefined;
-        // sorted so a declaration reordering its types produces the same output under `--check`
+        // sorted so a reordered declaration still matches under `--check`
         const channelTypes =
             'channel_types' in option && option.channel_types && option.channel_types.length > 0
                 ? [...option.channel_types].sort((first, second) => first - second)

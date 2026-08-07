@@ -64,9 +64,7 @@ function inlineStripped(inline: InlineType | undefined, refs: InternalRef[], res
     return buf.join('');
 }
 
-// Walk the prettier-formatted text linearly. For each marker hit, copy the gap text into the
-// output, append the ref's display name, and record an offset range against the OUTPUT string.
-// This is single-pass and offset-correct because we only append, never rewrite.
+// single-pass and offset-correct, since this only appends to `out` and never rewrites it
 function substituteRefs(formatted: string, refs: readonly InternalRef[]): FormattedOutput {
     if (refs.length === 0) return { text: formatted, refs: [] };
 
@@ -92,10 +90,10 @@ function substituteRefs(formatted: string, refs: readonly InternalRef[]): Format
     return { text: out, refs: ranges };
 }
 
-// Method-shape inputs (`name<T>(p): R`) aren't valid top-level TS. Wrap as a function
-// declaration so prettier (and downstream shiki) parses a complete statement; extract the
-// body afterward. Function-wrap also tokenizes multi-line type-param constraints correctly,
-// which `class _ {…}` does not: TextMate grammar fails across newlines inside a class body.
+// Method-shape inputs (`name<T>(p): R`) aren't valid top-level TS. Wrapping as a function
+// declaration lets prettier (and downstream shiki) parse a complete statement, and the body
+// gets extracted afterward. The function wrap also tokenizes multi-line type-param constraints
+// correctly, which `class _ {…}` does not, because TextMate grammar fails across newlines inside a class body.
 async function tryPrettierAsMethod(stripped: string): Promise<string | null> {
     try {
         const formatted = await format(`function ${stripped} {}`, PRETTIER_OPTIONS);
@@ -193,7 +191,7 @@ function joinDeclarationStripped(header: RenderedDeclarationHeader, refs: Intern
 
 /**
  * `text` is prettier-formatted TS with type references rendered as their plain names.
- * `refs` is the offset map; each entry's `[start, end)` slice of `text` equals its `name`,
+ * `refs` is the offset map. Each entry's `[start, end)` slice of `text` equals its `name`,
  * and `href` is the URL the consumer should target (e.g. via shiki decorations). When prettier
  * fails (rare) the unformatted joined text is returned with offsets recomputed against it.
  */
@@ -209,7 +207,7 @@ export async function formatRenderedSignaturePretty(
 
 /**
  * Like {@link formatRenderedSignaturePretty}, for declaration headers. Class/interface/enum get a `{}`
- * body probe before prettier (syntactically incomplete without one); the probe is stripped from the output.
+ * body probe before prettier (syntactically incomplete without one). The probe is stripped from the output.
  */
 export async function formatRenderedDeclarationHeaderPretty(
     header: RenderedDeclarationHeader,

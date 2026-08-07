@@ -37,19 +37,19 @@ export interface ErrorsConfig {
      */
     defaultError?: new (uuid: UUID) => RenderableNotice;
     /**
-     * discord.js API error codes the interaction error path swallows quietly instead of reporting a
-     * fault, for a code thrown by the handler's own work. When empty, every such code reports and a real
+     * discord.js API error codes the interaction error path swallows quietly, reporting no fault, for a
+     * code thrown by the handler's own work. When empty, every such code reports and a real
      * bug (a double ack from a misplaced defer) surfaces. Add a code here to swallow it once you have
      * confirmed it is an expected dead end in your bot. A swallowed code still debug-logs.
      *
      * The reply sender always swallows the harmless reply-token codes on its own send for safety,
-     * independent of this list, so the error path never crashes.
+     * independent of this list. The error path never crashes.
      *
      * @defaultValue `[]`
      */
     ignoreApiCodes?: readonly (number | string)[];
     /**
-     * discord.js API error codes the event error path swallows quietly instead of reporting a fault.
+     * discord.js API error codes the event error path swallows quietly, reporting no fault.
      * Discord delivers dead resources on events (a reaction on a deleted message, a member that just
      * left), so a handler's own fetch can throw a gone-resource error.
      *

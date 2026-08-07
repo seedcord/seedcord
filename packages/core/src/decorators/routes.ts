@@ -112,7 +112,7 @@ type NamesFor<Kind extends ContextMenuKind> = Kind extends ApplicationCommandTyp
  * Routes one or more slash commands to a `SlashHandler`.
  *
  * Pass the same route string(s) as the handler's generic. A single command reads `this.options`, several
- * commands branch with `this.match`. The decorator routes and the generic must match exactly, so listing
+ * commands branch with `this.match`. The decorator routes and the generic must match exactly. Listing
  * fewer or more than the handler declares is a compile error. Subcommands use a slash path.
  *
  * @param routes - The route string(s) this handler serves, e.g. `'ban'`, `'ban', 'kick'`, or `'demo/setup'`.
@@ -138,8 +138,8 @@ export function SlashRoute<const Route extends keyof SlashOptionRegistry>(...rou
  *
  * Pass the same command route string(s) as the handler's generic. One command branches with `this.match`
  * over its autocompletable fields, several commands share one handler whose arms span every command's
- * fields. The decorator routes and the generic must match exactly, so listing fewer or more than the
- * handler declares is a compile error.
+ * fields. Listing fewer or more commands than the handler declares is a compile error, since the
+ * decorator routes and the generic must match exactly.
  *
  * @param routes - The command route string(s) this handler serves, e.g. `'search'` or `'search', 'find'`.
  * @decorator
@@ -163,7 +163,7 @@ export function AutocompleteRoute<const Route extends keyof SlashOptionRegistry>
  * Routes one or more context-menu commands to a `ContextMenuHandler`.
  *
  * Pass the kind (`ApplicationCommandType.User` or `ApplicationCommandType.Message`) and the command name(s),
- * each checked against that kind's registry, so a typo is a compile error. The handler's generic must
+ * each checked against that kind's registry. A typo there is a compile error. The handler's generic must
  * declare the same kind, cross-checked both directions. Context menus carry no options, so a multi-name
  * handler reads `this.target` uniformly with no branch.
  *
@@ -208,8 +208,7 @@ export function ButtonRoute<const Defs extends readonly AnyCustomId[]>(...defs: 
  *
  * Pass the {@link CustomId} definition(s) this handler decodes and list the same ones in the handler's
  * generic. Passing different definitions to the decorator and the generic is a compile error. Routing
- * matches the stable prefix, so an older-shape wire still reaches the handler and throws StaleCustomId
- * on read, the same as a button route.
+ * matches the stable prefix here too, throwing StaleCustomId on read the same as a button route.
  *
  * @param defs - The customId definition(s) this handler decodes, one per route.
  * @decorator

@@ -24,7 +24,7 @@ export function renderSingle(data: readonly (readonly string[])[], options?: Tab
     const columnCount = data.reduce((max, row) => Math.max(max, row.length), 0);
     if (columnCount === 0) return '';
 
-    // a raw newline in a cell would split the framed output across physical lines, so collapse it
+    // a raw newline in a cell would split the framed output across physical lines
     const grid = data.map((row) =>
         Array.from({ length: columnCount }, (_, i) => {
             const cell = (row[i] ?? '').replaceAll(/\r?\n/g, ' ');

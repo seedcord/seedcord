@@ -14,7 +14,6 @@ export interface WebhookFile extends ReplyFile {
     readonly description: string;
 }
 
-/** The payload {@link WebhookSender.send} posts. */
 export interface WebhookSendOptions {
     flags: number;
     username: string;
@@ -22,26 +21,18 @@ export interface WebhookSendOptions {
     files?: readonly WebhookFile[] | undefined;
 }
 
-/**
- * Sends component messages to a Discord webhook through `@discordjs/rest`.
- *
- * @throws A `SeedcordError` when the url does not carry a webhook id and token.
- */
+// throws SeedcordError when the url has no webhook id and token
 export class WebhookSender {
     private readonly rest = new REST();
     private readonly route: `/${string}`;
 
     constructor(url: string) {
         const match = /\/webhooks\/(\d+)\/([\w$-]+)$/.exec(url);
-        // the url is a secret, so the error message never carries it
         if (!match?.[1] || !match[2]) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookUrlInvalid, ['The url']);
         this.route = Routes.webhook(match[1], match[2]);
     }
 
-    /**
-     * Fetches the webhook object, sending no message. Returns `missing` on a 404 or 401 from
-     * Discord and `unreachable` on any other failure.
-     */
+    // missing means discord answered 404 or 401
     async verify(): Promise<'ok' | 'missing' | 'unreachable'> {
         try {
             await this.rest.get(this.route, { auth: false });

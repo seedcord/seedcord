@@ -68,7 +68,6 @@ export interface TooltipProps extends Omit<TooltipRootProps, 'children'>, Toolti
     contentClassName?: string;
 }
 
-// Use for keyboard/hover label hints on icon-only or terse controls. Don't roll Radix Tooltip by hand.
 export function Tooltip({
     children,
     content,

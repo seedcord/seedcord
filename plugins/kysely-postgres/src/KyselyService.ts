@@ -67,5 +67,4 @@ export abstract class KyselyService<TTable extends LiteralUnion<KyselyTable, str
     }
 }
 
-/** Constructor type for {@link KyselyService} classes */
 export type KyselyServiceConstructor = TypedConstructor<typeof KyselyService<KyselyTable>>;

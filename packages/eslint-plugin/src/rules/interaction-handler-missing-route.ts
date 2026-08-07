@@ -63,12 +63,10 @@ export default createRule({
                     }
                 }
                 if (base === undefined) return;
-                // an abstract subclass becomes a base for later concrete handlers (same-file intermediate)
                 if (node.abstract) {
                     if (node.id) bases.set(node.id.name, base);
                     return;
                 }
-                // only the decorator matching this handler's base registers it. a wrong-type route still fails
                 if (decorators.hasDecorator(node, BASE_TO_DECORATOR[base])) return;
 
                 context.report({

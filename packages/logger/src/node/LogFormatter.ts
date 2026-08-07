@@ -12,7 +12,7 @@ const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
 const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
 const SAVED_SPLAT_KEY = Symbol('savedSplat');
-// %% takes no arg, keep it out of the count. ObjectConsoleSink matches %% because it substitutes it inline.
+// %% takes no arg. ObjectConsoleSink matches %% because it substitutes it inline.
 const FORMAT_SPECIFIERS = /%[sdifjoO]/gu;
 
 interface PrettyFormatOptions {
@@ -113,7 +113,7 @@ export class LogFormatter {
     }
 
     private renderLevel(level: string, padding: number, strip: boolean): string {
-        const padded = level.padEnd(padding); // pad before colorizing, an ansi-wrapped level breaks padEnd
+        const padded = level.padEnd(padding); // pad before colorizing, because an ansi-wrapped level breaks padEnd
         if (strip) return padded;
         const palette: Partial<Record<string, string>> = LEVEL_COLOR;
         const hex = palette[level];
@@ -185,7 +185,7 @@ export class LogFormatter {
         const filtered = cleaned.filter((x, index) => {
             if (x === null || x === undefined || x === '') return false;
             if (Error.isError(x)) {
-                // the first Error's stack already renders as info.stack, skip it
+                // the first Error's stack already renders as info.stack. skip it
                 if (hasStack && !firstErrorDropped) {
                     firstErrorDropped = true;
                     return false;

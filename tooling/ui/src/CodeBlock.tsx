@@ -19,7 +19,6 @@ export interface CodeBlockProps {
 
 const CODE_CONTAINER_CLASS = tw`code-scroll-area px-3 py-2 text-sm/relaxed text-(--text)`;
 
-// Use for inline code snippets in a card with an optional caption + copy button (install commands, examples).
 export function CodeBlock({ representation, label, copyValue, className }: CodeBlockProps): ReactElement {
     const showCopy = copyValue !== null;
     const resolvedCopyValue = copyValue ?? representation.text;

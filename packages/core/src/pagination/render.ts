@@ -17,7 +17,7 @@ type Renderable = string | V2Component[] | ReplyResponse;
 /** A full-page render override. */
 export type PageRender<Item> = (view: PageView<Item>, controls: PaginatorControls) => Renderable;
 
-// subclassed because BuilderComponent.instance is protected, so the assembly has to happen inside.
+// subclassed because BuilderComponent.instance is protected
 class PageContainer<Item> extends BuilderComponent<'container'> {
     constructor(view: PageView<Item>, renderItem: ItemRender<Item>, controlRow: ActionRowBuilder<ButtonBuilder>) {
         super('container');
@@ -51,10 +51,8 @@ function toReplyResponse(renderable: Renderable): ReplyResponse {
 const ARRAY_KEYS: ControlKey[] = ['first', 'prev', 'indicator', 'next', 'last'];
 const CURSOR_KEYS: ControlKey[] = ['prev', 'indicator', 'next'];
 
-/**
- * A `render` override builds the whole tree, otherwise the default container lists the items and appends
- * the controls (all five for a known total, prev/indicator/next for a cursor source).
- */
+// a render override builds the whole tree, or the default container lists the items and appends
+// the controls (all five for a known total, prev/indicator/next for a cursor source)
 export function renderPage<Item>(
     view: PageView<Item>,
     cursor: PageCursor<string>,

@@ -96,8 +96,8 @@ function buildVersion(
     } satisfies PackageVersionCatalog;
 }
 
-// Newest-first (stable line heads, then latest prerelease) so callers can take versions[0] as the
-// default. Categories stay empty here; loadActiveVersion fills them for one version on demand.
+// newest first so callers can take versions[0] as the default. categories stay empty until
+// loadActiveVersion fills the active one.
 function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersionCatalog[] {
     const versions: PackageVersionCatalog[] = [];
 
@@ -136,7 +136,7 @@ const sortCatalogEntries = (entries: PackageCatalogEntry[]): PackageCatalogEntry
         return a.label.localeCompare(b.label, undefined, { sensitivity: 'base' });
     });
 
-// The package + version axes come straight from index.json; no project.json is fetched.
+// both axes come straight from index.json. nothing fetches project.json here.
 export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     const engine = await getDocsEngine();
     await engine.ready();
@@ -152,9 +152,8 @@ export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     return sortCatalogEntries(entries.filter((entry): entry is PackageCatalogEntry => entry !== null));
 });
 
-// One setVersion per (folder, version) per request, shared via cache() across the layout and the
-// page's categories/reexports/readme loaders, so project.json is fetched and the model rebuilt once
-// rather than once per loader. Returns the entry (callers read by fullName) or null when unresolved.
+// cache() dedupes this across the layout and the page's loaders, so project.json is fetched and the
+// model rebuilt once per request
 const ensureActiveVersion = cache(async (folder: string, versionId: string): Promise<PackageIndexEntry | null> => {
     const engine = await getDocsEngine();
     const entry = await engine.getEntry(folder);
@@ -200,8 +199,8 @@ export interface ReexportLink {
     tone: EntityTone | null;
 }
 
-// The umbrella package re-exports symbols declared in sibling packages; resolve each to its declaring
-// package's page so the overview href targets the canonical entity instead of a duplicate.
+// the umbrella package re-exports symbols declared in sibling packages. each one resolves to its
+// declaring package's page, which is the canonical entity.
 export const loadReexports = cache(async (folder: string, versionId: string): Promise<ReexportLink[]> => {
     const entry = await ensureActiveVersion(folder, versionId);
     if (!entry) return [];
@@ -210,8 +209,7 @@ export const loadReexports = cache(async (folder: string, versionId: string): Pr
     const reexports = engine.getPackage(entry.fullName)?.root.reexports ?? [];
     const resolver = engine.resolver();
     return reexports.reduce<ReexportLink[]>((acc, ref) => {
-        // A re-export reference always carries its declaring package (set in adapter.buildReexports);
-        // a missing one is dropped rather than rendered with a blank owner.
+        // adapter.buildReexports always sets packageName. a missing one would render a blank owner.
         if (!ref.packageName) return acc;
         const href = resolver.href(entry.fullName, ref);
         if (href) acc.push({ name: ref.name, owner: ref.packageName, href, tone: resolver.crossPackageTone(ref) });
@@ -230,8 +228,6 @@ export function findCatalogVersion(entry: PackageCatalogEntry, versionId: string
     return entry.versions.find((version) => version.id === versionId);
 }
 
-// Fills categories on the resolved (packageId, versionId) only; the sidebar renders the active
-// version alone, so every other version stays empty.
 export function withActiveCategories(
     catalog: DocsCatalog,
     packageId: string,

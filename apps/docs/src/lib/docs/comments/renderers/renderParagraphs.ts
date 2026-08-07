@@ -15,9 +15,9 @@ marked.use({
     async: true,
     walkTokens: async (token) => {
         if (token.type === 'code') {
-            // Narrow token type from any. Shiki validates language at runtime.
+            // the cast narrows token past marked's union, and shiki validates the language string itself at runtime
             const { text, lang } = token as Tokens.Code;
-            // an untagged fence gives an empty lang, which the || sends to the helper's ts default
+            // an untagged fence leaves lang empty, and `||` falls through to the helper's ts default
             const html = await highlightToHtml(text, (lang || undefined) as BundledLanguage | undefined);
             if (html) {
                 Object.assign(token, { type: 'html', text: html });
@@ -32,7 +32,6 @@ marked.use({
     }
 });
 
-/** Assembles the markdown for a run of comment parts, resolving `{@link}` parts to a markdown link. */
 export function partsToMarkdown(parts: readonly CommentDisplayPart[], context: FormatContext): string {
     let markdown = '';
 

@@ -1,11 +1,7 @@
 import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
 
-/**
- * Default handler for autocomplete no manifest row matches.
- * Empty choices are the only legal answer, they clear the pending state.
- *
- * @internal
- */
+// dispatch falls back here when no manifest row matches
+// discord requires empty choices here, which clears the pending autocomplete state
 export class UnhandledAutocomplete extends AutocompleteHandler<never> {
     async execute(): Promise<void> {
         await this.respond([]);

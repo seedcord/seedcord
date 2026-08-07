@@ -4,13 +4,12 @@ import { ButtonStyle } from 'discord.js';
 
 import type { PageView } from '@seedcord/gateway';
 
-/** One leaderboard row. */
 export interface LeaderboardEntry {
     name: string;
     score: number;
 }
 
-/** The leaderboard page as an embed (the headless path uses embeds, with no components-v2 flag). */
+/** the headless path has no components-v2 flag. */
 export class LeaderboardCard extends BuilderComponent<'embed'> {
     constructor(view: PageView<LeaderboardEntry>) {
         super('embed');
@@ -25,7 +24,6 @@ export class LeaderboardCard extends BuilderComponent<'embed'> {
     }
 }
 
-/** Prev/Next for the headless leaderboard, stamped with the caller's own cursor wires. */
 export class LeaderboardControls extends RowComponent<'button'> {
     constructor(view: PageView<LeaderboardEntry>, prevId: string, nextId: string) {
         super('button');

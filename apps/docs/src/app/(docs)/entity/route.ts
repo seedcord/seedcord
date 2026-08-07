@@ -33,7 +33,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { pkg, lookup } = readEntityQuery(request.nextUrl.searchParams);
     const redirect = (target: string | URL): NextResponse =>
         NextResponse.redirect(new URL(target, request.url), HTTP_TEMPORARY_REDIRECT);
-    // No package to land on (empty index / unresolved version): `/` is the only sensible target.
     const homeFallback = (): NextResponse => redirect('/');
 
     const engine = await getDocsEngine();
@@ -50,8 +49,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const entity = await loadEntityModel(engine, identity.fullName, lookup);
     if (!entity) {
-        // Package resolves but the symbol is gone (renamed/removed in a newer version): keep the reader in
-        // context on the target package index with a `moved` flag, rather than bouncing to `/`.
+        // this lands on the package index with a moved flag
         const movedSlug = lookup.slug ?? lookup.symbol ?? lookup.qualifiedName ?? '';
         const base = new URL(
             buildPackageBasePath(identity.fullName, engine.activeVersion(identity.fullName)),

@@ -59,7 +59,7 @@ export default createRule({
                     target = unwrapAssertions(init);
                 }
 
-                // report at the argument, a shared init would collapse several call sites into one report
+                // reports at the argument because a shared init would otherwise collapse several call sites into one report
                 if (isRawString(target)) context.report({ node: arg, messageId: 'rawCustomId' });
             }
         };

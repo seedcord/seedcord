@@ -27,7 +27,7 @@ import type {
     RenderedSignature
 } from '@src/types';
 
-// First-seen kind order, not sorted: the entity-page section layout depends on it.
+// the entity page lays out sections in this first-seen kind order
 export function synthGroups(children: DocNode[]): DocGroup[] {
     const byKind = new Map<number, DocNode[]>();
     for (const child of children) {
@@ -42,8 +42,8 @@ export function synthGroups(children: DocNode[]): DocGroup[] {
     }));
 }
 
-// Fields API Extractor exposes on concrete item subtypes but not on the `ApiItem` base. All optional,
-// so `item as AeShapes` is a safe widening (no `as unknown as` needed).
+// api extractor declares these on concrete item subtypes only. reading them off an ApiItem takes a
+// cast, and every field being optional keeps that cast safe.
 export interface AeShapes {
     extendsType?: HeritageType;
     extendsTypes?: readonly HeritageType[];
@@ -67,7 +67,7 @@ export function buildDeclarationHeader(
         modifiers: modifiersOf(flags, kind)
     };
 
-    // Methods + constructors carry their type parameters on the signature, not the header one-liner.
+    // method and ctor type params render on the signature
     const headerHasTypeParams = kind !== DocKind.Method && kind !== DocKind.Constructor;
     if (headerHasTypeParams && ApiTypeParameterListMixin.isBaseClassOf(item) && item.typeParameters.length > 0) {
         header.typeParams = item.typeParameters.map((tp) => {
@@ -135,7 +135,7 @@ function declarationKeyword(kind: number, flags: DocFlags): string | null {
 function modifiersOf(flags: DocFlags, kind: number): string[] {
     const modifiers: string[] = [];
     if (flags.access) modifiers.push(flags.access);
-    // A `const` variable's keyword already conveys readonly; TypeDoc doesn't double it up.
+    // typedoc leaves readonly off a const because the keyword already says it
     if (flags.isReadonly && kind !== DocKind.Variable) modifiers.push('readonly');
     if (flags.isAbstract) modifiers.push('abstract');
     if (flags.isStatic) modifiers.push('static');
@@ -174,7 +174,6 @@ function heritageInline(types: readonly HeritageType[] | undefined): InlineType[
     return rendered.length > 0 ? rendered : undefined;
 }
 
-/** A member surfaced via inheritance gets a reference to its defining class; own members get null. */
 export function inheritedFromRef(item: ApiItem, owningContainer: ApiItem | undefined): DocReference | null {
     if (!owningContainer) return null;
     const parent = item.parent;
@@ -196,11 +195,8 @@ const MODIFIER_WORDS = new Set([
     'async'
 ]);
 
-/**
- * Read the access + readonly modifiers actually written in source from the declaration excerpt.
- * TypeDoc renders only explicit modifiers (no inferred `public`, no auto-`readonly` on getters), so
- * the excerpt prefix is the source of truth, not the AE mixins.
- */
+// typedoc prints only the modifiers written in source (no inferred `public`, no auto-`readonly` on a
+// getter). the AE mixins report the inferred ones too, which is why this parses the excerpt prefix.
 export function explicitModifiers(item: ApiItem, name: string): { access: DocFlags['access']; isReadonly: boolean } {
     if (!(item instanceof ApiDeclaredItem)) return { access: null, isReadonly: false };
     const text = item.excerptTokens[0]?.text ?? '';
@@ -217,7 +213,7 @@ export function explicitModifiers(item: ApiItem, name: string): { access: DocFla
     return { access, isReadonly: words.has('readonly') };
 }
 
-/** A getter/setter arrives as an `ApiProperty` whose excerpt begins with `get `/`set `. */
+// AE emits an accessor as an ApiProperty whose excerpt starts with `get ` or `set `
 export function accessorRole(item: ApiItem): 'getter' | 'setter' | null {
     if (!(item instanceof ApiDeclaredItem)) return null;
     const first = item.excerptTokens[0]?.text ?? '';
@@ -226,9 +222,8 @@ export function accessorRole(item: ApiItem): 'getter' | 'setter' | null {
     return null;
 }
 
-// API Extractor folds a get+set pair into one `get`-prefixed property and never emits the setter as
-// its own item, so the only signal that a setter exists is that the accessor is not readonly
-// (a get-only accessor reports isReadonly=true).
+// AE folds a get+set pair into one `get` property and never emits the setter, so a non-readonly
+// accessor is the only sign a setter exists (a get-only accessor reports isReadonly=true).
 export function accessorHasSetter(item: ApiItem): boolean {
     return accessorRole(item) === 'getter' && (item as AeShapes).isReadonly === false;
 }
@@ -238,7 +233,6 @@ interface SignatureBuildDeps {
     resolveLink: LinkResolver;
 }
 
-/** The first signature (index 0) carries the accessor's doc comment; later ones get none. */
 export function buildAccessorSignature(
     item: ApiItem,
     owner: DocNode,
@@ -255,8 +249,7 @@ export function buildAccessorSignature(
         role === 'setter' ? [{ name: 'value', optional: false, ...(valueType && { type: valueType }) }] : [];
     const render: RenderedSignature = { name: [{ kind: 'text', text: owner.name }], parameters: renderParameters };
     if (role !== 'setter' && valueType) render.returnType = valueType;
-    // AE gives the get + set halves one shared comment; attach it only to the first signature so a
-    // get+set pair doesn't render the same summary twice.
+    // AE gives get and set one shared comment
     const comment =
         index === 0 && item instanceof ApiDocumentedItem ? buildComment(item.tsdocComment, resolveLink) : null;
     const signature: DocSignature = {
@@ -267,8 +260,7 @@ export function buildAccessorSignature(
         anchor: '',
         overloadIndex: index,
         kindLabel: frozenKindLabel(sigKind),
-        // Snapshot, not owner.flags by reference: applyAccessor sets node.flags.accessor in place,
-        // so each signature keeps its own DocFlags instead of aliasing the node's.
+        // snapshot, applyAccessor mutates node.flags
         flags: { ...owner.flags },
         parameters,
         typeParameters: [],
@@ -281,17 +273,13 @@ export function buildAccessorSignature(
         implementationOf: null
     };
     if (owner.sourceUrl) signature.sourceUrl = owner.sourceUrl;
-    // node.comment is nulled for accessors, so @throws must travel on the carrying signature
-    // (mirrors buildSignature) or it would vanish from the rendered docs.
+    // applyAccessor nulls node.comment, so @throws only reaches the page on the signature
     const throwsTags = comment?.blockTags.filter((tag) => tag.tag === '@throws');
     if (throwsTags && throwsTags.length > 0) signature.throws = throwsTags;
     return signature;
 }
 
-/**
- * Group same-name callable overloads (TypeScript guarantees they are written adjacently) and get/set
- * accessor pairs into one logical member; everything else passes through singly.
- */
+// TS requires same-name overloads be written adjacently
 export function groupOverloads(members: readonly ApiItem[]): ApiItem[][] {
     const groups: ApiItem[][] = [];
     const indexByKey = new Map<string, number>();

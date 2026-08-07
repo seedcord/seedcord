@@ -16,7 +16,8 @@ export type { ConfirmOptions, DefaultConfirmOptions } from '@bot/confirm';
 export type * from '@interfaces/index';
 
 export * from '@handlers/index';
-// @handlers/index and @seedcord/core both export RepliableHandler so this explicit export is needed
+// deleting these gives TS2308 because @seedcord/core exports the same two names
+export { BaseHandler } from '@handlers/BaseHandler';
 export { RepliableHandler } from '@handlers/RepliableHandler';
 
 export * from '@pagination/index';
@@ -33,7 +34,6 @@ export type { GatewayPluginOptions, PluginLifecycleSpec, PluginOptions } from '.
 
 export * from './Seedcord';
 
-// Exports from other packages
 export * from '@seedcord/core';
 export * from '@seedcord/errors';
 export * from '@seedcord/event-emitter';

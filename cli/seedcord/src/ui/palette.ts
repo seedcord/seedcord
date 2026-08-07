@@ -1,5 +1,5 @@
-// truecolor palette for the dev-TUI's own chrome (headings, hotkeys, status), so it renders the same in
-// every terminal. the bot's log lines carry their own colors.
+// truecolor palette for the dev-TUI's own chrome (headings, hotkeys, status), so it renders the same
+// across terminals. the bot's log lines carry their own colors
 export const ui = {
     accent: '#7dcfff',
     muted: '#9aa0b3',

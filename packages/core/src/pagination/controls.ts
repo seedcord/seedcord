@@ -12,7 +12,7 @@ import type { APIMessageComponentEmoji } from 'discord-api-types/v10';
 /** The five built-in nav controls. */
 export type ControlKey = 'first' | 'prev' | 'indicator' | 'next' | 'last';
 
-// Link and Premium have no custom_id, so they would un-route a control.
+// Link and Premium have no custom_id, which un-routes a control.
 type CustomIdStyle = ButtonStyle.Primary | ButtonStyle.Secondary | ButtonStyle.Success | ButtonStyle.Danger;
 
 /** Cosmetic overrides for a control button. `style` excludes Link and Premium, which would un-route it. */
@@ -44,7 +44,7 @@ const DEFAULT_LABEL: Record<ControlKey, string> = {
     last: 'Last'
 };
 
-// a distinct slot keeps two controls on the same page from sharing an id, and 0-4 is the cursor's SLOT_MAX.
+// a distinct slot keeps two controls on the same page off the same id. 0-4 is the cursor's SLOT_MAX.
 const CONTROL_SLOT: Record<ControlKey, number> = {
     first: 0,
     prev: 1,
@@ -88,7 +88,7 @@ export class Controls implements PaginatorControls {
             next: page + 1,
             last: knownTotal ? totalPages - 1 : page
         }[key];
-        // past PAGE_MAX the encoded page would clamp to a wrong one, so next and last are disabled.
+        // past PAGE_MAX the encoded page would clamp to a wrong one
         const disabled = {
             first: !hasPrev,
             prev: !hasPrev,

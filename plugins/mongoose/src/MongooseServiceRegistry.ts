@@ -13,9 +13,6 @@ import type { MongooseServices } from './types/MongooseServices';
 import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 
-/**
- * Discovers and registers Mongoose services for the plugin.
- */
 export class MongooseServiceRegistry {
     // the augmented interface has no index signature, hence Reflect below
     private readonly services = Object.create(null) as MongooseServices;
@@ -72,7 +69,7 @@ export class MongooseServiceRegistry {
     }
 
     public initializeService(Service: MongooseServiceConstructor): void {
-        // isServiceClass gates every caller on ServiceMetadataKey, and the decorator writes both keys together
+        // isServiceClass already checked ServiceMetadataKey exists, since the decorator writes both keys together
         const modelName = Reflect.getMetadata(ModelNameMetadataKey, Service) as string;
 
         // mongoose returns an existing model when the schema matches. That one is not this plugin's to delete
@@ -103,7 +100,7 @@ export class MongooseServiceRegistry {
             Reflect.deleteProperty(this.services, key);
         }
 
-        // make sure hmr doesn't delete a model registered elsewhere
+        // only delete models this registry created
         if (modelName && this.ownModels.has(modelName)) {
             mongoose.deleteModel(modelName);
             this.ownModels.delete(modelName);

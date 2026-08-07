@@ -12,11 +12,7 @@ import { withTimeout } from './withTimeout';
 
 import type { LifecycleTask } from './LifecycleTypes';
 
-/**
- * Base for the startup and shutdown coordinators. Runs phase-ordered tasks off a per-phase map.
- *
- * @internal
- */
+// base for the startup and shutdown coordinators, runs phase-ordered tasks off a per-phase map
 export abstract class CoordinatedLifecycle<TPhase extends number> {
     protected readonly logger: Logger;
     protected readonly tasksMap = new Map<TPhase, LifecycleTask[]>();
@@ -30,14 +26,6 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         this.phaseOrder.forEach((phase) => this.tasksMap.set(phase, []));
     }
 
-    /**
-     * Adds a task to `phase`. Tasks run in phase order, each bounded by `timeoutMs`.
-     *
-     * @param phase - The lifecycle phase to add the task to
-     * @param taskName - Unique name for the task, used for logging and removal
-     * @param task - Async function to execute during the phase
-     * @param timeoutMs - Maximum time allowed for task execution in milliseconds
-     */
     public addTask(phase: TPhase, taskName: string, task: () => Promise<void>, timeoutMs: number): void {
         if (!this.canAddTask()) return;
 
@@ -52,13 +40,6 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
         );
     }
 
-    /**
-     * Removes a lifecycle task from a specific phase.
-     *
-     * @param phase - The lifecycle phase to remove the task from
-     * @param taskName - Name of the task to remove
-     * @returns True if the task was found and removed, false otherwise
-     */
     public removeTask(phase: TPhase, taskName: string): boolean {
         if (!this.canRemoveTask()) return false;
 

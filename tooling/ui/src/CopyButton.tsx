@@ -20,7 +20,6 @@ export interface CopyButtonProps {
     ariaLabel?: string;
 }
 
-// Use for clipboard-copy of any text value. Bakes in icon swap + 2s reset.
 export function CopyButton({
     value,
     className,
@@ -34,9 +33,7 @@ export function CopyButton({
         try {
             await navigator.clipboard.writeText(value);
             markCopied();
-        } catch {
-            // swallow clipboard errors
-        }
+        } catch {}
     }, [value, markCopied]);
 
     return (

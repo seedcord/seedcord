@@ -18,17 +18,17 @@ function buildConfigObject(options: {
         enabled: true,
         apiJsonFilePath: options.apiJsonPath,
         includeForgottenExports: true,
-        // AE trims `@internal` from the doc model by default; keep everything. `@internal` is a
-        // render-time badge here, not an API-surface gate, so internal symbols still get pages.
+        // AE trims `@internal` out of the doc model by default. Here it is only a render-time
+        // badge, so internal symbols still get pages.
         releaseTagsToTrim: []
     };
 
     return {
         projectFolder: options.packageDir,
         mainEntryPointFilePath: options.entryPoint,
-        // No bundledPackages: each package documents only its own surface. Folding a re-exported
-        // workspace dep's symbols inline made API Extractor mis-stamp their owning package (rushstack
-        // #3521/#3593); re-exports now resolve cross-package and the umbrella package lists them.
+        // Folding a re-exported workspace dep's symbols inline made API Extractor mis-stamp their
+        // owning package (rushstack #3521/#3593). With no bundledPackages, re-exports resolve
+        // cross-package and the umbrella package lists them.
         compiler: { tsconfigFilePath: options.tsconfigPath },
         apiReport: { enabled: false },
         docModel,
@@ -38,10 +38,9 @@ function buildConfigObject(options: {
             compilerMessageReporting: { default: { logLevel: ExtractorLogLevel.Warning } },
             extractorMessageReporting: {
                 default: { logLevel: ExtractorLogLevel.Warning },
-                // forgotten exports are the two-tier feature, not a defect. This project does not
-                // use release tags (@public/@beta/...) as an API contract; `@internal` is only a
-                // render-time badge, so AE's release-tag coherence checks and the underscore-prefix
-                // convention are all noise here.
+                // forgotten exports are expected here. this project sets no release tags
+                // (@public/@beta/...), which leaves AE's coherence checks and its underscore-prefix
+                // convention for `@internal` with nothing to report.
                 'ae-forgotten-export': { logLevel: ExtractorLogLevel.None },
                 'ae-missing-release-tag': { logLevel: ExtractorLogLevel.None },
                 'ae-internal-missing-underscore': { logLevel: ExtractorLogLevel.None },
@@ -53,8 +52,8 @@ function buildConfigObject(options: {
     };
 }
 
-// The built declaration entry: tsdown emits `index.d.mts`, tsc emits `index.d.ts`. Prefer the
-// bundler output the real packages ship, fall back to the tsc output the test fixture builds.
+// tsdown emits `index.d.mts` and tsc emits `index.d.ts`. The bundler output comes first because
+// that is what the published packages contain. The tsc output only exists for the test fixture.
 const DECLARATION_ENTRY_CANDIDATES = ['dist/index.d.mts', 'dist/index.d.ts'];
 
 async function resolveDeclarationEntry(packageDir: string): Promise<string | null> {
@@ -75,7 +74,6 @@ export async function extractPackageApiModel(
     const manifest = await readPackageManifest(packageDir);
     if (manifest.private) return null;
 
-    // A package with no resolvable source entry (e.g. a config-only package) is not documentable.
     const srcEntries = await resolveEntryPoints(packageDir, manifest);
     const primaryEntry = srcEntries[0];
     if (!primaryEntry) return null;
@@ -123,7 +121,7 @@ export async function extractPackageApiModel(
         name: manifest.name,
         version: manifest.version,
         entryPoints: [path.relative(packageDir, entryPoint)],
-        // The src entry the source pass must walk (matches AE's, honoring a seedcordDocs override).
+        // the source pass walks this, and a `seedcordDocs` override can move it off src/index.ts
         sourceEntry: path.relative(packageDir, primaryEntry).split(path.sep).join('/'),
         outputPath: result.succeeded ? apiJsonPath : null,
         warnings,

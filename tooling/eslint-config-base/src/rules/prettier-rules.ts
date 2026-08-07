@@ -1,5 +1,3 @@
-// Prettier configuration
-
 import { Linter } from 'eslint';
 import { Options } from 'prettier';
 

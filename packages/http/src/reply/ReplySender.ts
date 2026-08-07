@@ -41,7 +41,7 @@ function wireAllowedMentions(mentions: NonNullable<ReplyResponse['allowedMention
     return { ...wire, ...(repliedUser !== undefined && { replied_user: repliedUser }) };
 }
 
-// RawFile has no description field, so alt text goes on the wire attachments entries
+// RawFile has no description field
 function wireAttachments(files: SerializedReply['files']): WireAttachment[] | null {
     if (!files?.some((file) => file.description ?? file.title)) return null;
     return files.map((file, index) => ({

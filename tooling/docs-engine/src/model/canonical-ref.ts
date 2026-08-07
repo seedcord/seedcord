@@ -9,8 +9,8 @@ import type { DocReference } from '@src/types';
  *   `seedcord!Logger.configure:member(1)` static member
  *   `seedcord!~RowTypes:var`           forgotten/local (not exported)
  *   `!Partial:type`                    TS lib / global (no package)
- * The leading segment before `!` is the package; a leading `~` on the symbol path marks a
- * not-exported declaration; the trailing `:meaning(N)` is the symbol meaning + overload index.
+ * The leading segment before `!` is the package. A leading `~` on the symbol path marks a
+ * not-exported declaration. The trailing `:meaning(N)` is the symbol meaning + overload index.
  */
 export interface CanonicalReferenceLike {
     toString(): string;
@@ -46,9 +46,8 @@ function qualifiedNameOf(ref: CanonicalReferenceLike): string | undefined {
 }
 
 /**
- * Build a `DocReference` for a referenced symbol. `displayText` is the rendered token label (already
- * the name as it appears in source, e.g. `Partial`), so we keep it as `name` and derive the lookup
- * key + package from the canonical reference.
+ * Build a `DocReference` for a referenced symbol. `displayText` is the rendered token label, already
+ * the name as it appears in source, e.g. `Partial`.
  */
 export function referenceFromCanonical(ref: CanonicalReferenceLike, displayText: string): DocReference {
     const reference: DocReference = { name: displayText, targetKey: canonicalKey(ref) };

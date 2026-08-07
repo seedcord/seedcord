@@ -1,18 +1,9 @@
-/**
- * Drops duplicate fault reports inside a fixed window, so a recurring fault (a database outage on a
- * hot path) reports once per window and never floods the webhook.
- *
- * @internal
- */
+/** @internal */
 export class FaultThrottle {
     // keyed by core so each bot gets its own window, and the entry is collected with the core
     private static readonly perCore = new WeakMap<object, FaultThrottle>();
 
-    /**
-     * The throttle for one bot instance.
-     *
-     * @internal
-     */
+    /** @internal */
     public static for(core: object): FaultThrottle {
         let throttle = FaultThrottle.perCore.get(core);
         if (!throttle) {
@@ -29,7 +20,6 @@ export class FaultThrottle {
         private readonly now: () => number = () => Date.now()
     ) {}
 
-    /** Evicts the entry for this key if it has aged out. */
     public shouldReport(key: string): boolean {
         const last = this.lastReportedAt.get(key);
         if (last === undefined) return true;

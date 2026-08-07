@@ -5,13 +5,11 @@ import { ButtonStyle } from 'discord.js';
 import type { ButtonBuilder } from '@discordjs/builders';
 import type { PageView, PaginatorControls } from '@seedcord/gateway';
 
-/** One paginated activity event. */
 export interface FeedEvent {
     id: number;
     text: string;
 }
 
-/** The complex paginator's styled page, holding the events and the hand-placed controls. */
 export class FeedCard extends BuilderComponent<'container'> {
     constructor(view: PageView<FeedEvent>, controls: PaginatorControls) {
         super('container');

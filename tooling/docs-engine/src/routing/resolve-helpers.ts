@@ -2,7 +2,6 @@ import { Slugger, slugForNode } from '@src/Slugger';
 
 import type { DocNode, DocPackageModel, DocReference } from '@src/types';
 
-// Resolution priority: hinted package, then current, then the rest.
 export function orderedPackageCandidates(
     currentPackage: string,
     hintedPackage: string | undefined,
@@ -37,10 +36,9 @@ export function resolveWithinPackage(reference: DocReference, pkg: DocPackageMod
 }
 
 /**
- * Best-effort cross-package link target for the lazy engine, where the referenced package is not
- * loaded so its node cannot be looked up. The canonical qualified name joins segments with `.`/`#`,
- * while a node slug is the slash-joined path, so the path is rebuilt from those separators. A fresh
- * Slugger reproduces the un-deduplicated slug.
+ * Best-effort cross-package link, used because the target package isn't loaded to look up its node
+ * directly. A qualified name joins segments with `.`/`#` while a slug joins them with `/`. A fresh
+ * Slugger here reproduces the un-deduplicated slug.
  */
 export function crossPackageUrlRef(reference: DocReference): { packageName?: string; slug?: string } {
     if (!reference.packageName || !reference.qualifiedName) {

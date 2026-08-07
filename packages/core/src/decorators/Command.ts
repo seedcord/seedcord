@@ -26,7 +26,6 @@ type CommandScope = CommandMeta['scope'];
 /**
  * Attaches deployment metadata so the framework registers this command globally or in specific guilds.
  *
- * @param scope - Must be 'global' for global registration
  * @decorator
  * @example
  * ```typescript
@@ -39,7 +38,6 @@ export function RegisterCommand(scope: 'global'): (ctor: CommandCtor) => void;
 /**
  * Registers a command for specific guild deployment.
  *
- * @param scope - Must be 'guild' for guild-specific registration
  * @param guilds - Array of guild IDs where the command should be registered
  * @decorator
  * @example

@@ -42,7 +42,6 @@ export interface SubscribeMetadataEntry {
  * \@Subscribe('userJoin')
  * class WelcomeHandler extends Subscriber<'userJoin'> {
  *   async execute() {
- *     // Handle user join event
  *   }
  * }
  * ```

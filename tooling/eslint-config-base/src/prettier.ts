@@ -4,7 +4,7 @@ import type { Options } from 'prettier';
 
 /**
  * Prettier config augmented with the option keys contributed by `prettier-plugin-tailwindcss`.
- * The plugin's options are not part of prettier's own `Options` type, so they are declared here.
+ * The plugin's options are not part of prettier's own `Options` type.
  */
 export type PrettierConfig = Options & {
     tailwindStylesheet?: string;
@@ -32,7 +32,7 @@ export interface TailwindPrettierOptions {
     attributes?: string[];
 
     /**
-     * Keep duplicate classes instead of collapsing them
+     * Keeps duplicate classes uncollapsed
      *
      * @defaultValue `false`
      */

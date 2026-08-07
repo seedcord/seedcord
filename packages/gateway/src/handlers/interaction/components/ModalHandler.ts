@@ -51,7 +51,7 @@ export abstract class ModalHandler<
         return super.deferUpdate();
     }
 
-    // discord omits the message when a command opened the modal, so update and deferUpdate have no target
+    // discord omits the message when a command opened the modal
     private ensureSourceMessage(method: string): void {
         if (this.event.isFromMessage()) return;
         throw new SeedcordError(SeedcordErrorCode.ReplyUpdateWithoutSource, [method, this.routeId]);

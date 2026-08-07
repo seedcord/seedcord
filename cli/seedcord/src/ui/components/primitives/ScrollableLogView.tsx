@@ -25,7 +25,6 @@ const CHIP_TEXT = '#1a1a1a';
 
 const LEVEL_LETTER: Record<LogLevel, string> = { error: 'E', warn: 'W', info: 'I', debug: 'D', trace: 'T' };
 
-// the wash covers the prefix only, so the message keeps its own color
 const WASH: Partial<Record<LogLevel, string>> = { warn: '#3a2f14', error: '#3d1a20' };
 
 function truncate(label: string, width: number): string {
@@ -137,7 +136,7 @@ export function ScrollableLogView({ visible, viewportHeight, measured }: Scrolla
                 visible.map((row) => {
                     if (row.kind === 'rule') return <Rule key={row.key} />;
                     const props = { log: row.entry, text: row.text, labelWidth };
-                    // a continuation draws its gutter on every row, so only a head line needs a tail variant
+                    // a continuation draws its gutter on every row
                     if (!row.entry.head) return <ContinuationLine key={row.key} {...props} />;
                     return row.first ? <HeadLine key={row.key} {...props} /> : <HeadTail key={row.key} {...props} />;
                 })

@@ -4,19 +4,18 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
     output: 'standalone',
-    // Pin the file-tracing root to the monorepo root so tracing can resolve the workspace:* deps under
-    // packages/* into the standalone bundle; without it the emitted server.js path is nondeterministic.
+    // tracing resolves the workspace:* deps only from the monorepo root, and without it the emitted
+    // server.js path moves between builds
     outputFileTracingRoot: path.join(import.meta.dirname, '../..'),
-    // tsdoc-config reads tsdoc.schema.json at runtime via a constructed path, which nft's JS-require
-    // trace misses, so the standalone server 500s loading the extractor model. Force the schema in.
+    // tsdoc-config builds the path to tsdoc.schema.json at runtime, which nft's require trace misses,
+    // so the standalone server 500s loading the extractor model
     outputFileTracingIncludes: {
         '**': ['../../node_modules/.pnpm/@microsoft+tsdoc@*/node_modules/@microsoft/tsdoc/schemas/**/*']
     },
     serverExternalPackages: [
         '@seedcord/docs-engine',
         '@seedcord/docs-generator',
-        // API Extractor model + TSDoc do runtime file reads (tsdoc.schema.json); keep them out of the
-        // server bundle so Node resolves them from node_modules at runtime.
+        // these three read files off disk at runtime, which only works unbundled
         '@microsoft/api-extractor-model',
         '@microsoft/tsdoc',
         '@microsoft/tsdoc-config'
@@ -24,7 +23,7 @@ const nextConfig: NextConfig = {
     headers() {
         return [
             {
-                // RFC 8288 discovery hint pointing agents at the machine-readable index, skips assets + meta routes
+                // rfc 8288 alternate link
                 source: '/((?!_next/|og/|llms/|llms.txt|sitemap.xml|robots.txt).*)',
                 headers: [{ key: 'Link', value: '</llms.txt>; rel="alternate"; type="text/plain"' }]
             }

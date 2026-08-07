@@ -13,20 +13,18 @@ function logger(): Logger {
     return replyLogger;
 }
 
-/** The bus a write publishes on, and the interaction it belongs to. */
 export interface ReplyTelemetry {
     readonly bus: Bus;
     readonly interactionId: string;
 }
 
-/** The reply verbs plus the autocomplete choices callback, which runs outside the ack state machine. */
+// the reply verbs plus the autocomplete choices callback, which runs outside the ack state machine
 export type WriteMethod = ReplyMethod | 'respond';
 
-/** What one write reports once it settles. */
 export interface ResponseReport {
     readonly routeId: string;
     readonly method: WriteMethod;
-    /** `performance.now()` captured before the write began. */
+    // performance.now() captured before the write began
     readonly startedAt: number;
     readonly outcome: ResponseOutcome;
     readonly messageId: string | null;
@@ -52,11 +50,6 @@ export function publishResponse(telemetry: ReplyTelemetry, report: ResponseRepor
     );
 }
 
-/**
- * Runs a write that returns no message and publishes whichever arm it takes.
- *
- * @internal
- */
 export async function reportedWrite<Result>(
     telemetry: ReplyTelemetry,
     routeId: string,
@@ -69,12 +62,7 @@ export async function reportedWrite<Result>(
     return result;
 }
 
-/**
- * Runs a wire write and publishes the `failed` arm when it throws, since the caller's success report
- * sits after the write and a throw skips it.
- *
- * @internal
- */
+// publishes the failed arm when write() throws, since the caller's success report sits after the write and a throw skips it
 export async function attemptWrite<Result>(
     telemetry: ReplyTelemetry,
     routeId: string,
@@ -87,7 +75,7 @@ export async function attemptWrite<Result>(
     } catch (caught) {
         const error = asError(caught);
         publishResponse(telemetry, { routeId, method, startedAt, outcome: 'failed', messageId: null, error });
-        // rethrown raw, so the caller catches the value the write threw
+        // rethrown raw
         throw caught;
     }
 }

@@ -71,13 +71,13 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
     protected get focused(): FocusedField<Route> {
         const focused = this.reader.getFocused();
         if (!focused) throw new SeedcordError(SeedcordErrorCode.AutocompleteNoFocusedOption);
-        // the registry constrains the names, a focused field outside the set has no arm.
+        // the registry constrains the names. a focused field outside it has no arm
         return focused as FocusedField<Route>;
     }
 
     /**
-     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused, so
-     * match is how you read it.
+     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused.
+     * Match is how you read it.
      *
      * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
      * arm receives the focused partial value and a `respond` typed to that field's choice value. The
@@ -122,7 +122,7 @@ export abstract class AutocompleteHandler<Route extends keyof SlashOptionRegistr
      * types the focused field. The focused field is on `this.focused`.
      */
     protected get options(): AutocompleteOptions<Route> {
-        // the reader exposes these getters, AutocompleteOptions is the registry-typed view over it.
+        // AutocompleteOptions is just the registry-typed view over the getters the reader already exposes
         return this.reader as AutocompleteOptions<Route>;
     }
 }

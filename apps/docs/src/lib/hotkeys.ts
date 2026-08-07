@@ -12,8 +12,8 @@ export function registerCommandPaletteHotkey(toggle: () => void): Unregister {
             return;
         }
 
-        // no text-input guard, the cmd/ctrl modifier already separates this chord from a typed "k" so it
-        // fires even while the palette's own input has focus.
+        // no text-input guard needed, cmd or ctrl already sets this chord apart from a typed "k", so it
+        // fires even while the palette's input has focus.
         if (!(event.metaKey || event.ctrlKey)) {
             return;
         }

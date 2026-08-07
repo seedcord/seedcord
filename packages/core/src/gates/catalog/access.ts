@@ -43,7 +43,7 @@ export function OwnerOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'O
 /**
  * Passes inside a guild, else refuses.
  *
- * Agnostic, so it attaches to any handler kind. Often paired with `RequirePermissions` in an {@link and}.
+ * Agnostic. Attaches to any handler kind. Often paired with `RequirePermissions` in an {@link and}.
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *
@@ -72,7 +72,7 @@ export function GuildOnly(options?: GateNoticeOptions): Gate<GateContextBase, 'G
 /**
  * Passes in a direct message, else refuses.
  *
- * Agnostic, so it attaches to any handler kind. The inverse of {@link GuildOnly}, so combining the two in an {@link and} can never pass.
+ * Agnostic, fitting any handler kind. The inverse of {@link GuildOnly}, so combining the two in an {@link and} can never pass.
  *
  * @param options - Reword the default refusal with `message`, or replace it with `notice`.
  *

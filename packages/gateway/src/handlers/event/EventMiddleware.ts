@@ -30,8 +30,7 @@ export abstract class EventMiddleware<
         this.firedEvent = eventName;
     }
 
-    // a concrete tuple for one event, never for several or a catchall, so reading the payload on a multi-event
-    // middleware is a compile error. branch on this.eventName and do payload-shape-independent work instead.
+    // a concrete tuple for one event only, so reading it on a multi-event middleware is a compile error
     declare protected readonly event: SingleEventPayload<EventName>;
 
     /**

@@ -33,7 +33,7 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
 
-        // the content side can also arrive through a spread of another object, so read the spread's type.
+        // the content side can also arrive through a spread of another object
         // an optional field may be absent at runtime. only a required one is certainly set
         function spreadHasContent(node: TSESTree.ObjectExpression): boolean {
             for (const prop of node.properties) {

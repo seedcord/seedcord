@@ -9,5 +9,4 @@ export type { KyselyOptions, KyselyMigrationsOptions } from './types/KyselyOptio
 export type { KyselyServiceRegistrationOptions } from './types/KyselyServiceRegistrationOptions';
 export type { KyselyServices } from './types/KyselyServices';
 
-/** Package version */
 export const version = process.env.PACKAGE_VERSION ?? '0.0.0';

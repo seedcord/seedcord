@@ -24,8 +24,8 @@ interface SidebarSelectProps {
 
 export function SidebarSelect({ id, label, value, options, groups, onChange }: SidebarSelectProps): ReactElement {
     const labelId = `${id}-label`;
-    // Inside the mobile drawer this is the drawer's content node, so the dropdown portals there and positions
-    // against its trigger. On desktop it is null and the dropdown portals to document.body as usual.
+    // on mobile this is the drawer's content node so the dropdown portals there and anchors to its trigger.
+    // on desktop it's null, so dropdowns fall back to document.body.
     const panelContainer = use(MobilePanelContainerContext);
     const dropdownOptions = useMemo<DropdownOption[]>(
         () => (options ?? []).map((option) => ({ value: option.id, label: option.label })),

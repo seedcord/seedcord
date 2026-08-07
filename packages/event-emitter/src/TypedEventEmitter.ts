@@ -79,7 +79,6 @@ export class TypedEventEmitter<TEvents extends EventMap<TEvents>> {
         return this.dispatchSafe(event, args);
     }
 
-    // only dispatchSafe calls this, override it to log the listener throw
     /** @internal */
     protected onListenerError(error: unknown, _event: string | symbol): void {
         queueMicrotask(() => {

@@ -3,7 +3,7 @@ import { Braces, FunctionSquare, ListTree, Puzzle, SquareStack, Variable } from 
 
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
-// The tone taxonomy and resolution logic are defined in @seedcord/docs-engine; this only maps each tone to its visuals.
+// The tone taxonomy and resolution logic are defined in @seedcord/docs-engine. This file only maps each tone to its visuals.
 const TONE_PRESENTATION = {
     class: {
         icon: SquareStack,

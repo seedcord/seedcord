@@ -21,15 +21,14 @@ const popoverContentBaseClassName = cn(
     tw`data-[state=open]:ease-(--ease-out-strong)`
 );
 
-// Use for floating anchored content (menus, settings panels). Don't roll Radix Popover by hand.
 export const Popover = PopoverPrimitive.Root;
 export const PopoverTrigger = PopoverPrimitive.Trigger;
 export const PopoverAnchor = PopoverPrimitive.Anchor;
 export const PopoverClose = PopoverPrimitive.Close;
 
 interface PopoverContentProps extends ComponentPropsWithoutRef<typeof PopoverPrimitive.Content> {
-    // Portal target. Pass the content node of a modal Dialog so the popover lands inside its
-    // react-remove-scroll region; otherwise the default body portal cannot be scrolled inside a dialog.
+    // portal target. pass a modal Dialog's content node so the popover lands inside its
+    // react-remove-scroll region. otherwise the body portal can't scroll inside the dialog
     container?: HTMLElement | null;
 }
 

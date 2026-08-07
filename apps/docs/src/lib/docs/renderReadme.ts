@@ -6,23 +6,23 @@ import { highlightToHtml } from '@lib/shiki';
 import type { Tokens } from 'marked';
 import type { BundledLanguage } from 'shiki';
 
-// Isolated instance so README rendering stays independent of the shiki-configured global `marked`
-// used for TSDoc prose (renderParagraphs.ts).
+// a separate marked instance keeps readme rendering independent of the shiki-configured global marked
+// in renderParagraphs.ts.
 const readmeMarked = new Marked({
     async: true,
     gfm: true,
     walkTokens: async (token) => {
         if (token.type !== 'code') return;
-        // Narrow token type from any. Shiki validates language at runtime.
+        // the cast narrows token past marked's union. shiki validates the language string at runtime regardless.
         const { text, lang } = token as Tokens.Code;
-        // an untagged fence gives an empty lang, which the || sends to the helper's ts default
+        // a fence with no language tag leaves lang empty, so `||` picks the helper's ts default
         const html = await highlightToHtml(text, (lang || undefined) as BundledLanguage | undefined);
         if (html) Object.assign(token, { type: 'html', text: html });
     }
 });
 
-// the browser picks the <picture> wordmark by OS prefers-color-scheme, which the site's data-theme
-// toggle can't override, so rewrite it to data-theme-gated imgs (globals.css).
+// the browser picks the <picture> wordmark by OS prefers-color-scheme, and the site's data-theme
+// toggle can't override that. this rewrites it into data-theme-gated imgs, styled in globals.css.
 function themeWordmarkPictures(html: string): string {
     return html.replace(/<picture>([\s\S]*?)<\/picture>/gi, (whole, inner: string) => {
         const darkSource = /<source\b[^>]*prefers-color-scheme:\s*dark[^>]*>/i.exec(inner);

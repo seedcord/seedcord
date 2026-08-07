@@ -6,7 +6,7 @@ import type { ApplicationCommandType } from 'discord-api-types/v10';
 type RegistrableCommandType =
     ApplicationCommandType.ChatInput | ApplicationCommandType.User | ApplicationCommandType.Message;
 
-/** One file may export several handlers, so the row states which export it registers. */
+/** One file may export several handlers. */
 export interface RouteModule {
     /** The exported binding inside the loaded module. */
     readonly exportName: string;
@@ -53,7 +53,7 @@ interface SubscriberRoute extends RouteModule {
     readonly frequency: EventFrequency;
 }
 
-/** A middleware row. Middleware runs on every dispatch, so it carries no lookup key. */
+/** A middleware row. Middleware runs on every dispatch. */
 type MiddlewareRoute = RouteModule;
 
 /**

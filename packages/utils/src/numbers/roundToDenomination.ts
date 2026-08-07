@@ -17,14 +17,13 @@ export interface RoundToDenomOptions {
 
 /**
  * Rounds a number to a string representation with a denomination suffix.
- * @param num - The number to round.
+ *
  * @example
  * ```ts
  * roundToDenomination(1234); // "1.2K"
  * roundToDenomination(10000, { suffixes: ['k', 'm', 'b', 't', 'q'] }); // "10k"
  * roundToDenomination(12345678); // "12.3M"
  * ```
- * @returns The rounded number as a string with a denomination suffix.
  */
 export function roundToDenomination(num: number, opts?: RoundToDenomOptions): string {
     const { suffixes = ['K', 'M', 'B', 'T', 'Q'], precision = 1 } = opts ?? {};

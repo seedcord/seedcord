@@ -79,7 +79,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
     public init(): Promise<void> {
         if (this.isInitialised) return Promise.resolve();
-        // racing callers share one attempt, and clearing it on settle means the next call starts a fresh one
+        // racing callers share one attempt, and clearing it on settle lets the next call start fresh
         this.inFlight ??= this.runInit().finally(() => {
             this.inFlight = null;
         });
@@ -91,7 +91,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
             await this.connect();
             await this.loadServices();
         } catch (caught) {
-            // the host skips dispose for a plugin whose init rejected so need to disconnect here
+            // the host skips dispose for a plugin whose init rejected
             await this.disconnect().catch((error: unknown) => this.logger.error('failed to disconnect', error));
             throw caught;
         }

@@ -42,7 +42,7 @@ export interface CommentExample {
 export interface SeeAlsoEntry {
     name: string;
     href?: string;
-    // True when href points outside the current package: cross-package internal link or external URL.
+    // true for a link outside the current package, whether a different package's page or an external url
     external?: boolean;
     target?: unknown;
 }

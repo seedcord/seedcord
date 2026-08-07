@@ -71,7 +71,7 @@ export async function readReadme(packageDir: string): Promise<string | null> {
     return readFile(readmePath, 'utf8');
 }
 
-/** The unscoped package name: `@seedcord/utils` becomes `utils`; a bare `utils` is returned as-is. */
+/** The unscoped package name. `@seedcord/utils` becomes `utils`, a bare `utils` is returned as-is. */
 export function unscopedName(name: string): string {
     return name.split('/').pop() ?? name;
 }

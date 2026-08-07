@@ -7,8 +7,7 @@ import { OG_SCALE } from '@lib/site';
 export const dynamic = 'force-static';
 export const revalidate = false;
 
-// need this so that the static export emits a real `.png` file
-// instead of an extension-less file with the wrong content-type
+// without this, the static export emits an extension-less file with the wrong content-type
 export function generateStaticParams(): { slug: string[] }[] {
     return [{ slug: ['image.png'] }];
 }

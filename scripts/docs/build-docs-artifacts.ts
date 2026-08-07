@@ -12,7 +12,6 @@ import {
 
 import type { DocProjectFile, IndexJson, PackageVersionsInput } from '@seedcord/docs-engine';
 
-// Builds the index.json + per-version project.json the VersionedDocsEngine reads, from generated/.
 // `--fixtures` adds synthetic versions per package so the version dropdown is testable locally.
 
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
@@ -26,7 +25,6 @@ interface SyntheticVersion {
     channel: 'stable' | 'prerelease';
 }
 
-// From a real version, derive up to two prior minor line heads + a next-minor prerelease.
 function syntheticVersions(real: string): SyntheticVersion[] {
     const match = /^(\d+)\.(\d+)\.(\d+)/.exec(real);
     if (!match) {
@@ -67,8 +65,8 @@ async function writeArtifacts(index: IndexJson, projects: readonly ProjectArtifa
         await mkdir(path.dirname(dest), { recursive: true });
         await writeFile(dest, `${JSON.stringify(project.file)}\n`);
 
-        // Keep the raw API-Extractor model beside project.json. The engine never fetches it, but
-        // storing it lets project.json be re-derived when the render shape changes, without re-extracting.
+        // api.json rides along so a render-shape change can re-derive project.json without
+        // re-extracting. Nothing reads it at serve time.
         await copyFile(project.apiSource, path.join(path.dirname(dest), 'api.json'));
     }
 }
@@ -85,8 +83,8 @@ async function main(): Promise<void> {
 
         const real = pkg.manifest.version;
         const folder = formatDisplayPackageName(fullName);
-        // The extractor names api.json by the unscoped package name, which can diverge from the
-        // display folder if a displayName override is set; key the copy off the source name.
+        // The extractor names api.json after the unscoped package name, which diverges from the
+        // display folder when a displayName override is set.
         const apiSource = path.join(GENERATED_ROOT, `${fullName.split('/').pop() ?? fullName}.api.json`);
         const file = serializeProject(pkg);
         const versions = USE_FIXTURES

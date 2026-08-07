@@ -1,4 +1,4 @@
-// exported so api-extractor keeps the reply members in the docs model, a forgotten base loses its methods
+// api-extractor drops the methods of a base that no entry point exports
 export { InteractionHandler } from './InteractionHandler';
 export { SlashHandler } from './SlashHandler';
 export { ContextMenuHandler } from './ContextMenuHandler';

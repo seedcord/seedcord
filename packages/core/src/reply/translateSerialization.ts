@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-// shapeshift aggregate errors nest, the cap bounds the recursion
+// shapeshift aggregate errors nest, so the cap bounds the recursion
 const MAX_DEPTH = 8;
 
 interface ShapeshiftLike {
@@ -93,7 +93,6 @@ function describeLeaf(record: ShapeshiftLike): string {
     return firstLine(record.message);
 }
 
-// a concrete bound is picked first, then accepted instance classes, then the first branch
 function describeUnion(branches: unknown[], depth: number): string {
     const records: ShapeshiftLike[] = [];
     for (const branch of branches) {
@@ -133,10 +132,7 @@ function detailOf(value: unknown, depth: number): string {
     return describeLeaf(record);
 }
 
-/**
- * Translates a shapeshift throw into an actionable message, keeping the original as `cause`. Any other
- * throw contributes its message as the detail.
- */
+// a shapeshift throw becomes an actionable message with the cause kept, while anything else contributes its own message as the detail
 export function translateSerializationError(
     error: unknown,
     componentClass: string,

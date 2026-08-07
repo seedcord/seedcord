@@ -8,8 +8,6 @@ import type * as fs from 'node:fs';
 
 /**
  * Determines if a directory entry is a TypeScript or JavaScript file.
- *
- * @param entry - The directory entry to check.
  */
 export function isTsOrJsFile(entry: fs.Dirent): boolean {
     return (
@@ -23,9 +21,6 @@ export function isTsOrJsFile(entry: fs.Dirent): boolean {
 /**
  * Recursively traverses through a directory, importing all .ts and .js files and applying a callback to each import.
  *
- * @param dir - The directory path to traverse.
- * @param callback - A function that will be called for each imported module. It receives the full file path, the file's relative path, and the imported module as arguments.
- * @returns A Promise that resolves when the traversal is complete.
  * @throws A **SeedcordError** when a directory cannot be read or a file throws while importing.
  *
  * @example

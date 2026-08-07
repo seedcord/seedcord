@@ -19,17 +19,16 @@ import type {
     WebhookMessageEditOptions
 } from 'discord.js';
 
-// the two djs kinds carrying a source message, so update / deferUpdate have a target
+// djs kinds that carry a source message
 type SourceInteraction = MessageComponentInteraction | ModalMessageModalSubmitInteraction;
 
-/** The created message a gateway reply resolves to. */
 export type SentMessage = Message;
 
 function isReplyFile(file: ReplyFile | GatewayFile): file is ReplyFile {
     return typeof file === 'object' && 'data' in file && ArrayBuffer.isView(file.data);
 }
 
-// discord.js rejects a plain Uint8Array, so convert the bytes to a Buffer
+// discord.js rejects a plain Uint8Array
 function toDjsFile(file: ReplyFile | GatewayFile): GatewayFile {
     if (!isReplyFile(file)) return file;
     return {
@@ -49,10 +48,7 @@ function seedState(interaction: Repliables): AckState {
     return 'unacked';
 }
 
-/**
- * Writes interaction responses through the discord.js interaction. Construction is internal to the repliable
- * handler bases and the dispatcher.
- */
+/** Writes interaction responses through discord.js. The repliable handler bases and the dispatcher construct it. */
 export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
     public constructor(
         private readonly interaction: Repliables,
@@ -115,7 +111,7 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
     }
 
     protected override guardModalSource(): void {
-        // runtime backstop for direct sender callers, which a compile-time gate on the bases cannot cover
+        // the bases gate this at compile time. a direct sender caller skips that
         if (this.interaction.isModalSubmit()) this.rejectModalSubmit();
     }
 
@@ -128,7 +124,6 @@ export class ReplySender extends BaseReplySender<SentMessage, GatewayFile> {
         ]);
     }
 
-    // only component and message-opened-modal kinds carry a source message
     private sourceInteraction(method: 'update' | 'deferUpdate'): SourceInteraction {
         const { interaction } = this;
         if (interaction.isMessageComponent()) return interaction;

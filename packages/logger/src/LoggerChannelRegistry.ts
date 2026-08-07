@@ -43,7 +43,7 @@ export class LoggerChannelRegistry {
         const nextSinks = config.sinks ?? defaultSinks();
         const nextChannels = config.channels ?? {};
         const retained = new Set<ILogSink>([...nextSinks, ...channelSinks(nextChannels)]);
-        // dispose sinks absent from the new config, global or per-channel, so their winston file handles close
+        // winston file handles close on dispose
         for (const sink of new Set([...this.sinks, ...channelSinks(this.channels)])) {
             if (!retained.has(sink)) sink.dispose?.();
         }

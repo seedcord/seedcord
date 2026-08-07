@@ -9,7 +9,7 @@ export interface EventActor {
     channelId: string | null;
 }
 
-// the actor sits in a different arg per event, so scan the tuple for the common carriers, best-effort
+// each event carries the actor in a different argument
 export function deriveEventActor(args: unknown): EventActor {
     const tuple = Array.isArray(args) ? (args as unknown[]) : [args];
     for (const arg of tuple) {

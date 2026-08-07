@@ -25,7 +25,7 @@ export function interactionGateContext(
         channelId: payload.channel?.id ?? null,
         memberRoleIds: member?.roles ?? [],
         memberPermissions: member ? BigInt(member.permissions) : null,
-        // app_permissions is present on every interaction Discord delivers, including DMs, so it is never null here
+        // app_permissions is present on every interaction Discord delivers, including DMs
         appPermissions: BigInt(payload.app_permissions),
         routeId
     };

@@ -100,7 +100,7 @@ export async function buildSignatureDetails({
             }
 
             const sig = signature;
-            // the lead description renders above the code block, the @param/@typeParam/@throws prose below it
+            // the lead description renders above the code block while @param/@typeParam/@throws prose renders below it
             const documentation: CommentParagraph[] = [];
             await appendParameterComments(sig, context, documentation);
             await appendTypeParameterComments(sig, context, documentation);

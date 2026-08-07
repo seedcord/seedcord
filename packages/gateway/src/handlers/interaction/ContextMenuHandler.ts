@@ -14,17 +14,14 @@ import type {
     UserContextMenuCommandInteraction
 } from 'discord.js';
 
-// the interaction class for each kind, so this.event carries the right targetUser/targetMessage members.
 type InteractionFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User
     ? UserContextMenuCommandInteraction<Cache>
     : MessageContextMenuCommandInteraction<Cache>;
 
-// the right-clicked entity, a User for a user menu and a Message for a message menu.
 type TargetFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User
     ? User
     : Message<BooleanCache<Cache>>;
 
-// the invoking member, present only on user menus where Discord resolves it alongside the target user.
 type TargetMemberFor<Kind extends ContextMenuKind, Cache extends CacheType> = Kind extends ApplicationCommandType.User
     ? CacheTypeReducer<Cache, GuildMember, APIInteractionGuildMember> | null
     : never;
@@ -54,7 +51,7 @@ export abstract class ContextMenuHandler<
     Kind extends ContextMenuKind,
     Cache extends CacheType = 'cached'
 > extends InteractionHandler<InteractionFor<Kind, Cache>> {
-    // phantom, never set at runtime.
+    // phantom, nothing reads it. it keeps Kind on the instance type
     /** @internal */
     declare readonly __ctxKind?: Kind;
 

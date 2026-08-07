@@ -6,12 +6,12 @@ import { createRule } from '../createRule';
 import type { ParserServicesWithTypeInformation, TSESTree } from '@typescript-eslint/utils';
 import type * as ts from 'typescript';
 
-// MessageFlags.IsComponentsV2, the stable Discord wire bit
+// discord's MessageFlags.IsComponentsV2 bit
 const IS_COMPONENTS_V2 = 32_768;
 
 type FlagState = 'present' | 'absent' | 'unknown';
 
-// the runtime value is one member of the union, so the flag is only determined when all members match
+// the runtime value is any one member
 function combine(states: FlagState[]): FlagState {
     const [first] = states;
     if (first === undefined) return 'unknown';
@@ -34,7 +34,6 @@ function flagTypeState(type: ts.Type | undefined): FlagState {
     }
     const element = type.getNumberIndexType();
     if (element !== undefined) return flagTypeState(element);
-    // a non-literal type (a variable, a computed value, a MessageFlagsBitField) has no statically-known bits
     return 'unknown';
 }
 
@@ -64,8 +63,8 @@ function applyBitwise(operator: string, left: number, right: number): number | u
     }
 }
 
-// the type checker widens a bitwise flag expression to `number`, so fold it from operands it still
-// resolves to literals (a numeric literal or an enum member)
+// the checker widens a bitwise expression to `number`, so fold it from the operands it still
+// resolves as literals (a numeric literal or an enum member)
 function foldToNumber(node: TSESTree.Node, services: ParserServicesWithTypeInformation): number | undefined {
     switch (node.type) {
         case AST_NODE_TYPES.Literal: {
@@ -122,7 +121,7 @@ function flagValueState(value: TSESTree.Node, services: ParserServicesWithTypeIn
     return elementState(value, services);
 }
 
-// object properties apply left to right, so the last flags contributor (a key or a spread) wins
+// a later flags key or spread overwrites an earlier one
 function flagState(
     node: TSESTree.ObjectExpression,
     services: ParserServicesWithTypeInformation,
@@ -140,7 +139,6 @@ function flagState(
     return state;
 }
 
-// a discord.js message-options type declares both a components list and a flags field
 function isMessageOptionsType(type: ts.Type): boolean {
     if (type.isUnion()) return type.types.some(isMessageOptionsType);
     const components = type.getProperty('components');
@@ -184,8 +182,7 @@ export default createRule({
 
                 context.report({ node, messageId: 'missingFlag' });
             },
-            // an unannotated payload variable has no contextual type at its declaration, so it
-            // resolves at the call site
+            // an unannotated payload has no contextual type until the call site
             CallExpression(node) {
                 for (const arg of node.arguments) {
                     if (arg.type !== AST_NODE_TYPES.Identifier) continue;
@@ -193,7 +190,6 @@ export default createRule({
                     if (init?.type !== AST_NODE_TYPES.ObjectExpression) continue;
                     // an annotated declaration is already reported at the object literal
                     if (contextualType(init) !== undefined) continue;
-                    // a payload reused across sends is one fix at one declaration
                     if (reportedInits.has(init)) continue;
                     const contextual = contextualType(arg);
                     if (contextual === undefined || !isMessageOptionsType(contextual)) continue;

@@ -12,14 +12,8 @@ import type { AllSubscriptions, FaultSource } from '../types/Subscriptions';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { Notice } from '@stops/Notice';
 
-/**
- * Default subscriber that delivers a reported `Notice` (`report: true`) to a webhook with the
- * denial, the fault source, the threaded uuid, the cause stack, and the raw source as a JSON
- * attachment. The controller boundary throttles identical faults before they reach the bus.
- *
- * Reads its webhook url from HANDLED_EXCEPTION_WEBHOOK_URL. Unset, the reporter is disabled with
- * a boot warning.
- */
+// FaultThrottle drops repeat faults before they reach this subscriber
+// no HANDLED_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
 @Subscribe('handledException')
 @WebhookUrl('HANDLED_EXCEPTION_WEBHOOK_URL')
 export class HandledException extends WebhookLog<'handledException', CoreBase> {
@@ -51,7 +45,7 @@ class HandledExceptionContainer extends BuilderComponent<'container'> {
 }
 
 function faultSummary(denial: Notice, source: FaultSource): string {
-    // name and message carry chalk, the webhook payload renders them raw
+    // name and message carry chalk codes that the webhook payload would otherwise render raw
     const head = stripAnsi(`### A handled fault was reported: \`${denial.name}\`\n**Message:** ${denial.message}\n`);
     if (source.kind === 'event') {
         return (
@@ -73,7 +67,7 @@ function faultSummary(denial: Notice, source: FaultSource): string {
     );
 }
 
-// every cause shape returns a string, building the report never throws on a bigint or circular cause
+// every cause shape returns a string, so building the report never throws on a bigint or circular cause
 function causeStack(denial: Notice): string {
     const { cause } = denial;
     if (Error.isError(cause)) return stripAnsi(cause.stack ?? cause.message);

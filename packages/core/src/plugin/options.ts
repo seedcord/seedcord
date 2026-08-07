@@ -25,10 +25,10 @@ export type RuntimeOf<Opts extends PluginOptions> = undefined extends Opts['runt
     ? 'any'
     : NonNullable<Opts['runtime']>;
 
-/** @internal the transport a bot runs */
+/** @internal */
 export type Transport = TypedExclude<NonNullable<PluginOptions['transport']>, 'any'>;
 
-/** @internal the runtime a bot runs */
+/** @internal */
 export type Runtime = TypedExclude<NonNullable<PluginOptions['runtime']>, 'any'>;
 
 type TransportMismatch<PluginT extends string, BotT extends string> = Record<

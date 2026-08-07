@@ -20,8 +20,8 @@ function matchesKind(node: DocNode, kind: EntityTone | null): boolean {
         return true;
     }
 
-    // Strict: a non-entity kind (accessor, constructor) resolves to null and matches no tone filter,
-    // rather than collapsing into 'class'.
+    // strict: a non-entity kind (accessor, constructor) resolves to null and matches no tone filter.
+    // the non-strict resolver defaults null to 'class' instead.
     return resolveEntityToneStrict(kindName(node.kind)) === kind;
 }
 
@@ -81,7 +81,7 @@ function findNodeByName(
         return pickPreferredNode(nodes);
     }
 
-    // Search is the last-resort fallback; like the by-name fallback above it accepts the hit
+    // search is the last-resort fallback. like the by-name fallback above, it accepts the hit
     // regardless of kind.
     const [searchResult] = engine.search(symbol, manifestPackage);
     if (searchResult?.packageName) {

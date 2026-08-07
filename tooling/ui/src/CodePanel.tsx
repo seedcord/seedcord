@@ -14,7 +14,6 @@ export interface CodePanelProps {
 
 const CODE_CONTAINER_CLASS = tw`code-scroll-area rounded-md border border-(--border) bg-(--surface-subtle) px-3 py-2 text-sm text-(--text)`;
 
-// Use for standalone code blocks with a section-level title/description header (declaration viewers).
 export function CodePanel({ representation, title, description, className }: CodePanelProps): ReactElement {
     const hasHeader = Boolean(title ?? description);
     return (

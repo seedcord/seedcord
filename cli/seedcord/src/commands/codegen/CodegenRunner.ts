@@ -37,18 +37,12 @@ interface ScanResult {
     pluginKeys: readonly string[];
 }
 
-// relative to config.root, where the generated file sits. extensionless resolves under
-// moduleResolution bundler, which a seedcord project sets.
+// extensionless resolves under moduleResolution bundler, which a seedcord project sets
 function botSpecifier(root: string, instance: string): string {
     const posix = relative(root, instance).split(sep).join('/').replace(ENTRY_EXTENSION, '');
     return posix.startsWith('.') ? posix : `./${posix}`;
 }
 
-/**
- * Orchestrates `seedcord codegen`. Locates and loads the CLI config, imports the user's Seedcord instance to
- * read its commands directory and emoji config, scans and instantiates each command for its `toJSON()`, then
- * renders the augmentations and either writes them or, under `--check`, diffs against the committed file.
- */
 export class CodegenRunner {
     constructor(
         private readonly locator: ConfigLocator,
@@ -100,15 +94,15 @@ export class CodegenRunner {
         return { commands, emojis, augmentTarget, pluginKeys };
     }
 
-    // the bot's own scan runs under tsx/vite, so its import() handles .ts. codegen runs under plain node, so
-    // it imports each command file through the tsx-backed module loader instead.
+    // the bot scans under tsx/vite where import() takes a .ts path. codegen runs under plain node, hence the
+    // tsx-backed module loader below.
     private async *walk(dir: string, seen: Set<unknown>, isRoot: boolean): AsyncGenerator<ScannedCommand> {
         let entries;
         try {
             entries = await readdir(dir, { withFileTypes: true });
         } catch (error: unknown) {
             const reason = Error.isError(error) ? error.message : 'Unknown error';
-            // an unreadable top-level commands dir would silently pass --check against a stale registry, so fail.
+            // an unreadable commands dir would pass --check against a stale registry
             if (isRoot) throw new SeedcordError(SeedcordErrorCode.CliCodegenCommandsDirUnreadable, [dir, reason]);
             this.logger.warn(`Skipping unreadable directory ${dir}. ${reason}.`);
             return;
@@ -121,7 +115,7 @@ export class CodegenRunner {
             } else if (isTsOrJsFile(entry)) {
                 const imported = await this.moduleLoader.importModule<Record<string, unknown>>(fullPath);
                 for (const exported of Object.values(imported)) {
-                    // a barrel re-exports the same class object, so scan each command once.
+                    // a barrel re-exports the same class object
                     if (seen.has(exported)) continue;
                     seen.add(exported);
                     const json = this.commandJsonOf(exported);
@@ -134,8 +128,8 @@ export class CodegenRunner {
     private async resolveInstance(
         config: ResolvedSeedcordDevConfig
     ): Promise<TypedOmit<ScanResult, 'commands'> & { commandsDir: string | undefined }> {
-        // loading the instance constructs the bot to read commands.path and emojis, so its lifecycle and plugin
-        // setup logs follow this line. codegen never starts the bot, nothing logs in or connects.
+        // reading commands.path and emojis constructs the bot, so its lifecycle and plugin setup logs
+        // appear here. codegen never starts it, nothing logs in or connects
         this.logger.debug('Loading instance to resolve the commands directory');
         const module = await this.moduleLoader.importModule(config.instance);
         const instance = resolveDefaultExport(module);
@@ -143,7 +137,7 @@ export class CodegenRunner {
             throw new SeedcordError(SeedcordErrorCode.CliInstanceInvalid);
         }
 
-        // the bot resolves commands.path relative to cwd, so codegen must too or it scans the wrong dir.
+        // the bot resolves commands.path against cwd
         const commandsPath = instance.config.bot.commands.path;
         return {
             commandsDir: commandsPath ? resolve(process.cwd(), commandsPath) : undefined,
@@ -160,7 +154,6 @@ export class CodegenRunner {
         try {
             instance = new (exported as new () => unknown)();
         } catch {
-            // not an instantiable command (or a side-effecting constructor); skip it.
             return undefined;
         }
 
@@ -184,8 +177,7 @@ export class CodegenRunner {
         if (typeof json !== 'object' || json === null) return false;
         const { name, type } = json as { name?: unknown; type?: unknown };
         if (typeof name !== 'string') return false;
-        // chat-input commands omit type or set it to ChatInput, context menus set User/Message. A
-        // PrimaryEntryPoint or any other type is not something codegen registers, so drop it.
+        // chat-input omits type or sets ChatInput, context menus set User or Message
         return (
             type === undefined ||
             type === ApplicationCommandType.ChatInput ||

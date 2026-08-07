@@ -25,8 +25,6 @@ import type {
 import type { Stats } from 'node:fs';
 
 /**
- * Migration tooling for KyselyPostgres.
- *
  * @sealed
  */
 export class KyselyMigrationManager {

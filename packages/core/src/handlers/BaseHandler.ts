@@ -5,7 +5,7 @@ import type { LoggerChannelId } from '@seedcord/logger';
 import type { DispatchContext } from '@src/dispatch/DispatchContext';
 
 /**
- * Base class every transport handler extends. Don't register handlers directly, use the more specific
+ * Base class every transport handler extends. Don't register handlers directly. Use the more specific
  * handler subclasses.
  *
  * @typeParam Event - The event or interaction this handler processes

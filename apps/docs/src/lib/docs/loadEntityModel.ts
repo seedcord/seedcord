@@ -12,7 +12,7 @@ interface EntityLookup {
     kind?: string;
 }
 
-// Requires the caller to have run setVersion for the package first; resolves against loaded models only.
+// this resolves only against already-loaded models, so the caller must have called setVersion for the package first
 export async function loadEntityModel(
     engine: VersionedDocsEngine,
     manifestPackage: string,

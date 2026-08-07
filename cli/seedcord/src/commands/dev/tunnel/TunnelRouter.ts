@@ -28,7 +28,7 @@ export class TunnelRouter {
     }
 
     private async routeTo(tunnel: ResolvedTunnel, port: number): Promise<void> {
-        // each restart reloads the config, so the tunnel can differ from the built one
+        // each restart reloads the config
         if (!same(this.built, tunnel)) {
             // clearing the old endpoint must finish before the replacement sets its own
             await this.stop();

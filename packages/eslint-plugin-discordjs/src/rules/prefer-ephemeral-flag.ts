@@ -37,7 +37,6 @@ function canReplaceEphemeral(
     return messageFlagsAlias !== undefined && !hasFlags && !hasSpread && isTrue;
 }
 
-// a reply method destructured off an interaction: `const { reply } = interaction; reply(...)`
 function destructuredReply(
     node: TSESTree.CallExpression,
     sourceCode: TSESLint.SourceCode

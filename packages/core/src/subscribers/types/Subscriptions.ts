@@ -41,7 +41,7 @@ export interface InteractionFaultSource {
 
 /**
  * A fault that came from a client event, JSON-safe for a webhook payload. The actor, guild, and channel
- * are best-effort, derived from the event args, so each is nullable. The raw args carry the full detail.
+ * are best-effort, derived from the event args. Each is nullable. The raw args carry the full detail.
  */
 export interface EventFaultSource {
     kind: 'event';
@@ -94,7 +94,7 @@ export interface DefaultSubscriptions {
         durationMs: number;
         /**
          * Discord's interaction creation until dispatch entry, read from the snowflake. This covers
-         * network transit plus any time your bot was busy before starting, so a rise points at either
+         * network transit plus any time your bot was busy before starting. A rise points at either
          * Discord or your own backlog. It subtracts a Discord timestamp from the host clock, so a host
          * running behind Discord reports a negative value.
          */

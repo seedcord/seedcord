@@ -22,7 +22,7 @@ export type ChoiceValueOf<Entry> = Entry extends { kind: 'string' }
       ? number
       : never;
 
-/** The focused option. `value` is the raw partial Discord delivers mid-type, always a string regardless of kind. */
+/** the focused option. `value` is the raw partial discord delivers mid-type, always a string regardless of kind. */
 export interface FocusedField<Route extends keyof SlashOptionRegistry> {
     name: AutocompletableNames<Route>;
     value: string;

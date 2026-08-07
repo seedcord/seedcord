@@ -15,7 +15,7 @@ interface DevLayoutProps {
 }
 
 function DevLayout({ children }: DevLayoutProps): ReactNode {
-    // dev-only: 404 in production builds so the route doesn't ship
+    // dev-only, this 404s in production builds so the route doesn't ship
     if (process.env.NODE_ENV !== 'development') notFound();
 
     return (

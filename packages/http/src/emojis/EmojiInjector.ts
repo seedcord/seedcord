@@ -54,11 +54,7 @@ export type InjectedEmojiMap = {
  */
 export const Emojis = guardedAccessor('Emojis', emojiStorage) as InjectedEmojiMap;
 
-/**
- * Resolves the configured emojis over REST at startup.
- *
- * @internal
- */
+// resolves the configured emojis over REST at startup
 export class EmojiInjector {
     private readonly logger = new Logger('Emojis', { channel: 'bot' });
 

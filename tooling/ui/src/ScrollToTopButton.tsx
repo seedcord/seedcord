@@ -21,7 +21,6 @@ function scrollToTop(): void {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Use for the bottom-right "jump to top" affordance on long-scroll pages. Auto-shows past a viewport threshold.
 export function ScrollToTopButton({ className }: ScrollToTopButtonProps): ReactElement {
     const [visible, setVisible] = useState(false);
     const thresholdRef = useRef(0);

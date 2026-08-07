@@ -16,10 +16,6 @@ const PHASE_ORDER: ShutdownPhase[] = [
 // gives the logger's file sink time to flush before process.exit
 const LOG_FLUSH_DELAY_MS = 3000;
 
-/**
- * Runs registered shutdown tasks across `ShutdownPhase` in order. Registers SIGINT and SIGTERM
- * handlers. Tasks within a phase run in parallel.
- */
 export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
     private isShuttingDown = false;
     private hasShutdown = false;
@@ -86,35 +82,14 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         this.startupGate = settled;
     }
 
-    /**
-     * Adds a shutdown-phase task.
-     *
-     * @param phase - The shutdown phase to run the task in.
-     * @param taskName - A descriptive name for the task.
-     * @param task - The async function to run.
-     * @param timeoutMs - Task timeout in ms. {@default `5000` }
-     */
     public override addTask(phase: ShutdownPhase, taskName: string, task: () => Promise<void>, timeoutMs = 5000): void {
         super.addTask(phase, taskName, task, timeoutMs);
     }
 
-    /** Removes a shutdown-phase task, returning whether one was removed. */
     public override removeTask(phase: ShutdownPhase, taskName: string): boolean {
         return super.removeTask(phase, taskName);
     }
 
-    /**
-     * Runs registered tasks across shutdown phases in `ShutdownPhase` order.
-     * Tasks within each phase run in parallel.
-     *
-     * @param exitCode - Process exit code. {@default `0` }
-     * @param exitProcess - Whether to exit the process after shutdown. {@default `true` }
-     * @example
-     * ```typescript
-     * shutdown.addTask(ShutdownPhase.Disconnect, 'database', () => db.disconnect(), 5000);
-     * await shutdown.run(0);
-     * ```
-     */
     public async run(exitCode = 0, exitProcess = true): Promise<void> {
         this.removeSignalHandlers();
 

@@ -8,21 +8,20 @@ export default createConfig({
     tsconfigRootDir: import.meta.dirname,
     registerImportPlugin: false,
     registerTypescriptConfigs: false,
-    // unicorn needs eslint >=10.4; this app is still on eslint 9.
+    // unicorn needs eslint 10.4 or newer, but this app is still on eslint 9
     registerUnicornPlugin: false,
     tailwindEntryPoint: path.resolve(import.meta.dirname, 'src/app/globals.css'),
     userConfigs: [
-        // Next core with Web Vitals. Includes react, hooks, import, jsx-a11y, and @next already.
+        // next's core-web-vitals config already bundles react, hooks, import, jsx-a11y, and @next
         ...nextVitals,
 
-        // React Compiler diagnostics. Plugin is RC (19.1.0-rc.2) but actively maintained; user opted in.
+        // react-compiler plugin is still 19.1.0-rc.2, opted in ahead of a stable tag
         reactCompiler.configs.recommended,
 
         // react-doctor covers the jsx-a11y strict set, so only next's own a11y rules run here
         {
             rules: {
                 'jsx-a11y/alt-text': ['error', { elements: ['img'], img: ['Image'] }],
-                // Hardening
                 'react/jsx-no-target-blank': 'error',
                 'react-hooks/exhaustive-deps': 'error',
                 'import/no-anonymous-default-export': 'error',
@@ -41,7 +40,7 @@ export default createConfig({
             rules: { 'import/no-default-export': 'off' }
         },
 
-        // Ignores per Next docs
+        // next's docs recommend ignoring these
         { ignores: ['.next/**', 'out/**', 'build/**', 'next-env.d.ts'] }
     ]
 });

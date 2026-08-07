@@ -5,12 +5,7 @@ import { Routes } from 'discord-api-types/v10';
 import type { REST } from '@discordjs/rest';
 import type { APIApplication } from 'discord-api-types/v10';
 
-/**
- * Reads the bot's own application id over REST. A gateway host takes it off the logged-in client, and
- * an http host has no session to read it from.
- *
- * @internal
- */
+// a gateway host reads its id off the client session, this host has none so it fetches over REST
 export async function fetchApplicationId(rest: REST): Promise<string> {
     try {
         // justified: the discord api contract for this route

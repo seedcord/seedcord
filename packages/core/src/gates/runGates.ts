@@ -6,10 +6,7 @@ import { discardCommits, runCheck, runCommits } from './effects';
 
 import type { Gate, GateContextBase } from './Gate';
 
-/**
- * Receives each gate's name and how long its check ran, in ms. A combinator (`and`/`or`) reports once
- * under its joined name.
- */
+// a combinator (`and`/`or`) reports once under its joined name.
 export type GateObserver = (gateName: string, elapsedMs: number) => void;
 
 // the stable id a route decorator stored, e.g. slash:daily or button:confirm. null for a plain event handler.
@@ -32,11 +29,8 @@ async function timedCheck(gate: Gate<GateContextBase>, ctx: GateContextBase, obs
     }
 }
 
-/**
- * Runs each gate's check in order, so the first refusal propagates to the dispatcher boundary. An effect
- * gate's commit runs once the whole set passes. When `observe` is given, each check is timed and reported,
- * commits excluded.
- */
+// the first refusal throws out to the dispatcher boundary. an effect gate's commit runs once the
+// whole set passes, and observe never times the commit phase.
 export async function runGates(
     gates: readonly Gate<GateContextBase>[],
     ctx: GateContextBase,
@@ -52,8 +46,8 @@ export async function runGates(
     }
 }
 
-// dispatchers call this before execute, inside the boundary, so a refusal renders or drops. the
-// explicit routeId overrides the ctor-derived id for manifest-driven handlers with no route metadata.
+// dispatchers call this before execute, inside the boundary, so a refusal renders or drops. an explicit
+// routeId is for manifest-driven handlers, which carry no route metadata to derive one from.
 export async function runHandlerGates(
     handlerCtor: object,
     ctx: GateContextBase,

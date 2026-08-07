@@ -11,8 +11,7 @@ import { FOCUS_DELAY_MS } from './constants';
 
 import type { CommandAction, DocsPackageOption } from './types';
 
-// `action.href` already carries the correct member fragment from the search route; this only
-// strips the origin for router.push / window.open.
+// action.href already carries the right member fragment from the search route
 function buildNavigationHref(action: CommandAction, origin: string): string {
     try {
         const targetUrl = new URL(action.href, origin);
@@ -22,7 +21,6 @@ function buildNavigationHref(action: CommandAction, origin: string): string {
     }
 }
 
-// The scope dropdown lists every documented package; fetch it once the palette first opens.
 function usePackageList(open: boolean): DocsPackageOption[] {
     const [packages, setPackages] = useState<DocsPackageOption[]>([]);
 
