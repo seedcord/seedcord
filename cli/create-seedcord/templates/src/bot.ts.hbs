@@ -1,0 +1,50 @@
+import 'reflect-metadata';
+
+import { resolve } from 'node:path';
+
+{{#if isGateway}}
+import { Seedcord } from '@seedcord/gateway';
+import { GatewayIntentBits{{#if partials}}, Partials{{/if}} } from 'discord.js';
+{{else}}
+import { Seedcord } from '@seedcord/http';
+{{/if}}
+import { Envapter } from 'envapt';
+
+Envapter.baseDir = resolve(import.meta.dirname, '..');
+
+export const seedcord = new Seedcord({
+    bot: {
+{{#if isGateway}}
+        clientOptions: {
+            intents: [
+{{#each intents}}
+                GatewayIntentBits.{{ this }}{{#unless @last}},{{/unless}}
+{{/each}}
+            ]{{#if partials}},
+            partials: [{{#each partials}}Partials.{{ this }}{{#unless @last}}, {{/unless}}{{/each}}]{{/if}}
+        },
+{{/if}}
+        interactions: {
+            path: resolve(import.meta.dirname, './handlers')
+        },
+        commands: {
+            path: resolve(import.meta.dirname, './commands')
+        }{{#if isGateway}},
+        events: {
+{{#if hasEvents}}
+            path: resolve(import.meta.dirname, './events')
+{{else}}
+            path: null
+{{/if}}
+        }{{/if}}
+    },
+    subscribers: {
+        path: null
+    },
+    botColor: '{{ botColor }}',
+    notifications: {
+        developerUsername: '{{ developerUsername }}'
+    }
+});
+
+export default seedcord;
