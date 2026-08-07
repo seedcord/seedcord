@@ -27,7 +27,11 @@ function parseCapabilities(raw: string): string[] {
 
 export const capabilitiesStep: Step<'capabilities'> = {
     key: 'capabilities',
-    flag: { name: 'capabilities', parse: parseCapabilities },
+    flag: {
+        name: 'capabilities',
+        description: `a comma separated list of ${CAPABILITIES.map((capability) => capability.id).join(', ')}`,
+        parse: parseCapabilities
+    },
     skip: (answers) => answers.transport === 'http',
     ask: async () =>
         requireAnswer(

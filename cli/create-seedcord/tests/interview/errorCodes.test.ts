@@ -44,14 +44,16 @@ describe('a flag answering a skipped question', () => {
     it('throws its own code, separate from a rejected value', async () => {
         const publicKey: Step<'publicKey'> = {
             key: 'publicKey',
-            flag: { name: 'public-key', parse: (raw) => raw },
+            flag: { name: 'public-key', description: 'a stub', parse: (raw) => raw },
             skip: (answers) => answers.transport === 'gateway',
             ask: () => Promise.resolve('prompted')
         };
 
-        const thrown = await runFlow([publicKey], { transport: 'gateway', publicKey: 'supplied' }).catch(
-            (error: unknown) => error
-        );
+        const thrown = await runFlow(
+            [publicKey],
+            { transport: 'gateway', publicKey: 'supplied' },
+            { interactive: true }
+        ).catch((error: unknown) => error);
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateFlagNotApplicable)).toBe(true);
         expect((thrown as Error).message).toContain('public-key');

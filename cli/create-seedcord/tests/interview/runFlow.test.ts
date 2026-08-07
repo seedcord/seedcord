@@ -7,7 +7,7 @@ import type { Answers, Step } from '@src/interview/types';
 function stubStep<Key extends keyof Answers>(key: Key, value: Answers[Key], asked: (keyof Answers)[]): Step<Key> {
     return {
         key,
-        flag: { name: String(key), parse: (raw) => raw as Answers[Key] },
+        flag: { name: String(key), description: 'a stub', parse: (raw) => raw as Answers[Key] },
         ask: () => {
             asked.push(key);
             return Promise.resolve(value);
@@ -20,7 +20,8 @@ describe('runFlow', () => {
         const asked: (keyof Answers)[] = [];
         const answers = await runFlow(
             [stubStep('directory', 'my-bot', asked), stubStep('transport', 'gateway', asked)],
-            {}
+            {},
+            { interactive: true }
         );
 
         expect(asked).toEqual(['directory', 'transport']);
@@ -29,7 +30,13 @@ describe('runFlow', () => {
 
     it('leaves a step unasked when its flag already supplied the answer', async () => {
         const asked: (keyof Answers)[] = [];
-        const answers = await runFlow([stubStep('directory', 'prompted', asked)], { directory: 'from-flag' });
+        const answers = await runFlow(
+            [stubStep('directory', 'prompted', asked)],
+            { directory: 'from-flag' },
+            {
+                interactive: true
+            }
+        );
 
         expect(asked).toEqual([]);
         expect(answers.directory).toBe('from-flag');
@@ -42,7 +49,7 @@ describe('runFlow', () => {
             skip: (answers) => answers.transport === 'http'
         };
 
-        const answers = await runFlow([stubStep('transport', 'http', asked), capabilities], {});
+        const answers = await runFlow([stubStep('transport', 'http', asked), capabilities], {}, { interactive: true });
 
         expect(asked).toEqual(['transport']);
         expect(answers.capabilities).toBeUndefined();
@@ -52,12 +59,12 @@ describe('runFlow', () => {
         const asked: (keyof Answers)[] = [];
         const publicKey: Step<'publicKey'> = {
             ...stubStep('publicKey', 'prompted', asked),
-            flag: { name: 'public-key', parse: (raw) => raw },
+            flag: { name: 'public-key', description: 'a stub', parse: (raw) => raw },
             skip: (answers) => answers.transport === 'gateway'
         };
 
-        await expect(runFlow([publicKey], { transport: 'gateway', publicKey: 'supplied' })).rejects.toThrow(
-            /public-key/
-        );
+        await expect(
+            runFlow([publicKey], { transport: 'gateway', publicKey: 'supplied' }, { interactive: true })
+        ).rejects.toThrow(/public-key/);
     });
 });

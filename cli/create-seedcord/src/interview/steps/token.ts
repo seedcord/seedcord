@@ -25,7 +25,7 @@ function parseToken(raw: string): string {
 
 export const tokenStep: Step<'token'> = {
     key: 'token',
-    flag: { name: 'token', parse: parseToken },
+    flag: { name: 'token', description: 'your bot token', parse: parseToken },
     ask: async () =>
         parseToken(
             requireAnswer(

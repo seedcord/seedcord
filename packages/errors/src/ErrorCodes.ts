@@ -257,5 +257,7 @@ export enum SeedcordErrorCode {
     /** A flag supplied an answer for a question the earlier answers skip. */
     CreateFlagNotApplicable = 3202,
     /** A flag carried a value its question rejects. */
-    CreateInvalidAnswer = 3203
+    CreateInvalidAnswer = 3203,
+    /** The command line did not parse. */
+    CreateBadUsage = 3204
 }

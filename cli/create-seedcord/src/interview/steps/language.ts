@@ -28,7 +28,7 @@ export function pickReply(random: () => number = Math.random): string {
 
 export const languageStep: Step<'language'> = {
     key: 'language',
-    flag: { name: 'language', parse: () => 'typescript' },
+    flag: { name: 'language', description: 'accepted, then overrides with typescript', parse: () => 'typescript' },
     ask: async () => {
         const picked = requireAnswer(
             await select<'typescript' | 'javascript'>({

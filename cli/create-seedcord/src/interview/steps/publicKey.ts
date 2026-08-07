@@ -25,7 +25,7 @@ function parsePublicKey(raw: string): string {
 
 export const publicKeyStep: Step<'publicKey'> = {
     key: 'publicKey',
-    flag: { name: 'public-key', parse: parsePublicKey },
+    flag: { name: 'public-key', description: 'your app public key, http only', parse: parsePublicKey },
     skip: (answers) => answers.transport === 'gateway',
     ask: async () =>
         parsePublicKey(

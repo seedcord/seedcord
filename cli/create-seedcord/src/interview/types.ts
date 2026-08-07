@@ -15,6 +15,8 @@ export interface Answers {
 interface FlagSpec<Key extends keyof Answers> {
     // no leading dashes
     name: string;
+    // one line, printed by --help
+    description: string;
     parse: (raw: string) => Answers[Key];
 }
 

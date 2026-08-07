@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { requireAnswer } from '@src/interview/steps/requireAnswer';
 
-// clack never exports its cancel symbol, and isCancel compares it by identity
+// clack never exports its cancel symbol
 const { CANCEL } = vi.hoisted(() => ({ CANCEL: Symbol('cancel') }));
 
 vi.mock('@clack/prompts', async (importOriginal) => ({

@@ -79,7 +79,7 @@ function colorOptions(this: { userInput: string }): Option<string>[] {
 
 export const botColorStep: Step<'botColor'> = {
     key: 'botColor',
-    flag: { name: 'color', parse: parseColor },
+    flag: { name: 'color', description: 'a color name or a six-digit hex', parse: parseColor },
     ask: async () =>
         parseColor(
             requireAnswer(

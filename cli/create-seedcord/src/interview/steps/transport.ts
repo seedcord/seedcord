@@ -23,7 +23,7 @@ function parseTransport(raw: string): Answers['transport'] {
 
 export const transportStep: Step<'transport'> = {
     key: 'transport',
-    flag: { name: 'transport', parse: parseTransport },
+    flag: { name: 'transport', description: 'gateway or http', parse: parseTransport },
     ask: async () =>
         requireAnswer(
             await select<Answers['transport']>({

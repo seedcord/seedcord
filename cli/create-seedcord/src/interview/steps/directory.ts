@@ -17,7 +17,7 @@ function parseDirectory(raw: string): string {
 
 export const directoryStep: Step<'directory'> = {
     key: 'directory',
-    flag: { name: 'dir', parse: parseDirectory },
+    flag: { name: 'dir', description: 'where the project goes', parse: parseDirectory },
     ask: async () =>
         parseDirectory(
             requireAnswer(

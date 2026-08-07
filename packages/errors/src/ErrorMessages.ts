@@ -234,7 +234,9 @@ const messages = {
     [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
     [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
         `The --${flag} flag does not apply to the answers you gave.`,
-    [SeedcordErrorCode.CreateInvalidAnswer]: (flag: string, reason: string) => `--${flag}: ${reason}`
+    [SeedcordErrorCode.CreateInvalidAnswer]: (flag: string, reason: string) => `--${flag}: ${reason}`,
+    // node's parseArgs message ends on an unclosed quote
+    [SeedcordErrorCode.CreateBadUsage]: (reason: string) => `${reason}\nRun with --help for the flag list.`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */
