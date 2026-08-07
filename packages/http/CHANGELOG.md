@@ -1,5 +1,18 @@
 # @seedcord/http
 
+## 0.2.1
+
+### Patch Changes
+
+- 272b729: Update comments
+- Updated dependencies [272b729]
+    - @seedcord/core@0.1.2
+    - @seedcord/errors@0.3.2
+    - @seedcord/logger@0.1.2
+    - @seedcord/rate-limiter@0.1.2
+    - @seedcord/types@0.8.2
+    - @seedcord/utils@0.8.2
+
 ## 0.2.0
 
 ### Minor Changes
@@ -32,39 +45,6 @@
     - @seedcord/types@0.8.1
     - @seedcord/utils@0.8.1
     - @seedcord/rate-limiter@0.1.1
-
-## 0.2.0-next.0
-
-### Minor Changes
-
-- 0642de5: **BREAKING:** `@seedcord/http` no longer serves a health endpoint, and `healthCheck` is gone from its config. An unsigned POST to the interactions server answers 401, which covers an uptime check.
-- 0642de5: **BREAKING:** `start()` takes no arguments. Declare the interactions port as `port` on the config.
-
-### Patch Changes
-
-- c567fea: Bump deps.
-- 814902a: Both transports now trace the elapsed time of each dispatched interaction and each reply write.
-- c567fea: Set all packages' node floor to LTS.
-- 5b57bda: A hot reload now logs one line worded by what changed, `Unloaded` on a delete, `Registered` on a new file, and `Reloaded` with a duration on an edit.
-- d470ad4: A dispatched interaction now logs its route and handler at debug like the gateway.
-- c567fea: Loads `reflect-metadata` from the package entry.
-- 5b57bda: A failed startup no longer drops sinks installed through `installSink`, so the `seedcord dev` log view keeps working after one.
-- d470ad4: Now uses the appropriate log levels for logs across the lifecycle of the transports and plugins.
-- Updated dependencies [c567fea]
-- Updated dependencies [0642de5]
-- Updated dependencies [814902a]
-- Updated dependencies [c567fea]
-- Updated dependencies [5b57bda]
-- Updated dependencies [0642de5]
-- Updated dependencies [d470ad4]
-- Updated dependencies [d470ad4]
-- Updated dependencies [814902a]
-    - @seedcord/core@0.1.1-next.0
-    - @seedcord/errors@0.3.1-next.0
-    - @seedcord/logger@0.1.1-next.0
-    - @seedcord/types@0.8.1-next.0
-    - @seedcord/utils@0.8.1-next.0
-    - @seedcord/rate-limiter@0.1.1-next.0
 
 ## 0.1.0
 
