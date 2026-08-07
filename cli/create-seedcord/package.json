@@ -52,6 +52,7 @@
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/types": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
         "tsx": "catalog:deps",
         "typescript": "catalog:peer"
