@@ -44,6 +44,8 @@ export const COLOR_NAMES = [
 
 export type ColorChoice = (typeof COLOR_NAMES)[number];
 
+const VISIBLE_COLORS = 8;
+
 // the framework's resolveColor takes six hex digits with the hash optional
 function normalizeHex(raw: string): `#${string}` | null {
     const digits = raw.trim().replace(/^#/, '');
@@ -87,7 +89,8 @@ export const botColorStep: Step<'botColor'> = {
                     message: 'Pick an accent color, or type a hex',
                     options: colorOptions,
                     initialValue: 'Blurple',
-                    placeholder: 'Blurple'
+                    placeholder: 'Blurple',
+                    maxItems: VISIBLE_COLORS
                 })
             )
         )
