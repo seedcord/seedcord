@@ -47,4 +47,17 @@ describe('runFlow', () => {
         expect(asked).toEqual(['transport']);
         expect(answers.capabilities).toBeUndefined();
     });
+
+    it('rejects a flag that supplied a value for a step the answers skip', async () => {
+        const asked: (keyof Answers)[] = [];
+        const publicKey: Step<'publicKey'> = {
+            ...stubStep('publicKey', 'prompted', asked),
+            flag: { name: 'public-key', parse: (raw) => raw },
+            skip: (answers) => answers.transport === 'gateway'
+        };
+
+        await expect(runFlow([publicKey], { transport: 'gateway', publicKey: 'supplied' })).rejects.toThrow(
+            /public-key/
+        );
+    });
 });

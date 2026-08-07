@@ -5,7 +5,6 @@ export const CAPABILITIES = [
         id: 'guild-messages',
         label: 'Messages in servers',
         hint: 'know when a message is sent, edited, or deleted',
-        privileged: false,
         intents: ['GuildMessages'],
         partials: []
     },
@@ -13,15 +12,14 @@ export const CAPABILITIES = [
         id: 'message-text',
         label: 'What messages actually say',
         hint: 'privileged. without this, message text is empty unless the message mentions your bot',
-        privileged: true,
-        intents: ['MessageContent'],
+        // MessageContent subscribes to nothing on its own
+        intents: ['GuildMessages', 'MessageContent'],
         partials: []
     },
     {
         id: 'direct-messages',
         label: 'Direct messages',
         hint: 'messages people send your bot directly',
-        privileged: false,
         // djs documents Partials.Channel as required to receive direct messages
         intents: ['DirectMessages'],
         partials: ['Channel']
@@ -30,7 +28,6 @@ export const CAPABILITIES = [
         id: 'reactions',
         label: 'Reactions',
         hint: 'know when someone reacts to a message',
-        privileged: false,
         intents: ['GuildMessageReactions', 'DirectMessageReactions'],
         partials: ['Message', 'Channel', 'Reaction']
     },
@@ -38,7 +35,6 @@ export const CAPABILITIES = [
         id: 'members',
         label: 'Member joins and leaves',
         hint: 'privileged. also covers nickname and role changes',
-        privileged: true,
         intents: ['GuildMembers'],
         partials: []
     },
@@ -46,7 +42,6 @@ export const CAPABILITIES = [
         id: 'presence',
         label: 'Member online status',
         hint: 'privileged. who is online, and what they are playing',
-        privileged: true,
         intents: ['GuildPresences'],
         partials: []
     },
@@ -54,7 +49,6 @@ export const CAPABILITIES = [
         id: 'voice',
         label: 'Voice channel activity',
         hint: 'know when someone joins, leaves, or moves between voice channels',
-        privileged: false,
         intents: ['GuildVoiceStates'],
         partials: []
     },
@@ -62,7 +56,6 @@ export const CAPABILITIES = [
         id: 'moderation',
         label: 'Bans and timeouts',
         hint: 'know when a member is banned, unbanned, or timed out',
-        privileged: false,
         intents: ['GuildModeration'],
         partials: []
     },
@@ -70,7 +63,6 @@ export const CAPABILITIES = [
         id: 'scheduled-events',
         label: 'Scheduled events',
         hint: 'know when a server event is created, updated, or starts',
-        privileged: false,
         intents: ['GuildScheduledEvents'],
         partials: []
     },
@@ -78,7 +70,6 @@ export const CAPABILITIES = [
         id: 'automod',
         label: 'AutoMod',
         hint: 'know when a server AutoMod rule changes or fires',
-        privileged: false,
         intents: ['AutoModerationConfiguration', 'AutoModerationExecution'],
         partials: []
     },
@@ -86,7 +77,6 @@ export const CAPABILITIES = [
         id: 'polls',
         label: 'Polls',
         hint: 'know when someone votes in a poll',
-        privileged: false,
         intents: ['GuildMessagePolls', 'DirectMessagePolls'],
         partials: []
     }
@@ -111,8 +101,9 @@ export function partialsFor(ids: readonly string[]): PartialName[] {
     return [...new Set<PartialName>(picked(ids).flatMap((capability) => capability.partials))];
 }
 
+// each of the three has its own toggle on the Discord dashboard
+const PRIVILEGED_INTENTS = new Set<IntentName>(['GuildMembers', 'GuildPresences', 'MessageContent']);
+
 export function privilegedFor(ids: readonly string[]): IntentName[] {
-    return picked(ids)
-        .filter((capability) => capability.privileged)
-        .flatMap((capability) => capability.intents);
+    return intentsFor(ids).filter((intent) => PRIVILEGED_INTENTS.has(intent));
 }

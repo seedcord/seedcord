@@ -31,6 +31,10 @@ describe('intentsFor', () => {
     it('ignores an id no capability declares', () => {
         expect(intentsFor(['nonsense'])).toEqual(['Guilds']);
     });
+
+    it('carries a message event source when only message-text is picked', () => {
+        expect(intentsFor(['message-text'])).toContain('GuildMessages');
+    });
 });
 
 describe('partialsFor', () => {

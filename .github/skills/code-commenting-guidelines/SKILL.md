@@ -156,7 +156,7 @@ A comment can address the reader directly. "if you change this, change X too" is
 
 The reader is whoever changes this line six months from now. They want the fact.
 
-A reviewer asking "why is this comment here" is a different person asking a different question. Answering that question inside the comment makes that comment fail it's own test and purpose.
+A reviewer asking "why is this comment here" is a different person asking a different question. Answering that question inside the comment makes that comment fail its own test and purpose.
 
 ---
 
