@@ -25,14 +25,14 @@ describe('claimTarget', () => {
     it('accepts a path that does not exist yet', async () => {
         const target = join(await scratch(), 'my-bot');
 
-        await expect(claimTarget(target)).resolves.toBeUndefined();
+        await expect(claimTarget(target)).resolves.toEqual({ existed: false });
     });
 
-    it('accepts an existing empty directory', async () => {
+    it('reports an existing empty directory, which the cleanup leaves behind', async () => {
         const target = join(await scratch(), 'my-bot');
         await mkdir(target);
 
-        await expect(claimTarget(target)).resolves.toBeUndefined();
+        await expect(claimTarget(target)).resolves.toEqual({ existed: true });
     });
 
     it('refuses a directory with anything in it', async () => {

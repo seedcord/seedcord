@@ -261,5 +261,7 @@ export enum SeedcordErrorCode {
     /** The command line did not parse. */
     CreateBadUsage = 3204,
     /** The target path already holds something. */
-    CreateTargetNotEmpty = 3205
+    CreateTargetNotEmpty = 3205,
+    /** A command the scaffolder shelled out to exited non-zero. */
+    CreateStepFailed = 3206
 }

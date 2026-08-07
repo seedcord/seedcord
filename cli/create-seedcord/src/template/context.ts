@@ -1,5 +1,8 @@
 import { basename } from 'node:path';
 
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
+
 import { intentsFor, partialsFor } from '@interview/capabilities';
 
 import type { Answers } from '@interview/types';
@@ -23,6 +26,19 @@ export interface TemplateContext {
     botColor: string;
     developerUsername: string;
     pm: { run: string };
+}
+
+const REQUIRED = ['directory', 'language', 'transport', 'token', 'botColor'] as const;
+
+// runFlow either fills these or throws
+export function requireScaffoldAnswers(answers: Partial<Answers>): ScaffoldAnswers {
+    for (const key of REQUIRED) {
+        if (answers[key] === undefined) {
+            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [key, 'No answer was collected.']);
+        }
+    }
+
+    return answers as ScaffoldAnswers;
 }
 
 export function buildContext(

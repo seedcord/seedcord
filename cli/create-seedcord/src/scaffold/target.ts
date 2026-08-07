@@ -3,14 +3,14 @@ import { readdir, stat } from 'node:fs/promises';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-// an empty target is what lets the cleanup remove everything it finds
-export async function claimTarget(target: string): Promise<void> {
+// scaffold deletes this directory when a step fails
+export async function claimTarget(target: string): Promise<{ existed: boolean }> {
     const found = await stat(target).catch(() => null);
-    if (found === null) return;
+    if (found === null) return { existed: false };
 
     if (found.isDirectory()) {
         const entries = await readdir(target);
-        if (entries.length === 0) return;
+        if (entries.length === 0) return { existed: true };
     }
 
     throw new SeedcordError(SeedcordErrorCode.CreateTargetNotEmpty, [target]);

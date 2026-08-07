@@ -238,7 +238,8 @@ const messages = {
     // node's parseArgs message ends on an unclosed quote
     [SeedcordErrorCode.CreateBadUsage]: (reason: string) => `${reason}\nRun with --help for the flag list.`,
     [SeedcordErrorCode.CreateTargetNotEmpty]: (target: string) =>
-        `${target} already has files in it. Pick an empty directory or a name that does not exist yet.`
+        `${target} already has files in it. Pick an empty directory or a name that does not exist yet.`,
+    [SeedcordErrorCode.CreateStepFailed]: (command: string, reason: string) => `\`${command}\` failed.\n${reason}`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */
