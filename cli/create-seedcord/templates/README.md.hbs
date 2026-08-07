@@ -1,0 +1,62 @@
+# {{ projectName }}
+
+A Discord bot built with [seedcord](https://seedcord.org){{#if isGateway}} on the gateway transport{{else}} on the http transport{{/if}}.
+
+## Running it
+
+```sh
+{{ pm.run }} dev
+```
+
+That starts the dev server with hot reload{{#unless isGateway}} and opens a tunnel so Discord can reach your interactions endpoint{{/unless}}.
+
+## Scripts
+
+<!-- prettier-ignore-start -->
+
+| script | what it does |
+| --- | --- |
+| `{{ pm.run }} dev` | dev server with hot reload |
+| `{{ pm.run }} build` | compile to `dist/` |
+| `{{ pm.run }} start` | run the compiled build |
+| `{{ pm.run }} codegen` | regenerate `src/seedcord-gen.d.ts` |
+| `{{ pm.run }} lint` | eslint |
+| `{{ pm.run }} tc` | type-check |
+
+<!-- prettier-ignore-end -->
+
+Run `codegen` after you add a command or change its options. It writes the types behind `this.options`, and the generated file is committed.
+
+## Environment
+
+`.env` holds your secrets and is gitignored.
+
+<!-- prettier-ignore-start -->
+
+| key | required |
+| --- | --- |
+| `DISCORD_BOT_TOKEN` | yes |
+{{#unless isGateway}}
+| `DISCORD_PUBLIC_KEY` | yes |
+{{/unless}}
+| `UNKNOWN_EXCEPTION_WEBHOOK_URL` | no |
+| `HANDLED_EXCEPTION_WEBHOOK_URL` | no |
+| `ENV` | no, defaults to `development` |
+
+<!-- prettier-ignore-end -->
+
+The two webhook keys take Discord webhook URLs. Set them to get error reports posted to a channel.
+
+## Where things go
+
+- `src/commands/` holds command definitions, one class per command.
+- `src/handlers/` holds the code that runs when someone uses one.
+{{#if hasEvents}}
+- `src/events/` holds event handlers for the things you said your bot reacts to.
+{{/if}}
+- `src/bot.ts` is the config.
+
+## Docs
+
+- Guide: <https://guide.seedcord.org>
+- API reference: <https://docs.seedcord.org>

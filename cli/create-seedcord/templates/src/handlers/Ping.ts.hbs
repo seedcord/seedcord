@@ -1,4 +1,4 @@
-import { SlashHandler, SlashRoute, timestampFromSnowflake } from '@seedcord/http';
+import { SlashHandler, SlashRoute, timestampFromSnowflake } from '{{ transportPackage }}';
 
 @SlashRoute('ping')
 export class Ping extends SlashHandler<'ping'> {

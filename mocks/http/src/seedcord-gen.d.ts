@@ -4,7 +4,7 @@
 // prettier-ignore
 declare module '@seedcord/http' {
     interface SlashOptionRegistry {
-        ping: { note: { kind: 'string'; required: true } };
+        ping: { detailed: { kind: 'boolean'; required: false } };
     }
     interface UserContextMenuRegistry {
 
