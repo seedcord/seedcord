@@ -83,6 +83,7 @@
                 "fix-esm-import-path"
             ]
         },
+        "cli/create-seedcord": {},
         "tooling/docs-engine": {},
         "tooling/docs-generator": {
             "ignore": [

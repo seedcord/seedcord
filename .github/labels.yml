@@ -51,6 +51,9 @@
 - name: '📦 seedcord'
   color: b062bc
   description: framework orchestrator and bot host
+- name: '📦 create-seedcord'
+  color: a562bc
+  description: the project scaffolder
 - name: '📦 docs-generator'
   color: bc62a5
   description: API model generation

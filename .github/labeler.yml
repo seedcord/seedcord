@@ -61,6 +61,9 @@
 '📦 seedcord':
   - changed-files:
       - any-glob-to-any-file: 'cli/seedcord/**'
+'📦 create-seedcord':
+  - changed-files:
+      - any-glob-to-any-file: 'cli/create-seedcord/**'
 '📦 docs-generator':
   - changed-files:
       - any-glob-to-any-file: 'tooling/docs-generator/**'

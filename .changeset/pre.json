@@ -5,6 +5,7 @@
     "@seedcord/docs": "0.1.8",
     "@seedcord/home": "0.0.1",
     "seedcord": "0.17.1",
+    "create-seedcord": "0.0.1",
     "@seedcord/mock-gateway": "0.2.25",
     "@seedcord/mock-http": "0.0.3",
     "@seedcord/core": "0.1.2",
