@@ -54,6 +54,7 @@
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
+        "discord.js": "catalog:peer",
         "tsx": "catalog:deps",
         "typescript": "catalog:peer"
     },
