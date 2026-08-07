@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   deps:
+    '@clack/prompts':
+      specifier: ^1.7.0
+      version: 1.7.0
     '@discordjs/builders':
       specifier: ^1.14.1
       version: 1.14.1
@@ -378,7 +381,7 @@ importers:
         version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
       eslint-config-next:
         specifier: catalog:eslint
-        version: 16.2.12(@typescript-eslint/parser@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+        version: 16.2.12(@typescript-eslint/parser@8.61.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       eslint-plugin-react-compiler:
         specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
@@ -436,7 +439,7 @@ importers:
         version: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
       eslint-config-next:
         specifier: catalog:eslint
-        version: 16.2.12(@typescript-eslint/parser@8.61.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+        version: 16.2.12(@typescript-eslint/parser@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       eslint-plugin-react-compiler:
         specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
@@ -457,6 +460,10 @@ importers:
         version: 4.118.0(@types/node@26.1.2)
 
   cli/create-seedcord:
+    dependencies:
+      '@clack/prompts':
+        specifier: catalog:deps
+        version: 1.7.0
     devDependencies:
       '@seedcord/eslint-config':
         specifier: workspace:*
@@ -486,7 +493,7 @@ importers:
   cli/seedcord:
     dependencies:
       '@clack/prompts':
-        specifier: ^1.7.0
+        specifier: catalog:deps
         version: 1.7.0
       '@commander-js/extra-typings':
         specifier: ^15.0.0

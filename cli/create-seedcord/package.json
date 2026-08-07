@@ -51,5 +51,8 @@
     "publishConfig": {
         "access": "public",
         "provenance": true
+    },
+    "dependencies": {
+        "@clack/prompts": "catalog:deps"
     }
 }

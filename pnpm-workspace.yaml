@@ -45,6 +45,7 @@ allowBuilds:
 
 catalogs:
   deps:
+    '@clack/prompts': ^1.7.0
     '@discordjs/builders': ^1.14.1
     '@discordjs/rest': ^2.6.3
     '@tailwindcss/postcss': ^4.3.3
