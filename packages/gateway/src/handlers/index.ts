@@ -1,6 +1,7 @@
 export {
     AutocompleteHandler,
     ButtonHandler,
+    ComponentHandler,
     ContextMenuHandler,
     InteractionHandler,
     InteractionMiddleware,
