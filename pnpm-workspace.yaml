@@ -45,6 +45,7 @@ allowBuilds:
 
 catalogs:
   deps:
+    '@clack/prompts': ^1.7.0
     '@discordjs/builders': ^1.14.1
     '@discordjs/rest': ^2.6.3
     '@tailwindcss/postcss': ^4.3.3
@@ -58,6 +59,7 @@ catalogs:
     next: ^16.2.12
     prettier: ^3.9.6
     prettier-plugin-tailwindcss: ^0.8.1
+    reflect-metadata: ^0.2.2
     shiki: ^4.4.1
     tailwindcss: ^4.3.3
     tsdown: ^0.22.14
@@ -86,7 +88,6 @@ catalogs:
   peer:
     discord.js: ^14.27.0
     mongoose: ^9.9.1
-    reflect-metadata: ^0.2.2
     typescript: ^6.0.3
   test:
     dedent: ^1.7.2

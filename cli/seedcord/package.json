@@ -52,7 +52,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@clack/prompts": "^1.7.0",
+        "@clack/prompts": "catalog:deps",
         "@commander-js/extra-typings": "^15.0.0",
         "@discordjs/rest": "catalog:deps",
         "@seedcord/core": "workspace:*",

@@ -33,8 +33,7 @@
         "@seedcord/plugin-mongoose": "workspace:*",
         "discord.js": "catalog:peer",
         "envapt": "catalog:deps",
-        "mongoose": "catalog:peer",
-        "reflect-metadata": "catalog:peer"
+        "mongoose": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
