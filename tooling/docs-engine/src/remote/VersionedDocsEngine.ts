@@ -16,15 +16,14 @@ import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEnt
 
 const defaultFetcher: Fetcher = (url) => globalThis.fetch(url);
 
-// shared across the per-request engines so the deserialize and token-index build runs once per
-// (folder, version) for the process, not per request. a built model is immutable, so sharing is safe.
+// a built model is immutable
 const sharedModelCache = new Map<string, DocPackageModel>();
 
 /**
  * Version-aware engine for the remote (R2) docs. Holds one loaded model per package, keyed by
- * full name; `setVersion(folder, selector)` fetches and swaps a single package's active version.
- * Search and reference resolution are scoped to the loaded set; resolution runs through the shared
- * {@link ReferenceResolver} via `resolver()`. Construct one per request: it carries mutable per-package
+ * full name. `setVersion(folder, selector)` fetches and swaps a single package's active version.
+ * Search and reference resolution are scoped to the loaded set. Resolution runs through the shared
+ * {@link ReferenceResolver} via `resolver()`. Construct one per request. It carries mutable per-package
  * state and must not be shared across requests.
  */
 export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
@@ -109,8 +108,8 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
 
-    // Same lookup as getNodeBySlug here (only loaded packages exist), kept distinct so the
-    // ReferenceResolver runs against this engine or DocsEngine through the NodeLookup interface.
+    // same lookup as getNodeBySlug here. the two differ on DocsEngine, which ReferenceResolver also
+    // runs against through NodeLookup.
     getNodeByGlobalSlug(packageName: string, slug: string): DocNode | null {
         return this.models.get(packageName)?.indexes.bySlug.get(slug) ?? null;
     }
@@ -155,8 +154,7 @@ export class VersionedDocsEngine implements NodeLookup, PackageRegistry {
         return null;
     }
 
-    // deferred so loading several packages then searching rebuilds once instead of once per setVersion,
-    // and a page render that only reads nodes by slug never builds the search index.
+    // deferred so several setVersion calls cost one rebuild, and a slug-only render builds nothing
     private ensureBuilt(): void {
         if (!this.dirty) return;
         this.rebuild();
@@ -188,8 +186,6 @@ function emptyManifest(packages: DocManifest['packages']): DocManifest {
     return { generatedAt: '', tool: '', apiExtractorVersion: '', outputDir: '', packages };
 }
 
-// Resolve a (possibly member) slug against one package's index entry: the entity must be listed, and
-// the entry must include a concrete version. `fragment` is the member segment when the slug is nested.
 function entityFromEntry(entry: PackageIndexEntry, slug: string, activeVersion?: string): CrossPackageEntity | null {
     const segments = slug.split('/');
     const entitySlug = segments[0];
@@ -198,8 +194,7 @@ function entityFromEntry(entry: PackageIndexEntry, slug: string, activeVersion?:
     const tone = entry.entities?.[entitySlug];
     if (!tone) return null;
 
-    // Prefer the version actually loaded for this package so a cross-package link stays consistent
-    // with what the reader is viewing, not always the latest head.
+    // stay on the version the reader is viewing
     const version = activeVersion ?? entry.stable?.latest ?? entry.prerelease?.latest;
     if (!version) return null;
 

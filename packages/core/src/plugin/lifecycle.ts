@@ -5,7 +5,7 @@ import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
 
 /**
  * The lifecycle a plugin declares through `super(host, spec)`. Unset fields resolve to the base
- * defaults. `ready` runs at a fixed `StartupPhase.Ready`, so it takes only a timeout.
+ * defaults. `ready` runs at a fixed `StartupPhase.Ready`.
  */
 export interface PluginLifecycleSpec {
     init?: { phase?: StartupPhase; timeout?: number };

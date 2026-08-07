@@ -5,9 +5,8 @@ import type { APIInteractionGuildMember, APIUser } from 'discord-api-types/v10';
 
 /**
  * The interaction gate context on the HTTP transport. It extends the scalar {@link GateContextBase} with the
- * raw interaction payload and the user and member the payload carries. `Repliable` narrows which handlers a
- * gate attaches to, inferred from the `ctx` annotation, so a gate reading button fields is rejected on a
- * slash handler.
+ * raw interaction payload and the user and member the payload carries. A gate reading button fields, inferred
+ * from its `ctx` annotation, is rejected on a slash handler.
  *
  * The http transport delivers no role-derived permission sets, so `memberGuildPermissions` and
  * `appGuildPermissions` are absent. A gate requiring `GuildPermissionsContext` (a permission gate with
@@ -31,7 +30,7 @@ export interface InteractionGateContext<Repliable extends Repliables = Repliable
     readonly core: Core;
     /** The raw interaction payload, which is the reply target. */
     readonly interaction: Repliable;
-    /** Every repliable interaction contains a user, so this is never null. */
+    /** Every repliable interaction contains a user. */
     readonly user: APIUser;
     /** The invoking member, or null in a DM. */
     readonly member: APIInteractionGuildMember | null;

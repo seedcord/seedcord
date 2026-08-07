@@ -1,10 +1,6 @@
 /**
  * Rounds a number to a specified number of decimal places.
  *
- * @param num - The number to be rounded.
- * @param precision - The number of decimal places to round to.
- * @returns The rounded number.
- *
  * @example
  * ```ts
  * round(3.14159, 2); // 3.14

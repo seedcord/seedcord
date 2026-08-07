@@ -231,7 +231,7 @@ export enum SeedcordErrorCode {
     CliCodegenDuplicateContextMenu = 3124,
     /** Could not resolve the application from the bot token during `commands --clean`. */
     CliCleanAppFetchFailed = 3125,
-    /** `commands --clean` ran with neither --guild nor --all-guilds, so there is nothing to scan. */
+    /** `commands --clean` ran with neither --guild nor --all-guilds. */
     CliCleanNoGuilds = 3126,
     /** `commands --clean` combined --purge with --all-guilds, which would wipe every guild. */
     CliCleanPurgeAllGuilds = 3127,

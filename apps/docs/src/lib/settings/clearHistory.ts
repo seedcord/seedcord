@@ -25,10 +25,6 @@ export function clearDocsHistory(): void {
                 const name = eq > -1 ? cookie.slice(0, eq) : cookie;
                 document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
             }
-        } catch {
-            // ignore cookie clearing failures
-        }
-    } catch {
-        // ignore overall failures
-    }
+        } catch {}
+    } catch {}
 }

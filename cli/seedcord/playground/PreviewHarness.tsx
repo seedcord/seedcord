@@ -13,8 +13,8 @@ interface PreviewHarnessProps {
     readonly scenario: Scenario;
 }
 
-// Dev-only harness: it renders the real DevApp and runs the scenario once (in onReady, after the LogStore
-// sink mounts). All UI controls are the real DevApp hotkeys; the harness only feeds scripted data.
+// the scenario runs once in onReady, after the LogStore sink mounts. every UI control is a DevApp
+// hotkey. this component only feeds scripted data.
 export function PreviewHarness({ store, scenario }: PreviewHarnessProps): ReactElement {
     const abortRef = useRef({ aborted: false });
 

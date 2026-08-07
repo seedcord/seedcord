@@ -1,5 +1,13 @@
 # @seedcord/eslint-plugin
 
+## 0.1.2
+
+### Patch Changes
+
+- 272b729: Update comments
+- Updated dependencies [272b729]
+    - eslint-plugin-discordjs@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
@@ -7,14 +15,6 @@
 - c567fea: Set all packages' node floor to LTS.
 - Updated dependencies [c567fea]
     - eslint-plugin-discordjs@0.1.1
-
-## 0.1.1-next.0
-
-### Patch Changes
-
-- c567fea: Set all packages' node floor to LTS.
-- Updated dependencies [c567fea]
-    - eslint-plugin-discordjs@0.1.1-next.0
 
 ## 0.1.0
 

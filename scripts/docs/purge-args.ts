@@ -9,9 +9,8 @@ function parseListArg(argv: readonly string[], flag: string): string[] {
     return argv.slice(index + 1).filter((value) => !value.startsWith('--'));
 }
 
-// prefixes win over files so the more targeted flag is unambiguous if both are passed by mistake.
-// a flag present with no values throws rather than falling through, so a forgotten value never
-// silently purges the whole zone.
+// prefixes win, so the more targeted flag applies if both are passed by mistake. a flag present with
+// no values throws immediately, so a forgotten value never silently purges the whole zone.
 export function buildPurgeBody(argv: readonly string[]): PurgeBody {
     const prefixes = parseListArg(argv, '--prefixes');
     if (prefixes.length > 0) return { prefixes };

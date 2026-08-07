@@ -55,8 +55,8 @@ function errorShape(error: Error, withCause = true): Record<string, unknown> {
 
 /**
  * The edge default sink. Emits one structured object to the severity-matched `console` method so
- * a Workers drain indexes each field. Trailing object args merge into top-level fields, an Error
- * arg serializes to `{ name, message, stack }`. The message and error strings are ANSI-stripped
+ * a Workers drain indexes each field. Trailing object args merge into top-level fields, and an
+ * Error arg serializes to `{ name, message, stack }`. The message and error strings are ANSI-stripped
  * (the output is machine-read), and every value passes through `filterCirculars` so a BigInt
  * or circular reference never throws.
  */
@@ -95,7 +95,7 @@ export class ObjectConsoleSink implements ILogSink {
 }
 
 function emit(level: LogLevel, payload: unknown): void {
-    // debug carries trace too, workerd has no console.trace
+    // debug carries trace too, because workerd has no console.trace
     const method = level === 'error' ? 'error' : level === 'warn' ? 'warn' : level === 'info' ? 'info' : 'debug';
     // eslint-disable-next-line no-console -- this sink emits to the console by design
     console[method](payload);

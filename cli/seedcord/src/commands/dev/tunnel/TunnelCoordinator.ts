@@ -16,7 +16,7 @@ export type TunnelStatus = TunnelPhase | 'live' | 'lost';
 
 export interface CoordinatorDeps {
     readonly makeTunnel: (onLost: () => void) => CoordinatorTunnel;
-    // a quick hostname is gone after the session, so its endpoint is cleared on quit
+    // a quick hostname lasts only as long as this process, so quit clears the endpoint
     readonly kind: 'quick' | 'configured';
     readonly endpoint: Pick<InteractionsEndpoint, 'set' | 'clear'>;
     readonly onStatus: (status: TunnelStatus | null) => void;
@@ -46,7 +46,7 @@ export class TunnelCoordinator {
         const startedAt = Date.now();
         const since = (): string => paint.mute(`+${formatUptime(Date.now() - startedAt)}`);
         const tunnel = this.deps.makeTunnel(() => this.reportLost(attempt));
-        // a later onPort holds no handle on this tunnel, so abort contains the stop
+        // a later onPort has no handle on this tunnel. the abort is the only way back to stop it.
         attempt.signal.addEventListener('abort', () => tunnel.stop(), { once: true });
         let patched = false;
 
@@ -66,7 +66,7 @@ export class TunnelCoordinator {
             this.deps.logger.info(`Interactions endpoint set on the dev dashboard ${since()}`);
         } catch (error: unknown) {
             if (superseded(attempt)) return;
-            // stop from attempting a patch because discord refuses a hostname it previously refused
+            // discord will refuse the same hostname again
             if (patched) attempt.abort();
             this.reportFailure(error, patched);
         }
@@ -81,11 +81,11 @@ export class TunnelCoordinator {
     }
 
     private reportFailure(error: unknown, patched: boolean): void {
-        // so the next restart on this port retries
+        // so a retry on this port is not skipped
         this.target = undefined;
         this.deps.onStatus(null);
         this.deps.logger.error('Tunnel setup failed, the bot runs without a public endpoint', error);
-        // pasting works exactly when the tunnel survived, which is the same condition as the abort above
+        // patched means the abort above stopped the tunnel. the paste hint only holds while it is up.
         if (this.deps.kind === 'quick') this.deps.logger.info(patched ? RESTART_HINT : PASTE_HINT);
     }
 

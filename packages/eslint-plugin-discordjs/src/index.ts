@@ -31,7 +31,6 @@ const plugin: TSESLint.FlatConfig.Plugin = {
     rules
 };
 
-// prefer-* rules are style choices, so they warn
 const WARN_RULES = new Set(['prefer-ephemeral-flag', 'prefer-v2-component']);
 
 const presetRules: NonNullable<TSESLint.FlatConfig.Config['rules']> = {};

@@ -76,7 +76,6 @@ export default createRule({
         }
 
         function check(anchor: TSESTree.Node, calls: TSESTree.CallExpression[], root: TSESTree.Node): void {
-            // cheap AST facts before the type lookup is worth paying for
             const facts = gatherFacts(calls, constructorData(root));
             if (facts.props.size === 0 && facts.styleSource === undefined) return;
 

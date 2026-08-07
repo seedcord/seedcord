@@ -255,8 +255,8 @@ const mapSearchEntry = (
 };
 
 function dedupe(rawResults: DocSearchEntry[], kind: KindFilter): DocSearchEntry[] {
-    // A member's overload signatures share slug+kind; key by package too so a same-named entity in
-    // another package (Logger in seedcord and services) stays a distinct result.
+    // a member's overload signatures share slug and kind. a same-named entity in another package,
+    // like Logger in seedcord and services, stays a distinct result
     const seen = new Set<string>();
     const out: DocSearchEntry[] = [];
     for (const entry of rawResults) {
@@ -271,8 +271,8 @@ function dedupe(rawResults: DocSearchEntry[], kind: KindFilter): DocSearchEntry[
     return out;
 }
 
-// the package you're viewing is searched at its URL version so older versions stay searchable. the
-// other packages follow the toggle, stable heads when off and pre-release heads when on.
+// the current package is searched at its URL version, keeping older versions searchable. other
+// packages follow the toggle, stable heads when off and pre-release heads when on
 async function loadSearchTargets(
     engine: Awaited<ReturnType<typeof getDocsEngine>>,
     targets: readonly { folder: string }[],
@@ -286,8 +286,8 @@ async function loadSearchTargets(
             continue;
         }
         const entry = await engine.getEntry(pkg.folder);
-        // prefer the toggled channel, fall back to the other so a package that only ships one (every
-        // package on the next branch is pre-release-only) stays searchable instead of vanishing.
+        // prefer the toggled channel, falling back to the other since every package on the next
+        // branch ships pre-release only. it would otherwise vanish from search
         const channel = prerelease ? (entry?.prerelease ?? entry?.stable) : (entry?.stable ?? entry?.prerelease);
         if (!channel) continue;
         await engine.setVersion(pkg.folder, channel.latest).catch(() => undefined);

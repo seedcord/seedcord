@@ -23,7 +23,7 @@ const COMMANDS: readonly SlashCommandDef[] = [
     { name: 'invite', description: 'join the Discord server', href: DISCORD_URL }
 ];
 
-// typed in full these run, the list never shows them
+// typed in full these still run. the list never shows them
 const HIDDEN_COMMANDS: readonly SlashCommandDef[] = [{ name: 'star', description: 'star the repo', href: REPO_URL }];
 
 const REPLY_DISMISS_MS = 4000;

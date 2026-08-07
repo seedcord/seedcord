@@ -39,7 +39,7 @@ export default createVitestConfig(import.meta.url, {
                 }
             },
             {
-                // no node:http on workerd, so the bridge tests run in a node environment
+                // no node:http on workerd
                 resolve: { alias },
                 test: {
                     name: 'node',

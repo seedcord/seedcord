@@ -44,9 +44,9 @@ function refsToLinks(refs: readonly RefRange[], currentPackage: string): CodeLin
     return links;
 }
 
-// A type link whose range crosses a shiki span boundary is split by DOMPurify's HTML5 reparse into
-// the real anchor plus an empty seam anchor (the parser copies the href onto the reopened tag).
-// Drop the empty seams; the fixpoint loop handles back-to-back boundaries.
+// dompurify's html5 reparse splits a link that crosses a shiki span boundary into the real anchor plus
+// an empty one, because the parser copies the href onto the tag it reopens. the loop repeats for
+// back-to-back boundaries.
 const EMPTY_ANCHOR = /<a\b[^>]*>\s*<\/a>/g;
 
 async function safeHighlight(
@@ -70,9 +70,8 @@ export async function formatDeclarationHeader(
 ): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedDeclarationHeaderPretty(header, buildResolveHref(context));
     const links = refsToLinks(refs, context.manifestPackage);
-    // Property/type-parameter declarations (no leading keyword) need a class-body wrap so shiki
-    // tokenizes `protected`/`readonly`/type-param `extends` as keywords; keyword-led top-level
-    // declarations (`class Foo`, `type Y = ...`) are valid TS at the file level without it.
+    // with no leading keyword the text isn't top-level TS, and shiki only reads `protected`, `readonly`
+    // and type-param `extends` as keywords inside the class-body wrap
     const highlighter = header.keyword
         ? (c: string): Promise<string | null> => highlightToHtml(c, 'ts', links)
         : (c: string): Promise<string | null> => highlightMemberToHtml(c, links);
@@ -89,8 +88,7 @@ export async function formatSignature(
         const links = refsToLinks(refs, context.manifestPackage);
         return { text, html: await safeHighlight((c) => highlightSignatureToHtml(c, links), text) };
     }
-    // A modifier prefix (`async`, `public get`, ...) sits outside the engine's offset map, so shift
-    // every ref past it and highlight the prefixed text with the shifted links.
+    // the engine's ref offsets don't count a modifier prefix (`async`, `public get`)
     const offset = prefix.length + 1;
     const prefixedText = `${prefix} ${text}`;
     const links = refsToLinks(refs, context.manifestPackage).map((link) => ({
@@ -118,8 +116,7 @@ export async function formatTypeParameter(param: TypeParameter, context: FormatC
     return { text, html: await safeHighlight((c) => highlightTypeParamToHtml(c, links), text) };
 }
 
-// For metadata fields (`model.returnType`, `model.type`) shown outside a code block, where markdown
-// link syntax would render as raw text. Returns plain text with refs resolved, no markup.
+// callers render this outside a code block, where markdown link syntax would show as raw text
 export async function inlineTypeText(inline: InlineType, context: FormatContext): Promise<string> {
     const { text } = await formatInlineTypePretty(inline, buildResolveHref(context));
     return text;
@@ -132,8 +129,7 @@ export interface ParameterFormatInput {
     defaultValue?: string;
 }
 
-// Uses the member-wrap (`class _ { … }`) so shiki's TS grammar tokenizes the `name: type` shape as a
-// class-field declaration, not as a labeled statement.
+// a bare `name: type` tokenizes as a labeled statement until the member wrap makes it a class field
 export async function formatParameter(
     input: ParameterFormatInput,
     context: FormatContext

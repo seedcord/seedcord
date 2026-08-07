@@ -1,5 +1,5 @@
 export { InteractionMiddleware } from './InteractionMiddleware';
-// exported only so api-extractor keeps confirm in the docs model, a forgotten base loses its methods
+// api-extractor drops the methods of a base that no entry point exports
 export { InteractionHandler } from './InteractionHandler';
 export { SlashHandler } from './SlashHandler';
 export { ContextMenuHandler } from './ContextMenuHandler';

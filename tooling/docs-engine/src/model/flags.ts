@@ -13,7 +13,7 @@ import type { DocFlags } from '@src/types';
 
 /**
  * Bits the adapter derives (API Extractor doesn't model them directly) and folds into the flags.
- * `access` 'private' is detected from the excerpt; private members are filtered out upstream, so it
+ * `access` 'private' is detected from the excerpt. Private members are filtered out upstream, so it
  * only appears transiently.
  */
 export interface DerivedFlagBits {

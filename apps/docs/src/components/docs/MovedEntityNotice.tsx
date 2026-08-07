@@ -9,9 +9,9 @@ import type { ReactElement } from 'react';
 
 const noticeClassName = tw`shadow-soft inline-flex max-w-full items-center gap-2.5 py-2 pr-2 pl-3`;
 
-// The entity route redirects a dead cross-package link here with `?moved=<symbol>` (see
-// app/(docs)/entity/route.ts). The package index page is force-static, so the symbol is read
-// client-side; useSearchParams hydrates against the live URL.
+// the entity route redirects a dead cross-package link here with `?moved=<symbol>` (see
+// app/(docs)/entity/route.ts). the package index page is force-static, so the symbol is read
+// client-side. useSearchParams hydrates against the live URL
 export function MovedEntityNotice({ packageLabel }: { packageLabel: string }): ReactElement | null {
     const moved = useSearchParams().get('moved');
     const [dismissed, setDismissed] = useState(false);

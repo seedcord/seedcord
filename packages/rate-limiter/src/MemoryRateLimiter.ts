@@ -37,7 +37,7 @@ export class MemoryRateLimiter implements Store<'charge'> {
     public charge(key: string, window: RateLimitWindow): Promise<RateLimitResult> {
         const now = Date.now();
         this.maybeSweep(now);
-        // a window must allow at least one use, so 0 or a negative never means "block everything"
+        // 0 or a negative limit never means "block everything"
         const limit = Math.max(1, window.limit ?? 1);
         const live = this.live(key, now);
 

@@ -9,7 +9,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  * The user sees a fixed generic reply with the tracking uuid, never the cause. `report` defaults to
  * `true`, so the framework logs it and publishes it to the `handledException` bus. Pass `report: false`
  * to show the generic reply without the bus publish. The original error is stored as the standard
- * `cause`, so the real stack reaches the webhook. For a fault the user should see a real message,
+ * `cause`, so the real stack reaches the webhook. When the user should see a real message for a fault,
  * subclass {@link Notice} and write your own `render` instead.
  *
  * The framework also renders this for an unhandled throw, where it points the user at
@@ -22,7 +22,7 @@ import type { RenderContext, ReplyResponse } from '@seedcord/types';
  * try {
  *     await db.write(record);
  * } catch (cause) {
- *     // user sees the generic reply with the uuid, the real error rides along as cause for the webhook
+ *     // user sees the generic reply with the uuid, and the real error rides along as cause for the webhook
  *     throw new Fault({ cause });
  *
  *     // pass report: false to show the same reply without publishing to the handledException bus

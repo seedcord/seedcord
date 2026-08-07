@@ -10,7 +10,7 @@ const PAGE_BOUND = 999;
 const ENTRY_COUNT = 23;
 const SCORE_STEP = 100;
 
-// the caller defines the cursor here. a plain prev/next never collides, so the slot is unnecessary.
+// the caller defines the cursor here, and a plain prev/next never collides, so no slot is needed
 const Board = new CustomId('lb').int('page', 0, PAGE_BOUND);
 
 const SCORES: LeaderboardEntry[] = Array.from({ length: ENTRY_COUNT }, (_, index) => ({
@@ -18,7 +18,7 @@ const SCORES: LeaderboardEntry[] = Array.from({ length: ENTRY_COUNT }, (_, index
     score: (ENTRY_COUNT - index) * SCORE_STEP
 }));
 
-// a headless render from the kit paginate() math and the caller's own cursor, without the Paginator.
+// renders headless, calling the kit's paginate() math directly and building its own cursor.
 function renderBoard(page: number): { embeds: EmbedBuilder[]; components: ActionRowBuilder<ButtonBuilder>[] } {
     const view = paginate(SCORES, page, PER_PAGE);
     const controls = new LeaderboardControls(

@@ -65,7 +65,7 @@ function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | 
     );
 }
 
-// flexShrink={0} on every section holds its natural height. A short terminal overlaps rows without it
+// flexShrink={0} on every section holds its natural height, a short terminal overlaps rows without it
 export function Sidebar({
     state,
     enabled,

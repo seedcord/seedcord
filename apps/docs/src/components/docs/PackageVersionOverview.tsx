@@ -59,7 +59,7 @@ function renderReexportGroup([owner, links]: [string, ReexportLink[]]): ReactEle
             <div className={cn('flex flex-wrap gap-2')}>
                 {links.map((link) => {
                     const toneStyles = link.tone ? getToneConfig(link.tone).styles : null;
-                    // Re-exports open the owning package's page in a new tab, matching the cross-package link convention.
+                    // re-exports open the owning package's page in a new tab, matching the cross-package link convention
                     return (
                         <Link
                             key={link.name}

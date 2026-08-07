@@ -21,7 +21,7 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
     const botImport = attached ? `import type ${BOT_BINDING} from '${escapeLiteral(plugins.specifier)}';\n\n` : '';
     const coreRows = attached ? `    interface Core {\n${renderPluginRows(keys)}\n    }\n` : '';
 
-    // the ignore comment attaches to the declare-module statement, which is the whole meaningful file
+    // prettier-ignore binds to the next statement, and the declare module is the whole file
     const header = `${BANNER}\n\n${botImport}// prettier-ignore\ndeclare module '${target}' {\n`;
 
     return (
@@ -33,8 +33,8 @@ export function renderAugmentation(registry: Augmentation, target: string, plugi
     );
 }
 
-// an indexed access defers resolution. an `extends Pick<typeof Bot, ...>` clause resolves while the
-// bot constant is still being inferred, and a plugin ctor naming Core closes that loop (TS7022).
+// the indexed access defers resolution. an `extends Pick<typeof Bot, ...>` clause resolves while the bot
+// constant is still being inferred, and a plugin ctor naming Core closes that loop (TS7022).
 function renderPluginRows(keys: readonly string[]): string {
     return keys.map((key) => `        ${renderKey(key)}: (typeof ${BOT_BINDING})['${escapeLiteral(key)}'];`).join('\n');
 }
@@ -46,20 +46,18 @@ function renderSlashRows(tables: SlashTables): string {
         .join('\n');
 }
 
-// an empty kind renders the blank-body form (matching the slash registry), so the interface stays present
-// and `keyof` resolves to `never`.
 function renderContextMenuRows(names: readonly string[]): string {
     return [...names]
         .sort(compare)
-        .map((name) => `        ${renderName(name)}: true;`)
+        .map((name) => `        ${renderKey(name)}: true;`)
         .join('\n');
 }
 
-// InjectedEmojiMap reads this tag to type Emojis.X as GuildEmoji vs ApplicationEmoji.
+// InjectedEmojiMap reads this tag to type Emojis.X as GuildEmoji or ApplicationEmoji
 function renderEmojiRows(emojis: EmojiKinds): string {
     return Object.entries(emojis)
         .sort(([first], [second]) => compare(first, second))
-        .map(([key, kind]) => `        ${renderName(key)}: '${kind === 'tuple' ? 'guild' : 'application'}';`)
+        .map(([key, kind]) => `        ${renderKey(key)}: '${kind === 'tuple' ? 'guild' : 'application'}';`)
         .join('\n');
 }
 
@@ -73,7 +71,7 @@ function renderOption(opt: SlashOption): string {
     const parts = [`kind: '${opt.kind}'`, `required: ${opt.required}`];
     if (opt.choices && opt.choices.length > 0) parts.push(`choices: [${opt.choices.map(renderChoice).join(', ')}]`);
     if (opt.autocomplete) parts.push('autocomplete: true');
-    // emitted as wire numbers, the typed view maps them to channel subtypes
+    // wire numbers, mapped to channel subtypes by the typed view
     if (opt.channelTypes && opt.channelTypes.length > 0) parts.push(`channelTypes: [${opt.channelTypes.join(', ')}]`);
     return `{ ${parts.join('; ')} }`;
 }
@@ -83,17 +81,11 @@ function renderChoice(value: string | number): string {
     return `'${escapeLiteral(value)}'`;
 }
 
-// a slash route or option name is restricted to Discord's name charset, so quoting alone is enough. A
-// context-menu name allows spaces, mixed case, and apostrophes, so its quoted form must escape the body.
-function renderName(name: string): string {
-    return IDENTIFIER.test(name) ? name : `'${escapeLiteral(name)}'`;
-}
-
+// discord allows spaces and apostrophes in a context-menu name
 function renderKey(name: string): string {
     return IDENTIFIER.test(name) ? name : `'${escapeLiteral(name)}'`;
 }
 
-// escape backslashes, single quotes, and control chars or the value emits invalid TS inside a single-quoted literal.
 function escapeLiteral(value: string): string {
     let escaped = '';
     for (const char of value) {

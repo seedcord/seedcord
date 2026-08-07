@@ -86,8 +86,6 @@ export class ApiAdapter {
         return root;
     }
 
-    // Each re-exported symbol maps to a cross-package reference to its declaring package, so the
-    // umbrella page href targets that package's canonical page instead of a duplicate.
     private buildReexports(): DocReference[] {
         return (this.manifest.reexports ?? []).map((entry) => ({
             name: entry.name,
@@ -167,9 +165,8 @@ export class ApiAdapter {
         if (ApiReturnTypeMixin.isBaseClassOf(item)) {
             derived.isAsync = /^Promise\s*</.test(item.returnTypeExcerpt.text.trim());
         }
-        // Modifiers written in source (the excerpt prefix) win; matching TypeDoc, an own (non-
-        // inherited) class member with no explicit modifier still renders the implicit `public`,
-        // while inherited / interface / top-level declarations carry no access modifier.
+        // typedoc shows the implicit `public` on a class's own members and leaves it off inherited,
+        // interface, and top-level declarations. whatever the source writes wins.
         const explicit = explicitModifiers(item, item.displayName);
         derived.access = explicit.access ?? (ownClassMember ? 'public' : null);
         derived.isReadonly = explicit.isReadonly;
@@ -192,9 +189,8 @@ export class ApiAdapter {
         });
     }
 
-    // Source positions come from the generator's TS-compiler pass (manifest.sources), keyed by the
-    // same dotted qualified name a node builds from its path. API Extractor's own fileUrlPath points
-    // into the bundled `dist/index.d.mts` rollup and carries no line/column, so it is not used.
+    // api extractor's fileUrlPath points into the bundled dist/index.d.mts rollup and carries no line or
+    // column, so positions come from the generator's compiler pass keyed by qualified name.
     private sourcesFor(qualifiedName: string): DocSource[] {
         const entries = this.manifest.sources?.[qualifiedName];
         if (!entries) return [];
@@ -216,12 +212,10 @@ export class ApiAdapter {
         for (const group of groupOverloads(members)) {
             const primary = group[0];
             if (!primary) continue;
-            // API Extractor names a constructor `(constructor)`; the engine + URL grammar expect the
-            // bare `constructor` (sets the `#constructor` anchor and the `Owner.constructor` slug).
+            // AE names it `(constructor)`
             const memberName = apiKindToDocKind(primary) === DocKind.Constructor ? 'constructor' : primary.displayName;
             const inheritedFrom = inheritedFromRef(primary, owningContainer);
-            // Own (non-inherited) class members render the implicit `public`; constructors do not
-            // (TypeDoc shows `public` on a constructor only when written explicitly).
+            // typedoc prints `public` on a constructor only when written
             const ownClassMember =
                 inheritedFrom === null &&
                 owningContainer?.kind === ApiItemKind.Class &&
@@ -230,17 +224,14 @@ export class ApiAdapter {
 
             if (CALLABLE.has(node.kind)) {
                 node.signatures = group.map((sig, index) => this.buildSignature(sig, node, index, group.length));
-                // The signature(s) carry the doc comment, matching TypeDoc (where a callable's
-                // declaration comment is empty); without this the summary renders twice, once as the
-                // member description and once as the node's "shared" documentation.
+                // the signatures carry the comment, matching typedoc. leaving it here renders the summary
+                // twice, once as the member description and once as the node's shared documentation.
                 node.comment = null;
             } else if (accessorRole(primary)) {
                 this.applyAccessor(node, group);
             }
 
             if (ApiItemContainerMixin.isBaseClassOf(primary)) {
-                // Classes + interfaces flatten inherited members (matching TypeDoc); the inherited
-                // ones are tagged via owningContainer in the recursive call.
                 const nodeKind: number = node.kind;
                 const flattened =
                     nodeKind === DocKind.Class || nodeKind === DocKind.Interface
@@ -259,9 +250,6 @@ export class ApiAdapter {
         node.kindLabel = frozenKindLabel(DocKind.Accessor);
         const primary = group[0];
         if (!primary) return;
-        // AE never emits a standalone setter: a set-only accessor surfaces as a `set `-prefixed
-        // property, while a get-only OR get+set pair both surface as a `get `-prefixed property
-        // (the pair distinguished only by not being readonly).
         const signatures: DocSignature[] = [];
         const deps = { nextId: (): number => this.idCounter++, resolveLink: this.makeResolveLink(primary) };
         if (accessorRole(primary) === 'setter') {
@@ -274,10 +262,7 @@ export class ApiAdapter {
             if (hasSetter) signatures.push(buildAccessorSignature(primary, node, 'setter', 1, deps));
         }
         node.signatures = signatures;
-        // The first signature carries the accessor's doc comment (matching the CALLABLE branch);
-        // leaving it on the node too would render the summary twice (description + shared docs).
         node.comment = null;
-        // An accessor renders through its get/set signatures, not a property-header type.
         if (node.header?.type) {
             delete node.header.type;
             node.headerText = formatRenderedDeclarationHeader(node.header);
@@ -338,13 +323,12 @@ export class ApiAdapter {
 
         const { docParams: parameters, renderParams: renderParameters } = this.signatureParameters(item);
 
-        // TypeDoc names a constructor's signature after the owning class (renders `MockClass(...)`,
-        // not `constructor(...)`); mirror that so the rendered signature stays identical.
+        // typedoc renders a ctor signature as `MockClass(...)`
         const signatureName =
             apiKindToDocKind(item) === DocKind.Constructor ? (item.parent?.displayName ?? owner.name) : owner.name;
 
-        // Each overload owns its type parameters; `owner.typeParameters` is the first overload's
-        // list, so reusing it would mislabel the others (e.g. buildSlashRoute's overloads differ).
+        // owner.typeParameters holds the first overload's list, so every other overload would be
+        // mislabelled by it (buildSlashRoute's overloads differ).
         const typeParameters = this.typeParamsFor(item);
         const render = this.buildSignatureRender(item, signatureName, renderParameters, typeParameters);
 
@@ -363,7 +347,6 @@ export class ApiAdapter {
             anchor: fragment,
             overloadIndex,
             kindLabel: owner.kindLabel,
-            // Snapshot so a signature never aliases the node's mutable DocFlags (applyAccessor mutates it).
             flags: { ...owner.flags },
             parameters,
             typeParameters,
@@ -382,8 +365,8 @@ export class ApiAdapter {
         return signature;
     }
 
-    // owner.sources is one entry per documented overload in source-declaration order, matching API
-    // Extractor's overloadIndex (TS requires overloads adjacent); a missing index falls back to primary.
+    // manifest.sources lists one entry per documented overload in declaration order, matching AE's
+    // overloadIndex.
     private signatureSource(owner: DocNode, overloadIndex: number): { sources: DocSource[]; sourceUrl?: string } {
         const overloadSource = owner.sources[overloadIndex];
         const sources = overloadSource ? [overloadSource] : owner.sources;

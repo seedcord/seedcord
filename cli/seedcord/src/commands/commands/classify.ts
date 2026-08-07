@@ -18,9 +18,8 @@ export interface Flagged extends DeployedCommand {
 }
 
 /**
- * Selects which deployed guild commands `commands --clean` would delete. An overlap is a guild command whose
- * name also exists globally, so it renders twice in the picker. Under `purge` every guild command is selected.
- * Global commands are never passed in here, so they are never deleted.
+ * Selects which deployed guild commands `commands --clean` would delete. An overlap is a guild command
+ * whose name also exists globally, so it renders twice in the picker.
  */
 export function classifyGuildCommands(
     globalNames: ReadonlySet<string>,

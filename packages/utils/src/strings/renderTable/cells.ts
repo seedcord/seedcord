@@ -14,7 +14,7 @@ export function truncate(content: string, maxWidth: number): string {
 }
 
 export function isNumericColumn(grid: readonly (readonly string[])[], col: number, header: boolean): boolean {
-    // the header label is rarely numeric, so judging the column by data rows only
+    // the header label is rarely numeric
     const dataRows = header ? grid.slice(1) : grid;
     const cells = dataRows.map((row) => row[col] ?? '').filter((cell) => cell !== '');
     return cells.length > 0 && cells.every((cell) => !Number.isNaN(Number(cell)));

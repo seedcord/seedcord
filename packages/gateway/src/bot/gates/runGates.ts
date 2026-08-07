@@ -9,9 +9,8 @@ import type { ClientEvents } from 'discord.js';
 
 export function interactionGateContext(interaction: Repliables, core: Core): InteractionGateContext {
     const rawMember = interaction.member;
-    // an uncached member still arrives as the raw payload shape, whose roles are already ids. the cache
-    // additionally carries the everyone role (id equals the guild id), which the raw payload never does,
-    // so it is filtered out for one shape across cache states
+    // an uncached member's roles arrive as plain ids already, and the cached everyone role's id equals
+    // the guildId
     const memberRoleIds =
         rawMember instanceof GuildMember
             ? [...rawMember.roles.cache.keys()].filter((id) => id !== interaction.guildId)
@@ -29,7 +28,7 @@ export function interactionGateContext(interaction: Repliables, core: Core): Int
         channelId: interaction.channelId,
         memberRoleIds,
         memberPermissions: interaction.memberPermissions?.bitfield ?? null,
-        // djs types appPermissions non-null on interactions, a ?. here would trip no-unnecessary-condition
+        // djs types appPermissions as non-null on interactions
         appPermissions: interaction.appPermissions.bitfield,
         memberGuildPermissions: rawMember instanceof GuildMember ? rawMember.permissions.bitfield : null,
         appGuildPermissions: interaction.guild?.members.me?.permissions.bitfield ?? null,

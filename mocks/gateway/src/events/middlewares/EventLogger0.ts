@@ -2,8 +2,7 @@ import { EventMiddleware, Middleware, MiddlewareType } from '@seedcord/gateway';
 import { Events } from 'discord.js';
 
 /**
- * Reacts to new messages before the message handlers run. A single-event middleware, so `this.event` is the
- * typed messageCreate payload.
+ * a single-event middleware, so `this.event` is the typed messageCreate payload.
  */
 @Middleware(MiddlewareType.Event, 0, { events: [Events.MessageCreate] })
 export class MiddlewareLogger0 extends EventMiddleware<Events.MessageCreate> {

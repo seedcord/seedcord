@@ -47,9 +47,9 @@ function writeStoredTab(tab: OverviewTab): void {
     try {
         window.localStorage.setItem(TAB_STORAGE_KEY, tab);
     } catch {
-        // storage blocked (private mode / disabled); the preference just won't persist
+        // storage blocked (private mode / disabled), so the preference just won't persist
     }
-    // 'storage' fires only in other tabs, not the one that wrote it.
+    // the 'storage' event fires only in other tabs
     tabListeners.forEach((callback) => callback());
 }
 
@@ -75,11 +75,10 @@ export function PackageOverviewTabs({
     reference
 }: PackageOverviewTabsProps): ReactElement {
     const hasReadme = readme !== null;
-    // Server snapshot is null so hydration matches the default render; the stored preference applies after.
+    // the server snapshot is null so hydration matches the default render. the stored preference applies after
     const storedTab = useSyncExternalStore(subscribeStoredTab, readStoredTab, () => null);
     const tab = resolveTab(storedTab, hasReadme);
 
-    // directional transition
     const [direction, setDirection] = useState(1);
     const handleTabChange = (next: OverviewTab): void => {
         const nextIndex = next === 'readme' ? 0 : 1;

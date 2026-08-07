@@ -20,12 +20,11 @@ export class IndexLoader {
     constructor(
         private readonly indexUrl: string = resolveIndexUrl(),
         private readonly fetcher: Fetcher = defaultFetcher,
-        // the R2 index is additive, a folder published once stays. drop folders the docs no longer
-        // document at the read boundary so removed packages never list, load, or search.
+        // the R2 index is additive, so a folder published once stays listed forever
         private readonly isDocumented: (folder: string) => boolean = isDocumentedPackage
     ) {}
 
-    /** `force` re-fetches past the in-memory cache; it does NOT bust the R2/CDN edge cache. */
+    /** `force` re-fetches past the in-memory cache. It does NOT bust the R2/CDN edge cache. */
     async load(force = false): Promise<IndexJson> {
         if (this.cache && !force) {
             return this.cache;
@@ -57,34 +56,31 @@ export class IndexLoader {
 
     /**
      * Resolves a UI selector to a concrete published version. `latest` / `prerelease` map to the
-     * channel head; `v1` / `1` to the latest of a major line; `0.2` to the latest of a minor line;
-     * a full version passes through only when it is a published line head (stable or the prerelease).
+     * channel head, `v1` / `1` to the latest of a major line, `0.2` to the latest of a minor line.
+     * A full version passes through only when it is a published line head (stable or the prerelease).
      */
     resolveVersion(entry: PackageIndexEntry, selector: string): ResolvedVersion | null {
         if (selector === 'prerelease' || selector === 'next') {
             return entry.prerelease ? { version: entry.prerelease.latest, channel: 'prerelease' } : null;
         }
 
-        // A concrete prerelease id (the value surfaced in the version dropdown) resolves back to its channel.
         if (entry.prerelease?.latest === selector) {
             return { version: selector, channel: 'prerelease' };
         }
 
-        // `latest` prefers the stable head but falls back to the prerelease head on a 0-stable package
-        // (the prerelease-only archive before the first stable cut). Null only when both channels are empty.
+        // a 0-stable package has only a prerelease head to fall back to
         if (selector === 'latest') {
             if (entry.stable) return { version: entry.stable.latest, channel: 'stable' };
             if (entry.prerelease) return { version: entry.prerelease.latest, channel: 'prerelease' };
             return null;
         }
 
-        // major/minor/passthrough selectors are stable-only by definition.
+        // only the stable channel indexes by major and minor
         const { stable } = entry;
         if (!stable) {
             return null;
         }
 
-        // Strip leading v from version selectors
         const normalized = selector.replace(/^v/, '');
 
         const byMajor = stable.latestByMajor[normalized];

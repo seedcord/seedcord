@@ -27,17 +27,15 @@ import type { RemoteRef } from './artifacts-repo';
 import type { EmittedEntry } from './union-inputs';
 import type { PackageVersionsInput } from '@seedcord/docs-engine';
 
-// Forward-only docs publish. For each freshly-published package it optionally extracts the docs pinned to
-// the release tag, serializes the version dir, and additively merges the new versions into the remote R2
-// catalog without dropping a prior version. It runs in one process with no cross-process handoff.
-// build-docs-artifacts.ts stays the whole-tree local builder. This script extends the existing remote index.
+// Additive publish. Merges freshly-published versions into the remote R2 index without dropping a
+// prior version. build-docs-artifacts.ts is the whole-tree local builder.
 
 const INIT_CWD = process.env.INIT_CWD ? path.resolve(process.env.INIT_CWD) : process.cwd();
 const GENERATED_ROOT = path.resolve(INIT_CWD, 'generated');
 const ARTIFACTS_ROOT = path.join(GENERATED_ROOT, 'artifacts');
 const DEFAULT_PROJECT_FOLDER_URL = 'https://github.com/seedcord/seedcord';
 
-// Caps how much --prune can delete, guarding against a union-reconstruction bug wiping the catalog.
+// a union-reconstruction bug could otherwise let --prune wipe the whole catalog
 const PRUNE_DELETE_CAP = 0.5;
 
 interface PublishedPackage {
@@ -113,7 +111,7 @@ function run(command: string, args: readonly string[]): Promise<void> {
     });
 }
 
-// Source links are pinned to the immutable <name>@<version> tag so they never drift.
+// <name>@<version> is the immutable release tag. Source links pinned to it never drift.
 async function extractPackage(pkg: PublishedPackage, projectFolderUrl: string): Promise<void> {
     await run('pnpm', [
         'tsx',
@@ -129,7 +127,6 @@ async function extractPackage(pkg: PublishedPackage, projectFolderUrl: string): 
     ]);
 }
 
-// a pure-config package like @seedcord/tsconfig publishes to npm with no extractable API
 async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promise<EmittedEntry | null> {
     const found = engine.getPackage(pkg.name);
     if (!found) {
@@ -157,7 +154,7 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
 async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     const emitted: EmittedEntry[] = [];
     if (opts.extract) {
-        // Each extract overwrites generated/manifest.json, so re-create the engine after every one.
+        // each extract overwrites generated/manifest.json
         for (const pkg of opts.published) {
             await extractPackage(pkg, opts.projectFolderUrl);
             const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
@@ -175,7 +172,7 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     return emitted;
 }
 
-// Only reachable via --prune. The publish path never calls this, preserving the additive invariant.
+// nothing on the publish path calls this, which is what keeps the sync additive
 async function prune(opts: Options, ref: RemoteRef, inputs: readonly PackageVersionsInput[]): Promise<void> {
     const desired = new Set<string>([`${opts.prefix}index.json`]);
     for (const input of inputs) {
@@ -217,7 +214,7 @@ async function finalize(opts: Options, emitted: readonly EmittedEntry[]): Promis
     const inputs = buildUnionInputs(remote, emitted);
     const index = buildIndex(inputs, { updatedAt: new Date().toISOString() });
 
-    // Versioned objects are immutable, so a re-run skips any already present.
+    // already-uploaded versions are immutable. skip them on a re-run.
     for (const e of emitted) {
         const relDir = e.channel === 'stable' ? 'releases' : 'prerelease';
         for (const file of ['project.json', 'api.json'] as const) {
@@ -239,7 +236,6 @@ async function finalize(opts: Options, emitted: readonly EmittedEntry[]): Promis
         }
     }
 
-    // index.json is the only mutable object (no-cache), so re-put it every run.
     await mkdir(ARTIFACTS_ROOT, { recursive: true });
     const indexLocal = path.join(ARTIFACTS_ROOT, 'index.json');
     await writeFile(indexLocal, `${JSON.stringify(index, null, 2)}\n`);

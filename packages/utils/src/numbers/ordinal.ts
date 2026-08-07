@@ -1,9 +1,6 @@
 /**
  * Returns the ordinal suffix for a given number.
  *
- * @param n - The number to get the ordinal for
- * @returns The number with its ordinal suffix
- *
  * @example
  * ordinal(1); // "1st"
  * ordinal(22); // "22nd"

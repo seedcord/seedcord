@@ -5,14 +5,12 @@ import { translateSerializationError } from './translateSerialization';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
-/** Serialized message data the transport wire writers consume. */
 export interface SerializedReply<TNative = never> {
     readonly components: APIMessageTopLevelComponent[];
     readonly allowedMentions?: ReplyResponse['allowedMentions'];
     readonly files?: ReplyResponse<TNative>['files'];
 }
 
-/** Wraps a string in a TextDisplay component. */
 export function serializeReply<TNative>(
     response: ReplyResponse<TNative> | string,
     routeId: string

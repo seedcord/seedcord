@@ -42,11 +42,10 @@ export interface EngineContext {
 
 export interface EngineParts {
     readonly handle: (request: Request, ctx?: EngineContext) => Promise<Response>;
-    /** In-flight post-202 work on the node paths, drained at shutdown. */
+    // node paths only, drained at shutdown
     readonly inFlight: ReadonlySet<Promise<void>>;
 }
 
-// shared by createSeedcord (frozen manifest maps) and the node host (live dispatcher maps)
 export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
     if (!Envapter.has('DISCORD_PUBLIC_KEY')) throw new SeedcordError(SeedcordErrorCode.ConfigMissingPublicKey);
     const publicKey = Envapter.getRequired('DISCORD_PUBLIC_KEY', Converters.String);
@@ -54,7 +53,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
     const verifier = new Ed25519Verifier(publicKey);
     const replays = new ReplayGuard();
     const inFlight = new Set<Promise<void>>();
-    // constructed here because the logger reads the environment, which binds before this factory runs
+    // eager because env binds before this factory runs
     const logger = new Logger('Engine', { channel: 'bot' });
 
     async function dispatchMatched(
@@ -65,8 +64,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
         const start = await dispatchInteraction({ match, payload, core });
         if (!start) return;
 
-        // the post-ack phase runs unawaited, so its own catch is the only thing between a throw and
-        // an unhandled rejection
+        // this catch is all that stands between a throw and an unhandled rejection
         const work = start().catch(rootFault);
         if (ctx) {
             ctx.waitUntil(work);
@@ -76,7 +74,6 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
         }
     }
 
-    // make sure an escaped error doesn't crash the process
     function rootFault(caught: unknown): void {
         const error = asError(caught);
         logger.error('dispatch failed past the boundary', error);
@@ -127,7 +124,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
             const match = resolve(maps, payload as APIInteraction);
             if (match) await dispatchMatched(match, payload as ValidInteractionTypes, ctx);
         } catch (caught) {
-            // a throw here must never eat the ack
+            // the 202 has to go out either way or discord drops the interaction
             rootFault(caught);
         }
 

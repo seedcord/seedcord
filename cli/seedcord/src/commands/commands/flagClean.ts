@@ -12,7 +12,6 @@ export interface CleanFlags {
     yes: boolean;
 }
 
-/** Runs `seedcord commands --clean ...` headlessly from parsed flags, reproducing any wizard run. */
 export async function runCleanFromFlags(
     runner: CleanRunner,
     flags: CleanFlags,

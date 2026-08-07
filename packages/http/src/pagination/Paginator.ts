@@ -24,7 +24,7 @@ function contextOf(interaction: Repliables, core: Core): PageContext {
     const resolved = interaction.member?.user ?? interaction.user;
     return {
         interaction,
-        // justified: every repliable interaction Discord delivers carries a user, the wrapper types don't say so
+        // justified: every repliable interaction Discord delivers carries a user, and the wrapper types don't say so
         user: resolved as APIUser,
         guildId: interaction.guild_id ?? null,
         core

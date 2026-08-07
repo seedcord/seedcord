@@ -71,7 +71,7 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         this.patch({ commandUpdatePrompt: null });
     }
 
-    // one patch, so the r/d press costs a single render before the runner swaps sessions
+    // keeps the r/d press to a single render before the runner swaps sessions
     public beginRestart(): void {
         this.patch({
             phase: 'starting',

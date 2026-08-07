@@ -5,8 +5,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { IndexLoader, VersionedDocsEngine } from '@seedcord/docs-engine';
 import { cache } from 'react';
 
-// file:// reads the local generated/artifacts tree from disk instead of an HTTP fetch, so SSR
-// doesn't issue a request back to itself.
+// avoids a self-referential http fetch during SSR
 async function protocolFetcher(url: string): Promise<Response> {
     if (!url.startsWith('file://')) {
         return fetch(url);
@@ -23,8 +22,8 @@ async function protocolFetcher(url: string): Promise<Response> {
 const LOCAL_INDEX_URL = pathToFileURL(path.resolve(process.cwd(), '../../generated/artifacts/index.json')).href;
 const INDEX_URL = process.env.SEEDCORD_DOCS_INDEX_URL ?? LOCAL_INDEX_URL;
 
-// Per-request via React cache(): the engine carries mutable per-package active-version state and
-// must not be shared across requests.
+// react's cache() memoizes this per request, since the engine holds mutable per-package version
+// state that can't leak across requests.
 export const getDocsEngine = cache((): Promise<VersionedDocsEngine> =>
     Promise.resolve(new VersionedDocsEngine(new IndexLoader(INDEX_URL, protocolFetcher), protocolFetcher))
 );

@@ -143,7 +143,7 @@ export class DevRunner {
         this.signalResolve?.();
     }
 
-    // the tunnel stays up here because a disconnect is a short parked state the user presses r out of
+    // the tunnel stays up because a disconnect is a short parked state the user leaves by pressing r
     public async disconnect(): Promise<void> {
         // waking the signal while already parked would fall through and start a fresh session
         if (this.isDisconnected) return;
@@ -157,7 +157,7 @@ export class DevRunner {
         this.currentSession?.refreshCommands(shouldRefresh);
     }
 
-    // an accepted refresh means command files changed, so regenerate the registry for tsc to pick up the new option types
+    // regenerates so tsc picks up the new command option types
     private async regenerateRegistry(): Promise<void> {
         if (this.isRegenerating) return;
         this.isRegenerating = true;

@@ -10,12 +10,11 @@ import type { CommandAction, SearchResultKind } from './types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
 
-// Only the kinds with no entity tone; every tone-able kind (entities + members) renders from its tone.
 type NonEntityResultKind = Extract<SearchResultKind, 'package' | 'page' | 'resource'>;
 
-// Tone-able result kind -> entity tone. Members inherit their owner's family (a method is
-// function-toned, a property variable-toned, an enum member enum-toned), so their icon + active
-// highlight match that tone. package/page/resource have no entity tone.
+// members inherit their owner's tone family (a method maps to function, a property to variable, an
+// enum member to enum) so their icon and highlight match. adding a new SearchResultKind here means
+// giving it a tone too.
 const RESULT_TONE: Partial<Record<SearchResultKind, EntityTone>> = {
     class: 'class',
     interface: 'interface',

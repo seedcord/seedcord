@@ -29,8 +29,6 @@ interface Ungateable {
     readonly [UngateableBrand]: true;
 }
 
-// the interaction or event context a handler provides. autocomplete matches neither arm and maps to
-// Ungateable, a refusal there has no reply target
 type ProvidedContext<TCtor extends AnyHandlerCtor> =
     InstanceType<TCtor> extends InteractionHandler<infer Repliable>
         ? InteractionGateContext<Repliable>
@@ -38,8 +36,7 @@ type ProvidedContext<TCtor extends AnyHandlerCtor> =
           ? EventGateContext<Names>
           : Ungateable;
 
-// the short label for a context, so a mismatch error names the kind where the raw djs context type
-// would be TS-truncated
+// TS truncates the raw djs context type in a mismatch error
 type KindName<Ctx> = Ctx extends Ungateable
     ? 'autocomplete'
     : Ctx extends InteractionGateContext<infer R>
@@ -68,7 +65,7 @@ type KindName<Ctx> = Ctx extends Ungateable
         ? `${N & string} event`
         : 'an agnostic';
 
-// core defines the fit mechanism over pre-computed labels, this supplies the gateway's kind labeler
+// core defines the fit, this labels the kinds
 export type FitAll<TCtor extends AnyHandlerCtor, Gates extends readonly Gate<GateContextBase>[]> = {
     [Index in keyof Gates]: GateFitsWith<
         ProvidedContext<TCtor>,

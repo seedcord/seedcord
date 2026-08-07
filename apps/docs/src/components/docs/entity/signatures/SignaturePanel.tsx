@@ -35,7 +35,7 @@ export function SignaturePanel({ signature, isActive, parentDeprecationStatus }:
     const parentKey = deprecationMessageKey(parentDeprecationStatus);
     const sigKey = deprecationMessageKey(signature.deprecationStatus);
 
-    // When the parent already shows the same deprecation message, the per-signature banner would duplicate it.
+    // when the parent already shows the same deprecation message, the per-signature banner would duplicate it
     const shouldDecorate =
         isActive &&
         signature.deprecationStatus?.isDeprecated &&

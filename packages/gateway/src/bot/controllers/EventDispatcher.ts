@@ -43,9 +43,7 @@ interface RegisteredEventHandlerEntry {
 type EventArtifact = string;
 
 /**
- * Scans event handler directories, attaches one client listener per registered event, and runs the
- * handlers for each fire. Interactions route through InteractionDispatcher. Multiple handlers can
- * point to one event.
+ * Interactions route through InteractionDispatcher.
  *
  * @internal
  */
@@ -178,7 +176,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         });
     }
 
-    /** @internal For use in dev mode */
+    /** @internal */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
     }

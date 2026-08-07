@@ -10,11 +10,8 @@ export type SlashLikeData = (
     APIChatInputApplicationCommandInteraction | APIApplicationCommandAutocompleteInteraction
 )['data'];
 
-/**
- * Computes the dispatch route for a chat-input or autocomplete payload, the raw-payload port of the
- * gateway's `slashRouteOf`. Both assemble keys through `buildSlashRoute`, so a dispatched interaction
- * and a generated registry key always match.
- */
+// the raw-payload port of the gateway's slashRouteOf
+// both assemble the key through buildSlashRoute, so a dispatched interaction always matches its generated registry key
 export function slashRouteOf(data: SlashLikeData): string {
     const first = data.options?.[0];
     if (first?.type === ApplicationCommandOptionType.SubcommandGroup) {

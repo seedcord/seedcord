@@ -1,5 +1,5 @@
 // Node-free subset, safe to import from client components. Anything that value-imports
-// `@microsoft/api-extractor-model`, `prettier`, or `node:*` belongs in index.ts: a `node:*` import
+// `@microsoft/api-extractor-model`, `prettier`, or `node:*` belongs in index.ts, because a `node:*` import
 // reachable from a client bundle breaks `next build`.
 export * from '@src/anchors';
 export * from '@src/tones';

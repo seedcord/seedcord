@@ -15,7 +15,6 @@ function decoratorIdentifier(decorator: TSESTree.Decorator): TSESTree.Identifier
     return undefined;
 }
 
-// matches class decorators to seedcord decorator names by import origin
 export interface DecoratorMatcher {
     collectImports(node: TSESTree.ImportDeclaration): void;
     hasDecorator(node: TSESTree.ClassDeclaration, originalName: string): boolean;
@@ -29,7 +28,7 @@ export function createDecoratorMatcher(
     const wanted = new Set(originalNames);
     const locals = new Map<string, Set<string>>();
 
-    // a tsconfig-alias import is shaped like a scoped package, only the resolved declaration file tells the two apart
+    // a tsconfig-alias import looks like a scoped package, and only the resolved declaration file tells them apart
     function resolvesTo(id: TSESTree.Identifier, originalName: string): boolean {
         const symbol = checker.getSymbolAtLocation(services.esTreeNodeToTSNodeMap.get(id));
         if (!symbol) return false;
@@ -68,14 +67,14 @@ export function createDecoratorMatcher(
     };
 }
 
-// the symbol is declared inside the discord.js or @discordjs packages, so a same-named local class is excluded
+// excludes a local class that shares a discord.js name
 export function isFromDiscordJs(symbol: ts.Symbol | undefined): boolean {
     const file = symbol?.declarations?.[0]?.getSourceFile().fileName;
     return file !== undefined && (file.includes('/discord.js/') || file.includes('/@discordjs/'));
 }
 
-// discord.js interactions are generic (ChatInputCommandInteraction<Cached>), so their base chain is only
-// reachable through the target.
+// discord.js interactions are generic (ChatInputCommandInteraction<Cached>), so the base chain is only
+// reachable through the target
 function asClassOrInterface(type: ts.Type): ts.InterfaceType | undefined {
     if (type.isClassOrInterface()) return type;
     // justified: the checker types .target as an always-present GenericType, but it is undefined on a
@@ -114,8 +113,7 @@ export function extendsDjsType(checker: ts.TypeChecker, type: ts.Type, names: st
     return walkBaseChain(checker, type, (symbol) => wanted.has(symbol.getName()) && isFromDiscordJs(symbol));
 }
 
-// a user subclass constructor may repurpose the data argument, so it only counts on
-// discord.js's own classes
+// only discord.js's own classes count here because a subclass may repurpose the data argument
 export function trustedConstructorData(root: TSESTree.Node, rootType: ts.Type): TSESTree.ObjectExpression | undefined {
     const data = constructorData(root);
     return data !== undefined && isFromDiscordJs(rootType.getSymbol()) ? data : undefined;
@@ -133,10 +131,8 @@ export function staticNumber(
     ) {
         return undefined;
     }
-    // a cast only changes the checker's view, the literal behind it is the runtime value
     const target = unwrapAssertions(node);
     if (target.type === AST_NODE_TYPES.Literal && typeof target.value === 'number') return target.value;
-    // a const bound resolves through its number-literal type
     const type = services.getTypeAtLocation(target);
     return type.isNumberLiteral() ? type.value : undefined;
 }
@@ -161,7 +157,7 @@ export function classInstanceType(
     return type.getConstructSignatures()[0]?.getReturnType() ?? type;
 }
 
-// match by name only. a path-origin guard is ambiguous because "seedcord" appears in the plugin's own source paths
+// no path-origin guard here, "seedcord" appears in the plugin's own source paths
 export function extendsSeedcordType(
     checker: ts.TypeChecker,
     type: ts.Type,

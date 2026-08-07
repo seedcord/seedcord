@@ -14,12 +14,7 @@ import type { SubscriptionKey } from '@subscribers/types/Subscriptions';
 
 type SubscriberArtifact = SubscriptionKey[];
 
-/**
- * Loads subscribers off the filesystem into a {@link Bus} and stores their hot-reload wiring. Node
- * only, a bundled isolate registers from the manifest instead.
- *
- * @internal
- */
+// loads subscribers off the filesystem into a Bus and stores their hot-reload wiring. node only, a bundled isolate registers from the manifest instead
 export class SubscriberLoader implements Initializeable, HmrAware {
     private isInitialized = false;
     private readonly hmrHandler?: HmrModuleHandler<StoredSubscriberCtor, void, SubscriberArtifact>;

@@ -13,6 +13,5 @@ export interface PageContext {
     user: APIUser;
     /** The guild id, or `null` in a DM. */
     guildId: string | null;
-    /** The framework core. */
     core: Core;
 }

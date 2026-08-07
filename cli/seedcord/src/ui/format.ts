@@ -6,7 +6,6 @@ function pad(value: number): string {
     return value.toString().padStart(2, '0');
 }
 
-// Drops empty leading units: 12s, 3m 12s, 1h 02m 03s.
 export function formatUptime(ms: number): string {
     const totalSeconds = Math.max(0, Math.floor(ms / MS_PER_SECOND));
     const seconds = totalSeconds % SECONDS_PER_MINUTE;

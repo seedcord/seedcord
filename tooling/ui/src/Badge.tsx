@@ -27,7 +27,6 @@ export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
     ref?: Ref<HTMLSpanElement>;
 }
 
-// Use for short status/category tags. Don't roll `border rounded-sm…` spans.
 export function Badge({ variant = 'status', tone = 'neutral', className, ...props }: BadgeProps): ReactElement {
     return (
         <span

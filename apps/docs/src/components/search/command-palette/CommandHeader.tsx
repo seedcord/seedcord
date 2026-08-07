@@ -30,9 +30,7 @@ interface FilterControlsProps {
     onKindChange: (kind: string) => void;
 }
 
-// Borderless scope/kind dropdowns. They portal into `container` (the dialog) so their lists scroll inside
-// the palette's scroll lock. Rendered twice: inline in the field on sm+, and on their own row on mobile
-// (CSS toggles which is visible) so a narrow screen doesn't crush the query input.
+// the lists portal into `container` (the dialog) so they scroll under the palette's scroll lock
 function FilterDropdowns({
     scope,
     kind,
@@ -71,8 +69,6 @@ function FilterDropdowns({
     );
 }
 
-// The input's leading content: the search glyph, plus the filters inline on sm+. On mobile the filters
-// are hidden here and rendered on their own row above the input instead.
 function SearchLeading({ isSearching, ...controls }: FilterControlsProps & { isSearching: boolean }): ReactElement {
     return (
         <span className={cn('flex items-center gap-1')}>
@@ -92,7 +88,6 @@ function SearchLeading({ isSearching, ...controls }: FilterControlsProps & { isS
     );
 }
 
-// Mobile shows an icon close; sm+ shows the keyboard `Esc` hint. The two are mutually exclusive by breakpoint.
 function CloseButtons({ onClose }: { onClose: () => void }): ReactElement {
     return (
         <>
@@ -168,8 +163,7 @@ export function CommandHeader({
 }: CommandHeaderProps): ReactElement {
     return (
         <div className={cn('px-4 py-3', listExpanded && 'border-border border-b')}>
-            {/* On mobile the filters and toggle share one row. On sm+ the filters move inline into the
-                input's leading and the toggle into its trailing, so neither needs its own row. */}
+            {/* on sm+ these two move into the input's leading and trailing */}
             <div className={cn('mb-2 flex items-center justify-between gap-2 sm:hidden')}>
                 <FilterDropdowns
                     scope={scope}

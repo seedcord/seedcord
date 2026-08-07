@@ -10,9 +10,6 @@ import type { KyselyServices } from './types/KyselyServices';
 import type { CoreBase } from '@seedcord/core';
 import type { Logger } from '@seedcord/logger';
 
-/**
- * Discovers and registers Postgres services for the plugin.
- */
 export class KyselyServiceRegistry {
     // the augmented interface has no index signature, hence Reflect below
     private readonly services = Object.create(null) as KyselyServices;

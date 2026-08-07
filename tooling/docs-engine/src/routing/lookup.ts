@@ -2,7 +2,7 @@ import type { GlobalId } from '@src/ids';
 import type { EntityTone } from '@src/tones';
 import type { DocNode, DocPackageModel } from '@src/types';
 
-// Callers keep the `getNodeByGlobalSlug(...) ?? getNodeBySlug(...)` fallback: the lazy engine aliases
+// Callers keep the `getNodeByGlobalSlug(...) ?? getNodeBySlug(...)` fallback. The lazy engine aliases
 // the two, so either can return a node where the other returns null.
 export interface NodeLookup {
     getNodeByKey(key: GlobalId): DocNode | null;
@@ -12,8 +12,8 @@ export interface NodeLookup {
     getPackage(packageName: string): DocPackageModel | null;
 }
 
-// Cross-package URL parts read from the index, not a loaded model (`logger/debug` -> entitySlug
-// `logger`, fragment `debug`).
+// Cross-package URL parts read straight from the index, bypassing a loaded model (`logger/debug` ->
+// entitySlug `logger`, fragment `debug`).
 export interface CrossPackageEntity {
     tone: EntityTone;
     version: string;
@@ -22,13 +22,13 @@ export interface CrossPackageEntity {
 }
 
 export interface PackageRegistry {
-    // True for any package with docs, loaded or not; the cross-package URL fallback requires this wider
+    // True for any package with docs, loaded or not. The cross-package URL fallback needs this wider
     // set than the loaded-only candidatePackages below.
     isKnownPackage(fullName: string): boolean;
     // Ordered: hinted, then current, then the loaded set.
     candidatePackages(currentPackage: string, hinted?: string): string[];
-    // Returns `slug`'s URL parts when its entity is listed in `fullName`'s index entry; null when the
-    // slug is a param/predicate rather than a real entity.
+    // Returns `slug`'s URL parts when its entity is listed in `fullName`'s index entry. A param or
+    // predicate slug returns null, since only real entities get indexed.
     crossPackageEntity(fullName: string, slug: string): CrossPackageEntity | null;
 }
 

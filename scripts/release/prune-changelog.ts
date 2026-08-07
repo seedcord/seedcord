@@ -12,8 +12,8 @@ function sectionVersion(section: string): string | undefined {
 }
 
 /**
- * Removes a prerelease section once its stable section exists above it, so the changelog keeps
- * one entry per released version.
+ * Prunes a prerelease section once its stable release exists above it, keeping one changelog entry
+ * per released version.
  */
 export function pruneSupersededPrereleases(changelog: string): string {
     const sections = changelog.split(/(?=^## )/m);

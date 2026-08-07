@@ -32,7 +32,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
     size?: InputSize;
     leading?: ReactNode;
     trailing?: ReactNode;
-    // Wrapper class override; `inputClassName` targets the inner <input>.
+    // `className` overrides the wrapper. `inputClassName` targets the inner <input>.
     inputClassName?: string;
     ref?: Ref<HTMLInputElement>;
 }
@@ -57,7 +57,7 @@ export function Input({
                 ref={ref}
                 type={type}
                 className={cn(
-                    // pointer-coarse:text-base pins the font to 16px on touch devices; iOS Safari zooms a focused input under 16px.
+                    // pointer-coarse:text-base pins the font to 16px on touch devices because iOS Safari zooms a focused input under 16px
                     tw`placeholder:text-subtle min-w-0 flex-1 bg-transparent text-(--text) outline-hidden pointer-coarse:text-base`,
                     inputClassName
                 )}

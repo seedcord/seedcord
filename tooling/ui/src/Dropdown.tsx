@@ -17,9 +17,7 @@ const dropdownTriggerBaseClassName = cn(
 );
 
 const dropdownTriggerVariantClasses = {
-    // Bordered field that fills its container.
     default: tw`w-full justify-between gap-2 rounded-md border border-(--border) bg-(--bg-popover) text-(--text) hover:border-(--border-accent-b-subtle) aria-invalid:border-(--accent-a) aria-invalid:focus-visible:outline-(--accent-a) data-[state=open]:border-(--accent-b) data-[state=open]:bg-(--bg-accent-b-moderate)`,
-    // Borderless, content-width trigger for inlining in a bar (e.g. an inline search scope filter).
     ghost: tw`gap-1 rounded-md px-1 py-0.5 text-(--text-muted) hover:text-(--text) data-[state=open]:text-(--accent-b)`
 } as const;
 
@@ -135,7 +133,7 @@ export interface DropdownProps {
     minWidth?: string;
     variant?: DropdownVariant;
     fieldSize?: DropdownSize;
-    // Portal target for the listbox (see PopoverContent.container); needed inside a modal Dialog.
+    // portal target for the listbox (see PopoverContent.container), needed inside a modal Dialog
     container?: HTMLElement | null;
     error?: boolean;
     disabled?: boolean;

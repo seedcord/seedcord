@@ -100,8 +100,8 @@ export class ViteDevRuntime implements DevRuntime {
     }
 
     public async dispose(): Promise<void> {
-        // Restart/disconnect dispose the runtime without exiting the process, so drop the runtime<->plugin
-        // 'event' wiring and references or each new session would leak the prior one's listeners.
+        // restart and disconnect dispose the runtime without exiting the process, so drop the event
+        // wiring here, else each new session leaks the last one's listeners
         this.hmrPlugin?.removeAllListeners('event');
 
         if (this.viteServer) {
@@ -121,7 +121,7 @@ export class ViteDevRuntime implements DevRuntime {
     }
 }
 
-// Vite normalizes module ids to forward slashes; relative() yields backslashes on Windows, so normalize.
+// vite normalizes module ids to forward slashes. relative() yields backslashes on windows
 function toModuleId(projectRoot: string, file: string): string {
     return `/${relative(projectRoot, file).replaceAll('\\', '/')}`;
 }

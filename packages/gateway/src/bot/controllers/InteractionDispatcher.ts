@@ -74,12 +74,6 @@ interface DispatchedHandler {
     execute(): Promise<void>;
 }
 
-/**
- * Scans handler directories, routes each interaction to its registered handler, and runs the handler.
- * One handler per interaction.
- *
- * @internal
- */
 export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly logger = new Logger('Interactions', { channel: 'interactions' });
     private isInitialized = false;
@@ -96,7 +90,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly userContextMenuMap = new Map<string, HandlerConstructor>();
     private readonly autocompleteMap = new Map<string, HandlerConstructor>();
 
-    // the duplicate-route error reports the file the existing class came from
     private readonly handlerFiles = new Map<HandlerConstructor, string>();
 
     private readonly keysToIgnore = new Set<CustomIdMatcher>();
@@ -105,7 +98,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     private readonly inFlight = new Set<Promise<void>>();
     private draining = false;
 
-    // batched during bulk load. A reload reports on the hmr channel instead
+    // batched during bulk load. a reload reports on the hmr channel instead
     private loading = false;
     private readonly loadedHandlers: { name: string; from: string }[] = [];
     private readonly loadedMiddlewares: { name: string; from: string }[] = [];
@@ -143,7 +136,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
         const interactionsDir = this.core.config.bot.interactions.path;
         if (!interactionsDir) {
-            // unreachable today, guards against a path regression
             throw new SeedcordError(SeedcordErrorCode.CoreControllerPathMissing, [
                 'InteractionDispatcher',
                 'interactions'
@@ -210,7 +202,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         this.isInitialized = true;
 
         const handlersDir = this.core.config.bot.interactions.path;
-        // unreachable, the constructor throws when the path is unset
+        // the constructor already threw on this
         if (!handlersDir) return;
 
         const middlewareDir = hasKeys(this.core.config.bot.interactions, ['middlewares'])
@@ -294,7 +286,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // same class re-registered (double import or an HMR re-scan) is idempotent, matching event middleware
         if (this.middlewares.some((entry) => entry.ctor === middlewareCtor)) return;
 
-        // a different class sharing the name would run alongside the first
         if (this.middlewares.some((entry) => entry.ctor.name === middlewareCtor.name)) {
             throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateMiddleware, [middlewareCtor.name]);
         }
@@ -354,7 +345,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (this.loading) this.loadedHandlers.push({ name: handlerClass.name, from });
     }
 
-    /** @internal For use in dev mode */
     public async onHmr(event: HmrUpdateEvent): Promise<void> {
         await this.hmrHandler?.handle(event);
     }
@@ -419,7 +409,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         // route by the stable prefix (the routeKey minus its shape hash) so an older-shape wire still
         // reaches its handler, where reading this.params throws StaleCustomId and the boundary replies
         const prefix = prefixOf(interaction.customId);
-        // an empty prefix matches no route, so the unhandled default replies to it the way http does
+        // no route matches an empty prefix. the unhandled default answers it like http does
         if (!prefix)
             this.logger.warn(`${paint.sky.bold(kind)} has invalid customId: ${paint.mute(interaction.customId)}`);
 
@@ -440,15 +430,13 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
     ): Promise<void> {
         const key = extractKey(interaction);
         const startedAt = performance.now();
-        // read here, since a read at publish time would count the handler run into the queue too
+        // reading at publish time would count the handler run into the queue
         const queuedMs = queuedMsFor(interaction.id);
         const matched = getHandler(key);
 
-        // the handler's own routeId replaces this once the dispatch context is built, and the closure
-        // below reads whichever one is current when it publishes. an empty key means a customId
-        // seedcord never minted, since a minted routeKey always outlives its 3-char hash
+        // an empty key means a customId seedcord never minted. a real routeKey outlives its 3-char hash
         let routeId = `${kind}:${key || 'unrouted'}`;
-        // one report per dispatch, since a throw while answering a refusal reaches the catch and answers again
+        // answering a refusal can throw into the catch and answer twice
         let reported = false;
         const report = (outcome: DispatchOutcome): void => {
             if (reported) return;
@@ -464,7 +452,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             });
         };
 
-        // declared outside the try so the fault boundary replies through the handler's exact ack state
+        // outside the try so the fault boundary keeps the handler's ack state
         let sender: ReplySender | undefined;
         try {
             if (!interaction.isAutocomplete()) await this.runMiddlewares(interaction as Repliables);
@@ -474,7 +462,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             routeId = dispatch.routeId ?? routeId;
             const handler = this.buildHandler(HandlerCtor, interaction as Repliables, dispatch, key, !matched);
             if (handler instanceof RepliableHandler) sender = handler.getSender();
-            // @Gated rejects autocomplete at compile time, since it has no reply target. This is the runtime backstop
+            // @Gated rejects autocomplete at compile time, since it has no reply target. this is the backstop
             const refusal = interaction.isAutocomplete()
                 ? null
                 : await this.gateRefusal(HandlerCtor, interaction as Repliables, dispatch.routeId);
@@ -489,7 +477,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    // reports in a finally, so a throw from the boundary still publishes
     private async answer(
         caught: unknown,
         interaction: ValidInteractionTypes,
@@ -526,7 +513,6 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         }
     }
 
-    // null when the gates passed. the caller answers the refusal, so one code path reports and replies
     private async gateRefusal(
         HandlerCtor: HandlerConstructor,
         interaction: Repliables,

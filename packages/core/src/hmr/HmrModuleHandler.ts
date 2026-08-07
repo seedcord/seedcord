@@ -43,10 +43,10 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     private readonly options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>;
 
     constructor(options: HmrModuleHandlerOptions<THandler, TMiddleware, TArtifacts>) {
-        // the caller's options object stays unmutated
         this.options = { ...options, logger: options.logger.inChannel('hmr') };
 
-        // no import.meta.hot.data stash needed, a leaf reload never reconstructs the singleton that holds these Maps
+        // no import.meta.hot.data stash needed because a leaf reload never reconstructs the singleton
+        // holding these Maps
         this.store = {
             fileToHandlers: new Map(),
             fileToMiddlewares: new Map(),
@@ -64,7 +64,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
             return;
         }
 
-        // a directory is never importable. Its files arrive as their own create events
+        // a directory is never importable. its files arrive as their own create events
         if (type === 'createDir') return;
 
         if (type === 'update' && !existsSync(file)) {
@@ -98,7 +98,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
     private inScope(file: string): boolean {
         const { handlersDir, middlewaresDir } = this.options;
 
-        // the separator keeps a sibling dir sharing the prefix (commands-extra vs commands) out
+        // the trailing separator keeps commands-extra out of commands
         if (file.startsWith(resolve(process.cwd(), handlersDir) + sep)) return true;
         return middlewaresDir ? file.startsWith(resolve(process.cwd(), middlewaresDir) + sep) : false;
     }
@@ -185,7 +185,6 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         return names;
     }
 
-    // only a failed reload returns null
     private async reloadFile(file: string): Promise<string[] | null> {
         const { logger, isHandler, isMiddleware, registerHandler, registerMiddleware } = this.options;
 
@@ -196,7 +195,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
 
         try {
             let fileUrl = pathToFileURL(file).href;
-            // vitest has no real vite server managing the module graph, so bust the import cache manually.
+            // vitest has no real vite server managing the module graph
             if (process.env.VITEST === 'true') fileUrl += `?update=${Date.now()}`;
 
             // justified: a dynamic import resolves to an untyped export map
@@ -222,7 +221,7 @@ export class HmrModuleHandler<THandler, TMiddleware = void, TArtifacts = unknown
         }
     }
 
-    // restoring re-registers the same class objects, so a live db connection survives rollback
+    // these are the same class objects, which is how a live db connection survives a rollback
     private snapshotUnits(file: string): { handlers: THandler[]; middlewares: TMiddleware[] } {
         return {
             handlers: [...(this.store.fileToHandlers.get(file) ?? [])],

@@ -4,7 +4,7 @@ import { createOnigurumaEngine } from 'shiki/engine/oniguruma';
 
 import type { ThemeRegistrationRaw } from 'shiki';
 
-// Warm code palette, named. Each hue carries a dark-mode value and a deeper light-mode value.
+// each named hue below pairs a dark-mode value with a deeper light-mode value
 const SEED_DARK = '#2d3328';
 const PITH = '#f4f1e3';
 
@@ -143,7 +143,7 @@ export const PALETTE: PaletteRole[] = [
     }
 ];
 
-// Function + decorator-name share one hue. You're iffy on the orange, so these are the candidates.
+// function and decorator names share one hue. the orange is still undecided
 export interface FunctionHue {
     key: string;
     label: string;

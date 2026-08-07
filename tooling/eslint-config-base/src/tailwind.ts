@@ -26,14 +26,14 @@ export function resolveSharedTailwindEntry(packageRoot: string, candidates: stri
 
 interface TailwindBlockParams {
     files: string[];
-    // undefined makes the block a no-op, packages with no Tailwind surface register no rules
+    // undefined makes the block a no-op for packages with no Tailwind surface
     entryPoint: string | undefined;
     calleeFunctions: string[];
     taggedTemplates: string[];
 }
 
 // both rules run at warn so they autofix without blocking CI. a doubled space can appear when
-// shorthand collapses, the next prettier pass cleans it
+// shorthand collapses, but the next prettier pass cleans it
 export function tailwindBlock(params: TailwindBlockParams): Linter.Config {
     const block: Linter.Config = { files: [...params.files] };
 

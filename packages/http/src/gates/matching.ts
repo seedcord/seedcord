@@ -20,7 +20,7 @@ export type AnyHandlerCtor = abstract new (...args: never[]) => {
     execute(): Promise<void>;
 };
 
-// a marker no gate's required context matches, so @Gated rejects every gate on an autocomplete handler
+// @Gated rejects every gate on an autocomplete handler through this marker
 declare const UngateableBrand: unique symbol;
 interface Ungateable {
     readonly [UngateableBrand]: true;
@@ -32,7 +32,7 @@ type ProvidedContext<TCtor extends AnyHandlerCtor> =
 
 type SelectData<Repliable> = Repliable extends APIMessageComponentSelectMenuInteraction ? Repliable['data'] : never;
 
-// a short label per context, so a mismatch error names the kind where TS would truncate the raw API type.
+// a mismatch error names the kind where TS would otherwise truncate the raw API type
 // GuildPermissionsContext labels as gateway-only, because the http context does not define its guild fields
 type KindName<Ctx> = Ctx extends Ungateable
     ? 'autocomplete'

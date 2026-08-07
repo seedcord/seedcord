@@ -75,7 +75,7 @@ export class CloudflaredTunnel {
         onResolving?.();
         // the record lands ~2.5s later and an early lookup caches NXDOMAIN for a 30 minute negative TTL
         await this.deps.wait(SETTLE_MS);
-        // our dns lagging says nothing about discord's, so the result only shortens the wait
+        // local dns resolving doesn't mean discord's resolver has too, so this only shortens the wait
         await awaitReachable(url, this.deps, signal);
         child.once('exit', () => {
             if (this.child === child) this.onLost();

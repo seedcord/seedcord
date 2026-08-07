@@ -46,7 +46,6 @@ export default createRule({
                     if (classType) isBase = extendsSeedcordType(checker, classType, MIDDLEWARE_BASES);
                 }
                 if (!isBase) return;
-                // an abstract subclass becomes a base for later concrete middleware (same-file intermediate)
                 if (node.abstract) {
                     if (node.id) bases.add(node.id.name);
                     return;

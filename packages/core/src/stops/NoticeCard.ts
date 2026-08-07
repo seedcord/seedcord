@@ -2,10 +2,8 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 
 import { BuilderComponent } from '@components/Component';
 
-/**
- * Built fresh inside a {@link Notice}'s `render` to back its ComponentsV2 reply. The title renders as
- * an h3 line with the description on the next line.
- */
+// built fresh inside a Notice's render to back its ComponentsV2 reply
+// discord renders the ### line as an h3 with the description below
 export class NoticeCard extends BuilderComponent<'container'> {
     public constructor(description: string, title = 'Cannot Proceed') {
         super('container');

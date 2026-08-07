@@ -20,11 +20,10 @@ export class DevCommand extends BaseCommand {
             .command(this.name)
             .description(this.description)
             .action(async () => {
-                // built here so every other command skips the dev machinery
                 const store = new DevStore();
                 const runner = DevRunner.create(this.logger, store);
 
-                // SIGINT reaches here only when stdin is not raw, Ink handles the raw-mode Ctrl-C itself
+                // ink intercepts Ctrl-C under raw mode. this fires only when stdin is not raw.
                 const onSignal = (): void => {
                     void runner.quit();
                 };
@@ -41,10 +40,10 @@ export class DevCommand extends BaseCommand {
                     process.off('SIGTERM', onSignal);
                 }
 
-                // the in-UI logs are gone once the UI unmounts, so point at the folder on the normal terminal
+                // the in-ui logs went with the unmount
                 this.printLogLocation();
 
-                // Ink's raw-mode stdin and the Vite dev server hold the event loop open after teardown
+                // ink's raw stdin and vite's dev server keep the event loop alive after teardown
                 process.exit();
             });
     }
@@ -68,22 +67,22 @@ export class DevCommand extends BaseCommand {
                     runResult = runner
                         .run()
                         .finally(async () => {
-                            // unmounting first would drop the buffered lines
+                            // unmounting first drops the buffered lines
                             await LogStore.instance.flush();
                             unmount();
                         })
-                        // node kills the process over an unwatched rejection while the ui is still up
+                        // node kills the process over an unwatched rejection
                         .catch((error: unknown) => {
                             failure = { error };
                         });
                 }
             }),
-            // the alternate screen restores the terminal and scrollback on quit, and Ink's ESC[3J purge never fires
+            // the alternate screen restores the terminal and scrollback on quit, and ink's ESC[3J purge never fires
             { exitOnCtrlC: false, alternateScreen: true }
         );
 
         await waitUntilExit();
-        // awaited so a run-loop failure reaches the action's try/catch before process.exit()
+        // a run-loop failure has to reach the action's catch before process.exit()
         await runResult;
         if (failure) throw failure.error;
     }

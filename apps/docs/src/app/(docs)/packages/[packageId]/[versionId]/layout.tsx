@@ -34,8 +34,8 @@ async function PackageLayout({
 }): Promise<ReactNode> {
     const [catalog, { packageId, versionId }] = await Promise.all([loadDocsCatalog(), params]);
 
-    // 404 gating runs in the layout, not the page: the page renders behind loading.tsx's Suspense
-    // boundary, which streams a 200 shell before the page's notFound() could set the status.
+    // 404 gating runs here because the page renders behind loading.tsx's Suspense boundary, which
+    // streams a 200 shell before the page's notFound() could set the status
     const entry = findCatalogEntry(catalog, decodeParam(packageId));
     if (!entry) notFound();
 

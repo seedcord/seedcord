@@ -23,7 +23,7 @@ export function neutralizeFences(text: string): string {
     return text.replaceAll('```', '`​`​`');
 }
 
-/** An error's stack with its direct cause appended (one level), ANSI-stripped for the webhook payload. */
+// stack plus one level of cause, ansi codes stripped since discord won't render them
 export function errorReport(error: Error): string {
     let report = error.stack ?? `${error.name}: ${error.message}`;
     if (Error.isError(error.cause)) {

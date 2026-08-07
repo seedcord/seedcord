@@ -29,7 +29,6 @@ export interface CardProps<Tag extends ElementType = 'div'> {
     children?: ComponentPropsWithoutRef<Tag>['children'];
 }
 
-// Use for grouped content surfaces (panels, cards, dialog bodies). Don't roll `border rounded bg-…`.
 export function Card<Tag extends ElementType = 'div'>({
     as,
     variant = 'default',

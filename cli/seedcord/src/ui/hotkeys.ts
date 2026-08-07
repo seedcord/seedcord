@@ -10,7 +10,7 @@ import type { LogRow } from '@ui/logRows';
 import type { DevState, DevStore } from '@ui/stores/DevStore';
 import type { Key } from 'ink';
 
-// empty set means all, so "all on" collapses back to empty and later channels stay visible by default
+// empty set means all. toggling every channel on collapses back to empty, keeping later channels visible by default
 function toggleChannel(prev: ReadonlySet<string>, channel: string, all: readonly string[]): ReadonlySet<string> {
     const base = prev.size === 0 ? new Set(all) : new Set(prev);
     if (base.has(channel)) base.delete(channel);
@@ -47,7 +47,7 @@ interface HotkeyContext {
     readonly setEnabledLevels: (next: ReadonlySet<LogLevel>) => void;
     readonly cursor: FilterCursor;
     readonly setCursor: (next: FilterCursor) => void;
-    readonly filtersOpen: boolean; // to disable hotkeys that would otherwise move the cursor when the filter chips are closed
+    readonly filtersOpen: boolean;
     readonly onQuit?: (() => Promise<void> | void) | undefined;
     readonly onDisconnect?: (() => Promise<void> | void) | undefined;
     readonly onRestart?: (() => Promise<void> | void) | undefined;
@@ -59,7 +59,7 @@ function quit(ctx: HotkeyContext): void {
     void ctx.onQuit?.();
 }
 
-// Ink puts stdin in raw mode, so Ctrl-C arrives as a plain keypress with no SIGINT.
+// ink puts stdin in raw mode, so ctrl-c arrives as a plain keypress with no sigint
 function handleQuitSignal(ctx: HotkeyContext): boolean {
     if (!ctx.key.ctrl || ctx.input !== 'c') return false;
 
@@ -159,7 +159,7 @@ function handleActions(ctx: HotkeyContext): void {
     }
 }
 
-// first stage that returns true captures the keypress. the prompt captures all input while open
+// dispatch checks the prompt before filters. an open y/n prompt would otherwise lose keys to filter hotkeys
 export function dispatchHotkey(ctx: HotkeyContext): void {
     if (handleQuitSignal(ctx)) return;
     if (ctx.state.quitArmed) ctx.store.setQuitArmed(false);

@@ -10,7 +10,7 @@ import type { DecodedParams } from './Field';
 import type { Promisable } from 'type-fest';
 
 /**
- * The route decorators store a handler's customId definitions here so the component base can decode
+ * route decorators store a handler's customId defs here, so the component base can decode
  * against them at runtime.
  *
  * @internal
@@ -18,8 +18,8 @@ import type { Promisable } from 'type-fest';
 export const ComponentDefsKey = Symbol('seedcord:customId:componentDefs');
 
 /**
- * The phantom a component handler base carries. A route decorator constrains its argument to this, so
- * passing different definitions to the decorator and the handler's generic is a compile error. Never set at runtime.
+ * the phantom a component handler base carries. a route decorator constrains its argument to this, so
+ * passing different defs to the decorator and the handler's generic is a compile error. never set at runtime.
  *
  * @internal
  */
@@ -35,7 +35,7 @@ export interface DecodedComponentRoute {
 }
 
 /**
- * Throws `CustomIdHandlerRouteMissing` when the class has no stored defs. A drifted or corrupt wire
+ * throws `CustomIdHandlerRouteMissing` when the class has no stored defs. a drifted or corrupt wire
  * throws `StaleCustomId` or `InvalidCustomId`.
  *
  * @internal

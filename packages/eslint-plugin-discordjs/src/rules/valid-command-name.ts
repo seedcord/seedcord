@@ -67,7 +67,7 @@ export default createRule({
                 }
                 if (name === undefined || isValidChatInputName(name)) return;
 
-                // a context menu name allows any case, so restrict the check to the discord.js slash builders
+                // a context menu name allows any case
                 if (node.callee.type !== AST_NODE_TYPES.MemberExpression) return;
                 const checker = services.program.getTypeChecker();
                 const receiverType = services.getTypeAtLocation(node.callee.object);

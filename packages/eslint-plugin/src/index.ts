@@ -39,7 +39,6 @@ export const recommended: TSESLint.FlatConfig.Config = {
     rules: presetRules
 };
 
-// the seedcord preset layers the framework rules over the discord.js set
 export const seedcord: TSESLint.FlatConfig.Config[] = [discordjsRecommended, recommended];
 
 plugin.configs = { seedcord };

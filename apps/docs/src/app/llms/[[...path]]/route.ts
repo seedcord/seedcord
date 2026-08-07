@@ -3,8 +3,7 @@ import { entityToMarkdown } from '@lib/docs/entityMarkdown';
 import { resolveEntity } from '@lib/docs/resolveEntity';
 import { canonicalUrl } from '@lib/site';
 
-// a Markdown mirror of each docs page, for agents and assistants that prefer Markdown over scraping the
-// rendered HTML. the path mirrors the page, `/llms/packages/<pkg>/<ver>/<category>/<slug>`.
+// the llms path mirrors the docs page path, `/llms/packages/<pkg>/<ver>/<category>/<slug>`
 export const dynamic = 'force-static';
 
 const MARKDOWN = { 'content-type': 'text/markdown; charset=utf-8' } as const;

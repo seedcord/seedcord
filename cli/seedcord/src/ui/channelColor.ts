@@ -1,4 +1,4 @@
-// stable first-seen assignment keeps a channel's tag and its filter chip matched. red is reserved for errors and the live dot, so it is left out.
+// stable first-seen assignment keeps a channel's tag matched to its filter chip. red is reserved for errors and the live dot, so it stays out of the palette.
 const PALETTE = [
     '#ff8a3d',
     '#ff6a4d',
@@ -33,7 +33,7 @@ export function channelColor(channel: string): string {
     return color;
 }
 
-// the map is module-level, so clear it per dev session or stale channels skew the next session's colors.
+// clearing here keeps stale channels from skewing the next session's colors
 export function resetChannelColors(): void {
     assigned.clear();
 }

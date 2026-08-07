@@ -15,7 +15,7 @@ import type * as ts from 'typescript';
 
 const OPTION_BUILDERS = new Set(['SlashCommandStringOption', 'SlashCommandIntegerOption', 'SlashCommandNumberOption']);
 
-// the last setAutocomplete call is the effective one. collectChain is outermost-first, so the first match is the last executed
+// collectChain is outermost-first
 function autocompleteOn(
     calls: TSESTree.CallExpression[],
     services: ParserServicesWithTypeInformation,
@@ -29,10 +29,10 @@ function autocompleteOn(
     return booleanLiteralValue(checker, services.getTypeAtLocation(arg)) === true;
 }
 
-// addChoices appends literal choices, setChoices replaces them
+// addChoices appends literal choices while setChoices replaces them
 function declaresChoices(calls: TSESTree.CallExpression[]): boolean {
     let has = false;
-    // reversed to source order, so a later setChoices resets an earlier addChoices
+    // a later setChoices resets an earlier addChoices
     for (const call of [...calls].reverse()) {
         const name = methodName(call);
         if (name === 'addChoices') {

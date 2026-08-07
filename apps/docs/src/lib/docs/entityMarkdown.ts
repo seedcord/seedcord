@@ -10,8 +10,8 @@ import type {
     TypeEntityModel
 } from './types';
 
-// function and type render their own declaration (per-signature / the expanded declaration), so the
-// base signature would just duplicate it.
+// function renders its own declaration per signature, and type renders its expanded declaration, so
+// the base signature here would just duplicate it.
 const SKIP_BASE_SIGNATURE = new Set<EntityModel['kind']>(['function', 'type']);
 
 function paragraphs(parts: readonly CommentParagraph[] | undefined): string {
@@ -112,9 +112,6 @@ function references(entity: EntityModel): string[] {
     return out;
 }
 
-/**
- * Render an API entity as agent-friendly Markdown
- */
 export function entityToMarkdown(entity: EntityModel, selfUrl?: string): string {
     const version = entity.version ? ` · v${entity.version}` : '';
     const lines: string[] = [

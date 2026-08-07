@@ -8,7 +8,7 @@ import type { ValidEventTypes } from './interactionTypes';
  * gate hook.
  */
 export abstract class BaseHandler<ValidEvent extends ValidEventTypes> extends CoreBaseHandler<ValidEvent, Core> {
-    /** @internal */
+    // gates infer which event a handler is for from this return type
     public getEvent(): ValidEvent {
         return this.event;
     }

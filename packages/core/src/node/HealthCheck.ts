@@ -35,7 +35,6 @@ export class HealthCheck {
         return this.responder.path;
     }
 
-    // `undefined` and `true` both build the defaults, only `false` opts out
     public static fromOption(shutdown: CoordinatedShutdown, option?: HealthCheckOption): HealthCheck | undefined {
         if (option === false) return undefined;
         return new HealthCheck(shutdown, typeof option === 'object' ? option : undefined);
@@ -55,7 +54,7 @@ export class HealthCheck {
             server.on('error', onListenError);
 
             server.once('listening', () => {
-                // a late error would reject an already-settled promise, and no 'error' listener at all crashes the process
+                // a late error would reject an already-settled promise, and node throws process-wide without a listener here
                 server.removeListener('error', onListenError);
                 server.on('error', (err) => this.logger.error('Health check server error', err));
 

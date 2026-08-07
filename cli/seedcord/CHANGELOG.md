@@ -1,5 +1,18 @@
 # seedcord
 
+## 0.17.1
+
+### Patch Changes
+
+- 272b729: Update comments
+- Updated dependencies [272b729]
+    - @seedcord/core@0.1.2
+    - @seedcord/errors@0.3.2
+    - @seedcord/event-emitter@0.1.2
+    - @seedcord/logger@0.1.2
+    - @seedcord/types@0.8.2
+    - @seedcord/utils@0.8.2
+
 ## 0.17.0
 
 ### Minor Changes
@@ -29,36 +42,6 @@
     - @seedcord/types@0.8.1
     - @seedcord/utils@0.8.1
     - @seedcord/event-emitter@0.1.1
-
-## 0.17.0-next.0
-
-### Minor Changes
-
-- 0642de5: `seedcord dev` exposes an http bot's interactions server through the `tunnel` dev config field. `true` opens a cloudflared quick tunnel and writes the interactions endpoint on every run. An https URL is one you already serve, and the CLI checks it reaches the bot, writes the endpoint when the stored value differs, then leaves it in place.
-
-### Patch Changes
-
-- d470ad4: Config resolution and the tsc watch relay now log at debug and trace.
-- d470ad4: Updated gen file's comment.
-- c567fea: Bump deps.
-- 5b57bda: A dev log line too long for the pane now wraps onto the next line, and re-wraps when the terminal resizes.
-- c567fea: Set all packages' node floor to LTS.
-- 5b57bda: A hot reload now logs one line worded by what changed, `Unloaded` on a delete, `Registered` on a new file, and `Reloaded` with a duration on an edit.
-- Updated dependencies [c567fea]
-- Updated dependencies [0642de5]
-- Updated dependencies [814902a]
-- Updated dependencies [c567fea]
-- Updated dependencies [5b57bda]
-- Updated dependencies [0642de5]
-- Updated dependencies [d470ad4]
-- Updated dependencies [d470ad4]
-- Updated dependencies [814902a]
-    - @seedcord/core@0.1.1-next.0
-    - @seedcord/errors@0.3.1-next.0
-    - @seedcord/logger@0.1.1-next.0
-    - @seedcord/types@0.8.1-next.0
-    - @seedcord/utils@0.8.1-next.0
-    - @seedcord/event-emitter@0.1.1-next.0
 
 ## 0.16.0
 

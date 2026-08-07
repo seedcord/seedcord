@@ -16,7 +16,6 @@ function formatStars(count: number): string {
     return `${k >= TWO_DIGIT_K ? String(Math.round(k)) : k.toFixed(1).replace('.0', '')}k`;
 }
 
-// renders nothing until the count arrives, and nothing at all when the fetch fails
 export function GithubStars(): ReactNode {
     const [stars, setStars] = useState<number | null>(null);
 

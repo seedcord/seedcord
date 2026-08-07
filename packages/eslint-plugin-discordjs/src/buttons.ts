@@ -51,7 +51,7 @@ export function gatherFacts(
                   : (getProperty(data, key) ?? getProperty(data, prop));
         if (site !== undefined) props.set(prop, site);
     }
-    // a chained setStyle runs after the constructor, so it wins over a data style
+    // a chained setStyle runs after the constructor
     const styleSource =
         lastCall(calls, 'setStyle')?.arguments[0] ??
         (data === undefined ? undefined : getProperty(data, 'style')?.value);

@@ -17,8 +17,8 @@ import { CommandListItem } from '@components/search/command-palette/CommandListI
 import type { CommandAction, SearchResultKind } from '@components/search/command-palette/types';
 import type { ReactElement } from 'react';
 
-// Prototype-only: a CommandAction plus the package it belongs to, so the mock can group/filter by
-// package. The real route derives the package from the result's href.
+// prototype-only, this adds a package field to CommandAction so the mock can group and filter by
+// package. the real route derives the package from the result's href
 interface MockResult extends CommandAction {
     pkg: Pkg;
 }
@@ -63,8 +63,8 @@ function entry(pkg: Pkg, label: string, kind: SearchResultKind, qualified = labe
     return { id: `${pkg}-${qualified}`, label, kind, pkg, path: `${pkg} · ${qualified}`, href: '#' };
 }
 
-// A spread across packages, kinds, and members, with cross-package duplicates (Logger, BotConfig) so the
-// scope + kind filters and the active-first grouping can all be triggered.
+// a spread across packages, kinds, and members, with cross-package duplicates (Logger, BotConfig) so the
+// scope + kind filters and the active-first grouping can all be triggered
 const MOCK: MockResult[] = [
     entry('seedcord', 'Seedcord', 'class'),
     entry('seedcord', 'Plugin', 'class'),
@@ -121,7 +121,6 @@ function groupByPackage(results: MockResult[], scope: 'all' | Pkg, currentPkg: P
         return acc;
     }, new Map());
 
-    // Current package first, then the rest in declaration order.
     const ordered: Pkg[] = [currentPkg, ...PACKAGES.filter((pkg) => pkg !== currentPkg)];
     return ordered.reduce<PkgGroup[]>((acc, pkg) => {
         const items = byPkg.get(pkg);
@@ -166,8 +165,6 @@ interface ScopeBarProps {
     onKind: (value: KindFilter) => void;
 }
 
-// TanStack-style bar: search glyph, then borderless package + kind dropdowns separated by `/`, then the
-// query field, all inline in one focusable bar.
 function ScopeBar({ query, onQuery, scope, kind, onScope, onKind }: ScopeBarProps): ReactElement {
     return (
         <div className={tw`border-b border-(--border) px-4 py-3`}>

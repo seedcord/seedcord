@@ -12,14 +12,7 @@ import type { WebhookReport } from '../bases/WebhookLog';
 import type { AllSubscriptions } from '../types/Subscriptions';
 import type { CoreBase } from '@interfaces/CoreBase';
 
-/**
- * Default subscriber that reports an unhandled exception to a webhook: the stack trace, the guild
- * and user, a tracking uuid, interaction timestamps when available, and the error metadata as a
- * JSON attachment.
- *
- * Reads its webhook url from UNKNOWN_EXCEPTION_WEBHOOK_URL. Unset, the reporter is disabled with
- * a boot warning.
- */
+// no UNKNOWN_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
 @Subscribe('unknownException')
 @WebhookUrl('UNKNOWN_EXCEPTION_WEBHOOK_URL')
 export class UnknownException extends WebhookLog<'unknownException', CoreBase> {

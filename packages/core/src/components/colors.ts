@@ -1,6 +1,6 @@
 import type { ColorName, TypedOmit } from '@seedcord/types';
 
-// Ported verbatim from discord.js (Apache-2.0), src/util/Colors.js.
+// ported verbatim from discord.js (Apache-2.0), src/util/Colors.js
 export const Colors: TypedOmit<Record<ColorName, number>, 'Random'> = {
     Aqua: 0x1a_bc_9c,
     Blue: 0x34_98_db,

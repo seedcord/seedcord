@@ -40,7 +40,6 @@ export function useCommandPaletteSearch({
     prerelease
 }: UseCommandPaletteSearchOptions): SearchState {
     const [state, setState] = useState<SearchState>(DEFAULT_STATE);
-    // Re-opening with a previously-resolved query must skip the fetch, otherwise the UI flickers cached -> loading -> cached.
     const cacheRef = useRef<Map<string, CommandAction[]>>(new Map());
     const trimmed = query.trim();
     const active = open && trimmed.length >= MIN_SEARCH_QUERY_LENGTH;
@@ -51,11 +50,8 @@ export function useCommandPaletteSearch({
 
         let cancelled = false;
         const controller = new AbortController();
-        // Key the cache to every input that changes the result set (current package/version + the scope,
-        // kind, and prerelease filters) so one combination never returns another's results.
         const cacheKey = `${pkg}::${version}::${scope}::${kind}::${prerelease ? '1' : '0'}::${trimmed}`;
-        // Cache check sits inside the debounce so both paths (hit and fresh fetch) wait the same
-        // window; checking before would flash intermediate cached results between keystrokes.
+        // a cache hit waits out the debounce too, else old queries flash by as you type
         const timeout = window.setTimeout(() => {
             const cached = cacheRef.current.get(cacheKey);
             if (cached) {
@@ -63,8 +59,7 @@ export function useCommandPaletteSearch({
                 return;
             }
 
-            // Keep the previous results visible while the next query resolves; the header spinner signals the
-            // refresh. Clearing here is what made the list flicker to the caption between keystrokes.
+            // carrying prev.results is what stops the list blanking mid-refresh
             setState((prev) => ({ results: prev.results, status: 'loading' }));
 
             const params = new URLSearchParams({
@@ -111,6 +106,6 @@ export function useCommandPaletteSearch({
         };
     }, [active, trimmed, pkg, version, scope, kind, prerelease]);
 
-    // Returning `state` while `!active` preserves results during the close animation so Esc doesn't flash the empty caption mid-collapse.
+    // results ride out the close animation
     return state;
 }

@@ -24,17 +24,17 @@ import type { CoreBase } from '@interfaces/CoreBase';
 import type { EventFrequency } from '@seedcord/types';
 
 /**
- * A subscriber class as the Bus stores it. Both parameters are `never` because construct-signature
- * parameters check contravariantly, and a concrete subscriber narrows each to its own payload and
- * transport `Core`. One cast at dispatch restores both.
+ * Both parameters are `never` because construct-signature parameters check contravariantly, and a
+ * concrete subscriber narrows each to its own payload and transport `Core`. One cast at dispatch
+ * restores both.
  *
  * @internal
  */
 export type StoredSubscriberCtor = new (data: never, core: never) => Subscriber<SubscriptionKey, CoreBase>;
 
 /**
- * One registration. `resolve` is lazy so an edge host registers from a manifest row without
- * importing the module until that key first publishes.
+ * `resolve` is lazy so an edge host registers from a manifest row without importing the module
+ * until that key first publishes.
  *
  * @internal
  */
@@ -42,7 +42,7 @@ export interface SubscriberRegistration {
     readonly keys: readonly SubscriptionKey[];
     readonly frequency: EventFrequency;
     readonly resolve: () => StoredSubscriberCtor | Promise<StoredSubscriberCtor>;
-    /** The resolved class. A server-host registration carries it from the start, a lazy one fills it on first resolve. */
+    /** A server-host registration carries it from the start. A lazy one fills it on first resolve. */
     ctor?: StoredSubscriberCtor | undefined;
 }
 
@@ -63,12 +63,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         super();
     }
 
-    /**
-     * Registers the two shipped webhook reporters. The host calls this during startup, keeping the
-     * url validation inside `start()` where a failure can still release the singleton guard.
-     *
-     * @internal
-     */
+    /** @internal the host calls this during startup, keeping the url validation inside `start()` where a failure can still release the singleton guard. */
     public registerDefaults(): void {
         this.register(registrationFor(UnknownException));
         this.register(registrationFor(HandledException));
@@ -76,7 +71,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 
     /** @internal */
     public register(registration: SubscriberRegistration): void {
-        // a url-less reporter never registers, so a publish on its key does not reach a disabled sender
+        // a url-less reporter never registers. a publish on its key reaches nothing
         if (registration.ctor && !this.probeWebhook(registration.ctor)) return;
 
         for (const key of registration.keys) {
@@ -97,7 +92,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
             const index = registrations.findIndex((entry) => entry.ctor === ctor);
             if (index !== -1) registrations.splice(index, 1);
         }
-        // registration identity carries the once state, so a restored subscriber runs again after a rollback
+        // the once state hangs off the registration identity, which is why a restored subscriber runs again
     }
 
     /** @internal */
@@ -116,11 +111,11 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
                     this.logger.warn(`could not verify webhook at ${paint.sky.bold(envKeys.join(', '))}`);
             })
         );
-        // initial boot reports all missing webhooks
+        // collected first so the first boot names every missing webhook at once
         if (missing.length > 0) throw new SeedcordError(SeedcordErrorCode.ConfigWebhookNotFound, [missing.join(', ')]);
     }
 
-    /** Returns whether the class should register. */
+    // true means the class registers
     private probeWebhook(ctor: StoredSubscriberCtor): boolean {
         if (!(ctor.prototype instanceof WebhookLog)) return true;
 
@@ -139,12 +134,11 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     /**
      * Publishes an event to its subscribers and native listeners.
      *
-     * Fire-and-forget, so subscriber handlers run asynchronously and this returns before they
-     * complete, and callers must not assume side effects have completed. Errors thrown by a subscriber
-     * or by an `on()` listener are caught and logged, never surfaced here. One throwing listener
-     * does not stop the others. Subscribers on one key run concurrently and carry no ordering
-     * guarantee. A `'once'` subscriber is marked as executed when it starts (even if it throws), so
-     * it never runs twice.
+     * Fire-and-forget. Subscriber handlers run asynchronously and this returns before they finish. A
+     * caller cannot assume a side effect has completed. Errors thrown by a subscriber or by an `on()`
+     * listener are caught and logged, never surfaced here. One throwing listener does not stop the
+     * others. Subscribers on one key run concurrently and carry no ordering guarantee. A `'once'`
+     * subscriber is marked as executed when it starts, even if it throws. It never runs twice.
      *
      * The framework's own keys are excluded. Subscribe to those and listen with `on`. The framework
      * is their only publisher.
@@ -206,7 +200,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         subscriberName: KeyOfSubscribers,
         data: AllSubscriptions[KeyOfSubscribers]
     ): Promise<void> {
-        // named outside the try so the catch can report which subscriber threw, several run per key
+        // named outside the try so the catch can say which subscriber threw. several run per key
         let name = '<unresolved>';
         try {
             entry.ctor ??= await entry.resolve();
@@ -223,7 +217,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
     }
 }
 
-// callers gate on the Subscribe metadata, so it is present
+// every caller has already gated on the Subscribe metadata being there
 /** @internal */
 export function registrationFor(ctor: StoredSubscriberCtor): SubscriberRegistration {
     const meta = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry;

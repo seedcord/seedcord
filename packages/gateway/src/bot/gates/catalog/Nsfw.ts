@@ -7,7 +7,7 @@ import type { InteractionGateContext } from '../Gate';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
 import type { NonModalInteraction } from '@src/handlers/interactionTypes';
 
-// a thread carries no nsfw flag of its own, so it inherits the parent channel's
+// a thread carries no nsfw flag of its own
 function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']): boolean {
     if (!channel) return false;
     if (channel.isThread()) return channel.parent?.nsfw ?? false;

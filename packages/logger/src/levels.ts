@@ -13,7 +13,7 @@ const LEVEL_RANK: Record<LogLevel, number> = {
 
 export const DEFAULT_CHANNEL = 'default';
 
-/** The environment-derived floor when no level is configured. */
+// the floor LoggerChannelRegistry falls back to when config sets no level
 export function defaultLevel(): LogLevel {
     if (Envapter.isDevelopment) return 'trace';
     if (Envapter.isStaging) return 'debug';

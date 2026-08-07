@@ -16,7 +16,6 @@ export interface IconProps {
     className?: string;
 }
 
-// Wraps a lucide-react / GithubIcon glyph and applies size + aria-label.
 export function Icon({ icon: IconComponent, size = 18, title, className }: IconProps): ReactElement {
     if (title) {
         return (

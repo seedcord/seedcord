@@ -33,7 +33,6 @@ function commandKindOf(node: TSESTree.ClassDeclaration): CommandKind | undefined
     return isCommandKind(literal.value) ? literal.value : undefined;
 }
 
-// the command kind for a class whose BuilderComponent base is imported from another file
 function crossFileCommandKind(
     node: TSESTree.ClassDeclaration,
     checker: ts.TypeChecker,
@@ -79,14 +78,13 @@ export default createRule({
                 const superName = node.superClass.name;
 
                 let kind: CommandKind | undefined;
-                // the checker fallback also resolves a declared type alias to its literal kind
+                // also catches a kind declared through a type alias, which the syntax check above misses
                 if (builderComponentNames.has(superName))
                     kind = commandKindOf(node) ?? crossFileCommandKind(node, checker, services);
                 else if (intermediateKinds.has(superName)) kind = intermediateKinds.get(superName);
                 else kind = crossFileCommandKind(node, checker, services);
                 if (kind === undefined) return;
 
-                // an abstract subclass carries the kind to later concrete commands (same-file intermediate)
                 if (node.abstract) {
                     if (node.id) intermediateKinds.set(node.id.name, kind);
                     return;

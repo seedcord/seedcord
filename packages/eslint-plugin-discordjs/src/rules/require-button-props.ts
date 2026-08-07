@@ -30,14 +30,15 @@ function isDjsConsumption(call: TSESTree.CallExpression, arg: TSESTree.Expressio
     return isFromDiscordJs(info.services.getTypeAtLocation(call.callee.object).getSymbol());
 }
 
-// the setter calls that a single read adds, [] for plain consumption, undefined when the builder
-// escapes somewhere props could still be added
-function referenceCalls(id: TSESTree.Identifier, info: TypeInfo): TSESTree.CallExpression[] | undefined {
+// undefined when the builder escapes somewhere props can still be added. an empty array means it
+// was tracked and nothing was added.
+type TrackedCalls = TSESTree.CallExpression[] | undefined;
+
+function referenceCalls(id: TSESTree.Identifier, info: TypeInfo): TrackedCalls {
     const top = enclosingChainTop(id);
     if (top !== id && top.type === AST_NODE_TYPES.CallExpression) {
         const calls = collectChain(top);
-        // a setter chain returns the builder itself, so its result must be dropped or consumed,
-        // never bound where props could still be added
+        // a setter chain returns the builder itself
         if (!extendsDjsType(info.checker, info.services.getTypeAtLocation(top), 'ButtonBuilder')) return calls;
         const sealed = outermostAssertion(top);
         if (sealed.parent.type === AST_NODE_TYPES.ExpressionStatement) return calls;
@@ -48,11 +49,10 @@ function referenceCalls(id: TSESTree.Identifier, info: TypeInfo): TSESTree.CallE
     }
     const wrapped = outermostAssertion(id);
     if (wrapped.parent.type === AST_NODE_TYPES.CallExpression && isDjsConsumption(wrapped.parent, wrapped, info)) {
-        // a from() source is a template, its copies carry the completion
+        // a from() source is a template, and its copies carry the completion
         return methodName(wrapped.parent) === 'from' ? undefined : [];
     }
-    // exporting an incomplete builder is flagged deliberately, cross-module completion mutates a
-    // shared instance and stays out of scope
+    // an exported builder is flagged because completing it in another module is out of scope
     if (
         id.parent.type === AST_NODE_TYPES.ExportSpecifier ||
         id.parent.type === AST_NODE_TYPES.ExportDefaultDeclaration
@@ -62,12 +62,7 @@ function referenceCalls(id: TSESTree.Identifier, info: TypeInfo): TSESTree.CallE
     return undefined;
 }
 
-// setter calls from every later statement that reads the variable, or undefined when the builder
-// escapes through a reference
-function completionCalls(
-    declarator: TSESTree.VariableDeclarator,
-    info: TypeInfo
-): TSESTree.CallExpression[] | undefined {
+function completionCalls(declarator: TSESTree.VariableDeclarator, info: TypeInfo): TrackedCalls {
     const variable = info.sourceCode.getDeclaredVariables(declarator)[0];
     if (variable === undefined) return undefined;
 
@@ -83,11 +78,7 @@ function completionCalls(
     return chains.reverse().flat();
 }
 
-// the calls that run on the finished value, or undefined when later code could still add props
-function reachableCalls(
-    top: TSESTree.CallExpression | TSESTree.NewExpression,
-    info: TypeInfo
-): TSESTree.CallExpression[] | undefined {
+function reachableCalls(top: TSESTree.CallExpression | TSESTree.NewExpression, info: TypeInfo): TrackedCalls {
     const calls = top.type === AST_NODE_TYPES.CallExpression ? collectChain(top) : [];
     const sealed = outermostAssertion(top);
     const parent = sealed.parent;
@@ -141,8 +132,6 @@ export default createRule({
 
         return {
             NewExpression(node) {
-                // a bare discord.js ButtonBuilder construction is the only root that shows every
-                // prop the button will carry, so subclasses and .from() copies stay out
                 const type = services.getTypeAtLocation(node);
                 if (!isFromDiscordJs(type.getSymbol()) || !extendsDjsType(info.checker, type, 'ButtonBuilder')) return;
 
@@ -151,7 +140,6 @@ export default createRule({
                 if (node.arguments.length > 0 && data === undefined) return;
                 if (data?.properties.some((p) => p.type === AST_NODE_TYPES.SpreadElement) === true) return;
 
-                // where the finished value lands decides whether later code can still add props
                 const top = enclosingChainTop(node);
                 const calls = reachableCalls(top, info);
                 if (calls === undefined) return;
@@ -161,8 +149,7 @@ export default createRule({
                     context.report({ node: top, messageId: 'missingStyle' });
                     return;
                 }
-                // a style that is set but not static (or outside the wire range) keeps the
-                // requirements unknowable
+                // nothing to require when the style is not a static wire value
                 const style = knownStyle(staticNumber(facts.styleSource, services));
                 if (style === undefined) return;
 

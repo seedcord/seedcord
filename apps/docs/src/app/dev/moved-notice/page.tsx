@@ -5,7 +5,6 @@ import { MovedEntityNotice } from '@components/docs/MovedEntityNotice';
 
 import type { ReactElement } from 'react';
 
-// Dev preview: the notice only renders when a `moved` query param is present (append ?moved=<symbol>).
 function MovedNoticePage(): ReactElement {
     return (
         <div className={cn('space-y-10')}>

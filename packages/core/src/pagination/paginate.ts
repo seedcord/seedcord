@@ -18,7 +18,6 @@ export function paginate<Item>(items: readonly Item[], page: number, perPage: nu
     }
 
     const totalPages = Math.max(1, Math.ceil(items.length / perPage));
-    // a headless caller can pass a non-integer or out-of-range page.
     const clamped = Math.min(Math.max(Math.trunc(page), 0), totalPages - 1);
     const start = clamped * perPage;
 

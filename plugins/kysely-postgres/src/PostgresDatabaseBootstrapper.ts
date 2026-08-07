@@ -19,9 +19,6 @@ function isDuplicateDatabase(error: unknown): boolean {
     return typeof error === 'object' && error !== null && 'code' in error && error.code === DUPLICATE_DATABASE;
 }
 
-/**
- * Ensures the target Postgres database exists, creating it if missing.
- */
 export class PostgresDatabaseBootstrapper {
     private static readonly ADMIN_DB = 'postgres';
     private static readonly DATABASE_EXISTS_SQL =

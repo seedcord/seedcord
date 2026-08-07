@@ -37,7 +37,7 @@ export function useActiveSignature(member: EntityMemberSummary): SignatureSelect
             }
         };
 
-        // justified: window.location.hash is unavailable during SSR; the timer schedules a post-hydration read so the URL hash sets the initial active signature.
+        // justified: window.location.hash is unavailable during SSR. the timer schedules a post-hydration read so the URL hash sets the initial active signature.
         const initTimeout = window.setTimeout(init, 0);
         const onHash = (): void => {
             const hash = window.location.hash.slice(1);

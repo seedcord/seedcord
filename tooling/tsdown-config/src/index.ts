@@ -21,7 +21,6 @@ function readPackageVersion(): string {
             return cachedVersion;
         }
     } catch (error) {
-        // Surface the cause (missing or malformed package.json) before falling back to the default.
         // eslint-disable-next-line no-console -- build-config helper has no Logger
         console.warn(`[tsdown-config] could not read package.json version, using default: ${String(error)}`);
     }

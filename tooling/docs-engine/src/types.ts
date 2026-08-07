@@ -80,7 +80,7 @@ export interface DocReference {
 }
 
 // Defined in the engine, structurally identical to the parts the comment renderers in apps/docs consume.
-// The adapter emits a pre-resolved `DocReference` here; the app narrows by reading
+// The adapter emits a pre-resolved `DocReference` here. The app narrows by reading
 // `qualifiedName`/`packageName`/`targetKey` off it.
 export interface InlineTagTarget {
     name?: string;
@@ -142,7 +142,7 @@ export interface DocSource {
 }
 
 // A declaration's type, rendered as inline parts (refs resolved). The adapter emits these from AE
-// excerpts; the app narrows with `isInlineType` before formatting.
+// excerpts. The app narrows with `isInlineType` before formatting.
 export type DocType = InlineType;
 
 export interface DocTypeParameter {
@@ -171,7 +171,7 @@ export interface DocSignature {
     name: string;
     kind: number;
     // `overload-N` (1-based) for multi-signature members, empty otherwise. `anchor` mirrors it
-    // (bare, no parent slug); apps/docs composes the full member anchor.
+    // (bare, no parent slug). apps/docs composes the full member anchor.
     fragment: string;
     anchor: string;
     overloadIndex: number;
@@ -222,8 +222,8 @@ export interface DocNode {
     slug: string;
     kind: number;
     kindLabel: string;
-    // Reachable from the package entry point. Forgotten/referenced-only declarations are `false`:
-    // they get a page + resolve as link targets but are hidden from the sidebar + search (two-tier).
+    // Reachable from the package entry point. Forgotten/referenced-only declarations are `false`.
+    // They still get a page and resolve as link targets, but stay hidden from the sidebar and search (two-tier).
     isExported: boolean;
     flags: DocFlags;
     comment?: DocComment | null;

@@ -8,7 +8,6 @@ import type { TSESTree } from '@typescript-eslint/utils';
 // InteractionMiddleware extends BaseHandler directly, so this gate excludes it
 const HANDLER_GATES = ['InteractionHandler', 'AutocompleteHandler'];
 
-// literal superclass names, matched before falling back to the type checker
 const HANDLER_BASE_NAMES = new Set([
     'InteractionHandler',
     'AutocompleteHandler',
@@ -82,7 +81,6 @@ export default createRule({
         const services = ESLintUtils.getParserServices(context);
         const checker = services.program.getTypeChecker();
         const bases = new Set<string>();
-        // true inside an InteractionHandler or AutocompleteHandler subclass
         const classStack: boolean[] = [];
 
         function isHandlerClass(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression): boolean {
@@ -94,7 +92,6 @@ export default createRule({
 
         function enterClass(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression): void {
             const inScope = isHandlerClass(node);
-            // lets a same-file subclass hit the fast bases.has path and skip the type checker
             if (inScope && node.abstract && node.id) bases.add(node.id.name);
             classStack.push(inScope);
         }

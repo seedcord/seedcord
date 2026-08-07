@@ -1,4 +1,3 @@
-// Named warm code palette. Each hue has a dark value and a deeper light value.
 const SEED_DARK = '#2d3328';
 const PITH = '#f4f1e3';
 

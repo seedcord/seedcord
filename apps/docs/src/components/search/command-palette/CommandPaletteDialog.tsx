@@ -20,9 +20,8 @@ function optionId(id: string): string {
     return `command-option-${id}`;
 }
 
-// The scope/kind dropdowns portal their listbox outside the dialog, so a click on an option reads as an
-// outside interaction; ignore anything inside a Radix popper wrapper so selecting a filter never closes
-// the palette.
+// radix portals the dropdown listbox out of the dialog, so picking a filter reads as an outside
+// interaction and would close the palette
 function isWithinPopover(target: EventTarget | null): boolean {
     return target instanceof Element && target.closest('[data-radix-popper-content-wrapper]') !== null;
 }
@@ -47,8 +46,7 @@ function CommandListContent({
     onActivate
 }: CommandListContentProps): ReactElement | null {
     const hasResults = results.length > 0;
-    // Items stay visible during a refresh (stale results) so the list doesn't flicker; the header spinner
-    // signals loading. The "no results" fallback waits for loading to finish to avoid a false flash.
+    // the isSearching guard keeps "no results" from flashing between keystrokes
     const shouldShowItems = !showInitialHint && !errorMessage && hasResults;
     const shouldShowFallback = !showInitialHint && !isSearching && !errorMessage && !hasResults;
 
@@ -71,7 +69,7 @@ function CommandListContent({
         );
     }
 
-    // Rendering null (e.g. under the min query length) collapses the animated panel back to the bare bar.
+    // null measures as zero height, which collapses the animated panel back to the bare bar
     if (!emptyContent && !shouldShowItems) return null;
 
     return (
@@ -121,7 +119,6 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const observerRef = useRef<ResizeObserver | null>(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const [contentHeight, setContentHeight] = useState(0);
-    // The dropdown listboxes portal here (inside the dialog) so their lists scroll under the scroll lock.
     const [container, setContainer] = useState<HTMLElement | null>(null);
 
     const normalizedSearch = useMemo(() => searchValue.trim(), [searchValue]);
@@ -135,17 +132,15 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
     const listProps = deriveListProps(searchState, normalizedSearch);
     const { results } = listProps;
 
-    // A new result set re-anchors the active row to the top. Adjusting during render (not in an effect)
-    // avoids a wasted render pass and the set-state-in-effect smell.
+    // react's adjust-state-during-render pattern, an effect here would cost a second pass
     const [trackedResults, setTrackedResults] = useState(results);
     if (trackedResults !== results) {
         setTrackedResults(results);
         setActiveIndex(0);
     }
 
-    // The animated container follows the measured body height. A callback ref re-attaches the observer every
-    // time the dialog opens (the measured node only exists in the DOM while the Radix portal is mounted); the
-    // observer fires on observe() and on every later content change.
+    // the radix portal drops this node on close. a callback ref re-attaches the observer on every open,
+    // and ResizeObserver fires once on observe() to seed the first height.
     const measureRef = useCallback((el: HTMLDivElement | null) => {
         observerRef.current?.disconnect();
         if (!el) {
@@ -165,7 +160,7 @@ export function CommandPaletteDialog({ controller }: { controller: CommandPalett
 
     useEffect(() => {
         if (!activeId) return;
-        // Fixes first searched entity being scrolled up to be flush with the top when it should keep the padding and header.
+        // scrollIntoView on the first row tucks it under the header padding
         if (activeIndex === 0) {
             scrollRef.current?.scrollTo({ top: 0 });
             return;

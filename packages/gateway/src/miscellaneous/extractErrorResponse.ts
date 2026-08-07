@@ -29,7 +29,7 @@ interface EventOrigin {
 export interface ErrorOrigin {
     interaction?: Repliables;
     event?: EventOrigin;
-    /** The route, for the throttle key when there is no repliable interaction or event (autocomplete). */
+    // set only for autocomplete, where faultKey has no interaction or event to key on
     route?: string;
     guild: Nullable<Guild>;
     user: Nullable<User>;
@@ -41,14 +41,6 @@ export interface ExtractedErrorResponse {
     response: ReplyResponse;
 }
 
-/**
- * Processes an error into a user-facing reply and routes its report.
- *
- * A {@link Notice} always renders its own reply. A reporting denial (`report: true`) additionally
- * publishes `handledException` on the interaction path. A raw, non-denial throw publishes
- * `unknownException` and renders the configured `defaultError` (or a generic {@link Fault}). One uuid is
- * threaded into both the reply and the bus payload.
- */
 export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrigin): ExtractedErrorResponse {
     const uuid = crypto.randomUUID();
     const developerUsername = core.config.notifications?.developerUsername;
@@ -67,7 +59,7 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
     return { uuid, response };
 }
 
-// stamp only after a publish, so a throttled fault stays reportable next window
+// stamp after the publish, otherwise a throttled fault loses its next window
 function withThrottle(core: Core, origin: ErrorOrigin, error: Error, publish: () => void): void {
     const throttle = FaultThrottle.for(core);
     const key = faultKey(origin, error);
@@ -80,7 +72,7 @@ function withThrottle(core: Core, origin: ErrorOrigin, error: Error, publish: ()
 }
 
 function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    // outside the throttle, so the uuid on the user's card always resolves to a log line
+    // logged outside the throttle, so the uuid on the user's card always finds a line
     logger.error(`${denial.name}: ${uuid}`, denial);
 
     withThrottle(core, origin, denial, () => {
@@ -97,7 +89,7 @@ function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID
                 source: buildEventSource(origin.event, origin)
             });
         } else {
-            // autocomplete has no reply target and no typed source, so report through unknownException
+            // an autocomplete throw has no typed source. unknownException is the only channel left
             core.bus[PublishDefault]('unknownException', {
                 uuid,
                 error: denial,
@@ -117,7 +109,6 @@ function causeLine(error: Error): string {
 
 function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUID): void {
     const showStack = core.config.errors?.errorStack ?? false;
-    // outside the throttle, so the uuid on the user's card always resolves to a log line
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
@@ -131,7 +122,7 @@ function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUI
     });
 }
 
-// the bus payload must stay djs-free, so map to plain scalars
+// the bus payload must stay djs-free
 function scalarActors(origin: ErrorOrigin): Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
     return {
         guild: origin.guild ? { id: origin.guild.id, name: origin.guild.name } : undefined,
@@ -156,7 +147,7 @@ function buildEventSource(event: EventOrigin, origin: ErrorOrigin): EventFaultSo
     };
 }
 
-// the stable route plus the error name, so a parameterized component or a flooding event collapses to one key
+// a parameterized component or a flooding event has to collapse to one key
 function faultKey(origin: ErrorOrigin, error: Error): string {
     const name =
         error instanceof Notice
@@ -166,7 +157,7 @@ function faultKey(origin: ErrorOrigin, error: Error): string {
               : error.constructor.name;
     if (origin.event) return `${origin.event.name}:${origin.event.handler}:${name}`;
     if (origin.interaction) return `${interactionRoute(origin.interaction)}:${name}`;
-    // autocomplete, namespaced so it never collides with a same-named slash command
+    // namespaced so it never collides with a same-named slash command
     if (origin.route) return `autocomplete:${origin.route}:${name}`;
     return `autocomplete:${name}`;
 }

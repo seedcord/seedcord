@@ -67,13 +67,13 @@ export abstract class AutocompleteHandler<
         const raw = this.event.options.getFocused(true);
         const focused = { name: raw.name, value: raw.value };
         this.decodedFocused = focused;
-        // the registry constrains the names, a focused field outside the set has no arm.
+        // the registry constrains the names. a focused field outside the set has no arm.
         return focused as FocusedField<Route>;
     }
 
     /**
-     * Run the arm for the focused field. An autocomplete always dispatches by which field is focused, so
-     * match is how you read it. There is no single-field shortcut the way slash/component handlers have one.
+     * Run the arm for the focused field. Because an autocomplete always dispatches by which field is
+     * focused, match is how you read it. There is no single-field shortcut the way slash/component handlers have one.
      *
      * Provide one arm per autocompletable field across the registered commands, keyed by field name. Each
      * arm receives the focused partial value and a `respond` typed to that field's choice value. The
@@ -100,7 +100,7 @@ export abstract class AutocompleteHandler<
         const { name, value } = this.focused;
         const respond = (choices: readonly ApplicationCommandOptionChoiceData[]): Promise<void> =>
             this.respond(choices);
-        // justified: FocusedArms is keyed by field literals, the Record cast indexes it with the runtime field name.
+        // justified: FocusedArms is keyed by field literals, so the Record cast indexes it with the runtime field name.
         type Arm = (
             value: string,
             respond: (choices: readonly ApplicationCommandOptionChoiceData[]) => Promise<void>
@@ -131,7 +131,7 @@ export abstract class AutocompleteHandler<
      * types the focused field. The focused field is on `this.focused`.
      */
     protected get options(): AutocompleteOptions<Route> {
-        // the djs resolver exposes these getters, AutocompleteOptions is the registry-typed view over it.
+        // the djs resolver exposes these getters. AutocompleteOptions is the registry-typed view over it.
         return this.event.options as AutocompleteOptions<Route>;
     }
 }

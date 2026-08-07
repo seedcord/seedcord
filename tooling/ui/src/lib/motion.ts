@@ -1,4 +1,4 @@
-// Mirror of --ease-* in @seedcord/ui/styles/tokens.css; keep in sync.
+// mirrors --ease-* in @seedcord/ui/styles/tokens.css, keep them in sync
 
 // eslint-disable-next-line no-magic-numbers -- cubic-bezier coefficients
 export const easeOutStrong = [0.23, 1, 0.32, 1] as const;

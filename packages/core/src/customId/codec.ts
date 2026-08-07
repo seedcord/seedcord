@@ -8,11 +8,11 @@ import { InvalidCustomId } from './Errors';
 import type { CustomIdField, CustomIdShape } from './Field';
 
 // wire is routeKey, a colon, then the body. the routeKey is the stable prefix plus a short shape
-// hash, so a shape change produces a new routeKey and decode rejects an old wire as stale. bounded
-// fields (known range) fold into one base64 integer by mixed-radix packing, unbounded ones (free
-// string, unbounded int) trail it as delimited tokens.
+// hash, which is how decode rejects a wire minted under an older shape. bounded fields (known range)
+// fold into one base64 integer by mixed-radix packing. unbounded ones (free string, unbounded int)
+// trail it as delimited tokens.
 //
-// works on runtime values (unknown), CustomId.ts adds the typed layer.
+// everything here works on runtime values (unknown). CustomId.ts adds the typed layer.
 
 // url-safe base64, one utf-16 unit per char so encode's wire.length cap counts chars exactly.
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
@@ -93,13 +93,12 @@ function splitTokens(body: string): string[] {
     return pieces;
 }
 
-// bounded means the full range is known, so the field can fold into the shared packed integer.
+// bounded means the full range is known. those fold into the shared packed integer.
 function isBounded(field: CustomIdField<unknown>): boolean {
     if (field.kind === 'int') return field.min !== undefined && field.max !== undefined;
     return field.kind === 'snowflake' || field.kind === 'uuid' || field.kind === 'bool' || field.kind === 'oneOf';
 }
 
-// how many distinct values the field can hold.
 function radixOf(field: CustomIdField<unknown>): bigint {
     switch (field.kind) {
         case 'snowflake': {
@@ -112,13 +111,13 @@ function radixOf(field: CustomIdField<unknown>): bigint {
             return 2n;
         }
         case 'oneOf': {
-            // oneOf() rejects an empty list at define time, so no choices here means a hand-built
-            // corrupt shape.
+            // oneOf() rejects an empty list at define time, so an empty one here came from a
+            // hand-built shape.
             if (!field.choices?.length) throw new InvalidCustomId('oneOf field has no choices');
             return BigInt(field.choices.length);
         }
         case 'int': {
-            // isBounded only routes a min-and-max int here, so a missing bound means a corrupt shape.
+            // isBounded only lets a min-and-max int through. a missing bound means the shape is corrupt.
             if (field.min === undefined || field.max === undefined)
                 throw new InvalidCustomId('bounded int field is missing a bound');
             // bigint before the math, max - min + 1 in float64 drops the +1 at 2^53.
@@ -141,8 +140,8 @@ function boundedToBigint(field: CustomIdField<unknown>, name: string, value: unk
 function boundedSlot(field: CustomIdField<unknown>, name: string, value: unknown): bigint {
     switch (field.kind) {
         case 'snowflake': {
-            // BigInt() throws a bare TypeError or SyntaxError on a bad value, so the guard throws
-            // the branded error first.
+            // a bad value makes BigInt() throw a bare TypeError or SyntaxError. the guard gets
+            // ahead of it with the branded error.
             if (typeof value !== 'string' || !/^\d+$/.test(value)) return outOfRange(name, value);
             return BigInt(value);
         }
@@ -212,17 +211,17 @@ function encodeUnboundedToken(field: CustomIdField<unknown>, name: string, value
 }
 function decodeUnboundedToken(field: CustomIdField<unknown>, piece: string): unknown {
     if (field.kind !== 'int') return unescapeToken(piece);
-    // an int always encodes to at least one char, so an empty piece is a truncated wire
+    // an empty piece means a truncated wire
     if (piece === '') throw new InvalidCustomId('empty integer token');
     const decoded = zigzagDecode(base64ToBigint(piece));
-    // an unbounded int is authored as a js number, so a value past 2^53 cannot come from encode.
+    // encode only ever takes a js number. anything past 2^53 came from somewhere else.
     if (decoded > SAFE_MAX || decoded < SAFE_MIN) throw new InvalidCustomId('integer out of safe range');
     return Number(decoded);
 }
 
 /** @internal */
 export function computeLayoutHash(shape: CustomIdShape): string {
-    // stringify escapes the choice strings, so two different shapes cannot produce the same signature.
+    // stringify escapes the choice strings. two different shapes cannot produce the same signature.
     const signature = JSON.stringify(
         Object.entries(shape).map(([name, field]) => [
             name,
@@ -267,7 +266,7 @@ function unpackBounded(
     blob: string | undefined,
     result: Record<string, unknown>
 ): void {
-    // zero packs to one char, so an empty block means the body was truncated.
+    // zero still packs to one char. an empty block means the body was cut short.
     if (blob === undefined || blob === '') throw new InvalidCustomId('empty packed block');
     let packed = base64ToBigint(blob);
     // last field packed is the first one back out.

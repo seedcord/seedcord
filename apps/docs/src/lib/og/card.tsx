@@ -102,7 +102,7 @@ function Footer(): ReactElement {
 
 function CardBody({ pill, accent, meta, name, description }: DocOgCardProps): ReactElement {
     const nameSize = name.length > 24 ? 50 : name.length > 18 ? 60 : 72;
-    // a long name can wrap to a second line and eat vertical room, so leave the summary fewer lines
+    // a long name can wrap to a second line and eat vertical room
     const descLines = name.length > 24 ? 4 : 5;
     return (
         <div
@@ -152,8 +152,7 @@ function CardBody({ pill, accent, meta, name, description }: DocOgCardProps): Re
     );
 }
 
-// The reference-page header rendered for social cards, the kind/package/version badges, the
-// tone-colored name, and the entity summary. No code block, so long signatures never break it.
+// no code block here, so a long signature can't overflow the layout
 export function DocOgCard(props: DocOgCardProps): ReactElement {
     return (
         <div

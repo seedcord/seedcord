@@ -50,8 +50,8 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
 
     for (const entry of collected) {
         let href = entry.href;
-        // Resolve even when the `{@link}` target is absent: API Extractor leaves many in-repo
-        // `@see {@link X}` destinations unresolved, so fall back to resolving X by name (search).
+        // api extractor leaves many in-repo `@see {@link X}` destinations unresolved, so this resolves X by
+        // name through search even when the target is absent.
         if (!href) {
             try {
                 const resolved = resolveInlineHref(
@@ -60,7 +60,7 @@ export function renderSeeAlso(comment: DocComment, context: FormatContext): SeeA
                 );
                 if (resolved) href = resolved;
             } catch {
-                // An unresolved target stays a plain-text see-also entry.
+                // an unresolved target just stays a plain-text entry
             }
         }
 

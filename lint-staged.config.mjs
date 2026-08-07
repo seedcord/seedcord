@@ -55,7 +55,6 @@ const runPrettier = (files) => {
 const findNearestEslintConfig = (filePath) => {
     let currentDir = path.dirname(filePath);
 
-    // traverse up the directory tree to find the nearest eslint.config.mjs
     while (true) {
         const candidate = path.join(currentDir, 'eslint.config.mjs');
         if (existsSync(candidate)) {
@@ -72,7 +71,6 @@ const findNearestEslintConfig = (filePath) => {
 
 const runEslint = (files) => {
     const filteredFiles = files.filter((file) => {
-        // skip any .d.ts files
         if (file.endsWith('.d.ts')) return false;
         if (file.endsWith('next-env.d.ts')) return false;
         return true;

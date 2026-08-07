@@ -19,7 +19,7 @@ const base = defineConfig({
     }
 });
 
-// maps the sibling tsconfig's paths to resolve aliases. configUrl is the caller's import.meta.url
+// configUrl is expected to be the caller's import.meta.url
 export function aliasFromTsconfig(configUrl: string): Record<string, string> {
     // parseTsconfig because tsconfig can be jsonc
     const paths = parseTsconfig(fileURLToPath(new URL('tsconfig.json', configUrl))).compilerOptions?.paths ?? {};

@@ -60,14 +60,13 @@ const LIMITS: readonly Limit[] = [
     }
 ];
 
-// a fixed-arity tuple type (an as-const array) has a statically known length
 function tupleLength(type: ts.Type, checker: ts.TypeChecker): number | undefined {
     if (!checker.isTupleType(type)) return undefined;
     // justified: isTupleType narrows to a reference whose target is the tuple shape
     const reference = type as ts.TypeReference;
     const target = reference.target as ts.TupleType;
     const length = checker.getTypeArguments(reference).length;
-    // an optional or rest element raises the argument count past minLength, so the arity is uncertain
+    // an optional or rest element raises the argument count past minLength
     return target.minLength === length ? length : undefined;
 }
 
@@ -79,7 +78,6 @@ function spreadCount(
     return tupleLength(services.getTypeAtLocation(spread.argument), checker);
 }
 
-// the array length when every element is countable, spreads resolve through tuple arity
 function arrayLength(
     array: TSESTree.ArrayExpression,
     services: ParserServicesWithTypeInformation,
@@ -135,7 +133,6 @@ function countStaticItems(
     let count = 0;
     let matched = false;
 
-    // the constructor runs first, so its items seed the count
     const seed = data !== undefined && limit.dataKey !== undefined ? getProperty(data, limit.dataKey) : undefined;
     if (seed !== undefined) {
         const length =
@@ -147,14 +144,14 @@ function countStaticItems(
         matched = true;
     }
 
-    // reversed to source order, so a later setMethod wins over earlier adds
+    // a later setMethod wins over earlier adds
     for (const call of [...calls].reverse()) {
         const name = methodName(call);
         if (name !== limit.addMethod && name !== limit.setMethod) continue;
         matched = true;
         const items = callItems(call, services, checker);
         if (items === undefined) return undefined;
-        // the setMethod replaces, so it resets the count
+        // the setMethod replaces the list
         count = name === limit.addMethod ? count + items : items;
     }
     return matched ? count : undefined;
@@ -180,7 +177,7 @@ export default createRule({
         function check(anchor: TSESTree.Node, calls: TSESTree.CallExpression[], root: TSESTree.Node): void {
             const rawData = constructorData(root);
             const methods = new Set(calls.map((call) => methodName(call)));
-            // skip the type lookup when no capped method or data key is present
+            // cheap prefilter, the type lookup below costs the most
             const relevant = LIMITS.some(
                 (limit) =>
                     methods.has(limit.addMethod) ||
@@ -207,7 +204,7 @@ export default createRule({
                 check(node, collectChain(node), chainRoot(node));
             },
             NewExpression(node) {
-                // a chained root is anchored by its chain-top CallExpression visit instead
+                // a chained root gets checked by the CallExpression visit above
                 if (enclosingChainTop(node) !== node) return;
                 check(node, [], node);
             }

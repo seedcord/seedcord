@@ -1,281 +1,223 @@
 ---
 name: code-commenting-guidelines
-description: Use this when writing, refactoring, or reviewing TypeScript code. Defines when comments are required, when they are noise, and how to document guardrails, invariants, and non-obvious logic without bloating the codebase.
+description: Use this when writing, refactoring, or reviewing TypeScript code. Decides whether a comment should exist at all, which is usually no. Covers the code fixes to try first, the four facts a name can never carry, and how a comment should sound once you write one.
 ---
 
-# Code Commenting Guidelines
+# Comments
 
-Use comments to explain intent, constraints, and hidden rules. Do not use comments to narrate obvious syntax.
+Most code needs none. Fix the code first. When the reason sits outside the file and no name can hold it, write one line the way you would say it out loud.
 
-> **Related:** this skill decides _whether_ and _where_ a comment belongs. For _how_ a comment should read once you write it (voice, word choice, no hype or anthropomorphism), see the `writing-voice` skill.
+For _how_ the line should read once you decide to write it, this skill and `writing-voice` both apply. That one covers word choice everywhere. This one covers whether the comment exists.
 
-## When Comments Are Required
+---
 
-Add a short comment when one of these is true:
+## 1. Try the code first
 
-- A rule exists because of an architectural constraint (auth boundary, caching strategy, ordering requirement, external API contract).
-- A code path intentionally bypasses the more common path.
-- A condition protects an invariant that would otherwise look arbitrary.
-- A calculation uses authored offsets, tolerances, or thresholds in a non-obvious way.
-- A validation or guardrail exists to prevent a subtle regression.
+Try a comment last. Each fix below deletes the comment by making the code say the thing.
 
-## When Comments Are Noise
-
-Do not add comments for:
-
-- Straightforward assignments or returns.
-- Obvious control flow.
-- Repeating a method or variable name in sentence form.
-- General TypeScript or Node.js basics the code already expresses clearly.
-- A test stub or fixture whose shape the literal already shows.
-
-Bad:
+### Rename
 
 ```ts
-// Set the user's display name.
-user.displayName = payload.name;
+// bad
+// the running item count
+let n = 0;
+
+// good
+let itemCount = 0;
 ```
 
-Good:
+### Move the words into a function name
 
 ```ts
-// Display name is set from the OAuth payload at login time; later edits go through updateProfile().
-user.displayName = payload.name;
+// bad
+// a quick tunnel hostname disappears when the process exits, clear the endpoint
+if (kind === 'quick') await endpoint.clear();
+
+// good
+if (hostnameDiesWithProcess(kind)) await endpoint.clear();
 ```
 
-## Preferred Comment Style
+The comment became the predicate name. Now it shows up at every call site and the compiler keeps it honest.
 
-- Keep comments short and local.
-- Prefer `//` inline comments over TSDoc for implementation details.
-- **A TSDoc block needs a caller who would read the signature and still guess wrong.** `export` is not that test. A symbol reachable only through a package's `./internal` entry has no such caller, so it takes a `//` line or nothing. See the internal-code failure pattern below.
-- **Public TSDoc uses capitals and complete sentences.** Inline `//` comments stay lowercase fragments. Both follow the writing-voice punctuation ban (no em-dash, no colon or semicolon splicing two clauses, a colon before a list or code block is fine).
-- Put the comment immediately above the line or block whose intent is non-obvious.
-- Explain why the rule exists or what breaks if it changes.
-
-## Put the why on the line it explains
-
-When a comment explains one specific line, put it on that line (`code; // why`) or right above it. Avoid a multi-sentence block at the top of the function. When one header covers three different lines, the reader has to hold all three explanations at once and map each back to the line it describes. An inline note sits where the confusion is, so the reader gets the why exactly where they need it.
-
-Break a multi-clause header into per-line comments. Each clause moves to the line it explains, and any clause that only restates its line falls away in the move.
-
-Why it matters:
-
-- **Locality.** The reader meets the why at the line, not after decoding a preamble.
-- **It survives edits.** An inline note is anchored to its line and gets deleted with it. A top-of-function block drifts stale as the lines beneath it change, because no one sentence is tied to any one line.
-- **It forces brevity.** A line has room for one short clause, so only the load-bearing why fits. A header block invites narrate-then-justify and restatement.
-
-Keep a block comment only for a why that genuinely spans the whole function, an invariant every line leans on or a design choice the whole body carries out, and that cannot be pinned to one line.
-
-Bad, one header narrating three separate lines:
+### Name the number
 
 ```ts
-// the item count: addMethod appends, setMethod replaces everything before it. collectChain is
-// outermost-first, so walk it reversed to follow source order. undefined when the count is not static.
-function countStaticItems(calls: Call[], limit: Limit): number | undefined {
-    let count = 0;
-    for (const call of [...calls].reverse()) {
-        const name = methodName(call);
-        if (name === limit.addMethod) count += call.arguments.length;
-        else if (name === limit.setMethod) count = arrayLen(call.arguments[0]);
-    }
-    return count;
-}
+// bad
+await wait(4000); // cloudflare needs a moment
+
+// good
+const DNS_PROPAGATION_MS = 4000;
+await wait(DNS_PROPAGATION_MS);
 ```
 
-Good, each why on the line it explains, the return-type restatement dropped:
+A named constant carries the what. A comment above it can still carry where the number came from, which is section 2.
+
+### Make the wrong call impossible
+
+A comment reading "call `open()` before `stop()`" is a type problem wearing a comment. Return a handle from `open()` that `stop()` requires, and the ordering stops being something a reader has to remember.
+
+Same for "do not pass an empty array here". Take a non-empty tuple type. Same for "only valid after init". Split the type into pre-init and post-init.
+
+### Move the code next to what it explains
+
+Two lines that only make sense together should be adjacent. A comment bridging thirty lines is usually a request to move one of them.
+
+### Split the function
+
+If a block needs a comment to say what it is, that block is a function and the comment is its name.
+
+Once none of these apply, write the comment.
+
+---
+
+## 2. What a name can never carry
+
+Four things. Everything outside this list is a code fix.
+
+**A fact about someone else's system.** Discord, Cloudflare, Node, the browser, a spec, a wire format. You cannot rename your way to "Discord rejects a hostname it already rejected".
+
+**Where an authored number came from.** Any timeout, retry count, threshold, or buffer size someone picked. The constant name says what it is. The comment says why that value and what happens at a different one.
+
+**A workaround.** A bug in a dependency, a language trap, a limit of the type system. Say what breaks without it, so the next person does not clean it up and re-break the build.
+
+**An invariant set up somewhere else.** "Sorted by `createdAt` before this point" when the sort happens in a different file. Anything the reader would have to open another file to know.
+
+If your comment is none of these four, go back to section 1.
+
+---
+
+## 3. Sound like a person
+
+Write the sentence you would say to someone sitting next to you at the keyboard. Read it back out loud. If it sounds like a form got filled in, rewrite it.
+
+These are all fine. They are all different.
 
 ```ts
-function countStaticItems(calls: Call[], limit: Limit): number | undefined {
-    let count = 0;
-    // reversed to source order, so the last setX wins over earlier adds
-    for (const call of [...calls].reverse()) {
-        const name = methodName(call);
-        if (name === limit.addMethod) count += call.arguments.length;
-        else if (name === limit.setMethod) count = arrayLen(call.arguments[0]); // setX replaces
-    }
-    return count;
-}
-```
-
-Bad, a header line for one constant:
-
-```ts
-// ButtonStyle.Link, the stable Discord wire value for a link button
-const BUTTON_STYLE_LINK = 5;
-```
-
-Good, inline on the same line:
-
-```ts
-const BUTTON_STYLE_LINK = 5; // stable Discord wire value for a link button
-```
-
-## Connect Clauses The Way You'd Say Them
-
-Once a comment earns its place, it should read like you explaining the code to someone next to you, not a telegram. Join cause and effect with the ordinary words you would use out loud, so, and, because, but, then, instead of clipping every thought into its own stiff fragment or stacking formal clauses. The punctuation ban from the `writing-voice` skill (no `—`, and no clause-splicing `;` or `:`) already pushes you here, and a connector word is almost always the replacement that reads best.
-
-Read the comment out loud. If it sounds like something you would say to a colleague at the keyboard, keep it. If it sounds like a spec sheet, you are probably missing the connector that ties the facts together.
-
-Stiff, clipped into fragments with no connective tissue:
-
-```ts
-// decode once. cache it. a subclass field is too late.
-const cached = decodeCache.get(this);
-```
-
-Natural, the same facts joined the way you would explain them:
-
-```ts
-// decode once and cache it here, because a subclass field would initialize too late to hold
-// the value (populate runs inside super()).
-const cached = decodeCache.get(this);
-```
-
-## Good Patterns
-
-Guardrails:
-
-```ts
-// Mutations must be validated server-side before write; client input is untrusted at this point.
-if (!isVerifiedRequest(req)) throw new ForbiddenError();
-```
-
-Non-obvious branching:
-
-```ts
-// Retry only on 429 and 503; other 5xx errors indicate a data problem and should not be retried.
-if (status === 429 || status === 503) {
-    return scheduleRetry(job);
-}
-```
-
-Invariants:
-
-```ts
-// Items are sorted ascending by createdAt before this point; binary search below depends on it.
-const index = binarySearch(items, targetDate);
-```
-
-Thresholds and authored values:
-
-```ts
-// 50ms debounce matches the minimum polling interval guaranteed by the upstream service contract.
-const DEBOUNCE_MS = 50;
-```
-
-## Anti-Patterns To Avoid
-
-Do not turn the codebase into a wall of commentary.
-
-Avoid:
-
-- Commenting every branch in a method.
-- Large banner comments that restate the whole function.
-- JSDoc on every member just to satisfy documentation goals.
-- Bug-history comments tied to one incident unless the history is essential to the rule.
-
-Bad:
-
-```ts
-/**
- * Sets the active state.
- * @param value The value to set.
- */
-setActive(value: boolean) {
-    // Set active to value.
-    this.active = value;
-}
-```
-
-Good:
-
-```ts
-// Active flag gates all outbound event emission; callers must set this before subscribing.
-setActive(value: boolean) {
-    this.active = value;
-}
-```
-
-## The two-pass cut, run it while you type
-
-1. Cover the comment and read the code. Would a careful reader get it wrong? If no, delete the comment and move on. If yes, try a better name or a smaller function first, and keep the comment only for what the code still cannot say.
-2. Cover the code and read the comment. Every word the code already showed comes out. What survives is the why.
-3. Count the whys. One comment carries one. Two clauses joined by "and" or ", so" means one explains the choice and the other sets a scene the reader can already see. Keep the one.
-4. Count the words. A `//` why lands around ten. Past that you are explaining two things, or explaining one thing twice.
-5. Look at each comma. A connector follows it, or it separates list items, or it becomes a period. A comma holding two standalone clauses apart is a splice.
-
-Steps 3 to 5 are arithmetic, so run them even when steps 1 and 2 felt clean. A clause reads as useful context right up until you count it, and a missing connector is invisible until you look for the word.
-
-Step 5 exists because obeying one rule can break another. The ban on a reflexive `", so"` rejects a connector, and dropping the word leaves the comma doing a job it cannot do. Every rule that rejects a connector still owes you the one that fits.
-
-Step 1's rename branch reaches a _what_ and stops there. A name can carry what the code does, so `// the item count` dies the moment the variable is called `itemCount`. A _why_ survives every refactor, because no identifier holds an external contract, a workaround, an ordering the code depends on, or the reason a threshold is that number. Renaming until the comment looks removable is how a load-bearing why gets deleted.
-
-Run all five on the block you just wrote, before the diff leaves your hands. A later audit catches the same thing at the cost of a full re-read of every file you touched.
-
-## Failure Patterns To Avoid
-
-The fastest way to slip past the checklist is to write a comment that LOOKS like a "why" but actually narrates the code first and then tacks the why on the end. Catch these:
-
-### Narrate-then-justify
-
-```ts
-// Anti: lead-in restates the next line; only the second sentence is load-bearing.
-// We anchor the write to BaseClass rather than `this`: subclass calls would otherwise
-// create an own property on the subclass while readers walk up to the base and miss it.
-BaseClass._strict = value;
+// cloudflare publishes the DNS record about 2.5s after the tunnel opens
+await wait(SETTLE_MS);
 ```
 
 ```ts
-// Drop the lead-in. Lead with the why.
-// Anchored to BaseClass: `this._strict = value` creates an own-property on the subclass
-// that callers reading via the base won't see.
-BaseClass._strict = value;
+// 240 tries at 250ms covers the 60s a cold edge takes
+for (let attempt = 0; attempt < HOSTNAME_ATTEMPTS; attempt++) {
 ```
-
-### Type-system paraphrase
-
-`@returns` and `@param` are where this hides. `@returns Whether the check passed` next to a declared `boolean` says what the signature already showed. Delete the tag. When every tag on a block is that, delete the block.
-
-A tag earns its place by mapping inputs onto outcomes the signature cannot express, for example which of `undefined`, `true`, and an object each produces which return value.
-
-If a comment explains a TYPE definition that's two lines above, the comment is redundant. Either the type is sufficient on its own, or the type needs a better name. Rewriting the type is almost always the right fix.
 
 ```ts
-// Anti: re-states the type structure in prose right next to the type.
-// `EnvaptOptions` is a discriminated union over `required` so the compile-time check
-// rejects `required: true` paired with `fallback`. The runtime Validator catches the
-// dynamic case that bypasses the types.
-type EnvaptOptions = { required: false; fallback?: T } | { required: true; fallback?: Err<'...'> };
-
-// Good: the brand-name and Err<> explanation belong on the brand type itself, once.
-// Consumers don't need a paragraph re-explaining the union.
+// keep this above the await because the exit handler fires synchronously
+child.on('exit', onExit);
 ```
-
-### Overload narration
-
-Multiple overload signatures next to short `//` comments labeling each one ("Time-specific overload", "Required form, time-specific", "Required form, built-in/array") are noise: the signature already conveys this. If users need a map of overloads, write ONE TSDoc block on the implementation signature describing the family, not a per-overload caption.
-
-### Stale-after-refactor
-
-Every refactor invalidates some "why" comments. When you delete an overload, change a return type, or revert a design, **grep for the names you removed and clean up every comment that references them**. A stale comment is worse than a missing one: it actively misleads.
-
-### TSDoc on internal code
-
-Internal code gets no IDE-hover documentation. Two things count as internal, whatever the `@internal` tag marks, and whatever is reachable only through a package's `./internal` entry point. The tag covers the first and says nothing about the second, so read the `exports` map in `package.json` to tell. Use a single `//` line when a why exists, and zero comments when the name and body are self-explanatory. A four-line `/** ... */` block on a one-line accessor is signal that the name is too thin or the block is decoration.
-
-Do not tag a member `@internal` when its whole class is already internal-only. The entry map states it, and no consumer reads the tag.
-
-### "I'm doing X" wrapper
-
-Comments that lead `// We do X here because...` always contain redundancy: the next line shows you doing X. Drop the wrapper, keep the because.
 
 ```ts
-// Anti: `// Resolve key, then check missing under strict, then throw.` narrates 3 lines below.
-// Good: NO comment. The three function calls below are self-evident.
+// base64 because toString stops at 36
+function bigintToBase64(value: bigint): string {
 ```
 
-## Fixing a bloated comment
+```ts
+// 4s is the shortest wait that stopped the NXDOMAIN caching. no idea why 2s fails.
+const SETTLE_MS = 4000;
+```
 
-The bar is "would mislead without it". "Would be slightly faster to read with it" fails it, because prose restating code costs more to keep honest across refactors than it saves on a read.
+```ts
+// the reverse of this is decodeBody
+export function encodeBody(shape: CustomIdShape): string {
+```
 
-When told a comment is bloated, cut it down. A four-sentence block that restates the code three times usually still carries one real why. Keep that clause as a lowercase `//` line and drop the rest. A TSDoc block cut down to one clause becomes a `//` line too. Deleting the whole block throws the why away, a second defect on top of the first.
+```ts
+// adding a field kind here means adding it to isBounded too
+function radixOf(field: CustomIdField<unknown>): bigint {
+```
+
+```ts
+// node throws process-wide without a listener here
+child.on('error', onError);
+```
+
+```ts
+// discord's docs call this the interactions endpoint
+const FIELD = 'interactions_endpoint_url';
+```
+
+```ts
+// an empty piece means a truncated wire
+if (piece === '') throw new InvalidCustomId('empty integer token');
+```
+
+Notice the range. Four words to fifteen. Some name a cause. Some name a fact and stop. One admits it does not know why.
+
+### You are allowed to not know
+
+If you measured something and cannot explain it, say that. "4s works, 2s does not, unclear why" is more honest and more useful than a confident guess, and it tells the next reader the number came from a test. A wrong reason stated cleanly is worse than an open question.
+
+### Talk to the next person
+
+A comment can address the reader directly. "if you change this, change X too" is a real comment and often the most useful one on the page. Vary the grammar, sentence structure, and voice in comments, like you would in a conversation.
+
+---
+
+## 4. Write the fact, then stop
+
+**One fact per comment. Write it, then stop.** That is the default and it covers most comments.
+
+Add a consequence only when a reader would misread the code without it. Usually the consequence is the next line and they are about to read it anyway.
+
+**The test, run it before the comment ships.** Cut everything from the connective onward and read what is left. When the shorter line still does the job, that was the whole comment.
+
+```ts
+// drafted
+// zero packs to one char, so an empty block means the body was truncated
+
+// cut at the connective, still works, ship this one
+// an empty block means the body was truncated
+```
+
+Keep both halves when the first carries something the reader has no other way to get. "cloudflare publishes the record 2.5s late" earns its place. "the loop collects failures" does not, because the loop is right there.
+
+---
+
+## 5. Put it on the line it explains
+
+Attach the comment to the one line whose reason is unclear, on that line or directly above it.
+
+```ts
+const BUTTON_STYLE_LINK = 5; // discord's wire value, stable since v8
+```
+
+A comment inline gets deleted with its line. A block at the top of a function goes stale as the body changes underneath it, because no sentence in it belongs to any one line.
+
+Keep a block comment only for something the whole function rests on, an invariant every line depends on or a wire format the whole body implements. `packages/core/src/customId/codec.ts:10` is a fair example, because the format description belongs to the module.
+
+Break a multi-clause header into per-line comments. Any clause that only restates its line disappears during the move, which is the point.
+
+---
+
+## 6. TSDoc
+
+A TSDoc block needs a caller who would read the signature and still guess wrong. `export` is not that test.
+
+- Public API gets full sentences and capitals.
+- Anything reachable only through a package's `./internal` entry gets a `//` line or nothing. Read the `exports` map in `package.json` to tell.
+- `@returns Whether the check passed` next to a declared `boolean` repeats the signature. Delete the tag. When every tag on a block does this, delete the block.
+- A tag earns its place by mapping inputs to outcomes the types cannot express, for example which of `undefined`, `true`, and an object produces which result.
+- Skip `@internal` on a member when the whole class is already internal. The entry map states it and no consumer reads the tag.
+
+---
+
+## 7. Delete on sight
+
+- Anything restating the line below it.
+- `// We do X here because Y`. The next line shows you doing X. Keep the because.
+- A comment explaining a type that sits two lines above. Fix the type name.
+- Per-overload captions. One block on the implementation signature covers the family.
+- Commented-out code.
+- A comment naming a symbol that no longer exists. Every refactor leaves these. Grep the names you removed.
+- Bug history tied to one incident, unless the incident is the reason the code is shaped that way.
+
+---
+
+## The test
+
+Cover the comment and read the code. Would a careful reader get it wrong?
+
+- No, and a rename would fix it. Do the rename.
+- No, it is already clear. Delete the comment.
+- Yes, and the missing piece is one of the four in section 2. Keep it, one line, in your own voice.

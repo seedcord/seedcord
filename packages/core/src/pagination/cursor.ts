@@ -7,7 +7,7 @@ import type { CustomIdField } from '@customId/Field';
 export const PAGE_MAX = 1_000_000;
 
 // Discord rejects a message with duplicate custom_ids, and two controls can target the same page (first and
-// prev both hit 0), so each control uses a distinct slot.
+// prev both hit 0).
 // @internal
 const SLOT_MAX = 4;
 

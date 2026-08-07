@@ -6,15 +6,11 @@ interface RawHot {
     on(event: string, cb: (data: unknown) => void): void;
 }
 
-/**
- * Wraps a raw vite hot object as a typed {@link DevChannel}.
- *
- * @internal
- */
+/** @internal */
 export function wrapHot<TSend, TRecv>(hot: RawHot): DevChannel<TSend, TRecv> {
     return {
         send: (event, data) => hot.send(event, data),
-        // justified: RawHot types every payload as unknown, the wire contract guarantees it matches TRecv[Key]
+        // justified: RawHot types every payload as unknown, and the wire contract guarantees it matches TRecv[Key]
         on: (event, cb) => hot.on(event, cb as (data: unknown) => void)
     };
 }

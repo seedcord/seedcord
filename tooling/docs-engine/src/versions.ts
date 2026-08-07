@@ -10,9 +10,8 @@ function sortVersionsDesc(versions: readonly string[]): string[] {
 }
 
 /**
- * The distinct stable line heads to surface in the version picker, descending. The union of the
- * per-minor and per-major latest maps; `latestByMajor['0']` repeats the newest 0.x minor, so the
- * Set drops the duplicate.
+ * The distinct stable line heads to surface in the version picker, descending. This is the union of
+ * the per-minor and per-major latest maps. `latestByMajor['0']` repeats the newest 0.x minor.
  */
 export function stableLineHeads(channel: {
     latestByMinor: Record<string, string>;

@@ -1,5 +1,14 @@
 # @seedcord/logger
 
+## 0.1.2
+
+### Patch Changes
+
+- 272b729: Update comments
+- Updated dependencies [272b729]
+    - @seedcord/types@0.8.2
+    - @seedcord/utils@0.8.2
+
 ## 0.1.1
 
 ### Patch Changes
@@ -12,19 +21,6 @@
 - Updated dependencies [c567fea]
     - @seedcord/types@0.8.1
     - @seedcord/utils@0.8.1
-
-## 0.1.1-next.0
-
-### Patch Changes
-
-- c567fea: Bump deps.
-- c567fea: Set all packages' node floor to LTS.
-- 814902a: The logger now catches a sink that throws. Your logging call returns normally, the other sinks still get the record, and the broken sink is reported once on the console.
-- Updated dependencies [c567fea]
-- Updated dependencies [0642de5]
-- Updated dependencies [c567fea]
-    - @seedcord/types@0.8.1-next.0
-    - @seedcord/utils@0.8.1-next.0
 
 ## 0.1.0
 

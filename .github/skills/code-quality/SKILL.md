@@ -5,7 +5,7 @@ description: Use this when asked to write code, or audit, sweep, or fix code qua
 
 # Code Quality Sweep
 
-The seedcord monorepo enforces quality through layered checks — mostly tool-enforced now, with a single review-enforced check that's hard to automate (cross-package source paths).
+The seedcord monorepo enforces quality through layered checks. Most are tool-enforced now, with a single review-enforced check that's hard to automate (cross-package source paths).
 
 <!--prettier-ignore-start-->
 
@@ -14,7 +14,7 @@ The seedcord monorepo enforces quality through layered checks — mostly tool-en
 | **ESLint + TypeScript** (tool) | Type errors, lint violations, import order, formatting, rule violations | `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc` (or `pnpm lint:fix && pnpm tc` from repo root via turbo) |
 | **Vitest** (tool) | Behavior regressions | `pnpm -C <pkg> test` (only after lint + tc pass) |
 | **Prettier** (tool) | Formatting | `pnpm -C <pkg> fmt` / `fmt:check` |
-| **changesets** (tool) | Missing version bump on published packages | `pnpm cs` when touching a published package; `pnpm cs:status` to check |
+| **changesets** (tool) | Missing version bump on published packages | `pnpm cs` when touching a published package. `pnpm cs:status` to check |
 | **React 19 antipatterns** (tool) | Mutable deps, index keys, deprecated APIs, hydration mismatches, hand-rolled `useContext`, giant components | `pnpm react-doctor --verbose` from repo root. Configured via `react-doctor.config.json`. Run deliberately, NOT on every `prePush` (it's slow + interactive). Use the verbose flag for per-file diagnostics. |
 | **Dead code / unused deps** (tool) | Unused files, exports, types, deps, devDeps, binaries | `pnpm knip` from repo root. Configured via `knip.json`. Run deliberately, NOT on every `prePush`. Triage false positives into `knip.json` `ignoreDependencies` / `ignoreBinaries` / extra `entry` patterns with a comment explaining why. |
 | **Cross-package source paths** (review) | `paths` or `include` reaching into another package's `src` | Manual review of every new/changed `tsconfig.json` and `vitest.config.ts`. |
@@ -52,7 +52,7 @@ Husky's hooks run `lint-staged` (configured in `lint-staged.config.mjs`) on comm
 
 These apply to every component in `apps/{docs,guide,home}/src` and to the Ink CLI components in `packages/cli/src` (Ink uses the same React reconciler). They are not currently auto-detected, so read for them when you review a diff.
 
-### Bugs — must fix before merge
+### Bugs: must fix before merge
 
 **Mutable values in effect deps** `location.pathname`, `ref.current`, or other mutable globals in a `useEffect` deps array. These don't trigger re-renders when they change, so the effect won't re-run.
 
@@ -62,7 +62,7 @@ useEffect(() => {
     doSomething();
 }, [location.pathname]);
 
-// Good — depend on the stable object, read .pathname inside
+// Good: depend on the stable object, read .pathname inside
 useEffect(() => {
     const path = location.pathname;
     doSomething(path);
@@ -80,20 +80,20 @@ useEffect(() => {
 // Bad
 items.map((item, i) => <Item key={i} />);
 
-// Good — stable identity
+// Good: stable identity
 items.map((item) => <Item key={item.id} />);
 
 // Static arrays with no id: use the content itself
 STATIC_TABS.map((tab) => <Tab key={tab.label} />);
 ```
 
-**Hydration mismatches** `new Date()`, `Math.random()`, `window.*`, or any client-only value reached from JSX during SSR. The server renders one value, the client renders another, hydration throws.
+**Hydration mismatches** `new Date()`, `Math.random()`, `window.*`, or any client-only value reached from JSX during SSR. The server renders one value while the client renders another, so hydration throws.
 
 ```tsx
 // Bad
 <p>{new Date().toLocaleDateString()}</p>;
 
-// Good — client-only rendering
+// Good: client-only rendering
 const [now, setNow] = useState<Date | null>(null);
 useEffect(() => {
     setNow(new Date());
@@ -101,9 +101,9 @@ useEffect(() => {
 <p>{now?.toLocaleDateString() ?? ''}</p>;
 ```
 
-### Warnings — fix in the same pass
+### Warnings: fix in the same pass
 
-**React 19 deprecated APIs** `useContext(X)` is superseded by `use(X)` in React 19. `forwardRef` is no longer needed — `ref` is a normal prop now.
+**React 19 deprecated APIs** `useContext(X)` is superseded by `use(X)` in React 19. `forwardRef` is no longer needed. `ref` is a normal prop now.
 
 ```tsx
 // Bad
@@ -125,7 +125,7 @@ function MyInput({ ref, ...rest }: { ref?: Ref<HTMLInputElement> } & InputHTMLAt
 **5+ related `useState` calls** Collapse related boolean / open-state flags into a `useReducer`.
 
 ```tsx
-// Bad — 6 related useState calls
+// Bad: 6 related useState calls
 const [isOpen, setIsOpen] = useState(false);
 const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 // ...
@@ -178,7 +178,7 @@ const b = await fetchB();
 const [a, b] = await Promise.all([fetchA(), fetchB()]);
 ```
 
-**`await` before a synchronous early-return guard** The guard doesn't need the awaited value — return first.
+**`await` before a synchronous early-return guard** The guard doesn't need the awaited value. Return first.
 
 ```ts
 // Bad
@@ -195,7 +195,7 @@ async function handle(input: string | null) {
 }
 ```
 
-**`font-bold` on headings (h1–h6)** Bold weight crushes counter shapes at display sizes. Use `font-semibold` at most.
+**`font-bold` on headings (h1 to h6)** Bold weight crushes counter shapes at display sizes. Use `font-semibold` at most.
 
 ```tsx
 // Bad
@@ -227,7 +227,7 @@ import { useAuthStore } from '../store/useAuthStore';
 
 **Em dash (`—`) in JSX text** Use comma, colon, semicolon, or parentheses. The em dash visually crowds inline UI text.
 
-**Giant components (~200+ lines)** Extract focused sub-components. The parent reads as an orchestrator — state, effects, and composition. Children own a single visual concern.
+**Giant components (~200+ lines)** Extract focused sub-components. The parent orchestrates state, effects, and composition. Children own a single visual concern.
 
 ---
 
@@ -245,8 +245,8 @@ Until a dead-code scanner is wired into the repo, run this checklist on the pack
     rg "<pkg>" packages/<pkg>/package.json
     ```
 
-    - Returns nothing in src/tests, returns nothing in scripts → **remove from package.json**, then `pnpm install`.
-    - Returns nothing in src/tests but appears as a `pnpm exec <pkg>` in scripts → it's a CLI dep, leave it.
+    - Nothing found in src/tests and nothing in scripts → **remove from package.json**, then `pnpm install`.
+    - Nothing found in src/tests but it appears as a `pnpm exec <pkg>` in scripts → it's a CLI dep, so leave it.
 
 2. **Unused exports.** Before adding `export` to a symbol, verify it's consumed outside the file. After moving code, re-grep:
 
@@ -264,7 +264,7 @@ Until a dead-code scanner is wired into the repo, run this checklist on the pack
 
 4. **Workspace catalog duplication.** If the dep appears in 2+ packages, lift it to `pnpm-workspace.yaml`'s `catalogs:` and reference it as `catalog:<name>` everywhere.
 
-Track candidates in a scratch note while you sweep so you fix them in one focused commit, not scattered across feature work.
+Track candidates in a scratch note while you sweep, so you fix them together in one focused commit.
 
 ---
 
@@ -285,9 +285,9 @@ Each subagent should:
 2. Fix every issue found
 3. Run `pnpm -C <pkg> lint:fix && pnpm -C <pkg> tc && pnpm -C <pkg> test`
 4. Confirm 0 errors before reporting back
-5. NOT commit — the orchestrator commits after all subagents complete
+5. Do not commit here. The orchestrator commits after all subagents complete
 
-For small sweeps (under ~10 issues, 1–2 packages), fix inline — subagent overhead isn't worth it. Read [`../../skills/subagent-context-management/SKILL.md`](../subagent-context-management/SKILL.md) before spawning anything.
+For small sweeps (under ~10 issues, 1 to 2 packages), fix inline, since subagent overhead isn't worth it. Read [`../../skills/subagent-context-management/SKILL.md`](../subagent-context-management/SKILL.md) before spawning anything.
 
 ---
 
@@ -307,14 +307,14 @@ pnpm -C apps/<dependent-app> tc
 
 ## Commit Strategy
 
-Commit after each well-defined phase clears all gates — not all at the end.
+Commit after each well-defined phase clears all gates. Don't wait until everything is done at the end.
 
 Example milestones:
 
-- `fix(<pkg>): react-19 antipatterns + warnings` — after a package or app is clean
-- `chore: remove unused deps and dead code` — after a dead-code sweep
-- `chore(<pkg>): tighten tsconfig / lint config` — when adopting stricter rules
-- `chore: add changeset for <pkg>` — when bumping a published package
+- `fix(<pkg>): react-19 antipatterns + warnings`, used after a package or app is clean
+- `chore: remove unused deps and dead code`, used after a dead-code sweep
+- `chore(<pkg>): tighten tsconfig / lint config`, used when adopting stricter rules
+- `chore: add changeset for <pkg>`, used when bumping a published package
 
 For any change touching a package under `packages/` (other than `tsconfig`, `tsup-config`, `eslint-config` which are workspace-internal), add a changeset via `pnpm cs` so the release pipeline can publish correctly.
 
@@ -322,9 +322,9 @@ For any change touching a package under `packages/` (other than `tsconfig`, `tsu
 
 ## Related Skills (in this folder)
 
-- **[`PREVENT-REINVENTION.md`](./PREVENT-REINVENTION.md)** — checks to run before writing new code (reuse `@seedcord/{types,utils,services,plugins,cli}`, app-local `lib/`, `components/ui/`)
-- **[`TAILWIND.md`](./TAILWIND.md)** — Tailwind v4 CSS-first setup, `cn()`, `@theme`, opacity modifiers, responsive discipline, v4 gotchas vs v3 (applies to `apps/{docs,guide,home}`)
-- **[`REACT19.md`](./REACT19.md)** — `use()` vs `useContext`, ref as prop, `useTransition` / `useActionState` / `useOptimistic`, deprecated APIs, React Compiler
-- **[`TYPESCRIPT.md`](./TYPESCRIPT.md)** — type narrowing, discriminated unions, generics, `satisfies`, const assertions, branded types, utility types from `type-fest`
-- **[`OOP.md`](./OOP.md)** — class vs function decision, SOLID in TypeScript, service pattern, composition vs inheritance, access modifiers
-- **[`FAIL-FAST-RULES.md`](./FAIL-FAST-RULES.md)** — null/undefined handling, invariant checks, when NOT to use `?.` / `??`
+- **[`PREVENT-REINVENTION.md`](./PREVENT-REINVENTION.md)** covers checks to run before writing new code (reuse `@seedcord/{types,utils,services,plugins,cli}`, app-local `lib/`, `components/ui/`)
+- **[`TAILWIND.md`](./TAILWIND.md)** covers Tailwind v4 CSS-first setup, `cn()`, `@theme`, opacity modifiers, responsive discipline, and v4 gotchas vs v3 (applies to `apps/{docs,guide,home}`)
+- **[`REACT19.md`](./REACT19.md)** covers `use()` vs `useContext`, ref as prop, `useTransition` / `useActionState` / `useOptimistic`, deprecated APIs, and React Compiler
+- **[`TYPESCRIPT.md`](./TYPESCRIPT.md)** covers type narrowing, discriminated unions, generics, `satisfies`, const assertions, branded types, and utility types from `type-fest`
+- **[`OOP.md`](./OOP.md)** covers class vs function decision, SOLID in TypeScript, service pattern, composition vs inheritance, and access modifiers
+- **[`FAIL-FAST-RULES.md`](./FAIL-FAST-RULES.md)** covers null/undefined handling, invariant checks, and when NOT to use `?.` / `??`

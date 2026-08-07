@@ -1,6 +1,5 @@
 import { Linter } from 'eslint';
 
-// TypeScript-specific rules
 export const TYPESCRIPT_RULES: Linter.RulesRecord = {
     '@typescript-eslint/explicit-function-return-type': [
         'warn',

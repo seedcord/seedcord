@@ -40,7 +40,7 @@ async function buildScope(runner: CleanRunner, token: string): Promise<ScopePlan
         ]
     });
 
-    // a full purge needs named guilds, so all-guilds stays duplicates-only
+    // a full purge needs named guilds
     if (target === 'all') return { scope: { guildIds: [], allGuilds: true, purge: false } };
 
     const status = spinner();

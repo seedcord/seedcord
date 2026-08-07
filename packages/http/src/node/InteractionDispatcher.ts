@@ -24,12 +24,7 @@ interface RouteTarget {
     readonly kind: ResolvedRoute['kind'];
 }
 
-/**
- * Discovers interaction handlers from the filesystem into the engine's live route maps.
- *
- * The node host runs it at startup and dev HMR swaps map entries in place. The engine's `resolve`
- * reads `maps` per request. The edge path builds its maps from the generated manifest.
- */
+// hmr swaps entries live and resolve() reads per request, but edge builds from manifest instead
 export class InteractionDispatcher implements Initializeable, HmrAware {
     public readonly maps: RouteMaps;
     private readonly targets: Record<InteractionRoutes, RouteTarget>;
@@ -115,7 +110,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
 
     private isHandler(value: unknown): value is HandlerConstructor {
         if (typeof value !== 'function') return false;
-        // this package's own family bases. A gateway handler in the same dir stays unregistered
+        // this package's own family bases, so a gateway handler in the same dir stays unregistered
         return (
             (value.prototype instanceof InteractionHandler || value.prototype instanceof AutocompleteHandler) &&
             Reflect.hasMetadata(InteractionMetadataKey, value)
@@ -163,7 +158,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
             for (const key of keys) {
                 const routeId = `${target.kind}:${key}`;
                 const existing = this.rowOwners.get(routeId);
-                // a different class on the same route would silently shadow (last write wins)
+                // a different class on the same route silently shadows the existing one (last write wins)
                 if (existing && existing.ctor !== ctor) {
                     throw new SeedcordError(SeedcordErrorCode.InteractionDuplicateRoute, [
                         routeId,

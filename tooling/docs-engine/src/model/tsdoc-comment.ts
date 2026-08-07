@@ -18,16 +18,9 @@ import type {
     DocCommentExample
 } from '@src/types';
 
-/**
- * Resolve a TSDoc `@link` code destination to an engine reference, or undefined when it cannot be
- * resolved (the link then renders as plain text, matching the pre-migration behaviour for the
- * package's pre-existing broken/external `@link`s). Supplied by the adapter, wired to
- * `ApiModel.resolveDeclarationReference`.
- */
+// undefined renders the link as plain text. the adapter wires this to ApiModel.resolveDeclarationReference.
 export type LinkResolver = (linkTagCodeDestination: unknown, fallbackText: string) => DocReference | undefined;
 
-// The displayed symbol name for a `{@link ...}` code destination with no explicit text: the last
-// member identifier (`Foo.bar` → "bar"), else the package name (`@scope/pkg` → "@scope/pkg").
 export function codeDestinationName(codeDestination: unknown): string {
     if (!codeDestination || typeof codeDestination !== 'object') return '';
     const dest = codeDestination as {
@@ -57,8 +50,7 @@ function walkLinkTag(link: DocLinkTag, parts: CommentDisplayPart[], resolveLink:
         });
         return;
     }
-    // With no explicit `{@link Dest|text}` text, fall back to the destination's symbol name
-    // (TypeDoc rendered `{@link Error}` as "Error", not an empty span).
+    // typedoc rendered `{@link Error}` as "Error"
     const text = explicitText ?? codeDestinationName(link.codeDestination);
     const target = link.codeDestination ? resolveLink(link.codeDestination, text) : undefined;
     parts.push({ kind: 'inline-tag', tag: '@link', text, ...(target && { target }) });
@@ -92,7 +84,6 @@ function walk(node: DocNode, parts: CommentDisplayPart[], resolveLink: LinkResol
         }
         case 'InlineTag': {
             const inline = node as DocInlineTag;
-            // only `{@default}` is surfaced (a param-default tag), other custom inline tags drop as before
             if (inline.tagName === '@default') {
                 parts.push({ kind: 'inline-tag', tag: '@default', text: inline.tagContent.trim() });
             }
@@ -153,8 +144,7 @@ export function buildComment(tsdoc: DocComment | undefined, resolveLink: LinkRes
         blockTags.push(blockTag(block, resolveLink));
     }
 
-    // `@see` is a standard TSDoc tag, so it parses into `seeBlocks` rather than `customBlocks`;
-    // surface it as a `@see` block tag for the consumer's see-also renderer.
+    // the parser puts `@see` in seeBlocks, never customBlocks
     for (const block of tsdoc.seeBlocks) {
         blockTags.push(blockTag(block, resolveLink));
     }
@@ -175,7 +165,6 @@ export interface ParamComment {
     defaultValue?: string;
 }
 
-// pulls the `{@default X}` tag out of a param's parts, returning the value and the parts without it
 function splitParamDefault(parts: CommentDisplayPart[]): { parts: CommentDisplayPart[]; defaultValue?: string } {
     const index = parts.findIndex((p) => p.kind === 'inline-tag' && p.tag === '@default');
     if (index === -1) return { parts };

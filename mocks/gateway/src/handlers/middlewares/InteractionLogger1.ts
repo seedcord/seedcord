@@ -1,8 +1,5 @@
 import { Middleware, MiddlewareType, InteractionMiddleware, type Repliables } from '@seedcord/gateway';
 
-/**
- * Logs incoming interactions before handlers execute.
- */
 @Middleware(MiddlewareType.Interaction, 1)
 export class InteractionLogger1 extends InteractionMiddleware<Repliables> {
     public async execute(): Promise<void> {

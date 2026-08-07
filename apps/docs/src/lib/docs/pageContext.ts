@@ -28,7 +28,6 @@ export async function getCatalogContext(
     const entry = findCatalogEntry(catalog, decodedPackageId);
     if (!entry) notFound();
 
-    // An unknown explicit version is a 404, not a fall-through to latest.
     const version = findCatalogVersion(entry, decodeParam(params.versionId));
     if (!version) notFound();
 

@@ -1,18 +1,8 @@
 /* eslint-disable no-console -- justified: developer-facing CLI script */
 /**
- * Enforces the workspace catalog rule:
- *   - Any dep in 2+ `package.json` files MUST be referenced via `catalog:*` in `pnpm-workspace.yaml`.
- *     A dep listed in several dependency fields of ONE package (e.g. an optional peer that is also a
- *     devDependency for local build) counts as a single consumer.
- *   - Conversely, any catalog entry MUST be referenced by 2+ packages (catalog is for shared deps,
- *     single-use entries belong inline in the package that needs them).
- *
- * Flags:
- *   - `duplicate-literal`: dep in 2+ packages with at least one pinned version
- *   - `catalog-missing-entry`: a package references `catalog:X` for a dep that isn't in any bucket
- *   - `catalog-underused`: a catalog entry referenced by `<2` packages
- *
- * Exits with code 1 on any violation. Runs in `prePush`.
+ * The workspace catalog rule, both directions. A dep used by 2+ packages must be referenced as
+ * `catalog:*` in `pnpm-workspace.yaml`, and a catalog entry used by fewer than 2 packages belongs
+ * inline in the one package that needs it. Runs in `prePush`.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -22,9 +12,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..
 const WORKSPACE_GLOBS = ['apps', 'packages', 'plugins', 'cli', 'tooling', 'mocks'];
 const DEP_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const;
 
-// Deps exempt from the catalog rule. eslint is intentionally split for the eslint 10 migration.
-// The framework and cli run catalog eslint 10 while the Next apps pin eslint 9 until
-// eslint-config-next supports 10.
+// eslint stays split until eslint-config-next supports eslint 10. The framework and cli run
+// catalog eslint 10 while the Next apps pin 9.
 const IGNORED_DEPS: ReadonlySet<string> = new Set(['eslint']);
 
 interface DepRef {
@@ -44,7 +33,6 @@ interface PackageJson {
 function findPackageJsons(): string[] {
     const out: string[] = [];
 
-    // Workspace-root devDeps count toward the 2+ rule (turbo, husky, vitest tooling all live there).
     const rootPkg = path.join(REPO_ROOT, 'package.json');
     if (safeIsFile(rootPkg)) out.push(rootPkg);
 
@@ -76,9 +64,9 @@ function safeIsFile(p: string): boolean {
     }
 }
 
-// Parses the `catalogs:` block from `pnpm-workspace.yaml` without a YAML lib. Indentation-agnostic
-// (works under either Prettier's 2- or 4-space style): a catalog entry is any indented `name: <value>`
-// line; bucket headers like `dev:` have no value after the colon and are skipped.
+// parses the `catalogs:` block out of `pnpm-workspace.yaml` without a YAML lib. an entry is any
+// indented `name: <value>` line, so it survives either Prettier indent width. bucket headers like
+// `dev:` have nothing after the colon and get skipped
 function parseCatalogEntries(): Set<string> {
     const yamlPath = path.join(REPO_ROOT, 'pnpm-workspace.yaml');
     const lines = readFileSync(yamlPath, 'utf8').split('\n');
@@ -140,7 +128,7 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
 
     for (const [depName, refs] of byName.entries()) {
         if (IGNORED_DEPS.has(depName)) continue;
-        // one package.json counts once, an optional peer is often also a devDependency for the local build
+        // an optional peer is often also a devDependency
         const distinctPackages = new Set(refs.map((r) => r.packageJsonPath));
         if (distinctPackages.size < 2) continue;
 
@@ -158,7 +146,6 @@ function findViolations(byName: Map<string, DepRef[]>, catalogEntries: Set<strin
         }
     }
 
-    // Skip catalog entries already flagged above (don't double-report).
     for (const entryName of catalogEntries) {
         if (IGNORED_DEPS.has(entryName)) continue;
         if (seen.has(entryName)) continue;

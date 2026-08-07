@@ -13,7 +13,7 @@ export function ThemeToggle(): ReactElement {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // next-themes resolves the active theme one tick after mount; the timer skips one frame so the first paint reads the resolved value, not the SSR default.
+        // next-themes resolves the active theme one tick after mount
         const t = setTimeout(() => setMounted(true), 0);
         return () => clearTimeout(t);
     }, []);

@@ -6,7 +6,7 @@ import type { ReplyResponse } from '@seedcord/types';
 /**
  * Thrown when a customId was minted by an older version of its shape.
  *
- * This is normal after the shape changes. The reply tells the user to run the command again.
+ * This is normal after the shape changes.
  */
 export class StaleCustomId extends Notice {
     constructor(prefix: string) {
@@ -25,7 +25,7 @@ export class StaleCustomId extends Notice {
 /**
  * Thrown when a customId wire is corrupt or tampered with and cannot be trusted.
  *
- * This should not happen in normal use, so it reports.
+ * It reports because this is an odd case that should not happen.
  */
 export class InvalidCustomId extends Notice {
     constructor(detail: string) {

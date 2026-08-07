@@ -14,7 +14,7 @@ export default defineConfig({
                 ]
             },
             {
-                // trusted build-time HTML (shiki highlight + rendered TSDoc), never user input
+                // content comes only from shiki highlighting and rendered TSDoc, generated at build time
                 files: [
                     '**/CodeBlock.tsx',
                     '**/CodePanel.tsx',
@@ -33,12 +33,12 @@ export default defineConfig({
                 rules: ['react-doctor/no-danger']
             },
             {
-                // Satori cannot use CSS classes, OG cards must inline styles
+                // Satori cannot use CSS classes. OG cards must inline styles
                 files: ['**/lib/og/card.tsx'],
                 rules: ['react-doctor/no-inline-exhaustive-style']
             },
             {
-                // server-side docs builder, not a security context
+                // the docs builder runs this server-side, with no security exposure
                 files: ['**/lib/docs/builders/buildSignatureDetails.ts'],
                 rules: ['react-doctor/insecure-crypto-risk']
             },
@@ -66,7 +66,7 @@ export default defineConfig({
                 rules: ['react-doctor/no-initialize-state']
             },
             {
-                // scrollIntoView must run after the index-driven re-render, so it stays an effect
+                // scrollIntoView must run after the index-driven re-render. that keeps it as an effect
                 files: ['**/components/search/command-palette/**'],
                 rules: [
                     'react-doctor/prefer-tag-over-role',

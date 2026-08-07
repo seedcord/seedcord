@@ -14,7 +14,7 @@ const FEEDBACK_DURATION_MS = 2000;
 export function ClearHistoryRow(): ReactElement {
     const [cleared, markCleared] = useTimedToggle(FEEDBACK_DURATION_MS);
 
-    // Blur after the action so the brand-red focus ring (`--accent-a`) does not linger across the timed-feedback window.
+    // blurs after clearing so the brand-red focus ring (`--accent-a`) doesn't linger through the feedback window
     const handleClear = (event: MouseEvent<HTMLButtonElement>): void => {
         clearDocsHistory();
         markCleared();

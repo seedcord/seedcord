@@ -8,7 +8,11 @@
 
 Most of this framework's design is already settled. Unverified claims produce confident-looking but incorrect output that wastes hours to debug.
 
-Common failure mode: **grounding on the immediate context, then inferring how it connects elsewhere.** Examples: asserting that duplicate call sites share identical implementations without checking their bodies; implementing a hot-reload method without reading the dispatcher; labeling something a contradiction when a decision record already resolved it.
+Common failure mode: **grounding on the immediate context, then inferring how it connects elsewhere.** Examples:
+
+- Asserting that duplicate call sites share identical implementations without checking their bodies.
+- Implementing a hot-reload method without reading the dispatcher.
+- Labeling something a contradiction when a decision record already resolved it.
 
 1. **Cite or flag every load-bearing sentence.** Each claim must carry a `file:line` reference from this session, or the word "assumption". Nothing unlabeled. Labeled guesses add one line of reading. Unlabeled ones waste hours.
 
@@ -46,7 +50,7 @@ const x: NoteForAgentAddedByTheUser = 42; // forces a type error
 
 ## Design Patterns
 
-- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface leans on classes, so extend or compose them rather than re-implementing parallel function pipelines.
+- **OOP for complex domain logic** (inheritance & composition). **Plain functions for small, stateless utilities.** Seedcord's framework surface leans on classes, so extend or compose them. A parallel function pipeline re-implementing what a class already does is the thing to avoid.
 
 - **No static-only classes as namespaces.** Use named exports instead.
 
@@ -71,7 +75,7 @@ const x: NoteForAgentAddedByTheUser = 42; // forces a type error
 - **Don't cast values that are already correctly typed**, adjust the type instead.
 - **Prefer `?.` and `??`** for genuinely optional branches, never to suppress errors or hide broken assumptions. See `.github/skills/code-quality/FAIL-FAST-RULES.md` for when NOT to reach for them.
 - **Prefer `import type { T } from 'pkg'`** for type-only imports. Avoid inline `import('pkg').T`.
-- **Use `type-fest` utility types** (available via the workspace catalog) for structural transforms rather than casts. The shared `@seedcord/types` package re-exports project-specific aliases, check there first.
+- **Use `type-fest` utility types** (available via the workspace catalog) for structural transforms, so a cast is never the answer. The shared `@seedcord/types` package re-exports project-specific aliases, check there first.
 - **Derive types from their source, never restate them.** A ctor shape is `TypedConstructor<typeof X>` (see `gateway/src/handlers/constructors.ts`), a member union comes from `keyof`, `TypedExtract`/`TypedExclude`, indexed access, or a template-literal map over the owning enum, a narrowed copy from `Pick`/`TypedOmit`. A hand-written structural duplicate drifts from its source.
 - **To disable an ESLint rule inline:** `// eslint-disable-next-line <rule> -- <reason>`. Never file-wide or project-wide.
 - **Never throw a raw error.** Framework code throws `SeedcordError`, `SeedcordTypeError`, or `SeedcordRangeError` from `@seedcord/errors`, each with a registered code. Translate a third-party throw into one of the three before it propagates to the consumer.
@@ -131,7 +135,7 @@ A monorepo of focused leaf packages under `packages/`, Next.js apps under `apps/
 
 The Next.js apps each own their primitives under `apps/<name>/src/components/ui/`. Raw `<button>` / `<input>` / `<select>` markup is banned when the primitive exists in the app, so read the `components/ui/` index first, every time. Use `cn(...)` (from each app's `@lib/utils`) for class composition and the `tw\`…\``template tag for multi-line class strings. Icon-only actions:`<Button variant="ghost" size="icon">`.
 
-A "one-off style" is a missing variant in the primitive's `VARIANTS` map, not an excuse to inline styles. If a primitive doesn't exist yet, that's a signal to either lift the pattern (when used in 2+ apps) or build the primitive in the app where it belongs.
+A "one-off style" is a missing variant in the primitive's `VARIANTS` map. Add the variant there and inline nothing. If a primitive doesn't exist yet, that's a signal to either lift the pattern (when used in 2+ apps) or build the primitive in the app where it belongs.
 
 Same rule applies before writing a new hook, helper, or store in any app: check `apps/<name>/src/lib/`, `src/store/`, and `src/components/` first.
 
@@ -139,7 +143,7 @@ Same rule applies before writing a new hook, helper, or store in any app: check 
 
 ## Design fidelity
 
-When a mock or design reference is provided for an app, it is visual ground truth, not a loose reference. Every visible difference between the mock and the implementation is a bug unless explicitly listed in a written "Explicitly Descoped" section. If the project later adopts a UI quality bar doc (e.g. `.vscode/docs/UI_QUALITY_BAR.md`), read it before any UI work. It encodes tokens, animation rules, primitive conventions, and the iteration protocol. Deviations from mock require a written justification in the PR description. The `frontend-iteration` skill documents the interactive iteration loop.
+When a mock or design reference is provided for an app, treat it as visual ground truth. Every visible difference between the mock and the implementation is a bug unless explicitly listed in a written "Explicitly Descoped" section. If the project later adopts a UI quality bar doc (e.g. `.vscode/docs/UI_QUALITY_BAR.md`), read it before any UI work. It encodes tokens, animation rules, primitive conventions, and the iteration protocol. Deviations from mock require a written justification in the PR description. The `frontend-iteration` skill documents the interactive iteration loop.
 
 ---
 

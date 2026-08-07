@@ -16,14 +16,6 @@ import type { AutocompleteInteraction } from 'discord.js';
 
 const logger = new Logger('Faults', { channel: 'errors' });
 
-/**
- * The interaction controller boundary. Sorts a throw from any handler-lifecycle phase into the right
- * user reply plus the right bus event. When a handler is built its sender is passed in, so the boundary
- * sends from the current ack state. A middleware or pre-construction throw arrives with no sender, so the
- * boundary builds one from the interaction flags.
- *
- * @internal
- */
 export async function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
@@ -39,14 +31,13 @@ export async function handleInteractionFault(
     }
     const error = asError(caught);
 
-    // empty by default, so every api code from the handler's own work reports
     const ignore = new Set<number | string>(core.config.errors?.ignoreApiCodes ?? []);
     if (error instanceof DiscordAPIError && ignore.has(error.code)) {
         logger.debug(`swallowed api code ${error.code}`);
         return;
     }
 
-    // autocomplete has no reply target, so report through extractErrorResponse and build no sender
+    // autocomplete cannot be replied to, only reported
     if (interaction.isAutocomplete()) {
         extractErrorResponse(error, core, {
             guild: interaction.guild,
@@ -65,11 +56,11 @@ export async function handleInteractionFault(
         user: interaction.user,
         metadata: interaction
     });
+    // the handler's own sender carries its ack state. a middleware throw arrives without one
     const liveSender = sender ?? new ReplySender(interaction, routeId, core.bus);
     await sendGuarded(liveSender, response, error instanceof Notice ? error.ephemeral : true);
 }
 
-// reports like any other write, so a faulted autocomplete still shows its discord round trip
 async function sendEmptyChoices(interaction: AutocompleteInteraction, core: Core, routeId: string): Promise<void> {
     const telemetry = { bus: core.bus, interactionId: interaction.id };
     try {
@@ -79,7 +70,7 @@ async function sendEmptyChoices(interaction: AutocompleteInteraction, core: Core
     }
 }
 
-// the boundary's own send drops the harmless reply-token codes so a dead token never escapes it
+// only this send swallows the harmless codes. a handler's own write still reports them
 async function sendGuarded(sender: ReplySender, response: ReplyResponse, ephemeral: boolean): Promise<void> {
     try {
         await sender.send(response, { ephemeral });

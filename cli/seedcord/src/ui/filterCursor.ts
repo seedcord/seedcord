@@ -1,7 +1,6 @@
 export type FilterGroup = 'channels' | 'levels';
 export type CursorMove = 'left' | 'right' | 'switch';
 
-// one remembered index per group, kept across group switches
 export interface FilterCursor {
     readonly group: FilterGroup;
     readonly channels: number;

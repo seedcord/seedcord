@@ -17,7 +17,7 @@ interface SidebarSelectionState {
     effectivePackageId: string;
     effectiveVersionId: string;
     setPendingSelection: Dispatch<SetStateAction<PendingSidebarSelection | null>>;
-    // True until the switch commits; the catalog still holds the prior selection's categories.
+    // true until the switch commits, while the catalog still shows the prior selection's categories
     isPendingSelection: boolean;
 }
 export function useSidebarSelectionState(
@@ -54,9 +54,8 @@ export function useSidebarSelectionState(
     const fallbackPackageId = resolvedFromPath?.packageId ?? activePackageId;
     const fallbackVersionId = resolvedFromPath?.versionId ?? activeVersionId;
 
-    // Clear the pending selection synchronously once the navigation it represents
-    // has committed (fallback now matches). React supports setState during render
-    // to derive new state, avoiding a deferred-effect roundtrip.
+    // react allows setState during render, so this clears the pending selection here once
+    // the fallback matches, skipping a deferred effect.
     if (pendingSelection) {
         const matchesPackage = pendingSelection.packageId === fallbackPackageId;
         const matchesVersion = pendingSelection.versionId ? pendingSelection.versionId === fallbackVersionId : true;

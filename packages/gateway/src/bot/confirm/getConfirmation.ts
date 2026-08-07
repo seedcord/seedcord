@@ -13,7 +13,7 @@ import type { Promisable } from 'type-fest';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
-// the reserved def's shape and choices never change, so encode the ids once
+// encode the ids once because the reserved def's shape and choices never change
 const CONFIRM_IDS = {
     confirm: CONFIRM_DEF.encode({ choice: 'confirm' }),
     cancel: CONFIRM_DEF.encode({ choice: 'cancel' })
@@ -112,8 +112,7 @@ async function collectChoice(message: Message, userId: string, timeoutMs: number
 
 async function settle(sender: ReplySender, message: Message, outcome: Outcome | undefined): Promise<void> {
     if (outcome === undefined) {
-        // routes through the interaction webhook, so it removes an ephemeral prompt where a plain
-        // message.delete() cannot
+        // a plain message.delete() cannot remove an ephemeral message
         await sender.delete(message).catch(() => undefined);
         return;
     }

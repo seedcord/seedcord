@@ -6,7 +6,7 @@ export default createConfig({
     registerSeedcordPlugin: true,
     userConfigs: [
         {
-            // fixtures for the embed component type
+            // fixtures build the old embed style on purpose, so the rule would flag them
             files: ['tests/**/*.ts'],
             rules: {
                 'discordjs/prefer-v2-component': 'off'

@@ -23,7 +23,7 @@ export abstract class RepliableHandler<Event extends Repliables> extends CoreRep
     GatewayFile,
     ReplySender
 > {
-    // this chain skips gateway BaseHandler, the only class that defines getEvent, so it re-declares here
+    // this chain skips gateway BaseHandler, the only class that defines getEvent
     /** @internal */
     public getEvent(): Event {
         return this.event;

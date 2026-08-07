@@ -58,7 +58,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
      * Reading this decodes `this.event.customId` once (cached after the first read) and throws
      * `StaleCustomId` or `InvalidCustomId` when the wire no longer matches the current shape, which the
      * controller boundary turns into a reply. On a handler registered for several routes this is
-     * `never`, so use {@link match} instead.
+     * `never`. Use {@link match} instead.
      */
     protected get params(): SingleParams<Defs> {
         return this.route.params as SingleParams<Defs>;
@@ -67,7 +67,7 @@ export abstract class ComponentHandler<Event extends ComponentInteraction, Defs 
     /**
      * Run the arm for whichever route the component was minted from. Use this only when the handler is
      * registered for several routes. A single-route handler reads `this.params` directly. On a multi-route
-     * handler `this.params` is `never`, so match is the only way to read the decoded params.
+     * handler `this.params` is `never`, leaving match as the only way to read the decoded params.
      *
      * Provide one arm per registered route, keyed by its prefix, and each arm receives that route's own
      * decoded params. The arms cover every registered route prefix, checked at compile time, and a prefix

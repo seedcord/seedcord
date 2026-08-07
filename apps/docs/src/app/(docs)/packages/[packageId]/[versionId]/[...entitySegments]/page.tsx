@@ -11,7 +11,7 @@ import type { ResolvedEntity } from '@lib/docs/resolveEntity';
 import type { Metadata, Viewport } from 'next';
 import type { ReactElement } from 'react';
 
-// force-static because entity pages are shiki-heavy, dropping it flips them to slow per-request rendering.
+// force-static because entity pages are shiki-heavy, and dropping it flips them to slow per-request rendering
 export const dynamic = 'force-static';
 
 function entityPath({ entry, version, segments }: ResolvedEntity): string {
@@ -62,7 +62,8 @@ function entityJsonLd(resolved: ResolvedEntity): Record<string, unknown> {
 
 export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
     const resolved = await resolveEntity(await params);
-    // an unresolved path renders a soft-404, keep it out of the index instead of inheriting the root OG/title
+    // an unresolved path renders a soft-404, so this keeps it out of the index.
+    // it would otherwise inherit the root's og image and title
     if (!resolved) return { robots: { index: false } };
     const { entity } = resolved;
 

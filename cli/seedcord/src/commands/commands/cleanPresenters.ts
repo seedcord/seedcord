@@ -139,10 +139,10 @@ export class FlagPresenter implements CleanPresenter {
         return Promise.reject(new SeedcordError(SeedcordErrorCode.CliCleanLargeBotUnconfirmed, [guildCount]));
     }
 
-    // confirmCount is the headless typed-count gate, clack confirm (InteractivePresenter) needs a TTY
+    // clack confirm needs a tty, so this prompts for a typed count instead
     public confirmDelete(count: number, skippedCount: number): Promise<boolean> {
         if (this.yes) return Promise.resolve(true);
-        // readline cannot prompt without a terminal, so fail fast
+        // readline cannot prompt without a terminal
         if (!process.stdin.isTTY || !process.stdout.isTTY) {
             return Promise.reject(new SeedcordError(SeedcordErrorCode.CliCleanApplyNeedsYes));
         }

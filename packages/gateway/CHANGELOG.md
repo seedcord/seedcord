@@ -1,5 +1,19 @@
 # @seedcord/gateway
 
+## 0.1.2
+
+### Patch Changes
+
+- 272b729: Update comments
+- Updated dependencies [272b729]
+    - @seedcord/core@0.1.2
+    - @seedcord/errors@0.3.2
+    - @seedcord/event-emitter@0.1.2
+    - @seedcord/logger@0.1.2
+    - @seedcord/rate-limiter@0.1.2
+    - @seedcord/types@0.8.2
+    - @seedcord/utils@0.8.2
+
 ## 0.1.1
 
 ### Patch Changes
@@ -26,33 +40,6 @@
     - @seedcord/utils@0.8.1
     - @seedcord/event-emitter@0.1.1
     - @seedcord/rate-limiter@0.1.1
-
-## 0.1.1-next.0
-
-### Patch Changes
-
-- c567fea: Bump deps.
-- 814902a: Both transports now trace the elapsed time of each dispatched interaction and each reply write.
-- c567fea: Set all packages' node floor to LTS.
-- 5b57bda: A hot reload now logs one line worded by what changed, `Unloaded` on a delete, `Registered` on a new file, and `Reloaded` with a duration on an edit.
-- 5b57bda: A failed startup no longer drops sinks installed through `installSink`, so the `seedcord dev` log view keeps working after one.
-- d470ad4: Now uses the appropriate log levels for logs across the lifecycle of the transports and plugins.
-- Updated dependencies [c567fea]
-- Updated dependencies [0642de5]
-- Updated dependencies [814902a]
-- Updated dependencies [c567fea]
-- Updated dependencies [5b57bda]
-- Updated dependencies [0642de5]
-- Updated dependencies [d470ad4]
-- Updated dependencies [d470ad4]
-- Updated dependencies [814902a]
-    - @seedcord/core@0.1.1-next.0
-    - @seedcord/errors@0.3.1-next.0
-    - @seedcord/logger@0.1.1-next.0
-    - @seedcord/types@0.8.1-next.0
-    - @seedcord/utils@0.8.1-next.0
-    - @seedcord/event-emitter@0.1.1-next.0
-    - @seedcord/rate-limiter@0.1.1-next.0
 
 ## 0.1.0
 

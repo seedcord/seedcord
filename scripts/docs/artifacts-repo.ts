@@ -14,8 +14,6 @@ import { validateIndex } from '@seedcord/docs-engine';
 
 import type { IndexJson } from '@seedcord/docs-engine';
 
-// Shared helpers for publishing the docs artifact tree (generated/artifacts/) to Cloudflare R2
-
 const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 const HTTP_NOT_FOUND = 404;
 
@@ -58,7 +56,6 @@ export interface PutToR2Options {
     cacheControl: string;
 }
 
-// Every served artifact is JSON, so the content type is hardcoded.
 export async function putToR2(options: PutToR2Options): Promise<void> {
     const body = await readFile(options.filePath);
     await options.client.send(
@@ -72,7 +69,7 @@ export async function putToR2(options: PutToR2Options): Promise<void> {
     );
 }
 
-// err.name is inconsistent across operations (NoSuchKey on GET, NotFound on HEAD), so the 404 status is the reliable check.
+// err.name varies by operation (NoSuchKey on GET, NotFound on HEAD), so trust the 404 status.
 function isR2NotFound(error: unknown): boolean {
     if (typeof error !== 'object' || error === null) return false;
     const candidate = error as { name?: unknown; $metadata?: { httpStatusCode?: unknown } };
@@ -89,7 +86,6 @@ export interface RemoteRef {
     prefix: string;
 }
 
-// Returns null on the first publish, when the bucket has no index yet.
 export async function fetchRemoteIndex(ref: RemoteRef): Promise<IndexJson | null> {
     try {
         const res = await ref.client.send(new GetObjectCommand({ Bucket: ref.bucket, Key: `${ref.prefix}index.json` }));
@@ -103,7 +99,6 @@ export async function fetchRemoteIndex(ref: RemoteRef): Promise<IndexJson | null
     }
 }
 
-// Versioned files are immutable, so a re-run can skip any that already exist.
 export async function objectExists(options: { client: S3Client; bucket: string; key: string }): Promise<boolean> {
     try {
         await options.client.send(new HeadObjectCommand({ Bucket: options.bucket, Key: options.key }));
@@ -114,7 +109,6 @@ export async function objectExists(options: { client: S3Client; bucket: string; 
     }
 }
 
-// Collects the full live key set that --prune diffs against the desired union.
 export async function listRemoteKeys(ref: RemoteRef): Promise<string[]> {
     const keys: string[] = [];
     let token: string | undefined;

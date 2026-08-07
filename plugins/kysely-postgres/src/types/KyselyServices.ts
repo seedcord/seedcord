@@ -15,9 +15,5 @@
  */
 export interface KyselyServices {}
 
-/**
- * Union of all registered service keys.
- *
- * @internal
- */
+/** @internal */
 export type KyselyServiceKeys = keyof KyselyServices;

@@ -3,10 +3,6 @@
  * This function creates a new array with the same elements in a random order,
  * without modifying the original array.
  *
- * @typeParam TArray - The type of elements in the array
- * @param items - The array to shuffle
- * @returns A new array with the same elements in a random order
- *
  * @example
  * ```typescript
  * const numbers = [1, 2, 3, 4, 5];

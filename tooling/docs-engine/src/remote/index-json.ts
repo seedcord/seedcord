@@ -3,9 +3,9 @@ import { isEntityTone, type EntityTone } from '@src/tones';
 
 /**
  * Root `index.json` published to the artifacts repo. `packages` is keyed by the unscoped folder
- * name (`utils`), which `pathTemplates` substitute as `{name}`; `fullName` is the scoped display
- * name (`@seedcord/utils`). The doc-version axis is the latest patch per minor (pre-1.0) and per
- * major (post-1.0), not every published patch.
+ * name (`utils`), which `pathTemplates` substitute as `{name}`. `fullName` is the scoped display
+ * name (`@seedcord/utils`). The doc-version axis tracks only the latest patch per minor (pre-1.0)
+ * and per major (post-1.0).
  */
 export interface IndexJson {
     schemaVersion: 1;

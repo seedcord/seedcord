@@ -25,13 +25,12 @@ export function methodName(call: TSESTree.CallExpression): string | undefined {
     return callee.property.name;
 }
 
-// the outermost call of a fluent chain
 export function isChainTop(node: TSESTree.CallExpression): boolean {
     const { parent } = node;
     return parent.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node;
 }
 
-// every `.method()` call in a fluent chain, from the outermost down
+// outermost first
 export function collectChain(top: TSESTree.CallExpression): TSESTree.CallExpression[] {
     const calls: TSESTree.CallExpression[] = [];
     let current: TSESTree.Node = top;
@@ -42,7 +41,6 @@ export function collectChain(top: TSESTree.CallExpression): TSESTree.CallExpress
     return calls;
 }
 
-// the value a chain is built on, e.g. the `new ButtonBuilder()` a chain of setters runs against
 export function chainRoot(top: TSESTree.CallExpression): TSESTree.Node {
     let current: TSESTree.Node = top;
     while (current.type === AST_NODE_TYPES.CallExpression && current.callee.type === AST_NODE_TYPES.MemberExpression) {
@@ -51,7 +49,7 @@ export function chainRoot(top: TSESTree.CallExpression): TSESTree.Node {
     return current;
 }
 
-// the outermost call of the fluent chain built on this expression, or the expression itself when unchained
+// returns the node itself when nothing is chained on it
 export function enclosingChainTop<Node extends TSESTree.Node>(node: Node): Node | TSESTree.CallExpression {
     let current: Node | TSESTree.CallExpression = node;
     while (
@@ -65,17 +63,16 @@ export function enclosingChainTop<Node extends TSESTree.Node>(node: Node): Node 
     return current;
 }
 
-// collectChain is outermost-first, so the first match is the last call executed, and that one wins
+// collectChain is outermost-first, so the first match is the last call to run
 export function lastCall(calls: TSESTree.CallExpression[], name: string): TSESTree.CallExpression | undefined {
     return calls.find((call) => methodName(call) === name);
 }
 
-// the property token of a member call, the natural report target for an offending setter
 export function calleeProperty(call: TSESTree.CallExpression): TSESTree.Node {
     return call.callee.type === AST_NODE_TYPES.MemberExpression ? call.callee.property : call;
 }
 
-// a later reassignment means the initializer is not the value that reaches the use site
+// a later write means the init is no longer the value at the use site
 export function resolveConstInit(
     sourceCode: TSESLint.SourceCode,
     identifier: TSESTree.Identifier
@@ -101,7 +98,6 @@ export function getProperty(node: TSESTree.ObjectExpression, name: string): TSES
     );
 }
 
-// the data object literal behind a builder chain's `new X({ ... })` root
 export function constructorData(root: TSESTree.Node): TSESTree.ObjectExpression | undefined {
     if (root.type !== AST_NODE_TYPES.NewExpression) return undefined;
     const arg = root.arguments[0];
@@ -110,7 +106,7 @@ export function constructorData(root: TSESTree.Node): TSESTree.ObjectExpression 
     return value.type === AST_NODE_TYPES.ObjectExpression ? value : undefined;
 }
 
-// the outermost assertion wrapping this expression, so `b as X` classifies like `b`
+// `b as X` classifies like `b`
 export function outermostAssertion(node: TSESTree.Expression): TSESTree.Expression {
     let current: TSESTree.Expression = node;
     while (
@@ -124,7 +120,6 @@ export function outermostAssertion(node: TSESTree.Expression): TSESTree.Expressi
     return current;
 }
 
-// unwrap as / satisfies / <T> so the expression behind them is still readable
 export function unwrapAssertions(expr: TSESTree.Expression): TSESTree.Expression {
     let current = expr;
     while (

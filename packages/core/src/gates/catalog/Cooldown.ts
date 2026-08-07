@@ -31,7 +31,7 @@ import type { Notice } from '@stops/Notice';
  */
 export interface CooldownOptions {
     /**
-     * The bucket the cooldown window applies to. 'user' scopes by user ID, falls back to global when the source carries no user id. 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
+     * The bucket the cooldown window applies to. 'user' scopes by user ID (falls back to global when the source carries no user id). 'guild' scopes by guild ID (falls back to global if no guild), and 'channel' scopes by channel ID (falls back to global if no channel).
      *
      * @defaultValue `'user'`
      */
@@ -43,8 +43,8 @@ export interface CooldownOptions {
      */
     limit?: number;
     /**
-     * Reword the refusal, keeping the standard notice card. Receives the epoch ms the key frees up, so the
-     * text can include the retry time with `<t:${Math.round(resetAt / 1000)}:R>`.
+     * Reword the refusal, keeping the standard notice card. Receives the epoch ms the key frees up, to
+     * show the retry time with `<t:${Math.round(resetAt / 1000)}:R>`.
      */
     message?: (resetAt: EpochMs) => string;
     /**
@@ -54,7 +54,7 @@ export interface CooldownOptions {
     notice?: (resetAt: EpochMs) => Notice;
 }
 
-// off-route ctxs have no route to key on, so each Cooldown() gets its own id to keep unrelated event handlers isolated
+// off-route ctxs have no route to key on. each Cooldown() call gets its own id to keep unrelated event handlers isolated
 let anonSeq = 0;
 
 function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): string {
@@ -64,14 +64,14 @@ function scopeValue(ctx: GateContextBase, per: 'user' | 'guild' | 'channel'): st
 }
 
 /**
- * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, a string is
+ * Allows `limit` uses per window, scoped by `per`. A number `duration` is **seconds**, and a string is
  * a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError** at construction. The
  * slot is charged in commit, only after the whole gate set passes, so a later refusal never burns the cooldown.
  * That split also means two requests racing the same key can both pass before either charges the slot.
- * The key combines the handler's route with the window settings, so two different handlers keep separate
+ * The key combines the handler's route with the window settings, keeping two different handlers on separate
  * windows. Reword the refusal with {@link CooldownOptions.message} or replace it with {@link CooldownOptions.notice}.
  *
- * @param duration - A number is seconds, a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
+ * @param duration - A number is seconds, and a string is a duration like `30m` or `24h`. An unparseable string throws a **SeedcordTypeError**.
  * @param options - Sets the scope with `per`, the uses per window with `limit`, and the refusal text with `message` or `notice`.
  *
  * @see the `@Gated` decorator from `seedcord`
@@ -119,16 +119,16 @@ export function Cooldown(
         if (parsed === null) throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [duration]);
         windowMs = parsed;
     }
-    // a zero or negative window would never limit, refuse it the same way an unparseable string is refused
+    // refused the same way as an unparseable string, because a zero or negative window would never limit
     if (windowMs <= 0) {
         throw new SeedcordTypeError(SeedcordErrorCode.GateInvalidCooldownDuration, [String(duration)]);
     }
 
     const per = options?.per ?? 'user';
-    // omit limit when unset so the limiter applies its default of 1, exactOptionalPropertyTypes rejects an explicit undefined
+    // exactOptionalPropertyTypes rejects an explicit undefined key
     const window = options?.limit === undefined ? { windowMs } : { windowMs, limit: options.limit };
     const anonId = anonSeq++;
-    // routed keys are stable across restarts, so a durable store rebuilds the same window
+    // routed keys stay stable across restarts, letting a durable store rebuild the same window
     const keyOf = (ctx: GateContextBase): string =>
         `cooldown:${ctx.routeId ?? `anon${anonId}`}:${per}:w${windowMs}:l${options?.limit ?? 1}:${scopeValue(ctx, per)}`;
 

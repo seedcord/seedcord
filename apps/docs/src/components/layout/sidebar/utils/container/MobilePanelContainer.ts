@@ -2,7 +2,7 @@
 
 import { createContext } from 'react';
 
-// The mobile nav drawer's content node. Popovers rendered inside the drawer (the package and version selectors)
-// portal here so they anchor to their trigger and stay inside the Dialog's focus trap, rather than landing on
-// document.body where the modal Dialog leaves them mispositioned and inert.
+// the mobile drawer's content node. popovers rendered inside it (package and version selectors) portal here
+// so they anchor to their trigger and stay inside the dialog's focus trap. portaling to document.body leaves
+// them mispositioned and inert under the modal dialog.
 export const MobilePanelContainerContext = createContext<HTMLElement | null>(null);

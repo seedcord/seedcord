@@ -7,8 +7,7 @@ export function isExternalHref(href: string): boolean {
     return EXTERNAL_HREF.test(href);
 }
 
-// True when the link points outside the current package's docs: external https, or internal into a
-// different package. The package segment is parsed the same way buildEntityHref / buildPackageBasePath write it.
+// the package segment here parses the same way buildEntityHref and buildPackageBasePath write it
 export function opensInNewTab(href: string, currentPackage: string): boolean {
     if (isExternalHref(href)) return true;
     if (!href.startsWith(PACKAGES_PREFIX)) return false;

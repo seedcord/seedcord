@@ -2,16 +2,15 @@ import type { EffectGate, Gate, GateContextBase } from './Gate';
 
 type CommitFn = () => Promise<void>;
 
-// per-request commit queue keyed on the context, so an effect gate's commit runs only after the whole
-// set passes. WeakMap so each entry is dropped once its request's context is gone
+// commits wait here until the whole gate set passes, one queue per request. the key is the context
+// itself and the map is weak, so an entry goes when its request does
 const commitQueues = new WeakMap<GateContextBase, CommitFn[]>();
 
 function isEffectGate(gate: Gate<GateContextBase>): gate is EffectGate<GateContextBase> {
     return typeof (gate as Partial<EffectGate<GateContextBase>>).commit === 'function';
 }
 
-// a refusal throws before the queue, so a refused effect gate never commits. the combinators and the
-// runner both route through here, so an effect gate inside `and`/`or` queues the same way
+// a refused effect gate never commits. combinators call this too
 export async function runCheck(gate: Gate<GateContextBase>, ctx: GateContextBase): Promise<void> {
     await gate.check(ctx);
     if (!isEffectGate(gate)) return;
@@ -30,17 +29,17 @@ export async function runCommits(ctx: GateContextBase): Promise<void> {
     for (const commit of queue) await commit();
 }
 
-// the runner calls this after every run, so a refused or drained run leaves no stale queue behind
+// the runner calls this from a finally, refused run or not
 export function discardCommits(ctx: GateContextBase): void {
     commitQueues.delete(ctx);
 }
 
-// the queued-commit count, the mark an `or` arm rolls back to if it refuses
+// an `or` arm takes this mark before it runs
 export function markCommits(ctx: GateContextBase): number {
     return commitQueues.get(ctx)?.length ?? 0;
 }
 
-// drops commits queued after `mark`, so a refused `or` arm leaves no commit behind
+// and rolls back to it when the arm refuses, leaving no commit behind
 export function rollbackCommits(ctx: GateContextBase, mark: number): void {
     const queue = commitQueues.get(ctx);
     if (queue && queue.length > mark) queue.length = mark;

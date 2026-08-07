@@ -6,12 +6,6 @@
 
 - c567fea: Set all packages' node floor to LTS.
 
-## 2.0.2-next.0
-
-### Patch Changes
-
-- c567fea: Set all packages' node floor to LTS.
-
 ## 2.0.1
 
 ### Patch Changes

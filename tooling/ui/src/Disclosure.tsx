@@ -17,7 +17,7 @@ const disclosureChevronBaseClassName = tw`shrink-0 text-(--text-muted) transitio
 
 const disclosurePanelBaseClassName = tw`grid min-w-0 transition-[grid-template-rows,opacity] duration-300 ease-out data-[state=closed]:grid-rows-[0fr] data-[state=closed]:opacity-0 data-[state=open]:grid-rows-[1fr] data-[state=open]:opacity-100`;
 
-// `min-w-0` is load-bearing: grid items default to `min-width: auto` (content-size), which
+// `min-w-0` is load-bearing because grid items default to `min-width: auto` (content-size), which
 // would inflate this column with any wide descendant (e.g. a CodeBlock with a long line) and
 // defeat downstream `overflow-x: auto` clipping.
 const disclosurePanelInnerClassName = tw`min-h-0 min-w-0 overflow-y-clip`;
@@ -68,7 +68,7 @@ export function Disclosure({
             const saved = globalThis.localStorage.getItem(storageKey);
             if (saved !== null) setInternalOpen(saved === 'true');
         } catch {
-            // localStorage can throw in private mode + SSR fallback; ignore.
+            // localStorage throws in private-mode browsers and during SSR
         }
     }, [storageKey, isControlled]);
 
@@ -80,7 +80,7 @@ export function Disclosure({
                 try {
                     globalThis.localStorage.setItem(storageKey, String(next));
                 } catch {
-                    // same swallow reason as the read above
+                    // same reason as above
                 }
             }
         },

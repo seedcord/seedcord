@@ -24,7 +24,6 @@ const handler = {
         const isHtml = (normalized.headers.get('content-type') ?? '').includes('text/html');
         const isProduction = new URL(request.url).hostname === PRODUCTION_HOST;
 
-        // assets on the production host pass straight through, only documents carry the Link hint
         if (isProduction && !isHtml) return normalized;
 
         const response = new Response(normalized.body, normalized);

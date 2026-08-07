@@ -145,10 +145,9 @@ export function selectDescription(
     signatureComments: (FormattedComment | undefined)[],
     nodeComment: FormattedComment
 ): DescriptionSelection {
-    // with 2+ self-documented overloads, the header can't show one overload's
-    // description without misrepresenting the others, so keep each description in
-    // its own signature panel (tracking the selector) and use the node-level
-    // description for the header.
+    // with 2+ self-documented overloads, showing one in the header would misrepresent the others, so
+    // each description stays in its own signature panel and the header falls back to the node-level
+    // description.
     const selfDocumented = signatureComments.filter((comment) => comment?.paragraphs[0]).length;
     if (selfDocumented < 2) {
         for (let index = 0; index < signatureComments.length; index += 1) {

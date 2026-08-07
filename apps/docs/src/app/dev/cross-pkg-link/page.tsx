@@ -13,17 +13,17 @@ import type { ReactElement } from 'react';
 const CURRENT_PACKAGE = 'seedcord';
 const EMPTY_ANCHOR = /<a\b[^>]*>\s*<\/a>/g;
 
-// Matches marked output: a markdown `[`label`](href)` link renders as `<a href><code>label</code></a>`.
+// marked renders a markdown `[label](href)` link as `<a href><code>label</code></a>`, so this mirrors that shape
 const RAW_PROSE =
     '<p>Returns a <a href="/packages/seedcord/latest/classes/Seedcord"><code>Seedcord</code></a> instance ' +
     '(same package, in-tab, no icon), wraps <a href="/packages/utils/latest/functions/clamp"><code>clamp</code></a> ' +
     'from another package (new tab + icon), and mirrors the ' +
     '<a href="https://discord.js.org/docs">discord.js client</a> (external, new tab + icon).</p>';
 
-// Adversarial case: the function name `getClient` contains the substring "Client". The real engine
-// assigns the ref offset via a sentinel marker (pretty-formatter substituteRefs) so only the
-// return-type token links; going through that path rather than a faked offset is what catches the
-// earlier `getClient` mislink.
+// adversarial case, the function name `getClient` contains the substring Client. the real engine
+// assigns the ref offset through a sentinel marker (pretty-formatter substituteRefs) so only the
+// return-type token links. going through that real path catches the earlier `getClient` mislink
+// that a faked offset would miss
 const SIGNATURE: RenderedSignature = {
     name: [{ kind: 'text', text: 'getClient' }],
     parameters: [],
@@ -44,7 +44,7 @@ function Section({ title, children }: { title: string; children: ReactElement | 
 
 async function buildSignature(): Promise<CodeRepresentation> {
     const { text, refs } = await formatRenderedSignaturePretty(SIGNATURE, resolveClientHref);
-    // Mirrors formatting.ts so this exercises the real ref-to-link mapping, not a hand-built one.
+    // mirrors formatting.ts, exercising the same ref-to-link mapping the real formatter uses
     const links: CodeLink[] = refs.flatMap((ref) =>
         ref.href
             ? [

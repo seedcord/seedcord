@@ -16,7 +16,6 @@ export class Users extends MongooseService<IUser> {
     public test(): void {}
 }
 
-/* Declare Users to augment the ServiceMap */
 declare module '@seedcord/plugin-mongoose' {
     interface MongooseServices {
         users: Users;

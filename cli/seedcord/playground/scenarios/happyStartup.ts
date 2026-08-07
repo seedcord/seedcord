@@ -33,7 +33,7 @@ export const happyStartup: Scenario = {
         ctx.store.setBusy(false);
         ctx.store.setStatus('Connected as PreviewBot#0001');
 
-        // Loop forever (until the harness unmounts) so there's always fresh output to scroll and filter.
+        // runs forever so there's always fresh output to scroll and filter
         for (let round = 0; !ctx.isAborted(); round += 1) {
             for (const [channel, line] of FEED) {
                 if (ctx.isAborted()) return;

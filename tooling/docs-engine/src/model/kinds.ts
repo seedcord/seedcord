@@ -58,7 +58,7 @@ export function frozenKindLabel(kind: number): string {
 
 /**
  * API Extractor's `ApiItemKind` → the frozen numeric kind. AE has no distinct getter/setter/accessor
- * kind (they arrive as `Property`); the adapter detects `get `/`set ` excerpt prefixes and overrides
+ * kind. They arrive as `Property`. The adapter detects `get `/`set ` excerpt prefixes and overrides
  * to Accessor where needed, so this base map keeps Property for the plain case.
  */
 const API_KIND_TO_DOC_KIND: Readonly<Record<string, number>> = {

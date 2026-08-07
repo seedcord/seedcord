@@ -6,7 +6,7 @@ const FALLBACK_URL = 'https://docs.seedcord.org';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? FALLBACK_URL;
 export const SITE_NAME = 'seedcord';
-export const OG_SITE_NAME = 'seedcord documentation'; // so it makes sense on docs embeds from links
+export const OG_SITE_NAME = 'seedcord documentation'; // reads clearer than plain 'seedcord' on docs link embeds
 export const SITE_DESCRIPTION =
     'API documentation for seedcord, a TypeScript framework for Discord bots built on discord.js.';
 export const REPO_URL = 'https://github.com/seedcord/seedcord';
@@ -27,7 +27,7 @@ function truncate(text: string, max: number): string {
     return `${cut.slice(0, lastSpace > 0 ? lastSpace : max).trimEnd()}…`;
 }
 
-// Next replaces openGraph and twitter per route instead of merging, so each page rebuilds the full block here.
+// Next replaces the whole openGraph and twitter block per route, so each page rebuilds it in full here.
 // Entity pages pass `image` (their /og route) because a catch-all segment cannot host an opengraph-image file.
 export function pageMetadata(opts: {
     title: string;
@@ -39,7 +39,7 @@ export function pageMetadata(opts: {
     markdownPath?: string;
 }): Metadata {
     const url = canonicalUrl(opts.path);
-    // social embeds render markdown and newlines literally, so reduce to plain text
+    // reduced to plain text because social embeds render markdown and newlines literally
     const description = truncate(plainSummary(opts.description), DESCRIPTION_MAX);
     const imageUrl = opts.image ? canonicalUrl(opts.image) : undefined;
     const images = imageUrl ? [{ url: imageUrl, width: OG_IMAGE_W, height: OG_IMAGE_H, alt: opts.title }] : undefined;

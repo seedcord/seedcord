@@ -202,8 +202,7 @@ export function EntityHeader({
     const headerSummary = active?.summary.length ? active.summary : summary;
     const headerExamples = getHeaderExamples(active, summaryExamples);
     const headerThrows = active?.throws?.length ? active.throws : throws;
-    // Functions carry @see on the signature (entity-level seeAlso is empty), so track the active
-    // overload like summary/throws do.
+    // functions carry @see on the signature, entity-level seeAlso stays empty
     const headerSeeAlso = active?.seeAlso?.length ? active.seeAlso : seeAlso;
     const summaryNodes = buildSummaryNodes(headerSummary, '');
 

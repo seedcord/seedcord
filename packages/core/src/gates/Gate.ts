@@ -30,7 +30,7 @@ export interface GateContextBase {
     readonly memberRoleIds: readonly string[];
     /**
      * The member's permission bits, or null outside a guild. On an interaction these are the
-     * channel-scoped permissions the payload contains, on a gateway event the member's guild-level ones.
+     * channel-scoped permissions the payload contains, and on a gateway event they're the member's guild-level ones.
      */
     readonly memberPermissions: bigint | null;
     /**
@@ -68,7 +68,7 @@ export interface GuildPermissionsContext extends GateContextBase {
     readonly appGuildPermissions: bigint | null;
 }
 
-// phantom brand, so a bare check function or a plain object is rejected where a Gate is expected
+// phantom brand rejects a bare check function or plain object where a Gate is expected
 declare const GateBrand: unique symbol;
 
 /**
@@ -77,8 +77,8 @@ declare const GateBrand: unique symbol;
  * a field absent on a handler's context is rejected at compile time. `Name` is captured as a literal so
  * a mismatch error can name the gate. Build one with {@link defineGate} or {@link defineEffectGate}.
  *
- * @typeParam Ctx - The context the gate requires, so reading a field absent on a handler's context is a compile error.
- * @typeParam Name - The gate's name captured as a literal, so a mismatch error can name the gate.
+ * @typeParam Ctx - The context the gate requires. A field missing from it is a compile error.
+ * @typeParam Name - The gate's literal name, named in a mismatch error.
  *
  * @example
  * ```ts
@@ -104,12 +104,12 @@ export interface Gate<Ctx extends GateContextBase = GateContextBase, Name extend
 
 /**
  * A gate that carries a side effect, split so the effect fires only once the gate is the one that
- * let the request through. `check` peeks and refuses, `commit` applies the effect after the whole
+ * let the request through. `check` peeks and refuses, while `commit` applies the effect after the whole
  * gate set passes. {@link Cooldown} is the catalog gate that returns one. Build one with
  * {@link defineEffectGate}.
  *
- * @typeParam Ctx - The context the gate requires, so reading a field absent on a handler's context is a compile error.
- * @typeParam Name - The gate's name captured as a literal, so a mismatch error can name the gate.
+ * @typeParam Ctx - The context both `check` and `commit` require. A field missing from it fails to compile.
+ * @typeParam Name - The gate's literal name, shown when a mismatch error names the gate.
  *
  * @example
  * ```ts
@@ -143,7 +143,7 @@ export interface EffectGate<Ctx extends GateContextBase = GateContextBase, Name 
  * the check reads. No annotation defaults to {@link GateContextBase}, an agnostic gate that fits every
  * handler.
  *
- * @typeParam Name - The gate's name captured as a literal, so a mismatch error can name the gate.
+ * @typeParam Name - The gate's name, captured as a literal for mismatch errors.
  * @typeParam Ctx - The context the check reads, inferred from the `ctx` annotation.
  *
  * @param name - The gate's name, used in mismatch errors.
@@ -183,7 +183,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  * commits. In an `or`, a refusing arm's queued commit is rolled back. This is how {@link Cooldown} peeks
  * in `check` and charges the slot in `commit`.
  *
- * @typeParam Name - The gate's name captured as a literal, so a mismatch error can name the gate.
+ * @typeParam Name - The gate's literal name, used to name a mismatch error.
  * @typeParam Ctx - The context both `check` and `commit` read, inferred from the `ctx` annotation.
  *
  * @param name - The gate's name, used in mismatch errors.
@@ -201,7 +201,7 @@ export function defineGate<const Name extends string, Ctx extends GateContextBas
  *     return defineEffectGate(
  *         'UsesPerDay',
  *         (ctx) => {
- *             // peek and refuse by throwing, do not mutate yet
+ *             // peek and refuse by throwing. do not mutate yet
  *             if (usedToday(ctx.userId) >= max) throw new OutOfUsesNotice(max);
  *         },
  *         (ctx) => {

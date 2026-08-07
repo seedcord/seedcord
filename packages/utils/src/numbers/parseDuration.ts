@@ -18,8 +18,8 @@ const DURATION_PATTERN = new RegExp(String.raw`^(\d+)(${Object.keys(UNIT_MS).joi
  *
  * The grammar is one or more digits followed by one lowercase unit (`ms`, `s`, `m`, `h`, `d`).
  * Anything else returns `null`, including a bare number, an unknown unit, an uppercase unit,
- * surrounding whitespace, a fractional value, and a result of zero. The return is a positive
- * number or `null`, never `0` or `NaN`, so a malformed input can never read as a valid duration.
+ * surrounding whitespace, a fractional value, and a result of zero. A malformed input can never
+ * read as a valid duration.
  *
  * @param input - The duration string to parse.
  * @returns The duration in milliseconds, or `null` if `input` is not a well-formed positive duration.

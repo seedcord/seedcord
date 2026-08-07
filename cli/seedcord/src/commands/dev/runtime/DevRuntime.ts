@@ -17,7 +17,7 @@ export interface DevRuntime {
 
     /**
      * Relays the user's response to a pending command-update prompt to the running instance.
-     * @param shouldRefresh - `true` re-registers the changed commands; `false` dismisses the prompt without re-registering.
+     * @param shouldRefresh - `true` re-registers the changed commands. `false` dismisses the prompt without re-registering.
      */
     refreshCommands?(shouldRefresh: boolean): void;
 }

@@ -11,7 +11,7 @@ export interface LogEntry {
     label: string;
     text: string;
     timestamp: number;
-    head: boolean; // false for continuation lines (stack frames, wrapped text)
+    head: boolean;
     frame: boolean;
 }
 
@@ -21,7 +21,7 @@ interface LogStoreEvents {
     change: [];
 }
 
-// Buffered log batches flush on this debounce so a noisy bot doesn't re-render the log view per line.
+// 30ms keeps a noisy bot from re-rendering the log view once per line
 const UPDATE_DEBOUNCE_MS = 30;
 
 // eslint-disable-next-line no-magic-numbers -- 27 is the ESC control code
@@ -64,9 +64,8 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
     }
 
     public onLog(record: LogRecord): void {
-        // Split on a lone \r too. A bare carriage return left in a row resets the terminal cursor to column 0
-        // on print and overwrites the start of the line. Then drop any other control char (keeping ESC so SGR
-        // color sequences still render) for the same corruption reason.
+        // a lone \r left in a row sends the terminal cursor to column 0 and overwrites what it printed, and
+        // every other control char corrupts the row the same way. ESC survives because SGR colors need it.
         const lines = formatBody(record).split(/\r\n|\r|\n/);
 
         for (const [index, line] of lines.entries()) {
@@ -86,12 +85,12 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
         this.scheduleUpdate();
     }
 
-    // Stays a stable reference for useSyncExternalStore. Channel filtering happens in useLogs.
+    // useSyncExternalStore needs a stable reference, so channel filtering stays in useLogs
     public getLogs(): readonly LogEntry[] {
         return this.entries;
     }
 
-    // Source channels from live entries so the toggle list never shows an empty "default" placeholder.
+    // read off live entries, else the toggle list carries an empty "default" row
     public getChannels(): readonly string[] {
         const seen = new Set<string>();
         for (const entry of this.entries) seen.add(entry.channel);
@@ -110,7 +109,7 @@ export class LogStore extends TypedEventEmitter<LogStoreEvents> implements ILogS
         this.emit('change');
     }
 
-    // Drain buffered logs immediately and yield once so Ink paints the final lines before a quit unmounts the UI.
+    // the yield gives ink one paint of the last lines before quit unmounts the ui
     public async flush(): Promise<void> {
         if (this.flushTimer) {
             clearTimeout(this.flushTimer);

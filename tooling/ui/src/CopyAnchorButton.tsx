@@ -17,10 +17,8 @@ export interface CopyAnchorButtonProps {
     className?: string;
 }
 
-// Use for the # link-copy affordance next to headings/member rows. Copies a deep-link URL with the anchor hash.
 export function CopyAnchorButton({ anchorId, label, className }: CopyAnchorButtonProps): ReactElement {
-    // Two independent windows: the icon swaps back to Hash sooner than the button's `data-copied`
-    // state, so hover/focus styling stays asserted while the glyph has already returned to idle.
+    // the longer data-copied window keeps hover/focus styling asserted after the glyph returns to idle
     const [iconCopied, markIconCopied] = useTimedToggle(ICON_FLIP_DURATION_MS);
     const [feedbackHold, markFeedbackHold] = useTimedToggle(FEEDBACK_HOLD_DURATION_MS);
 
@@ -38,9 +36,7 @@ export function CopyAnchorButton({ anchorId, label, className }: CopyAnchorButto
                     })
                     .catch(() => {});
             }
-        } catch {
-            // swallow clipboard errors
-        }
+        } catch {}
     }, [anchorId, markIconCopied, markFeedbackHold]);
 
     return (
