@@ -36,7 +36,7 @@ async function templateFiles(root: string, directory: string): Promise<string[]>
 export async function renderTemplates(templatesRoot: string, context: TemplateContext): Promise<RenderedFile[]> {
     const sources = await templateFiles(templatesRoot, templatesRoot);
 
-    return Promise.all(
+    const rendered = await Promise.all(
         sources.map(async (source) => {
             const raw = await readFile(join(templatesRoot, source), 'utf8');
 
@@ -47,4 +47,7 @@ export async function renderTemplates(templatesRoot: string, context: TemplateCo
             };
         })
     );
+
+    // a template that wraps its whole body in a conditional writes no file when that is false
+    return rendered.filter((file) => file.contents.trim() !== '');
 }

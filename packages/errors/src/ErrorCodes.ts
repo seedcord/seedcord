@@ -259,5 +259,7 @@ export enum SeedcordErrorCode {
     /** A flag carried a value its question rejects. */
     CreateInvalidAnswer = 3203,
     /** The command line did not parse. */
-    CreateBadUsage = 3204
+    CreateBadUsage = 3204,
+    /** The target path already holds something. */
+    CreateTargetNotEmpty = 3205
 }

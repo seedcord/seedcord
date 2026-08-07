@@ -29,11 +29,7 @@ export const seedcord = new Seedcord({
             path: resolve(import.meta.dirname, './commands')
         }{{#if isGateway}},
         events: {
-{{#if hasEvents}}
             path: resolve(import.meta.dirname, './events')
-{{else}}
-            path: null
-{{/if}}
         }{{/if}}
     },
     subscribers: {

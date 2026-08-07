@@ -41,8 +41,8 @@ describe('buildContext on gateway', () => {
         expect(context.partials).toEqual(['Message', 'Channel', 'Reaction']);
     });
 
-    it('writes an events directory once a capability was picked', () => {
-        expect(context.hasEvents).toBe(true);
+    it('sees no message capability behind reactions alone', () => {
+        expect(context.hasMessages).toBe(false);
     });
 
     it('leaves the public key empty, since gateway never asks for one', () => {
@@ -65,7 +65,7 @@ describe('buildContext on http', () => {
     it('carries no intents or partials', () => {
         expect(context.intents).toEqual([]);
         expect(context.partials).toEqual([]);
-        expect(context.hasEvents).toBe(false);
+        expect(context.hasMessages).toBe(false);
     });
 
     it('carries the public key through', () => {
@@ -80,8 +80,18 @@ describe('buildContext on a gateway bot that picked nothing', () => {
         expect(context.intents).toEqual(['Guilds']);
     });
 
-    it('skips the events directory', () => {
-        expect(context.hasEvents).toBe(false);
+    it('sees no message capability', () => {
+        expect(context.hasMessages).toBe(false);
+    });
+});
+
+describe('the message capabilities', () => {
+    it.each(['guild-messages', 'message-text', 'direct-messages'])('counts %s', (id) => {
+        expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(true);
+    });
+
+    it.each(['reactions', 'voice', 'polls', 'automod'])('leaves %s out', (id) => {
+        expect(buildContext({ ...GATEWAY, capabilities: [id] }, EXTRAS).hasMessages).toBe(false);
     });
 });
 

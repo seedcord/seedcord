@@ -488,6 +488,9 @@ importers:
       handlebars:
         specifier: ^4.7.9
         version: 4.7.9
+      package-manager-detector:
+        specifier: ^1.8.0
+        version: 1.8.0
       tsx:
         specifier: catalog:deps
         version: 4.23.5

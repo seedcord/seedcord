@@ -60,11 +60,41 @@ describe('renderTemplates', () => {
         expect(files.has('src/handlers/Ping.ts')).toBe(true);
     });
 
-    it('writes the same file set for both transports', async () => {
+    it('gives http every file except the events one', async () => {
         const gateway = await render(GATEWAY);
         const http = await render(HTTP);
+        const onlyOnGateway = [...gateway.keys()].filter((path) => !http.has(path));
 
-        expect([...http.keys()].sort()).toEqual([...gateway.keys()].sort());
+        expect(onlyOnGateway).toEqual(['src/events/Ready.ts']);
+    });
+});
+
+describe('the sample event handler', () => {
+    it('replies to a mention once a message capability is picked', async () => {
+        const files = await render({ ...GATEWAY, capabilities: ['guild-messages'] });
+
+        expect(files.has('src/events/Mentioned.ts')).toBe(true);
+        expect(files.has('src/events/Ready.ts')).toBe(false);
+    });
+
+    it('falls back to the boot handler for any other capability', async () => {
+        const files = await render(GATEWAY);
+
+        expect(files.has('src/events/Ready.ts')).toBe(true);
+        expect(files.has('src/events/Mentioned.ts')).toBe(false);
+    });
+
+    it('ships the boot handler even when nothing was picked', async () => {
+        const files = await render({ ...GATEWAY, capabilities: [] });
+
+        expect(files.has('src/events/Ready.ts')).toBe(true);
+    });
+
+    it('writes neither on http', async () => {
+        const files = await render(HTTP);
+
+        expect(files.has('src/events/Ready.ts')).toBe(false);
+        expect(files.has('src/events/Mentioned.ts')).toBe(false);
     });
 });
 
@@ -78,18 +108,10 @@ describe('the rendered gateway config', () => {
         expect(bot).toContain('Partials.Reaction');
     });
 
-    it('points events at the directory once a capability was picked', async () => {
-        const bot = await renderOne(GATEWAY, 'src/bot.ts');
-
-        expect(bot).toContain("'./events'");
-        expect(bot).not.toContain('path: null,');
-    });
-
-    it('leaves events null when nothing was picked', async () => {
+    it('always points events at the directory', async () => {
         const bot = await renderOne({ ...GATEWAY, capabilities: [] }, 'src/bot.ts');
 
-        expect(bot).toContain('GatewayIntentBits.Guilds');
-        expect(bot).not.toContain('./events');
+        expect(bot).toContain("'./events'");
     });
 });
 
