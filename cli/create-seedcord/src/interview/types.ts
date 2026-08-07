@@ -5,11 +5,11 @@ export interface Answers {
     // answering JavaScript still records TypeScript
     language: 'typescript';
     transport: 'gateway' | 'http';
-    // capability ids. which the intent map resolves into intents and partials
+    // capability ids the intent map resolves into intents and partials
     capabilities: string[];
     token: string;
     publicKey: string;
-    botColor: ColorName;
+    botColor: ColorName | `#${string}`;
 }
 
 interface FlagSpec<Key extends keyof Answers> {
@@ -26,5 +26,5 @@ export interface Step<Key extends keyof Answers> {
     ask: (answers: Partial<Answers>) => Promise<Answers[Key]>;
 }
 
-// indexed so a mixed list of steps assigns to one array
+// a mixed list of steps assigns to one array
 export type AnyStep = { [Key in keyof Answers]: Step<Key> }[keyof Answers];

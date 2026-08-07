@@ -7,7 +7,7 @@ export async function runFlow(steps: AnyStep[], supplied: Partial<Answers>): Pro
         if (step.skip?.(answers)) continue;
         if (answers[step.key] !== undefined) continue;
 
-        // justified: Step<Key> correlates its key with its answer type, the Record cast indexes with the runtime key
+        // justified: Step<Key> ties each key to its own answer type
         (answers as Record<keyof Answers, unknown>)[step.key] = await step.ask(answers);
     }
 
