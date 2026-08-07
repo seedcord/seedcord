@@ -78,7 +78,7 @@ Four things. Everything outside this list is a code fix.
 
 **Where an authored number came from.** Any timeout, retry count, threshold, or buffer size someone picked. The constant name says what it is. The comment says why that value and what happens at a different one.
 
-**A workaround.** A bug in a dependency, a language trap, a limit of the type system. Say what breaks without it, so the next person does not clean it up and re-break the build.
+**A workaround.** A bug in a dependency, a language trap, a limit of the type system. Say what breaks without it. The next person needs that to leave it alone.
 
 **An invariant set up somewhere else.** "Sorted by `createdAt` before this point" when the sort happens in a different file. Anything the reader would have to open another file to know.
 
@@ -170,7 +170,7 @@ Add a consequence only when a reader would misread the code without it. Usually 
 
 ```ts
 // drafted
-// zero packs to one char, so an empty block means the body was truncated
+// zero packs to one char, which means an empty block is a truncated body
 
 // cut at the connective, still works, ship this one
 // an empty block means the body was truncated

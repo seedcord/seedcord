@@ -15,7 +15,7 @@ This covers everything a human reads. A field description, a `//` comment, a com
 
 This is the rule that matters most and the one that gets broken most.
 
-An abstract phrase is shorter than the plain sentence it replaces, so any rule that rewards brevity will pull you toward abstraction. Resist it. **Cut whole ideas. Keep common words.**
+An abstract phrase is shorter than the plain sentence it replaces. Any rule that rewards brevity will pull you toward abstraction. Resist it. **Cut whole ideas. Keep common words.**
 
 A sentence improves when you drop a point the reader did not need. A sentence gets worse when you compress a point into a technical-sounding noun phrase. The second one looks like editing and is the opposite of it.
 
@@ -50,7 +50,7 @@ Those ten are examples of one move, and checking against them catches nothing. A
 
 **Did you borrow it as a picture?** A word carried in from maths, physics, war, or biology to stand for what you mean is a picture, and the reader has to unpack it to get back to the thing. Name the thing.
 
-No list will cover this, so apply the test to every phrase. The question is whether the word already meant this here before you wrote the sentence. Debounce, backoff, snowflake, gateway, and shard pass, because they are the real names of real things in this codebase. A word you reached past the domain for does not.
+No list will cover this. Apply the test to every phrase. The question is whether the word already meant this here before you wrote the sentence. Debounce, backoff, snowflake, gateway, and shard pass, because they are the real names of real things in this codebase. A word you reached past the domain for does not.
 
 ---
 
@@ -116,7 +116,7 @@ The standing swaps:
 
 ### A company is an actor
 
-Discord, Cloudflare, and a browser vendor are people and servers, so they do act. "Discord rejects a hostname it already rejected" is correct and precise. "The parser wants a trailing newline" is the banned thing. The line falls between an organization that made a choice and a function that executes one.
+Discord, Cloudflare, and a browser vendor are people and servers. They do act. "Discord rejects a hostname it already rejected" is correct and precise. "The parser wants a trailing newline" is the banned thing. The line falls between an organization that made a choice and a function that executes one.
 
 > "I have now seen programs 'trying to do things', 'wanting to do things', 'believing things to be true', 'knowing things' etc. Don't be so naive as to believe that this use of language is harmless." Dijkstra, EWD854.
 
@@ -154,7 +154,7 @@ Rule of thumb: if an adjective cannot be replaced by a measurable fact or a code
 
 Em-dash `—` and en-dash `–` are banned in prose. Use a comma, parentheses, a hyphen, or two sentences.
 
-Colon `:` and semicolon `;` are banned as a clause splice, where the mark joins two complete clauses into one sentence. A colon introducing a list, a code block, or a short label is standard, so keep it.
+Colon `:` and semicolon `;` are banned as a clause splice, where the mark joins two complete clauses into one sentence. A colon introducing a list, a code block, or a short label is standard. Keep it.
 
 Comma splices are banned. A comma cannot join two complete clauses. Every comma carries a connector after it, separates list items, or becomes a period.
 
@@ -163,7 +163,7 @@ Comma splices are banned. A comma cannot join two complete clauses. Every comma 
 **Fix a splice by rewriting it shorter, in this order.**
 
 1. **Collapse to one clause.** Most splices are one fact stretched over two. This is almost always the best result and the one to try first.
-2. **Add the connector that names the real relation** (`because`, `since`, `and`, `then`, `so`). Keeps one sentence when both halves genuinely earn their place.
+2. **Add the connector that names the real relation** (`because`, `since`, `and`, `then`). Keeps one sentence when both halves genuinely earn their place.
 3. **Two sentences.** The fallback when the halves are independent facts that both matter.
 
 Going to a period first produces two stubby sentences carrying what one short line said better.
@@ -179,17 +179,17 @@ Going to a period first produces two stubby sentences carrying what one short li
 // Bad: two facts jammed with a comma
 // the cache is keyed by file, a rename lands as a fresh entry
 // Good (2): the connector names the relation
-// the cache is keyed by file, so a rename lands as a fresh entry
+// a rename lands as a fresh entry because the cache is keyed by file
 ```
 
 **Replace a banned mark with punctuation that does the same job.** A `;` or `—` between two complete clauses is holding two thoughts apart, and a bare comma cannot do that. Use a period.
 
-**Do not default to ", so".** A semicolon often sets two related facts side by side, and ", so" claims a cause the original never made. Use it only when the second clause genuinely results from the first. Otherwise pick the connector that fits, `because` or `since` for a reason, `, and` for a neutral join, or a period when there is no relation at all.
+**A connector that claims a cause has to earn it.** Reaching for one to hold a second clause on is how a sentence grows a consequence the reader was about to read anyway. Name the reason for the first clause with `because` or `since`, join two facts with `and`, or end the sentence.
 
-- BAD, invented cause: "meaningless without a filesystem, so it throws".
-- GOOD: "it throws because it's meaningless without a filesystem".
-- BAD, stacked: "binds a source per file, so restore it after any swap so later tests see a clean default".
-- GOOD: "binds a source per file. Tests here swap it, so restore it afterward for a clean default."
+- BAD, invented cause: "it is meaningless without a filesystem and it throws".
+- GOOD: "it throws because it is meaningless without a filesystem".
+- BAD, stacked: "binds a source per file and restore it after any swap and later tests see a clean default".
+- GOOD: "binds a source per file. Tests here swap it, then restore it for a clean default."
 
 ### Contrast
 

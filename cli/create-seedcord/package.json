@@ -39,6 +39,8 @@
         "coverage": "vitest run --coverage"
     },
     "devDependencies": {
+        "@clack/prompts": "catalog:deps",
+        "@seedcord/errors": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
@@ -51,8 +53,5 @@
     "publishConfig": {
         "access": "public",
         "provenance": true
-    },
-    "dependencies": {
-        "@clack/prompts": "catalog:deps"
     }
 }
