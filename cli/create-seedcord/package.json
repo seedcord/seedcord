@@ -47,6 +47,7 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
         "discord.js": "catalog:peer",
+        "handlebars": "^4.7.9",
         "tsx": "catalog:deps",
         "typescript": "catalog:peer"
     },
