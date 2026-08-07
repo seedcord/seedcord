@@ -4,9 +4,9 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { gitPlanFrom, probeGit } from '@src/scaffold/git';
+import { gitPlanFrom, probeGit } from '@scaffold/git';
 
-import type { GitProbe } from '@src/scaffold/git';
+import type { GitProbe } from '@scaffold/git';
 
 const PRESENT: GitProbe = {
     installed: true,

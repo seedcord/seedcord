@@ -1,9 +1,9 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { runFlow } from '@src/interview/runFlow';
+import { runFlow } from '@interview/runFlow';
 
-import type { Answers, Step } from '@src/interview/types';
+import type { Answers, Step } from '@interview/types';
 
 function neverAsks<Key extends keyof Answers>(key: Key, flag: string): Step<Key> {
     return {

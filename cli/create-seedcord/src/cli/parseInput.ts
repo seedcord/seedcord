@@ -3,10 +3,10 @@ import { parseArgs } from 'node:util';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { applyFlags } from '../interview/applyFlags';
-import { STEPS } from '../interview/steps';
+import { applyFlags } from '@interview/applyFlags';
+import { STEPS } from '@interview/steps';
 
-import type { Answers } from '../interview/types';
+import type { Answers } from '@interview/types';
 
 export interface CliInput {
     supplied: Partial<Answers>;

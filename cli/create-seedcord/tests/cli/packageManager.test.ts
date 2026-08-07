@@ -2,7 +2,7 @@ import process from 'node:process';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { addCommand, runPrefix, runningAgent } from '@src/cli/packageManager';
+import { addCommand, runPrefix, runningAgent } from '@cli/packageManager';
 
 const original = process.env.npm_config_user_agent;
 

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { claimTarget } from '@src/scaffold/target';
+import { claimTarget } from '@scaffold/target';
 
 async function scratch(): Promise<string> {
     return mkdtemp(join(tmpdir(), 'create-seedcord-'));

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { directoryStep } from '@src/interview/steps/directory';
-import { JAVASCRIPT_REPLIES, languageStep, pickReply } from '@src/interview/steps/language';
-import { transportStep } from '@src/interview/steps/transport';
+import { directoryStep } from '@interview/steps/directory';
+import { JAVASCRIPT_REPLIES, languageStep, pickReply } from '@interview/steps/language';
+import { transportStep } from '@interview/steps/transport';
 
 describe('directoryStep', () => {
     it('takes the directory from its flag verbatim', () => {

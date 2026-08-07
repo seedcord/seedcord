@@ -2,7 +2,7 @@ import { log, select } from '@clack/prompts';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '../types';
+import type { Step } from '@interview/types';
 
 export const JAVASCRIPT_REPLIES = [
     'weird flex. anyway, welcome to TypeScript.',

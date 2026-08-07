@@ -1,8 +1,8 @@
 import { basename } from 'node:path';
 
-import { intentsFor, partialsFor } from '../interview/capabilities';
+import { intentsFor, partialsFor } from '@interview/capabilities';
 
-import type { Answers } from '../interview/types';
+import type { Answers } from '@interview/types';
 
 // capabilities and publicKey each belong to one transport, and runFlow leaves the other unset
 export type ScaffoldAnswers = Partial<Answers> &

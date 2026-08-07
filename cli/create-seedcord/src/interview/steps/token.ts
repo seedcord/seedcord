@@ -4,7 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '../types';
+import type { Step } from '@interview/types';
 
 const TOKEN_PARTS = 3;
 

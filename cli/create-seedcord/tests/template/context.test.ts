@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildContext } from '@src/template/context';
+import { buildContext } from '@template/context';
 
-import type { ScaffoldAnswers } from '@src/template/context';
+import type { ScaffoldAnswers } from '@template/context';
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',

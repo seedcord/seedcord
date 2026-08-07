@@ -2,11 +2,11 @@ import process from 'node:process';
 
 import { intro, isCI, isTTY, log, outro } from '@clack/prompts';
 
-import { helpText } from './cli/help';
-import { parseInput } from './cli/parseInput';
-import { reportFailure } from './cli/reportFailure';
-import { runFlow } from './interview/runFlow';
-import { STEPS } from './interview/steps';
+import { helpText } from '@cli/help';
+import { parseInput } from '@cli/parseInput';
+import { reportFailure } from '@cli/reportFailure';
+import { runFlow } from '@interview/runFlow';
+import { STEPS } from '@interview/steps';
 
 function isInteractive(): boolean {
     return Boolean(process.stdin.isTTY) && isTTY(process.stdout) && !isCI();

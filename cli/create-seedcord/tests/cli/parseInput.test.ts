@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { parseInput } from '@src/cli/parseInput';
+import { parseInput } from '@cli/parseInput';
 
 function thrownBy(run: () => unknown): unknown {
     try {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { runFlow } from '@src/interview/runFlow';
+import { runFlow } from '@interview/runFlow';
 
-import type { Answers, Step } from '@src/interview/types';
+import type { Answers, Step } from '@interview/types';
 
 function stubStep<Key extends keyof Answers>(key: Key, value: Answers[Key], asked: (keyof Answers)[]): Step<Key> {
     return {
