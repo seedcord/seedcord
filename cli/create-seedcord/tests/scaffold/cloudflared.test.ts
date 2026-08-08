@@ -1,3 +1,7 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { installHint, missingNotice, probeCloudflared } from '@scaffold/cloudflared';
@@ -31,5 +35,17 @@ describe('probeCloudflared', () => {
 
     it('reports true for one that does', async () => {
         await expect(probeCloudflared('node')).resolves.toBe(true);
+    });
+
+    it('gives up on a binary that never answers', async () => {
+        const directory = await mkdtemp(join(tmpdir(), 'create-seedcord-probe-'));
+        const hangs = join(directory, 'hangs');
+        await writeFile(hangs, '#!/bin/sh\nsleep 30\n', { mode: 0o755 });
+
+        try {
+            await expect(probeCloudflared(hangs, 200)).resolves.toBe(false);
+        } finally {
+            await rm(directory, { recursive: true, force: true });
+        }
     });
 });
