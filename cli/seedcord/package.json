@@ -1,7 +1,7 @@
 {
     "name": "seedcord",
     "type": "module",
-    "version": "0.17.2",
+    "version": "0.17.3",
     "engines": {
         "node": ">=24.11"
     },
