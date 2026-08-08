@@ -1,7 +1,7 @@
 :root {
     /* brand accents */
-    --flesh: var(--accent-a);
-    --rind: var(--accent-b);
+    --flesh: var(--flesh);
+    --rind: var(--rind);
     --vine-deep: #4d7d33;
     --flesh-deep: #c8341f;
 

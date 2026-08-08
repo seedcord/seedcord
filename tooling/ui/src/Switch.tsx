@@ -11,7 +11,7 @@ import type { ReactElement, ReactNode } from 'react';
 const switchRootBaseClassName = cn(
     tw`relative inline-flex shrink-0 cursor-pointer items-center rounded-full border border-(--border) p-0.5`,
     tw`bg-(--accent-r) transition-colors duration-150 ease-out`,
-    tw`data-[state=checked]:border-(--accent-b) data-[state=checked]:bg-(--accent-b)`,
+    tw`data-[state=checked]:border-(--rind) data-[state=checked]:bg-(--rind)`,
     tw`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-outline-b)`,
     tw`disabled:cursor-not-allowed disabled:opacity-45`
 );

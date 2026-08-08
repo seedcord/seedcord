@@ -100,7 +100,7 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
                 void copy();
             }}
             className={cn(
-                'font-mono-code relative cursor-pointer rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--cream)',
+                'font-mono-code relative cursor-pointer rounded-sm bg-(--seed-dark) px-2 py-1 text-sm text-(--pith)',
                 pressable,
                 'hover:bg-(--flesh-deep)',
                 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--rind)',
@@ -115,7 +115,7 @@ export function CopyCommand({ command, className }: CopyCommandProps): ReactNode
                         copied ? 'opacity-0 blur-[2px] motion-safe:-translate-y-1' : 'opacity-100'
                     )}
                 >
-                    <span className={cn('text-(--cream)/50 select-none')}>$ </span>
+                    <span className={cn('text-(--pith)/50 select-none')}>$ </span>
                     {command}
                 </span>
                 <span

@@ -150,7 +150,7 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
     };
 
     return (
-        <div hidden={!open} className={cn('rule blk-sm pointer-events-auto overflow-hidden rounded-sm bg-(--cream)')}>
+        <div hidden={!open} className={cn('rule blk-sm pointer-events-auto overflow-hidden rounded-sm bg-(--pith)')}>
             {matches.length > 0 && (
                 <CommandOptions matches={matches} selected={selected} onHover={onSelect} onRun={run} />
             )}
@@ -173,15 +173,13 @@ function Palette({ query, selected, onSelect, onChange, onRun }: PaletteProps): 
 function ReplyBubble({ text }: { text: string }): ReactNode {
     return (
         <div
-            className={cn(
-                'rule blk-sm pointer-events-auto flex items-center gap-3 rounded-sm bg-(--cream) px-3 py-2.5'
-            )}
+            className={cn('rule blk-sm pointer-events-auto flex items-center gap-3 rounded-sm bg-(--pith) px-3 py-2.5')}
         >
             <Materwelon className={cn('drop-shadow-mark size-8 shrink-0')} />
             <div>
                 <div className={cn('flex items-center gap-1.5')}>
                     <span className={cn('font-display text-sm font-semibold text-(--seed-dark)')}>seedcord</span>
-                    <span className={cn('rounded-sm bg-(--vine-deep) px-1 text-[10px] font-semibold text-(--cream)')}>
+                    <span className={cn('rounded-sm bg-(--vine-deep) px-1 text-[10px] font-semibold text-(--pith)')}>
                         APP
                     </span>
                 </div>

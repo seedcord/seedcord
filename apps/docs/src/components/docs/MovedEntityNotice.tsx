@@ -21,7 +21,7 @@ export function MovedEntityNotice({ packageLabel }: { packageLabel: string }): R
     return (
         <div className={cn('flex justify-center')}>
             <Card variant="flat" size="none" role="status" className={cn(noticeClassName)}>
-                <span className={cn('shrink-0 text-(--accent-b)')}>
+                <span className={cn('shrink-0 text-(--rind)')}>
                     <Icon icon={Signpost} size={16} />
                 </span>
                 <p className={cn('text-subtle min-w-0 text-sm')}>

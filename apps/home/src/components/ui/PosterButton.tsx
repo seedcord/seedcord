@@ -9,11 +9,11 @@ import type { ReactNode } from 'react';
 const slide = cn('motion-safe:translate-1', 'motion-safe:hover:translate-0.5', 'motion-safe:active:translate-1.5');
 
 const VARIANTS = {
-    solid: { socket: 'bg-(--seed-dark)', button: 'rule bg-(--flesh-deep) text-(--cream)' },
-    outline: { socket: 'bg-(--seed-dark)', button: 'rule bg-(--cream) text-(--seed-dark)' },
-    solidDark: { socket: 'bg-(--rind)', button: 'rule-cream bg-(--flesh-deep) text-(--cream)' },
-    outlineDark: { socket: 'bg-(--rind)', button: 'rule-cream bg-(--cream) text-(--seed-dark)' },
-    ink: { socket: null, button: 'bg-(--seed-dark) text-(--cream) hover:bg-(--flesh-deep)' }
+    solid: { socket: 'bg-(--seed-dark)', button: 'rule bg-(--flesh-deep) text-(--pith)' },
+    outline: { socket: 'bg-(--seed-dark)', button: 'rule bg-(--pith) text-(--seed-dark)' },
+    solidDark: { socket: 'bg-(--rind)', button: 'rule-pith bg-(--flesh-deep) text-(--pith)' },
+    outlineDark: { socket: 'bg-(--rind)', button: 'rule-pith bg-(--pith) text-(--seed-dark)' },
+    ink: { socket: null, button: 'bg-(--seed-dark) text-(--pith) hover:bg-(--flesh-deep)' }
 } as const;
 
 type PosterButtonVariant = keyof typeof VARIANTS;

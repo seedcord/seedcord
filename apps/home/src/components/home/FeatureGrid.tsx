@@ -137,7 +137,7 @@ function pad(count: number): string {
 
 export function FeatureGrid(): ReactNode {
     return (
-        <Section ground="cream">
+        <Section ground="pith">
             <h2
                 className={cn(
                     'font-display text-[clamp(2.2rem,4.6vw,3.6rem)] leading-[0.95] font-semibold tracking-tight'
@@ -146,7 +146,7 @@ export function FeatureGrid(): ReactNode {
                 It all comes <span className={cn('text-(--flesh-deep)')}>built in.</span>
             </h2>
 
-            <div className={cn('rule blk mt-10 rounded-sm bg-(--cream)')}>
+            <div className={cn('rule blk mt-10 rounded-sm bg-(--pith)')}>
                 {GROUPS.map((group, groupIndex) => (
                     <div
                         key={group.area}

@@ -21,11 +21,11 @@
     .rule {
         border: 3px solid var(--seed-dark);
     }
-    .rule-cream {
-        border: 3px solid var(--cream);
+    .rule-pith {
+        border: 3px solid var(--pith);
     }
-    .blk-cream {
-        box-shadow: 10px 10px 0 0 var(--cream);
+    .blk-pith {
+        box-shadow: 10px 10px 0 0 var(--pith);
     }
     .blk-rind {
         box-shadow: 10px 10px 0 0 var(--rind);

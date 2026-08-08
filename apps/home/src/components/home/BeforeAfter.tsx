@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 
 export function BeforeAfter(): ReactNode {
     return (
-        <Section ground="cream">
+        <Section ground="pith">
             <div className={cn('mb-10 flex flex-wrap items-end justify-between gap-4')}>
                 <div>
                     <h2
@@ -23,9 +23,9 @@ export function BeforeAfter(): ReactNode {
                     </h2>
                 </div>
                 <div className={cn('font-mono-code flex items-center gap-3 text-sm font-semibold')}>
-                    <span className={cn('rounded-sm bg-(--seed-dark) px-3 py-2 text-(--cream)')}>by hand</span>
+                    <span className={cn('rounded-sm bg-(--seed-dark) px-3 py-2 text-(--pith)')}>by hand</span>
                     <Icon icon={ArrowRight} size={20} className={cn('text-(--seed-dark)')} />
-                    <span className={cn('blk-sm rounded-sm bg-(--flesh-deep) px-3 py-2 text-(--cream)')}>
+                    <span className={cn('blk-sm rounded-sm bg-(--flesh-deep) px-3 py-2 text-(--pith)')}>
                         seedcord · one handler
                     </span>
                 </div>

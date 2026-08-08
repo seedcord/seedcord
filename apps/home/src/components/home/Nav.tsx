@@ -16,7 +16,7 @@ const LINKS = [
 
 export function Nav(): ReactNode {
     return (
-        <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--cream)')}>
+        <header className={cn('sticky top-0 z-50 border-b-[3px] border-(--seed-dark) bg-(--pith)')}>
             <div className={cn('mx-auto flex h-16 max-w-7xl items-center justify-between px-5')}>
                 <Link href="/" className={cn('flex items-center gap-3')}>
                     <Materwelon className={cn('drop-shadow-mark size-9')} />
@@ -25,7 +25,7 @@ export function Nav(): ReactNode {
                     </span>
                     <span
                         className={cn(
-                            'font-mono-code ml-1 rounded-sm bg-(--vine-deep) px-1.5 py-0.5 text-[11px] font-semibold text-(--cream)'
+                            'font-mono-code ml-1 rounded-sm bg-(--vine-deep) px-1.5 py-0.5 text-[11px] font-semibold text-(--pith)'
                         )}
                     >
                         v1.0
@@ -40,7 +40,7 @@ export function Nav(): ReactNode {
                                 target="_blank"
                                 rel="noreferrer"
                                 className={cn(
-                                    'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) hover:bg-(--seed-dark) hover:text-(--cream)',
+                                    'font-mono-code rounded-sm px-3 py-1.5 text-sm font-medium text-(--seed-dark) hover:bg-(--seed-dark) hover:text-(--pith)',
                                     pressable
                                 )}
                             >

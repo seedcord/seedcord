@@ -14,7 +14,7 @@ const FEEDBACK_DURATION_MS = 2000;
 export function ClearHistoryRow(): ReactElement {
     const [cleared, markCleared] = useTimedToggle(FEEDBACK_DURATION_MS);
 
-    // blurs after clearing so the brand-red focus ring (`--accent-a`) doesn't linger through the feedback window
+    // blurs after clearing so the brand-red focus ring (`--flesh`) doesn't linger through the feedback window
     const handleClear = (event: MouseEvent<HTMLButtonElement>): void => {
         clearDocsHistory();
         markCleared();
@@ -29,7 +29,7 @@ export function ClearHistoryRow(): ReactElement {
                     idleIcon={Trash2}
                     activeIcon={Check}
                     size={16}
-                    activeClassName={tw`text-(--accent-b)`}
+                    activeClassName={tw`text-(--rind)`}
                 />
                 <span className={cn('sr-only')} aria-live="polite">
                     {cleared ? 'History cleared' : ''}

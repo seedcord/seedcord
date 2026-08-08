@@ -5,7 +5,7 @@
 
 // hardcoded from tokens.css because Satori can't read CSS variables
 export const OG = {
-    cream: '#f8f6e8',
+    pith: '#f8f6e8',
     seedDark: '#2d3328',
     flesh: '#f04e36',
     fleshDeep: '#c8341f',

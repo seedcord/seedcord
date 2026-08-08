@@ -142,7 +142,7 @@ function RootLayout({ children }: RootLayoutProps): ReactNode {
                                 <a
                                     href="#main-content"
                                     className={cn(
-                                        'fixed top-4 left-6 z-60 -translate-y-20 transform rounded-full bg-(--accent-b) px-4 py-2 text-sm font-semibold text-black transition focus-visible:translate-y-0'
+                                        'fixed top-4 left-6 z-60 -translate-y-20 transform rounded-full bg-(--rind) px-4 py-2 text-sm font-semibold text-black transition focus-visible:translate-y-0'
                                     )}
                                 >
                                     Skip to content

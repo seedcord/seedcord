@@ -5,15 +5,15 @@
     --color-base-slate: #2d3328;
     --color-surface: rgba(0, 0, 0, 0.02);
 
-    /* canonical brand cream, stays cream in both themes unlike --color-bg which flips dark */
-    --cream: #f8f6e8;
+    /* the brand pith. both themes hold this value while --color-bg flips dark */
+    --pith: #f8f6e8;
     /* canonical brand ink (watermelon seeds + the offset mark shadow), fixed in both themes */
     --seed-dark: #2d3328;
 
     /* mater red */
-    --accent-a: #f04e36;
+    --flesh: #f04e36;
     /* welon green */
-    --accent-b: #6fab49;
+    --rind: #6fab49;
     /* resource accent */
     --accent-r: #8b90a7;
     /* switch thumb, kept constant in both themes so it stays light on the gray off-track and green on-track */
@@ -54,11 +54,11 @@
     --surface-moderate: color-mix(in oklab, var(--color-surface) 92%, transparent);
 
     /* Accent Hovers */
-    --accent-a-hover: color-mix(in oklab, var(--accent-a) 88%, black);
-    --accent-b-hover: color-mix(in oklab, var(--accent-b) 92%, black 8%);
+    --flesh-hover: color-mix(in oklab, var(--flesh) 88%, black);
+    --rind-hover: color-mix(in oklab, var(--rind) 92%, black 8%);
 
     /* Accent transparency tiers (for hover/active subtle tints) */
-    --accent-a-transparent-subtle: color-mix(in oklab, var(--accent-a) 8%, transparent);
+    --flesh-transparent-subtle: color-mix(in oklab, var(--flesh) 8%, transparent);
 
     /* Text Mixes */
     --text-muted: color-mix(in oklab, var(--color-text) 70%, transparent);
@@ -66,7 +66,7 @@
     --text-faint: color-mix(in oklab, var(--color-text) 28%, transparent);
 
     /* Focus ring (primitive focus-visible default) */
-    --focus-outline-b: color-mix(in oklab, var(--accent-b) 78%, transparent);
+    --focus-outline-b: color-mix(in oklab, var(--rind) 78%, transparent);
 
     /* Popover/Tooltip surface — slightly tinted toward dark for contrast at any theme */
     --bg-popover: color-mix(in oklab, var(--bg) 98%, var(--color-base-dark) 2%);
@@ -84,19 +84,19 @@
         0 2px 6px color-mix(in oklab, var(--color-text) 4%, transparent);
 
     /* Badge tones */
-    --badge-package-border: color-mix(in oklab, var(--accent-b) 38%, var(--border));
-    --badge-package-bg: color-mix(in oklab, var(--accent-b) 16%, var(--surface));
-    --badge-package-text: color-mix(in oklab, var(--text) 88%, var(--accent-b) 12%);
-    --badge-page-border: color-mix(in oklab, var(--accent-a) 34%, var(--border));
-    --badge-page-bg: color-mix(in oklab, var(--accent-a) 14%, var(--surface));
-    --badge-page-text: color-mix(in oklab, var(--text) 90%, var(--accent-a) 10%);
+    --badge-package-border: color-mix(in oklab, var(--rind) 38%, var(--border));
+    --badge-package-bg: color-mix(in oklab, var(--rind) 16%, var(--surface));
+    --badge-package-text: color-mix(in oklab, var(--text) 88%, var(--rind) 12%);
+    --badge-page-border: color-mix(in oklab, var(--flesh) 34%, var(--border));
+    --badge-page-bg: color-mix(in oklab, var(--flesh) 14%, var(--surface));
+    --badge-page-text: color-mix(in oklab, var(--text) 90%, var(--flesh) 10%);
     --badge-resource-border: color-mix(in oklab, var(--accent-r) 46%, var(--border));
     --badge-resource-bg: color-mix(in oklab, var(--accent-r) 18%, var(--surface));
     --badge-resource-text: color-mix(in oklab, var(--text) 88%, var(--accent-r) 12%);
 
     /* SegmentedControl active tints */
-    --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--accent-b) 8%);
-    --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--accent-b) 15%);
+    --text-accent-b-faint: color-mix(in oklab, var(--color-text) 92%, var(--rind) 8%);
+    --surface-accent-b-moderate: color-mix(in oklab, var(--surface) 85%, var(--rind) 15%);
 }
 
 @layer base {

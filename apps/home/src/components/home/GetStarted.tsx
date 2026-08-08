@@ -22,7 +22,7 @@ export function GetStarted(): ReactNode {
                         <br />
                         to <span className={cn('text-(--flesh)')}>hot reload</span>.
                     </h2>
-                    <p className={cn('mt-6 max-w-md text-lg font-medium text-(--cream)/80')}>
+                    <p className={cn('mt-6 max-w-md text-lg font-medium text-(--pith)/80')}>
                         Scaffold a typed bot, open it, and run it. Routing, registration and the option types are wired
                         for you, and hot reload keeps the gateway alive.
                     </p>
@@ -43,7 +43,7 @@ export function GetStarted(): ReactNode {
                         </PosterButton>
                     </div>
                 </div>
-                <CodeCard code={startTerminal} filename="terminal" lang="bash" className={cn('rule-cream blk-cream')} />
+                <CodeCard code={startTerminal} filename="terminal" lang="bash" className={cn('rule-pith blk-pith')} />
             </div>
         </Section>
     );

@@ -4,7 +4,7 @@ export interface MaterwelonFills {
     flesh: string;
     seeds: string;
     rind: string;
-    cream: string;
+    pith: string;
 }
 
 interface MaterwelonGlyphProps {
@@ -65,7 +65,7 @@ export function MaterwelonGlyph({ fills, width, className, style }: MaterwelonGl
                 cx="409.32"
                 cy="373.32"
                 r="104.76"
-                fill={fills.cream}
+                fill={fills.pith}
                 transform="translate(-144.09 398.78) rotate(-45)"
             />
         </svg>

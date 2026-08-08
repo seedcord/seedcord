@@ -14,7 +14,7 @@ export default function NotFound(): ReactNode {
             <main
                 id="main-content"
                 className={cn(
-                    'flex min-h-[70vh] flex-col items-center justify-center gap-6 bg-(--cream) px-5 py-20 text-center'
+                    'flex min-h-[70vh] flex-col items-center justify-center gap-6 bg-(--pith) px-5 py-20 text-center'
                 )}
             >
                 <Materwelon className={cn('drop-shadow-mark size-20')} />

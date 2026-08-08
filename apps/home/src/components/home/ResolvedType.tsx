@@ -11,7 +11,7 @@ export function ResolvedType(): ReactNode {
     return (
         <Section ground="rind" className={cn('grid items-center gap-8 md:grid-cols-[1fr_28rem]')}>
             <div>
-                <p className={cn('font-mono-code mb-2 text-sm font-semibold text-(--cream)')}>the resolved type</p>
+                <p className={cn('font-mono-code mb-2 text-sm font-semibold text-(--pith)')}>the resolved type</p>
                 <p
                     className={cn(
                         'font-display text-[clamp(1.6rem,3.4vw,2.6rem)] leading-tight font-semibold text-balance'
@@ -25,7 +25,7 @@ export function ResolvedType(): ReactNode {
                     . You never typed that union.
                 </p>
             </div>
-            <CodeCard code={resolvedCheck} filename="proof.ts" className={cn('rule-cream blk-cream w-full')} />
+            <CodeCard code={resolvedCheck} filename="proof.ts" className={cn('rule-pith blk-pith w-full')} />
         </Section>
     );
 }

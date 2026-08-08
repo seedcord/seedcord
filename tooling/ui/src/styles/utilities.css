@@ -83,7 +83,7 @@
         background-clip: content-box;
     }
 
-    /* hard offset ink shadow for the brand mark. mainly for the cream ground, fades to nothing on the dark one */
+    /* hard offset ink shadow for the brand mark. mainly for the pith ground, fades to nothing on the dark one */
     .drop-shadow-mark {
         filter: drop-shadow(2px 2px 0 color-mix(in srgb, var(--seed-dark) 85%, transparent));
     }

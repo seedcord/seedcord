@@ -9,7 +9,7 @@ function GlyphShadow({ width }: { width: number }): ReactElement {
     return (
         <MaterwelonGlyph
             width={width}
-            fills={{ flesh: ink, seeds: ink, rind: ink, cream: ink }}
+            fills={{ flesh: ink, seeds: ink, rind: ink, pith: ink }}
             style={{ opacity: 0.85 }}
         />
     );
@@ -25,7 +25,7 @@ function Mark(): ReactElement {
             </div>
             <MaterwelonGlyph
                 width={width}
-                fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, cream: OG.cream }}
+                fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, pith: OG.pith }}
             />
         </div>
     );
@@ -89,7 +89,7 @@ function Footer(): ReactElement {
                     fontFamily: 'JetBrains Mono',
                     fontSize: 23,
                     backgroundColor: OG.seedDark,
-                    color: OG.cream,
+                    color: OG.pith,
                     padding: '13px 22px',
                     borderRadius: 4
                 }}
@@ -111,7 +111,7 @@ export function OgCard(): ReactElement {
                 display: 'flex',
                 width: OG_SIZE.width,
                 height: OG_SIZE.height,
-                backgroundColor: OG.cream
+                backgroundColor: OG.pith
             }}
         >
             <div
@@ -135,7 +135,7 @@ export function OgCard(): ReactElement {
                     height: 534,
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: OG.cream,
+                    backgroundColor: OG.pith,
                     border: `3px solid ${OG.seedDark}`,
                     borderRadius: 4
                 }}

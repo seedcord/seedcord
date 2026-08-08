@@ -46,7 +46,7 @@ export function CopyButton({
             }}
             className={cn(
                 'text-subtle size-9 rounded-md hover:text-(--text)',
-                copied ? 'text-(--accent-a)' : null,
+                copied ? 'text-(--flesh)' : null,
                 className
             )}
         >

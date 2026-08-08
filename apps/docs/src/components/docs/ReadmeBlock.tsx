@@ -10,7 +10,7 @@ const readmeProseClassName = cn(
     tw`[&_h4]:mt-4 [&_h4]:mb-2 [&_h4]:text-base [&_h4]:font-semibold [&_h4]:text-(--text)`,
     tw`[&_p]:my-3 [&_p]:leading-relaxed`,
     tw`[&_strong]:font-semibold [&_strong]:text-(--text)`,
-    tw`[&_a]:text-(--accent-b) [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:opacity-80`,
+    tw`[&_a]:text-(--rind) [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:opacity-80`,
     tw`[&_ul]:my-3 [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-6`,
     tw`[&_ol]:my-3 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-6`,
     tw`[&_li]:leading-relaxed`,

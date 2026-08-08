@@ -17,8 +17,8 @@ const dropdownTriggerBaseClassName = cn(
 );
 
 const dropdownTriggerVariantClasses = {
-    default: tw`w-full justify-between gap-2 rounded-md border border-(--border) bg-(--bg-popover) text-(--text) hover:border-(--border-accent-b-subtle) aria-invalid:border-(--accent-a) aria-invalid:focus-visible:outline-(--accent-a) data-[state=open]:border-(--accent-b) data-[state=open]:bg-(--bg-accent-b-moderate)`,
-    ghost: tw`gap-1 rounded-md px-1 py-0.5 text-(--text-muted) hover:text-(--text) data-[state=open]:text-(--accent-b)`
+    default: tw`w-full justify-between gap-2 rounded-md border border-(--border) bg-(--bg-popover) text-(--text) hover:border-(--border-accent-b-subtle) aria-invalid:border-(--flesh) aria-invalid:focus-visible:outline-(--flesh) data-[state=open]:border-(--rind) data-[state=open]:bg-(--bg-accent-b-moderate)`,
+    ghost: tw`gap-1 rounded-md px-1 py-0.5 text-(--text-muted) hover:text-(--text) data-[state=open]:text-(--rind)`
 } as const;
 
 export type DropdownVariant = keyof typeof dropdownTriggerVariantClasses;
@@ -110,7 +110,7 @@ function DropdownListbox({ listboxId, groups, value, onSelect }: DropdownListbox
                                     <span className={cn('flex shrink-0 items-center gap-1.5')}>
                                         {opt.trailing}
                                         {isSelected ? (
-                                            <Check size={16} aria-hidden className={cn('text-(--accent-b)')} />
+                                            <Check size={16} aria-hidden className={cn('text-(--rind)')} />
                                         ) : null}
                                     </span>
                                 </button>

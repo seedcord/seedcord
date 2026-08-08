@@ -27,7 +27,7 @@ export function Codec(): ReactNode {
                     <br />
                     typed schema.
                 </h2>
-                <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--cream)')}>
+                <p className={cn('mt-6 max-w-md text-lg/snug font-medium text-(--pith)')}>
                     Discord limits a customId to 100 characters. The codec packs your fields so more state fits than a
                     joined string would, then decodes them back to exact, typed values.
                 </p>
@@ -36,7 +36,7 @@ export function Codec(): ReactNode {
                         <span
                             key={chip.label}
                             className={cn(
-                                'rule-cream font-mono-code flex items-center gap-2 rounded-sm bg-(--seed-dark)/30 px-3 py-1.5 text-xs font-semibold'
+                                'rule-pith font-mono-code flex items-center gap-2 rounded-sm bg-(--seed-dark)/30 px-3 py-1.5 text-xs font-semibold'
                             )}
                         >
                             <Icon icon={chip.icon} size={14} className={cn('shrink-0')} />
@@ -50,13 +50,13 @@ export function Codec(): ReactNode {
                     code={codecComponent}
                     filename="components/role-picker.ts"
                     note="component"
-                    className={cn('rule-cream blk-cream')}
+                    className={cn('rule-pith blk-pith')}
                 />
                 <CodeCard
                     code={codecHandler}
                     filename="handlers/role-picker.ts"
                     note="select handler"
-                    className={cn('rule-cream blk-cream')}
+                    className={cn('rule-pith blk-pith')}
                 />
             </div>
         </Section>

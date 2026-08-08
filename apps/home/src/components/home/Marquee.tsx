@@ -20,7 +20,7 @@ function Track({ items }: { items: readonly string[] }): ReactNode {
 
 export function FeatureMarquee({ items }: { items: readonly string[] }): ReactNode {
     return (
-        <div className={cn('overflow-hidden bg-(--seed-dark) text-(--cream)')}>
+        <div className={cn('overflow-hidden bg-(--seed-dark) text-(--pith)')}>
             <div className={cn('marquee-anim font-mono-code flex w-max py-2.5 text-sm font-semibold')}>
                 <Track items={items} />
                 <span aria-hidden className={cn('flex')}>

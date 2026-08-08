@@ -10,10 +10,10 @@ const homeTokens = readFileSync(join(import.meta.dirname, '../../../apps/home/sr
 
 describe('OG palette mirrors token files', () => {
     it.each([
-        ['--cream', OG.cream],
+        ['--pith', OG.pith],
         ['--seed-dark', OG.seedDark],
-        ['--accent-a', OG.flesh],
-        ['--accent-b', OG.rind]
+        ['--flesh', OG.flesh],
+        ['--rind', OG.rind]
     ] as const)('%s matches the shared UI token', (token, hex) => {
         expect(uiTokens).toContain(`${token}: ${hex};`);
     });

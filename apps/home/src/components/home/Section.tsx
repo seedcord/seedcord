@@ -2,13 +2,13 @@ import { cn, tw } from '@seedcord/ui';
 
 import type { ReactNode } from 'react';
 
-export type Ground = 'cream' | 'rind' | 'flesh' | 'ink';
+export type Ground = 'pith' | 'rind' | 'flesh' | 'ink';
 
 const GROUND: Record<Ground, string> = {
-    cream: tw`bg-(--cream) text-(--seed-dark)`,
-    rind: tw`bg-(--vine-deep) text-(--cream)`,
-    flesh: tw`bg-(--flesh-deep) text-(--cream)`,
-    ink: tw`bg-(--seed-dark) text-(--cream)`
+    pith: tw`bg-(--pith) text-(--seed-dark)`,
+    rind: tw`bg-(--vine-deep) text-(--pith)`,
+    flesh: tw`bg-(--flesh-deep) text-(--pith)`,
+    ink: tw`bg-(--seed-dark) text-(--pith)`
 };
 
 export function Section({

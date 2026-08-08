@@ -62,7 +62,7 @@ function GithubVariants(): ReactElement {
                 </div>
             ))}
             <div className={cn('flex flex-col items-center gap-2')}>
-                <GithubIcon size={24} className={cn('text-(--accent-a)')} />
+                <GithubIcon size={24} className={cn('text-(--flesh)')} />
                 <span className={cn('text-subtle text-xs')}>direct, accent-a</span>
             </div>
         </div>

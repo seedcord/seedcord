@@ -30,7 +30,7 @@ const RESULT_TONE: Partial<Record<SearchResultKind, EntityTone>> = {
     enumMember: 'enum'
 };
 
-const ACCENT_ACTIVE = tw`data-[active=true]:border-(--accent-b)/38 data-[active=true]:bg-(--accent-b)/16`;
+const ACCENT_ACTIVE = tw`data-[active=true]:border-(--rind)/38 data-[active=true]:bg-(--rind)/16`;
 
 const NON_ENTITY_BADGES: Record<NonEntityResultKind, string> = {
     package: tw`border-(--badge-package-border) bg-(--badge-package-bg) text-(--badge-package-text)`,

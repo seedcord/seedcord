@@ -133,7 +133,7 @@ function DevIndex(): ReactElement {
                 <ul className={cn('space-y-1 text-sm')}>
                     {PRIMITIVES.map(({ href, label, description }) => (
                         <li key={href}>
-                            <Link href={href} className={cn('text-(--text) hover:text-(--accent-a)')}>
+                            <Link href={href} className={cn('text-(--text) hover:text-(--flesh)')}>
                                 {label}
                             </Link>
                             <span className={cn('text-subtle')}>: {description}</span>
@@ -146,7 +146,7 @@ function DevIndex(): ReactElement {
                 <ul className={cn('space-y-1 text-sm')}>
                     {DOCS_BEHAVIORS.map(({ href, label, description }) => (
                         <li key={href}>
-                            <Link href={href} className={cn('text-(--text) hover:text-(--accent-a)')}>
+                            <Link href={href} className={cn('text-(--text) hover:text-(--flesh)')}>
                                 {label}
                             </Link>
                             <span className={cn('text-subtle')}>: {description}</span>

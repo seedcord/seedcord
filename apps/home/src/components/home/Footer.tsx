@@ -34,7 +34,7 @@ const COLUMNS = [
 
 export function Footer(): ReactNode {
     return (
-        <footer className={cn('border-t-[3px] border-(--seed-dark) bg-(--cream)')}>
+        <footer className={cn('border-t-[3px] border-(--seed-dark) bg-(--pith)')}>
             <div className={cn('mx-auto max-w-7xl px-5 py-14')}>
                 <div className={cn('grid gap-10 lg:grid-cols-[1.6fr_1fr_1fr_1fr]')}>
                     <div className={cn('flex flex-col gap-4')}>

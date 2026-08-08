@@ -33,13 +33,13 @@ function Mark({ width }: { width: number }): ReactElement {
             >
                 <MaterwelonGlyph
                     width={width}
-                    fills={{ flesh: ink, seeds: ink, rind: ink, cream: ink }}
+                    fills={{ flesh: ink, seeds: ink, rind: ink, pith: ink }}
                     style={{ opacity: 0.85 }}
                 />
             </div>
             <MaterwelonGlyph
                 width={width}
-                fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, cream: OG.cream }}
+                fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, pith: OG.pith }}
             />
         </div>
     );
@@ -55,7 +55,7 @@ const badgeBase: CSSProperties = {
 };
 
 function Pill({ label, accent }: { label: string; accent: string }): ReactElement {
-    return <div style={{ ...badgeBase, color: OG.cream, backgroundColor: accent, padding: '6px 15px' }}>{label}</div>;
+    return <div style={{ ...badgeBase, color: OG.pith, backgroundColor: accent, padding: '6px 15px' }}>{label}</div>;
 }
 
 function Badge({ label }: { label: string }): ReactElement {
@@ -161,7 +161,7 @@ export function DocOgCard(props: DocOgCardProps): ReactElement {
                 display: 'flex',
                 width: OG_SIZE.width,
                 height: OG_SIZE.height,
-                backgroundColor: OG.cream
+                backgroundColor: OG.pith
             }}
         >
             <div
@@ -185,7 +185,7 @@ export function DocOgCard(props: DocOgCardProps): ReactElement {
                     height: PANEL_H,
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: OG.cream,
+                    backgroundColor: OG.pith,
                     border: `3px solid ${OG.seedDark}`,
                     borderRadius: 4
                 }}

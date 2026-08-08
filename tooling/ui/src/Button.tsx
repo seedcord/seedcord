@@ -20,10 +20,10 @@ const buttonBaseClassName = cn(
 );
 
 const buttonVariantClasses = {
-    primary: tw`shadow-soft bg-(--accent-a) text-white hover:bg-(--accent-a-hover)`,
-    secondary: tw`shadow-soft bg-(--accent-b) text-black hover:bg-(--accent-b-hover)`,
+    primary: tw`shadow-soft bg-(--flesh) text-white hover:bg-(--flesh-hover)`,
+    secondary: tw`shadow-soft bg-(--rind) text-black hover:bg-(--rind-hover)`,
     outline: tw`border-(--border) bg-transparent text-(--text) hover:border-(--border-accent-a-subtle) hover:bg-(--surface-subtle)`,
-    ghost: tw`bg-transparent text-(--text) hover:bg-(--accent-a-transparent-subtle)`
+    ghost: tw`bg-transparent text-(--text) hover:bg-(--flesh-transparent-subtle)`
 } as const;
 
 export type ButtonVariant = keyof typeof buttonVariantClasses;

@@ -16,7 +16,7 @@ const BULLETS = [
 
 export function TypedDx(): ReactNode {
     return (
-        <Section ground="cream">
+        <Section ground="pith">
             <div className={cn('grid items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]')}>
                 <div className={cn('min-w-0')}>
                     <h2

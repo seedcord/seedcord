@@ -4,10 +4,10 @@ import { MaterwelonGlyph } from './MaterwelonGlyph';
 import type { ReactElement } from 'react';
 
 const FILLS = {
-    flesh: 'var(--accent-a)',
+    flesh: 'var(--flesh)',
     seeds: 'var(--seed-dark)',
-    rind: 'var(--accent-b)',
-    cream: 'var(--cream)'
+    rind: 'var(--rind)',
+    pith: 'var(--pith)'
 } as const;
 
 export function Materwelon({ className }: { className?: string }): ReactElement {
