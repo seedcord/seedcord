@@ -15,7 +15,6 @@ Scaffold a new seedcord bot project.
 pnpm create seedcord my-bot
 npm create seedcord my-bot
 yarn create seedcord my-bot
-bun create seedcord my-bot // currently doesn't work because bun doesn't support legacy decorators
 ```
 
 It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, and an accent color. Then it writes the project, installs, formats, generates your command types, and makes the first commit.
