@@ -2,7 +2,7 @@ import process from 'node:process';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { addCommand, runPrefix, runningAgent } from '@cli/packageManager';
+import { addCommand, execCommand, runPrefix, runningAgent } from '@cli/packageManager';
 
 const original = process.env.npm_config_user_agent;
 
@@ -54,5 +54,17 @@ describe('addCommand', () => {
 
     it('keeps every package in the order it was given', () => {
         expect(addCommand('pnpm', ['a', 'b', 'c'], false).args).toEqual(['add', 'a', 'b', 'c']);
+    });
+});
+
+describe('execCommand', () => {
+    it('spells running a local binary the way each manager does', () => {
+        expect(execCommand('pnpm', ['prettier'])).toEqual({ command: 'pnpm', args: ['exec', 'prettier'] });
+        expect(execCommand('npm', ['prettier'])).toEqual({ command: 'npx', args: ['prettier'] });
+        expect(execCommand('bun', ['prettier'])).toEqual({ command: 'bun', args: ['x', 'prettier'] });
+    });
+
+    it('keeps the arguments after the binary name', () => {
+        expect(execCommand('pnpm', ['prettier', '--write', '.']).args).toEqual(['exec', 'prettier', '--write', '.']);
     });
 });

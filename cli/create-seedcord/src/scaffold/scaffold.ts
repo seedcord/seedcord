@@ -1,7 +1,7 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { addCommand, runPrefix } from '@cli/packageManager';
+import { addCommand, execCommand, runPrefix } from '@cli/packageManager';
 import { gitPlanFrom, probeGit } from '@scaffold/git';
 import { claimTarget } from '@scaffold/target';
 import { buildContext } from '@template/context';
@@ -54,6 +54,27 @@ async function writeTree(target: string, files: { path: string; contents: string
     }
 }
 
+async function runInstallSteps(input: ScaffoldInput, run: CommandRunner, isGateway: boolean): Promise<void> {
+    const { agent, steps, target } = input;
+
+    const deps = addCommand(agent, runtimePackages(isGateway), false);
+    const dev = addCommand(agent, DEV_PACKAGES, true);
+    const format = execCommand(agent, ['prettier', '--write', '.']);
+    const codegen = execCommand(agent, ['seedcord', 'codegen']);
+
+    await steps.run({ running: 'Installing dependencies', done: 'Dependencies installed' }, async () => {
+        await run(deps.command, deps.args, target);
+        await run(dev.command, dev.args, target);
+    });
+
+    // prettier is only on disk after the install above
+    await steps.run({ running: 'Formatting', done: 'Code formatted' }, () => run(format.command, format.args, target));
+
+    await steps.run({ running: 'Generating types', done: 'Types generated' }, () =>
+        run(codegen.command, codegen.args, target)
+    );
+}
+
 export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promise<ScaffoldResult> {
     const { existed } = await claimTarget(input.target);
 
@@ -76,22 +97,7 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
         });
 
         if (input.install) {
-            const deps = addCommand(input.agent, runtimePackages(context.isGateway), false);
-            const dev = addCommand(input.agent, DEV_PACKAGES, true);
-
-            await steps.run({ running: 'Installing dependencies', done: 'Dependencies installed' }, async () => {
-                await run(deps.command, deps.args, input.target);
-                await run(dev.command, dev.args, input.target);
-            });
-
-            // prettier is only on disk after the install above
-            await steps.run({ running: 'Formatting', done: 'Code formatted' }, () =>
-                run(input.agent, ['exec', 'prettier', '--write', '.'], input.target)
-            );
-
-            await steps.run({ running: 'Generating types', done: 'Types generated' }, () =>
-                run(input.agent, ['exec', 'seedcord', 'codegen'], input.target)
-            );
+            await runInstallSteps(input, run, context.isGateway);
         } else {
             steps.skip('Dependencies installed');
             steps.skip('Code formatted');

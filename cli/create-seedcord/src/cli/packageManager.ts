@@ -24,3 +24,7 @@ export function addCommand(agent: AgentName, packages: string[], dev: boolean): 
     const args = dev ? ['-D', ...packages] : packages;
     return resolveCommand(agent, 'add', args) ?? { command: agent, args: ['add', ...args] };
 }
+
+export function execCommand(agent: AgentName, args: string[]): ResolvedCommand {
+    return resolveCommand(agent, 'execute-local', args) ?? { command: agent, args: ['exec', ...args] };
+}
