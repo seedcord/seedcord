@@ -200,6 +200,15 @@ describe('scaffold', () => {
         expect(calls.every((call) => call.command !== 'git')).toBe(true);
     });
 
+    it('still finds git when the target sits under directories that do not exist yet', async () => {
+        const target = join(await mkdtemp(join(tmpdir(), 'create-seedcord-nested-')), 'a', 'b', 'my-bot');
+        const { runner, calls } = recorder();
+
+        await scaffold(baseInput(target), runner);
+
+        expect(calls.map((call) => call.command)).toContain('git');
+    });
+
     it('writes the token the interview collected', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();

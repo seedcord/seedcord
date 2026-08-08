@@ -56,7 +56,11 @@ async function writeTree(target: string, files: { path: string; contents: string
 
 export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promise<ScaffoldResult> {
     const { existed } = await claimTarget(input.target);
-    const plan = gitPlanFrom(await probeGit(dirname(input.target)), input.git);
+
+    // execFile rejects when cwd does not exist
+    const parent = dirname(input.target);
+    await mkdir(parent, { recursive: true });
+    const plan = gitPlanFrom(await probeGit(parent), input.git);
 
     try {
         const context = buildContext(input.answers, {
