@@ -1000,6 +1000,9 @@ importers:
 
   packages/logger:
     dependencies:
+      '@seedcord/errors':
+        specifier: workspace:*
+        version: link:../errors
       '@seedcord/types':
         specifier: workspace:*
         version: link:../types

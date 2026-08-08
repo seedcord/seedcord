@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CAPABILITIES, intentsFor, partialsFor, privilegedFor } from '@interview/capabilities';
+import { CAPABILITIES, intentsFor, isPrivileged, partialsFor, privilegedFor } from '@interview/capabilities';
 
 describe('CAPABILITIES', () => {
     it('offers eleven options with unique ids', () => {
@@ -12,15 +12,18 @@ describe('CAPABILITIES', () => {
         expect(CAPABILITIES.flatMap((c) => c.intents)).not.toContain('Guilds');
     });
 
-    it('marks the dashboard toggle in the label, which clack draws on every row', () => {
-        for (const capability of CAPABILITIES) {
-            const gated = privilegedFor([capability.id]).length > 0;
-            expect(capability.label.includes('needs a dashboard toggle')).toBe(gated);
-        }
-    });
-
     it('keeps the marker out of the hints, which clack draws only under the cursor', () => {
         expect(CAPABILITIES.filter((c) => c.hint.includes('privileged'))).toEqual([]);
+    });
+});
+
+describe('isPrivileged', () => {
+    it('names the three the dashboard gates and nothing else', () => {
+        expect(CAPABILITIES.filter((c) => isPrivileged(c.id)).map((c) => c.id)).toEqual([
+            'message-text',
+            'members',
+            'presence'
+        ]);
     });
 });
 

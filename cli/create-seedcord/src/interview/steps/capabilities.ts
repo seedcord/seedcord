@@ -1,8 +1,8 @@
 import { multiselect } from '@clack/prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, paint } from '@seedcord/errors/internal';
 
-import { CAPABILITIES } from '@interview/capabilities';
+import { CAPABILITIES, isPrivileged } from '@interview/capabilities';
 
 import { requireAnswer } from './requireAnswer';
 
@@ -26,6 +26,11 @@ function parseCapabilities(raw: string): string[] {
     return ids;
 }
 
+// clack draws a hint only under the cursor
+function optionLabel(id: string, label: string): string {
+    return isPrivileged(id) ? `${label} ${paint.amber('privileged')}` : label;
+}
+
 export const capabilitiesStep: Step<'capabilities'> = {
     key: 'capabilities',
     flag: {
@@ -40,7 +45,7 @@ export const capabilitiesStep: Step<'capabilities'> = {
                 message: 'What should your bot react to?',
                 options: CAPABILITIES.map((capability) => ({
                     value: capability.id,
-                    label: capability.label,
+                    label: optionLabel(capability.id, capability.label),
                     hint: capability.hint
                 })),
                 required: false

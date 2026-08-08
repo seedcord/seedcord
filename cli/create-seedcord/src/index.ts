@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import process from 'node:process';
 
 import { cancel, intro, isCI, isTTY, log, note, outro } from '@clack/prompts';
+import { paint } from '@seedcord/errors/internal';
 
 import { banner } from '@cli/banner';
 import { helpText } from '@cli/help';
@@ -69,7 +70,7 @@ async function main(): Promise<void> {
 
 // a gutter on the wrapped rows would end up in whatever gets pasted
 function copyable(label: string, value: string): void {
-    log.message(label);
+    log.message(paint.mute(label));
     log.message(value, { withGuide: false, spacing: 0 });
 }
 
@@ -88,14 +89,19 @@ async function reportOutcome(
         log.warn(missingNotice(process.platform));
     }
 
-    note(nextSteps(answers, { agent, installed }).join('\n'), 'Next steps');
+    note(
+        nextSteps(answers, { agent, installed })
+            .map((step) => paint.mint(step))
+            .join('\n'),
+        'Next steps'
+    );
 
     const invite = inviteUrl(answers.token);
-    if (invite !== null) copyable('Add the bot to a server', invite);
+    if (invite !== null) copyable('Add the bot to a server', paint.sky(invite));
 
-    copyable('Run this setup again', reproducingCommand(answers, agent));
+    copyable('Run this setup again', paint.mute(reproducingCommand(answers, agent)));
 
-    outro('https://guide.seedcord.org');
+    outro(paint.sky('https://guide.seedcord.org'));
 }
 
 try {

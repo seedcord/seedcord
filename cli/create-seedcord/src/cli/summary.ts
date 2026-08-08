@@ -1,3 +1,5 @@
+import { paint } from '@seedcord/errors/internal';
+
 import { runPrefix } from '@cli/packageManager';
 import { privilegedFor } from '@interview/capabilities';
 
@@ -26,9 +28,9 @@ export function dashboardToggles(capabilities: string[]): string[] {
 
     return [
         'Turn these on for your app under Bot, at',
-        PORTAL,
+        paint.sky(PORTAL),
         '',
-        ...privileged.map((intent) => `  ${TOGGLE_LABELS[intent] ?? intent}`)
+        ...privileged.map((intent) => `  ${paint.amber(TOGGLE_LABELS[intent] ?? intent)}`)
     ];
 }
 

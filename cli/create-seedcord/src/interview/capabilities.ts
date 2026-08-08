@@ -10,7 +10,7 @@ export const CAPABILITIES = [
     },
     {
         id: 'message-text',
-        label: 'What messages actually say (privileged intent. needs a dashboard toggle)',
+        label: "The messages' contents",
         hint: 'without this, message text is empty unless the message mentions your bot',
         // MessageContent subscribes to nothing on its own
         intents: ['GuildMessages', 'MessageContent'],
@@ -33,14 +33,14 @@ export const CAPABILITIES = [
     },
     {
         id: 'members',
-        label: 'Member joins and leaves (privileged intent. needs a dashboard toggle)',
+        label: 'Member joins and leaves',
         hint: 'also covers nickname and role changes',
         intents: ['GuildMembers'],
         partials: ['GuildMember']
     },
     {
         id: 'presence',
-        label: 'Member online status (privileged intent. needs a dashboard toggle)',
+        label: 'Member online status',
         hint: 'who is online, and what they are playing',
         intents: ['GuildPresences'],
         partials: []
@@ -108,4 +108,8 @@ const PRIVILEGED_INTENTS = new Set<IntentName>(['GuildMembers', 'GuildPresences'
 
 export function privilegedFor(ids: readonly string[]): IntentName[] {
     return intentsFor(ids).filter((intent) => PRIVILEGED_INTENTS.has(intent));
+}
+
+export function isPrivileged(id: string): boolean {
+    return privilegedFor([id]).length > 0;
 }
