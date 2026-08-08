@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { dashboardToggles, nextSteps, reproducingCommand } from '@cli/summary';
+import { STEPS } from '@interview/steps';
 
 import type { ScaffoldAnswers } from '@template/context';
 
@@ -88,9 +89,20 @@ describe('reproducingCommand', () => {
         const command = reproducingCommand(GATEWAY, 'pnpm');
 
         expect(command).toContain('my-bot');
+        expect(command).toContain('--language typescript');
         expect(command).toContain('--transport gateway');
         expect(command).toContain('--capabilities guild-messages');
         expect(command).toContain('--color Blurple');
+    });
+
+    it('answers every step a re-run would ask', () => {
+        const command = reproducingCommand(HTTP, 'pnpm');
+        // the directory goes in as the positional argument
+        const flagged = STEPS.filter((step) => step.flag.name !== 'dir' && step.skip?.(HTTP) !== true);
+
+        for (const step of flagged) {
+            expect(command).toContain(`--${step.flag.name} `);
+        }
     });
 
     it('leaves capabilities out on http', () => {
@@ -106,6 +118,6 @@ describe('reproducingCommand', () => {
     });
 
     it('leaves the double dash out for every other manager', () => {
-        expect(reproducingCommand(GATEWAY, 'pnpm')).toContain('pnpm create seedcord my-bot --transport');
+        expect(reproducingCommand(GATEWAY, 'pnpm')).not.toContain(' -- ');
     });
 });

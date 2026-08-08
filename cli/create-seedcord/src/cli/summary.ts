@@ -37,6 +37,7 @@ export function dashboardToggles(capabilities: string[]): string[] {
 // the token and public key stay out, since this line reaches scroll-back and screenshots
 export function reproducingCommand(answers: ScaffoldAnswers, agent: AgentName): string {
     const flags = [
+        `--language ${answers.language}`,
         `--transport ${answers.transport}`,
         ...(answers.capabilities === undefined ? [] : [`--capabilities ${answers.capabilities.join(',')}`]),
         '--token YOUR_TOKEN',
