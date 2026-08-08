@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
+import { styleText } from 'node:util';
 
 import { cancel, intro, isCI, isTTY, log, outro } from '@clack/prompts';
 
@@ -8,11 +9,16 @@ import { runningAgent } from '@cli/packageManager';
 import { parseInput } from '@cli/parseInput';
 import { reportFailure } from '@cli/reportFailure';
 import { clackSteps, silentSteps } from '@cli/steps';
+import { dashboardToggles, nextSteps, reproducingCommand } from '@cli/summary';
 import { runFlow } from '@interview/runFlow';
 import { STEPS } from '@interview/steps';
+import { missingNotice, probeCloudflared } from '@scaffold/cloudflared';
 import { execRunner } from '@scaffold/exec';
 import { scaffold } from '@scaffold/scaffold';
 import { requireScaffoldAnswers } from '@template/context';
+
+import type { ScaffoldAnswers } from '@template/context';
+import type { AgentName } from 'package-manager-detector';
 
 // dist/index.mjs and src/index.ts are both one level under the package root
 const TEMPLATES = resolve(import.meta.dirname, '../templates');
@@ -39,13 +45,14 @@ async function main(): Promise<void> {
 
     const answers = requireScaffoldAnswers(await runFlow(STEPS, input.supplied, { interactive }));
     const target = resolve(process.cwd(), answers.directory);
+    const agent = runningAgent();
 
     const result = await scaffold(
         {
             target,
             templatesRoot: TEMPLATES,
             answers,
-            agent: runningAgent(),
+            agent,
             install: input.install,
             git: input.git,
             steps: interactive ? clackSteps() : silentSteps()
@@ -55,7 +62,28 @@ async function main(): Promise<void> {
 
     if (result.gitNotice !== null) log.warn(result.gitNotice);
 
-    if (interactive) outro(`cd ${answers.directory}`);
+    await reportOutcome(answers, agent, result.installed, interactive);
+}
+
+async function reportOutcome(
+    answers: ScaffoldAnswers,
+    agent: AgentName,
+    installed: boolean,
+    interactive: boolean
+): Promise<void> {
+    if (!interactive) return;
+
+    const toggles = dashboardToggles(answers.capabilities ?? []);
+    if (toggles.length > 0) log.warn(toggles.join('\n'));
+
+    if (answers.transport === 'http' && !(await probeCloudflared())) {
+        log.warn(missingNotice(process.platform));
+    }
+
+    log.step(nextSteps(answers, { agent, installed }).join('\n'));
+    log.message(styleText('dim', reproducingCommand(answers, agent)));
+
+    outro('https://guide.seedcord.org');
 }
 
 try {
