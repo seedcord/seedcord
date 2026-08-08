@@ -29,7 +29,7 @@ describe('transportStep', () => {
     });
 
     it('names both options when the value is neither', () => {
-        expect(() => transportStep.flag.parse('websocket')).toThrow(/gateway.*http/);
+        expect(() => transportStep.flag.parse('websocket')).toThrow(/http.*gateway/);
     });
 });
 

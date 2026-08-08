@@ -13,7 +13,7 @@ const LINE_BREAK = /[\r\n]+/;
 // one uncut chunk grew past node's max string length
 const MAX_LINE = 120;
 
-export async function execRunner(...[command, args, cwd, onLine]: Parameters<CommandRunner>): Promise<void> {
+export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<void> {
     const spoken = [command, ...args].join(' ');
 
     return new Promise((resolve, reject) => {
@@ -26,12 +26,6 @@ export async function execRunner(...[command, args, cwd, onLine]: Parameters<Com
                 if (text === '') continue;
 
                 captured.push(text);
-
-                try {
-                    onLine?.(text);
-                } catch {
-                    // a throw inside a stream handler escapes this promise as an uncaught exception
-                }
             }
         };
 

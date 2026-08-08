@@ -61,7 +61,7 @@ function stepRecorder(): { steps: StepUi; seen: string[] } {
         steps: {
             run: async (labels, work) => {
                 seen.push(labels.running);
-                const result = await work(() => undefined);
+                const result = await work();
                 seen.push(`done: ${labels.done}`);
                 return result;
             },

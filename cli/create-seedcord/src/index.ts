@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { intro, isCI, isTTY, log, outro } from '@clack/prompts';
+import { cancel, intro, isCI, isTTY, log, outro } from '@clack/prompts';
 
 import { helpText } from '@cli/help';
 import { runningAgent } from '@cli/packageManager';
@@ -61,7 +61,10 @@ async function main(): Promise<void> {
 try {
     await main();
 } catch (error) {
-    const { code, message } = reportFailure(error);
-    if (message !== null) log.error(message);
-    process.exit(code);
+    const failure = reportFailure(error);
+
+    if (failure.cancelled) cancel(failure.message);
+    else log.error(failure.message);
+
+    process.exit(failure.code);
 }

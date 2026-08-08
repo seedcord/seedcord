@@ -6,7 +6,7 @@ import { requireAnswer } from './requireAnswer';
 
 import type { Answers, Step } from '@interview/types';
 
-const TRANSPORTS: Answers['transport'][] = ['gateway', 'http'];
+const TRANSPORTS: Answers['transport'][] = ['http', 'gateway'];
 
 function parseTransport(raw: string): Answers['transport'] {
     const value = raw.trim().toLowerCase();
@@ -14,7 +14,7 @@ function parseTransport(raw: string): Answers['transport'] {
     if (!match) {
         throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
             'transport',
-            `Unknown transport "${raw}". Pick gateway or http.`
+            `Unknown transport "${raw}". Pick http or gateway.`
         ]);
     }
 
@@ -23,21 +23,21 @@ function parseTransport(raw: string): Answers['transport'] {
 
 export const transportStep: Step<'transport'> = {
     key: 'transport',
-    flag: { name: 'transport', description: 'gateway or http', parse: parseTransport },
+    flag: { name: 'transport', description: 'http or gateway', parse: parseTransport },
     ask: async () =>
         requireAnswer(
             await select<Answers['transport']>({
                 message: 'How should Discord reach your bot?',
                 options: [
                     {
-                        value: 'gateway',
-                        label: 'Gateway',
-                        hint: 'keeps a connection to Discord open. messages, reactions, joins, voice activity, and so on arrive on top of interactions'
-                    },
-                    {
                         value: 'http',
                         label: 'Http',
                         hint: 'Discord posts interactions to your URL'
+                    },
+                    {
+                        value: 'gateway',
+                        label: 'Gateway',
+                        hint: 'keeps a connection to Discord open. messages, reactions, joins, voice activity, and so on arrive on top of interactions'
                     }
                 ]
             })

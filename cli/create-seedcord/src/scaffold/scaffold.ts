@@ -7,11 +7,11 @@ import { claimTarget } from '@scaffold/target';
 import { buildContext } from '@template/context';
 import { renderTemplates } from '@template/render';
 
-import type { StepLogger, StepUi } from '@cli/steps';
+import type { StepUi } from '@cli/steps';
 import type { ScaffoldAnswers } from '@template/context';
 import type { AgentName } from 'package-manager-detector';
 
-export type CommandRunner = (command: string, args: string[], cwd: string, onLine?: StepLogger) => Promise<void>;
+export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<void>;
 
 export interface ScaffoldInput {
     target: string;
@@ -75,13 +75,10 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
             const deps = addCommand(input.agent, runtimePackages(context.isGateway), false);
             const dev = addCommand(input.agent, DEV_PACKAGES, true);
 
-            await steps.run(
-                { running: 'Installing dependencies', done: 'Dependencies installed', stream: true },
-                async (onLine) => {
-                    await run(deps.command, deps.args, input.target, onLine);
-                    await run(dev.command, dev.args, input.target, onLine);
-                }
-            );
+            await steps.run({ running: 'Installing dependencies', done: 'Dependencies installed' }, async () => {
+                await run(deps.command, deps.args, input.target);
+                await run(dev.command, dev.args, input.target);
+            });
 
             // prettier is only on disk after the install above
             await steps.run({ running: 'Formatting', done: 'Code formatted' }, () =>
