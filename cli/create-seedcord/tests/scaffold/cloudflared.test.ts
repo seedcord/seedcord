@@ -1,6 +1,7 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import process from 'node:process';
 
 import { describe, expect, it } from 'vitest';
 
@@ -34,7 +35,7 @@ describe('probeCloudflared', () => {
     });
 
     it('reports true for one that does', async () => {
-        await expect(probeCloudflared('node')).resolves.toBe(true);
+        await expect(probeCloudflared(process.execPath)).resolves.toBe(true);
     });
 
     it('gives up on a binary that never answers', async () => {
