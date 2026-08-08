@@ -1,5 +1,12 @@
 # @seedcord/errors
 
+## 0.3.3-next.0
+
+### Patch Changes
+
+- dfd7dc2: Moved `paint` to the errors package
+- dfd7dc2: New error codes for the create command
+
 ## 0.3.2
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @seedcord/utils
 
+## 0.8.3-next.0
+
+### Patch Changes
+
+- Updated dependencies [dfd7dc2]
+- Updated dependencies [dfd7dc2]
+    - @seedcord/errors@0.3.3-next.0
+
 ## 0.8.2
 
 ### Patch Changes

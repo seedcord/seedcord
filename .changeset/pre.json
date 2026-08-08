@@ -31,5 +31,13 @@
     "@seedcord/ui": "0.2.0",
     "@seedcord/vitest-config": "0.0.1"
   },
-  "changesets": []
+  "changesets": [
+    "crisp-games-count",
+    "fifty-moons-grab",
+    "loud-news-decide",
+    "plain-ducks-listen",
+    "shy-breads-drive",
+    "spotty-baboons-stick",
+    "swift-pears-sin"
+  ]
 }

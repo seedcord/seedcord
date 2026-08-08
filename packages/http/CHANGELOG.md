@@ -1,5 +1,19 @@
 # @seedcord/http
 
+## 0.2.2-next.0
+
+### Patch Changes
+
+- 9b0a6a6: 'reflect-metadata' is a direct dep now. No need to import it at the top. The packages import it in their index files, first thing.
+- b8189ab: Export other useful packages from http transport like how gateway does
+- Updated dependencies [dfd7dc2]
+- Updated dependencies [dfd7dc2]
+- Updated dependencies [9b0a6a6]
+    - @seedcord/errors@0.3.3-next.0
+    - @seedcord/logger@0.1.3-next.0
+    - @seedcord/core@0.1.3-next.0
+    - @seedcord/utils@0.8.3-next.0
+
 ## 0.2.1
 
 ### Patch Changes
