@@ -1,6 +1,6 @@
 # @seedcord/gateway
 
-## 0.1.3-next.0
+## 0.1.3
 
 ### Patch Changes
 
@@ -9,10 +9,10 @@
 - Updated dependencies [dfd7dc2]
 - Updated dependencies [dfd7dc2]
 - Updated dependencies [9b0a6a6]
-    - @seedcord/errors@0.3.3-next.0
-    - @seedcord/logger@0.1.3-next.0
-    - @seedcord/core@0.1.3-next.0
-    - @seedcord/utils@0.8.3-next.0
+    - @seedcord/errors@0.3.3
+    - @seedcord/logger@0.1.3
+    - @seedcord/core@0.1.3
+    - @seedcord/utils@0.8.3
 
 ## 0.1.2
 

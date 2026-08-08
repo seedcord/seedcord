@@ -1,17 +1,15 @@
 # @seedcord/plugin-mongoose
 
-## 0.1.3-next.0
+## 0.1.3
 
 ### Patch Changes
 
 - 9b0a6a6: 'reflect-metadata' is a direct dep now. No need to import it at the top. The packages import it in their index files, first thing.
 - Updated dependencies [dfd7dc2]
 - Updated dependencies [dfd7dc2]
-- Updated dependencies [9b0a6a6]
-    - @seedcord/errors@0.3.3-next.0
-    - @seedcord/logger@0.1.3-next.0
-    - @seedcord/core@0.1.3-next.0
-    - @seedcord/utils@0.8.3-next.0
+    - @seedcord/errors@0.3.3
+    - @seedcord/logger@0.1.3
+    - @seedcord/utils@0.8.3
 
 ## 0.1.2
 

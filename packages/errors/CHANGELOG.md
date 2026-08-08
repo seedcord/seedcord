@@ -1,6 +1,6 @@
 # @seedcord/errors
 
-## 0.3.3-next.0
+## 0.3.3
 
 ### Patch Changes
 

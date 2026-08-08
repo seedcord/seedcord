@@ -1,14 +1,14 @@
 # @seedcord/logger
 
-## 0.1.3-next.0
+## 0.1.3
 
 ### Patch Changes
 
 - dfd7dc2: Moved `paint` to the errors package
 - Updated dependencies [dfd7dc2]
 - Updated dependencies [dfd7dc2]
-    - @seedcord/errors@0.3.3-next.0
-    - @seedcord/utils@0.8.3-next.0
+    - @seedcord/errors@0.3.3
+    - @seedcord/utils@0.8.3
 
 ## 0.1.2
 

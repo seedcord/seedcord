@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/utils",
     "type": "module",
-    "version": "0.8.3-next.0",
+    "version": "0.8.3",
     "engines": {
         "node": ">=24.11"
     },
