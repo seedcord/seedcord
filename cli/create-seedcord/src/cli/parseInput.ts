@@ -12,15 +12,20 @@ export interface CliInput {
     supplied: Partial<Answers>;
     install: boolean;
     git: boolean;
-    help: boolean;
 }
 
 const OPTIONS = {
     ...Object.fromEntries(STEPS.map((step) => [step.flag.name, { type: 'string' }] as const)),
     'no-install': { type: 'boolean' },
-    'no-git': { type: 'boolean' },
-    help: { type: 'boolean', short: 'h' }
+    'no-git': { type: 'boolean' }
 } as const;
+
+const HELP_FLAGS = new Set(['--help', '-h']);
+
+// parseArgs throws on a bad flag before it ever reads --help
+export function wantsHelp(argv: string[]): boolean {
+    return argv.some((argument) => HELP_FLAGS.has(argument));
+}
 
 function readArgv(argv: string[]): { values: Record<string, unknown>; positionals: string[] } {
     try {
@@ -61,7 +66,6 @@ export function parseInput(argv: string[]): CliInput {
     return {
         supplied: applyFlags(STEPS, raw),
         install: values['no-install'] !== true,
-        git: values['no-git'] !== true,
-        help: values.help === true
+        git: values['no-git'] !== true
     };
 }

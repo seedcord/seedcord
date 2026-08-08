@@ -1,7 +1,9 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { parseInput } from '@cli/parseInput';
+import { parseInput, wantsHelp } from '@cli/parseInput';
+
+const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 
 function thrownBy(run: () => unknown): unknown {
     try {
@@ -21,7 +23,7 @@ describe('parseInput', () => {
             '--transport',
             'http',
             '--token',
-            'aaa.bbb.ccc',
+            TOKEN,
             '--public-key',
             'a'.repeat(64),
             '--color',
@@ -31,7 +33,7 @@ describe('parseInput', () => {
         expect(supplied).toEqual({
             directory: 'my-bot',
             transport: 'http',
-            token: 'aaa.bbb.ccc',
+            token: TOKEN,
             publicKey: 'a'.repeat(64),
             botColor: 'Blurple'
         });
@@ -63,11 +65,6 @@ describe('parseInput', () => {
         expect(parseInput(['--no-git']).git).toBe(false);
     });
 
-    it('reads the help flag under both spellings', () => {
-        expect(parseInput(['--help']).help).toBe(true);
-        expect(parseInput(['-h']).help).toBe(true);
-    });
-
     it('names an unknown flag and points at the help', () => {
         const thrown = thrownBy(() => parseInput(['--transpor', 'http']));
 
@@ -85,5 +82,24 @@ describe('parseInput', () => {
         const thrown = thrownBy(() => parseInput(['--transport', 'websocket']));
 
         expect(isSeedcordError(thrown, undefined, SeedcordErrorCode.CreateInvalidAnswer)).toBe(true);
+    });
+});
+
+describe('wantsHelp', () => {
+    it('reads the flag under both spellings', () => {
+        expect(wantsHelp(['--help'])).toBe(true);
+        expect(wantsHelp(['-h'])).toBe(true);
+    });
+
+    it('reads it alongside other flags', () => {
+        expect(wantsHelp(['my-bot', '--transport', 'http', '--help'])).toBe(true);
+    });
+
+    it('answers without parsing, so a bad flag still reaches the help', () => {
+        expect(wantsHelp(['--transpor', 'http', '--help'])).toBe(true);
+    });
+
+    it('is false for a run that asked for none', () => {
+        expect(wantsHelp(['my-bot', '--no-git'])).toBe(false);
     });
 });

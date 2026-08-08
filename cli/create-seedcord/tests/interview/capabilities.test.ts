@@ -11,6 +11,17 @@ describe('CAPABILITIES', () => {
     it('never offers Guilds as a choice', () => {
         expect(CAPABILITIES.flatMap((c) => c.intents)).not.toContain('Guilds');
     });
+
+    it('marks the dashboard toggle in the label, which clack draws on every row', () => {
+        for (const capability of CAPABILITIES) {
+            const gated = privilegedFor([capability.id]).length > 0;
+            expect(capability.label.includes('needs a dashboard toggle')).toBe(gated);
+        }
+    });
+
+    it('keeps the marker out of the hints, which clack draws only under the cursor', () => {
+        expect(CAPABILITIES.filter((c) => c.hint.includes('privileged'))).toEqual([]);
+    });
 });
 
 describe('intentsFor', () => {

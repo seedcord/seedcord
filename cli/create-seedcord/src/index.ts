@@ -1,13 +1,13 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { cancel, intro, isCI, isTTY, log, outro } from '@clack/prompts';
-import chalk from 'chalk';
+import { cancel, intro, isCI, isTTY, log, note, outro } from '@clack/prompts';
 
 import { banner } from '@cli/banner';
 import { helpText } from '@cli/help';
+import { inviteUrl } from '@cli/invite';
 import { runningAgent } from '@cli/packageManager';
-import { parseInput } from '@cli/parseInput';
+import { parseInput, wantsHelp } from '@cli/parseInput';
 import { reportFailure } from '@cli/reportFailure';
 import { clackSteps, silentSteps } from '@cli/steps';
 import { dashboardToggles, nextSteps, reproducingCommand } from '@cli/summary';
@@ -34,9 +34,9 @@ function isInteractive(): boolean {
 }
 
 async function main(): Promise<void> {
-    const input = parseInput(process.argv.slice(2));
+    const argv = process.argv.slice(2);
 
-    if (input.help) {
+    if (wantsHelp(argv)) {
         process.stdout.write(`${helpText()}\n`);
         return;
     }
@@ -44,6 +44,7 @@ async function main(): Promise<void> {
     const interactive = isInteractive();
     if (interactive) intro(banner());
 
+    const input = parseInput(argv);
     const answers = requireScaffoldAnswers(await runFlow(STEPS, input.supplied, { interactive }));
     const target = resolve(process.cwd(), answers.directory);
     const agent = runningAgent();
@@ -66,6 +67,12 @@ async function main(): Promise<void> {
     await reportOutcome(answers, agent, result.installed, interactive);
 }
 
+// a gutter on the wrapped rows would end up in whatever gets pasted
+function copyable(label: string, value: string): void {
+    log.message(label);
+    log.message(value, { withGuide: false, spacing: 0 });
+}
+
 async function reportOutcome(
     answers: ScaffoldAnswers,
     agent: AgentName,
@@ -75,14 +82,18 @@ async function reportOutcome(
     if (!interactive) return;
 
     const toggles = dashboardToggles(answers.capabilities ?? []);
-    if (toggles.length > 0) log.warn(toggles.join('\n'));
+    if (toggles.length > 0) note(toggles.join('\n'), 'Dashboard toggles');
 
     if (answers.transport === 'http' && !(await probeCloudflared())) {
         log.warn(missingNotice(process.platform));
     }
 
-    log.step(nextSteps(answers, { agent, installed }).join('\n'));
-    log.message(chalk.dim(reproducingCommand(answers, agent)));
+    note(nextSteps(answers, { agent, installed }).join('\n'), 'Next steps');
+
+    const invite = inviteUrl(answers.token);
+    if (invite !== null) copyable('Add the bot to a server', invite);
+
+    copyable('Run this setup again', reproducingCommand(answers, agent));
 
     outro('https://guide.seedcord.org');
 }
@@ -92,8 +103,8 @@ try {
 } catch (error) {
     const failure = reportFailure(error);
 
-    if (failure.cancelled) cancel(failure.message);
-    else log.error(failure.message);
+    if (failure.message !== null) log.error(failure.message);
+    cancel(failure.closing);
 
     process.exit(failure.code);
 }

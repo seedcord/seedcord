@@ -1,7 +1,7 @@
 import { S_STEP_SUBMIT, log, spinner } from '@clack/prompts';
 import chalk from 'chalk';
 
-export interface StepLabels {
+interface StepLabels {
     running: string;
     done: string;
 }
@@ -14,7 +14,8 @@ export interface StepUi {
 export function clackSteps(): StepUi {
     return {
         run: async (labels, work) => {
-            const spin = spinner();
+            // clack fixes the indicator at construction
+            const spin = spinner({ indicator: 'timer' });
             spin.start(labels.running);
 
             try {
@@ -22,7 +23,7 @@ export function clackSteps(): StepUi {
                 spin.stop(labels.done);
                 return result;
             } catch (error) {
-                spin.error(labels.running);
+                spin.error(`${labels.running} failed`);
                 throw error;
             }
         },

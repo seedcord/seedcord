@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import process from 'node:process';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -8,13 +9,29 @@ import type { CommandRunner } from '@scaffold/scaffold';
 // an install logs hundreds of lines before the one that names the failure
 const KEPT_LINES = 12;
 
+// npm prefixes those lines with "npm error", pnpm and yarn with "ERR!"
+const NAMES_THE_CAUSE = /error|ERR!/i;
+
 // pnpm redraws its progress with carriage returns
 const LINE_BREAK = /[\r\n]+/;
-// one uncut chunk grew past node's max string length
-const MAX_LINE = 120;
+
+const PIPED_COLUMNS = 100;
+// clack indents captured output by three
+const GUTTER = 3;
+
+function lineWidth(): number {
+    return (process.stdout.columns > 0 ? process.stdout.columns : PIPED_COLUMNS) - GUTTER;
+}
+
+function failureLines(captured: string[]): string[] {
+    const named = captured.filter((line) => NAMES_THE_CAUSE.test(line));
+
+    return named.length > 0 ? named.slice(0, KEPT_LINES) : captured.slice(-KEPT_LINES);
+}
 
 export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<void> {
     const spoken = [command, ...args].join(' ');
+    const width = lineWidth();
 
     return new Promise((resolve, reject) => {
         const child = spawn(command, args, { cwd });
@@ -22,7 +39,8 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
 
         const take = (chunk: Buffer): void => {
             for (const line of chunk.toString('utf8').split(LINE_BREAK)) {
-                const text = line.trim().slice(0, MAX_LINE);
+                // one uncut chunk grew past node's max string length
+                const text = line.trim().slice(0, width);
                 if (text === '') continue;
 
                 captured.push(text);
@@ -42,8 +60,8 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
                 return;
             }
 
-            const tail = captured.slice(-KEPT_LINES).join('\n');
-            reject(new SeedcordError(SeedcordErrorCode.CreateStepFailed, [spoken, tail || `exited with ${code}`]));
+            const shown = failureLines(captured).join('\n');
+            reject(new SeedcordError(SeedcordErrorCode.CreateStepFailed, [spoken, shown || `exited with ${code}`]));
         });
     });
 }

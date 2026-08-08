@@ -25,7 +25,9 @@ export function dashboardToggles(capabilities: string[]): string[] {
     if (privileged.length === 0) return [];
 
     return [
-        `Turn these on for your app at ${PORTAL}, under Bot:`,
+        'Turn these on for your app under Bot, at',
+        PORTAL,
+        '',
         ...privileged.map((intent) => `  ${TOGGLE_LABELS[intent] ?? intent}`)
     ];
 }

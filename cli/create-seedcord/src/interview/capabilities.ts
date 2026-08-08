@@ -10,8 +10,8 @@ export const CAPABILITIES = [
     },
     {
         id: 'message-text',
-        label: 'What messages actually say',
-        hint: 'privileged. without this, message text is empty unless the message mentions your bot',
+        label: 'What messages actually say (privileged intent. needs a dashboard toggle)',
+        hint: 'without this, message text is empty unless the message mentions your bot',
         // MessageContent subscribes to nothing on its own
         intents: ['GuildMessages', 'MessageContent'],
         partials: []
@@ -33,15 +33,15 @@ export const CAPABILITIES = [
     },
     {
         id: 'members',
-        label: 'Member joins and leaves',
-        hint: 'privileged. also covers nickname and role changes',
+        label: 'Member joins and leaves (privileged intent. needs a dashboard toggle)',
+        hint: 'also covers nickname and role changes',
         intents: ['GuildMembers'],
         partials: ['GuildMember']
     },
     {
         id: 'presence',
-        label: 'Member online status',
-        hint: 'privileged. who is online, and what they are playing',
+        label: 'Member online status (privileged intent. needs a dashboard toggle)',
+        hint: 'who is online, and what they are playing',
         intents: ['GuildPresences'],
         partials: []
     },

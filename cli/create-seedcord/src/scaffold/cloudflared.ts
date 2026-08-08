@@ -1,5 +1,4 @@
 import { execFile } from 'node:child_process';
-import process from 'node:process';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
@@ -20,9 +19,4 @@ export function missingNotice(platform: NodeJS.Platform): string {
 export async function probeCloudflared(binary = 'cloudflared'): Promise<boolean> {
     const found = await run(binary, ['--version']).catch(() => null);
     return found !== null;
-}
-
-// brew and winget install it. every other platform gets a download page.
-export function canInstall(platform: NodeJS.Platform = process.platform): boolean {
-    return platform === 'darwin' || platform === 'win32';
 }
