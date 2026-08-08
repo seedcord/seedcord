@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { scaffold } from '@scaffold/scaffold';
 
+import type { StepUi } from '@cli/steps';
 import type { CommandRunner } from '@scaffold/scaffold';
 import type { ScaffoldAnswers } from '@template/context';
 
@@ -52,14 +53,34 @@ async function scratchTarget(): Promise<string> {
     return join(await mkdtemp(join(tmpdir(), 'create-seedcord-scaffold-')), 'my-bot');
 }
 
-function baseInput(target: string): Parameters<typeof scaffold>[0] {
+function stepRecorder(): { steps: StepUi; seen: string[] } {
+    const seen: string[] = [];
+
+    return {
+        seen,
+        steps: {
+            run: async (labels, work) => {
+                seen.push(labels.running);
+                const result = await work(() => undefined);
+                seen.push(`done: ${labels.done}`);
+                return result;
+            },
+            skip: (label) => {
+                seen.push(`skipped: ${label}`);
+            }
+        }
+    };
+}
+
+function baseInput(target: string, steps: StepUi = stepRecorder().steps): Parameters<typeof scaffold>[0] {
     return {
         target,
         templatesRoot: TEMPLATES,
         answers: GATEWAY,
         agent: 'pnpm',
         install: true,
-        git: true
+        git: true,
+        steps
     };
 }
 
@@ -99,7 +120,7 @@ describe('scaffold', () => {
         expect(dev?.args).toContain('@types/node');
     });
 
-    it('holds typescript on 6, which is the last major typescript-eslint supports', async () => {
+    it('pins typescript to the last major typescript-eslint supports', async () => {
         const target = await scratchTarget();
         const { runner, calls } = recorder();
 
@@ -125,6 +146,49 @@ describe('scaffold', () => {
         await scaffold({ ...baseInput(target), install: false }, runner);
 
         expect(calls.map((call) => call.command)).toEqual(['git', 'git', 'git']);
+    });
+
+    it('reports every step in order', async () => {
+        const target = await scratchTarget();
+        const { runner } = recorder();
+        const { steps, seen } = stepRecorder();
+
+        await scaffold(baseInput(target, steps), runner);
+
+        expect(seen).toEqual([
+            'Writing files',
+            'done: Files written',
+            'Installing dependencies',
+            'done: Dependencies installed',
+            'Formatting',
+            'done: Code formatted',
+            'Generating types',
+            'done: Types generated',
+            'Setting up git',
+            'done: Committed'
+        ]);
+    });
+
+    it('marks the three install steps skipped rather than dropping them', async () => {
+        const target = await scratchTarget();
+        const { runner } = recorder();
+        const { steps, seen } = stepRecorder();
+
+        await scaffold({ ...baseInput(target, steps), install: false }, runner);
+
+        expect(seen).toContain('skipped: Dependencies installed');
+        expect(seen).toContain('skipped: Code formatted');
+        expect(seen).toContain('skipped: Types generated');
+    });
+
+    it('marks git skipped when git is off', async () => {
+        const target = await scratchTarget();
+        const { runner } = recorder();
+        const { steps, seen } = stepRecorder();
+
+        await scaffold({ ...baseInput(target, steps), git: false }, runner);
+
+        expect(seen).toContain('skipped: Committed');
     });
 
     it('skips git when git is off', async () => {

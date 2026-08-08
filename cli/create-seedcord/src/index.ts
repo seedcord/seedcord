@@ -1,23 +1,29 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
 
-import { intro, isCI, isTTY, log, outro, spinner } from '@clack/prompts';
+import { intro, isCI, isTTY, log, outro } from '@clack/prompts';
 
 import { helpText } from '@cli/help';
 import { runningAgent } from '@cli/packageManager';
 import { parseInput } from '@cli/parseInput';
 import { reportFailure } from '@cli/reportFailure';
+import { clackSteps, silentSteps } from '@cli/steps';
 import { runFlow } from '@interview/runFlow';
 import { STEPS } from '@interview/steps';
 import { execRunner } from '@scaffold/exec';
 import { scaffold } from '@scaffold/scaffold';
 import { requireScaffoldAnswers } from '@template/context';
 
-// dist/index.mjs and src/index.ts both sit one level under the package root
+// dist/index.mjs and src/index.ts are both one level under the package root
 const TEMPLATES = resolve(import.meta.dirname, '../templates');
 
+// a pty reporting zero columns makes clack wrap every line into an unbounded string
+function hasUsableWidth(): boolean {
+    return process.stdout.columns > 0;
+}
+
 function isInteractive(): boolean {
-    return Boolean(process.stdin.isTTY) && isTTY(process.stdout) && !isCI();
+    return Boolean(process.stdin.isTTY) && isTTY(process.stdout) && hasUsableWidth() && !isCI();
 }
 
 async function main(): Promise<void> {
@@ -34,9 +40,6 @@ async function main(): Promise<void> {
     const answers = requireScaffoldAnswers(await runFlow(STEPS, input.supplied, { interactive }));
     const target = resolve(process.cwd(), answers.directory);
 
-    const progress = interactive ? spinner() : null;
-    progress?.start('Setting up your project');
-
     const result = await scaffold(
         {
             target,
@@ -44,15 +47,12 @@ async function main(): Promise<void> {
             answers,
             agent: runningAgent(),
             install: input.install,
-            git: input.git
+            git: input.git,
+            steps: interactive ? clackSteps() : silentSteps()
         },
         execRunner
-    ).catch((error: unknown) => {
-        progress?.stop('Setup failed');
-        throw error;
-    });
+    );
 
-    progress?.stop('Project ready');
     if (result.gitNotice !== null) log.warn(result.gitNotice);
 
     if (interactive) outro(`cd ${answers.directory}`);

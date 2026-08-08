@@ -7,10 +7,11 @@ import { claimTarget } from '@scaffold/target';
 import { buildContext } from '@template/context';
 import { renderTemplates } from '@template/render';
 
+import type { StepLogger, StepUi } from '@cli/steps';
 import type { ScaffoldAnswers } from '@template/context';
 import type { AgentName } from 'package-manager-detector';
 
-export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<void>;
+export type CommandRunner = (command: string, args: string[], cwd: string, onLine?: StepLogger) => Promise<void>;
 
 export interface ScaffoldInput {
     target: string;
@@ -19,6 +20,7 @@ export interface ScaffoldInput {
     agent: AgentName;
     install: boolean;
     git: boolean;
+    steps: StepUi;
 }
 
 export interface ScaffoldResult {
@@ -27,14 +29,14 @@ export interface ScaffoldResult {
     gitNotice: string | null;
 }
 
-// @seedcord/tsconfig sets types: ['node'], and tsc fails outright without the package behind it
 const DEV_PACKAGES = [
     '@seedcord/eslint-config',
     '@seedcord/tsconfig',
+    // @seedcord/tsconfig sets types: ['node']
     '@types/node',
     'prettier',
     'seedcord',
-    // typescript-eslint 8 declares typescript >=4.8.4 <6.1.0, and typescript 7.0 ships no compiler api at all
+    // typescript-eslint 8 caps typescript below 6.1
     'typescript@~6.0'
 ];
 const SHARED_PACKAGES = ['@discordjs/builders', 'envapt'];
@@ -62,25 +64,47 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
             runCommand: runPrefix(input.agent)
         });
 
-        await mkdir(input.target, { recursive: true });
-        await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
+        const { steps } = input;
+
+        await steps.run({ running: 'Writing files', done: 'Files written' }, async () => {
+            await mkdir(input.target, { recursive: true });
+            await writeTree(input.target, await renderTemplates(input.templatesRoot, context));
+        });
 
         if (input.install) {
             const deps = addCommand(input.agent, runtimePackages(context.isGateway), false);
             const dev = addCommand(input.agent, DEV_PACKAGES, true);
 
-            await run(deps.command, deps.args, input.target);
-            await run(dev.command, dev.args, input.target);
+            await steps.run(
+                { running: 'Installing dependencies', done: 'Dependencies installed', stream: true },
+                async (onLine) => {
+                    await run(deps.command, deps.args, input.target, onLine);
+                    await run(dev.command, dev.args, input.target, onLine);
+                }
+            );
 
-            // format runs after install because prettier arrives with it
-            await run(input.agent, ['exec', 'prettier', '--write', '.'], input.target);
-            await run(input.agent, ['exec', 'seedcord', 'codegen'], input.target);
+            // prettier is only on disk after the install above
+            await steps.run({ running: 'Formatting', done: 'Code formatted' }, () =>
+                run(input.agent, ['exec', 'prettier', '--write', '.'], input.target)
+            );
+
+            await steps.run({ running: 'Generating types', done: 'Types generated' }, () =>
+                run(input.agent, ['exec', 'seedcord', 'codegen'], input.target)
+            );
+        } else {
+            steps.skip('Dependencies installed');
+            steps.skip('Code formatted');
+            steps.skip('Types generated');
         }
 
         if (plan.init) {
-            await run('git', ['init'], input.target);
-            await run('git', ['add', '.'], input.target);
-            await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
+            await steps.run({ running: 'Setting up git', done: 'Committed' }, async () => {
+                await run('git', ['init'], input.target);
+                await run('git', ['add', '.'], input.target);
+                await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
+            });
+        } else {
+            steps.skip('Committed');
         }
 
         return { installed: input.install, committed: plan.init, gitNotice: plan.notice };
