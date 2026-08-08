@@ -112,5 +112,6 @@ try {
     if (failure.message !== null) log.error(failure.message);
     cancel(failure.closing);
 
-    process.exit(failure.code);
+    // process.exit would cut the two lines above short when stdout is a pipe
+    process.exitCode = failure.code;
 }
