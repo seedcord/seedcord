@@ -1,5 +1,18 @@
 # seedcord
 
+## 0.17.2-next.0
+
+### Patch Changes
+
+- dfd7dc2: Fix cli bin missing shebang so npm works correctly
+- Updated dependencies [dfd7dc2]
+- Updated dependencies [dfd7dc2]
+- Updated dependencies [9b0a6a6]
+    - @seedcord/errors@0.3.3-next.0
+    - @seedcord/logger@0.1.3-next.0
+    - @seedcord/core@0.1.3-next.0
+    - @seedcord/utils@0.8.3-next.0
+
 ## 0.17.1
 
 ### Patch Changes
