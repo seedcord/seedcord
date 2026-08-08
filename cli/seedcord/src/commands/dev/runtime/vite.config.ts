@@ -24,9 +24,10 @@ export default defineConfig({
     ssr: {
         target: 'node',
         // logger stays external so the bot shares the CLI's LoggerChannelRegistry singleton the dev TUI reads through
-        // @seedcord/core stays bundled
-        // vite injects import.meta.hot only into modules it transforms, and HmrManager.init reads it
         external: ['@seedcord/logger', '@seedcord/logger/node'],
+        // an externalized package's import() of a project .ts file goes to node's loader, which cannot parse decorators
+        // vite injects import.meta.hot only into modules it transforms, and HmrManager.init reads it
+        noExternal: [/^@seedcord\//],
         resolve: {
             conditions: ['node', 'import'],
             externalConditions: ['node']

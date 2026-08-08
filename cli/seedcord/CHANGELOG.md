@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.17.3
+
+### Patch Changes
+
+- Fix seedcord dev failing while attempting to parse decorators
+
 ## 0.17.2
 
 ### Patch Changes
