@@ -33,8 +33,11 @@ export async function execRunner(...[command, args, cwd]: Parameters<CommandRunn
     const spoken = [command, ...args].join(' ');
     const width = lineWidth();
 
+    // windows ships the package managers as .cmd shims
+    const shell = process.platform === 'win32';
+
     return new Promise((resolve, reject) => {
-        const child = spawn(command, args, { cwd });
+        const child = spawn(command, args, { cwd, shell });
         const captured: string[] = [];
 
         const take = (chunk: Buffer): void => {
