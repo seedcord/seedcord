@@ -1,4 +1,4 @@
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -70,9 +70,14 @@ describe('probeGit against the real git', () => {
 
     it('reports a temp directory as outside any repo', async () => {
         const outside = await mkdtemp(join(tmpdir(), 'create-seedcord-git-'));
-        const probe = await probeGit(outside);
 
-        expect(probe.installed).toBe(true);
-        expect(probe.insideRepo).toBe(false);
+        try {
+            const probe = await probeGit(outside);
+
+            expect(probe.installed).toBe(true);
+            expect(probe.insideRepo).toBe(false);
+        } finally {
+            await rm(outside, { recursive: true, force: true });
+        }
     });
 });
