@@ -2,23 +2,24 @@ import { log, select } from '@clack/prompts';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '../types';
+import type { Step } from '@interview/types';
 
 export const JAVASCRIPT_REPLIES = [
     'weird flex. anyway, welcome to TypeScript.',
-    'noted. ignored.',
-    'respectfully, no.',
-    'haha. anyway.',
+    'noted. ignored. TypeScript.',
+    'TypeScript. respectfully.',
+    'haha. TypeScript then.',
     'checking with legal... they said TypeScript.',
-    'ran that by the compiler. it hung up.',
-    'hard to hear you over all these type errors.',
-    "yeah... we don't do that here.",
-    'bold of you.',
-    'love the confidence.',
+    'ran that by the compiler. it hung up and started a TypeScript project.',
+    'hard to hear you over all these type errors. TypeScript should clear those up.',
+    "yeah... we don't do that here. TypeScript we can do.",
+    'bold of you. enjoy your TypeScript.',
+    'love the confidence. TypeScript will test it.',
     'absolutely. one TypeScript project coming up.',
     'sure thing. TypeScript, as requested.',
-    "you're gonna thank me in about a week.",
-    'are you okay?'
+    "you're gonna thank me for overriding this with TypeScript in about a week.",
+    'are you okay? here, have some TypeScript.',
+    'heard you. picked TypeScript anyway.'
 ] as const;
 
 export function pickReply(random: () => number = Math.random): string {
@@ -28,7 +29,7 @@ export function pickReply(random: () => number = Math.random): string {
 
 export const languageStep: Step<'language'> = {
     key: 'language',
-    flag: { name: 'language', parse: () => 'typescript' },
+    flag: { name: 'language', description: 'accepted, then overrides with typescript', parse: () => 'typescript' },
     ask: async () => {
         const picked = requireAnswer(
             await select<'typescript' | 'javascript'>({

@@ -1,8 +1,10 @@
 import { text } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '../types';
+import type { Step } from '@interview/types';
 
 // an Ed25519 public key is 32 bytes
 const PUBLIC_KEY_CHARS = 64;
@@ -12,7 +14,10 @@ function parsePublicKey(raw: string): string {
     const value = raw.trim();
 
     if (value.length !== PUBLIC_KEY_CHARS || !HEX.test(value)) {
-        throw new Error(`A public key is ${PUBLIC_KEY_CHARS} hex characters. Copy it from your app's main page.`);
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'public-key',
+            `A public key is ${PUBLIC_KEY_CHARS} hex characters. Copy it from your app's main page.`
+        ]);
     }
 
     return value.toLowerCase();
@@ -20,7 +25,7 @@ function parsePublicKey(raw: string): string {
 
 export const publicKeyStep: Step<'publicKey'> = {
     key: 'publicKey',
-    flag: { name: 'public-key', parse: parsePublicKey },
+    flag: { name: 'public-key', description: 'your app public key, http only', parse: parsePublicKey },
     skip: (answers) => answers.transport === 'gateway',
     ask: async () =>
         parsePublicKey(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CAPABILITIES, intentsFor, partialsFor, privilegedFor } from '@src/interview/capabilities';
+import { CAPABILITIES, intentsFor, isPrivileged, partialsFor, privilegedFor } from '@interview/capabilities';
 
 describe('CAPABILITIES', () => {
     it('offers eleven options with unique ids', () => {
@@ -10,6 +10,20 @@ describe('CAPABILITIES', () => {
 
     it('never offers Guilds as a choice', () => {
         expect(CAPABILITIES.flatMap((c) => c.intents)).not.toContain('Guilds');
+    });
+
+    it('keeps the marker out of the hints, which clack draws only under the cursor', () => {
+        expect(CAPABILITIES.filter((c) => c.hint.includes('privileged'))).toEqual([]);
+    });
+});
+
+describe('isPrivileged', () => {
+    it('names the three the dashboard gates and nothing else', () => {
+        expect(CAPABILITIES.filter((c) => isPrivileged(c.id)).map((c) => c.id)).toEqual([
+            'message-text',
+            'members',
+            'presence'
+        ]);
     });
 });
 
@@ -46,8 +60,26 @@ describe('partialsFor', () => {
         expect(partialsFor(['reactions'])).toEqual(['Message', 'Channel', 'Reaction']);
     });
 
+    it('takes the member partial a leave needs', () => {
+        expect(partialsFor(['members'])).toEqual(['GuildMember']);
+    });
+
+    it('takes the four a poll vote needs', () => {
+        expect(partialsFor(['polls'])).toEqual(['Message', 'Channel', 'Poll', 'PollAnswer']);
+    });
+
+    it('takes the user partial an event sign-up needs', () => {
+        expect(partialsFor(['scheduled-events'])).toEqual(['User']);
+    });
+
     it('lists a shared partial once', () => {
         const partials = partialsFor(['reactions', 'direct-messages']);
+
+        expect(new Set(partials).size).toBe(partials.length);
+    });
+
+    it('lists a shared partial once across reactions and polls', () => {
+        const partials = partialsFor(['reactions', 'polls']);
 
         expect(new Set(partials).size).toBe(partials.length);
     });

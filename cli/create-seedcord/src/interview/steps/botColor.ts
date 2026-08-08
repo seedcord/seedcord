@@ -1,9 +1,11 @@
 import { autocomplete } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Answers, Step } from '../types';
 import type { Option } from '@clack/prompts';
+import type { Answers, Step } from '@interview/types';
 import type { ColorName } from '@seedcord/types';
 
 export const COLOR_NAMES = [
@@ -42,6 +44,8 @@ export const COLOR_NAMES = [
 
 export type ColorChoice = (typeof COLOR_NAMES)[number];
 
+const VISIBLE_COLORS = 8;
+
 // the framework's resolveColor takes six hex digits with the hash optional
 function normalizeHex(raw: string): `#${string}` | null {
     const digits = raw.trim().replace(/^#/, '');
@@ -54,7 +58,13 @@ function parseColor(raw: string): Answers['botColor'] {
 
     const value = raw.trim().toLowerCase();
     const match = COLOR_NAMES.find((name) => name.toLowerCase() === value);
-    if (!match) throw new Error(`Unknown color "${raw}". Use a color name or a six-digit hex.`);
+    if (!match) {
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'color',
+            `Unknown color "${raw}". Use a color name or a six-digit hex.`
+        ]);
+    }
+
     return match;
 }
 
@@ -71,7 +81,7 @@ function colorOptions(this: { userInput: string }): Option<string>[] {
 
 export const botColorStep: Step<'botColor'> = {
     key: 'botColor',
-    flag: { name: 'color', parse: parseColor },
+    flag: { name: 'color', description: 'a color name or a six-digit hex', parse: parseColor },
     ask: async () =>
         parseColor(
             requireAnswer(
@@ -79,7 +89,8 @@ export const botColorStep: Step<'botColor'> = {
                     message: 'Pick an accent color, or type a hex',
                     options: colorOptions,
                     initialValue: 'Blurple',
-                    placeholder: 'Blurple'
+                    placeholder: 'Blurple',
+                    maxItems: VISIBLE_COLORS
                 })
             )
         )

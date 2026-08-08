@@ -15,22 +15,5 @@
         "lint:fix": "eslint 'src/**/*.ts' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,json,md}' --cache",
         "tc": "tsc --noEmit"
-    },
-    "dependencies": {
-        "@discordjs/builders": "{{ versions.builders }}",
-{{#if isGateway}}
-        "@seedcord/gateway": "{{ versions.gateway }}",
-        "discord.js": "{{ versions.discordjs }}",
-{{else}}
-        "@seedcord/http": "{{ versions.http }}",
-{{/if}}
-        "envapt": "{{ versions.envapt }}"
-    },
-    "devDependencies": {
-        "@seedcord/eslint-config": "{{ versions.eslintConfig }}",
-        "@seedcord/tsconfig": "{{ versions.tsconfig }}",
-        "prettier": "{{ versions.prettier }}",
-        "seedcord": "{{ versions.cli }}",
-        "typescript": "{{ versions.typescript }}"
     }
 }

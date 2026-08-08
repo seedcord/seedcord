@@ -230,7 +230,16 @@ const messages = {
         `cloudflared did not report a tunnel URL within ${seconds}s. Check that the binary runs and that the network allows it.`,
     [SeedcordErrorCode.CliTunnelNotVerified]: (url: string) => `Discord rejected ${url} as an interactions endpoint.`,
     [SeedcordErrorCode.CliTunnelUnreachable]: (url: string, seconds: number) =>
-        `${url} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`
+        `${url} did not answer within ${seconds}s, so nothing was PATCHed to Discord.`,
+    [SeedcordErrorCode.CreateCancelled]: () => 'Cancelled.',
+    [SeedcordErrorCode.CreateFlagNotApplicable]: (flag: string) =>
+        `The --${flag} flag does not apply to the answers you gave.`,
+    [SeedcordErrorCode.CreateInvalidAnswer]: (flag: string, reason: string) => `--${flag}: ${reason}`,
+    // node's parseArgs message ends on an unclosed quote
+    [SeedcordErrorCode.CreateBadUsage]: (reason: string) => `${reason}\nRun with --help for the flag list.`,
+    [SeedcordErrorCode.CreateTargetNotEmpty]: (target: string) =>
+        `${target} already has files in it. Pick an empty directory or a name that does not exist yet.`,
+    [SeedcordErrorCode.CreateStepFailed]: (command: string, reason: string) => `\`${command}\` failed.\n${reason}`
 } satisfies Record<SeedcordErrorCode, (...args: never[]) => string>;
 
 /** @internal */

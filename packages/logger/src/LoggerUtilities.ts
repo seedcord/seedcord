@@ -1,7 +1,6 @@
+import { paint } from '@seedcord/errors/internal';
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
-
-import { paint } from './palette';
 
 import type { LogLevel } from './types';
 import type { ILogger } from '@seedcord/types';

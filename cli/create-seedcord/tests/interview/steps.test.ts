@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { directoryStep } from '@src/interview/steps/directory';
-import { JAVASCRIPT_REPLIES, languageStep, pickReply } from '@src/interview/steps/language';
-import { transportStep } from '@src/interview/steps/transport';
+import { directoryStep } from '@interview/steps/directory';
+import { JAVASCRIPT_REPLIES, languageStep, pickReply } from '@interview/steps/language';
+import { transportStep } from '@interview/steps/transport';
 
 describe('directoryStep', () => {
     it('takes the directory from its flag verbatim', () => {
@@ -15,6 +15,34 @@ describe('directoryStep', () => {
 
     it('rejects an empty directory', () => {
         expect(() => directoryStep.flag.parse('   ')).toThrow();
+    });
+
+    it('keeps a nested path, checking only the folder the project goes in', () => {
+        expect(directoryStep.flag.parse('bots/my-bot')).toBe('bots/my-bot');
+    });
+
+    it('rejects a name npm would refuse as a package name', () => {
+        expect(() => directoryStep.flag.parse('My Bot')).toThrow();
+        expect(() => directoryStep.flag.parse('MyBot')).toThrow();
+        expect(() => directoryStep.flag.parse('_bot')).toThrow();
+        expect(() => directoryStep.flag.parse('bots/My Bot')).toThrow();
+    });
+
+    it('takes the punctuation npm allows', () => {
+        expect(directoryStep.flag.parse('my-bot_2.0')).toBe('my-bot_2.0');
+    });
+
+    it('takes a name right on the length limit', () => {
+        const longest = 'a'.repeat(64);
+        expect(directoryStep.flag.parse(longest)).toBe(longest);
+    });
+
+    it('rejects one character past it, and says the number', () => {
+        expect(() => directoryStep.flag.parse('a'.repeat(65))).toThrow(/64/);
+    });
+
+    it('measures the folder, leaving the path in front of it out', () => {
+        expect(directoryStep.flag.parse(`${'nested/'.repeat(20)}my-bot`)).toContain('my-bot');
     });
 });
 
@@ -29,7 +57,7 @@ describe('transportStep', () => {
     });
 
     it('names both options when the value is neither', () => {
-        expect(() => transportStep.flag.parse('websocket')).toThrow(/gateway.*http/);
+        expect(() => transportStep.flag.parse('websocket')).toThrow(/http.*gateway/);
     });
 });
 
@@ -45,6 +73,17 @@ describe('the JavaScript replies', () => {
     it('offers a pool with no repeats', () => {
         expect(JAVASCRIPT_REPLIES.length).toBeGreaterThan(1);
         expect(new Set(JAVASCRIPT_REPLIES).size).toBe(JAVASCRIPT_REPLIES.length);
+    });
+
+    // clack leaves JavaScript on screen as the picked label
+    it('names TypeScript in every line', () => {
+        expect(JAVASCRIPT_REPLIES.filter((reply) => !reply.includes('TypeScript'))).toEqual([]);
+    });
+
+    it('opens each line differently', () => {
+        const openers = JAVASCRIPT_REPLIES.map((reply) => reply.split(' ')[0]?.replace(/\W+$/, ''));
+
+        expect(new Set(openers).size).toBe(openers.length);
     });
 
     it('picks one from the pool', () => {

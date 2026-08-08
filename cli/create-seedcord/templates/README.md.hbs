@@ -51,8 +51,8 @@ The two webhook keys take Discord webhook URLs. Set them to get error reports po
 
 - `src/commands/` holds command definitions, one class per command.
 - `src/handlers/` holds the code that runs when someone uses one.
-{{#if hasEvents}}
-- `src/events/` holds event handlers for the things you said your bot reacts to.
+{{#if isGateway}}
+- `src/events/` holds event handlers for the things happening in a server.
 {{/if}}
 - `src/bot.ts` is the config.
 

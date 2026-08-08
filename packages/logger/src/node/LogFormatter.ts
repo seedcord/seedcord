@@ -1,8 +1,9 @@
+import { paint } from '@seedcord/errors/internal';
 import { stripAnsi } from '@seedcord/utils';
 import chalk from 'chalk';
 import { format } from 'winston';
 
-import { LEVEL_COLOR, paint } from '../palette';
+import { LEVEL_COLOR } from '../palette';
 
 import type { Logform } from 'winston';
 

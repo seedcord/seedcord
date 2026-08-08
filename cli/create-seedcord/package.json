@@ -39,20 +39,21 @@
         "coverage": "vitest run --coverage"
     },
     "devDependencies": {
+        "@clack/prompts": "catalog:deps",
+        "@seedcord/errors": "workspace:*",
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
         "discord.js": "catalog:peer",
+        "handlebars": "^4.7.9",
+        "package-manager-detector": "^1.8.0",
         "tsx": "catalog:deps",
         "typescript": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",
         "provenance": true
-    },
-    "dependencies": {
-        "@clack/prompts": "catalog:deps"
     }
 }

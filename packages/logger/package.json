@@ -56,6 +56,7 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
+        "@seedcord/errors": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",

@@ -1,18 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyFlags } from '@src/interview/applyFlags';
+import { applyFlags } from '@interview/applyFlags';
 
-import type { AnyStep } from '@src/interview/types';
+import type { AnyStep } from '@interview/types';
 
 const directory: AnyStep = {
     key: 'directory',
-    flag: { name: 'dir', parse: (raw) => raw },
+    flag: { name: 'dir', description: 'a stub', parse: (raw) => raw },
     ask: () => Promise.resolve('asked')
 };
 
 const capabilities: AnyStep = {
     key: 'capabilities',
-    flag: { name: 'capabilities', parse: (raw) => raw.split(',') },
+    flag: { name: 'capabilities', description: 'a stub', parse: (raw) => raw.split(',') },
     ask: () => Promise.resolve([])
 };
 

@@ -1,9 +1,12 @@
 import { multiselect } from '@clack/prompts';
+import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordError, paint } from '@seedcord/errors/internal';
 
-import { CAPABILITIES } from '../capabilities';
+import { CAPABILITIES, isPrivileged } from '@interview/capabilities';
+
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '../types';
+import type { Step } from '@interview/types';
 
 function parseCapabilities(raw: string): string[] {
     const ids = raw
@@ -13,16 +16,28 @@ function parseCapabilities(raw: string): string[] {
 
     for (const id of ids) {
         if (!CAPABILITIES.some((capability) => capability.id === id)) {
-            throw new Error(`Unknown capability "${id}". Run with --help for the list.`);
+            throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+                'capabilities',
+                `Unknown capability "${id}". Run with --help for the list.`
+            ]);
         }
     }
 
     return ids;
 }
 
+// clack draws a hint only under the cursor
+function optionLabel(id: string, label: string): string {
+    return isPrivileged(id) ? `${label} ${paint.amber('privileged')}` : label;
+}
+
 export const capabilitiesStep: Step<'capabilities'> = {
     key: 'capabilities',
-    flag: { name: 'capabilities', parse: parseCapabilities },
+    flag: {
+        name: 'capabilities',
+        description: `a comma separated list of ${CAPABILITIES.map((capability) => capability.id).join(', ')}`,
+        parse: parseCapabilities
+    },
     skip: (answers) => answers.transport === 'http',
     ask: async () =>
         requireAnswer(
@@ -30,7 +45,7 @@ export const capabilitiesStep: Step<'capabilities'> = {
                 message: 'What should your bot react to?',
                 options: CAPABILITIES.map((capability) => ({
                     value: capability.id,
-                    label: capability.label,
+                    label: optionLabel(capability.id, capability.label),
                     hint: capability.hint
                 })),
                 required: false

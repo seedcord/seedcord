@@ -1,5 +1,5 @@
 const SEED_DARK = '#2d3328';
-const PITH = '#f4f1e3';
+const PITH = '#f8f6e8';
 
 const CREAM = '#f4f0df';
 const INK = '#3a4233';

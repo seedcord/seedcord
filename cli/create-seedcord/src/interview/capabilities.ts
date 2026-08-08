@@ -10,8 +10,8 @@ export const CAPABILITIES = [
     },
     {
         id: 'message-text',
-        label: 'What messages actually say',
-        hint: 'privileged. without this, message text is empty unless the message mentions your bot',
+        label: "The messages' contents",
+        hint: 'without this, message text is empty unless the message mentions your bot',
         // MessageContent subscribes to nothing on its own
         intents: ['GuildMessages', 'MessageContent'],
         partials: []
@@ -34,14 +34,14 @@ export const CAPABILITIES = [
     {
         id: 'members',
         label: 'Member joins and leaves',
-        hint: 'privileged. also covers nickname and role changes',
+        hint: 'also covers nickname and role changes',
         intents: ['GuildMembers'],
-        partials: []
+        partials: ['GuildMember']
     },
     {
         id: 'presence',
         label: 'Member online status',
-        hint: 'privileged. who is online, and what they are playing',
+        hint: 'who is online, and what they are playing',
         intents: ['GuildPresences'],
         partials: []
     },
@@ -62,9 +62,10 @@ export const CAPABILITIES = [
     {
         id: 'scheduled-events',
         label: 'Scheduled events',
-        hint: 'know when a server event is created, updated, or starts',
+        hint: 'know when a server event is made, changed, or starts, and when people sign up',
         intents: ['GuildScheduledEvents'],
-        partials: []
+        // only the sign-up events read the user cache
+        partials: ['User']
     },
     {
         id: 'automod',
@@ -78,7 +79,8 @@ export const CAPABILITIES = [
         label: 'Polls',
         hint: 'know when someone votes in a poll',
         intents: ['GuildMessagePolls', 'DirectMessagePolls'],
-        partials: []
+        // getPoll returns null on a partial message unless both Poll and PollAnswer are set
+        partials: ['Message', 'Channel', 'Poll', 'PollAnswer']
     }
 ] as const;
 
@@ -106,4 +108,8 @@ const PRIVILEGED_INTENTS = new Set<IntentName>(['GuildMembers', 'GuildPresences'
 
 export function privilegedFor(ids: readonly string[]): IntentName[] {
     return intentsFor(ids).filter((intent) => PRIVILEGED_INTENTS.has(intent));
+}
+
+export function isPrivileged(id: string): boolean {
+    return privilegedFor([id]).length > 0;
 }
