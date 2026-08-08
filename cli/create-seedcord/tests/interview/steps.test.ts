@@ -31,6 +31,19 @@ describe('directoryStep', () => {
     it('takes the punctuation npm allows', () => {
         expect(directoryStep.flag.parse('my-bot_2.0')).toBe('my-bot_2.0');
     });
+
+    it('takes a name right on the length limit', () => {
+        const longest = 'a'.repeat(64);
+        expect(directoryStep.flag.parse(longest)).toBe(longest);
+    });
+
+    it('rejects one character past it, and says the number', () => {
+        expect(() => directoryStep.flag.parse('a'.repeat(65))).toThrow(/64/);
+    });
+
+    it('measures the folder, leaving the path in front of it out', () => {
+        expect(directoryStep.flag.parse(`${'nested/'.repeat(20)}my-bot`)).toContain('my-bot');
+    });
 });
 
 describe('transportStep', () => {

@@ -11,6 +11,8 @@ import type { Step } from '@interview/types';
 const PACKAGE_NAME = /^[a-z\d][a-z\d._-]*$/;
 const FORMAT = 'lowercase, digits, and . _ -';
 
+const MAX_NAME = 64;
+
 function parseDirectory(raw: string): string {
     const value = raw.trim();
     if (value === '') {
@@ -18,7 +20,16 @@ function parseDirectory(raw: string): string {
     }
 
     // context.ts copies the basename into package.json as the package name
-    if (!PACKAGE_NAME.test(basename(value))) {
+    const name = basename(value);
+
+    if (name.length > MAX_NAME) {
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'dir',
+            `Keep the folder name to ${MAX_NAME} characters or fewer.`
+        ]);
+    }
+
+    if (!PACKAGE_NAME.test(name)) {
         throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
             'dir',
             `The folder name becomes the package name. Use ${FORMAT}, starting with a letter or digit.`
