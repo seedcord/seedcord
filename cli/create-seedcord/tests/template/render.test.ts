@@ -35,7 +35,11 @@ async function render(answers: ScaffoldAnswers): Promise<Map<string, string>> {
 
 async function renderOne(answers: ScaffoldAnswers, path: string): Promise<string> {
     const files = await render(answers);
-    return files.get(path) ?? '';
+    const contents = files.get(path);
+    // an empty string would satisfy every not.toContain below
+    if (contents === undefined) throw new Error(`${path} was never rendered`);
+
+    return contents;
 }
 
 describe('renderTemplates', () => {
