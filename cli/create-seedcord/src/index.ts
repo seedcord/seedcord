@@ -1,9 +1,10 @@
 import { resolve } from 'node:path';
 import process from 'node:process';
-import { styleText } from 'node:util';
 
 import { cancel, intro, isCI, isTTY, log, outro } from '@clack/prompts';
+import chalk from 'chalk';
 
+import { banner } from '@cli/banner';
 import { helpText } from '@cli/help';
 import { runningAgent } from '@cli/packageManager';
 import { parseInput } from '@cli/parseInput';
@@ -41,7 +42,7 @@ async function main(): Promise<void> {
     }
 
     const interactive = isInteractive();
-    if (interactive) intro('create-seedcord');
+    if (interactive) intro(banner());
 
     const answers = requireScaffoldAnswers(await runFlow(STEPS, input.supplied, { interactive }));
     const target = resolve(process.cwd(), answers.directory);
@@ -81,7 +82,7 @@ async function reportOutcome(
     }
 
     log.step(nextSteps(answers, { agent, installed }).join('\n'));
-    log.message(styleText('dim', reproducingCommand(answers, agent)));
+    log.message(chalk.dim(reproducingCommand(answers, agent)));
 
     outro('https://guide.seedcord.org');
 }

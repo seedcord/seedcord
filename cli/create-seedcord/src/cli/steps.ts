@@ -1,6 +1,5 @@
-import { styleText } from 'node:util';
-
 import { S_STEP_SUBMIT, log, spinner } from '@clack/prompts';
+import chalk from 'chalk';
 
 export interface StepLabels {
     running: string;
@@ -28,9 +27,7 @@ export function clackSteps(): StepUi {
             }
         },
         skip: (label) => {
-            log.message(styleText('gray', `${label} (skipped)`), {
-                symbol: styleText('gray', S_STEP_SUBMIT)
-            });
+            log.message(chalk.gray(`${label} (skipped)`), { symbol: chalk.gray(S_STEP_SUBMIT) });
         }
     };
 }

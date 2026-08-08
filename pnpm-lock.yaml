@@ -482,6 +482,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      chalk:
+        specifier: ^6.0.0
+        version: 6.0.0
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
