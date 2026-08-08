@@ -46,7 +46,6 @@
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
-        "chalk": "catalog:deps",
         "discord.js": "catalog:peer",
         "handlebars": "^4.7.9",
         "package-manager-detector": "^1.8.0",

@@ -9,163 +9,16 @@ catalogs:
     '@clack/prompts':
       specifier: ^1.7.0
       version: 1.7.0
-    '@discordjs/builders':
-      specifier: ^1.14.1
-      version: 1.14.1
-    '@discordjs/rest':
-      specifier: ^2.6.3
-      version: 2.6.3
-    '@tailwindcss/postcss':
-      specifier: ^4.3.3
-      version: 4.3.3
-    '@types/node':
-      specifier: ^26.1.2
-      version: 26.1.2
-    chalk:
-      specifier: ^6.0.0
-      version: 6.0.0
-    envapt:
-      specifier: ^8.1.1
-      version: 8.1.1
-    lodash.merge:
-      specifier: ^4.6.2
-      version: 4.6.2
-    lucide-react:
-      specifier: ^1.28.0
-      version: 1.28.0
-    motion:
-      specifier: ^12.43.0
-      version: 12.43.0
-    next:
-      specifier: ^16.2.12
-      version: 16.2.12
-    prettier:
-      specifier: ^3.9.6
-      version: 3.9.6
-    prettier-plugin-tailwindcss:
-      specifier: ^0.8.1
-      version: 0.8.1
-    reflect-metadata:
-      specifier: ^0.2.2
-      version: 0.2.2
-    shiki:
-      specifier: ^4.4.1
-      version: 4.4.1
-    tailwindcss:
-      specifier: ^4.3.3
-      version: 4.3.3
-    tsdown:
-      specifier: ^0.22.14
-      version: 0.22.14
     tsx:
       specifier: ^4.23.5
       version: 4.23.5
-    type-fest:
-      specifier: ^5.8.0
-      version: 5.8.0
-    vite:
-      specifier: ^8.2.0
-      version: 8.2.0
-  eslint:
-    '@types/eslint-plugin-security':
-      specifier: ^3.0.1
-      version: 3.0.1
-    '@typescript-eslint/parser':
-      specifier: ^8.65.0
-      version: 8.65.0
-    '@typescript-eslint/rule-tester':
-      specifier: ^8.65.0
-      version: 8.65.0
-    '@typescript-eslint/utils':
-      specifier: ^8.65.0
-      version: 8.65.0
-    eslint:
-      specifier: ^10.8.0
-      version: 10.8.0
-    eslint-config-next:
-      specifier: ^16.2.12
-      version: 16.2.12
-    eslint-config-prettier:
-      specifier: ^10.1.8
-      version: 10.1.8
-    eslint-import-resolver-typescript:
-      specifier: ^4.4.5
-      version: 4.4.5
-    eslint-plugin-better-tailwindcss:
-      specifier: ^4.7.0
-      version: 4.7.0
-    eslint-plugin-import-x:
-      specifier: ^4.17.1
-      version: 4.17.1
-    eslint-plugin-mdx:
-      specifier: ^3.8.1
-      version: 3.8.1
-    eslint-plugin-prettier:
-      specifier: ^5.5.6
-      version: 5.5.6
-    eslint-plugin-react-compiler:
-      specifier: 19.1.0-rc.2
-      version: 19.1.0-rc.2
-    eslint-plugin-security:
-      specifier: ^4.0.1
-      version: 4.0.1
-    eslint-plugin-tailwind-canonical-classes:
-      specifier: ^1.4.1
-      version: 1.4.1
-    eslint-plugin-tsdoc:
-      specifier: ^0.5.2
-      version: 0.5.2
-    eslint-plugin-unicorn:
-      specifier: ^72.0.0
-      version: 72.0.0
-    typescript-eslint:
-      specifier: ^8.65.0
-      version: 8.65.0
   peer:
     discord.js:
       specifier: ^14.27.0
       version: 14.27.0
-    mongoose:
-      specifier: ^9.9.1
-      version: 9.9.1
     typescript:
       specifier: ^6.0.3
       version: 6.0.3
-  react:
-    '@types/react':
-      specifier: ^19.2.18
-      version: 19.2.18
-    '@types/react-dom':
-      specifier: ^19.2.4
-      version: 19.2.4
-    react:
-      specifier: ^19.2.8
-      version: 19.2.8
-    react-dom:
-      specifier: ^19.2.8
-      version: 19.2.8
-  test:
-    '@testing-library/dom':
-      specifier: ^10.4.1
-      version: 10.4.1
-    '@testing-library/jest-dom':
-      specifier: ^7.0.0
-      version: 7.0.0
-    '@testing-library/react':
-      specifier: ^16.3.2
-      version: 16.3.2
-    '@vitest/coverage-v8':
-      specifier: ^4.1.10
-      version: 4.1.10
-    dedent:
-      specifier: ^1.7.2
-      version: 1.7.2
-    jsdom:
-      specifier: ^30.0.1
-      version: 30.0.1
-    vitest:
-      specifier: ^4.1.10
-      version: 4.1.10
 
 overrides:
   discord.js>undici: ^6.27.0
@@ -482,9 +335,6 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
-      chalk:
-        specifier: catalog:deps
-        version: 6.0.0
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
