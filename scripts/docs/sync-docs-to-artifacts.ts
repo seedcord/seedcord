@@ -10,6 +10,7 @@ import {
     isPrerelease,
     serializeProject
 } from '@seedcord/docs-engine';
+import { documentedPackageNames } from '@seedcord/docs-generator';
 
 import {
     cacheControlFor,
@@ -152,10 +153,13 @@ async function emitVersionDir(engine: DocsEngine, pkg: PublishedPackage): Promis
 }
 
 async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
+    const documented = await documentedPackageNames();
+    const published = opts.published.filter((pkg) => documented.has(pkg.name));
     const emitted: EmittedEntry[] = [];
+
     if (opts.extract) {
         // each extract overwrites generated/manifest.json
-        for (const pkg of opts.published) {
+        for (const pkg of published) {
             await extractPackage(pkg, opts.projectFolderUrl);
             const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
             const entry = await emitVersionDir(engine, pkg);
@@ -164,7 +168,7 @@ async function collectEmitted(opts: Options): Promise<EmittedEntry[]> {
     } else {
         // generated/ already holds every published package (local / rehearsal path).
         const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
-        for (const pkg of opts.published) {
+        for (const pkg of published) {
             const entry = await emitVersionDir(engine, pkg);
             if (entry) emitted.push(entry);
         }

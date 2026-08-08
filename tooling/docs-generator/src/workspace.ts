@@ -34,6 +34,12 @@ export async function discoverWorkspacePackages(paths: ApiDocsPaths = defaultPat
     return packageDirs.sort();
 }
 
+export async function documentedPackageNames(paths: ApiDocsPaths = defaultPaths): Promise<Set<string>> {
+    const dirs = await discoverWorkspacePackages(paths);
+    const manifests = await Promise.all(dirs.map((dir) => readPackageManifest(dir)));
+    return new Set(manifests.map((manifest) => manifest.name));
+}
+
 async function readWorkspacePatterns(repoRoot: string): Promise<string[]> {
     const workspacePath = path.join(repoRoot, WORKSPACE_FILE);
     const parsed: unknown = parse(await readFile(workspacePath, 'utf8'));
