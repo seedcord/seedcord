@@ -1,15 +1,28 @@
+import { basename } from 'node:path';
+
 import { text } from '@clack/prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, paint } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
 import type { Step } from '@interview/types';
 
+const PACKAGE_NAME = /^[a-z\d][a-z\d._-]*$/;
+const FORMAT = 'lowercase, digits, and . _ -';
+
 function parseDirectory(raw: string): string {
     const value = raw.trim();
     if (value === '') {
         throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, ['dir', 'A project directory cannot be empty.']);
+    }
+
+    // context.ts copies the basename into package.json as the package name
+    if (!PACKAGE_NAME.test(basename(value))) {
+        throw new SeedcordError(SeedcordErrorCode.CreateInvalidAnswer, [
+            'dir',
+            `The folder name becomes the package name. Use ${FORMAT}, starting with a letter or digit.`
+        ]);
     }
 
     return value;
@@ -22,9 +35,16 @@ export const directoryStep: Step<'directory'> = {
         parseDirectory(
             requireAnswer(
                 await text({
-                    message: 'Where should the project go?',
+                    message: `Where should the project go? ${paint.mute(FORMAT)}`,
                     placeholder: 'my-bot',
-                    validate: (value) => ((value ?? '').trim() === '' ? 'Enter a directory name.' : undefined)
+                    validate: (value) => {
+                        try {
+                            parseDirectory(value ?? '');
+                            return undefined;
+                        } catch (error) {
+                            return Error.isError(error) ? error.message : 'Enter a directory name.';
+                        }
+                    }
                 })
             )
         )

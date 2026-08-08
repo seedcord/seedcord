@@ -16,6 +16,21 @@ describe('directoryStep', () => {
     it('rejects an empty directory', () => {
         expect(() => directoryStep.flag.parse('   ')).toThrow();
     });
+
+    it('keeps a nested path, checking only the folder the project goes in', () => {
+        expect(directoryStep.flag.parse('bots/my-bot')).toBe('bots/my-bot');
+    });
+
+    it('rejects a name npm would refuse as a package name', () => {
+        expect(() => directoryStep.flag.parse('My Bot')).toThrow();
+        expect(() => directoryStep.flag.parse('MyBot')).toThrow();
+        expect(() => directoryStep.flag.parse('_bot')).toThrow();
+        expect(() => directoryStep.flag.parse('bots/My Bot')).toThrow();
+    });
+
+    it('takes the punctuation npm allows', () => {
+        expect(directoryStep.flag.parse('my-bot_2.0')).toBe('my-bot_2.0');
+    });
 });
 
 describe('transportStep', () => {
