@@ -1,5 +1,5 @@
 import { S_STEP_SUBMIT, log, spinner } from '@clack/prompts';
-import chalk from 'chalk';
+import { paint } from '@seedcord/errors/internal';
 
 interface StepLabels {
     running: string;
@@ -28,7 +28,7 @@ export function clackSteps(): StepUi {
             }
         },
         skip: (label) => {
-            log.message(chalk.gray(`${label} (skipped)`), { symbol: chalk.gray(S_STEP_SUBMIT) });
+            log.message(paint.mute(`${label} (skipped)`), { symbol: paint.mute(S_STEP_SUBMIT) });
         }
     };
 }
