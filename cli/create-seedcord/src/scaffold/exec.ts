@@ -29,15 +29,28 @@ function failureLines(captured: string[]): string[] {
     return named.length > 0 ? named.slice(0, KEPT_LINES) : captured.slice(-KEPT_LINES);
 }
 
+interface SpawnSpec {
+    command: string;
+    args: string[];
+    shell: boolean;
+}
+
+export function spawnSpec(command: string, args: string[], platform: NodeJS.Platform): SpawnSpec {
+    // windows ships the package managers as .cmd shims, and node will not spawn one without a shell
+    const shell = platform === 'win32' && command !== 'git';
+    if (!shell) return { command, args, shell };
+
+    // node prints DEP0190 when args are passed with shell: true
+    return { command: [command, ...args].join(' '), args: [], shell };
+}
+
 export async function execRunner(...[command, args, cwd]: Parameters<CommandRunner>): Promise<void> {
     const spoken = [command, ...args].join(' ');
     const width = lineWidth();
-
-    // windows ships the package managers as .cmd shims
-    const shell = process.platform === 'win32';
+    const spec = spawnSpec(command, args, process.platform);
 
     return new Promise((resolve, reject) => {
-        const child = spawn(command, args, { cwd, shell });
+        const child = spawn(spec.command, spec.args, { cwd, shell: spec.shell });
         const captured: string[] = [];
 
         const take = (chunk: Buffer): void => {
