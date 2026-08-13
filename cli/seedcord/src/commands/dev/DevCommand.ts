@@ -3,6 +3,7 @@ import React from 'react';
 
 import { BaseCommand } from '@core/BaseCommand';
 import { DevApp } from '@ui/DevApp';
+import { profileFrame, profileReport, profileStdout } from '@ui/profile';
 import { DevStore } from '@ui/stores/DevStore';
 import { LogStore } from '@ui/stores/LogStore';
 
@@ -20,6 +21,7 @@ export class DevCommand extends BaseCommand {
             .command(this.name)
             .description(this.description)
             .action(async () => {
+                profileStdout();
                 const store = new DevStore();
                 const runner = DevRunner.create(this.logger, store);
 
@@ -50,6 +52,9 @@ export class DevCommand extends BaseCommand {
 
     private printLogLocation(): void {
         process.stdout.write('seedcord dev stopped. logs: logs/\n');
+
+        const report = profileReport();
+        if (report !== null) process.stdout.write(`${report}\n`);
     }
 
     private async runDevApp(store: DevStore, runner: DevRunner): Promise<void> {
@@ -78,7 +83,13 @@ export class DevCommand extends BaseCommand {
                 }
             }),
             // the alternate screen restores the terminal and scrollback on quit, and ink's ESC[3J purge never fires
-            { exitOnCtrlC: false, alternateScreen: true }
+            {
+                exitOnCtrlC: false,
+                alternateScreen: true,
+                onRender: ({ renderTime }) => {
+                    profileFrame(renderTime);
+                }
+            }
         );
 
         await waitUntilExit();

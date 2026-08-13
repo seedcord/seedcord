@@ -6,6 +6,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
 import chalk from 'chalk';
 
+import { profileMark } from '@ui/profile';
 import { resolveDefaultExport } from '@utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
@@ -42,6 +43,7 @@ export class DevSession {
                 this.onEvent(event);
             }
         });
+        profileMark('vite');
 
         // vite's missing-entry message changed across a minor and broke detection
         if (!existsSync(this.config.instance)) {
@@ -50,6 +52,7 @@ export class DevSession {
 
         try {
             const { module } = await this.runtime.loadEntry();
+            profileMark('entry');
             return module;
         } catch (error: unknown) {
             const message = Error.isError(error) ? error.message : String(error);
@@ -85,6 +88,7 @@ export class DevSession {
 
             this.store.setPhase('running');
             this.store.setStatus(`${chalk.bold(instance.username ?? 'Bot')} is ready!`);
+            profileMark('ready');
             onReady?.();
 
             // resolved by stop(), and no signal handlers here so restarts never accumulate listeners
