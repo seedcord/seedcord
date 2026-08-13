@@ -217,7 +217,7 @@ export enum SeedcordErrorCode {
     CliBuildFailed = 3117,
     /** Unable to write the generated bootstrap file. */
     CliBootstrapWriteFailed = 3118,
-    /** Config tsconfig must be a string when provided. */
+    /** Config hmr typecheck tsconfig must be a string when provided. */
     CliConfigInvalidTsconfig = 3119,
     /** Config hmr options must be an object when provided. */
     CliConfigInvalidHmr = 3120,
@@ -251,6 +251,8 @@ export enum SeedcordErrorCode {
     CliTunnelNotVerified = 3134,
     /** The tunnel URL never answered its health probe. */
     CliTunnelUnreachable = 3135,
+    /** Config hmr typecheck flag must be a boolean or object when provided. */
+    CliConfigInvalidHmrTypecheck = 3136,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

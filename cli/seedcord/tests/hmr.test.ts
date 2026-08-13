@@ -45,7 +45,7 @@ describe('HmrPlugin', () => {
         configFile: 'seedcord.config.ts',
         entry: 'src/index.ts',
         instance: 'src/Seedcord.ts',
-        tsconfig: 'tsconfig.json',
+        typecheck: { enabled: false } as const,
         tunnel: { mode: 'quick' } as const,
         build: {
             outDir: 'dist',

@@ -6,5 +6,9 @@ export default defineConfig({
     entry: './index.ts',
     build: {
         tsconfig: './tsconfig.build.json'
+    },
+    hmr: {
+        // set true to run tsc --watch alongside the bot, at the cost of a second node process
+        typecheck: false
     }
 });

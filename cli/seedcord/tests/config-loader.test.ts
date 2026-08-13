@@ -106,8 +106,8 @@ describe('ConfigLoader', () => {
         );
     });
 
-    it('carries hmr config through to the resolved config and resolves hmr.tsconfig', async () => {
-        const hmr = { restart: ['**/*.json'], tsconfig: './tsconfig.dev.json' };
+    it('carries hmr config through and resolves the typecheck tsconfig', async () => {
+        const hmr = { restart: ['**/*.json'], typecheck: { tsconfig: './tsconfig.dev.json' } };
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
                 return Promise.resolve({
@@ -121,7 +121,23 @@ describe('ConfigLoader', () => {
         );
 
         expect(resolved.hmr).toEqual(hmr);
-        expect(resolved.tsconfig).toBe(resolve(process.cwd(), 'tsconfig.dev.json'));
+        expect(resolved.typecheck).toEqual({ enabled: true, tsconfig: resolve(process.cwd(), 'tsconfig.dev.json') });
+    });
+
+    it('leaves typecheck off when the config omits it', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts' } satisfies SeedcordDevConfig
+                } as TModule);
+            }
+        };
+
+        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
+            join(process.cwd(), 'seedcord.config.ts')
+        );
+
+        expect(resolved.typecheck).toEqual({ enabled: false });
     });
 
     it('rejects a non-object default export', async () => {
@@ -162,6 +178,20 @@ describe('ConfigLoader', () => {
         await expect(
             new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
         ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRollback });
+    });
+
+    it('rejects a non-boolean hmr.typecheck', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts', hmr: { typecheck: 'nope' } }
+                } as TModule);
+            }
+        };
+
+        await expect(
+            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrTypecheck });
     });
 });
 

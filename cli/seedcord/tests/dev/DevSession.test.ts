@@ -16,6 +16,7 @@ function config(): ResolvedSeedcordDevConfig {
         instance: `${process.cwd()}/package.json`,
         entry: `${process.cwd()}/package.json`,
         tunnel: { mode: 'quick' },
+        typecheck: { enabled: false },
         build: { outDir: 'dist', bootstrap: 'index.mjs' }
     };
 }

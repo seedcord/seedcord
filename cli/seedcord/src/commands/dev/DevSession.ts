@@ -60,11 +60,15 @@ export class DevSession {
         }
     }
 
-    public async start(onReady?: () => void): Promise<void> {
-        const cwd = dirname(this.config.configFile);
-        this.tscRunner = new TscRunner(this.config.tsconfig, cwd);
-        this.tscRunner.start();
+    private startTypecheck(): void {
+        const { typecheck } = this.config;
+        if (!typecheck.enabled) return;
 
+        this.tscRunner = new TscRunner(typecheck.tsconfig, dirname(this.config.configFile));
+        this.tscRunner.start();
+    }
+
+    public async start(onReady?: () => void): Promise<void> {
         const module = await this.loadInstanceModule();
         const exported = resolveDefaultExport(module);
         const instance = await Promise.resolve(exported);
@@ -90,6 +94,8 @@ export class DevSession {
             this.store.setStatus(`${chalk.bold(instance.username ?? 'Bot')} is ready!`);
             profileMark('ready');
             onReady?.();
+            // tsc competes with vite's cold transform when it starts any earlier
+            this.startTypecheck();
 
             // resolved by stop(), and no signal handlers here so restarts never accumulate listeners
             await new Promise<void>((resolve) => {
