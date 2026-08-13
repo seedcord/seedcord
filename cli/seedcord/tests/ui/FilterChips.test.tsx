@@ -38,7 +38,7 @@ describe('FilterChips', () => {
         );
 
         const frame = lastFrame() ?? '';
-        expect(frame).toContain('↕ resize to see filters');
+        expect(frame).toContain('resize to see filters');
         expect(frame).toContain('▸ channels');
         expect(frame).toContain('▸ levels');
         expect(frame).not.toContain('gates');

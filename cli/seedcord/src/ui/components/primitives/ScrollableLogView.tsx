@@ -17,7 +17,7 @@ import type { ReactElement } from 'react';
 const MIN_LOG_LINES = 5; // fits an error head plus a few stack frames
 
 export const NO_ROOM = 'Need more room for logs.';
-const DOT = '⏺';
+const DOT = '●';
 const BAR = '▌';
 const GUIDE = '│';
 const ELLIPSIS = '…';

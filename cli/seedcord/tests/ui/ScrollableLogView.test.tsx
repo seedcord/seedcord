@@ -25,7 +25,7 @@ describe('ScrollableLogView', () => {
         );
         const frame = lastFrame() ?? '';
         expect(frame).toContain('Mongoose');
-        expect(frame).toContain('⏺');
+        expect(frame).toContain('●');
         expect(frame).toContain('connected');
     });
 
@@ -97,7 +97,7 @@ describe('ScrollableLogView', () => {
         const lines = frame.split('\n').filter((line) => line.trim() !== '');
 
         expect(lines).toHaveLength(3);
-        expect(lines.filter((line) => line.includes('⏺'))).toHaveLength(1);
+        expect(lines.filter((line) => line.includes('●'))).toHaveLength(1);
         expect(frame).toContain('india');
     });
 
