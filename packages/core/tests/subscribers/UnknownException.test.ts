@@ -15,8 +15,8 @@ const ESC = String.fromCharCode(27);
 const core = {} as unknown as CoreBase;
 
 // the text a text-display carries in the container, so an assertion sees the real webhook string
-function reportText(error: Error): string {
-    const report = new UnknownException({ uuid: randomUUID(), error }, core).report();
+function reportText(error: Error, suppressed = 0): string {
+    const report = new UnknownException({ uuid: randomUUID(), error, routeId: 'slash:probe' }, core).report(suppressed);
     // justified: report() emits a single container component, its json shape is APIContainerComponent
     const container = report.components[0]?.toJSON() as APIContainerComponent;
     return container.components
@@ -35,5 +35,13 @@ describe('UnknownException.report', () => {
     it('renders the direct AckTrace cause', () => {
         const error = new Error('illegal ack', { cause: new AckTrace('reply') });
         expect(reportText(error)).toContain('reply() acknowledged this interaction');
+    });
+
+    it('prints the suppressed count', () => {
+        expect(reportText(new Error('db down'), 412)).toContain('412 more');
+    });
+
+    it('prints no count when nothing was suppressed', () => {
+        expect(reportText(new Error('db down'))).not.toContain('more');
     });
 });

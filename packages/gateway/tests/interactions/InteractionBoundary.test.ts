@@ -57,14 +57,15 @@ function asInteraction(mock: ReturnType<typeof mockInteraction>): ValidInteracti
     return mock as unknown as ValidInteractionTypes;
 }
 
-// the dispatcher supplies its own route id, these cases pin the boundary's other behavior
+// the dispatcher supplies the route id
 function handleInteractionFault(
     caught: unknown,
     interaction: ValidInteractionTypes,
     core: Core,
-    sender?: ReplySender
+    sender?: ReplySender,
+    routeId = 'slash:test'
 ): Promise<void> {
-    return boundary(caught, interaction, core, 'slash:test', sender);
+    return boundary(caught, interaction, core, routeId, sender);
 }
 
 function senderFor(mock: ReturnType<typeof mockInteraction>, routeId: string): ReplySender {
@@ -119,8 +120,8 @@ describe('handleInteractionFault', () => {
         expect(payload.error.message).toBe('a thrown string');
     });
 
-    // the uuid on the user's error card has to be greppable, so the log runs before the throttle
-    it('logs every occurrence of a throttled fault, publishing only the first', async () => {
+    // the uuid on the user's error card has to be greppable
+    it('logs a line per fault', async () => {
         const core = mockCore(publish);
         const errorLog = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
@@ -129,7 +130,6 @@ describe('handleInteractionFault', () => {
 
         const lines = errorLog.mock.calls.map(([message]) => String(message));
         expect(lines.filter((line: string) => line.includes('db down'))).toHaveLength(2);
-        expect(publish.mock.calls.filter(([event]) => event === 'unknownException')).toHaveLength(1);
         errorLog.mockRestore();
     });
 
@@ -253,22 +253,6 @@ describe('handleInteractionFault', () => {
             expect(event).toBe('unknownException');
             expect(payload.error).toBeInstanceOf(Fault);
             expect(payload.metadata).toBe(interaction);
-        });
-
-        it('keys autocomplete faults per route, so two routes with the same error both report', async () => {
-            const core = mockCore(publish);
-            const search = mockInteraction();
-            search.isAutocomplete.mockReturnValue(true);
-            search.commandName = 'search';
-            const lookup = mockInteraction();
-            lookup.isAutocomplete.mockReturnValue(true);
-            lookup.commandName = 'lookup';
-
-            await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(search), core);
-            await handleInteractionFault(new Fault({ cause: new Error('x') }), asInteraction(lookup), core);
-
-            // the empty-choices send publishes responseAttempted too, so count the fault key alone
-            expect(publish.mock.calls.filter(([event]) => event === 'unknownException')).toHaveLength(2);
         });
 
         it('publishes responseAttempted for the empty-choices send', async () => {

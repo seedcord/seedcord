@@ -16,11 +16,15 @@ import type { CoreBase } from '@interfaces/CoreBase';
 @Subscribe('unknownException')
 @WebhookUrl('UNKNOWN_EXCEPTION_WEBHOOK_URL')
 export class UnknownException extends WebhookLog<'unknownException', CoreBase> {
-    report(): WebhookReport {
+    protected override throttleKey(): string {
+        return `${this.data.routeId}:${nameOf(this.data.error)}`;
+    }
+
+    report(suppressed: number): WebhookReport {
         const { metadata } = this.data;
         return {
             username: 'Unknown Exception',
-            components: [new UnhandledErrorContainer(this.data).component],
+            components: [new UnhandledErrorContainer(this.data, suppressed).component],
             files: metadata
                 ? [jsonAttachment('metadata.json', 'Metadata associated with the error', metadata)]
                 : undefined
@@ -28,8 +32,13 @@ export class UnknownException extends WebhookLog<'unknownException', CoreBase> {
     }
 }
 
+// discord.js puts the api code in the name, as `DiscordAPIError[10062]`
+function nameOf(error: Error): string {
+    return error.name === 'Error' ? error.constructor.name : error.name;
+}
+
 class UnhandledErrorContainer extends BuilderComponent<'container'> {
-    constructor(data: AllSubscriptions['unknownException']) {
+    constructor(data: AllSubscriptions['unknownException'], suppressed: number) {
         super('container');
 
         const { uuid, error, guild, user, metadata } = data;
@@ -51,6 +60,15 @@ class UnhandledErrorContainer extends BuilderComponent<'container'> {
 
         this.addTimestampsIfAvailable(error);
         this.addMetadataIfAvailable(metadata);
+        this.addSuppressedCount(suppressed);
+    }
+
+    private addSuppressedCount(suppressed: number): void {
+        if (suppressed === 0) return;
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`-# ${suppressed} more of these since the last report`)
+        );
     }
 
     private addTimestampsIfAvailable(error: Error): void {

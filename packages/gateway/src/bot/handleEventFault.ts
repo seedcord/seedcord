@@ -26,8 +26,7 @@ export function handleEventFault(
     }
     const error = asError(caught);
 
-    // empty by default, so a dead resource on an event reports (throttled) until the dev confirms it is
-    // an expected dead end and adds the code here
+    // a dead resource on an event keeps reporting until the dev adds its code to this list
     const ignore = new Set<number | string>(core.config.errors?.ignoreEventApiCodes ?? []);
     if (error instanceof DiscordAPIError && ignore.has(error.code)) {
         logger.debug(`swallowed api code ${error.code}`);
@@ -40,6 +39,7 @@ export function handleEventFault(
     const actor = deriveEventActor(args);
     extractErrorResponse(error, core, {
         event: { name: eventName, handler: handlerName, args, channelId: actor.channelId },
+        routeId: `event:${eventName}:${handlerName}`,
         guild: actor.guild,
         user: actor.user
     });

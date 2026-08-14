@@ -1,9 +1,8 @@
 import * as crypto from 'node:crypto';
 
 import { Notice, Fault } from '@seedcord/core';
-import { prefixOf, PublishDefault, FaultThrottle } from '@seedcord/core/internal';
+import { PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
-import { DiscordAPIError } from 'discord.js';
 
 import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';
 
@@ -29,8 +28,7 @@ interface EventOrigin {
 export interface ErrorOrigin {
     interaction?: Repliables;
     event?: EventOrigin;
-    // set only for autocomplete, where faultKey has no interaction or event to key on
-    route?: string;
+    routeId: string;
     guild: Nullable<Guild>;
     user: Nullable<User>;
     metadata?: unknown;
@@ -59,45 +57,33 @@ export function extractErrorResponse(error: Error, core: Core, origin: ErrorOrig
     return { uuid, response };
 }
 
-// stamp after the publish, otherwise a throttled fault loses its next window
-function withThrottle(core: Core, origin: ErrorOrigin, error: Error, publish: () => void): void {
-    const throttle = FaultThrottle.for(core);
-    const key = faultKey(origin, error);
-    if (!throttle.shouldReport(key)) {
-        logger.debug(`throttled duplicate fault ${key}`);
-        return;
-    }
-    publish();
-    throttle.markReported(key);
-}
-
 function reportFault(denial: Notice, core: Core, origin: ErrorOrigin, uuid: UUID): void {
-    // logged outside the throttle, so the uuid on the user's card always finds a line
     logger.error(`${denial.name}: ${uuid}`, denial);
 
-    withThrottle(core, origin, denial, () => {
-        if (origin.interaction) {
-            core.bus[PublishDefault]('handledException', {
-                denial,
-                uuid,
-                source: buildInteractionSource(origin.interaction)
-            });
-        } else if (origin.event) {
-            core.bus[PublishDefault]('handledException', {
-                denial,
-                uuid,
-                source: buildEventSource(origin.event, origin)
-            });
-        } else {
-            // an autocomplete throw has no typed source. unknownException is the only channel left
-            core.bus[PublishDefault]('unknownException', {
-                uuid,
-                error: denial,
-                ...scalarActors(origin),
-                metadata: metadataFor(origin)
-            });
-        }
-    });
+    if (origin.interaction) {
+        core.bus[PublishDefault]('handledException', {
+            denial,
+            uuid,
+            routeId: origin.routeId,
+            source: buildInteractionSource(origin.interaction)
+        });
+    } else if (origin.event) {
+        core.bus[PublishDefault]('handledException', {
+            denial,
+            uuid,
+            routeId: origin.routeId,
+            source: buildEventSource(origin.event, origin)
+        });
+    } else {
+        // an autocomplete throw has no typed source. unknownException is the only channel left
+        core.bus[PublishDefault]('unknownException', {
+            uuid,
+            error: denial,
+            routeId: origin.routeId,
+            ...scalarActors(origin),
+            metadata: metadataFor(origin)
+        });
+    }
 }
 
 function causeLine(error: Error): string {
@@ -112,13 +98,12 @@ function reportRawFault(error: Error, core: Core, origin: ErrorOrigin, uuid: UUI
     if (showStack) logger.error(uuid, error);
     else logger.error(`${uuid} | ${error.message}${causeLine(error)}`);
 
-    withThrottle(core, origin, error, () => {
-        core.bus[PublishDefault]('unknownException', {
-            uuid,
-            error,
-            ...scalarActors(origin),
-            metadata: metadataFor(origin)
-        });
+    core.bus[PublishDefault]('unknownException', {
+        uuid,
+        error,
+        routeId: origin.routeId,
+        ...scalarActors(origin),
+        metadata: metadataFor(origin)
     });
 }
 
@@ -145,31 +130,6 @@ function buildEventSource(event: EventOrigin, origin: ErrorOrigin): EventFaultSo
         channelId: event.channelId,
         raw: event.args
     };
-}
-
-// a parameterized component or a flooding event has to collapse to one key
-function faultKey(origin: ErrorOrigin, error: Error): string {
-    const name =
-        error instanceof Notice
-            ? error.name
-            : error instanceof DiscordAPIError
-              ? String(error.code)
-              : error.constructor.name;
-    if (origin.event) return `${origin.event.name}:${origin.event.handler}:${name}`;
-    if (origin.interaction) return `${interactionRoute(origin.interaction)}:${name}`;
-    // namespaced so it never collides with a same-named slash command
-    if (origin.route) return `autocomplete:${origin.route}:${name}`;
-    return `autocomplete:${name}`;
-}
-
-function interactionRoute(interaction: Repliables): string {
-    if (interaction.isChatInputCommand()) return slashRouteOf(interaction);
-    if (interaction.isContextMenuCommand()) return interaction.commandName;
-    if (interaction.isButton() || interaction.isAnySelectMenu() || interaction.isModalSubmit()) {
-        // || so an empty prefix (a too-short routeKey) falls back to the full wire
-        return prefixOf(interaction.customId) || interaction.customId;
-    }
-    return 'interaction';
 }
 
 function buildInteractionSource(interaction: Repliables): InteractionFaultSource {

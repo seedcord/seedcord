@@ -8,6 +8,7 @@ import { HandledException } from '@subscribers/default/HandledException';
 
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { ReplyResponse } from '@seedcord/types';
+import type { WebhookReport } from '@subscribers/bases/WebhookLog';
 import type { EventFaultSource, FaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 
@@ -45,14 +46,19 @@ const eventSource: EventFaultSource = {
 // justified: the Subscriber base only stores core
 const core = {} as unknown as CoreBase;
 
+function handledReport(denial: Notice, source: FaultSource, suppressed = 0): WebhookReport {
+    const data = { denial, uuid: randomUUID(), routeId: 'slash:probe', source };
+    return new HandledException(data, core).report(suppressed);
+}
+
 function reportText(denial: Notice, source: FaultSource): string {
-    const report = new HandledException({ denial, uuid: randomUUID(), source }, core).report();
+    const report = handledReport(denial, source);
     return JSON.stringify(report.components.map((component) => component.toJSON()));
 }
 
 // the raw text-display strings, so an assertion sees the real webhook content before JSON escaping
-function rawText(denial: Notice, source: FaultSource): string {
-    const report = new HandledException({ denial, uuid: randomUUID(), source }, core).report();
+function rawText(denial: Notice, source: FaultSource, suppressed = 0): string {
+    const report = handledReport(denial, source, suppressed);
     // justified: report() emits a single container component, its json shape is APIContainerComponent
     const container = report.components[0]?.toJSON() as APIContainerComponent;
     return container.components
@@ -108,5 +114,13 @@ describe('HandledException.report', () => {
         cause.stack = 'Error: boom ``` still open ``` end';
         const fences = rawText(new TestFault('x', cause), interactionSource).match(/```/gu) ?? [];
         expect(fences).toHaveLength(2);
+    });
+
+    it('prints the suppressed count', () => {
+        expect(rawText(new TestFault(), interactionSource, 7)).toContain('7 more');
+    });
+
+    it('prints no count when nothing was suppressed', () => {
+        expect(rawText(new TestFault(), interactionSource)).not.toContain('more');
     });
 });

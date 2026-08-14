@@ -6,6 +6,7 @@ import { Converters, Envapter } from 'envapt';
 import { sendFlags } from '@reply/flags';
 import { WebhookUrlMetadataKey } from '@src/metadataKeys';
 
+import { ReportThrottle } from '../ReportThrottle';
 import { Subscriber } from '../Subscriber';
 import { isDiscordWebhookUrl } from './webhookHelpers';
 import { WebhookSender } from './WebhookSender';
@@ -41,19 +42,38 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
 > {
     private static readonly senders = new Map<string, WebhookSender>();
 
-    /** Builds the message for one published event. */
-    abstract report(): WebhookReport | Promise<WebhookReport>;
+    /**
+     * Builds the message for one published event.
+     *
+     * @param suppressed - How many events were dropped since the last card
+     */
+    abstract report(suppressed: number): WebhookReport | Promise<WebhookReport>;
+
+    /**
+     * Events sharing this key collapse into one card per minute. Return `null` to send every event.
+     */
+    protected throttleKey(): string | null {
+        return null;
+    }
 
     async execute(): Promise<void> {
         const url = WebhookLog.urlOf(WebhookLog.envKeyOf(this.constructor));
         if (url === null) {
-            // a server host skips url-less reporters at registration, an edge host registers lazily and reaches this branch
+            // only an edge host reaches this branch, since it registers reporters lazily
             this.logger.warn(`${chalk.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`);
             return;
         }
 
-        const { username, components, files } = await this.report();
+        const key = this.throttleKey();
+        const throttle = ReportThrottle.for(this.core);
+        const suppressed = key === null ? 0 : throttle.take(key);
+        if (suppressed === null) {
+            this.logger.debug(`counted a repeat into the next ${chalk.bold(this.constructor.name)} card`);
+            return;
+        }
+
         try {
+            const { username, components, files } = await this.report(suppressed);
             await WebhookLog.senderFor(url).send({
                 flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
@@ -61,7 +81,8 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
                 files
             });
         } catch (error) {
-            this.logger.error('Failed to send webhook report', error);
+            if (key !== null) throttle.restore(key, suppressed);
+            this.logger.error('Webhook report failed', error);
         }
     }
 

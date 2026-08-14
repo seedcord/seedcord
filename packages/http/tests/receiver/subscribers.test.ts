@@ -8,7 +8,7 @@ import { registerSubscribers } from '@src/dispatch/registerSubscribers';
 
 import { emptyManifest } from '../helpers/fixtures';
 
-import type { CoreBase } from '@seedcord/core';
+import type { CoreBase, SubscriptionData } from '@seedcord/core';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 const ran: string[] = [];
@@ -40,9 +40,10 @@ function rowFor(exportName: string, load: () => Promise<Record<string, unknown>>
     };
 }
 
-const payload = (): { uuid: `${string}-${string}-${string}-${string}-${string}`; error: Error } => ({
+const payload = (): SubscriptionData<'unknownException'> => ({
     uuid: crypto.randomUUID(),
-    error: new Error('boom')
+    error: new Error('boom'),
+    routeId: 'slash:probe'
 });
 
 describe('manifest subscribers on workerd', () => {

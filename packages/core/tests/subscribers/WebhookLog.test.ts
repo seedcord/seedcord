@@ -31,6 +31,13 @@ const data = {} as unknown as AllSubscriptions['unknownException'];
 // justified: the Subscriber base only stores core
 const core = {} as unknown as CoreBase;
 
+// the throttle keys on the core
+const freshCore = (): CoreBase => ({}) as unknown as CoreBase;
+
+interface SentBody {
+    body: { username: string };
+}
+
 const component = { toJSON: (): APIMessageTopLevelComponent => ({ type: ComponentType.Container, components: [] }) };
 
 beforeEach(() => {
@@ -119,6 +126,96 @@ describe('WebhookLog', () => {
         expect(hoisted.postMock).not.toHaveBeenCalled();
         expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
+    });
+
+    it('sends every event when the reporter names no throttle key', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Chatty extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        await new Chatty(data, freshCore()).execute();
+        await new Chatty(data, core).execute();
+
+        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('puts the suppressed count on the next card', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Grouped extends WebhookLog<'unknownException', CoreBase> {
+            protected override throttleKey(): string {
+                return 'grouped';
+            }
+
+            report(suppressed: number): WebhookReport {
+                return { username: `n=${suppressed}`, components: [component] };
+            }
+        }
+
+        const own = freshCore();
+        vi.useFakeTimers();
+        await new Grouped(data, own).execute();
+        await new Grouped(data, own).execute();
+        vi.advanceTimersByTime(61_000);
+        await new Grouped(data, own).execute();
+        vi.useRealTimers();
+
+        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        expect(sent).toEqual(['n=0', 'n=1']);
+    });
+
+    it('keeps sending after a failed send', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Retried extends WebhookLog<'unknownException', CoreBase> {
+            protected override throttleKey(): string {
+                return 'retried';
+            }
+
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        const own = freshCore();
+        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        hoisted.postMock.mockRejectedValueOnce(new Error('down'));
+
+        await new Retried(data, own).execute();
+        await new Retried(data, own).execute();
+
+        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
+        errorSpy.mockRestore();
+    });
+
+    it('reopens the window when report throws', async () => {
+        let built = 0;
+
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Broken extends WebhookLog<'unknownException', CoreBase> {
+            protected override throttleKey(): string {
+                return 'broken';
+            }
+
+            report(): WebhookReport {
+                built += 1;
+                throw new Error('render blew up');
+            }
+        }
+
+        const own = freshCore();
+        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+        await new Broken(data, own).execute();
+        await new Broken(data, own).execute();
+
+        expect(built).toBe(2);
+        errorSpy.mockRestore();
     });
 
     it('throws at execute when the decorator is missing', async () => {

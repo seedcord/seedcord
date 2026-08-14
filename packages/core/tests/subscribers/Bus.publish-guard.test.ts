@@ -27,7 +27,11 @@ describe('publish protection', () => {
             seen += 1;
         });
 
-        bus[PublishDefault]('unknownException', { uuid: crypto.randomUUID(), error: new Error('boom') });
+        bus[PublishDefault]('unknownException', {
+            uuid: crypto.randomUUID(),
+            error: new Error('boom'),
+            routeId: 'slash:probe'
+        });
 
         expect(seen).toBe(1);
     });

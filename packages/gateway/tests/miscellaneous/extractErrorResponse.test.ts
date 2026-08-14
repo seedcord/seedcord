@@ -1,4 +1,4 @@
-import { Fault, CustomId } from '@seedcord/core';
+import { Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -33,29 +33,13 @@ function slashInteraction(commandName = 'ban'): Repliables {
     } as unknown as Repliables;
 }
 
-function buttonInteraction(customId: string): Repliables {
-    // justified: the fixture implements only the Repliables surface the source + key read.
-    return {
-        isChatInputCommand: () => false,
-        isContextMenuCommand: () => false,
-        isButton: () => true,
-        isAnySelectMenu: () => false,
-        isModalSubmit: () => false,
-        customId,
-        user: { id: 'u1' },
-        guildId: 'g1',
-        channelId: 'c1',
-        id: 'i1'
-    } as unknown as Repliables;
-}
-
-// the module-level throttle persists across tests, so every origin below carries a unique fault key
 describe('extractErrorResponse', () => {
     it('publishes handledException for a reporting denial with the uuid the reply shows', () => {
         const publish = vi.fn();
         const denial = new Fault({ cause: new Error('write failed') });
         const result = extractErrorResponse(denial, mockCore(publish), {
             interaction: slashInteraction(),
+            routeId: 'slash:ban',
             guild: null,
             user: null
         });
@@ -74,12 +58,43 @@ describe('extractErrorResponse', () => {
     it('publishes unknownException for a raw, non-denial throw', () => {
         const publish = vi.fn();
         const result = extractErrorResponse(new Error('a bug'), mockCore(publish), {
-            route: 'raw-probe',
+            routeId: 'autocomplete:raw-probe',
             guild: null,
             user: null
         });
 
         expect(publish).toHaveBeenCalledWith('unknownException', expect.objectContaining({ uuid: result.uuid }));
+    });
+
+    it('publishes the routeId it was given, so a subscriber can group faults by route', () => {
+        const publish = vi.fn();
+        extractErrorResponse(new Error('a bug'), mockCore(publish), {
+            routeId: 'slash:route-probe',
+            guild: null,
+            user: null
+        });
+
+        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(payload.routeId).toBe('slash:route-probe');
+    });
+
+    it('publishes both bugs when one route throws two different errors', () => {
+        const publish = vi.fn();
+        const core = mockCore(publish);
+        const origin = {
+            interaction: slashInteraction('profile'),
+            routeId: 'slash:profile',
+            guild: null,
+            user: null
+        };
+
+        extractErrorResponse(new Error('avatar fetch failed'), core, origin);
+        extractErrorResponse(new Error('rank lookup failed'), core, origin);
+
+        const messages = publish.mock.calls
+            .filter(([event]) => event === 'unknownException')
+            .map(([, payload]) => (payload as SubscriptionData<'unknownException'>).error.message);
+        expect(messages).toEqual(['avatar fetch failed', 'rank lookup failed']);
     });
 
     it('publishes scalar guild and user fields, never the discord.js objects', () => {
@@ -88,7 +103,7 @@ describe('extractErrorResponse', () => {
         const guild = { id: 'g1', name: 'Guild One', members: {} } as unknown as import('discord.js').Guild;
         const user = { id: 'u1', username: 'uname', client: {} } as unknown as import('discord.js').User;
 
-        extractErrorResponse(new Error('a bug'), mockCore(publish), { route: 'scalar-probe', guild, user });
+        extractErrorResponse(new Error('a bug'), mockCore(publish), { routeId: 'slash:scalar-probe', guild, user });
 
         const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
         expect(payload.guild).toEqual({ id: 'g1', name: 'Guild One' });
@@ -99,6 +114,7 @@ describe('extractErrorResponse', () => {
         const publish = vi.fn();
         extractErrorResponse(new TestNotice(), mockCore(publish), {
             interaction: slashInteraction(),
+            routeId: 'slash:quiet-probe',
             guild: null,
             user: null
         });
@@ -111,6 +127,7 @@ describe('extractErrorResponse', () => {
         const denial = new Fault({ cause: new Error('write failed') });
         extractErrorResponse(denial, mockCore(publish), {
             event: { name: 'messageCreate', handler: 'Starboard', args: [{}], channelId: 'ch1' },
+            routeId: 'event:messageCreate:Starboard',
             guild: null,
             user: null
         });
@@ -122,56 +139,5 @@ describe('extractErrorResponse', () => {
         expect(payload.source.eventName).toBe('messageCreate');
         expect(payload.source.handler).toBe('Starboard');
         expect(payload.source.channelId).toBe('ch1');
-    });
-
-    it('throttles a duplicate fault within the window to one publish', () => {
-        const publish = vi.fn();
-        const core = mockCore(publish);
-        const origin = { interaction: slashInteraction('throttle-probe'), guild: null, user: null };
-
-        extractErrorResponse(new Fault({ cause: new Error('first') }), core, origin);
-        extractErrorResponse(new Fault({ cause: new Error('second') }), core, origin);
-
-        expect(publish).toHaveBeenCalledTimes(1);
-    });
-
-    it('stamps the throttle on publish, so the next identical fault suppresses', () => {
-        const origin = { interaction: slashInteraction('stamp-probe'), guild: null, user: null };
-        const publish = vi.fn();
-        const core = mockCore(publish);
-
-        extractErrorResponse(new Fault({ cause: new Error('x') }), core, origin);
-        extractErrorResponse(new Fault({ cause: new Error('x') }), core, origin);
-
-        expect(publish).toHaveBeenCalledTimes(1);
-    });
-
-    it('keeps a separate window per bot, so one bot never throttles another', () => {
-        const origin = { interaction: slashInteraction('two-bots'), guild: null, user: null };
-
-        const first = vi.fn();
-        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(first), origin);
-        const second = vi.fn();
-        extractErrorResponse(new Fault({ cause: new Error('x') }), mockCore(second), origin);
-
-        expect(first).toHaveBeenCalledTimes(1);
-        expect(second).toHaveBeenCalledTimes(1);
-    });
-
-    it('collapses parameterized component customIds to one throttle key via the stable prefix', () => {
-        const publish = vi.fn();
-        const core = mockCore(publish);
-        const Pager = new CustomId('pager').int('page');
-
-        const origin = (page: number): Parameters<typeof extractErrorResponse>[2] => ({
-            interaction: buttonInteraction(Pager.encode({ page })),
-            guild: null,
-            user: null
-        });
-
-        extractErrorResponse(new Fault({ cause: new Error('p1') }), core, origin(1));
-        extractErrorResponse(new Fault({ cause: new Error('p2') }), core, origin(2));
-
-        expect(publish).toHaveBeenCalledTimes(1);
     });
 });

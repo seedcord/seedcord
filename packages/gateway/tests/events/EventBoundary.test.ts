@@ -166,12 +166,19 @@ describe('handleEventFault', () => {
         expect(payload.error.message).toBe('a thrown string');
     });
 
-    it('throttles duplicate event faults from the same handler within the window to one report', () => {
+    it('reports both faults when one handler throws twice', () => {
         const core = mockCore(publish);
 
         handleEventFault(new Fault({ cause: new Error('first') }), 'messageCreate', 'Starboard', [{}], core);
         handleEventFault(new Fault({ cause: new Error('second') }), 'messageCreate', 'Starboard', [{}], core);
 
-        expect(publish).toHaveBeenCalledTimes(1);
+        expect(publish).toHaveBeenCalledTimes(2);
+    });
+
+    it('publishes the event route as routeId', () => {
+        handleEventFault(new Error('boom'), 'messageCreate', 'Starboard', [{}], mockCore(publish));
+
+        const [, payload] = publish.mock.calls[0] as [string, SubscriptionData<'unknownException'>];
+        expect(payload.routeId).toBe('event:messageCreate:Starboard');
     });
 });

@@ -42,7 +42,11 @@ describe('Bus subscriber concurrency', () => {
         order.length = 0;
         const bus = busWith(SlowSubscriber, FastSubscriber);
 
-        bus[PublishDefault]('unknownException', { uuid: crypto.randomUUID(), error: new Error('boom') });
+        bus[PublishDefault]('unknownException', {
+            uuid: crypto.randomUUID(),
+            error: new Error('boom'),
+            routeId: 'slash:probe'
+        });
         await delay(60);
 
         expect(order).toEqual(['fast', 'slow']);
