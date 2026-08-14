@@ -1,6 +1,8 @@
 import { existsSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 
+import { Envapter } from 'envapt';
+
 const BINARY = 'cloudflared';
 const DOWNLOADS = 'https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/downloads/';
 
@@ -14,8 +16,8 @@ export interface PathLookup {
 
 export function systemLookup(): PathLookup {
     return {
-        pathVar: process.env.PATH,
-        pathExt: process.env.PATHEXT,
+        pathVar: Envapter.get('PATH'),
+        pathExt: Envapter.get('PATHEXT'),
         platform: process.platform,
         delimiter,
         exists: existsSync

@@ -24,9 +24,6 @@ catalogs:
     chalk:
       specifier: ^6.0.0
       version: 6.0.0
-    envapt:
-      specifier: ^8.1.1
-      version: 8.1.1
     lodash.merge:
       specifier: ^4.6.2
       version: 4.6.2
@@ -125,6 +122,9 @@ catalogs:
     discord.js:
       specifier: ^14.27.0
       version: 14.27.0
+    envapt:
+      specifier: ^8.1.1
+      version: 8.1.1
     mongoose:
       specifier: ^9.9.1
       version: 9.9.1
@@ -227,7 +227,7 @@ importers:
         specifier: catalog:test
         version: 4.1.10(vitest@4.1.10)
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       eslint:
         specifier: catalog:eslint
@@ -308,7 +308,7 @@ importers:
         specifier: catalog:deps
         version: 4.3.3
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       isomorphic-dompurify:
         specifier: ^3.21.0
@@ -383,9 +383,15 @@ importers:
       eslint-config-next:
         specifier: catalog:eslint
         version: 16.2.12(@typescript-eslint/parser@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.7.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
       eslint-plugin-react-compiler:
         specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
       jsdom:
         specifier: catalog:test
         version: 30.0.1
@@ -441,9 +447,15 @@ importers:
       eslint-config-next:
         specifier: catalog:eslint
         version: 16.2.12(@typescript-eslint/parser@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.7.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
       eslint-plugin-react-compiler:
         specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
       prettier:
         specifier: catalog:deps
         version: 3.9.6
@@ -537,9 +549,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       fix-esm-import-path:
         specifier: ^1.10.3
         version: 1.10.3(supports-color@10.2.2)
@@ -589,6 +598,9 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
@@ -614,7 +626,7 @@ importers:
         specifier: catalog:peer
         version: 14.27.0
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       mongoose:
         specifier: catalog:peer
@@ -642,7 +654,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/http
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       typescript:
         specifier: catalog:peer
@@ -687,9 +699,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -712,6 +721,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -891,9 +903,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -916,6 +925,9 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -955,9 +967,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -989,6 +998,9 @@ importers:
       '@vitest/coverage-istanbul':
         specifier: ^4.1.10
         version: 4.1.10(supports-color@10.2.2)(vitest@4.1.10)
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       esbuild:
         specifier: ^0.28.1
         version: 0.28.1
@@ -1010,9 +1022,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1032,6 +1041,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
 
   packages/rate-limiter:
     dependencies:
@@ -1137,9 +1149,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -1171,6 +1180,9 @@ importers:
       '@types/pg':
         specifier: ^8.20.3
         version: 8.20.3
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       kysely:
         specifier: ^0.29.4
         version: 0.29.4
@@ -1198,9 +1210,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -1229,6 +1238,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       mongoose:
         specifier: catalog:peer
         version: 9.9.1
@@ -1528,6 +1540,12 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 19.2.4(@types/react@19.2.18)
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.7.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.4.1(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))
       jsdom:
         specifier: catalog:test
         version: 30.0.1
@@ -12742,6 +12760,24 @@ snapshots:
       - '@eslint/css'
       - typescript
 
+  eslint-plugin-better-tailwindcss@4.7.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3):
+    dependencies:
+      '@eslint/css-tree': 4.0.4
+      '@valibot/to-json-schema': 1.7.1(valibot@1.4.2(typescript@6.0.3))
+      enhanced-resolve: 5.24.5
+      jiti: 2.7.0
+      synckit: 0.11.13
+      tailwind-csstree: 0.3.3
+      tailwindcss: 4.3.3
+      tsconfig-paths-webpack-plugin: 4.2.0
+      valibot: 1.4.2(typescript@6.0.3)
+    optionalDependencies:
+      eslint: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
+      oxlint: 1.76.0
+    transitivePeerDependencies:
+      - '@eslint/css'
+      - typescript
+
   eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2):
     dependencies:
       '@typescript-eslint/types': 8.65.0
@@ -13044,6 +13080,12 @@ snapshots:
     dependencies:
       '@tailwindcss/node': 4.3.3
       eslint: 10.8.0(jiti@2.7.0)(supports-color@10.2.2)
+      synckit: 0.11.13
+
+  eslint-plugin-tailwind-canonical-classes@1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2)):
+    dependencies:
+      '@tailwindcss/node': 4.3.3
+      eslint: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
       synckit: 0.11.13
 
   eslint-plugin-tsdoc@0.5.2(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3):

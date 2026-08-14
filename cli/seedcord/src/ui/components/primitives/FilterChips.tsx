@@ -73,7 +73,7 @@ export function FilterChips({
         <Box flexDirection="column">
             {open ? null : (
                 <Text dimColor wrap="truncate">
-                    ↕ resize to see filters
+                    resize to see filters
                 </Text>
             )}
             <Heading label="channels" open={open} />

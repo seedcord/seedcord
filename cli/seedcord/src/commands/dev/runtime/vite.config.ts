@@ -1,4 +1,15 @@
+import { realpathSync } from 'node:fs';
+import { resolve, sep } from 'node:path';
+
 import { defineConfig } from 'vite';
+
+// a **/logs/** glob would also swallow a source directory named logs
+export function logsIgnore(root: string): (path: string) => boolean {
+    // chokidar reports the resolved path, and a mac temp dir arrives through a symlink
+    const logs = resolve(realpathSync(root), 'logs');
+
+    return (path) => path === logs || path.startsWith(logs + sep);
+}
 
 export default defineConfig({
     server: {
@@ -6,7 +17,7 @@ export default defineConfig({
         hmr: true,
         watch: {
             usePolling: false,
-            ignored: ['**/node_modules/**', '**/dist/**']
+            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**']
         }
     },
     build: {

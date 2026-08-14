@@ -21,6 +21,19 @@ export interface SeedcordBuildConfig {
 }
 
 /**
+ * Type-checking options for `seedcord dev`, passed as the object form of
+ * {@link SeedcordHmrConfig.typecheck}.
+ */
+interface SeedcordTypecheckConfig {
+    /**
+     * Which tsconfig `tsc --watch` runs against.
+     *
+     * @defaultValue the nearest `tsconfig.json`
+     */
+    tsconfig?: string;
+}
+
+/**
  * HMR configuration used by the Seedcord CLI.
  */
 export interface SeedcordHmrConfig {
@@ -37,11 +50,11 @@ export interface SeedcordHmrConfig {
     rollback?: boolean;
 
     /**
-     * Optional tsconfig path to use for type checking in dev mode.
+     * Runs `tsc --watch` alongside the bot and reports type errors on the `tsc` channel.
      *
-     * @defaultValue the nearest `tsconfig.json`
+     * @defaultValue `false`
      */
-    tsconfig?: string;
+    typecheck?: boolean | SeedcordTypecheckConfig;
 }
 
 /**
@@ -74,6 +87,12 @@ export interface SeedcordDevConfig {
      */
     tunnel?: boolean | string;
     /**
+     * Runs any always-on animations in `seedcord dev`.
+     *
+     * @defaultValue `true`
+     */
+    idleAnimation?: boolean;
+    /**
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;
@@ -84,6 +103,8 @@ export interface SeedcordDevConfig {
 }
 
 export type ResolvedTunnel = { mode: 'off' } | { mode: 'quick' } | { mode: 'url'; url: string };
+
+export type ResolvedTypecheck = { enabled: false } | { enabled: true; tsconfig?: string };
 
 export interface ResolvedSeedcordBuildConfig {
     outDir: string;
@@ -105,9 +126,9 @@ export interface ResolvedSeedcordDevConfig extends Required<Omit<SeedcordDevConf
      */
     build: ResolvedSeedcordBuildConfig;
     /**
-     * Resolved tsconfig path to use for type checking in dev mode.
+     * Whether `tsc --watch` runs, with the tsconfig it runs against resolved to an absolute path.
      */
-    tsconfig?: string | undefined;
+    typecheck: ResolvedTypecheck;
     /**
      * HMR configuration carried through from the user config (restart globs are matched as-is).
      */

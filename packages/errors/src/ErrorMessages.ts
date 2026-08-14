@@ -198,11 +198,15 @@ const messages = {
     [SeedcordErrorCode.CliBuildFailed]: (diagnostics: string) => `TypeScript build failed:\n${diagnostics}`,
     [SeedcordErrorCode.CliBootstrapWriteFailed]: (targetPath: string, reason: string) =>
         `Failed to write bootstrap file at ${targetPath}: ${reason}`,
-    [SeedcordErrorCode.CliConfigInvalidTsconfig]: () => 'Config `tsconfig` must be a string when provided.',
+    [SeedcordErrorCode.CliConfigInvalidTsconfig]: () =>
+        'Config `hmr.typecheck.tsconfig` must be a string when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmr]: () => 'Config `hmr` must be an object when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRestart]: () =>
         'Config `hmr.restart` must be an array of strings when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrRollback]: () => 'Config `hmr.rollback` must be a boolean when provided.',
+    [SeedcordErrorCode.CliConfigInvalidHmrTypecheck]: () =>
+        'Config `hmr.typecheck` must be a boolean or an object when provided.',
+    [SeedcordErrorCode.CliConfigInvalidIdleAnimation]: () => 'Config `idleAnimation` must be a boolean when provided.',
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>

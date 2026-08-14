@@ -169,6 +169,16 @@ describe('scaffold', () => {
         ]);
     });
 
+    it('keeps the project and reports why when git fails', async () => {
+        const target = await scratchTarget();
+        const { runner } = recorder('commit');
+
+        const result = await scaffold(baseInput(target), runner);
+
+        expect(result.gitNotice).toContain('commit blew up');
+        await expect(readdir(target)).resolves.toContain('package.json');
+    });
+
     it('marks the three install steps skipped rather than dropping them', async () => {
         const target = await scratchTarget();
         const { runner } = recorder();

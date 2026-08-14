@@ -48,13 +48,25 @@
         "eslint": "^9.22.0 || ^10.4.0",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps",
-        "typescript": "catalog:peer"
+        "typescript": "catalog:peer",
+        "eslint-plugin-mdx": "catalog:eslint",
+        "eslint-plugin-better-tailwindcss": "catalog:eslint",
+        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint"
     },
     "peerDependenciesMeta": {
         "prettier-plugin-tailwindcss": {
             "optional": true
         },
         "tailwindcss": {
+            "optional": true
+        },
+        "eslint-plugin-mdx": {
+            "optional": true
+        },
+        "eslint-plugin-better-tailwindcss": {
+            "optional": true
+        },
+        "eslint-plugin-tailwind-canonical-classes": {
             "optional": true
         }
     },
@@ -63,12 +75,9 @@
         "@typescript-eslint/parser": "catalog:eslint",
         "eslint-config-prettier": "catalog:eslint",
         "eslint-import-resolver-typescript": "catalog:eslint",
-        "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-import-x": "catalog:eslint",
-        "eslint-plugin-mdx": "catalog:eslint",
         "eslint-plugin-prettier": "catalog:eslint",
         "eslint-plugin-security": "catalog:eslint",
-        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "eslint-plugin-tsdoc": "catalog:eslint",
         "eslint-plugin-unicorn": "catalog:eslint",
         "lodash.merge": "catalog:deps",

@@ -6,7 +6,7 @@ import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 import { EvaluatedModules } from 'vite/module-runner';
 
 import { HmrPlugin } from './HmrPlugin';
-import viteConfig from './vite.config';
+import viteConfig, { logsIgnore } from './vite.config';
 
 import type { DevRuntime, DevRuntimeContext, DevRuntimeLoadResult } from './DevRuntime';
 import type { DevEvent, DevEventHandler } from './events';
@@ -34,6 +34,7 @@ export class ViteDevRuntime implements DevRuntime {
 
         const config = mergeConfig(viteConfig, {
             root: projectRoot,
+            server: { watch: { ignored: [logsIgnore(projectRoot)] } },
             plugins: [hmrPlugin.plugin]
         });
 

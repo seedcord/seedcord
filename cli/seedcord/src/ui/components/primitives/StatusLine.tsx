@@ -10,7 +10,7 @@ import type { Notice } from '@ui/notices';
 import type { DevState } from '@ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
-const HINT = '↕ resize for full ui';
+const HINT = 'resize for full ui';
 
 // below this the hint would crowd out the summary, and it stays optional either way
 const HINT_COLUMNS = 64;
@@ -29,7 +29,8 @@ export function StatusLine({ state, notices, columns }: StatusLineProps): ReactE
         <Box flexShrink={0} justifyContent="space-between" paddingX={1}>
             <Box flexShrink={1} overflow="hidden">
                 <Text wrap="truncate">
-                    <Banner version={null} /> <StatusBadge phase={state.phase} glyph="live" />
+                    <Banner version={null} />{' '}
+                    <StatusBadge phase={state.phase} glyph="live" animate={state.idleAnimation} />
                     {top?.summary ? <Text dimColor> · </Text> : null}
                     {top?.summary ? <Text color={ui.warn}>{top.summary}</Text> : null}
                     {rest.length > 0 ? <Text dimColor> · +{rest.length}</Text> : null}

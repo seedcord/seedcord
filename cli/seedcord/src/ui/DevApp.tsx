@@ -13,6 +13,7 @@ import { dispatchHotkey } from '@ui/hotkeys';
 import { DevLayout } from '@ui/layout/DevLayout';
 import { expandRows, rowKey, wrapRows } from '@ui/logRows';
 import { noticesOf } from '@ui/notices';
+import { profileWrap } from '@ui/profile';
 import { LogStore } from '@ui/stores/LogStore';
 import { tierFor } from '@ui/tier';
 
@@ -51,12 +52,13 @@ export function DevApp(props: DevAppProps): ReactElement {
     const logs = useLogs(enabled, enabledLevels);
     // the label width only grows with a new entry, so the logs dep already covers it
     const logRows = useMemo(
-        () => wrapRows(expandRows(logs), logBox.width, Math.max(1, LogStore.instance.getLabelWidth())),
+        () =>
+            profileWrap(() => wrapRows(expandRows(logs), logBox.width, Math.max(1, LogStore.instance.getLabelWidth()))),
         [logs, logBox.width]
     );
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
-    const uptimeMs = useUptime(state);
+    const uptimeMs = useUptime(state, tier !== 'logs');
 
     const interactive = !state.isBusy || state.restartRequired;
 

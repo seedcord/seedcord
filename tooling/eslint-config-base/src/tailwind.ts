@@ -1,10 +1,9 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import betterTailwindcss from 'eslint-plugin-better-tailwindcss';
-import tailwindCanonical from 'eslint-plugin-tailwind-canonical-classes';
+import { requirePlugin } from './optionalPlugins';
 
-import type { Linter } from 'eslint';
+import type { ESLint, Linter } from 'eslint';
 
 /**
  * Resolves a Tailwind entry CSS path for a package that does not ship its own `globals.css`,
@@ -42,8 +41,11 @@ export function tailwindBlock(params: TailwindBlockParams): Linter.Config {
     }
 
     block.plugins = {
-        'better-tailwindcss': betterTailwindcss,
-        'tailwind-canonical-classes': tailwindCanonical
+        'better-tailwindcss': requirePlugin<ESLint.Plugin>('eslint-plugin-better-tailwindcss', 'tailwindEntryPoint'),
+        'tailwind-canonical-classes': requirePlugin<ESLint.Plugin>(
+            'eslint-plugin-tailwind-canonical-classes',
+            'tailwindEntryPoint'
+        )
     };
     block.settings = {
         'better-tailwindcss': { entryPoint: params.entryPoint }

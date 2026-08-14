@@ -54,7 +54,7 @@ function tunnelValue(status: TunnelStatus): string {
 function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
     return (
         <Box flexDirection="column">
-            <StatusBadge phase={state.phase} />
+            <StatusBadge phase={state.phase} animate={state.idleAnimation} />
             {state.status ? <Text>{state.status}</Text> : null}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {/* only the http host reports a port */}
@@ -117,7 +117,7 @@ export function Sidebar({
             <Box flexShrink={0} justifyContent="flex-end">
                 {isStreaming(state.phase) ? (
                     <Text>
-                        <BlinkDot />
+                        <BlinkDot animate={state.idleAnimation} />
                         <Text dimColor> live</Text>
                     </Text>
                 ) : (

@@ -16,6 +16,7 @@ export interface DevState {
     readonly port: number | null;
     readonly tunnel: TunnelStatus | null;
     readonly quitArmed: boolean;
+    readonly idleAnimation: boolean;
 }
 
 const INITIAL: DevState = {
@@ -28,7 +29,8 @@ const INITIAL: DevState = {
     commandUpdatePrompt: null,
     port: null,
     tunnel: null,
-    quitArmed: false
+    quitArmed: false,
+    idleAnimation: true
 };
 
 export class DevStore extends TypedEventEmitter<{ change: [] }> {
@@ -65,6 +67,10 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
 
     public setQuitArmed(quitArmed: boolean): void {
         this.patch({ quitArmed });
+    }
+
+    public setIdleAnimation(idleAnimation: boolean): void {
+        this.patch({ idleAnimation });
     }
 
     public clearPrompt(): void {

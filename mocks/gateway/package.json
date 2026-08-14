@@ -1,7 +1,7 @@
 {
     "name": "@seedcord/mock-gateway",
     "type": "module",
-    "version": "0.2.26",
+    "version": "0.2.27",
     "engines": {
         "node": ">=24.11"
     },
@@ -32,7 +32,7 @@
         "@seedcord/gateway": "workspace:*",
         "@seedcord/plugin-mongoose": "workspace:*",
         "discord.js": "catalog:peer",
-        "envapt": "catalog:deps",
+        "envapt": "catalog:peer",
         "mongoose": "catalog:peer"
     },
     "devDependencies": {

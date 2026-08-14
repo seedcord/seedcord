@@ -6,6 +6,7 @@ import { ConfigLoader } from '@core/config/ConfigLoader';
 import { ConfigLocator } from '@core/config/ConfigLocator';
 import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
 import { resetChannelColors } from '@ui/channelColor';
+import { profileMark } from '@ui/profile';
 
 import { DevSession } from './DevSession';
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
@@ -97,6 +98,8 @@ export class DevRunner {
         this.deps.store.setPhase('starting');
         this.deps.store.setBusy(true);
         const config = await this.loadConfig();
+        profileMark('config');
+        this.deps.store.setIdleAnimation(config.idleAnimation);
         const runtime = new ViteDevRuntime();
         this.currentSession = new DevSession(config, runtime, this.deps.store, (event) => {
             void this.deps.tunnel.route(config.tunnel, event);

@@ -9,8 +9,10 @@ import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
     ResolvedTunnel,
+    ResolvedTypecheck,
     SeedcordBuildConfig,
-    SeedcordDevConfig
+    SeedcordDevConfig,
+    SeedcordHmrConfig
 } from './schema';
 import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
@@ -35,16 +37,22 @@ function validateBuild(value: unknown): void {
     if (!isOptionalString(value.bootstrap)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildBootstrap);
 }
 
+function validateTypecheck(value: unknown): void {
+    if (value === undefined || typeof value === 'boolean') return;
+    if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrTypecheck);
+    if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
+}
+
 function validateHmr(value: unknown): void {
     if (value === undefined) return;
     if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmr);
-    if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
     if (value.restart !== undefined && !isStringArray(value.restart)) {
         throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRestart);
     }
     if (value.rollback !== undefined && typeof value.rollback !== 'boolean') {
         throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRollback);
     }
+    validateTypecheck(value.typecheck);
 }
 
 function validateTunnel(value: unknown): void {
@@ -61,6 +69,13 @@ function resolveTunnel(value: boolean | string | undefined): ResolvedTunnel {
     return { mode: 'quick' };
 }
 
+function resolveTypecheck(value: SeedcordHmrConfig['typecheck'], root: string): ResolvedTypecheck {
+    if (value === undefined || value === false) return { enabled: false };
+    if (value === true || value.tsconfig === undefined) return { enabled: true };
+
+    return { enabled: true, tsconfig: resolve(root, value.tsconfig) };
+}
+
 function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
     if (!isPlainObject(raw)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidExport);
     if (typeof raw.instance !== 'string' || raw.instance.length === 0) {
@@ -70,6 +85,9 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
         throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
     }
     if (!isOptionalString(raw.root)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
+    if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidIdleAnimation);
+    }
     validateTunnel(raw.tunnel);
     validateBuild(raw.build);
     validateHmr(raw.hmr);
@@ -92,7 +110,7 @@ export class ConfigLoader {
         const entry = this.resolveWithinRoot(root, config.entry);
         this.assertEntryWithinRoot(root, entry);
         const build = this.resolveBuildOptions(configDir, config.build);
-        const tsconfig = config.hmr?.tsconfig ? resolve(root, config.hmr.tsconfig) : undefined;
+        const typecheck = resolveTypecheck(config.hmr?.typecheck, root);
 
         this.logger.debug(`Loaded configuration from ${configPath}`);
         this.logger.trace(`Resolved root: ${root}`);
@@ -100,7 +118,7 @@ export class ConfigLoader {
         this.logger.trace(`Resolved entry: ${entry}`);
         this.logger.trace(`Resolved build outDir: ${build.outDir}`);
         if (build.tsconfig) this.logger.trace(`Resolved build tsconfig: ${build.tsconfig}`);
-        if (tsconfig) this.logger.trace(`Resolved dev tsconfig: ${tsconfig}`);
+        if (typecheck.enabled) this.logger.trace(`Typecheck tsconfig: ${typecheck.tsconfig ?? 'nearest'}`);
         this.logger.trace(`Resolved bootstrap: ${build.bootstrap}`);
 
         return {
@@ -109,7 +127,8 @@ export class ConfigLoader {
             configFile: configPath,
             entry,
             build,
-            tsconfig,
+            typecheck,
+            idleAnimation: config.idleAnimation ?? true,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
         } satisfies ResolvedSeedcordDevConfig;

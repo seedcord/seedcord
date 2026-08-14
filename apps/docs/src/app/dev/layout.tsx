@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Envapter } from 'envapt';
 
 export const metadata: Metadata = {
     title: 'Dev playground: @seedcord/ui',
@@ -16,7 +17,7 @@ interface DevLayoutProps {
 
 function DevLayout({ children }: DevLayoutProps): ReactNode {
     // dev-only, this 404s in production builds so the route doesn't ship
-    if (process.env.NODE_ENV !== 'development') notFound();
+    if (!Envapter.isDevelopment) notFound();
 
     return (
         <div className={cn('min-h-[calc(100vh-4rem)]')}>

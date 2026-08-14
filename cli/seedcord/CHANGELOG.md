@@ -1,5 +1,25 @@
 # seedcord
 
+## 0.17.4
+
+### Patch Changes
+
+- 0738efa: Add optional profiling. Enable with `SEEDCORD_DEV_PROFILE=1`
+- 71a0b99: _Kinda BREAKING?:_ envapt is a peer dependency now. Your project and seedcord load one copy, so the framework reads the config you set through `Envapter`.
+- 8e8e952: _Kinda BREAKING?:_ `seedcord dev` no longer runs `tsc --watch` unless you set `hmr.typecheck`. Pass `true` for the nearest tsconfig, or `{ tsconfig }` to pick one, which replaces the old `hmr.tsconfig`.
+- 2efe2f7: Fixed the channel dot in `seedcord dev` rendering as a white emoji on Windows and Linux. Also dropped the arrow from the two resize hints.
+- ca24b0d: Ignore churn files in hmr
+- 527a465: Added `idleAnimation` to `seedcord.config.ts`. Setting it to `false` holds the running arc and the live dot still, which cuts idle redraws by about 80% and the bytes written to the terminal by 63%.
+- Updated dependencies [71a0b99]
+- Updated dependencies [8e8e952]
+- Updated dependencies [527a465]
+    - @seedcord/core@0.1.4
+    - @seedcord/logger@0.1.4
+    - @seedcord/errors@0.3.4
+    - @seedcord/event-emitter@0.1.2
+    - @seedcord/types@0.8.2
+    - @seedcord/utils@0.8.4
+
 ## 0.17.3
 
 ### Patch Changes
