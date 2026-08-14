@@ -1,5 +1,18 @@
 # @seedcord/plugin-kysely-postgres
 
+## 0.1.4
+
+### Patch Changes
+
+- 71a0b99: _Kinda BREAKING?:_ envapt is a peer dependency now. Your project and seedcord load one copy, so the framework reads the config you set through `Envapter`.
+- Updated dependencies [71a0b99]
+- Updated dependencies [8e8e952]
+- Updated dependencies [527a465]
+    - @seedcord/logger@0.1.4
+    - @seedcord/errors@0.3.4
+    - @seedcord/types@0.8.2
+    - @seedcord/utils@0.8.4
+
 ## 0.1.3
 
 ### Patch Changes

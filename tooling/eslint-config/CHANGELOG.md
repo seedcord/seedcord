@@ -1,5 +1,12 @@
 # @seedcord/eslint-config
 
+## 1.5.3
+
+### Patch Changes
+
+- 505af63: _Kinda BREAKING?:_ `eslint-plugin-mdx`, `eslint-plugin-better-tailwindcss`, and `eslint-plugin-tailwind-canonical-classes` are optional peer dependencies now, so a project that skips `tailwindEntryPoint` and `mdxFiles` stops downloading them. Install the ones you use.
+- bb6f212: Fixed the `prettier/prettier` rule ignoring your `prettier.config.mjs` and enforcing the seedcord defaults. Editing that file now changes what both prettier and eslint expect.
+
 ## 1.5.2
 
 ### Patch Changes

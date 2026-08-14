@@ -1,5 +1,14 @@
 # @seedcord/utils
 
+## 0.8.4
+
+### Patch Changes
+
+- Updated dependencies [8e8e952]
+- Updated dependencies [527a465]
+    - @seedcord/errors@0.3.4
+    - @seedcord/types@0.8.2
+
 ## 0.8.3
 
 ### Patch Changes
