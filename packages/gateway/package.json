@@ -44,6 +44,7 @@
     },
     "peerDependencies": {
         "discord.js": "catalog:peer",
+        "envapt": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "dependencies": {
@@ -57,7 +58,6 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "envapt": "catalog:deps",
         "reflect-metadata": "catalog:deps"
     },
     "devDependencies": {
@@ -66,6 +66,7 @@
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
         "discord.js": "catalog:peer",
+        "envapt": "catalog:peer",
         "type-fest": "catalog:deps"
     },
     "publishConfig": {

@@ -53,6 +53,7 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "envapt": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "dependencies": {
@@ -60,14 +61,14 @@
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
-        "envapt": "catalog:deps",
         "winston": "^3.19.0"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",
         "@seedcord/tsconfig": "workspace:*",
         "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*"
+        "@seedcord/vitest-config": "workspace:*",
+        "envapt": "catalog:peer"
     },
     "publishConfig": {
         "access": "public",

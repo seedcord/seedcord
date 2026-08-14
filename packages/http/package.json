@@ -74,11 +74,11 @@
         "@seedcord/utils": "workspace:*",
         "chalk": "catalog:deps",
         "discord-api-types": "catalog:deps",
-        "envapt": "catalog:deps",
         "reflect-metadata": "catalog:deps",
         "type-fest": "catalog:deps"
     },
     "peerDependencies": {
+        "envapt": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "devDependencies": {
@@ -89,6 +89,7 @@
         "@seedcord/tsdown-config": "workspace:*",
         "@seedcord/vitest-config": "workspace:*",
         "@vitest/coverage-istanbul": "^4.1.10",
+        "envapt": "catalog:peer",
         "esbuild": "^0.28.1",
         "vitest": "catalog:test"
     },

@@ -32,7 +32,7 @@
         "@seedcord/gateway": "workspace:*",
         "@seedcord/plugin-mongoose": "workspace:*",
         "discord.js": "catalog:peer",
-        "envapt": "catalog:deps",
+        "envapt": "catalog:peer",
         "mongoose": "catalog:peer"
     },
     "devDependencies": {

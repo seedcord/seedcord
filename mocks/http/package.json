@@ -30,7 +30,7 @@
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
         "@seedcord/http": "workspace:*",
-        "envapt": "catalog:deps"
+        "envapt": "catalog:peer"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

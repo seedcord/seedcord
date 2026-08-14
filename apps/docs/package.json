@@ -30,7 +30,7 @@
         "@shikijs/langs": "^4.4.1",
         "@shikijs/themes": "^4.4.1",
         "@tailwindcss/postcss": "catalog:deps",
-        "envapt": "catalog:deps",
+        "envapt": "catalog:peer",
         "isomorphic-dompurify": "^3.21.0",
         "lucide-react": "catalog:deps",
         "marked": "^18.0.7",

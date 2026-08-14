@@ -1,5 +1,5 @@
 ---
-'seedcord': minor
+'seedcord': patch
 'create-seedcord': patch
 '@seedcord/errors': patch
 ---

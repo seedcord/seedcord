@@ -24,9 +24,6 @@ catalogs:
     chalk:
       specifier: ^6.0.0
       version: 6.0.0
-    envapt:
-      specifier: ^8.1.1
-      version: 8.1.1
     lodash.merge:
       specifier: ^4.6.2
       version: 4.6.2
@@ -125,6 +122,9 @@ catalogs:
     discord.js:
       specifier: ^14.27.0
       version: 14.27.0
+    envapt:
+      specifier: ^8.1.1
+      version: 8.1.1
     mongoose:
       specifier: ^9.9.1
       version: 9.9.1
@@ -227,7 +227,7 @@ importers:
         specifier: catalog:test
         version: 4.1.10(vitest@4.1.10)
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       eslint:
         specifier: catalog:eslint
@@ -308,7 +308,7 @@ importers:
         specifier: catalog:deps
         version: 4.3.3
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       isomorphic-dompurify:
         specifier: ^3.21.0
@@ -549,9 +549,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       fix-esm-import-path:
         specifier: ^1.10.3
         version: 1.10.3(supports-color@10.2.2)
@@ -601,6 +598,9 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       eslint-plugin-react-hooks:
         specifier: ^7.1.1
         version: 7.1.1(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
@@ -626,7 +626,7 @@ importers:
         specifier: catalog:peer
         version: 14.27.0
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       mongoose:
         specifier: catalog:peer
@@ -654,7 +654,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/http
       envapt:
-        specifier: catalog:deps
+        specifier: catalog:peer
         version: 8.1.1
       typescript:
         specifier: catalog:peer
@@ -699,9 +699,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -724,6 +721,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -903,9 +903,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -928,6 +925,9 @@ importers:
       discord.js:
         specifier: catalog:peer
         version: 14.27.0
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       type-fest:
         specifier: catalog:deps
         version: 5.8.0
@@ -967,9 +967,6 @@ importers:
       discord-api-types:
         specifier: ^0.38.52
         version: 0.38.52
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -1001,6 +998,9 @@ importers:
       '@vitest/coverage-istanbul':
         specifier: ^4.1.10
         version: 4.1.10(supports-color@10.2.2)(vitest@4.1.10)
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       esbuild:
         specifier: ^0.28.1
         version: 0.28.1
@@ -1022,9 +1022,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       typescript:
         specifier: catalog:peer
         version: 6.0.3
@@ -1044,6 +1041,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
 
   packages/rate-limiter:
     dependencies:
@@ -1149,9 +1149,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -1183,6 +1180,9 @@ importers:
       '@types/pg':
         specifier: ^8.20.3
         version: 8.20.3
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       kysely:
         specifier: ^0.29.4
         version: 0.29.4
@@ -1210,9 +1210,6 @@ importers:
       chalk:
         specifier: catalog:deps
         version: 6.0.0
-      envapt:
-        specifier: catalog:deps
-        version: 8.1.1
       reflect-metadata:
         specifier: catalog:deps
         version: 0.2.2
@@ -1241,6 +1238,9 @@ importers:
       '@seedcord/vitest-config':
         specifier: workspace:*
         version: link:../../tooling/vitest-config
+      envapt:
+        specifier: catalog:peer
+        version: 8.1.1
       mongoose:
         specifier: catalog:peer
         version: 9.9.1
