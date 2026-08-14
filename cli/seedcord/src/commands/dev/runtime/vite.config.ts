@@ -6,7 +6,8 @@ export default defineConfig({
         hmr: true,
         watch: {
             usePolling: false,
-            ignored: ['**/node_modules/**', '**/dist/**']
+            // the bot's own log file lands under logs/, and every line it writes would echo back as an update
+            ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/logs/**']
         }
     },
     build: {
