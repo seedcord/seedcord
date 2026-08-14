@@ -206,6 +206,7 @@ const messages = {
     [SeedcordErrorCode.CliConfigInvalidHmrRollback]: () => 'Config `hmr.rollback` must be a boolean when provided.',
     [SeedcordErrorCode.CliConfigInvalidHmrTypecheck]: () =>
         'Config `hmr.typecheck` must be a boolean or an object when provided.',
+    [SeedcordErrorCode.CliConfigInvalidIdleAnimation]: () => 'Config `idleAnimation` must be a boolean when provided.',
     [SeedcordErrorCode.CliCodegenDuplicateRoute]: (route: string, firstFile: string, secondFile: string) =>
         `Two commands resolve to the same slash route \`${route}\`. Defined in ${firstFile} and ${secondFile}. Rename one.`,
     [SeedcordErrorCode.CliCodegenCommandsDirUnreadable]: (dir: string, reason: string) =>

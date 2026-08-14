@@ -29,7 +29,8 @@ export function StatusLine({ state, notices, columns }: StatusLineProps): ReactE
         <Box flexShrink={0} justifyContent="space-between" paddingX={1}>
             <Box flexShrink={1} overflow="hidden">
                 <Text wrap="truncate">
-                    <Banner version={null} /> <StatusBadge phase={state.phase} glyph="live" />
+                    <Banner version={null} />{' '}
+                    <StatusBadge phase={state.phase} glyph="live" animate={state.idleAnimation} />
                     {top?.summary ? <Text dimColor> · </Text> : null}
                     {top?.summary ? <Text color={ui.warn}>{top.summary}</Text> : null}
                     {rest.length > 0 ? <Text dimColor> · +{rest.length}</Text> : null}

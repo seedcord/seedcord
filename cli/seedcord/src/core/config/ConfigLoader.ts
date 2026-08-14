@@ -85,6 +85,9 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
         throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
     }
     if (!isOptionalString(raw.root)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
+    if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
+        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidIdleAnimation);
+    }
     validateTunnel(raw.tunnel);
     validateBuild(raw.build);
     validateHmr(raw.hmr);
@@ -125,6 +128,7 @@ export class ConfigLoader {
             entry,
             build,
             typecheck,
+            idleAnimation: config.idleAnimation ?? true,
             tunnel: resolveTunnel(config.tunnel),
             hmr: config.hmr
         } satisfies ResolvedSeedcordDevConfig;

@@ -40,4 +40,23 @@ describe('StatusBadge', () => {
 
         unmount();
     });
+
+    it('holds the phase icon while running with animation off', async () => {
+        const { lastFrame, unmount } = renderAt(<StatusBadge phase="running" animate={false} />, SIZE);
+
+        await settled(() => {
+            expect(lastFrame()).toContain('●');
+            expect(TOGGLE4_FRAMES.some((frame) => lastFrame().includes(frame))).toBe(false);
+        });
+
+        unmount();
+    });
+
+    it('holds the live dot lit with animation off', async () => {
+        const { lastFrame, unmount } = renderAt(<StatusBadge phase="running" glyph="live" animate={false} />, SIZE);
+
+        await settled(() => expect(lastFrame()).toContain('●'));
+
+        unmount();
+    });
 });

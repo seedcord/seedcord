@@ -99,6 +99,7 @@ export class DevRunner {
         this.deps.store.setBusy(true);
         const config = await this.loadConfig();
         profileMark('config');
+        this.deps.store.setIdleAnimation(config.idleAnimation);
         const runtime = new ViteDevRuntime();
         this.currentSession = new DevSession(config, runtime, this.deps.store, (event) => {
             void this.deps.tunnel.route(config.tunnel, event);

@@ -46,6 +46,7 @@ describe('HmrPlugin', () => {
         entry: 'src/index.ts',
         instance: 'src/Seedcord.ts',
         typecheck: { enabled: false } as const,
+        idleAnimation: true,
         tunnel: { mode: 'quick' } as const,
         build: {
             outDir: 'dist',

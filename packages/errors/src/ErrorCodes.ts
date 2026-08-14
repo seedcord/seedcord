@@ -253,6 +253,8 @@ export enum SeedcordErrorCode {
     CliTunnelUnreachable = 3135,
     /** Config hmr typecheck flag must be a boolean or object when provided. */
     CliConfigInvalidHmrTypecheck = 3136,
+    /** Config idleAnimation flag must be a boolean when provided. */
+    CliConfigInvalidIdleAnimation = 3137,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

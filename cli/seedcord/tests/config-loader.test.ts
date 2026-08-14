@@ -180,6 +180,36 @@ describe('ConfigLoader', () => {
         ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRollback });
     });
 
+    it('leaves idleAnimation on when the config omits it', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts' } satisfies SeedcordDevConfig
+                } as TModule);
+            }
+        };
+
+        const resolved = await new ConfigLoader(moduleLoader, silentLogger).load(
+            join(process.cwd(), 'seedcord.config.ts')
+        );
+
+        expect(resolved.idleAnimation).toBe(true);
+    });
+
+    it('rejects a non-boolean idleAnimation', async () => {
+        const moduleLoader: ModuleLoader = {
+            importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {
+                return Promise.resolve({
+                    default: { instance: './bot.ts', entry: './index.ts', idleAnimation: 'nope' }
+                } as TModule);
+            }
+        };
+
+        await expect(
+            new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
+        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidIdleAnimation });
+    });
+
     it('rejects a non-boolean hmr.typecheck', async () => {
         const moduleLoader: ModuleLoader = {
             importModule<TModule = unknown>(_entryPath: string): Promise<TModule> {

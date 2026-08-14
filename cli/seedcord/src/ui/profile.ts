@@ -9,6 +9,7 @@ const MEDIAN = 0.5;
 const NEAR_WORST = 0.99;
 const BYTES_PER_MB = 1024 * 1024;
 const PERCENT = 100;
+const MS_PER_SECOND = 1000;
 
 // each one is the elapsed time when that startup step finished
 const PHASES = ['config', 'vite', 'entry', 'ready'] as const;
@@ -21,10 +22,16 @@ let wrapTotal = 0;
 let writes = 0;
 let written = 0;
 let writeTotal = 0;
+let framesAtReady = 0;
 
 export function profileMark(phase: Phase): void {
+    if (!enabled) return;
+
     // performance.now() counts from process start
-    if (enabled) marks.set(phase, performance.now());
+    marks.set(phase, performance.now());
+
+    // everything after the bot is up is the idle cost
+    if (phase === 'ready') framesAtReady = renderTimes.length;
 }
 
 export function profileFrame(renderTime: number): void {
@@ -108,12 +115,18 @@ export function profileReport(): string | null {
     const mb = (written / BYTES_PER_MB).toFixed(2);
     const share = (part: number): string => `${((part / session) * PERCENT).toFixed(1)}% of session`;
 
+    const ready = marks.get('ready') ?? session;
+    const idleFrames = renderTimes.length - framesAtReady;
+    const idleSeconds = (session - ready) / MS_PER_SECOND;
+    const idleRate = idleSeconds > 0 ? (idleFrames / idleSeconds).toFixed(1) : '0.0';
+
     return [
         'seedcord dev profile',
         ...machine(),
         `  session      ${ms(session)}`,
         ...startup(),
         `  frames       ${String(renderTimes.length)}`,
+        `  idle         ${String(idleFrames)} frames over ${idleSeconds.toFixed(1)}s = ${idleRate} fps`,
         `  layout       p50 ${ms(at(sorted, MEDIAN))}, p99 ${ms(at(sorted, NEAR_WORST))}, total ${ms(layoutTotal)}, ${share(layoutTotal)}`,
         `  stdout       ${mb} MB over ${String(writes)} writes, ${ms(writeTotal)}, ${share(writeTotal)}`,
         `  log wrap     ${ms(wrapTotal)} over ${String(wrapCalls)} builds, ${share(wrapTotal)}`

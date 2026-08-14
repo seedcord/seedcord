@@ -7,7 +7,9 @@ import type { ReactElement } from 'react';
 
 const BLINK_MS = 530;
 
-export function BlinkDot(): ReactElement {
-    const { frame } = useAnimation({ interval: BLINK_MS });
-    return <Text color={ui.bad}>{frame % 2 === 0 ? '●' : ' '}</Text>;
+export function BlinkDot({ animate = true }: { readonly animate?: boolean }): ReactElement {
+    const { frame } = useAnimation({ interval: BLINK_MS, isActive: animate });
+    const lit = !animate || frame % 2 === 0;
+
+    return <Text color={ui.bad}>{lit ? '●' : ' '}</Text>;
 }

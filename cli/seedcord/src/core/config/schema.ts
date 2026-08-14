@@ -87,6 +87,12 @@ export interface SeedcordDevConfig {
      */
     tunnel?: boolean | string;
     /**
+     * Runs any always-on animations in `seedcord dev`.
+     *
+     * @defaultValue `true`
+     */
+    idleAnimation?: boolean;
+    /**
      * Optional build configuration overrides.
      */
     build?: SeedcordBuildConfig;
