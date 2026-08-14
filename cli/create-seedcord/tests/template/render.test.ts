@@ -64,6 +64,14 @@ describe('renderTemplates', () => {
         expect(files.has('src/handlers/Ping.ts')).toBe(true);
     });
 
+    it('recommends the eslint and prettier extensions', async () => {
+        const files = await render(GATEWAY);
+        const recommendations = files.get('.vscode/extensions.json') ?? '';
+
+        expect(recommendations).toContain('dbaeumer.vscode-eslint');
+        expect(recommendations).toContain('esbenp.prettier-vscode');
+    });
+
     it('gives http every file except the events one', async () => {
         const gateway = await render(GATEWAY);
         const http = await render(HTTP);

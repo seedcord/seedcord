@@ -25,7 +25,6 @@ export interface ScaffoldInput {
 
 export interface ScaffoldResult {
     installed: boolean;
-    committed: boolean;
     gitNotice: string | null;
 }
 
@@ -51,6 +50,22 @@ async function writeTree(target: string, files: { path: string; contents: string
         const destination = join(target, file.path);
         await mkdir(dirname(destination), { recursive: true });
         await writeFile(destination, file.contents, 'utf8');
+    }
+}
+
+async function runGitSteps(input: ScaffoldInput, run: CommandRunner): Promise<string | null> {
+    try {
+        await input.steps.run({ running: 'Setting up git', done: 'Committed' }, async () => {
+            await run('git', ['init'], input.target);
+            await run('git', ['add', '.'], input.target);
+            await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
+        });
+
+        return null;
+    } catch (error: unknown) {
+        const reason = Error.isError(error) ? error.message : String(error);
+        // make sure a git failure is non fatal and can't delete the project
+        return `${reason} The project is complete and uncommitted.`;
     }
 }
 
@@ -104,17 +119,15 @@ export async function scaffold(input: ScaffoldInput, run: CommandRunner): Promis
             steps.skip('Types generated');
         }
 
+        let gitNotice = plan.notice;
+
         if (plan.init) {
-            await steps.run({ running: 'Setting up git', done: 'Committed' }, async () => {
-                await run('git', ['init'], input.target);
-                await run('git', ['add', '.'], input.target);
-                await run('git', ['commit', '-m', 'chore: create seedcord bot'], input.target);
-            });
+            gitNotice = (await runGitSteps(input, run)) ?? gitNotice;
         } else {
             steps.skip('Committed');
         }
 
-        return { installed: input.install, committed: plan.init, gitNotice: plan.notice };
+        return { installed: input.install, gitNotice };
     } catch (error) {
         await rm(input.target, { recursive: true, force: true });
         if (existed) await mkdir(input.target, { recursive: true });

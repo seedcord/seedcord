@@ -1,7 +1,7 @@
 {
     "name": "seedcord",
     "type": "module",
-    "version": "0.17.3",
+    "version": "0.17.4",
     "engines": {
         "node": ">=24.11"
     },
@@ -49,6 +49,7 @@
         "coverage": "vitest run --coverage"
     },
     "peerDependencies": {
+        "envapt": "catalog:peer",
         "typescript": "catalog:peer"
     },
     "dependencies": {
@@ -64,7 +65,6 @@
         "chalk": "catalog:deps",
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
-        "envapt": "catalog:deps",
         "fix-esm-import-path": "^1.10.3",
         "ink": "^7.1.1",
         "ink-spinner": "^5.0.0",
@@ -83,6 +83,7 @@
         "@seedcord/vitest-config": "workspace:*",
         "@types/react": "catalog:react",
         "discord.js": "catalog:peer",
+        "envapt": "catalog:peer",
         "eslint-plugin-react-hooks": "^7.1.1",
         "ink-testing-library": "^4.0.0",
         "typescript": "catalog:peer"

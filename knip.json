@@ -1,8 +1,7 @@
 {
     "$schema": "https://unpkg.com/knip@latest/schema.json",
     "ignoreBinaries": [
-        "seedcord",
-        "continue"
+        "seedcord"
     ],
     "ignoreDependencies": [
         "fallow"
@@ -29,7 +28,7 @@
                 "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
             ],
             "project": [
-                "src/**/*.{ts,tsx}"
+                "src/**/*.{ts,tsx,css}"
             ]
         },
         "apps/home": {
@@ -37,7 +36,7 @@
                 "src/app/**/{page,layout,route,not-found}.{ts,tsx}"
             ],
             "project": [
-                "src/**/*.{ts,tsx}"
+                "src/**/*.{ts,tsx,css}"
             ]
         },
         "packages/core": {},
@@ -95,11 +94,8 @@
                 "@types/eslint-plugin-security",
                 "@typescript-eslint/parser",
                 "eslint-config-prettier",
-                "eslint-plugin-better-tailwindcss",
-                "eslint-plugin-mdx",
                 "eslint-plugin-prettier",
                 "eslint-plugin-security",
-                "eslint-plugin-tailwind-canonical-classes",
                 "eslint-plugin-tsdoc",
                 "eslint-plugin-unicorn",
                 "lodash.merge"

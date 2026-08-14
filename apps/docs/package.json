@@ -1,6 +1,6 @@
 {
     "name": "@seedcord/docs",
-    "version": "0.1.8",
+    "version": "0.1.9",
     "engines": {
         "node": ">=24.11"
     },
@@ -30,7 +30,7 @@
         "@shikijs/langs": "^4.4.1",
         "@shikijs/themes": "^4.4.1",
         "@tailwindcss/postcss": "catalog:deps",
-        "envapt": "catalog:deps",
+        "envapt": "catalog:peer",
         "isomorphic-dompurify": "^3.21.0",
         "lucide-react": "catalog:deps",
         "marked": "^18.0.7",
@@ -57,7 +57,9 @@
         "@vitest/coverage-v8": "catalog:test",
         "eslint": "^9.39.4",
         "eslint-config-next": "catalog:eslint",
+        "eslint-plugin-better-tailwindcss": "catalog:eslint",
         "eslint-plugin-react-compiler": "catalog:eslint",
+        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "typescript": "catalog:peer",

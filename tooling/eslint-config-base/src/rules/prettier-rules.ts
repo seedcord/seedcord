@@ -1,7 +1,6 @@
 import { Linter } from 'eslint';
 import { Options } from 'prettier';
 
-// Make sure these match .prettierrc at root
 export const PRETTIER_CONFIG: Options = {
     tabWidth: 4,
     semi: true,
@@ -17,15 +16,7 @@ export const PRETTIER_CONFIG: Options = {
     proseWrap: 'never'
 };
 
+// the plugin reads the consumer's prettier config
 export const PRETTIER_RULES: Linter.RulesRecord = {
-    'prettier/prettier': [
-        'error',
-        PRETTIER_CONFIG,
-        {
-            usePrettierrc: false,
-            fileInfoOptions: {
-                withNodeModules: false
-            }
-        }
-    ]
+    'prettier/prettier': 'error'
 };

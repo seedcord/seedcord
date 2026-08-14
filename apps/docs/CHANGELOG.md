@@ -1,5 +1,17 @@
 # @seedcord/docs
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies [505af63]
+- Updated dependencies [bb6f212]
+    - @seedcord/eslint-config@1.5.3
+    - @seedcord/rate-limiter@0.1.2
+    - @seedcord/types@0.8.2
+    - @seedcord/docs-engine@0.3.2
+    - @seedcord/ui@0.2.0
+
 ## 0.1.8
 
 ### Patch Changes

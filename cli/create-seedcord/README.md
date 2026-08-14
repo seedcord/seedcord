@@ -19,6 +19,8 @@ yarn create seedcord my-bot
 
 It asks where the project goes, how Discord reaches your bot, what the bot should react to, your bot token, and an accent color. Then it writes the project, installs, formats, generates your command types, and makes the first commit.
 
+On Windows, run it from Windows Terminal. The prompts fall back to ASCII in `cmd.exe`, so the boxes draw as `T`, `|`, and `o`.
+
 ## Flags
 
 Every question has a flag. Pass them all to skip all questions. `--help` prints the list.
