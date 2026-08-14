@@ -1,17 +1,25 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { ESLint } from 'eslint';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import createConfig from '@src/index';
 
 import type { Linter } from 'eslint';
 
+const roots: string[] = [];
+
+afterEach(() => {
+    while (roots.length > 0) rmSync(roots.pop() ?? '', { recursive: true, force: true });
+});
+
 // a project whose prettier config disagrees with the seedcord defaults on both counts
 function projectAsking(prettierOptions: string, source: string): string {
     const root = mkdtempSync(join(tmpdir(), 'seedcord-prettier-'));
+    roots.push(root);
+
     mkdirSync(join(root, 'src'));
     writeFileSync(join(root, 'prettier.config.mjs'), `export default ${prettierOptions};\n`);
     writeFileSync(join(root, 'tsconfig.json'), '{ "include": ["src"] }\n');

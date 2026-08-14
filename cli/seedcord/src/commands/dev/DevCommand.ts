@@ -43,18 +43,27 @@ export class DevCommand extends BaseCommand {
                 }
 
                 // the in-ui logs went with the unmount
-                this.printLogLocation();
+                await this.printLogLocation();
 
                 // ink's raw stdin and vite's dev server keep the event loop alive after teardown
                 process.exit();
             });
     }
 
-    private printLogLocation(): void {
-        process.stdout.write('seedcord dev stopped. logs: logs/\n');
+    // process.exit() drops whatever a piped stdout has not flushed
+    private async write(text: string): Promise<void> {
+        return new Promise((resolve) => {
+            process.stdout.write(text, () => {
+                resolve();
+            });
+        });
+    }
+
+    private async printLogLocation(): Promise<void> {
+        await this.write('seedcord dev stopped. logs: logs/\n');
 
         const report = profileReport();
-        if (report !== null) process.stdout.write(`${report}\n`);
+        if (report !== null) await this.write(`${report}\n`);
     }
 
     private async runDevApp(store: DevStore, runner: DevRunner): Promise<void> {

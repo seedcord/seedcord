@@ -44,6 +44,13 @@ describe('spawnSpec', () => {
     it('uses no shell anywhere else', () => {
         expect(spawnSpec('npm', ['i'], 'darwin').shell).toBe(false);
     });
+
+    it('keeps an executable path whole on windows', () => {
+        const spec = spawnSpec(String.raw`C:\Program Files\nodejs\node.exe`, ['-e', ''], 'win32');
+
+        expect(spec.shell).toBe(false);
+        expect(spec.command).toBe(String.raw`C:\Program Files\nodejs\node.exe`);
+    });
 });
 
 describe('execRunner', () => {

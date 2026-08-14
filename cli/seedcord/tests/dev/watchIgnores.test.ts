@@ -1,31 +1,56 @@
-import { appendFileSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { createServer, mergeConfig } from 'vite';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import viteConfig from '@commands/dev/runtime/vite.config';
+import viteConfig, { logsIgnore } from '@commands/dev/runtime/vite.config';
 
 import type { ViteDevServer } from 'vite';
 
-const SETTLE_MS = 1200;
+const READY_POLL_MS = 50;
+const READY_ATTEMPTS = 60;
 const WATCH_MS = 2000;
 
 let server: ViteDevServer | undefined;
+const roots: string[] = [];
 
 afterEach(async () => {
     await server?.close();
     server = undefined;
+
+    while (roots.length > 0) rmSync(roots.pop() ?? '', { recursive: true, force: true });
 });
+
+function project(): string {
+    const root = mkdtempSync(join(tmpdir(), 'seedcord-watch-'));
+    roots.push(root);
+
+    mkdirSync(join(root, 'logs'), { recursive: true });
+    mkdirSync(join(root, 'src', 'logs'), { recursive: true });
+    writeFileSync(join(root, 'bot.ts'), 'export const bot = 1;\n');
+
+    return root;
+}
+
+// chokidar reports nothing watched until its first scan finishes
+async function untilWatching(watcher: ViteDevServer['watcher']): Promise<void> {
+    for (let attempt = 0; attempt < READY_ATTEMPTS; attempt++) {
+        if (Object.keys(watcher.getWatched()).length > 0) return;
+        await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
+    }
+}
 
 async function filesTouchedAfterWriting(paths: readonly string[], root: string): Promise<string[]> {
     const touched: string[] = [];
 
     server = await createServer(
+        // the same merge ViteDevRuntime does
         mergeConfig(viteConfig, {
             root,
             logLevel: 'error',
+            server: { watch: { ignored: [logsIgnore(root)] } },
             plugins: [
                 {
                     name: 'record',
@@ -38,7 +63,7 @@ async function filesTouchedAfterWriting(paths: readonly string[], root: string):
         })
     );
 
-    await new Promise((resolve) => setTimeout(resolve, SETTLE_MS));
+    await untilWatching(server.watcher);
     for (const path of paths) appendFileSync(path, 'a line\n');
     await new Promise((resolve) => setTimeout(resolve, WATCH_MS));
 
@@ -47,12 +72,19 @@ async function filesTouchedAfterWriting(paths: readonly string[], root: string):
 
 describe('dev server watch ignores', () => {
     it('stays quiet while the bot writes its log file', async () => {
-        const root = mkdtempSync(join(tmpdir(), 'seedcord-watch-'));
-        mkdirSync(join(root, 'logs'), { recursive: true });
-        writeFileSync(join(root, 'bot.ts'), 'export const bot = 1;\n');
+        const root = project();
 
         const touched = await filesTouchedAfterWriting([join(root, 'logs', 'combined.log')], root);
 
         expect(touched).toEqual([]);
+    });
+
+    // the logs ignore is root-relative
+    it('still reports a source file under src/logs', async () => {
+        const root = project();
+
+        const touched = await filesTouchedAfterWriting([join(root, 'src', 'logs', 'format.ts')], root);
+
+        expect(touched.join(' ')).toContain('/src/logs/format.ts');
     });
 });

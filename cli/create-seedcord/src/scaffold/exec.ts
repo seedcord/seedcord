@@ -35,9 +35,11 @@ interface SpawnSpec {
     shell: boolean;
 }
 
+// windows ships these as .cmd shims, and node will not spawn one without a shell
+const SHIMS = new Set(['npm', 'npx', 'pnpm', 'yarn', 'bun', 'deno']);
+
 export function spawnSpec(command: string, args: string[], platform: NodeJS.Platform): SpawnSpec {
-    // windows ships the package managers as .cmd shims, and node will not spawn one without a shell
-    const shell = platform === 'win32' && command !== 'git';
+    const shell = platform === 'win32' && SHIMS.has(command);
     if (!shell) return { command, args, shell };
 
     // node prints DEP0190 when args are passed with shell: true
