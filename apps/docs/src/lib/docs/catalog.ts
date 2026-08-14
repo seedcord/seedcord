@@ -152,6 +152,25 @@ export const loadDocsCatalog = cache(async (): Promise<DocsCatalog> => {
     return sortCatalogEntries(entries.filter((entry): entry is PackageCatalogEntry => entry !== null));
 });
 
+// react's cache() only memoizes inside a request. a metadata route runs outside one, where every
+// getDocsEngine() call returns a fresh engine.
+export async function collectCategories(
+    engine: VersionedDocsEngine,
+    folder: string,
+    versionId: string
+): Promise<NavigationCategory[]> {
+    const entry = await engine.getEntry(folder);
+    if (!entry) return [];
+
+    try {
+        await engine.setVersion(folder, versionId);
+    } catch {
+        return [];
+    }
+
+    return buildCategories(engine.getPackageDirectory(entry.fullName));
+}
+
 // cache() dedupes this across the layout and the page's loaders, so project.json is fetched and the
 // model rebuilt once per request
 const ensureActiveVersion = cache(async (folder: string, versionId: string): Promise<PackageIndexEntry | null> => {
