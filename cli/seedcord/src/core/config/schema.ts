@@ -24,7 +24,7 @@ export interface SeedcordBuildConfig {
  * Type-checking options for `seedcord dev`, passed as the object form of
  * {@link SeedcordHmrConfig.typecheck}.
  */
-export interface SeedcordTypecheckConfig {
+interface SeedcordTypecheckConfig {
     /**
      * Which tsconfig `tsc --watch` runs against.
      *
