@@ -54,7 +54,11 @@
             ]
         },
         "//#lint:scripts": {
-            "dependsOn": ["@seedcord/docs-engine#build", "@seedcord/docs-generator#build"],
+            "dependsOn": [
+                "@seedcord/docs-engine#build",
+                "@seedcord/docs-generator#build",
+                "@seedcord/eslint-config#build"
+            ],
             "inputs": [
                 "scripts/**/*.{ts,tsx}",
                 "scripts/tsconfig.json",
@@ -85,10 +89,11 @@
             "persistent": true
         },
         "lint": {
-            "dependsOn": ["^build"],
+            "dependsOn": ["^build", "@seedcord/eslint-config#build"],
             "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"]
         },
         "lint:fix": {
+            "dependsOn": ["@seedcord/eslint-config#build"],
             "inputs": ["$TURBO_DEFAULT$", ".eslintrc*", "eslint.config.*"],
             "cache": false
         },
@@ -129,10 +134,12 @@
             "outputs": ["coverage/**"]
         },
         "fmt": {
+            "dependsOn": ["@seedcord/eslint-config#build"],
             "inputs": ["$TURBO_DEFAULT$", ".prettierrc*", "prettier.config.*"],
             "cache": false
         },
         "fmt:check": {
+            "dependsOn": ["@seedcord/eslint-config#build"],
             "inputs": ["$TURBO_DEFAULT$", ".prettierrc*", "prettier.config.*"]
         },
         "clean": {
