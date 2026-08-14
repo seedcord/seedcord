@@ -86,6 +86,8 @@
         "@testing-library/user-event": "^14.6.1",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",
+        "eslint-plugin-better-tailwindcss": "catalog:eslint",
+        "eslint-plugin-tailwind-canonical-classes": "catalog:eslint",
         "jsdom": "catalog:test",
         "prettier-plugin-tailwindcss": "catalog:deps",
         "tailwindcss": "catalog:deps"

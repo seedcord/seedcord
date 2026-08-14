@@ -61,6 +61,13 @@ describe('createConfig plugin toggles', () => {
         expect(rules['@seedcord/no-djs-builder-import']).toBeDefined();
     });
 
+    it('registers the tailwind rules from their optional peer plugins', async () => {
+        const rules = await resolveRules({ tailwindEntryPoint: 'globals.css' }, 'src/example.ts');
+
+        expect(rules['tailwind-canonical-classes/tailwind-canonical-classes']).toBeDefined();
+        expect(rules['better-tailwindcss/enforce-canonical-classes']).toBeDefined();
+    });
+
     it('keeps the typescript rules when tsdoc is disabled', async () => {
         const rules = await resolveRules({ registerTsdocPlugin: false }, 'src/example.ts');
         expect(rules['@typescript-eslint/no-deprecated']).toBeDefined();

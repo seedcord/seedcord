@@ -383,9 +383,15 @@ importers:
       eslint-config-next:
         specifier: catalog:eslint
         version: 16.2.12(@typescript-eslint/parser@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.7.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
       eslint-plugin-react-compiler:
         specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
       jsdom:
         specifier: catalog:test
         version: 30.0.1
@@ -441,9 +447,15 @@ importers:
       eslint-config-next:
         specifier: catalog:eslint
         version: 16.2.12(@typescript-eslint/parser@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2))(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.7.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
       eslint-plugin-react-compiler:
         specifier: catalog:eslint
         version: 19.1.0-rc.2(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))
       prettier:
         specifier: catalog:deps
         version: 3.9.6
@@ -1528,6 +1540,12 @@ importers:
       '@types/react-dom':
         specifier: catalog:react
         version: 19.2.4(@types/react@19.2.18)
+      eslint-plugin-better-tailwindcss:
+        specifier: catalog:eslint
+        version: 4.7.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
+      eslint-plugin-tailwind-canonical-classes:
+        specifier: catalog:eslint
+        version: 1.4.1(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))
       jsdom:
         specifier: catalog:test
         version: 30.0.1
@@ -12742,6 +12760,24 @@ snapshots:
       - '@eslint/css'
       - typescript
 
+  eslint-plugin-better-tailwindcss@4.7.0(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3):
+    dependencies:
+      '@eslint/css-tree': 4.0.4
+      '@valibot/to-json-schema': 1.7.1(valibot@1.4.2(typescript@6.0.3))
+      enhanced-resolve: 5.24.5
+      jiti: 2.7.0
+      synckit: 0.11.13
+      tailwind-csstree: 0.3.3
+      tailwindcss: 4.3.3
+      tsconfig-paths-webpack-plugin: 4.2.0
+      valibot: 1.4.2(typescript@6.0.3)
+    optionalDependencies:
+      eslint: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
+      oxlint: 1.76.0
+    transitivePeerDependencies:
+      - '@eslint/css'
+      - typescript
+
   eslint-plugin-import-x@4.17.1(@typescript-eslint/utils@8.65.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3))(eslint-import-resolver-node@0.3.10(supports-color@10.2.2))(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2):
     dependencies:
       '@typescript-eslint/types': 8.65.0
@@ -13044,6 +13080,12 @@ snapshots:
     dependencies:
       '@tailwindcss/node': 4.3.3
       eslint: 10.8.0(jiti@2.7.0)(supports-color@10.2.2)
+      synckit: 0.11.13
+
+  eslint-plugin-tailwind-canonical-classes@1.4.1(eslint@9.39.4(jiti@2.7.0)(supports-color@10.2.2)):
+    dependencies:
+      '@tailwindcss/node': 4.3.3
+      eslint: 9.39.4(jiti@2.7.0)(supports-color@10.2.2)
       synckit: 0.11.13
 
   eslint-plugin-tsdoc@0.5.2(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3):
