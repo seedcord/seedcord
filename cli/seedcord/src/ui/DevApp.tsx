@@ -58,7 +58,7 @@ export function DevApp(props: DevAppProps): ReactElement {
     );
     const viewportHeight = Math.max(1, logBox.height);
     const scroll = useScroll(logRows, viewportHeight, rowKey);
-    const uptimeMs = useUptime(state);
+    const uptimeMs = useUptime(state, tier !== 'logs');
 
     const interactive = !state.isBusy || state.restartRequired;
 
