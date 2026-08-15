@@ -9,4 +9,4 @@
 'seedcord': patch
 ---
 
-Framework log lines and error messages now paint their interpolated values with the truecolor tones, so a terminal theme can no longer remap them. One tone per kind of value throughout, an identifier reads blue, a count purple, a success green, and a failure red. Both database plugins dropped their `chalk` dependency.
+Update log colors in some places.
