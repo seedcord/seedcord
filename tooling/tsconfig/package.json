@@ -18,6 +18,10 @@
         "url": "https://github.com/seedcord/seedcord.git",
         "directory": "tooling/tsconfig"
     },
+    "homepage": "https://seedcord.org",
+    "bugs": "https://github.com/seedcord/seedcord/issues",
+    "author": "Dhruv <materwelondhruv@gmail.com> (https://materwelon.dev)",
+    "funding": "https://github.com/sponsors/materwelonDhruv",
     "exports": {
         ".": {
             "default": "./base.json"
