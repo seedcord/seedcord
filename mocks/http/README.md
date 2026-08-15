@@ -5,6 +5,6 @@
   </picture>
 </div>
 
-# @seedcord/mock-gateway
+# @seedcord/mock-http
 
-A working bot on the gateway transport.
+A working bot on the interactions transport.
