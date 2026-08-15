@@ -23,7 +23,7 @@
 
 seedcord wires a Discord bot together on top of discord.js and types every part of it. Commands, events, components, gates, lifecycle, and plugins all come with the framework. A wrong route or a wrong option name is a compile error, before the bot ever connects.
 
-You pick one of two transports when you scaffold. `@seedcord/gateway` holds a websocket connection. `@seedcord/http` answers Discord's interaction requests, which runs on a server or at the edge. Everything you write on top of them is the same code.
+You pick one of two transports when you scaffold. `@seedcord/gateway` holds a websocket connection. `@seedcord/http` answers Discord's interaction requests. Everything you write on top of them is the same code.
 
 ```sh
 pnpm create seedcord

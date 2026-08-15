@@ -28,7 +28,7 @@
 - `registerSeedcordPlugin` applies [`@seedcord/eslint-plugin`](https://www.npmjs.com/package/@seedcord/eslint-plugin)'s recommended preset
 - `registerDiscordjsPlugin` applies [`eslint-plugin-discordjs`](https://www.npmjs.com/package/eslint-plugin-discordjs)'s recommended preset
 
-`create-seedcord` writes a config that uses this, so a scaffolded project gets it with nothing to wire.
+`create-seedcord` writes a config that uses this.
 
 Until v1.0.0, minor versions can break.
 

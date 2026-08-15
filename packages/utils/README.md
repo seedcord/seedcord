@@ -29,7 +29,7 @@ Until v1.0.0, minor versions can break.
 
 ## Installation
 
-Both transports depend on this package and re-export it, so a bot already has it.
+Your transport already re-exports this.
 
 ```sh
 pnpm add @seedcord/utils
@@ -47,7 +47,7 @@ pnpm add @seedcord/utils
 | `parseDuration(input)` | `'30m'` to milliseconds. Returns `null` on a bare number, an unknown or uppercase unit, a fraction, or a zero result |
 | `percentage(a, b)` | `a` as a percentage of `b`, to two decimals |
 | `round(num, precision)` | rounds to that many decimal places |
-| `roundToDenomination(num, opts?)` | `1234` to `"1.2K"`, with the suffixes and precision configurable |
+| `roundToDenomination(num, opts?)` | `1234` to `"1.2K"`. Suffixes and precision are configurable |
 | `timestampFromSnowflake(id)` | the epoch ms encoded in the top 42 bits of a Discord snowflake |
 | `toEpochSeconds(ms)` | epoch ms to epoch seconds, the unit Discord's `<t:...>` markup reads |
 
@@ -90,7 +90,7 @@ Passing epoch ms straight into `<t:...>` renders a date tens of thousands of yea
 | --- | --- |
 | `assertNever(value)` | exhaustiveness guard for a `switch` default. Adding a union variant without a case fails to compile |
 | `formatFilePath(path, opts?)` | a path rewritten relative to the working directory, `./src/Bot.ts`. Returns it unchanged outside that directory or on a runtime with no `process` |
-| `fyShuffle(items)` | a new array, Fisher-Yates shuffled, leaving the original alone |
+| `fyShuffle(items)` | Fisher-Yates shuffle. Returns a new array and leaves the original alone |
 
 <!-- prettier-ignore-end -->
 

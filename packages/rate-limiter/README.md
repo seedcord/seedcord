@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/rate-limiter` gives you `MemoryRateLimiter` and `buildKey`. Each transport constructs one in its `Seedcord` constructor and assigns it to `core.rateLimiter`. The `Cooldown` gate reads it from there, and a handler gets the same instance from `this.core.rateLimiter`.
+`@seedcord/rate-limiter` gives you `MemoryRateLimiter` and `buildKey`. Each transport constructs one in its `Seedcord` constructor and assigns it to `core.rateLimiter`. The `Cooldown` gate reads it from there. A handler gets the same instance from `this.core.rateLimiter`.
 
 `MemoryRateLimiter` counts in one process, so it resets on restart and stays per-isolate on serverless. Pass your own `Store<'charge'>` as `config.store` to keep the counts across restarts and isolates.
 
@@ -31,7 +31,7 @@ Until v1.0.0, minor versions can break.
 
 ## Installation
 
-Both transports depend on this package and re-export it, so a bot already has it.
+Your transport already re-exports this.
 
 ```sh
 pnpm add @seedcord/rate-limiter

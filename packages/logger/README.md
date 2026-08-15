@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/logger` writes log lines into named channels, so you can quiet the framework's startup and dispatch output while keeping your own. seedcord registers its channels through `FRAMEWORK_CHANNELS`, and you register whatever else your bot logs.
+`@seedcord/logger` writes log lines into named channels, so you can quiet the framework's startup and dispatch output while keeping your own. seedcord registers its channels through `FRAMEWORK_CHANNELS`. You register whatever else your bot logs.
 
 The root entry stays runtime-agnostic and writes through `ObjectConsoleSink`. `@seedcord/logger/node` swaps in the winston sinks for pretty console output and rotating files.
 
@@ -31,7 +31,7 @@ Until v1.0.0, minor versions can break.
 
 ## Installation
 
-Both transports depend on this package and re-export it, so a bot already has it. Install it directly for a standalone tool:
+Your transport already re-exports this. Install it directly for a standalone tool:
 
 ```sh
 pnpm add @seedcord/logger

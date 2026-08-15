@@ -23,7 +23,7 @@
 
 ## About
 
-`TypedEventEmitter` ties each event name to its payload tuple, so a typo in a name or a wrong argument is a compile error. It carries no dependency on `node:events`, which lets it run on Cloudflare Workers and other edge runtimes alongside Node.
+`TypedEventEmitter` ties each event name to its payload tuple, so a typo in a name or a wrong argument is a compile error. It carries no dependency on `node:events`. It runs on Cloudflare Workers and other edge runtimes alongside Node.
 
 `waitFor` resolves with the payload of the next matching event. It rejects with a `WaitForError` when the timeout elapses or the `AbortSignal` fires, and `error.reason` says which of the two happened.
 
@@ -31,7 +31,7 @@ Until v1.0.0, minor versions can break.
 
 ## Installation
 
-Both transports depend on this package and re-export it, so a bot already has it. It stands alone with no seedcord dependency:
+Your transport already re-exports this. It also stands alone with no seedcord dependency:
 
 ```sh
 pnpm add @seedcord/event-emitter

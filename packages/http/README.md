@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/http` runs a seedcord bot on Discord's interactions endpoint. Discord posts each interaction to your URL, and the framework verifies the Ed25519 signature before dispatching it.
+`@seedcord/http` runs a seedcord bot on Discord's interactions endpoint. Discord posts each interaction to your URL. The framework verifies the Ed25519 signature before dispatching it.
 
 Discord posts only interactions over this transport. Use [`@seedcord/gateway`](https://www.npmjs.com/package/@seedcord/gateway) when the bot reacts to messages, members, or voice.
 
@@ -41,4 +41,4 @@ pnpm add @seedcord/http
 
 The root entry runs on Node through the `Seedcord` class.
 
-`@seedcord/http/edge` targets Web-standard runtimes through `createSeedcord`, and the Node entry re-exports all of it. The edge build for Cloudflare Workers is a work in progress and cannot be used yet.
+`@seedcord/http/edge` targets Web-standard runtimes through `createSeedcord`. The Node entry re-exports all of it. The edge build for Cloudflare Workers is a work in progress and cannot be used yet.

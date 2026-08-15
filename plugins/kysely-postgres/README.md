@@ -25,7 +25,7 @@
 
 `@seedcord/plugin-kysely-postgres` connects a seedcord bot to Postgres through Kysely. It opens the pool during startup, runs your migrations, loads every class under `dir` that carries `@RegisterKyselyService`, and exposes them under the key you attached it on.
 
-You declare the schema once, and Kysely types every query off it, so a renamed column breaks the build.
+You declare the schema once. Kysely types every query off it, so a renamed column breaks the build.
 
 It runs on the gateway transport and on http's server runtime. Attaching it to an edge host is a compile error.
 

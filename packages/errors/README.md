@@ -31,7 +31,7 @@ Until v1.0.0, minor versions can break.
 
 ## Installation
 
-Both transports depend on this package and re-export it, so a bot already has it.
+Your transport already re-exports this.
 
 ```sh
 pnpm add @seedcord/errors

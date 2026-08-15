@@ -31,7 +31,7 @@ Until v1.0.0, minor versions can break.
 
 ## Installation
 
-Both transports re-export these types, so a bot already has them. Install it directly when you are writing a plugin or a tool that types against seedcord:
+Your transport already re-exports these types. Install it directly for a plugin or a tool that types against seedcord:
 
 ```sh
 pnpm add -D @seedcord/types

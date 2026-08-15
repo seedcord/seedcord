@@ -23,7 +23,7 @@
 
 ## About
 
-`@seedcord/tsconfig` is the base TypeScript config seedcord projects extend. It turns on `strict` plus the checks that catch the things `strict` leaves open, including `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, and `noFallthroughCasesInSwitch`. `experimentalDecorators` is on, which the framework's route and command decorators need.
+`@seedcord/tsconfig` is the base TypeScript config seedcord projects extend. It turns on `strict` plus the checks that catch the things `strict` leaves open, including `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `noImplicitReturns`, and `noFallthroughCasesInSwitch`. `experimentalDecorators` is on. The framework's route and command decorators require it.
 
 Two configs ship. `base` targets `ESNext`, and `node` targets `ES2024`.
 
