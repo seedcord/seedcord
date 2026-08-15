@@ -22,6 +22,8 @@ import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 export interface WebhookReport {
     /** Shown as the webhook message author. Defaults to the reporter's class name. */
     username?: string;
+    /** Shown as the webhook message avatar. Defaults to the webhook's own. */
+    avatarUrl?: string;
     components: readonly { toJSON(): APIMessageTopLevelComponent }[];
     files?: readonly WebhookFile[] | undefined;
 }
@@ -75,10 +77,11 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         }
 
         try {
-            const { username, components, files } = await this.report(suppressed);
+            const { username, avatarUrl, components, files } = await this.report(suppressed);
             await WebhookLog.senderFor(url).send({
                 flags: sendFlags({ ephemeral: false }),
                 username: username ?? this.constructor.name,
+                avatarUrl,
                 components,
                 files
             });

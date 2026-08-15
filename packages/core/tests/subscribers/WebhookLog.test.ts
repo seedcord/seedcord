@@ -35,7 +35,7 @@ const core = {} as unknown as CoreBase;
 const freshCore = (): CoreBase => ({}) as unknown as CoreBase;
 
 interface SentBody {
-    body: { username: string };
+    body: { username: string; avatar_url?: string };
 }
 
 const component = { toJSON: (): APIMessageTopLevelComponent => ({ type: ComponentType.Container, components: [] }) };
@@ -74,6 +74,31 @@ describe('WebhookLog', () => {
 
         const [, options] = hoisted.postMock.mock.calls[0] as [string, { body: { username: string } }];
         expect(options.body.username).toBe('NamedReporter');
+    });
+
+    it('sends the avatar url only when the report carries one', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Faced extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { avatarUrl: 'https://cdn.example/av.png', components: [component] };
+            }
+        }
+
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Plain extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        await new Faced(data, freshCore()).execute();
+        await new Plain(data, freshCore()).execute();
+
+        const bodies = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body);
+        expect(bodies[0]?.avatar_url).toBe('https://cdn.example/av.png');
+        expect(bodies[1]).not.toHaveProperty('avatar_url');
     });
 
     it('reuses one sender per url across instances', async () => {
