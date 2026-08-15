@@ -4,12 +4,12 @@ import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { registerSubscribers } from '@src/dispatch/registerSubscribers';
+import { registerSubscribers } from '#src/dispatch/registerSubscribers';
 
 import { emptyManifest } from '../helpers/fixtures';
 
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { CoreBase, SubscriptionData } from '@seedcord/core';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 const ran: string[] = [];
 

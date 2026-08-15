@@ -1,7 +1,7 @@
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { ComponentDefsKey } from '@customId/routing';
+import { ComponentDefsKey } from '#customId/routing';
 import {
     SelectMenuKind,
     areRoutes,
@@ -9,10 +9,10 @@ import {
     selectMenuRouteOf,
     storeComponentRoute,
     storeInteractionRoute
-} from '@decorators/interactionRoutes';
-import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
+} from '#decorators/interactionRoutes';
+import { InteractionMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '@customId/CustomId';
+import type { AnyCustomId } from '#customId/CustomId';
 
 describe('storeInteractionRoute', () => {
     it('stores routes under the route key and marks the constructor', () => {

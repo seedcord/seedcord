@@ -1,15 +1,15 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { EventHandler } from '@handlers/event/EventHandler';
-import { EventMiddleware } from '@handlers/event/EventMiddleware';
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { InteractionMiddleware } from '@handlers/interaction/InteractionMiddleware';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { EventHandler } from '#handlers/event/EventHandler';
+import { EventMiddleware } from '#handlers/event/EventMiddleware';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { mockInteraction } from '../utils/senderMock';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 import type { AutocompleteInteraction, ChatInputCommandInteraction, ClientEvents } from 'discord.js';
 

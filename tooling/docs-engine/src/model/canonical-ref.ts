@@ -1,4 +1,4 @@
-import type { DocReference } from '@src/types';
+import type { DocReference } from '#src/types';
 
 /**
  * API Extractor's `canonicalReference` (a TSDoc `DeclarationReference`) is an experimental/beta API.

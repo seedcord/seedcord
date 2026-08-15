@@ -6,12 +6,12 @@ import { Logger, paint } from '@seedcord/logger';
 import { Client, Events } from 'discord.js';
 import { Envapt } from 'envapt/legacy';
 
-import { EventDispatcher } from '@bControllers/EventDispatcher';
-import { InteractionDispatcher } from '@bControllers/InteractionDispatcher';
+import { EventDispatcher } from '#bControllers/EventDispatcher';
+import { InteractionDispatcher } from '#bControllers/InteractionDispatcher';
 
 import { EmojiInjector } from './injectors/EmojiInjector';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { Initializeable } from '@seedcord/core';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
 

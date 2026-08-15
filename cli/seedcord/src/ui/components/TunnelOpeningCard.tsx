@@ -2,9 +2,9 @@ import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import React from 'react';
 
-import { ui } from '@ui/palette';
+import { ui } from '#ui/palette';
 
-import type { TunnelPhase } from '@commands/dev/tunnel/TunnelCoordinator';
+import type { TunnelPhase } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { ReactElement } from 'react';
 
 const STEPS: readonly (readonly [TunnelPhase, string])[] = [

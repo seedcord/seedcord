@@ -1,5 +1,5 @@
-import { cloneCommentParagraphs, createPlainParagraph } from '@lib/docs/comments/creators';
-import { formatDeclarationHeader, formatSignature, highlightCode } from '@lib/docs/formatting';
+import { cloneCommentParagraphs, createPlainParagraph } from '#lib/docs/comments/creators';
+import { formatDeclarationHeader, formatSignature, highlightCode } from '#lib/docs/formatting';
 
 import type {
     CommentExample,
@@ -9,7 +9,7 @@ import type {
     FormattedComment,
     DeprecationStatus,
     EntityMemberSummary
-} from '@lib/docs/types';
+} from '#lib/docs/types';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
 type DocNodeLike = Pick<DocNode, 'flags' | 'comment'>;

@@ -1,11 +1,11 @@
 import { render } from 'ink';
 import React from 'react';
 
-import { BaseCommand } from '@core/BaseCommand';
-import { DevApp } from '@ui/DevApp';
-import { profileFrame, profileReport, profileStdout } from '@ui/profile';
-import { DevStore } from '@ui/stores/DevStore';
-import { LogStore } from '@ui/stores/LogStore';
+import { BaseCommand } from '#core/BaseCommand';
+import { DevApp } from '#ui/DevApp';
+import { profileFrame, profileReport, profileStdout } from '#ui/profile';
+import { DevStore } from '#ui/stores/DevStore';
+import { LogStore } from '#ui/stores/LogStore';
 
 import { DevRunner } from './DevRunner';
 

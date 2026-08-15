@@ -4,13 +4,13 @@ import { Logger } from '@seedcord/logger';
 import { MessageFlags } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { Config, RenderContext, ReplyResponse } from '@seedcord/types';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 import type { UUID } from 'node:crypto';
 
 const rest = vi.hoisted(() => {

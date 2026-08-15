@@ -3,14 +3,14 @@ import { asError, reportedWrite } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
-import { ReplySender } from '@bot/ReplySender';
-import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
+import { ReplySender } from '#bot/ReplySender';
+import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
 
 import { HARMLESS_API_CODES } from './harmlessApiCodes';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
+import type { ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { ReplyResponse } from '@seedcord/types';
-import type { ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type { AutocompleteInteraction } from 'discord.js';
 
 const logger = new Logger('Faults', { channel: 'errors' });

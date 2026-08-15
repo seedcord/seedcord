@@ -1,7 +1,7 @@
 import { Plugin } from '@seedcord/core/plugin';
 import { describe, it, expect } from 'vitest';
 
-import type { Seedcord } from '@src/Seedcord';
+import type { Seedcord } from '#src/Seedcord';
 
 class Anywhere extends Plugin {
     public init(): Promise<void> {

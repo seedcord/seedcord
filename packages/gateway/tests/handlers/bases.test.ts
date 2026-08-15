@@ -3,15 +3,15 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
-import { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
-import { ModalHandler } from '@handlers/interaction/components/ModalHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { mockInteraction, message } from '../utils/senderMock';
 import { stubBus } from '../utils/stubBus';
 
-import type { SentMessage } from '@bot/ReplySender';
-import type { Core } from '@interfaces/Core';
+import type { SentMessage } from '#bot/ReplySender';
+import type { Core } from '#interfaces/Core';
 import type { ModalLike } from '@seedcord/core/internal';
 import type { ButtonInteraction, ChatInputCommandInteraction, ModalSubmitInteraction } from 'discord.js';
 

@@ -1,7 +1,7 @@
 'use client';
 import { useMemo } from 'react';
 
-import type { PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
+import type { PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 
 export function useSidebarSelection(
     catalog: readonly PackageCatalogEntry[],

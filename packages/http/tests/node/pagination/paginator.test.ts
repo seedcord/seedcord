@@ -1,19 +1,19 @@
 import { ComponentType, InteractionResponseType, MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { ReplySender } from '@reply/ReplySender';
-import { ButtonRoute } from '@src/index';
-import { Paginator } from '@src/pagination/Paginator';
-import { ArraySource } from '@src/pagination/sources';
+import { ReplySender } from '#reply/ReplySender';
+import { ButtonRoute } from '#src/index';
+import { Paginator } from '#src/pagination/Paginator';
+import { ArraySource } from '#src/pagination/sources';
 
 import { stubBus } from '../../helpers/fixtures';
 
+import type { RepliableHandler } from '#handlers/RepliableHandler';
+import type { Core } from '#interfaces/Core';
+import type { InteractionRef } from '#reply/ReplySender';
+import type { Repliables } from '#src/handlers/interactionTypes';
+import type { PageContext } from '#src/pagination/PageContext';
 import type { REST } from '@discordjs/rest';
-import type { RepliableHandler } from '@handlers/RepliableHandler';
-import type { Core } from '@interfaces/Core';
-import type { InteractionRef } from '@reply/ReplySender';
-import type { Repliables } from '@src/handlers/interactionTypes';
-import type { PageContext } from '@src/pagination/PageContext';
 import type {
     APIComponentInContainer,
     APIContainerComponent,

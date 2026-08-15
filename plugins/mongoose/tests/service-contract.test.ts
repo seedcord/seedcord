@@ -2,15 +2,15 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import mongoose from 'mongoose';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { RegisterMongooseService } from '@src/decorators/RegisterMongooseService';
-import { MongooseService } from '@src/MongooseService';
+import { RegisterMongooseService } from '#src/decorators/RegisterMongooseService';
+import { MongooseService } from '#src/MongooseService';
 
 interface IUser {
     _id: string;
     username: string;
 }
 
-declare module '@src/types/MongooseServices' {
+declare module '#src/types/MongooseServices' {
     interface MongooseServices {
         users: WithSchema;
         products: WithProducts;

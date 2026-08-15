@@ -1,4 +1,4 @@
-import { Notice } from '@stops/Notice';
+import { Notice } from '#stops/Notice';
 
 import type { ReplyResponse } from '@seedcord/types';
 

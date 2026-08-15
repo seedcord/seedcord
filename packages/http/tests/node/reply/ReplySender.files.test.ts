@@ -3,12 +3,12 @@ import { Readable } from 'node:stream';
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ReplySender } from '@reply/ReplySender';
+import { ReplySender } from '#reply/ReplySender';
 
 import { stubBus } from '../../helpers/fixtures';
 
+import type { InteractionRef } from '#reply/ReplySender';
 import type { RawFile, REST } from '@discordjs/rest';
-import type { InteractionRef } from '@reply/ReplySender';
 import type { ReplyResponse } from '@seedcord/types';
 
 const BYTES = new Uint8Array([0x73, 0x65, 0x65, 0x64]);

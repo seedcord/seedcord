@@ -8,16 +8,16 @@ import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import { buildRouteMaps } from '@src/dispatch/resolve';
-import { EMPTY_MANIFEST } from '@src/manifest/RouteManifest';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import { buildRouteMaps } from '#src/dispatch/resolve';
+import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
 
-import type { HandlerConstructor } from '@handlers/constructors';
+import type { HandlerConstructor } from '#handlers/constructors';
+import type { ResolvedRoute, RouteMap, RouteMaps } from '#src/dispatch/resolve';
 import type { Initializeable } from '@seedcord/core';
 import type { ContextMenuLeaves } from '@seedcord/core/internal';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { ResolvedRoute, RouteMap, RouteMaps } from '@src/dispatch/resolve';
 
 interface RouteTarget {
     readonly map: RouteMap;

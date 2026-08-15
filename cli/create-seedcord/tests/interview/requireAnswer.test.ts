@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
-import { requireAnswer } from '@interview/steps/requireAnswer';
+import { requireAnswer } from '#interview/steps/requireAnswer';
 
 // clack never exports its cancel symbol
 const { CANCEL } = vi.hoisted(() => ({ CANCEL: Symbol('cancel') }));

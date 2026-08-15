@@ -1,7 +1,7 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 import { describe, expect, it } from 'vitest';
 
-import { Notice } from '@stops/Notice';
+import { Notice } from '#stops/Notice';
 
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
 

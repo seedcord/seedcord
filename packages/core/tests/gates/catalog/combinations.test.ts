@@ -1,14 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { GuildOnly, OwnerOnly } from '@gates/catalog/access';
-import { Cooldown } from '@gates/catalog/Cooldown';
-import { and, or } from '@gates/combinators';
-import { runGates } from '@gates/runGates';
-import { NotInGuild, NotOwner } from '@notices/index';
-import { Notice } from '@stops/Notice';
+import { GuildOnly, OwnerOnly } from '#gates/catalog/access';
+import { Cooldown } from '#gates/catalog/Cooldown';
+import { and, or } from '#gates/combinators';
+import { runGates } from '#gates/runGates';
+import { NotInGuild, NotOwner } from '#notices/index';
+import { Notice } from '#stops/Notice';
 
-import type { GateContextBase } from '@gates/Gate';
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { GateContextBase } from '#gates/Gate';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 function ctxOf(opts: { guild?: boolean; userId?: string; owners?: string[] }): GateContextBase {
     // the gates read core.config.ownerIds and the id scalars, so a minimal cast stands in

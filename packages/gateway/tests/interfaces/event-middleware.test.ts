@@ -2,12 +2,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Events } from 'discord.js';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { Middleware, MiddlewareType } from '@bDecorators/Middlewares';
-import { EventMiddleware } from '@handlers/event';
-import { InteractionMiddleware } from '@handlers/interaction';
+import { Middleware, MiddlewareType } from '#bDecorators/Middlewares';
+import { EventMiddleware } from '#handlers/event';
+import { InteractionMiddleware } from '#handlers/interaction';
 
-import type { Core } from '@interfaces/Core';
-import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { Repliables, ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 const core = {} as unknown as Core;

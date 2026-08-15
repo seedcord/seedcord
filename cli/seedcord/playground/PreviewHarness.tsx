@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 
-import { DevApp } from '@ui/DevApp';
+import { DevApp } from '#ui/DevApp';
 
 import { createPreviewContext } from './PreviewContext';
 
+import type { DevStore } from '#ui/stores/DevStore';
 import type { Scenario } from './scenarios/types';
-import type { DevStore } from '@ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 interface PreviewHarnessProps {

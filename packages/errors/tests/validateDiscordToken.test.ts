@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { SeedcordErrorCode } from '@src/index';
-import { validateDiscordToken } from '@src/internal.index';
+import { SeedcordErrorCode } from '#src/index';
+import { validateDiscordToken } from '#src/internal.index';
 
 const validToken = `${'a'.repeat(24)}.${'b'.repeat(6)}.${'c'.repeat(27)}`;
 

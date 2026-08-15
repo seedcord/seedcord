@@ -3,16 +3,16 @@ import { Logger, paint } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
-import { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
-import { accessorStore, clearStore, guardedAccessor } from '@src/miscellaneous/guarded';
+import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 
 import type {
     ContextMenuKind,
     MessageContextMenuRegistry,
     UserContextMenuRegistry
-} from '@registries/ContextMenuRegistry';
-import type { SlashOptionRegistry } from '@registries/SlashOptionRegistry';
-import type { CommandBuilder, DeployResult } from '@src/commands/types';
+} from '#registries/ContextMenuRegistry';
+import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
+import type { CommandBuilder, DeployResult } from '#src/commands/types';
 import type { APIApplicationCommand, Snowflake } from 'discord-api-types/v10';
 
 const commandStorage = accessorStore<CommandInfo>();

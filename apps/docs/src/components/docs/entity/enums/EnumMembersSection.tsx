@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 
 import { EnumMemberCard } from './EnumMemberCard';
 
-import type { EnumMemberModel } from '@lib/docs/types';
+import type { EnumMemberModel } from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface EnumMembersSectionProps {

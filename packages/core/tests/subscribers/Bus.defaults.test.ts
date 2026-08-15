@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import { Bus } from '@subscribers/index';
+import { Bus } from '#subscribers/index';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 // justified: the Bus only stores core, no member is read during construction
 function stubBus(): Bus {

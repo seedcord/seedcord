@@ -2,8 +2,8 @@
     // the parser must accept jsonc, tsc does
     "compilerOptions": {
         "paths": {
-            "@src/*": ["./src/*"],
-            "@flat": ["./src/flat.ts"]
+            "#src/*": ["./src/*"],
+            "#flat": ["./src/flat.ts"]
         }
     }
 }

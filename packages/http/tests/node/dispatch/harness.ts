@@ -1,13 +1,13 @@
 import { Envapter, PortableSource } from 'envapt';
 import { vi } from 'vitest';
 
-import { createSeedcord } from '@src/createSeedcord';
+import { createSeedcord } from '#src/createSeedcord';
 
 import { createSigner, type Signer } from '../../helpers/ed25519';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { Config } from '@seedcord/types';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 const encoder = new TextEncoder();
 

@@ -5,12 +5,12 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@src/*": ["./src/*"],
-            "@handlers/*": ["./src/handlers/*"],
-            "@inputs/*": ["./src/inputs/*"],
-            "@interfaces/*": ["./src/interfaces/*"],
-            "@reply/*": ["./src/reply/*"],
-            "@subscribers/*": ["./src/subscribers/*"]
+            "#src/*": ["./src/*"],
+            "#handlers/*": ["./src/handlers/*"],
+            "#inputs/*": ["./src/inputs/*"],
+            "#interfaces/*": ["./src/interfaces/*"],
+            "#reply/*": ["./src/reply/*"],
+            "#subscribers/*": ["./src/subscribers/*"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],

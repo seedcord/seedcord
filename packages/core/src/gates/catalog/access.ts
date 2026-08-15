@@ -1,10 +1,10 @@
-import { defineGate } from '@gates/Gate';
-import { NotInDm, NotInGuild, NotOwner } from '@notices/index';
+import { defineGate } from '#gates/Gate';
+import { NotInDm, NotInGuild, NotOwner } from '#notices/index';
 
 import { pickNotice } from './options';
 
+import type { Gate, GateContextBase } from '#gates/Gate';
 import type { GateNoticeOptions } from './options';
-import type { Gate, GateContextBase } from '@gates/Gate';
 
 /**
  * Passes only for a user id listed in `config.ownerIds`, else refuses.

@@ -3,15 +3,15 @@ import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach } from 'vitest';
 
-import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '@node/Pluggable';
-import { Plugin } from '@src/plugin/Plugin';
-import { Bus } from '@subscribers/Bus';
+import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
+import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import { Pluggable } from '#node/Pluggable';
+import { Plugin } from '#src/plugin/Plugin';
+import { Bus } from '#subscribers/Bus';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { Runtime } from '#src/plugin/options';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { Runtime } from '@src/plugin/options';
 
 class GatewayScoped extends Plugin<{ transport: 'gateway' }> {
     public init(): Promise<void> {

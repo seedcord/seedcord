@@ -4,12 +4,12 @@ import { Notice, Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 
-import { slashRouteOf } from '@bot/utilities/miscellaneous/slashRouteOf';
+import { slashRouteOf } from '#bot/utilities/miscellaneous/slashRouteOf';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { FaultSource, SubscriptionData } from '@seedcord/core';
 import type { RenderContext, ReplyResponse, Nullable } from '@seedcord/types';
-import type { Repliables } from '@src/handlers/interactionTypes';
 import type { Guild, User } from 'discord.js';
 import type { UUID } from 'node:crypto';
 

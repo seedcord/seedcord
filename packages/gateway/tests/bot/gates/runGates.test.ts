@@ -3,9 +3,9 @@ import { MissingPermissions } from '@seedcord/core/internal';
 import { GuildMember, PermissionFlagsBits } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { eventGateContext, interactionGateContext } from '@bot/gates/runGates';
+import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { ButtonInteraction } from 'discord.js';
 
 // a real GuildMember instance for the builder's instanceof guard, carrying only what the builder reads

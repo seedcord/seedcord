@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { DevStore } from '@ui/stores/DevStore';
+import { DevStore } from '#ui/stores/DevStore';
 
-import type { DevEvent } from '@commands/dev/runtime/events';
+import type { DevEvent } from '#commands/dev/runtime/events';
 
 describe('DevStore', () => {
     it('starts in the initial state', () => {

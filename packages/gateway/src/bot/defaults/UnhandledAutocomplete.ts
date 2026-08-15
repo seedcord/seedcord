@@ -1,4 +1,4 @@
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
 import type { SlashOptionRegistry } from '@seedcord/core';
 import type { CacheType } from 'discord.js';

@@ -1,7 +1,7 @@
 import { toEpochSeconds } from '@seedcord/utils';
 
-import { Notice } from '@stops/Notice';
-import { NoticeCard } from '@stops/NoticeCard';
+import { Notice } from '#stops/Notice';
+import { NoticeCard } from '#stops/NoticeCard';
 
 import type { EpochMs, ReplyResponse } from '@seedcord/types';
 

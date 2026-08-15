@@ -1,16 +1,16 @@
 import { cn } from '@seedcord/ui';
 import { Suspense } from 'react';
 
-import { MovedEntityNotice } from '@components/docs/MovedEntityNotice';
-import { PackageOverviewTabs } from '@components/docs/PackageOverviewTabs';
-import { PackageVersionOverview } from '@components/docs/PackageVersionOverview';
-import { ReadmeBlock } from '@components/docs/ReadmeBlock';
-import { loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '@lib/docs/catalog';
-import { getCatalogContext } from '@lib/docs/pageContext';
-import { renderReadme } from '@lib/docs/renderReadme';
-import { pageMetadata } from '@lib/site';
+import { MovedEntityNotice } from '#components/docs/MovedEntityNotice';
+import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
+import { PackageVersionOverview } from '#components/docs/PackageVersionOverview';
+import { ReadmeBlock } from '#components/docs/ReadmeBlock';
+import { loadActiveVersion, loadChangelogUrl, loadReadme, loadReexports } from '#lib/docs/catalog';
+import { getCatalogContext } from '#lib/docs/pageContext';
+import { renderReadme } from '#lib/docs/renderReadme';
+import { pageMetadata } from '#lib/site';
 
-import type { PageParams } from '@lib/docs/pageContext';
+import type { PageParams } from '#lib/docs/pageContext';
 import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
 

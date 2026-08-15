@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import * as pluginEntry from '@src/plugin.index';
+import * as pluginEntry from '#src/plugin.index';
 
 // the phase enums' single home is the core root barrel
 describe('@seedcord/core/plugin entry', () => {

@@ -4,8 +4,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
+import type { Answers, Step } from '#interview/types';
 import type { Option } from '@clack/prompts';
-import type { Answers, Step } from '@interview/types';
 import type { ColorName } from '@seedcord/types';
 
 export const COLOR_NAMES = [

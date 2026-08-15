@@ -2,8 +2,8 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { FilterChips } from '@ui/components/primitives/FilterChips';
-import { INITIAL_CURSOR } from '@ui/filterCursor';
+import { FilterChips } from '#ui/components/primitives/FilterChips';
+import { INITIAL_CURSOR } from '#ui/filterCursor';
 
 const CHANNELS = ['bot', 'hmr', 'gates'];
 

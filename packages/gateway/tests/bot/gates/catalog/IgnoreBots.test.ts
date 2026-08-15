@@ -1,9 +1,9 @@
 import { Silence } from '@seedcord/core';
 import { describe, it, expect } from 'vitest';
 
-import { IgnoreBots } from '@bot/gates/catalog';
+import { IgnoreBots } from '#bot/gates/catalog';
 
-import type { EventGateContext } from '@bot/gates';
+import type { EventGateContext } from '#bot/gates';
 
 function actorCtx(isBot: boolean): EventGateContext {
     // the gate reads only the event actor's bot flag, so a minimal cast stands in

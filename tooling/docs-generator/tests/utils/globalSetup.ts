@@ -4,7 +4,7 @@ import { rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 
-import { ApiDocsGenerator } from '@src/generator';
+import { ApiDocsGenerator } from '#src/generator';
 
 import { PACKAGES_DIR, MOCK_PACKAGE_NAME, TEMP_DIR } from '.';
 

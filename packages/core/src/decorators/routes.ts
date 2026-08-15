@@ -3,17 +3,17 @@ import {
     selectMenuRouteOf,
     storeComponentRoute,
     storeInteractionRoute
-} from '@decorators/interactionRoutes';
-import { InteractionRoutes } from '@src/metadataKeys';
+} from '#decorators/interactionRoutes';
+import { InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '@customId/CustomId';
-import type { SelectMenuKind } from '@decorators/interactionRoutes';
+import type { AnyCustomId } from '#customId/CustomId';
+import type { SelectMenuKind } from '#decorators/interactionRoutes';
 import type {
     ContextMenuKind,
     MessageContextMenuRegistry,
     UserContextMenuRegistry
-} from '@registries/ContextMenuRegistry';
-import type { SlashOptionRegistry } from '@registries/SlashOptionRegistry';
+} from '#registries/ContextMenuRegistry';
+import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 import type { Constructor } from 'type-fest';
 

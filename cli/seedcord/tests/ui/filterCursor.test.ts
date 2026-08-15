@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { focusedIn, INITIAL_CURSOR, moveCursor } from '@ui/filterCursor';
+import { focusedIn, INITIAL_CURSOR, moveCursor } from '#ui/filterCursor';
 
 describe('moveCursor', () => {
     it('moves right within channels and wraps', () => {

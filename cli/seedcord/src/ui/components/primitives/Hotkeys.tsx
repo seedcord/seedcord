@@ -1,10 +1,10 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { ui } from '@ui/palette';
-import { isSessionLive } from '@ui/stores/devPhase';
+import { ui } from '#ui/palette';
+import { isSessionLive } from '#ui/stores/devPhase';
 
-import type { DevPhase } from '@ui/stores/devPhase';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
 interface HotkeyProps {

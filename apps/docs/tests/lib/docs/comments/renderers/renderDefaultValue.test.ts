@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderDefaultValue } from '@lib/docs/comments/renderers/renderDefaultValue';
+import { renderDefaultValue } from '#lib/docs/comments/renderers/renderDefaultValue';
 
-import type { FormatContext } from '@lib/docs/types';
+import type { FormatContext } from '#lib/docs/types';
 import type { DocComment, DocCommentBlockTag, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 type DisplayPart = { kind: 'text'; text: string } | { kind: 'code'; text: string };

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatRenderedDeclarationHeaderPretty, formatRenderedSignaturePretty } from '@transformers/pretty-formatter';
+import { formatRenderedDeclarationHeaderPretty, formatRenderedSignaturePretty } from '#transformers/pretty-formatter';
 
-import type { DocReference, InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '@src/types';
+import type { DocReference, InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '#src/types';
 
 function ref(name: string): DocReference {
     return { name };

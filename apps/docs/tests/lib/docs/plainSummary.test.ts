@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { plainSummary } from '@lib/docs/plainSummary';
+import { plainSummary } from '#lib/docs/plainSummary';
 
 describe('plainSummary', () => {
     it('replaces a markdown link with its label', () => {

@@ -3,9 +3,9 @@ import { join } from 'node:path';
 
 import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HmrPlugin } from '@commands/dev/runtime/HmrPlugin';
+import { HmrPlugin } from '#commands/dev/runtime/HmrPlugin';
 
-import type { DevEvent } from '@commands/dev/runtime/events';
+import type { DevEvent } from '#commands/dev/runtime/events';
 import type { HmrUpdateEvent } from '@seedcord/types';
 import type { EnvironmentModuleNode, HotUpdateOptions, ViteDevServer } from 'vite';
 

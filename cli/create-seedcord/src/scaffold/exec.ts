@@ -4,7 +4,7 @@ import process from 'node:process';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import type { CommandRunner } from '@scaffold/scaffold';
+import type { CommandRunner } from '#scaffold/scaffold';
 
 // an install logs hundreds of lines before the one that names the failure
 const KEPT_LINES = 12;

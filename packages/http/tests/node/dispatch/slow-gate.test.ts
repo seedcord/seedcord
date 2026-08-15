@@ -6,14 +6,14 @@ import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { FROM, capturingCtx, emptyManifest, signedRequest, slashPayload } from './harness';
 import { createSigner } from '../../helpers/ed25519';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
+import type { EngineContext } from '#src/createSeedcord';
 import type { Gate, GateContextBase } from '@seedcord/core';
-import type { EngineContext } from '@src/createSeedcord';
 
 const rest = vi.hoisted(() => {
     interface FakeRestInstance {
@@ -68,7 +68,7 @@ async function engineFor(
     const source: Record<string, string> = { DISCORD_PUBLIC_KEY: signer.publicKeyHex, DISCORD_BOT_TOKEN: VALID_TOKEN };
     if (production) source.ENVIRONMENT = 'production';
     Envapter.useSource(new PortableSource(source));
-    const { createSeedcord } = await import('@src/createSeedcord');
+    const { createSeedcord } = await import('#src/createSeedcord');
     return { handle: createSeedcord(nullPathConfig, manifest), signer };
 }
 

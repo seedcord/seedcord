@@ -1,6 +1,6 @@
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
+import type { Repliables, ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { GuildPermissionsContext } from '@seedcord/core';
-import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents, Guild, GuildMember, User } from 'discord.js';
 
 /**

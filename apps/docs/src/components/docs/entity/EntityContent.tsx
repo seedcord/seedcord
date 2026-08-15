@@ -3,13 +3,13 @@
 import { cn } from '@seedcord/ui';
 import { useEffect, type ReactElement } from 'react';
 
-import { log } from '@lib/logger';
+import { log } from '#lib/logger';
 
 import { EntityHeader } from './EntityHeader';
 import { renderEntityBody } from './utils/renderers/renderEntityBody';
 import { useEntityTone } from './utils/useEntityTone';
 
-import type { EntityModel, FunctionEntityModel } from '@lib/docs/types';
+import type { EntityModel, FunctionEntityModel } from '#lib/docs/types';
 
 interface EntityContentProps {
     model: EntityModel;

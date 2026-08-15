@@ -5,16 +5,16 @@ import { GatedMetadataKey } from '@seedcord/core/internal';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '@src/dispatch/dispatchInteraction';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
 
 import { slashPayload } from './harness';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { ValidInteractionTypes } from '@handlers/interactionTypes';
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { ResolvedRoute } from '#src/dispatch/resolve';
 import type { SubscriptionData } from '@seedcord/core';
-import type { ResolvedRoute } from '@src/dispatch/resolve';
 
 vi.mock('@discordjs/rest', async (importOriginal) => {
     class FakeRest {

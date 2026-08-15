@@ -13,10 +13,10 @@
         ],
         "paths": {
             "@/*": ["./src/*"],
-            "@components/*": ["./src/components/*"],
-            "@ui/*": ["./src/components/ui/*"],
-            "@lib/*": ["./src/lib/*"],
-            "@styles/*": ["./src/app/*"]
+            "#components/*": ["./src/components/*"],
+            "#ui/*": ["./src/components/ui/*"],
+            "#lib/*": ["./src/lib/*"],
+            "#styles/*": ["./src/app/*"]
         },
         "incremental": true,
         "esModuleInterop": true

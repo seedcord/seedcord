@@ -1,10 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from '@components/search/command-palette/constants';
-import { useCommandPaletteSearch } from '@components/search/command-palette/useCommandPaletteSearch';
+import { MIN_SEARCH_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from '#components/search/command-palette/constants';
+import { useCommandPaletteSearch } from '#components/search/command-palette/useCommandPaletteSearch';
 
-import type { CommandAction } from '@components/search/command-palette/types';
+import type { CommandAction } from '#components/search/command-palette/types';
 
 const router = vi.hoisted(() => ({ pathname: '/' }));
 vi.mock('next/navigation', () => ({ usePathname: () => router.pathname }));

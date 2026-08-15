@@ -13,13 +13,13 @@ import {
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
-import { ModalHandler } from '@handlers/interaction/components/ModalHandler';
-import { SelectMenuHandler } from '@handlers/interaction/components/SelectMenuHandler';
-import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { Gated } from '@src/gates/Gated';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
+import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
+import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { Gated } from '#src/gates/Gated';
 
 import type { ApplicationCommandType } from 'discord-api-types/v10';
 

@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '@routing/lookup';
-import type { EntityTone } from '@src/tones';
-import type { DocNode, DocPackageModel, DocReference } from '@src/types';
+import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '#routing/lookup';
+import type { EntityTone } from '#src/tones';
+import type { DocNode, DocPackageModel, DocReference } from '#src/types';
 
 // justified: stub kindName to echo the fixture's `kind` string so fixtures use kind names directly.
-vi.mock('@src/kinds', async () => {
-    const actual = await vi.importActual<typeof import('@src/kinds')>('@src/kinds');
+vi.mock('#src/kinds', async () => {
+    const actual = await vi.importActual<typeof import('#src/kinds')>('#src/kinds');
     return {
         ...actual,
         kindName: (kind: unknown): string => (typeof kind === 'string' ? kind : String(kind))
     };
 });
 
-const { orderedPackageCandidates } = await import('@routing/resolve-helpers');
-const { AnchorStrategy } = await import('@routing/AnchorStrategy');
-const { ReferenceResolver } = await import('@routing/ReferenceResolver');
+const { orderedPackageCandidates } = await import('#routing/resolve-helpers');
+const { AnchorStrategy } = await import('#routing/AnchorStrategy');
+const { ReferenceResolver } = await import('#routing/ReferenceResolver');
 
 function makeNode(overrides: Partial<DocNode>): DocNode {
     const base: Partial<DocNode> = {

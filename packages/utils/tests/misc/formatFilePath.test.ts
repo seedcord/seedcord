@@ -2,7 +2,7 @@ import { join } from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
-import { formatFilePath } from '@src/misc/formatFilePath';
+import { formatFilePath } from '#src/misc/formatFilePath';
 
 describe('formatFilePath', () => {
     const cwd = process.cwd();

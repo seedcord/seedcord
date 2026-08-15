@@ -1,13 +1,13 @@
 import React from 'react';
 
-import { CommandRefreshPrompt } from '@ui/components/CommandRefreshPrompt';
-import { ErrorDisplay } from '@ui/components/ErrorDisplay';
-import { QuitConfirmCard } from '@ui/components/QuitConfirmCard';
-import { RestartRequiredCard } from '@ui/components/RestartRequiredCard';
-import { TunnelOpeningCard } from '@ui/components/TunnelOpeningCard';
+import { CommandRefreshPrompt } from '#ui/components/CommandRefreshPrompt';
+import { ErrorDisplay } from '#ui/components/ErrorDisplay';
+import { QuitConfirmCard } from '#ui/components/QuitConfirmCard';
+import { RestartRequiredCard } from '#ui/components/RestartRequiredCard';
+import { TunnelOpeningCard } from '#ui/components/TunnelOpeningCard';
 
-import type { TunnelPhase, TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
-import type { DevState } from '@ui/stores/DevStore';
+import type { TunnelPhase, TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
+import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 type NoticeKey = 'quit' | 'commands' | 'error' | 'restart' | 'tunnel';

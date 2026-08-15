@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Fault } from '@stops/Fault';
+import { Fault } from '#stops/Fault';
 
 import { cardJson } from '../utils/cardText';
 

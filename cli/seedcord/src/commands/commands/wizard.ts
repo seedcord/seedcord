@@ -1,5 +1,5 @@
-import { plural } from '@core/format';
-import { intro, log, outro, pickFromList, select, spinner } from '@core/prompts';
+import { plural } from '#core/format';
+import { intro, log, outro, pickFromList, select, spinner } from '#core/prompts';
 
 import { InteractivePresenter } from './cleanPresenters';
 import { executeClean } from './executeClean';

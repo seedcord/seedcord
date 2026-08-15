@@ -1,8 +1,8 @@
 import { missingCloudflaredHint } from './createTunnelCoordinator';
 
+import type { ResolvedTunnel } from '#core/config/schema';
 import type { TunnelCoordinator } from './TunnelCoordinator';
 import type { DevEvent } from '../runtime/events';
-import type { ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 function same(a: ResolvedTunnel | undefined, b: ResolvedTunnel): boolean {

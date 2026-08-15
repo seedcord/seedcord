@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { manifest } from '@src/manifest.index';
+import { manifest } from '#src/manifest.index';
 
-import type { RouteManifest } from '@src/manifest.index';
+import type { RouteManifest } from '#src/manifest.index';
 
 describe('manifest stub', () => {
     it('resolves the RouteManifest type and imports without throwing', () => {

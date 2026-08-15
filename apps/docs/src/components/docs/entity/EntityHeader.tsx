@@ -2,9 +2,9 @@ import { formatVersionLabel } from '@seedcord/docs-engine/client';
 import { Badge, Button, Card, Icon, type IconComponent, cn } from '@seedcord/ui';
 import { ArrowUpRight } from 'lucide-react';
 
-import { SeeAlso } from '@components/docs/SeeAlso';
-import { TagPills } from '@components/docs/TagPills';
-import { getToneConfig } from '@lib/tonePresentation';
+import { SeeAlso } from '#components/docs/SeeAlso';
+import { TagPills } from '#components/docs/TagPills';
+import { getToneConfig } from '#lib/tonePresentation';
 
 import { CommentExamples } from './comments/CommentExamples';
 import { CommentParagraphs } from './comments/CommentParagraphs';
@@ -22,8 +22,8 @@ import type {
     WithDeprecationStatus,
     WithSeeAlso,
     WithThrows
-} from '@lib/docs/types';
-import type { EntityToneStyle } from '@lib/tonePresentation';
+} from '#lib/docs/types';
+import type { EntityToneStyle } from '#lib/tonePresentation';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 import type { ReactElement } from 'react';
 

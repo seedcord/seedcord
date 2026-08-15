@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { FrameworkChannel, LoggerChannelId, LoggerConfig } from '@src/Interfaces/LogSink';
+import type { FrameworkChannel, LoggerChannelId, LoggerConfig } from '#src/Interfaces/LogSink';
 
 describe('FrameworkChannel', () => {
     it('pins the reserved channel set', () => {

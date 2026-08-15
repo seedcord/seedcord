@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 
-import rule from '@src/rules/no-raw-interaction-acks';
+import rule from '#src/rules/no-raw-interaction-acks';
 
 import { createTypedRuleTester } from '../typed-rule-tester';
 

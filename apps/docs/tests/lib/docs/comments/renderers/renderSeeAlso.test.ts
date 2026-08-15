@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { FormatContext } from '@lib/docs/types';
+import type { FormatContext } from '#lib/docs/types';
 import type { DocComment, DocCommentBlockTag, VersionedDocsEngine } from '@seedcord/docs-engine';
 
 const resolveInlineHrefMock = vi.fn<(...args: unknown[]) => string | null>(() => null);
@@ -8,7 +8,7 @@ vi.mock('../../../../../src/lib/docs/comments/resolvers', () => ({
     resolveInlineHref: (...args: unknown[]) => resolveInlineHrefMock(...args)
 }));
 
-const { renderSeeAlso } = await import('@lib/docs/comments/renderers/renderSeeAlso');
+const { renderSeeAlso } = await import('#lib/docs/comments/renderers/renderSeeAlso');
 
 type DisplayPart =
     | { kind: 'text'; text: string }

@@ -1,12 +1,12 @@
 import { TextDisplayBuilder } from '@discordjs/builders';
 
-import { BuilderComponent } from '@components/Component';
-import { Controls } from '@pagination/controls';
+import { BuilderComponent } from '#components/Component';
+import { Controls } from '#pagination/controls';
 
+import type { ControlKey, PaginatorControls } from '#pagination/controls';
+import type { PageCursor } from '#pagination/cursor';
+import type { PageView } from '#pagination/PageView';
 import type { ButtonBuilder, ActionRowBuilder } from '@discordjs/builders';
-import type { ControlKey, PaginatorControls } from '@pagination/controls';
-import type { PageCursor } from '@pagination/cursor';
-import type { PageView } from '@pagination/PageView';
 import type { ReplyResponse, V2Component } from '@seedcord/types';
 
 /** What `renderItem` returns for one item, a text line or a section. */

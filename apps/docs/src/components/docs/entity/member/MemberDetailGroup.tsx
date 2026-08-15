@@ -2,11 +2,11 @@
 
 import { Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, Icon } from '@seedcord/ui';
 
-import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '@components/docs/entity/constants';
+import { MEMBER_HEADER_ICONS, MEMBER_TITLES } from '#components/docs/entity/constants';
 
 import { MemberRow } from './MemberRow';
 
-import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '@lib/docs/types';
+import type { EntityMemberSummary, MemberPrefix, WithParentDeprecationStatus } from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface MemberDetailGroupProps extends WithParentDeprecationStatus {

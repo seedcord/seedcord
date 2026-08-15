@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/logger';
 
-import { formatUptime } from '@ui/format';
+import { formatUptime } from '#ui/format';
 
 import type { CloudflaredTunnel } from './CloudflaredTunnel';
 import type { InteractionsEndpoint } from './InteractionsEndpoint';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { mergeRoles } from '@src/permissions/mergeRoles';
+import { mergeRoles } from '#src/permissions/mergeRoles';
 
 describe('mergeRoles', () => {
     it('adds the new ids', () => {

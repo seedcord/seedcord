@@ -5,12 +5,12 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ReplySender } from '@reply/ReplySender';
+import { ReplySender } from '#reply/ReplySender';
 
 import { stubBus } from '../../helpers/fixtures';
 
+import type { InteractionRef, SentMessage } from '#reply/ReplySender';
 import type { REST } from '@discordjs/rest';
-import type { InteractionRef, SentMessage } from '@reply/ReplySender';
 import type { ReplyResponse } from '@seedcord/types';
 
 const APP_ID = '111';

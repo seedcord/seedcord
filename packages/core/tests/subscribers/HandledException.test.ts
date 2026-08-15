@@ -4,12 +4,12 @@ import { Notice } from '@seedcord/core';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { HandledException } from '@subscribers/default/HandledException';
+import { HandledException } from '#subscribers/default/HandledException';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { WebhookReport } from '#subscribers/bases/WebhookLog';
+import type { EventFaultSource, FaultSource, InteractionFaultSource } from '#subscribers/types/Subscriptions';
 import type { ReplyResponse } from '@seedcord/types';
-import type { WebhookReport } from '@subscribers/bases/WebhookLog';
-import type { EventFaultSource, FaultSource, InteractionFaultSource } from '@subscribers/types/Subscriptions';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 
 class TestFault extends Notice {

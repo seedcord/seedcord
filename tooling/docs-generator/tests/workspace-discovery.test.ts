@@ -2,7 +2,7 @@ import { relative, resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { ApiDocsGenerator } from '@src/generator';
+import { ApiDocsGenerator } from '#src/generator';
 
 const REPO_ROOT = resolve(__dirname, '../../..');
 

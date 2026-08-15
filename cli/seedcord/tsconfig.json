@@ -5,11 +5,11 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@ui/*": ["./src/ui/*"],
-            "@core/*": ["./src/core/*"],
-            "@commands/*": ["./src/commands/*"],
-            "@utils/*": ["./src/utils/*"],
-            "@api/*": ["./src/api/*"]
+            "#ui/*": ["./src/ui/*"],
+            "#core/*": ["./src/core/*"],
+            "#commands/*": ["./src/commands/*"],
+            "#utils/*": ["./src/utils/*"],
+            "#api/*": ["./src/api/*"]
         },
         "types": ["react"],
         "jsx": "react"

@@ -1,10 +1,10 @@
 import { typeParamFragment } from '@seedcord/docs-engine';
 
-import { createPlainParagraph } from '@lib/docs/comments/creators';
-import { formatCommentRich } from '@lib/docs/comments/formatter';
-import { formatTypeParameter } from '@lib/docs/formatting';
+import { createPlainParagraph } from '#lib/docs/comments/creators';
+import { formatCommentRich } from '#lib/docs/comments/formatter';
+import { formatTypeParameter } from '#lib/docs/formatting';
 
-import type { FormatContext, CommentParagraph, CommentExample, EntityMemberSummary } from '@lib/docs/types';
+import type { FormatContext, CommentParagraph, CommentExample, EntityMemberSummary } from '#lib/docs/types';
 import type { RenderedDeclarationHeader, DocTypeParameter } from '@seedcord/docs-engine';
 
 export async function buildTypeParameterSummaries(

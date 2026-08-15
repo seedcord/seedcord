@@ -1,5 +1,5 @@
-import { formatDisplayPackageName } from '@packages/identity';
-import { resolveEntityTone, resolveEntityToneStrict, toneToDirectory, type EntityTone } from '@src/tones';
+import { formatDisplayPackageName } from '#packages/identity';
+import { resolveEntityTone, resolveEntityToneStrict, toneToDirectory, type EntityTone } from '#src/tones';
 
 export interface BuildEntityHrefOptions {
     name: string;

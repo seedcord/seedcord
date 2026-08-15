@@ -15,18 +15,18 @@ import { formatFilePath, hasKeys } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
-import { MiddlewareType } from '@bDecorators/Middlewares';
-import { eventGateContext } from '@bot/gates/runGates';
-import { handleEventFault } from '@bot/handleEventFault';
-import { EventHandler, EventMiddleware } from '@handlers/event';
+import { MiddlewareType } from '#bDecorators/Middlewares';
+import { eventGateContext } from '#bot/gates/runGates';
+import { handleEventFault } from '#bot/handleEventFault';
+import { EventHandler, EventMiddleware } from '#handlers/event';
 
-import type { RegisterEventMetadataEntry } from '@bDecorators/Events';
-import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
-import type { EventHandlerConstructor, EventMiddlewareConstructor } from '@handlers/constructors';
-import type { Core } from '@interfaces/Core';
+import type { RegisterEventMetadataEntry } from '#bDecorators/Events';
+import type { MiddlewareMetadata } from '#bDecorators/Middlewares';
+import type { EventHandlerConstructor, EventMiddlewareConstructor } from '#handlers/constructors';
+import type { Core } from '#interfaces/Core';
+import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { Initializeable, SubscriptionData } from '@seedcord/core';
 import type { EventFrequency, HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 interface RegisteredEventMiddleware {

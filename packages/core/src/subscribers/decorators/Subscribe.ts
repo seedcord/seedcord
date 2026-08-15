@@ -1,11 +1,11 @@
 // the default reporters are decorated at Bus module load, before any entry's own polyfill import runs
 import 'reflect-metadata';
 
-import { SubscribeMetadataKey } from '@src/metadataKeys';
+import { SubscribeMetadataKey } from '#src/metadataKeys';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { Subscriber } from '../Subscriber';
 import type { SubscriptionKey } from '../types/Subscriptions';
-import type { CoreBase } from '@interfaces/CoreBase';
 import type { EventFrequency } from '@seedcord/types';
 import type { Constructor } from 'type-fest';
 

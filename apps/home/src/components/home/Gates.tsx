@@ -1,9 +1,9 @@
 import { cn } from '@seedcord/ui';
 
-import { CodeCard } from '@components/code/CodeCard';
-import { Section } from '@components/home/Section';
-import { Code } from '@components/ui/Code';
-import { gatesSample } from '@lib/code/samples';
+import { CodeCard } from '#components/code/CodeCard';
+import { Section } from '#components/home/Section';
+import { Code } from '#components/ui/Code';
+import { gatesSample } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
 

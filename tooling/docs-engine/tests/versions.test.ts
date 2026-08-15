@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPrerelease, stableLineHeads } from '@src/versions';
+import { isPrerelease, stableLineHeads } from '#src/versions';
 
 describe('versions', () => {
     it('detects prereleases', () => {

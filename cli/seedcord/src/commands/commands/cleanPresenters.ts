@@ -2,8 +2,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, paint } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 
-import { plural } from '@core/format';
-import { confirm, log, note, outro, spinner } from '@core/prompts';
+import { plural } from '#core/format';
+import { confirm, log, note, outro, spinner } from '#core/prompts';
 
 import { confirmCount } from './confirm';
 

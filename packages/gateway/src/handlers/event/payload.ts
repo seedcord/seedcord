@@ -1,4 +1,4 @@
-import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
+import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 import type { IsUnion } from 'type-fest';
 

@@ -1,11 +1,11 @@
-import { resolveExternalPackageUrl } from '@packages/identity';
-import { crossPackageUrlRef, resolveWithinPackage } from '@routing/resolve-helpers';
-import { buildEntityHref } from '@routing/url-builder';
+import { resolveExternalPackageUrl } from '#packages/identity';
+import { crossPackageUrlRef, resolveWithinPackage } from '#routing/resolve-helpers';
+import { buildEntityHref } from '#routing/url-builder';
 
-import type { AnchorStrategy } from '@routing/AnchorStrategy';
-import type { NodeLookup, PackageRegistry, RefTarget } from '@routing/lookup';
-import type { EntityTone } from '@src/tones';
-import type { DocReference } from '@src/types';
+import type { AnchorStrategy } from '#routing/AnchorStrategy';
+import type { NodeLookup, PackageRegistry, RefTarget } from '#routing/lookup';
+import type { EntityTone } from '#src/tones';
+import type { DocReference } from '#src/types';
 
 /**
  * Turns a `DocReference` into a target, composed over a {@link NodeLookup} and a {@link PackageRegistry}

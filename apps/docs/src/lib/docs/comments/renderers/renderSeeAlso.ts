@@ -1,7 +1,7 @@
-import { resolveInlineHref } from '@lib/docs/comments/resolvers';
-import { opensInNewTab } from '@lib/docs/crossPackage';
+import { resolveInlineHref } from '#lib/docs/comments/resolvers';
+import { opensInNewTab } from '#lib/docs/crossPackage';
 
-import type { FormatContext, InlineTagPart, SeeAlsoEntry, SeeAlsoEntryWithoutTarget } from '@lib/docs/types';
+import type { FormatContext, InlineTagPart, SeeAlsoEntry, SeeAlsoEntryWithoutTarget } from '#lib/docs/types';
 import type { DocComment, DocCommentBlockTag } from '@seedcord/docs-engine';
 
 type DocCommentPart = DocCommentBlockTag['content'][number];

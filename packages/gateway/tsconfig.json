@@ -5,19 +5,19 @@
         "rootDir": "./",
         "outDir": "./dist",
         "paths": {
-            "@src/*": ["./src/*"],
-            "@bot/*": ["./src/bot/*"],
-            "@subscribers/*": ["./src/subscribers/*"],
-            "@interfaces/*": ["./src/interfaces/*"],
-            "@handlers/*": ["./src/handlers/*"],
-            "@inputs/*": ["./src/inputs/*"],
-            "@pagination/*": ["./src/pagination/*"],
-            "@miscellaneous/*": ["./src/miscellaneous/*"],
+            "#src/*": ["./src/*"],
+            "#bot/*": ["./src/bot/*"],
+            "#subscribers/*": ["./src/subscribers/*"],
+            "#interfaces/*": ["./src/interfaces/*"],
+            "#handlers/*": ["./src/handlers/*"],
+            "#inputs/*": ["./src/inputs/*"],
+            "#pagination/*": ["./src/pagination/*"],
+            "#miscellaneous/*": ["./src/miscellaneous/*"],
 
             // Paths inside src/bot
-            "@bUtilities/*": ["./src/bot/utilities/*"],
-            "@bControllers/*": ["./src/bot/controllers/*"],
-            "@bDecorators/*": ["./src/bot/decorators/*"]
+            "#bUtilities/*": ["./src/bot/utilities/*"],
+            "#bControllers/*": ["./src/bot/controllers/*"],
+            "#bDecorators/*": ["./src/bot/decorators/*"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],

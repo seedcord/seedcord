@@ -1,11 +1,11 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { defineGate } from '@gates/Gate';
-import { Notice } from '@stops/Notice';
+import { defineGate } from '#gates/Gate';
+import { Notice } from '#stops/Notice';
 
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Gate, GateContextBase } from '@gates/Gate';
+import type { Gate, GateContextBase } from '#gates/Gate';
 
 // gates ignore ctx here, so a minimal cast stands in
 const ctx = {} as unknown as GateContextBase;

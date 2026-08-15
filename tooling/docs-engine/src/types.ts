@@ -1,6 +1,6 @@
+import type { GlobalId } from '#src/ids';
+import type { PackageDirectory } from '#src/PackageDirectory';
 import type { ManifestRepository, PackageSourceIndex, ReexportEntry as DocReexport } from '@seedcord/docs-generator';
-import type { GlobalId } from '@src/ids';
-import type { PackageDirectory } from '@src/PackageDirectory';
 
 export type SigPart =
     | { kind: 'text'; text: string }

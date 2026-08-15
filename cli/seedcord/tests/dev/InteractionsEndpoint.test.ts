@@ -3,9 +3,9 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { InteractionsEndpoint } from '@commands/dev/tunnel/InteractionsEndpoint';
+import { InteractionsEndpoint } from '#commands/dev/tunnel/InteractionsEndpoint';
 
-import type { EndpointRest } from '@commands/dev/tunnel/InteractionsEndpoint';
+import type { EndpointRest } from '#commands/dev/tunnel/InteractionsEndpoint';
 
 const TUNNEL = 'https://abc.trycloudflare.com';
 const RUNNING = new AbortController().signal;

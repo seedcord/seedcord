@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { errorReport, jsonAttachment } from '@subscribers/bases/webhookHelpers';
+import { errorReport, jsonAttachment } from '#subscribers/bases/webhookHelpers';
 
 describe('jsonAttachment', () => {
     it('encodes the json to bytes, which is what @discordjs/rest uploads as a file', () => {

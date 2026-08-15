@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { buildSourceIndex } from '@src/source-index';
+import { buildSourceIndex } from '#src/source-index';
 
 import { PACKAGES_DIR } from './utils/constants';
 

@@ -1,9 +1,9 @@
 import { ExcerptTokenKind } from '@microsoft/api-extractor-model';
 
-import { referenceFromCanonical } from '@model/canonical-ref';
+import { referenceFromCanonical } from '#model/canonical-ref';
 
+import type { InlineType, SigPart } from '#src/types';
 import type { Excerpt, ExcerptToken } from '@microsoft/api-extractor-model';
-import type { InlineType, SigPart } from '@src/types';
 
 // api extractor flattens these into plain Content text, so re-wrap them as `ref` parts to keep the
 // consumer's resolveHref linking them to MDN and the TS handbook

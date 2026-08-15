@@ -5,7 +5,7 @@ import { Menu } from 'lucide-react';
 import Link from 'next/link';
 import { useLayoutEffect, useRef } from 'react';
 
-import { useUIStore } from '@store/ui';
+import { useUIStore } from '#store/ui';
 
 import { HeaderSettingsPopover } from './HeaderSettingsPopover';
 import { HeaderSearchControls } from './search-controls/HeaderSearchControls';

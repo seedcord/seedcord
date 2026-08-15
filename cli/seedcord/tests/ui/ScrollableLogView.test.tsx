@@ -2,9 +2,9 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { NO_ROOM, ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
-import { expandRows, messageColumn, wrapRows } from '@ui/logRows';
-import { LogStore } from '@ui/stores/LogStore';
+import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
+import { expandRows, messageColumn, wrapRows } from '#ui/logRows';
+import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogRecord } from '@seedcord/logger';
 

@@ -11,14 +11,14 @@ import {
     type TypeParameter
 } from '@seedcord/docs-engine';
 
-import { sanitizeHtml } from '@lib/sanitizeHtml';
+import { sanitizeHtml } from '#lib/sanitizeHtml';
 import {
     highlightMemberToHtml,
     highlightSignatureToHtml,
     highlightToHtml,
     highlightTypeParamToHtml,
     type CodeLink
-} from '@lib/shiki';
+} from '#lib/shiki';
 
 import { opensInNewTab } from './crossPackage';
 

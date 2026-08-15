@@ -1,15 +1,15 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { and, or } from '@gates/combinators';
-import { defineGate } from '@gates/Gate';
-import { Fault } from '@stops/Fault';
-import { Notice } from '@stops/Notice';
-import { Silence } from '@stops/Silence';
+import { and, or } from '#gates/combinators';
+import { defineGate } from '#gates/Gate';
+import { Fault } from '#stops/Fault';
+import { Notice } from '#stops/Notice';
+import { Silence } from '#stops/Silence';
 
 import { cardJson } from '../utils/cardText';
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Gate, GateContextBase, RequiredOf } from '@gates/Gate';
+import type { Gate, GateContextBase, RequiredOf } from '#gates/Gate';
 import type { RenderContext } from '@seedcord/types';
 
 // gates ignore ctx here, so a minimal cast stands in

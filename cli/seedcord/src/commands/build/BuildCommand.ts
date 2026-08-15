@@ -1,6 +1,6 @@
 import { isSeedcordError } from '@seedcord/errors';
 
-import { BaseCommand } from '@core/BaseCommand';
+import { BaseCommand } from '#core/BaseCommand';
 
 import { BuildRunner } from './BuildRunner';
 

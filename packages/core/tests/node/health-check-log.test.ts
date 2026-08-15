@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { HealthCheck } from '@node/HealthCheck';
+import { HealthCheck } from '#node/HealthCheck';
 
-import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 
 describe('HealthCheck listen log', () => {
     it('prints a fetchable address when no host is configured', async () => {

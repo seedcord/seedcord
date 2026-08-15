@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { SlashOptions } from '@inputs/SlashOptions';
+import type { SlashOptions } from '#inputs/SlashOptions';
 import type {
     APIInteractionDataResolvedChannel,
     APIInteractionDataResolvedGuildMember,

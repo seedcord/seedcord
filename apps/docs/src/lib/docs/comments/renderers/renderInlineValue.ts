@@ -1,10 +1,10 @@
 import { marked } from 'marked';
 
-import { sanitizeHtml } from '@lib/sanitizeHtml';
+import { sanitizeHtml } from '#lib/sanitizeHtml';
 
 import { decorateProseLinks } from './decorateProseLinks';
 
-import type { CommentParagraph, FormatContext } from '@lib/docs/types';
+import type { CommentParagraph, FormatContext } from '#lib/docs/types';
 
 export async function renderInlineValue(
     markdown: string,

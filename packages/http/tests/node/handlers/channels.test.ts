@@ -1,10 +1,10 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 import type {
     APIApplicationCommandAutocompleteInteraction,

@@ -1,6 +1,6 @@
 import { renderParagraphs } from './renderParagraphs';
 
-import type { CommentParagraph, FormatContext } from '@lib/docs/types';
+import type { CommentParagraph, FormatContext } from '#lib/docs/types';
 import type { DocComment } from '@seedcord/docs-engine';
 
 export async function renderThrows(

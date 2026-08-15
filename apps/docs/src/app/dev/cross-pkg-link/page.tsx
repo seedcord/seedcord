@@ -1,13 +1,13 @@
 import { formatRenderedSignaturePretty, type RenderedSignature, type ResolveHref } from '@seedcord/docs-engine';
 import { CodeBlock, cn } from '@seedcord/ui';
 
-import { CommentParagraphs } from '@components/docs/entity/comments/CommentParagraphs';
-import { decorateProseLinks } from '@lib/docs/comments/renderers/decorateProseLinks';
-import { opensInNewTab } from '@lib/docs/crossPackage';
-import { sanitizeHtml } from '@lib/sanitizeHtml';
-import { highlightSignatureToHtml, type CodeLink } from '@lib/shiki';
+import { CommentParagraphs } from '#components/docs/entity/comments/CommentParagraphs';
+import { decorateProseLinks } from '#lib/docs/comments/renderers/decorateProseLinks';
+import { opensInNewTab } from '#lib/docs/crossPackage';
+import { sanitizeHtml } from '#lib/sanitizeHtml';
+import { highlightSignatureToHtml, type CodeLink } from '#lib/shiki';
 
-import type { CodeRepresentation } from '@lib/docs/types';
+import type { CodeRepresentation } from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 const CURRENT_PACKAGE = 'seedcord';

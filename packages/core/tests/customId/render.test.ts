@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { InvalidCustomId, StaleCustomId } from '@customId/Errors';
+import { InvalidCustomId, StaleCustomId } from '#customId/Errors';
 
 import { cardJson } from '../utils/cardText';
 

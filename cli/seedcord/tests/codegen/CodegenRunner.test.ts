@@ -7,12 +7,12 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { ApplicationCommandType, ContextMenuCommandBuilder, SlashCommandBuilder } from 'discord.js';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
-import { CodegenRunner } from '@commands/codegen/CodegenRunner';
+import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
+import { CodegenRunner } from '#commands/codegen/CodegenRunner';
 
-import type { ConfigLoader } from '@core/config/ConfigLoader';
-import type { ConfigLocator } from '@core/config/ConfigLocator';
-import type { ModuleLoader } from '@core/modules/ModuleLoader';
+import type { ConfigLoader } from '#core/config/ConfigLoader';
+import type { ConfigLocator } from '#core/config/ConfigLocator';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 const OUTPUT = 'seedcord-gen.d.ts';

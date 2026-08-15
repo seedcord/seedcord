@@ -1,8 +1,8 @@
 import { buildEntityHref, buildPackageBasePath, resolvePackageIdentity } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { getDocsEngine } from '@lib/docs/engine';
-import { loadEntityModel } from '@lib/docs/loadEntityModel';
+import { getDocsEngine } from '#lib/docs/engine';
+import { loadEntityModel } from '#lib/docs/loadEntityModel';
 
 const HTTP_TEMPORARY_REDIRECT = 307;
 

@@ -1,7 +1,7 @@
 import { defineGate, SlashRoute } from '@seedcord/core';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { Gated } from '@src/gates/Gated';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { Gated } from '#src/gates/Gated';
 
 import '../registry';
 

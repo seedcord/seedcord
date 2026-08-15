@@ -1,15 +1,15 @@
 import { OG, OG_SIZE } from '@seedcord/ui/og';
 import { ImageResponse } from 'next/og';
 
-import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
-import { plainSummary } from '@lib/docs/plainSummary';
-import { resolveEntity } from '@lib/docs/resolveEntity';
-import { ENTITY_TONE_HEX } from '@lib/entityColors';
-import { DocOgCard } from '@lib/og/card';
-import { OG_FONTS } from '@lib/og/fonts';
-import { SITE_DESCRIPTION } from '@lib/site';
+import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
+import { plainSummary } from '#lib/docs/plainSummary';
+import { resolveEntity } from '#lib/docs/resolveEntity';
+import { ENTITY_TONE_HEX } from '#lib/entityColors';
+import { DocOgCard } from '#lib/og/card';
+import { OG_FONTS } from '#lib/og/fonts';
+import { SITE_DESCRIPTION } from '#lib/site';
 
-import type { DocOgCardProps } from '@lib/og/card';
+import type { DocOgCardProps } from '#lib/og/card';
 
 // every og:image points here, the path mirrors the page. `/og` is the root, `/og/packages/<pkg>/<ver>`
 // the overview, `/og/packages/<pkg>/<ver>/<category>/<slug>` an entity. anything else returns the 404 card.

@@ -2,7 +2,7 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { fetchApplicationId } from '@src/applicationId';
+import { fetchApplicationId } from '#src/applicationId';
 
 import type { REST } from '@discordjs/rest';
 

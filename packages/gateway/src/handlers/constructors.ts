@@ -1,11 +1,11 @@
-import type { EventHandler } from '@handlers/event/EventHandler';
-import type { EventMiddleware } from '@handlers/event/EventMiddleware';
-import type { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import type { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import type { InteractionMiddleware } from '@handlers/interaction/InteractionMiddleware';
-import type { Core } from '@interfaces/Core';
+import type { EventHandler } from '#handlers/event/EventHandler';
+import type { EventMiddleware } from '#handlers/event/EventMiddleware';
+import type { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import type { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import type { InteractionMiddleware } from '#handlers/interaction/InteractionMiddleware';
+import type { Core } from '#interfaces/Core';
+import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { TypedConstructor } from '@seedcord/types';
-import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 /** @internal */

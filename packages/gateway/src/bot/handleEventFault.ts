@@ -3,10 +3,10 @@ import { asError } from '@seedcord/core/internal';
 import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
-import { deriveEventActor } from '@miscellaneous/deriveEventActor';
-import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
+import { deriveEventActor } from '#miscellaneous/deriveEventActor';
+import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 
 const logger = new Logger('Faults', { channel: 'errors' });
 

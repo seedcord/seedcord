@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 
 // construction only, never run(), which would exit the test process
 describe('CoordinatedShutdown signal handlers', () => {

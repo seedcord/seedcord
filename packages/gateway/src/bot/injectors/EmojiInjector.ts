@@ -3,7 +3,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
 import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 

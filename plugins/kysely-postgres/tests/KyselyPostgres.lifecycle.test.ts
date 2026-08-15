@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { KyselyPostgres } from '@src/KyselyPostgres';
+import { KyselyPostgres } from '#src/KyselyPostgres';
 
 import { TestEnvironment } from './utils/test-env';
 

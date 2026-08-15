@@ -4,10 +4,10 @@ import { ButtonStyle, ComponentType } from 'discord.js';
 
 import { CONFIRM_DEF } from './reserved';
 
-import type { ReplySender } from '@bot/ReplySender';
+import type { ReplySender } from '#bot/ReplySender';
+import type { NonModalInteraction } from '#src/handlers/interactionTypes';
+import type { RepliableHandler } from '#src/handlers/RepliableHandler';
 import type { ReplyResponse } from '@seedcord/types';
-import type { NonModalInteraction } from '@src/handlers/interactionTypes';
-import type { RepliableHandler } from '@src/handlers/RepliableHandler';
 import type { ButtonInteraction, Message } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
+import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
 
 /**
  * The lifecycle a plugin declares through `super(host, spec)`. Unset fields resolve to the base

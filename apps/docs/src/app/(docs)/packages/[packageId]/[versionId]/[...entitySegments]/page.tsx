@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 
-import { EntityContent } from '@components/docs/entity/EntityContent';
-import { plainSummary } from '@lib/docs/plainSummary';
-import { resolveEntity } from '@lib/docs/resolveEntity';
-import { ENTITY_TONE_HEX } from '@lib/entityColors';
-import { SITE_NAME, canonicalUrl, pageMetadata } from '@lib/site';
+import { EntityContent } from '#components/docs/entity/EntityContent';
+import { plainSummary } from '#lib/docs/plainSummary';
+import { resolveEntity } from '#lib/docs/resolveEntity';
+import { ENTITY_TONE_HEX } from '#lib/entityColors';
+import { SITE_NAME, canonicalUrl, pageMetadata } from '#lib/site';
 
-import type { PageParams } from '@lib/docs/pageContext';
-import type { ResolvedEntity } from '@lib/docs/resolveEntity';
+import type { PageParams } from '#lib/docs/pageContext';
+import type { ResolvedEntity } from '#lib/docs/resolveEntity';
 import type { Metadata, Viewport } from 'next';
 import type { ReactElement } from 'react';
 

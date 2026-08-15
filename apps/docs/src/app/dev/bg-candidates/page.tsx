@@ -1,6 +1,6 @@
 import { Badge, Card, CardBody, CardHeader, CardTitle, CodeBlock, cn } from '@seedcord/ui';
 
-import { getToneConfig } from '@lib/tonePresentation';
+import { getToneConfig } from '#lib/tonePresentation';
 
 import { renderSeedcord } from '../code-theme/compareHighlight';
 

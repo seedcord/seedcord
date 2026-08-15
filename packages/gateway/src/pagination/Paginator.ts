@@ -1,14 +1,14 @@
 import { PaginatorBase } from '@seedcord/core';
 
-import { ButtonHandler } from '@handlers/interaction/components';
+import { ButtonHandler } from '#handlers/interaction/components';
 
+import type { RepliableHandler } from '#handlers/RepliableHandler';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { PageContext } from './PageContext';
-import type { RepliableHandler } from '@handlers/RepliableHandler';
-import type { Core } from '@interfaces/Core';
 import type { PaginatorConfig } from '@seedcord/core';
 import type { PageCursor } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
-import type { Repliables } from '@src/handlers/interactionTypes';
 import type { ButtonInteraction, Message } from 'discord.js';
 
 // `& { execute }` concretizes the abstract execute so the empty `extends Bans.Handler {}` stays concrete

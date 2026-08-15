@@ -1,7 +1,7 @@
 import { cn } from '@seedcord/ui';
 
-import { OverviewSkeleton } from '@components/docs/OverviewSkeleton';
-import { SidebarCategoryListSkeleton } from '@components/layout/sidebar/SidebarCategoryListSkeleton';
+import { OverviewSkeleton } from '#components/docs/OverviewSkeleton';
+import { SidebarCategoryListSkeleton } from '#components/layout/sidebar/SidebarCategoryListSkeleton';
 
 import type { ReactElement, ReactNode } from 'react';
 

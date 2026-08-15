@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { hasCleanFlags } from '@commands/commands/CommandsCommand';
+import { hasCleanFlags } from '#commands/commands/CommandsCommand';
 
-import type { CleanInvocation } from '@commands/commands/CommandsCommand';
+import type { CleanInvocation } from '#commands/commands/CommandsCommand';
 
 const base: CleanInvocation = {
     clean: false,

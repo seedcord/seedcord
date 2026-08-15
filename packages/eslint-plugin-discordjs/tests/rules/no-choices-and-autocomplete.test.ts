@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 
-import rule from '@src/rules/no-choices-and-autocomplete';
+import rule from '#src/rules/no-choices-and-autocomplete';
 
 import { createTypedRuleTester } from '../typed-rule-tester';
 

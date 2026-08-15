@@ -1,12 +1,12 @@
 import { marked } from 'marked';
 
-import { resolveInlineHref } from '@lib/docs/comments/resolvers';
-import { sanitizeHtml } from '@lib/sanitizeHtml';
-import { highlightToHtml, highlightInlineToHtml } from '@lib/shiki';
+import { resolveInlineHref } from '#lib/docs/comments/resolvers';
+import { sanitizeHtml } from '#lib/sanitizeHtml';
+import { highlightToHtml, highlightInlineToHtml } from '#lib/shiki';
 
 import { decorateProseLinks } from './decorateProseLinks';
 
-import type { FormatContext, CommentParagraph, CommentDisplayPart } from '@lib/docs/types';
+import type { FormatContext, CommentParagraph, CommentDisplayPart } from '#lib/docs/types';
 import type { DocComment } from '@seedcord/docs-engine';
 import type { Tokens } from 'marked';
 import type { BundledLanguage } from 'shiki';

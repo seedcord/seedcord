@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, it, expect, vi } from 'vitest';
 
-import { Bus } from '@subscribers/Bus';
-import { PublishDefault } from '@subscribers/publishDefault';
+import { Bus } from '#subscribers/Bus';
+import { PublishDefault } from '#subscribers/publishDefault';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 
 // justified: the Bus only stores core, no member is read during publish
 function stubBus(): Bus {

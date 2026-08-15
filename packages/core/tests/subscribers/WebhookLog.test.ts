@@ -2,13 +2,13 @@ import { Logger } from '@seedcord/logger';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { WebhookLog } from '@subscribers/bases/WebhookLog';
-import { Subscribe } from '@subscribers/decorators/Subscribe';
-import { WebhookUrl } from '@subscribers/decorators/WebhookUrl';
+import { WebhookLog } from '#subscribers/bases/WebhookLog';
+import { Subscribe } from '#subscribers/decorators/Subscribe';
+import { WebhookUrl } from '#subscribers/decorators/WebhookUrl';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { WebhookReport } from '@subscribers/bases/WebhookLog';
-import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { WebhookReport } from '#subscribers/bases/WebhookLog';
+import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 const hoisted = vi.hoisted(() => {

@@ -2,7 +2,7 @@ import { setDevChannel } from '@seedcord/core/internal';
 import { Plugin } from '@seedcord/core/plugin';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Seedcord } from '@src/Seedcord';
+import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';
@@ -10,7 +10,7 @@ import { TestEnvironment } from '../utils/test-env';
 
 import '../utils/mock-env';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { CommandRegistry } from '@seedcord/core/node/internal';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type { Mock } from 'vitest';

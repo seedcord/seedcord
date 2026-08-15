@@ -1,7 +1,7 @@
 import { major, minor, prerelease, rcompare, valid } from 'semver';
 
-import type { IndexJson, PackageIndexEntry, StableChannel } from '@remote/index-json';
-import type { EntityTone } from '@src/tones';
+import type { IndexJson, PackageIndexEntry, StableChannel } from '#remote/index-json';
+import type { EntityTone } from '#src/tones';
 
 export interface PackageVersionsInput {
     folder: string;

@@ -1,10 +1,10 @@
 import { GuildMember } from 'discord.js';
 
-import { deriveEventActor } from '@miscellaneous/deriveEventActor';
+import { deriveEventActor } from '#miscellaneous/deriveEventActor';
 
+import type { Core } from '#interfaces/Core';
+import type { Repliables, ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { EventGateContext, InteractionGateContext } from './Gate';
-import type { Core } from '@interfaces/Core';
-import type { Repliables, ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 
 export function interactionGateContext(interaction: Repliables, core: Core): InteractionGateContext {

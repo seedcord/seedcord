@@ -4,8 +4,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { log } from '@lib/logger';
-import { useUIStore, type UIStore } from '@store/ui';
+import { log } from '#lib/logger';
+import { useUIStore, type UIStore } from '#store/ui';
 
 import { FOCUS_DELAY_MS } from './constants';
 

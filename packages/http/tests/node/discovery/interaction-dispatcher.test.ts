@@ -2,8 +2,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { resolve } from '@src/dispatch/resolve';
-import { InteractionDispatcher } from '@src/node/InteractionDispatcher';
+import { resolve } from '#src/dispatch/resolve';
+import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
 
 import { ConfirmId } from './fixtures/handlers/ConfirmControls';
 

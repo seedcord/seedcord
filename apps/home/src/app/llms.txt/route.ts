@@ -1,4 +1,4 @@
-import { REPO_URL, SITE_DESCRIPTION, SITE_URL } from '@lib/site';
+import { REPO_URL, SITE_DESCRIPTION, SITE_URL } from '#lib/site';
 
 export const dynamic = 'force-static';
 export const revalidate = false;

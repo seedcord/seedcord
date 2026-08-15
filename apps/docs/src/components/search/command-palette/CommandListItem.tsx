@@ -2,7 +2,7 @@
 
 import { cn, tw, Icon } from '@seedcord/ui';
 
-import { getToneConfig } from '@lib/tonePresentation';
+import { getToneConfig } from '#lib/tonePresentation';
 
 import { SEARCH_KIND_ICONS } from './constants';
 

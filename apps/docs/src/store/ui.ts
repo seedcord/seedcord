@@ -2,8 +2,8 @@
 
 import { create } from 'zustand';
 
-import { log } from '@lib/logger';
-import { formatMemberAccessLabel, type MemberAccessLevel } from '@lib/memberAccess';
+import { log } from '#lib/logger';
+import { formatMemberAccessLabel, type MemberAccessLevel } from '#lib/memberAccess';
 
 interface UIState {
     isCommandPaletteOpen: boolean;

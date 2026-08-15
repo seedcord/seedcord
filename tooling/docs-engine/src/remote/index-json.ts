@@ -1,5 +1,5 @@
-import { IndexFetchError } from '@remote/errors';
-import { isEntityTone, type EntityTone } from '@src/tones';
+import { IndexFetchError } from '#remote/errors';
+import { isEntityTone, type EntityTone } from '#src/tones';
 
 /**
  * Root `index.json` published to the artifacts repo. `packages` is keyed by the unscoped folder

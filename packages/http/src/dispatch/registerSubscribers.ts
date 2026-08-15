@@ -2,9 +2,9 @@ import { Subscriber } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { Bus } from '@seedcord/core';
 import type { StoredSubscriberCtor, SubscriberRegistration } from '@seedcord/core/internal';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 // an idle isolate that never publishes pays nothing for this
 export function registerSubscribers(bus: Bus, manifest: RouteManifest): void {

@@ -1,10 +1,10 @@
 import 'reflect-metadata';
 
-import { WebhookUrlMetadataKey } from '@src/metadataKeys';
+import { WebhookUrlMetadataKey } from '#src/metadataKeys';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { WebhookLog } from '../bases/WebhookLog';
 import type { SubscriptionKey } from '../types/Subscriptions';
-import type { CoreBase } from '@interfaces/CoreBase';
 import type { Constructor } from 'type-fest';
 
 /**

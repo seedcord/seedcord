@@ -3,9 +3,9 @@ import { EventEmitter } from 'node:events';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CloudflaredTunnel } from '@commands/dev/tunnel/CloudflaredTunnel';
+import { CloudflaredTunnel } from '#commands/dev/tunnel/CloudflaredTunnel';
 
-import type { TunnelDeps } from '@commands/dev/tunnel/CloudflaredTunnel';
+import type { TunnelDeps } from '#commands/dev/tunnel/CloudflaredTunnel';
 import type { ChildProcess } from 'node:child_process';
 
 const METRICS_PORT = 20_500;

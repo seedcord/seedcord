@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { buildKey } from '@src/buildKey';
-import { MemoryRateLimiter } from '@src/MemoryRateLimiter';
+import { buildKey } from '#src/buildKey';
+import { MemoryRateLimiter } from '#src/MemoryRateLimiter';
 
 describe('MemoryRateLimiter key isolation', () => {
     beforeEach(() => vi.useFakeTimers());

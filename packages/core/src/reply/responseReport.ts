@@ -1,11 +1,11 @@
 import { Logger, paint } from '@seedcord/logger';
 
-import { asError } from '@stops/asError';
-import { PublishDefault } from '@subscribers/publishDefault';
+import { asError } from '#stops/asError';
+import { PublishDefault } from '#subscribers/publishDefault';
 
+import type { Bus } from '#subscribers/Bus';
+import type { ResponseOutcome } from '#subscribers/types/Subscriptions';
 import type { ReplyMethod } from './ackLegality';
-import type { Bus } from '@subscribers/Bus';
-import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 
 let replyLogger: Logger | undefined;
 function logger(): Logger {

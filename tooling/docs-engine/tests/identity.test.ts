@@ -5,9 +5,9 @@ import {
     isDocumentedPackage,
     resolveExternalPackageUrl,
     resolvePackageIdentity
-} from '@packages/identity';
+} from '#packages/identity';
 
-import type { PackageIdentity } from '@packages/identity';
+import type { PackageIdentity } from '#packages/identity';
 
 const id = (fullName: string): PackageIdentity => ({ folder: formatDisplayPackageName(fullName), fullName });
 const ids = (...fullNames: string[]): PackageIdentity[] => fullNames.map(id);

@@ -3,8 +3,8 @@
 import { Button, Icon, cn } from '@seedcord/ui';
 import { Search } from 'lucide-react';
 
-import { log } from '@lib/logger';
-import { useUIStore } from '@store/ui';
+import { log } from '#lib/logger';
+import { useUIStore } from '#store/ui';
 
 import type { ReactElement } from 'react';
 

@@ -1,17 +1,17 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MotionProvider } from '@components/providers/MotionProvider';
-import { CommandPaletteDialog } from '@components/search/command-palette/CommandPaletteDialog';
-import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
+import { MotionProvider } from '#components/providers/MotionProvider';
+import { CommandPaletteDialog } from '#components/search/command-palette/CommandPaletteDialog';
+import { COMMAND_LISTBOX_ID, MIN_SEARCH_QUERY_LENGTH } from '#components/search/command-palette/constants';
 
-import type { CommandAction } from '@components/search/command-palette/types';
-import type { CommandPaletteController } from '@components/search/command-palette/useCommandPaletteController';
+import type { CommandAction } from '#components/search/command-palette/types';
+import type { CommandPaletteController } from '#components/search/command-palette/useCommandPaletteController';
 import type { ReactElement } from 'react';
 
 const { searchHook } = vi.hoisted(() => ({ searchHook: vi.fn() }));
 
-vi.mock('@components/search/command-palette/useCommandPaletteSearch', () => ({
+vi.mock('#components/search/command-palette/useCommandPaletteSearch', () => ({
     useCommandPaletteSearch: searchHook
 }));
 

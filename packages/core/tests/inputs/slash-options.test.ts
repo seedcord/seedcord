@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { OptionLens, SlashOptions } from '@src/internal.index';
+import type { OptionLens, SlashOptions } from '#src/internal.index';
 
 interface StubUser {
     id: string;
@@ -38,7 +38,7 @@ interface StubLens extends OptionLens {
     attachment: StubAttachment;
 }
 
-declare module '@registries/SlashOptionRegistry' {
+declare module '#registries/SlashOptionRegistry' {
     interface SlashOptionRegistry {
         coreReq: {
             who: { kind: 'user'; required: true };

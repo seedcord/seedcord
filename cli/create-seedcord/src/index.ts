@@ -4,22 +4,22 @@ import process from 'node:process';
 import { cancel, intro, isCI, isTTY, log, note, outro } from '@clack/prompts';
 import { paint } from '@seedcord/errors/internal';
 
-import { banner } from '@cli/banner';
-import { helpText } from '@cli/help';
-import { inviteUrl } from '@cli/invite';
-import { runningAgent } from '@cli/packageManager';
-import { parseInput, wantsHelp } from '@cli/parseInput';
-import { reportFailure } from '@cli/reportFailure';
-import { clackSteps, silentSteps } from '@cli/steps';
-import { dashboardToggles, nextSteps, reproducingCommand } from '@cli/summary';
-import { runFlow } from '@interview/runFlow';
-import { STEPS } from '@interview/steps';
-import { missingNotice, probeCloudflared } from '@scaffold/cloudflared';
-import { execRunner } from '@scaffold/exec';
-import { scaffold } from '@scaffold/scaffold';
-import { requireScaffoldAnswers } from '@template/context';
+import { banner } from '#cli/banner';
+import { helpText } from '#cli/help';
+import { inviteUrl } from '#cli/invite';
+import { runningAgent } from '#cli/packageManager';
+import { parseInput, wantsHelp } from '#cli/parseInput';
+import { reportFailure } from '#cli/reportFailure';
+import { clackSteps, silentSteps } from '#cli/steps';
+import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { runFlow } from '#interview/runFlow';
+import { STEPS } from '#interview/steps';
+import { missingNotice, probeCloudflared } from '#scaffold/cloudflared';
+import { execRunner } from '#scaffold/exec';
+import { scaffold } from '#scaffold/scaffold';
+import { requireScaffoldAnswers } from '#template/context';
 
-import type { ScaffoldAnswers } from '@template/context';
+import type { ScaffoldAnswers } from '#template/context';
 import type { AgentName } from 'package-manager-detector';
 
 // dist/index.mjs and src/index.ts are both one level under the package root

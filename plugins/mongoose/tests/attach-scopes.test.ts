@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-import { Mongoose } from '@src/Mongoose';
+import { Mongoose } from '#src/Mongoose';
 
+import type { MongooseOptions } from '#src/types/MongooseOptions';
 import type { Seedcord as GatewaySeedcord } from '@seedcord/gateway';
 import type { HttpEdgeConfig, HttpServerConfig, Seedcord as HttpSeedcord } from '@seedcord/http';
-import type { MongooseOptions } from '@src/types/MongooseOptions';
 
 const options: MongooseOptions = { uri: 'mongodb://localhost:27017', name: 'test', dir: '/services' };
 

@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { ManifestReader } from '@src/ManifestReader';
+import { ManifestReader } from '#src/ManifestReader';
 
 import { TEMP_DIR } from './utils/constants';
 

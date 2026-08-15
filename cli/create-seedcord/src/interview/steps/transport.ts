@@ -4,7 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Answers, Step } from '@interview/types';
+import type { Answers, Step } from '#interview/types';
 
 const TRANSPORTS: Answers['transport'][] = ['http', 'gateway'];
 

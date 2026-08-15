@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { INITIAL_CURSOR } from '@ui/filterCursor';
-import { dispatchHotkey } from '@ui/hotkeys';
-import { LogStore } from '@ui/stores/LogStore';
+import { INITIAL_CURSOR } from '#ui/filterCursor';
+import { dispatchHotkey } from '#ui/hotkeys';
+import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogLevel, LogRecord } from '@seedcord/logger';
 import type { Key } from 'ink';

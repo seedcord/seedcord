@@ -1,11 +1,11 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '@customId/CustomId';
-import { decodeComponentRoute } from '@customId/routing';
-import { storeComponentRoute } from '@decorators/interactionRoutes';
-import { InteractionRoutes } from '@src/metadataKeys';
-import { Notice } from '@stops/Notice';
+import { CustomId } from '#customId/CustomId';
+import { decodeComponentRoute } from '#customId/routing';
+import { storeComponentRoute } from '#decorators/interactionRoutes';
+import { InteractionRoutes } from '#src/metadataKeys';
+import { Notice } from '#stops/Notice';
 
 const ApproveId = new CustomId('approve').snowflake('userId');
 

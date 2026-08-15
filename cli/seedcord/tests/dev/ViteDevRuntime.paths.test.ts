@@ -3,9 +3,9 @@ import { join } from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { ViteDevRuntime } from '@commands/dev/runtime/ViteDevRuntime';
+import { ViteDevRuntime } from '#commands/dev/runtime/ViteDevRuntime';
 
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 
 const SCRATCH_ROOT = join(import.meta.dirname, '.build-fixture');
 

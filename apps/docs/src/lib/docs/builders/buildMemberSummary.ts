@@ -1,7 +1,7 @@
 import { memberFragment } from '@seedcord/docs-engine';
 
-import { formatCommentRich } from '@lib/docs/comments/formatter';
-import { opensInNewTab } from '@lib/docs/crossPackage';
+import { formatCommentRich } from '#lib/docs/comments/formatter';
+import { opensInNewTab } from '#lib/docs/crossPackage';
 
 import { buildSignatureDetails } from './buildSignatureDetails';
 import {
@@ -14,7 +14,7 @@ import {
     selectDescription
 } from './utils';
 
-import type { FormatContext, SeeAlsoEntryWithoutTarget, EntityMemberSummary } from '@lib/docs/types';
+import type { FormatContext, SeeAlsoEntryWithoutTarget, EntityMemberSummary } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildMemberSummary(node: DocNode, context: FormatContext): Promise<EntityMemberSummary> {

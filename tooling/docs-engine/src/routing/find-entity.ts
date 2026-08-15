@@ -1,9 +1,9 @@
-import { kindName } from '@src/kinds';
-import { resolveEntityToneStrict, type EntityTone } from '@src/tones';
+import { kindName } from '#src/kinds';
+import { resolveEntityToneStrict, type EntityTone } from '#src/tones';
 
-import type { VersionedDocsEngine } from '@remote/VersionedDocsEngine';
-import type { DocsEngine } from '@src/DocsEngine';
-import type { DocNode, DocPackageModel } from '@src/types';
+import type { VersionedDocsEngine } from '#remote/VersionedDocsEngine';
+import type { DocsEngine } from '#src/DocsEngine';
+import type { DocNode, DocPackageModel } from '#src/types';
 
 type LookupEngine = DocsEngine | VersionedDocsEngine;
 

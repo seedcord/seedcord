@@ -2,8 +2,8 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { validateDiscordToken } from '@seedcord/errors/internal';
 import { Envapter } from 'envapt';
 
-import { BaseCommand } from '@core/BaseCommand';
-import { isInteractive } from '@core/interactive';
+import { BaseCommand } from '#core/BaseCommand';
+import { isInteractive } from '#core/interactive';
 
 import { CleanRunner } from './CleanRunner';
 import { runCleanFromFlags } from './flagClean';

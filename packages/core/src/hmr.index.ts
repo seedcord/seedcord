@@ -1,1 +1,1 @@
-export { HmrModuleHandler } from '@hmr/HmrModuleHandler';
+export { HmrModuleHandler } from '#hmr/HmrModuleHandler';

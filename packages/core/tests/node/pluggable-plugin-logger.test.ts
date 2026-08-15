@@ -3,11 +3,11 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '@node/Pluggable';
-import { Plugin } from '@src/plugin/Plugin';
-import { Bus } from '@subscribers/Bus';
+import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
+import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import { Pluggable } from '#node/Pluggable';
+import { Plugin } from '#src/plugin/Plugin';
+import { Bus } from '#subscribers/Bus';
 
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 import type { Config, IRateLimiter } from '@seedcord/types';

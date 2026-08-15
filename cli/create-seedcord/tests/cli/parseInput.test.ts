@@ -1,7 +1,7 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { parseInput, wantsHelp } from '@cli/parseInput';
+import { parseInput, wantsHelp } from '#cli/parseInput';
 
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;
 

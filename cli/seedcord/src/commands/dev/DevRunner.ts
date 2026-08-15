@@ -1,22 +1,22 @@
 import { settleWithin } from '@seedcord/core/node/internal';
 import { Logger } from '@seedcord/logger';
 
-import { CodegenRunner } from '@commands/codegen/CodegenRunner';
-import { ConfigLoader } from '@core/config/ConfigLoader';
-import { ConfigLocator } from '@core/config/ConfigLocator';
-import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
-import { resetChannelColors } from '@ui/channelColor';
-import { profileMark } from '@ui/profile';
+import { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ConfigLocator } from '#core/config/ConfigLocator';
+import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { resetChannelColors } from '#ui/channelColor';
+import { profileMark } from '#ui/profile';
 
 import { DevSession } from './DevSession';
 import { ViteDevRuntime } from './runtime/ViteDevRuntime';
 import { createTunnelCoordinator } from './tunnel/createTunnelCoordinator';
 import { TunnelRouter } from './tunnel/TunnelRouter';
 
+import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '#core/config/schema';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { TunnelCoordinator } from './tunnel/TunnelCoordinator';
-import type { ResolvedSeedcordDevConfig, ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
-import type { DevStore } from '@ui/stores/DevStore';
 
 const TUNNEL_TEARDOWN_MS = 3000;
 

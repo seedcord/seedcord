@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { resolveInlineHref } from '@lib/docs/comments/resolvers';
+import { resolveInlineHref } from '#lib/docs/comments/resolvers';
 
-import type { FormatContext, InlineTagPart } from '@lib/docs/types';
+import type { FormatContext, InlineTagPart } from '#lib/docs/types';
 import type { VersionedDocsEngine } from '@seedcord/docs-engine';
 
 interface SearchHit {

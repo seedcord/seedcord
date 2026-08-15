@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { pageMetadata } from '@lib/site';
+import { pageMetadata } from '#lib/site';
 
 describe('pageMetadata', () => {
     it('advertises the Markdown mirror as a text/markdown alternate when markdownPath is given', () => {

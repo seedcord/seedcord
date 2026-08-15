@@ -1,4 +1,4 @@
-import type { InlineTagPart, FormatContext } from '@lib/docs/types';
+import type { InlineTagPart, FormatContext } from '#lib/docs/types';
 import type { VersionedDocsEngine, DocNode, DocReference } from '@seedcord/docs-engine';
 
 function listPackageCandidates(engine: VersionedDocsEngine, currentPackage: string): string[] {

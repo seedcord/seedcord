@@ -1,10 +1,10 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { SlashOptions } from '@inputs/SlashOptions';
+import type { SlashOptions } from '#inputs/SlashOptions';
 import type { SlashOptionRegistry } from '@seedcord/core';
 import type { CacheType, ChatInputCommandInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';

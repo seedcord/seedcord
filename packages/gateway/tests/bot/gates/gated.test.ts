@@ -13,14 +13,14 @@ import { GatedMetadataKey } from '@seedcord/core/internal';
 import { ApplicationCommandType } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
-import { Gated } from '@bDecorators/Gated';
-import { EventHandler } from '@handlers/event';
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
-import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { Gated } from '#bDecorators/Gated';
+import { EventHandler } from '#handlers/event';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { ButtonHandler, ModalHandler, SelectMenuHandler } from '#handlers/interaction/components';
+import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import type { EventGateContext, InteractionGateContext } from '@bot/gates';
+import type { EventGateContext, InteractionGateContext } from '#bot/gates';
 import type {
     ButtonInteraction,
     ChatInputCommandInteraction,

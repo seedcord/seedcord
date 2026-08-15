@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { HealthCheck } from '@node/HealthCheck';
-import { ShutdownPhase } from '@src/lifecycle/phases';
+import { HealthCheck } from '#node/HealthCheck';
+import { ShutdownPhase } from '#src/lifecycle/phases';
 
-import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 
 function stubShutdown(): { shutdown: CoordinatedShutdown; addTask: ReturnType<typeof vi.fn> } {
     const addTask = vi.fn();

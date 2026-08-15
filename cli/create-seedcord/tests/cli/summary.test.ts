@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { dashboardToggles, nextSteps, reproducingCommand } from '@cli/summary';
-import { STEPS } from '@interview/steps';
+import { dashboardToggles, nextSteps, reproducingCommand } from '#cli/summary';
+import { STEPS } from '#interview/steps';
 
-import type { ScaffoldAnswers } from '@template/context';
+import type { ScaffoldAnswers } from '#template/context';
 
 const GATEWAY: ScaffoldAnswers = {
     directory: 'my-bot',

@@ -2,7 +2,7 @@ import process from 'node:process';
 
 import { describe, expect, it } from 'vitest';
 
-import { execRunner, spawnSpec } from '@scaffold/exec';
+import { execRunner, spawnSpec } from '#scaffold/exec';
 
 function noise(prefix: string, count: number): string {
     return `for (let i = 0; i < ${count}; i++) console.log('${prefix} ' + i);`;

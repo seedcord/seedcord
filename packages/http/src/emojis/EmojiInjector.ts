@@ -4,9 +4,9 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import { Routes } from 'discord-api-types/v10';
 
-import { fetchApplicationId } from '@src/applicationId';
+import { fetchApplicationId } from '#src/applicationId';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
 import type { APIEmoji, APIMessageComponentEmoji } from 'discord-api-types/v10';
 

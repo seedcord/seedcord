@@ -3,7 +3,7 @@ import type {
     NavigationCategory,
     NavigationEntityItem,
     PackageVersionCatalog
-} from '@lib/docs/types';
+} from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
 type SidebarVariant = 'desktop' | 'mobile';

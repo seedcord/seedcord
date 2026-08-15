@@ -1,7 +1,7 @@
 import { assertPermissions } from '@seedcord/core';
 import { Guild, GuildMember, Role } from 'discord.js';
 
-import { mentionFor } from '@bot/notices/utils';
+import { mentionFor } from '#bot/notices/utils';
 
 import type { PermissionNoticeOverrides, PermissionScope } from '@seedcord/core';
 import type { TextChannel } from 'discord.js';

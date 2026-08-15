@@ -1,6 +1,6 @@
 import wrapAnsi from 'wrap-ansi';
 
-import type { LogEntry } from '@ui/stores/LogStore';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 const CHIP_WIDTH = 3;
 const TIME_WIDTH = 8;

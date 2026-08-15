@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from 'react';
 
-import type { DevState, DevStore } from '@ui/stores/DevStore';
+import type { DevState, DevStore } from '#ui/stores/DevStore';
 
 export function useDevState(store: DevStore): DevState {
     const subscribe = useCallback(

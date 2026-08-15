@@ -1,4 +1,4 @@
-import { rawExternalLinks } from '@packages/external-links';
+import { rawExternalLinks } from '#packages/external-links';
 
 const EXTERNAL_DOCUMENTATION_LINKS: ReadonlyMap<string, string> = new Map(
     Object.entries(rawExternalLinks).map(([key, value]) => [sanitizeExternalKey(key), value])

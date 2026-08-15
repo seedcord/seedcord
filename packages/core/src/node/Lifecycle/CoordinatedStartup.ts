@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { paint } from '@seedcord/logger';
 
-import { StartupPhase } from '@src/lifecycle/phases';
+import { StartupPhase } from '#src/lifecycle/phases';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 

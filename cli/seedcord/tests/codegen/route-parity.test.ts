@@ -2,11 +2,11 @@ import { buildSlashRoute } from '@seedcord/utils/internal';
 import { SlashCommandBuilder, ApplicationCommandOptionType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
+import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 
 import { silentLogger } from '../silentLogger';
 
-import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
+import type { SlashTables } from '#commands/codegen/AugmentationBuilder';
 import type { RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 
 // Independently re-derive the route key set from the same toJSON the generator reads, funneling every leaf

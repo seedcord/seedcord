@@ -1,7 +1,7 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 

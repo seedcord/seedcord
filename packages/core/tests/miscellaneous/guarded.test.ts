@@ -1,7 +1,7 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { accessorStore, clearStore, guardedAccessor } from '@src/miscellaneous/guarded';
+import { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
 
 const emptyStore = (): Record<string, string> => accessorStore<string>();
 

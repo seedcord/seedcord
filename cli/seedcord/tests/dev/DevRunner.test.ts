@@ -1,14 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { DevRunner } from '@commands/dev/DevRunner';
-import { DevStore } from '@ui/stores/DevStore';
+import { DevRunner } from '#commands/dev/DevRunner';
+import { DevStore } from '#ui/stores/DevStore';
 
 import { silentLogger } from '../silentLogger';
 
-import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
-import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
-import type { ConfigLoader } from '@core/config/ConfigLoader';
-import type { ConfigLocator } from '@core/config/ConfigLocator';
+import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
+import type { ConfigLoader } from '#core/config/ConfigLoader';
+import type { ConfigLocator } from '#core/config/ConfigLocator';
 
 // justified: these paths never touch the locator or the config loader
 function makeRunner(codegen: { run: ReturnType<typeof vi.fn> }, tunnel: TunnelRouter = fakeTunnel()): DevRunner {

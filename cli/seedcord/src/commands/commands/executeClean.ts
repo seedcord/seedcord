@@ -1,4 +1,4 @@
-import { plural } from '@core/format';
+import { plural } from '#core/format';
 
 import type { CleanOps, CleanScope, DeleteResult, GuildSummary, ScanResult, SkippedGuild } from './CleanRunner';
 

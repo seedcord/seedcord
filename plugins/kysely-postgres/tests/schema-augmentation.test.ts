@@ -1,9 +1,9 @@
 import { describe, it, expectTypeOf } from 'vitest';
 
-import { RegisterKyselyService } from '@src/decorators/RegisterKyselyService';
-import { KyselyService } from '@src/KyselyService';
+import { RegisterKyselyService } from '#src/decorators/RegisterKyselyService';
+import { KyselyService } from '#src/KyselyService';
 
-import type { KyselySchema, KyselyTable } from '@src/types/KyselyDatabase';
+import type { KyselySchema, KyselyTable } from '#src/types/KyselyDatabase';
 import type { Kysely } from 'kysely';
 
 interface UserRow {
@@ -16,7 +16,7 @@ interface ProductRow {
     title: string;
 }
 
-declare module '@src/types/KyselyDatabase' {
+declare module '#src/types/KyselyDatabase' {
     interface KyselyDatabase {
         schema: { users: UserRow; products: ProductRow };
     }
@@ -25,7 +25,7 @@ declare module '@src/types/KyselyDatabase' {
 class Users extends KyselyService<'users'> {}
 class AnyTable extends KyselyService {}
 
-declare module '@src/types/KyselyServices' {
+declare module '#src/types/KyselyServices' {
     interface KyselyServices {
         users: Users;
         people: Users;

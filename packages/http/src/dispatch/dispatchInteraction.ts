@@ -13,16 +13,16 @@ import { Logger, paint } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 
-import { RepliableHandler } from '@handlers/RepliableHandler';
-import { ReplySender } from '@reply/ReplySender';
-import { interactionGateContext } from '@src/gates/context';
+import { RepliableHandler } from '#handlers/RepliableHandler';
+import { ReplySender } from '#reply/ReplySender';
+import { interactionGateContext } from '#src/gates/context';
 
 import { reportFault } from './reportFault';
 
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { HttpConfig } from '#interfaces/Config';
+import type { Core } from '#interfaces/Core';
 import type { ResolvedRoute } from './resolve';
-import type { ValidInteractionTypes } from '@handlers/interactionTypes';
-import type { HttpConfig } from '@interfaces/Config';
-import type { Core } from '@interfaces/Core';
 import type { DispatchOutcome } from '@seedcord/core';
 import type { IRateLimiter, RenderContext, TypedOmit } from '@seedcord/types';
 

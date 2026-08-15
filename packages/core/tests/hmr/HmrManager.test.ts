@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 
-import { getDevChannel, setDevChannel } from '@hmr/devChannel';
-import { HmrManager } from '@hmr/HmrManager';
+import { getDevChannel, setDevChannel } from '#hmr/devChannel';
+import { HmrManager } from '#hmr/HmrManager';
 
 describe('HmrManager', () => {
     afterEach(() => {

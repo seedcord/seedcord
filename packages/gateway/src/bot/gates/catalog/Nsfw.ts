@@ -1,11 +1,11 @@
 import { defineGate } from '@seedcord/core';
 import { pickNotice } from '@seedcord/core/internal';
 
-import { NotNsfw } from '@bot/notices';
+import { NotNsfw } from '#bot/notices';
 
+import type { NonModalInteraction } from '#src/handlers/interactionTypes';
 import type { InteractionGateContext } from '../Gate';
 import type { Gate, GateNoticeOptions } from '@seedcord/core';
-import type { NonModalInteraction } from '@src/handlers/interactionTypes';
 
 // a thread carries no nsfw flag of its own
 function channelIsNsfw(channel: InteractionGateContext['interaction']['channel']): boolean {

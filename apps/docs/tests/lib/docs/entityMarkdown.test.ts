@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { entityToMarkdown } from '@lib/docs/entityMarkdown';
+import { entityToMarkdown } from '#lib/docs/entityMarkdown';
 
-import type { EntityModel } from '@lib/docs/types';
+import type { EntityModel } from '#lib/docs/types';
 
 function para(plain: string): { plain: string; html: string } {
     return { plain, html: `<p>${plain}</p>` };

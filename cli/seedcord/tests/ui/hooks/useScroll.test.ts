@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeScrollView } from '@ui/hooks/useScroll';
+import { computeScrollView } from '#ui/hooks/useScroll';
 
 interface Row {
     id: number;

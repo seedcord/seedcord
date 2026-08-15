@@ -1,18 +1,18 @@
-import { PackageVersionNotFoundError } from '@remote/errors';
-import { IndexLoader } from '@remote/index-loader';
-import { deserializeProject } from '@remote/project-file';
-import { ProjectLoader } from '@remote/project-loader';
-import { AnchorStrategy } from '@routing/AnchorStrategy';
-import { ReferenceResolver } from '@routing/ReferenceResolver';
-import { orderedPackageCandidates } from '@routing/resolve-helpers';
-import { DocSearch } from '@services/Search';
+import { PackageVersionNotFoundError } from '#remote/errors';
+import { IndexLoader } from '#remote/index-loader';
+import { deserializeProject } from '#remote/project-file';
+import { ProjectLoader } from '#remote/project-loader';
+import { AnchorStrategy } from '#routing/AnchorStrategy';
+import { ReferenceResolver } from '#routing/ReferenceResolver';
+import { orderedPackageCandidates } from '#routing/resolve-helpers';
+import { DocSearch } from '#services/Search';
 
-import type { IndexJson, PackageIndexEntry } from '@remote/index-json';
-import type { Fetcher } from '@remote/index-loader';
-import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '@routing/lookup';
-import type { GlobalId } from '@src/ids';
-import type { DirectorySnapshot, PackageDirectory } from '@src/PackageDirectory';
-import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '@src/types';
+import type { IndexJson, PackageIndexEntry } from '#remote/index-json';
+import type { Fetcher } from '#remote/index-loader';
+import type { CrossPackageEntity, NodeLookup, PackageRegistry } from '#routing/lookup';
+import type { GlobalId } from '#src/ids';
+import type { DirectorySnapshot, PackageDirectory } from '#src/PackageDirectory';
+import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '#src/types';
 
 const defaultFetcher: Fetcher = (url) => globalThis.fetch(url);
 

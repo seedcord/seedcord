@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-import { DmOnly, GuildOnly, OwnerOnly } from '@gates/catalog/access';
-import { NotInDm, NotInGuild, NotOwner } from '@notices/index';
+import { DmOnly, GuildOnly, OwnerOnly } from '#gates/catalog/access';
+import { NotInDm, NotInGuild, NotOwner } from '#notices/index';
 
-import type { GateContextBase } from '@gates/Gate';
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { GateContextBase } from '#gates/Gate';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 function ownerCtx(userId: string | null, ownerIds: string[]): GateContextBase {
     // the gate reads only core.config.ownerIds and userId, so a minimal cast stands in

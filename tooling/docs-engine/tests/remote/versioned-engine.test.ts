@@ -1,17 +1,17 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { IndexFetchError, PackageVersionNotFoundError, ProjectFetchError } from '@remote/errors';
-import { IndexLoader } from '@remote/index-loader';
-import { serializeProject } from '@remote/project-file';
-import { VersionedDocsEngine } from '@remote/VersionedDocsEngine';
+import { IndexFetchError, PackageVersionNotFoundError, ProjectFetchError } from '#remote/errors';
+import { IndexLoader } from '#remote/index-loader';
+import { serializeProject } from '#remote/project-file';
+import { VersionedDocsEngine } from '#remote/VersionedDocsEngine';
 
 import { MOCK_PACKAGE_FULL_NAME } from '../utils/constants';
 import { getMockPackage } from '../utils/test-helpers';
 
-import type { IndexJson } from '@remote/index-json';
-import type { Fetcher } from '@remote/index-loader';
-import type { DocProjectFile } from '@remote/project-file';
-import type { DocPackageModel } from '@src/types';
+import type { IndexJson } from '#remote/index-json';
+import type { Fetcher } from '#remote/index-loader';
+import type { DocProjectFile } from '#remote/project-file';
+import type { DocPackageModel } from '#src/types';
 
 const INDEX_URL = 'https://cdn.test/index.json';
 const MOCK_FOLDER = 'mock-docs';

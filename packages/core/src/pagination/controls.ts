@@ -3,10 +3,10 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal';
 import { ButtonStyle } from 'discord-api-types/v10';
 
-import { PAGE_MAX } from '@pagination/cursor';
+import { PAGE_MAX } from '#pagination/cursor';
 
-import type { PageCursor } from '@pagination/cursor';
-import type { PageView } from '@pagination/PageView';
+import type { PageCursor } from '#pagination/cursor';
+import type { PageView } from '#pagination/PageView';
 import type { APIMessageComponentEmoji } from 'discord-api-types/v10';
 
 /** The five built-in nav controls. */

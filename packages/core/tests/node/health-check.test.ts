@@ -3,9 +3,9 @@ import { createServer } from 'node:net';
 
 import { describe, it, expect } from 'vitest';
 
-import { HealthCheck } from '@node/HealthCheck';
+import { HealthCheck } from '#node/HealthCheck';
 
-import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 
 // fixture: HealthCheck only calls shutdown.addTask, so a stub avoids constructing a real
 // CoordinatedShutdown (which registers process signal handlers).

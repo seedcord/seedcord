@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { capturingCtx, emptyManifest, readyEngine, signedRequest } from './harness';
 import { ConfirmButton, NoteModal, NoteModalId } from '../discovery/fixtures/handlers/ConfirmControls';
 
-import type { RouteManifest } from '@src/manifest/RouteManifest';
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 
 const rest = vi.hoisted(() => {
     class FakeRest {

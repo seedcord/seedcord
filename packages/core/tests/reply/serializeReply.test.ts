@@ -3,7 +3,7 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { serializeReply } from '@reply/serializeReply';
+import { serializeReply } from '#reply/serializeReply';
 
 import { stripAnsi } from './helpers';
 

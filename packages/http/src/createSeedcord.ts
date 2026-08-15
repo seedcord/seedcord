@@ -6,9 +6,9 @@ import { registerSubscribers } from './dispatch/registerSubscribers';
 import { buildRouteMaps } from './dispatch/resolve';
 import { buildEngine } from './engine';
 
+import type { HttpConfig } from '#interfaces/Config';
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { EngineContext } from './engine';
-import type { HttpConfig } from '@interfaces/Config';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 export type { EngineContext } from './engine';
 

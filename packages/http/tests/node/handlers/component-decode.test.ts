@@ -2,12 +2,12 @@ import { CustomId, Notice, SelectMenuKind } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
-import { ModalHandler } from '@handlers/interaction/components/ModalHandler';
-import { SelectMenuHandler } from '@handlers/interaction/components/SelectMenuHandler';
-import { ButtonRoute, ModalRoute, SelectMenuRoute } from '@src/index';
+import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
+import { SelectMenuHandler } from '#handlers/interaction/components/SelectMenuHandler';
+import { ButtonRoute, ModalRoute, SelectMenuRoute } from '#src/index';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { MatchArms } from '@seedcord/core/internal';
 import type {
     APIMessageComponentButtonInteraction,

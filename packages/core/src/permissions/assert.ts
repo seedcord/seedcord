@@ -1,9 +1,9 @@
-import { HasDangerousPermissions, MissingPermissions } from '@notices/index';
+import { HasDangerousPermissions, MissingPermissions } from '#notices/index';
 
 import { hasAll, missingNames, presentNames } from './bits';
 
+import type { Notice } from '#stops/Notice';
 import type { PermissionScope } from './bits';
-import type { Notice } from '@stops/Notice';
 
 /** Replacement notices for the two refusals {@link assertPermissions} raises. */
 export interface PermissionNoticeOverrides {

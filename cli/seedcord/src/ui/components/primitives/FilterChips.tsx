@@ -2,12 +2,12 @@ import { LEVEL_COLOR } from '@seedcord/logger';
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { channelColor } from '@ui/channelColor';
-import { focusedIn } from '@ui/filterCursor';
-import { ui } from '@ui/palette';
+import { channelColor } from '#ui/channelColor';
+import { focusedIn } from '#ui/filterCursor';
+import { ui } from '#ui/palette';
 
+import type { FilterCursor } from '#ui/filterCursor';
 import type { LogLevel } from '@seedcord/logger';
-import type { FilterCursor } from '@ui/filterCursor';
 import type { ReactElement } from 'react';
 
 export const FILTER_LEVELS: readonly LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];

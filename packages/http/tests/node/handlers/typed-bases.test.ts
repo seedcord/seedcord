@@ -3,12 +3,12 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandOptionType, ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, expectTypeOf, it, vi } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
+import type { Core } from '#interfaces/Core';
 import type { REST } from '@discordjs/rest';
-import type { Core } from '@interfaces/Core';
 import type {
     APIApplicationCommandAutocompleteInteraction,
     APIChatInputApplicationCommandInteraction,

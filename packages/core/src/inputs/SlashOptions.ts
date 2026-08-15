@@ -1,5 +1,5 @@
-import type { OptionLens } from '@inputs/OptionLens';
-import type { OptionKind, SlashOptionRegistry } from '@registries/SlashOptionRegistry';
+import type { OptionLens } from '#inputs/OptionLens';
+import type { OptionKind, SlashOptionRegistry } from '#registries/SlashOptionRegistry';
 import type { ChannelType } from 'discord-api-types/v10';
 import type { IsNever } from 'type-fest';
 

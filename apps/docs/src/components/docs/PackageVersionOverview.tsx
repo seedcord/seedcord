@@ -1,10 +1,10 @@
 import { cn, tw } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { getToneConfig } from '@lib/tonePresentation';
+import { getToneConfig } from '#lib/tonePresentation';
 
-import type { ReexportLink } from '@lib/docs/catalog';
-import type { NavigationCategory } from '@lib/docs/types';
+import type { ReexportLink } from '#lib/docs/catalog';
+import type { NavigationCategory } from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 const chipBaseClassName = tw`bg-surface-moderate shadow-soft border-border inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium text-(--text) transition focus-visible:outline-2 focus-visible:outline-offset-2`;

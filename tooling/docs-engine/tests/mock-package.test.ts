@@ -1,16 +1,16 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { DocKind } from '@model/kinds';
-import { AnchorStrategy } from '@routing/AnchorStrategy';
-import { ReferenceResolver } from '@routing/ReferenceResolver';
-import { orderedPackageCandidates } from '@routing/resolve-helpers';
+import { DocKind } from '#model/kinds';
+import { AnchorStrategy } from '#routing/AnchorStrategy';
+import { ReferenceResolver } from '#routing/ReferenceResolver';
+import { orderedPackageCandidates } from '#routing/resolve-helpers';
 
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getManifest, getMockPackage, getNodeBySlug } from './utils/test-helpers';
 
-import type { PackageRegistry } from '@routing/lookup';
-import type { DocsEngine } from '@src/DocsEngine';
-import type { DocNode, DocPackageModel } from '@src/types';
+import type { PackageRegistry } from '#routing/lookup';
+import type { DocsEngine } from '#src/DocsEngine';
+import type { DocNode, DocPackageModel } from '#src/types';
 
 let engine: DocsEngine;
 let pkg: DocPackageModel;

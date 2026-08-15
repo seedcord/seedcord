@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { channelColor, resetChannelColors } from '@ui/channelColor';
+import { channelColor, resetChannelColors } from '#ui/channelColor';
 
 describe('channelColor', () => {
     beforeEach(() => resetChannelColors());

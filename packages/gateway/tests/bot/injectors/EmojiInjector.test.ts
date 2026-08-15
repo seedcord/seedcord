@@ -2,9 +2,9 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Collection } from 'discord.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { EmojiInjector, Emojis } from '@bot/injectors/EmojiInjector';
+import { EmojiInjector, Emojis } from '#bot/injectors/EmojiInjector';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 
 interface EmojiStub {
     id: string;

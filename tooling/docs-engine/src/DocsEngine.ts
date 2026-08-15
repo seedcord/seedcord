@@ -1,14 +1,14 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import { buildCollection, type ResolveOptions } from '@builders/collection-builder';
-import { DocSearch } from '@services/Search';
-import { resolveManifestPath } from '@src/constants';
-import { ManifestReader } from '@src/ManifestReader';
+import { buildCollection, type ResolveOptions } from '#builders/collection-builder';
+import { DocSearch } from '#services/Search';
+import { resolveManifestPath } from '#src/constants';
+import { ManifestReader } from '#src/ManifestReader';
 
-import type { GlobalId } from '@src/ids';
-import type { DirectorySnapshot, PackageDirectory } from '@src/PackageDirectory';
-import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '@src/types';
+import type { GlobalId } from '#src/ids';
+import type { DirectorySnapshot, PackageDirectory } from '#src/PackageDirectory';
+import type { DocCollection, DocManifest, DocNode, DocPackageModel, DocSearchEntry } from '#src/types';
 
 export interface DocsEngineOptions {
     generatedRoot: string;

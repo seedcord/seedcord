@@ -1,10 +1,10 @@
 import { describe, expect, it, vi, type Mock } from 'vitest';
 
-import { emptyOutcome, executeClean, LARGE_BOT_THRESHOLD } from '@commands/commands/executeClean';
+import { emptyOutcome, executeClean, LARGE_BOT_THRESHOLD } from '#commands/commands/executeClean';
 
-import type { Flagged } from '@commands/commands/classify';
-import type { CleanOps, CleanScope, GuildSummary, ScanResult } from '@commands/commands/CleanRunner';
-import type { CleanPresenter } from '@commands/commands/executeClean';
+import type { Flagged } from '#commands/commands/classify';
+import type { CleanOps, CleanScope, GuildSummary, ScanResult } from '#commands/commands/CleanRunner';
+import type { CleanPresenter } from '#commands/commands/executeClean';
 
 const flagged: Flagged[] = [{ guildId: 'g1', guildName: 'Alpha', id: '1', name: 'ban', reason: 'overlap' }];
 const scope: CleanScope = { guildIds: ['g1'], allGuilds: false, purge: false };

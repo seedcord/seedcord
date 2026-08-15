@@ -1,9 +1,9 @@
-import { pageCursor } from '@pagination/cursor';
-import { renderPage } from '@pagination/render';
+import { pageCursor } from '#pagination/cursor';
+import { renderPage } from '#pagination/render';
 
-import type { PageCursor } from '@pagination/cursor';
-import type { ItemRender, PageRender } from '@pagination/render';
-import type { PageSource } from '@pagination/sources';
+import type { PageCursor } from '#pagination/cursor';
+import type { ItemRender, PageRender } from '#pagination/render';
+import type { PageSource } from '#pagination/sources';
 import type { ReplyResponse } from '@seedcord/types';
 
 /**

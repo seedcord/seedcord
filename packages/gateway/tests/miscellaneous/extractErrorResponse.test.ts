@@ -2,14 +2,14 @@ import { Fault } from '@seedcord/core';
 import { PublishDefault } from '@seedcord/core/internal';
 import { describe, expect, it, vi } from 'vitest';
 
-import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
+import { extractErrorResponse } from '#miscellaneous/extractErrorResponse';
 
 import { cardJson } from '../utils/cardText';
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
-import type { Repliables } from '@src/handlers/interactionTypes';
 import type { Guild, User } from 'discord.js';
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {

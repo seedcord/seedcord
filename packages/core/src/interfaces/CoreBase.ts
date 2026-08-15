@@ -1,6 +1,6 @@
+import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { Bus } from '@subscribers/Bus';
 
 /**
  * The transport-agnostic slice of the running framework, what core code (gates, notices, plugins'

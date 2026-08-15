@@ -1,6 +1,6 @@
 import { ApplicationCommandOptionType } from 'discord-api-types/v10';
 
-import type { SlashLikeData } from '@src/dispatch/slashRouteOf';
+import type { SlashLikeData } from '#src/dispatch/slashRouteOf';
 import type {
     APIApplicationCommandInteractionDataBasicOption,
     APIApplicationCommandInteractionDataOption,

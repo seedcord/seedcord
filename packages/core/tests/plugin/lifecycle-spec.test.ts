@@ -1,11 +1,11 @@
 import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
-import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
-import { Plugin, resolvedLifecycleSpecOf } from '@src/plugin/Plugin';
+import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
+import { Plugin, resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { PluginLifecycleSpec } from '@src/plugin/Plugin';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { PluginLifecycleSpec } from '#src/plugin/Plugin';
 
 class SpecPlugin extends Plugin {
     // justified: never invoked, spec resolution is all these tests read

@@ -3,17 +3,17 @@ import { join, dirname, resolve } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
-import { DevRunner } from '@commands/dev/DevRunner';
-import { ConfigLoader } from '@core/config/ConfigLoader';
-import { DevStore } from '@ui/stores/DevStore';
+import { DevRunner } from '#commands/dev/DevRunner';
+import { ConfigLoader } from '#core/config/ConfigLoader';
+import { DevStore } from '#ui/stores/DevStore';
 
 import { silentLogger } from './silentLogger';
 
-import type { CodegenRunner } from '@commands/codegen/CodegenRunner';
-import type { TunnelRouter } from '@commands/dev/tunnel/TunnelRouter';
-import type { ConfigLocator } from '@core/config/ConfigLocator';
-import type { ResolvedTunnel, SeedcordDevConfig } from '@core/config/schema';
-import type { ModuleLoader } from '@core/modules/ModuleLoader';
+import type { CodegenRunner } from '#commands/codegen/CodegenRunner';
+import type { TunnelRouter } from '#commands/dev/tunnel/TunnelRouter';
+import type { ConfigLocator } from '#core/config/ConfigLocator';
+import type { ResolvedTunnel, SeedcordDevConfig } from '#core/config/schema';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 
 describe('ConfigLoader', () => {
     it('resolves paths and build defaults relative to config directory', async () => {

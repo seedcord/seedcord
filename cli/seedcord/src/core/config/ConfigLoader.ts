@@ -3,8 +3,9 @@ import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { resolveDefaultExport } from '@utils/resolveDefaultExport';
+import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type {
     ResolvedSeedcordBuildConfig,
     ResolvedSeedcordDevConfig,
@@ -14,7 +15,6 @@ import type {
     SeedcordDevConfig,
     SeedcordHmrConfig
 } from './schema';
-import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { ILogger } from '@seedcord/types';
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {

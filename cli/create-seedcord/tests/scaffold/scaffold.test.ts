@@ -4,11 +4,11 @@ import { join, resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { scaffold } from '@scaffold/scaffold';
+import { scaffold } from '#scaffold/scaffold';
 
-import type { StepUi } from '@cli/steps';
-import type { CommandRunner } from '@scaffold/scaffold';
-import type { ScaffoldAnswers } from '@template/context';
+import type { StepUi } from '#cli/steps';
+import type { CommandRunner } from '#scaffold/scaffold';
+import type { ScaffoldAnswers } from '#template/context';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 

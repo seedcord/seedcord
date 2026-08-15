@@ -1,14 +1,14 @@
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import { addCommand, execCommand, runPrefix } from '@cli/packageManager';
-import { gitPlanFrom, probeGit } from '@scaffold/git';
-import { claimTarget } from '@scaffold/target';
-import { buildContext } from '@template/context';
-import { renderTemplates } from '@template/render';
+import { addCommand, execCommand, runPrefix } from '#cli/packageManager';
+import { gitPlanFrom, probeGit } from '#scaffold/git';
+import { claimTarget } from '#scaffold/target';
+import { buildContext } from '#template/context';
+import { renderTemplates } from '#template/render';
 
-import type { StepUi } from '@cli/steps';
-import type { ScaffoldAnswers } from '@template/context';
+import type { StepUi } from '#cli/steps';
+import type { ScaffoldAnswers } from '#template/context';
 import type { AgentName } from 'package-manager-detector';
 
 export type CommandRunner = (command: string, args: string[], cwd: string) => Promise<void>;

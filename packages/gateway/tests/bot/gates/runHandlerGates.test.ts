@@ -2,15 +2,15 @@ import { Notice, defineGate } from '@seedcord/core';
 import { runHandlerGates } from '@seedcord/core/internal';
 import { describe, expect, it } from 'vitest';
 
-import { Gated } from '@bDecorators/Gated';
-import { eventGateContext, interactionGateContext } from '@bot/gates/runGates';
-import { EventHandler } from '@handlers/event';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { Gated } from '#bDecorators/Gated';
+import { eventGateContext, interactionGateContext } from '#bot/gates/runGates';
+import { EventHandler } from '#handlers/event';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { TestNotice } from '../../utils/TestNotice';
 
-import type { Core } from '@interfaces/Core';
-import type { Repliables } from '@src/handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Events } from 'discord.js';
 
 declare module '@seedcord/core' {

@@ -1,6 +1,6 @@
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { GateContextBase } from '@seedcord/core';
-import type { Repliables } from '@src/handlers/interactionTypes';
 import type { APIInteractionGuildMember, APIUser } from 'discord-api-types/v10';
 
 /**

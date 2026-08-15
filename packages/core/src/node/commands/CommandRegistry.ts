@@ -10,19 +10,19 @@ import chalk from 'chalk';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { BuilderComponent } from '@components/Component';
-import { getDevChannel } from '@hmr/devChannel';
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
-import { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
-import { CommandMetadataKey } from '@src/metadataKeys';
+import { BuilderComponent } from '#components/Component';
+import { getDevChannel } from '#hmr/devChannel';
+import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
+import { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
+import { CommandMetadataKey } from '#src/metadataKeys';
 
-import type { CommandMeta } from '@decorators/Command';
+import type { CommandMeta } from '#decorators/Command';
+import type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
+import type { CommandBuilder, DeployResult } from '#src/commands/types';
+import type { Initializeable } from '#src/plugin/Plugin';
 import type { REST } from '@discordjs/rest';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { ContextMenuLeaves } from '@src/commands/contextMenuLeaves';
-import type { CommandBuilder, DeployResult } from '@src/commands/types';
-import type { Initializeable } from '@src/plugin/Plugin';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 type CommandCtor = new () => BuilderComponent<'command' | 'context_menu'>;

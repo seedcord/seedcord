@@ -1,9 +1,9 @@
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '@customId/CustomId';
-import { ComponentDefsKey } from '@customId/routing';
-import { SelectMenuKind } from '@decorators/interactionRoutes';
+import { CustomId } from '#customId/CustomId';
+import { ComponentDefsKey } from '#customId/routing';
+import { SelectMenuKind } from '#decorators/interactionRoutes';
 import {
     AutocompleteRoute,
     ButtonRoute,
@@ -11,14 +11,14 @@ import {
     ModalRoute,
     SelectMenuRoute,
     SlashRoute
-} from '@decorators/routes';
-import { InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
+} from '#decorators/routes';
+import { InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
 
-import type { AnyCustomId } from '@customId/CustomId';
-import type { HasComponentDefs } from '@customId/routing';
-import type { SlashOptionRegistry } from '@registries/SlashOptionRegistry';
+import type { AnyCustomId } from '#customId/CustomId';
+import type { HasComponentDefs } from '#customId/routing';
+import type { SlashOptionRegistry } from '#registries/SlashOptionRegistry';
 
-declare module '@registries/SlashOptionRegistry' {
+declare module '#registries/SlashOptionRegistry' {
     interface SlashOptionRegistry {
         rtBan: { target: { kind: 'user'; required: true } };
         rtKick: { note: { kind: 'string'; required: false } };
@@ -26,7 +26,7 @@ declare module '@registries/SlashOptionRegistry' {
     }
 }
 
-declare module '@registries/ContextMenuRegistry' {
+declare module '#registries/ContextMenuRegistry' {
     interface UserContextMenuRegistry {
         'View Profile': true;
     }

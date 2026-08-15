@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { LogStore } from '@ui/stores/LogStore';
+import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogRecord } from '@seedcord/logger';
 

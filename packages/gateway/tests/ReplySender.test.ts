@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { message, mockInteraction, senderFor } from './utils/senderMock';
 
-import type { SentMessage } from '@bot/ReplySender';
+import type { SentMessage } from '#bot/ReplySender';
 import type { ReplyResponse } from '@seedcord/types';
 
 const V2 = MessageFlags.IsComponentsV2;

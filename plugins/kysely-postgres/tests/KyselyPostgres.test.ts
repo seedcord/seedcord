@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { KyselyPostgres } from '@src/KyselyPostgres';
+import { KyselyPostgres } from '#src/KyselyPostgres';
 
 import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';

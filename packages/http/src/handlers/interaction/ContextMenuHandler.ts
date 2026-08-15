@@ -1,6 +1,6 @@
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
-import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
 import type { ContextMenuKind } from '@seedcord/core';
 import type {

@@ -4,17 +4,17 @@ import { Notice } from '@seedcord/core';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { createCore, dispatchInteraction } from '@src/dispatch/dispatchInteraction';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { createCore, dispatchInteraction } from '#src/dispatch/dispatchInteraction';
 
 import { slashPayload } from './harness';
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { ValidInteractionTypes } from '@handlers/interactionTypes';
-import type { Core } from '@interfaces/Core';
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { ResolvedRoute } from '#src/dispatch/resolve';
 import type { SubscriptionData } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
-import type { ResolvedRoute } from '@src/dispatch/resolve';
 
 vi.mock('@discordjs/rest', async (importOriginal) => {
     class FakeRest {

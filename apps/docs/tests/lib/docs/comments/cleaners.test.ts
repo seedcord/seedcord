@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { escapeHtml } from '@lib/docs/comments/cleaners';
+import { escapeHtml } from '#lib/docs/comments/cleaners';
 
 describe('escapeHtml', () => {
     it('escapes ampersand', () => {

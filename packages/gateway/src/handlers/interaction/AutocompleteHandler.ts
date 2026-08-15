@@ -2,10 +2,10 @@ import { reportedWrite } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { BaseHandler } from '@src/handlers/BaseHandler';
+import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
+import { BaseHandler } from '#src/handlers/BaseHandler';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { AutocompleteOptions, DispatchContext, SlashOptionRegistry } from '@seedcord/core';
 import type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@seedcord/core/internal';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction, CacheType } from 'discord.js';

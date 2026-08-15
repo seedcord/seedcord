@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import type { HttpConfig } from '#src/interfaces/Config';
 import type { Config } from '@seedcord/types';
-import type { HttpConfig } from '@src/interfaces/Config';
 
 // a base-Config-typed fixture would carry the wide runtime key and fail the narrowed arms
 function base(): Pick<Config, 'bot' | 'subscribers'> {

@@ -1,11 +1,11 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { HealthCheck } from '@node/HealthCheck';
-import { Bus } from '@subscribers/Bus';
+import { HealthCheck } from '#node/HealthCheck';
+import { Bus } from '#subscribers/Bus';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 
 class FakeSink implements ILogSink {

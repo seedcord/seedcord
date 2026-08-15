@@ -1,8 +1,8 @@
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { ShutdownPhase } from '@src/lifecycle/phases';
+import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
+import { ShutdownPhase } from '#src/lifecycle/phases';
 
 // a second spyOn on an already-spied method returns the existing mock, so an unrestored spy
 // carries the previous test's calls into this one

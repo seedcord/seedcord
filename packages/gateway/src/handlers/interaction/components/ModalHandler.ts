@@ -3,8 +3,8 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ComponentHandler } from './ComponentHandler';
 
-import type { SentMessage } from '@bot/ReplySender';
-import type { GatewayReplyResponse } from '@interfaces/ReplyResponse';
+import type { SentMessage } from '#bot/ReplySender';
+import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
 import type { AnyCustomId } from '@seedcord/core/internal';
 import type { CacheType, ModalSubmitInteraction } from 'discord.js';
 

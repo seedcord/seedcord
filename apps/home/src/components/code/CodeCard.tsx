@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import { highlightCode, type CodeLang } from '@lib/code/highlight';
+import { highlightCode, type CodeLang } from '#lib/code/highlight';
 
 import type { ReactNode } from 'react';
 

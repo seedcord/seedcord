@@ -1,7 +1,7 @@
 import { filterCirculars, stripAnsi } from '@seedcord/utils';
 import { SeparatorSpacingSize } from 'discord-api-types/v10';
 
-import { BuilderComponent } from '@components/Component';
+import { BuilderComponent } from '#components/Component';
 
 import type { WebhookFile } from './WebhookSender';
 

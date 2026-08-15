@@ -1,8 +1,8 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { decodeFor, prefixOf, CustomId } from '@customId/CustomId';
-import { InvalidCustomId, StaleCustomId } from '@customId/Errors';
+import { decodeFor, prefixOf, CustomId } from '#customId/CustomId';
+import { InvalidCustomId, StaleCustomId } from '#customId/Errors';
 
 import type { SeedcordError } from '@seedcord/errors/internal';
 

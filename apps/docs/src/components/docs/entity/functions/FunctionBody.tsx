@@ -4,8 +4,8 @@ import { paramFragment, typeParamFragment, withOverload } from '@seedcord/docs-e
 import { cn } from '@seedcord/ui';
 import { useMemo } from 'react';
 
-import { MemberDetailGroup } from '@components/docs/entity/member/MemberDetailGroup';
-import { useActiveSignatureList } from '@components/docs/entity/utils/useActiveSignatureList';
+import { MemberDetailGroup } from '#components/docs/entity/member/MemberDetailGroup';
+import { useActiveSignatureList } from '#components/docs/entity/utils/useActiveSignatureList';
 
 import type {
     EntityMemberSummary,
@@ -13,7 +13,7 @@ import type {
     FunctionTypeParameterModel,
     FunctionSignatureParameterModel,
     CodeRepresentation
-} from '@lib/docs/types';
+} from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 function buildTypeParamMember(tp: FunctionTypeParameterModel): EntityMemberSummary {

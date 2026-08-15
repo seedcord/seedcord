@@ -6,11 +6,11 @@ import { promisify } from 'node:util';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { TypeScriptProjectBuilder } from '@commands/build/builder/TypeScriptProjectBuilder';
+import { TypeScriptProjectBuilder } from '#commands/build/builder/TypeScriptProjectBuilder';
 
 import { silentLogger } from '../../silentLogger';
 
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 
 // the project has to sit inside the repo so its tsc and its node resolution both walk up to the workspace
 const SCRATCH_ROOT = join(import.meta.dirname, '.build-fixture');

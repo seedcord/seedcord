@@ -1,7 +1,7 @@
 import { ShutdownPhase, StartupPhase } from '@seedcord/core/node/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Seedcord } from '@src/Seedcord';
+import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
 

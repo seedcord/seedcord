@@ -3,12 +3,12 @@ import path from 'node:path';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Seedcord } from '@src/node/Seedcord';
+import { Seedcord } from '#src/node/Seedcord';
 
 import { createSigner, type Signer } from '../helpers/ed25519';
 import { VALID_TOKEN } from '../helpers/fixtures';
 
-import type { HttpConfig } from '@src/interfaces/Config';
+import type { HttpConfig } from '#src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 

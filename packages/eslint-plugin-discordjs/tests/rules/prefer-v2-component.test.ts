@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 
-import rule from '@src/rules/prefer-v2-component';
+import rule from '#src/rules/prefer-v2-component';
 
 import { createTypedRuleTester } from '../typed-rule-tester';
 

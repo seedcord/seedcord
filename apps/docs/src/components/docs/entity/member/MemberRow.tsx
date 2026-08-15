@@ -1,7 +1,7 @@
 import { cn } from '@seedcord/ui';
 
-import { DeprecatedEntity } from '@components/docs/entity/DeprecatedEntity';
-import { buildTagList } from '@components/docs/entity/utils/buildTagList';
+import { DeprecatedEntity } from '#components/docs/entity/DeprecatedEntity';
+import { buildTagList } from '#components/docs/entity/utils/buildTagList';
 
 import { MemberRowBody } from './MemberRowBody';
 import { MemberRowHeader } from './MemberRowHeader';
@@ -11,7 +11,7 @@ import type {
     MemberPrefix,
     WithParentDeprecationStatus,
     DeprecationStatus
-} from '@lib/docs/types';
+} from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface MemberRowProps extends WithParentDeprecationStatus {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { expandRows } from '@ui/logRows';
+import { expandRows } from '#ui/logRows';
 
-import type { LogEntry } from '@ui/stores/LogStore';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 function entry(over: Partial<LogEntry>): LogEntry {
     return {

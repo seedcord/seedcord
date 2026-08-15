@@ -1,6 +1,6 @@
-import type { DevEvent } from '@commands/dev/runtime/events';
+import type { DevEvent } from '#commands/dev/runtime/events';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { LogLevel } from '@seedcord/logger';
-import type { DevStore } from '@ui/stores/DevStore';
 
 export type PreviewLogLevel = LogLevel;
 

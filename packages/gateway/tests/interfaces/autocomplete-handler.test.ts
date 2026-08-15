@@ -3,9 +3,9 @@ import { PublishDefault } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { ApplicationCommandOptionChoiceData, AutocompleteInteraction } from 'discord.js';
 
 // fixtures for the autocomplete suite, distinct routes from the other interface test files so the registry

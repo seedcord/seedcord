@@ -1,11 +1,11 @@
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { BuilderComponent } from '@components/Component';
-import { RegisterCommand } from '@decorators/Command';
-import { CommandMetadataKey } from '@src/metadataKeys';
+import { BuilderComponent } from '#components/Component';
+import { RegisterCommand } from '#decorators/Command';
+import { CommandMetadataKey } from '#src/metadataKeys';
 
-import type { CommandMeta } from '@decorators/Command';
+import type { CommandMeta } from '#decorators/Command';
 
 // eslint-disable-next-line @seedcord/command-builder-missing-register-command -- the tests apply RegisterCommand manually
 class TestCommand extends BuilderComponent<'command'> {

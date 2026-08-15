@@ -26,7 +26,7 @@ import {
     Wrench
 } from 'lucide-react';
 
-import { Section } from '@components/home/Section';
+import { Section } from '#components/home/Section';
 
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';

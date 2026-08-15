@@ -2,12 +2,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordTypeError } from '@seedcord/errors/internal';
 import { parseDuration, type ValidDuration } from '@seedcord/utils';
 
-import { defineEffectGate } from '@gates/Gate';
-import { OnCooldown } from '@notices/index';
+import { defineEffectGate } from '#gates/Gate';
+import { OnCooldown } from '#notices/index';
 
-import type { EffectGate, GateContextBase } from '@gates/Gate';
+import type { EffectGate, GateContextBase } from '#gates/Gate';
+import type { Notice } from '#stops/Notice';
 import type { EpochMs } from '@seedcord/types';
-import type { Notice } from '@stops/Notice';
 
 /**
  * Options for {@link Cooldown}. `per` sets the bucket the window applies to and `limit` the uses allowed per

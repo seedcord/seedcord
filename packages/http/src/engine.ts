@@ -10,9 +10,9 @@ import { resolve } from './dispatch/resolve';
 import { Ed25519Verifier } from './receiver/Ed25519Verifier';
 import { ReplayGuard } from './receiver/ReplayGuard';
 
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
 import type { RouteMaps } from './dispatch/resolve';
-import type { ValidInteractionTypes } from '@handlers/interactionTypes';
-import type { Core } from '@interfaces/Core';
 import type { APIInteraction } from 'discord-api-types/v10';
 
 const SIGNATURE_HEADER = 'x-signature-ed25519';

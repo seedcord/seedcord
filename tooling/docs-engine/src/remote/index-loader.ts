@@ -1,9 +1,9 @@
-import { isDocumentedPackage } from '@packages/identity';
-import { IndexFetchError } from '@remote/errors';
-import { validateIndex } from '@remote/index-json';
-import { projectBaseFromIndexUrl, resolveIndexUrl } from '@src/constants';
+import { isDocumentedPackage } from '#packages/identity';
+import { IndexFetchError } from '#remote/errors';
+import { validateIndex } from '#remote/index-json';
+import { projectBaseFromIndexUrl, resolveIndexUrl } from '#src/constants';
 
-import type { IndexJson, PackageIndexEntry } from '@remote/index-json';
+import type { IndexJson, PackageIndexEntry } from '#remote/index-json';
 
 export type Fetcher = (url: string) => Promise<Response>;
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Notice } from '@stops/Notice';
-import { Silence } from '@stops/Silence';
+import { Notice } from '#stops/Notice';
+import { Silence } from '#stops/Silence';
 
 import type { ReplyResponse } from '@seedcord/types';
 

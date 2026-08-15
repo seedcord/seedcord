@@ -1,7 +1,7 @@
-import { buildPackageFromModel } from '@builders/package-builder';
-import { ProjectFetchError } from '@remote/errors';
+import { buildPackageFromModel } from '#builders/package-builder';
+import { ProjectFetchError } from '#remote/errors';
 
-import type { DocManifestPackage, DocNode, DocPackageModel } from '@src/types';
+import type { DocManifestPackage, DocNode, DocPackageModel } from '#src/types';
 
 /**
  * The published, pre-adapted form of one package version: the adapted `DocNode` tree plus minimal

@@ -1,20 +1,20 @@
 import { Box } from 'ink';
 import React from 'react';
 
-import { LogHeader } from '@ui/components/primitives/LogHeader';
-import { NotificationStack } from '@ui/components/primitives/NotificationStack';
-import { Rule } from '@ui/components/primitives/Rule';
-import { ScrollableLogView } from '@ui/components/primitives/ScrollableLogView';
-import { Sidebar } from '@ui/components/primitives/Sidebar';
-import { StatusLine } from '@ui/components/primitives/StatusLine';
+import { LogHeader } from '#ui/components/primitives/LogHeader';
+import { NotificationStack } from '#ui/components/primitives/NotificationStack';
+import { Rule } from '#ui/components/primitives/Rule';
+import { ScrollableLogView } from '#ui/components/primitives/ScrollableLogView';
+import { Sidebar } from '#ui/components/primitives/Sidebar';
+import { StatusLine } from '#ui/components/primitives/StatusLine';
 
+import type { FilterCursor } from '#ui/filterCursor';
+import type { ScrollApi } from '#ui/hooks/useScroll';
+import type { LogRow } from '#ui/logRows';
+import type { Notice } from '#ui/notices';
+import type { DevState } from '#ui/stores/DevStore';
+import type { Tier } from '#ui/tier';
 import type { LogLevel } from '@seedcord/logger';
-import type { FilterCursor } from '@ui/filterCursor';
-import type { ScrollApi } from '@ui/hooks/useScroll';
-import type { LogRow } from '@ui/logRows';
-import type { Notice } from '@ui/notices';
-import type { DevState } from '@ui/stores/DevStore';
-import type { Tier } from '@ui/tier';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 

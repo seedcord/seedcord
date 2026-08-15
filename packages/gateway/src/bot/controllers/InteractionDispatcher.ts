@@ -27,24 +27,24 @@ import chalk from 'chalk';
 import { Events } from 'discord.js';
 import { Envapter } from 'envapt';
 
-import { MiddlewareType } from '@bDecorators/Middlewares';
-import { CONFIRM_DEF } from '@bot/confirm/reserved';
-import { UnhandledAutocomplete, UnhandledRepliable } from '@bot/defaults';
-import { interactionGateContext } from '@bot/gates/runGates';
-import { handleInteractionFault } from '@bot/handleInteractionFault';
-import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
-import { AutocompleteHandler, InteractionMiddleware } from '@handlers/interaction';
-import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
-import { RepliableHandler } from '@handlers/RepliableHandler';
+import { MiddlewareType } from '#bDecorators/Middlewares';
+import { CONFIRM_DEF } from '#bot/confirm/reserved';
+import { UnhandledAutocomplete, UnhandledRepliable } from '#bot/defaults';
+import { interactionGateContext } from '#bot/gates/runGates';
+import { handleInteractionFault } from '#bot/handleInteractionFault';
+import { slashRouteOf } from '#bUtilities/miscellaneous/slashRouteOf';
+import { AutocompleteHandler, InteractionMiddleware } from '#handlers/interaction';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
+import { RepliableHandler } from '#handlers/RepliableHandler';
 
-import type { MiddlewareMetadata } from '@bDecorators/Middlewares';
-import type { ReplySender } from '@bot/ReplySender';
-import type { HandlerConstructor, InteractionMiddlewareConstructor } from '@handlers/constructors';
-import type { Core } from '@interfaces/Core';
+import type { MiddlewareMetadata } from '#bDecorators/Middlewares';
+import type { ReplySender } from '#bot/ReplySender';
+import type { HandlerConstructor, InteractionMiddlewareConstructor } from '#handlers/constructors';
+import type { Core } from '#interfaces/Core';
+import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { DispatchOutcome, Initializeable } from '@seedcord/core';
 import type { ContextMenuLeaves } from '@seedcord/core/internal';
 import type { CustomIdMatcher, HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 import type {
     AutocompleteInteraction,
     ButtonInteraction,

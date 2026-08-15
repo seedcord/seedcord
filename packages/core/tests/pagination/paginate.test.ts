@@ -1,7 +1,7 @@
 import { SeedcordRangeError } from '@seedcord/errors/internal';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { paginate } from '@pagination/paginate';
+import { paginate } from '#pagination/paginate';
 
 const items = Array.from({ length: 25 }, (_, i) => i);
 

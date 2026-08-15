@@ -4,8 +4,8 @@ import { createServer, type Server } from 'node:http';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createSeedcord } from '@src/createSeedcord';
-import { toWebRequest, writeWebResponse } from '@src/node/webBridge';
+import { createSeedcord } from '#src/createSeedcord';
+import { toWebRequest, writeWebResponse } from '#src/node/webBridge';
 
 import { createSigner, type Signer } from '../helpers/ed25519';
 import { emptyManifest, nullPathConfig, VALID_TOKEN } from '../helpers/fixtures';

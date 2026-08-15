@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { publicKeyStep } from '@interview/steps/publicKey';
-import { tokenStep } from '@interview/steps/token';
+import { publicKeyStep } from '#interview/steps/publicKey';
+import { tokenStep } from '#interview/steps/token';
 
 const KEY = 'a'.repeat(64);
 const TOKEN = `${'a'.repeat(26)}.${'b'.repeat(6)}.${'c'.repeat(38)}`;

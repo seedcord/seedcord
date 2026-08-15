@@ -1,9 +1,9 @@
-import { formatCommentRich } from '@lib/docs/comments/formatter';
-import { formatTypeParameter, inlineTypeText } from '@lib/docs/formatting';
+import { formatCommentRich } from '#lib/docs/comments/formatter';
+import { formatTypeParameter, inlineTypeText } from '#lib/docs/formatting';
 
 import { isInlineType } from './buildFunctionParameters';
 
-import type { FunctionTypeParameterModel, FormatContext } from '@lib/docs/types';
+import type { FunctionTypeParameterModel, FormatContext } from '#lib/docs/types';
 import type { RenderedSignature, DocSignature, TypeParameter } from '@seedcord/docs-engine';
 
 export async function buildFunctionTypeParams(

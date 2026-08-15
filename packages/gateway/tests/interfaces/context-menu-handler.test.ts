@@ -2,9 +2,9 @@ import { ContextMenuRoute } from '@seedcord/core';
 import { ApplicationCommandType } from 'discord.js';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { ContextMenuHandler } from '@handlers/interaction/ContextMenuHandler';
+import { ContextMenuHandler } from '#handlers/interaction/ContextMenuHandler';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type {
     GuildMember,
     Message,

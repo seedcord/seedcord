@@ -1,7 +1,7 @@
 import { render } from 'ink';
 import React from 'react';
 
-import { DevStore } from '@ui/stores/DevStore';
+import { DevStore } from '#ui/stores/DevStore';
 
 import { PreviewHarness } from './PreviewHarness';
 import { SCENARIOS } from './scenarios';

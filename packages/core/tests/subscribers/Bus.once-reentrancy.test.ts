@@ -2,13 +2,13 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, it, expect } from 'vitest';
 
-import { Bus } from '@subscribers/Bus';
-import { Subscribe } from '@subscribers/decorators/Subscribe';
-import { PublishDefault } from '@subscribers/publishDefault';
-import { Subscriber } from '@subscribers/Subscriber';
+import { Bus } from '#subscribers/Bus';
+import { Subscribe } from '#subscribers/decorators/Subscribe';
+import { PublishDefault } from '#subscribers/publishDefault';
+import { Subscriber } from '#subscribers/Subscriber';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { AllSubscriptions } from '@subscribers/types/Subscriptions';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { AllSubscriptions } from '#subscribers/types/Subscriptions';
 
 describe("Bus 'once' re-entrancy", () => {
     it('runs a once subscriber a single time even if it re-publishes the same event', async () => {

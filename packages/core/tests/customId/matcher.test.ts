@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CustomId } from '@customId/CustomId';
+import { CustomId } from '#customId/CustomId';
 
 import type { Config, CustomIdMatcher } from '@seedcord/types';
 

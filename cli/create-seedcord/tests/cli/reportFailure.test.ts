@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it } from 'vitest';
 
-import { reportFailure } from '@cli/reportFailure';
+import { reportFailure } from '#cli/reportFailure';
 
 const THROWN = [
     new SeedcordError(SeedcordErrorCode.CreateCancelled),

@@ -4,14 +4,14 @@ import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { Seedcord } from '@src/node/Seedcord';
-import { Plugin } from '@src/plugin';
+import { Seedcord } from '#src/node/Seedcord';
+import { Plugin } from '#src/plugin';
 
 import { createSigner } from '../helpers/ed25519';
 import { VALID_TOKEN } from '../helpers/fixtures';
 
+import type { HttpServerConfig } from '#src/interfaces/Config';
 import type { LogRecord } from '@seedcord/logger';
-import type { HttpServerConfig } from '@src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 

@@ -4,8 +4,8 @@ import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-
 
 import { slashRouteOf } from './slashRouteOf';
 
-import type { ValidInteractionTypes } from '@handlers/interactionTypes';
-import type { Core } from '@interfaces/Core';
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
 import type { FaultSource, SubscriptionData } from '@seedcord/core';
 import type { RenderContext } from '@seedcord/types';
 

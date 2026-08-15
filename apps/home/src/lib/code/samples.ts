@@ -102,7 +102,7 @@ export const codecHandler = `import {
     SelectMenuKind,
     SelectMenuRoute
 } from '@seedcord/gateway';
-import { Roles } from '@components/role-picker';
+import { Roles } from '#components/role-picker';
 
 @SelectMenuRoute(SelectMenuKind.Role, Roles)
 export class RolePickerHandler extends SelectMenuHandler<

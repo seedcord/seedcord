@@ -2,16 +2,16 @@ import { LEVEL_COLOR } from '@seedcord/logger';
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { channelColor } from '@ui/channelColor';
-import { Rule } from '@ui/components/primitives/Rule';
-import { formatClock } from '@ui/format';
-import { messageColumn } from '@ui/logRows';
-import { ui } from '@ui/palette';
-import { LogStore } from '@ui/stores/LogStore';
+import { channelColor } from '#ui/channelColor';
+import { Rule } from '#ui/components/primitives/Rule';
+import { formatClock } from '#ui/format';
+import { messageColumn } from '#ui/logRows';
+import { ui } from '#ui/palette';
+import { LogStore } from '#ui/stores/LogStore';
 
+import type { LogRow } from '#ui/logRows';
+import type { LogEntry } from '#ui/stores/LogStore';
 import type { LogLevel } from '@seedcord/logger';
-import type { LogRow } from '@ui/logRows';
-import type { LogEntry } from '@ui/stores/LogStore';
 import type { ReactElement } from 'react';
 
 const MIN_LOG_LINES = 5; // fits an error head plus a few stack frames

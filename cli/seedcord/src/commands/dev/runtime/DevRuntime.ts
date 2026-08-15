@@ -1,5 +1,5 @@
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { DevEventHandler } from './events';
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 
 export interface DevRuntimeContext {
     readonly config: ResolvedSeedcordDevConfig;

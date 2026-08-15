@@ -2,11 +2,11 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SlashCommandBuilder, ContextMenuCommandBuilder, ApplicationCommandType } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { AugmentationBuilder } from '@commands/codegen/AugmentationBuilder';
+import { AugmentationBuilder } from '#commands/codegen/AugmentationBuilder';
 
 import { silentLogger } from '../silentLogger';
 
-import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
+import type { SlashTables } from '#commands/codegen/AugmentationBuilder';
 import type { ILogger } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord.js';
 

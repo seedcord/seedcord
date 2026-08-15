@@ -1,7 +1,7 @@
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { WebhookSender } from '@subscribers/bases/WebhookSender';
+import { WebhookSender } from '#subscribers/bases/WebhookSender';
 
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 

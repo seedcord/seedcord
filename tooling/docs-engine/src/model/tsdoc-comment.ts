@@ -1,4 +1,11 @@
 import type {
+    CommentDisplayPart,
+    DocReference,
+    DocComment as EngineComment,
+    DocCommentBlockTag,
+    DocCommentExample
+} from '#src/types';
+import type {
     DocBlock,
     DocCodeSpan,
     DocComment,
@@ -10,13 +17,6 @@ import type {
     DocParamBlock,
     DocPlainText
 } from '@microsoft/tsdoc';
-import type {
-    CommentDisplayPart,
-    DocReference,
-    DocComment as EngineComment,
-    DocCommentBlockTag,
-    DocCommentExample
-} from '@src/types';
 
 // undefined renders the link as plain text. the adapter wires this to ApiModel.resolveDeclarationReference.
 export type LinkResolver = (linkTagCodeDestination: unknown, fallbackText: string) => DocReference | undefined;

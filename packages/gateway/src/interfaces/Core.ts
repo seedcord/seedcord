@@ -1,5 +1,5 @@
-import type { Bot } from '@bot/Bot';
-import type { GatewayConfig } from '@interfaces/Config';
+import type { Bot } from '#bot/Bot';
+import type { GatewayConfig } from '#interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
 import type { CoordinatedShutdown, CoordinatedStartup } from '@seedcord/core/node/internal';
 

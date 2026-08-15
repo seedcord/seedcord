@@ -1,7 +1,7 @@
 import { MessageFlags } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { deferFlags, sendFlags } from '@reply/flags';
+import { deferFlags, sendFlags } from '#reply/flags';
 
 describe('sendFlags', () => {
     it('always sets IsComponentsV2 and defaults to ephemeral', () => {

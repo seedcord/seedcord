@@ -1,6 +1,6 @@
-import { Slugger, slugForNode } from '@src/Slugger';
+import { Slugger, slugForNode } from '#src/Slugger';
 
-import type { DocNode, DocPackageModel, DocReference } from '@src/types';
+import type { DocNode, DocPackageModel, DocReference } from '#src/types';
 
 export function orderedPackageCandidates(
     currentPackage: string,

@@ -1,10 +1,10 @@
 import { cn } from '@seedcord/ui';
 
-import { CodeCard } from '@components/code/CodeCard';
-import { Section } from '@components/home/Section';
-import { PosterButton } from '@components/ui/PosterButton';
-import { startTerminal } from '@lib/code/samples';
-import { GUIDE_URL, REPO_URL } from '@lib/site';
+import { CodeCard } from '#components/code/CodeCard';
+import { Section } from '#components/home/Section';
+import { PosterButton } from '#components/ui/PosterButton';
+import { startTerminal } from '#lib/code/samples';
+import { GUIDE_URL, REPO_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 

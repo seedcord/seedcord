@@ -3,11 +3,11 @@ import { render } from 'ink-testing-library';
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { useUptime } from '@ui/hooks/useUptime';
+import { useUptime } from '#ui/hooks/useUptime';
 
 import { settled } from '../settled';
 
-import type { DevState } from '@ui/stores/DevStore';
+import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 // the hook reads the phase alone

@@ -1,5 +1,5 @@
+import type { RepliableHandler } from '#handlers/RepliableHandler';
 import type { InteractionGateContext } from './Gate';
-import type { RepliableHandler } from '@handlers/RepliableHandler';
 import type { Gate, GateContextBase, GuildPermissionsContext, RequiredOf } from '@seedcord/core';
 import type { GateFitsWith } from '@seedcord/core/internal';
 import type {

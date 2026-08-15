@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { HealthCheck } from '@node/HealthCheck';
+import { HealthCheck } from '#node/HealthCheck';
 
-import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
 
 // stop() settles only in the close callback. A second settle source (a 'close'-event listener)
 // would race the callback, this pins that both concurrent stops settle through the one path.

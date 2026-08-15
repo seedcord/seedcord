@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from '@/app/(docs)/search/route';
 
-import { MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
+import { MIN_SEARCH_QUERY_LENGTH } from '#components/search/command-palette/constants';
 
 import type { DocNode, DocSearchEntry } from '@seedcord/docs-engine';
 import type { NextRequest } from 'next/server';
@@ -41,7 +41,7 @@ const engineStub = {
     getNodeBySlug: vi.fn<(packageName: string, slug: string) => DocNode | null>()
 };
 
-vi.mock('@lib/docs/engine', () => ({
+vi.mock('#lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve(engineStub)
 }));
 

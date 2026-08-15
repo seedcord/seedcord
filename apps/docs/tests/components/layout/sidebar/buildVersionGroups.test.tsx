@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildVersionGroups } from '@components/layout/sidebar/utils/buildVersionGroups';
+import { buildVersionGroups } from '#components/layout/sidebar/utils/buildVersionGroups';
 
-import type { PackageVersionCatalog } from '@lib/docs/types';
+import type { PackageVersionCatalog } from '#lib/docs/types';
 
 function makeVersion(id: string, overrides: Partial<PackageVersionCatalog> = {}): PackageVersionCatalog {
     return {

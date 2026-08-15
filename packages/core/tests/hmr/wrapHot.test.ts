@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { wrapHot } from '@hmr/wrapHot';
+import { wrapHot } from '#hmr/wrapHot';
 
 import type { SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 

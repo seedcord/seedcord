@@ -5,16 +5,16 @@ import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, expectTypeOf, afterEach, vi } from 'vitest';
 
-import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '@node/Pluggable';
-import { ShutdownPhase, StartupPhase } from '@src/lifecycle/phases';
-import { Plugin } from '@src/plugin/Plugin';
-import { Bus } from '@subscribers/Bus';
+import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
+import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import { Pluggable } from '#node/Pluggable';
+import { ShutdownPhase, StartupPhase } from '#src/lifecycle/phases';
+import { Plugin } from '#src/plugin/Plugin';
+import { Bus } from '#subscribers/Bus';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { PluginArgs } from '#src/plugin/Plugin';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { PluginArgs } from '@src/plugin/Plugin';
 
 function delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));

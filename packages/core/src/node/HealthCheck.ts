@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 
 import { Logger, paint } from '@seedcord/logger';
 
-import { ShutdownPhase } from '@src/lifecycle/phases';
+import { ShutdownPhase } from '#src/lifecycle/phases';
 
 import { HealthResponder } from './HealthResponder';
 

@@ -1,13 +1,13 @@
 import { Logger, paint } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
-import { Notice } from '@stops/Notice';
-import { Silence } from '@stops/Silence';
-import { PublishDefault } from '@subscribers/publishDefault';
+import { Notice } from '#stops/Notice';
+import { Silence } from '#stops/Silence';
+import { PublishDefault } from '#subscribers/publishDefault';
 
-import type { InteractionRoutes } from '@src/metadataKeys';
-import type { Bus } from '@subscribers/Bus';
-import type { DispatchOutcome } from '@subscribers/types/Subscriptions';
+import type { InteractionRoutes } from '#src/metadataKeys';
+import type { Bus } from '#subscribers/Bus';
+import type { DispatchOutcome } from '#subscribers/types/Subscriptions';
 
 let dispatchLogger: Logger | undefined;
 function logger(): Logger {

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { InteractionDispatcher } from '@src/node/InteractionDispatcher';
+import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
 
 const DUPLICATES_DIR = path.resolve(import.meta.dirname, './duplicates');
 

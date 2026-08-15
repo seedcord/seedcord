@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { renderTable } from '@src/strings/renderTable';
+import { renderTable } from '#src/strings/renderTable';
 
 const wideRanges: readonly (readonly [number, number])[] = [
     [0x11_00, 0x11_5f],

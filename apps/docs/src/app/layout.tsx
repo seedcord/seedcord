@@ -5,13 +5,13 @@ import { preconnect } from 'react-dom';
 
 import './globals.css';
 
-import { Navbar } from '@components/header/Navbar';
-import { HotkeyProvider } from '@components/providers/HotkeyProvider';
-import { MotionProvider } from '@components/providers/MotionProvider';
-import { ThemeProvider } from '@components/providers/ThemeProvider';
-import { CommandPalette } from '@components/search/command-palette';
-import { FOREGROUND_HEX } from '@lib/entityColors';
-import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@lib/site';
+import { Navbar } from '#components/header/Navbar';
+import { HotkeyProvider } from '#components/providers/HotkeyProvider';
+import { MotionProvider } from '#components/providers/MotionProvider';
+import { ThemeProvider } from '#components/providers/ThemeProvider';
+import { CommandPalette } from '#components/search/command-palette';
+import { FOREGROUND_HEX } from '#lib/entityColors';
+import { OG_IMAGE_H, OG_IMAGE_W, OG_SITE_NAME, REPO_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/site';
 
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';

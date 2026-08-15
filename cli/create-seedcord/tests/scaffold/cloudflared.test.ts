@@ -5,7 +5,7 @@ import process from 'node:process';
 
 import { describe, expect, it } from 'vitest';
 
-import { installHint, missingNotice, probeCloudflared } from '@scaffold/cloudflared';
+import { installHint, missingNotice, probeCloudflared } from '#scaffold/cloudflared';
 
 describe('installHint', () => {
     it('gives the package manager each platform ships with', () => {

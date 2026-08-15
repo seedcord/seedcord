@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { SeedcordErrorCode, isSeedcordError } from '@src/index';
-import { SeedcordError, SeedcordTypeError, SeedcordRangeError } from '@src/internal.index';
+import { SeedcordErrorCode, isSeedcordError } from '#src/index';
+import { SeedcordError, SeedcordTypeError, SeedcordRangeError } from '#src/internal.index';
 
 describe('Seedcord error constructors', () => {
     it('preserves metadata for parameterless codes', () => {

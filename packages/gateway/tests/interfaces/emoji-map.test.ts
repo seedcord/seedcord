@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { Emojis } from '@bot/injectors/EmojiInjector';
+import { Emojis } from '#bot/injectors/EmojiInjector';
 
 import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 

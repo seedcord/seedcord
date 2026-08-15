@@ -3,7 +3,7 @@ import path from 'node:path';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { traverseDirectory } from '@src/node/directory';
+import { traverseDirectory } from '#src/node/directory';
 
 const FIXTURES = path.join(import.meta.dirname, 'fixtures');
 

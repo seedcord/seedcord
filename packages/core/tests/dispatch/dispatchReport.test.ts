@@ -4,13 +4,13 @@ import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
-import { reportDispatch } from '@src/dispatch/dispatchReport';
-import { Bus } from '@subscribers/Bus';
+import { reportDispatch } from '#src/dispatch/dispatchReport';
+import { Bus } from '#subscribers/Bus';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { LogRecord } from '@seedcord/logger';
 import type { ReplyResponse } from '@seedcord/types';
-import type { SubscriptionData } from '@subscribers/types/Subscriptions';
 
 // 2022-01-01, so the gap to now is always positive
 const SNOWFLAKE = '926845371392000000';

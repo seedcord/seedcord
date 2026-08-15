@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CodeRepresentation, CommentParagraph, FormatContext, FormattedComment } from '@lib/docs/types';
+import type { CodeRepresentation, CommentParagraph, FormatContext, FormattedComment } from '#lib/docs/types';
 import type { DocNode, DocSignature } from '@seedcord/docs-engine';
 
 // justified: formatting.ts pulls in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve without vite-tsconfig-paths.
@@ -21,7 +21,7 @@ vi.mock('../../../../src/lib/docs/comments/renderers/renderInlineValue', () => (
     renderInlineValue: vi.fn((markdown: string) => Promise.resolve([{ plain: markdown, html: markdown }]))
 }));
 
-const { buildSignatureDetails } = await import('@lib/docs/builders/buildSignatureDetails');
+const { buildSignatureDetails } = await import('#lib/docs/builders/buildSignatureDetails');
 
 const para = (plain: string): CommentParagraph => ({ plain, html: plain });
 const comment = (paragraphs: CommentParagraph[]): FormattedComment => ({ paragraphs, examples: [] });

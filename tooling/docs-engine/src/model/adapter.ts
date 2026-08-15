@@ -24,21 +24,21 @@ import {
     paramFlags,
     synthGroups,
     type AeShapes
-} from '@model/adapter-helpers';
-import { canonicalKey } from '@model/canonical-ref';
-import { excerptToInlineType } from '@model/excerpt-renderer';
-import { buildFlags, type DerivedFlagBits } from '@model/flags';
-import { apiKindToDocKind, DocKind, frozenKindLabel } from '@model/kinds';
-import { createLinkResolver } from '@model/link-resolver';
+} from '#model/adapter-helpers';
+import { canonicalKey } from '#model/canonical-ref';
+import { excerptToInlineType } from '#model/excerpt-renderer';
+import { buildFlags, type DerivedFlagBits } from '#model/flags';
+import { apiKindToDocKind, DocKind, frozenKindLabel } from '#model/kinds';
+import { createLinkResolver } from '#model/link-resolver';
 import {
     buildComment,
     buildParamComment,
     buildReturnsComment,
     buildTypeParamComment,
     type LinkResolver
-} from '@model/tsdoc-comment';
-import { Slugger, slugForNode } from '@src/Slugger';
-import { formatRenderedDeclarationHeader, formatRenderedSignature } from '@transformers/signature-renderer';
+} from '#model/tsdoc-comment';
+import { Slugger, slugForNode } from '#src/Slugger';
+import { formatRenderedDeclarationHeader, formatRenderedSignature } from '#transformers/signature-renderer';
 
 import type {
     DocCommentBlockTag,
@@ -53,7 +53,7 @@ import type {
     RenderedSignature,
     SigPart,
     SourcePackage
-} from '@src/types';
+} from '#src/types';
 
 const CALLABLE = new Set<number>([DocKind.Function, DocKind.Method, DocKind.Constructor]);
 

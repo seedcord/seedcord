@@ -2,13 +2,13 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, vi } from 'vitest';
 
-import { Cooldown } from '@gates/catalog/Cooldown';
-import { runGates } from '@gates/runGates';
-import { OnCooldown } from '@notices/index';
-import { Notice } from '@stops/Notice';
+import { Cooldown } from '#gates/catalog/Cooldown';
+import { runGates } from '#gates/runGates';
+import { OnCooldown } from '#notices/index';
+import { Notice } from '#stops/Notice';
 
-import type { GateContextBase } from '@gates/Gate';
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { GateContextBase } from '#gates/Gate';
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { ReplyResponse } from '@seedcord/types';
 
 // a full-replacement refusal proving the notice factory receives the runtime retry-after

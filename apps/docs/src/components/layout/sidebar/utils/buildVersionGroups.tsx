@@ -1,6 +1,6 @@
 import { Badge } from '@seedcord/ui';
 
-import type { PackageVersionCatalog } from '@lib/docs/types';
+import type { PackageVersionCatalog } from '#lib/docs/types';
 import type { DropdownGroup, DropdownOption } from '@seedcord/ui';
 
 const BADGES: Record<NonNullable<PackageVersionCatalog['badge']>, DropdownOption['trailing']> = {

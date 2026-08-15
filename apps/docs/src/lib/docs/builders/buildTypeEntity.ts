@@ -1,6 +1,6 @@
 import { buildTypeParameterSummaries } from './buildTypeParameterSummaries';
 
-import type { BaseEntityModel, FormatContext, TypeEntityModel } from '@lib/docs/types';
+import type { BaseEntityModel, FormatContext, TypeEntityModel } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildTypeEntity(

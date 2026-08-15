@@ -4,14 +4,14 @@
     "compilerOptions": {
         "rootDir": ".",
         "paths": {
-            "@src/*": ["./src/*"],
-            "@model/*": ["./src/model/*"],
-            "@builders/*": ["./src/builders/*"],
-            "@routing/*": ["./src/routing/*"],
-            "@services/*": ["./src/services/*"],
-            "@transformers/*": ["./src/transformers/*"],
-            "@packages/*": ["./src/packages/*"],
-            "@remote/*": ["./src/remote/*"]
+            "#src/*": ["./src/*"],
+            "#model/*": ["./src/model/*"],
+            "#builders/*": ["./src/builders/*"],
+            "#routing/*": ["./src/routing/*"],
+            "#services/*": ["./src/services/*"],
+            "#transformers/*": ["./src/transformers/*"],
+            "#packages/*": ["./src/packages/*"],
+            "#remote/*": ["./src/remote/*"]
         }
     },
     "include": ["src/**/*.ts", "tests/**/*.ts", "tsdown.config.ts", "vitest.config.ts"],

@@ -1,11 +1,11 @@
 import { RepliableHandler as CoreRepliableHandler } from '@seedcord/core';
 
-import { ReplySender } from '@bot/ReplySender';
+import { ReplySender } from '#bot/ReplySender';
 
+import type { SentMessage } from '#bot/ReplySender';
+import type { Core } from '#interfaces/Core';
+import type { GatewayFile } from '#interfaces/ReplyResponse';
 import type { Repliables } from './interactionTypes';
-import type { SentMessage } from '@bot/ReplySender';
-import type { Core } from '@interfaces/Core';
-import type { GatewayFile } from '@interfaces/ReplyResponse';
 
 /**
  * Shared base the repliable interaction handlers extend.

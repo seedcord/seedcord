@@ -3,7 +3,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { ComponentHandler } from './ComponentHandler';
 
-import type { SentMessage } from '@reply/ReplySender';
+import type { SentMessage } from '#reply/ReplySender';
 import type { AnyCustomId } from '@seedcord/core/internal';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIModalSubmitInteraction } from 'discord-api-types/v10';

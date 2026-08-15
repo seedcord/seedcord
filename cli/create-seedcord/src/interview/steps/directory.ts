@@ -6,7 +6,7 @@ import { SeedcordError, paint } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '@interview/types';
+import type { Step } from '#interview/types';
 
 const PACKAGE_NAME = /^[a-z\d][a-z\d._-]*$/;
 const FORMAT = 'lowercase, digits, and . _ -';

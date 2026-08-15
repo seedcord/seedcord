@@ -4,7 +4,7 @@ import { cn, useTimedToggle } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import { useEffect, useRef, useState } from 'react';
 
-import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '@lib/site';
+import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '#lib/site';
 
 import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from 'react';
 

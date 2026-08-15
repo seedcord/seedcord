@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { ESLint } from 'eslint';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import createConfig from '@src/index';
+import createConfig from '#src/index';
 
 import type { Linter } from 'eslint';
 

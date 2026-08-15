@@ -7,7 +7,7 @@
         "allowJs": true,
         "checkJs": false,
         "paths": {
-            "@src/*": ["./src/*"]
+            "#src/*": ["./src/*"]
         }
     },
     "include": ["./src", "eslint.config.mjs", "./tsdown.config.ts", "./tests/**/*.ts", "vitest.config.ts"],

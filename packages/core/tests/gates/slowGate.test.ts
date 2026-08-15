@@ -2,7 +2,7 @@ import { Logger } from '@seedcord/logger';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
-import { slowGateMonitor } from '@gates/slowGate';
+import { slowGateMonitor } from '#gates/slowGate';
 
 afterEach(() => {
     vi.restoreAllMocks();

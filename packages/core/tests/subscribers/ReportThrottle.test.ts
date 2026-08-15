@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ReportThrottle } from '@subscribers/ReportThrottle';
+import { ReportThrottle } from '#subscribers/ReportThrottle';
 
 describe('ReportThrottle', () => {
     it('sends a fresh key with nothing suppressed behind it', () => {

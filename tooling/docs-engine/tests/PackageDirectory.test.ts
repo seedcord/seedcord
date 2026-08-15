@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine, getMockPackage, getNodeBySlug } from './utils/test-helpers';
 
-import type { PackageDirectory } from '@src/PackageDirectory';
+import type { PackageDirectory } from '#src/PackageDirectory';
 
 let directory: PackageDirectory;
 

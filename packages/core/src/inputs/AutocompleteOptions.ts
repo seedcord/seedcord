@@ -1,4 +1,4 @@
-import type { OptionKind, SlashOptionRegistry } from '@registries/SlashOptionRegistry';
+import type { OptionKind, SlashOptionRegistry } from '#registries/SlashOptionRegistry';
 import type { IsNever } from 'type-fest';
 
 type Row<Route extends keyof SlashOptionRegistry> = SlashOptionRegistry[Route];

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { botColorStep, COLOR_NAMES } from '@interview/steps/botColor';
-import { capabilitiesStep } from '@interview/steps/capabilities';
+import { botColorStep, COLOR_NAMES } from '#interview/steps/botColor';
+import { capabilitiesStep } from '#interview/steps/capabilities';
 
 describe('capabilitiesStep', () => {
     it('splits a comma list into ids', () => {

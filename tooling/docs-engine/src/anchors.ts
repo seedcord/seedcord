@@ -1,6 +1,6 @@
 // Imported by client components (FunctionBody); must not import the Node-bound `@seedcord/docs-engine`
 // barrel, only the node-free `./Slugger` module, or `next build` breaks on a `node:module` import.
-import { slugifySegment } from '@src/Slugger';
+import { slugifySegment } from '#src/Slugger';
 
 // Constructors already end in `/constructor`, so the trailing slug segment is the fragment with
 // no kind check needed.

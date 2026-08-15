@@ -1,8 +1,8 @@
 import { cn } from '@seedcord/ui';
 
-import { PackageOverviewTabs } from '@components/docs/PackageOverviewTabs';
-import { ReadmeBlock } from '@components/docs/ReadmeBlock';
-import { renderReadme } from '@lib/docs/renderReadme';
+import { PackageOverviewTabs } from '#components/docs/PackageOverviewTabs';
+import { ReadmeBlock } from '#components/docs/ReadmeBlock';
+import { renderReadme } from '#lib/docs/renderReadme';
 
 import type { ReactElement, ReactNode } from 'react';
 

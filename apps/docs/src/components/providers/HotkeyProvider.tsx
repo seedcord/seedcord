@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 
-import { registerCommandPaletteHotkey } from '@lib/hotkeys';
-import { useUIStore } from '@store/ui';
+import { registerCommandPaletteHotkey } from '#lib/hotkeys';
+import { useUIStore } from '#store/ui';
 
 import type { ReactNode } from 'react';
 

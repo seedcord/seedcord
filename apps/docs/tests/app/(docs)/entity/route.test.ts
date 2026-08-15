@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GET } from '@/app/(docs)/entity/route';
 
-import type { EntityModel } from '@lib/docs/types';
+import type { EntityModel } from '#lib/docs/types';
 import type { NextRequest } from 'next/server';
 
 const engineStub = {
@@ -13,10 +13,10 @@ const engineStub = {
 
 const loadEntityModel = vi.fn<(...args: unknown[]) => Promise<EntityModel | null>>();
 
-vi.mock('@lib/docs/engine', () => ({
+vi.mock('#lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve(engineStub)
 }));
-vi.mock('@lib/docs/loadEntityModel', () => ({
+vi.mock('#lib/docs/loadEntityModel', () => ({
     loadEntityModel: (...args: unknown[]) => loadEntityModel(...args)
 }));
 

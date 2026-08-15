@@ -1,8 +1,8 @@
 import { useAnimation } from 'ink';
 
-import { isSessionLive } from '@ui/stores/devPhase';
+import { isSessionLive } from '#ui/stores/devPhase';
 
-import type { DevState } from '@ui/stores/DevStore';
+import type { DevState } from '#ui/stores/DevStore';
 
 const TICK_MS = 1000;
 

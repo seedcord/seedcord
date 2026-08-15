@@ -1,6 +1,6 @@
-import { NeedsAny, NotAllowed } from '@notices/index';
-import { Fault } from '@stops/Fault';
-import { Notice } from '@stops/Notice';
+import { NeedsAny, NotAllowed } from '#notices/index';
+import { Fault } from '#stops/Fault';
+import { Notice } from '#stops/Notice';
 
 import { markCommits, rollbackCommits, runCheck } from './effects';
 import { defineGate } from './Gate';

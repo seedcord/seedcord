@@ -2,11 +2,11 @@ import { SeedcordRangeError, SeedcordTypeError } from '@seedcord/errors/internal
 import { ButtonStyle, ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { Controls } from '@pagination/controls';
-import { PAGE_MAX, pageCursor } from '@pagination/cursor';
+import { Controls } from '#pagination/controls';
+import { PAGE_MAX, pageCursor } from '#pagination/cursor';
 
+import type { PageView } from '#pagination/PageView';
 import type { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
-import type { PageView } from '@pagination/PageView';
 import type { APIButtonComponentWithCustomId } from 'discord-api-types/v10';
 
 const cursor = pageCursor('bans');

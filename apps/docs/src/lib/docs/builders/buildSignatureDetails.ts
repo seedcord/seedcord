@@ -1,9 +1,9 @@
 import { memberFragment, withOverload } from '@seedcord/docs-engine';
 
-import { cloneCommentParagraphs } from '@lib/docs/comments/creators';
-import { formatCommentRich } from '@lib/docs/comments/formatter';
-import { renderInlineValue } from '@lib/docs/comments/renderers/renderInlineValue';
-import { formatSignature, highlightCode } from '@lib/docs/formatting';
+import { cloneCommentParagraphs } from '#lib/docs/comments/creators';
+import { formatCommentRich } from '#lib/docs/comments/formatter';
+import { renderInlineValue } from '#lib/docs/comments/renderers/renderInlineValue';
+import { formatSignature, highlightCode } from '#lib/docs/formatting';
 
 import { stripDuplicateDescription, cloneExamples, buildDeprecationStatusFromNodeLike } from './utils';
 
@@ -14,7 +14,7 @@ import type {
     FormatContext,
     FormattedComment,
     EntityMemberSummary
-} from '@lib/docs/types';
+} from '#lib/docs/types';
 import type { DocSignature, DocNode, DocCommentBlockTag, DocComment } from '@seedcord/docs-engine';
 
 interface SignatureDetailsOptions {

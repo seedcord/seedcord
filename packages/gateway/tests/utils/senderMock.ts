@@ -1,11 +1,11 @@
 import { vi } from 'vitest';
 
-import { ReplySender } from '@bot/ReplySender';
+import { ReplySender } from '#bot/ReplySender';
 
 import { stubBus } from './stubBus';
 
-import type { SentMessage } from '@bot/ReplySender';
-import type { Repliables } from '@src/handlers/interactionTypes';
+import type { SentMessage } from '#bot/ReplySender';
+import type { Repliables } from '#src/handlers/interactionTypes';
 
 const ROUTE = 'button:page';
 

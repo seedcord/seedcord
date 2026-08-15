@@ -1,6 +1,6 @@
 import { paint } from '@seedcord/logger';
 
-import { ShutdownPhase } from '@src/lifecycle/phases';
+import { ShutdownPhase } from '#src/lifecycle/phases';
 
 import { CoordinatedLifecycle } from './CoordinatedLifecycle';
 

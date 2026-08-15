@@ -2,10 +2,10 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { Routes } from 'discord-api-types/v10';
 import { describe, expect, it, vi } from 'vitest';
 
-import { EmojiInjector, Emojis } from '@src/emojis/EmojiInjector';
+import { EmojiInjector, Emojis } from '#src/emojis/EmojiInjector';
 
-import type { Core } from '@interfaces/Core';
-import type { ResolvedEmoji } from '@src/emojis/EmojiInjector';
+import type { Core } from '#interfaces/Core';
+import type { ResolvedEmoji } from '#src/emojis/EmojiInjector';
 import type { APIEmoji } from 'discord-api-types/v10';
 import type { Mock } from 'vitest';
 

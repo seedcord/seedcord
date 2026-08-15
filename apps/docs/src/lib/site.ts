@@ -1,4 +1,4 @@
-import { plainSummary } from '@lib/docs/plainSummary';
+import { plainSummary } from '#lib/docs/plainSummary';
 
 import type { Metadata } from 'next';
 

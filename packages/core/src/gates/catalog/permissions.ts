@@ -1,15 +1,15 @@
-import { defineGate } from '@gates/Gate';
-import { MissingPermissions, MissingRole, NotInGuild } from '@notices/index';
-import { hasAll, missingNames } from '@src/permissions/bits';
+import { defineGate } from '#gates/Gate';
+import { MissingPermissions, MissingRole, NotInGuild } from '#notices/index';
+import { hasAll, missingNames } from '#src/permissions/bits';
 
 import { pickNotice } from './options';
 
+import type { Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
+import type { PermissionScope } from '#src/permissions/bits';
 import type { GateNoticeOptions } from './options';
-import type { Gate, GateContextBase, GuildPermissionsContext } from '@gates/Gate';
-import type { PermissionScope } from '@src/permissions/bits';
 
-export type { PermissionScope } from '@src/permissions/bits';
-export { PermissionNames } from '@src/permissions/bits';
+export type { PermissionScope } from '#src/permissions/bits';
+export { PermissionNames } from '#src/permissions/bits';
 
 interface PermCheckKind {
     unresolved: string;

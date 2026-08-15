@@ -1,4 +1,4 @@
-import { opensInNewTab } from '@lib/docs/crossPackage';
+import { opensInNewTab } from '#lib/docs/crossPackage';
 
 // marked's default renderer emits `<a href="...">` with href first and no class or target.
 // this must run before sanitize. otherwise DOMPurify strips the target/rel/class it adds.

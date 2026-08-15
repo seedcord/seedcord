@@ -8,17 +8,17 @@ import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/
 import { isTsOrJsFile } from '@seedcord/utils/node';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 
-import { ConfigLoader } from '@core/config/ConfigLoader';
-import { ConfigLocator } from '@core/config/ConfigLocator';
-import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
-import { resolveDefaultExport } from '@utils/resolveDefaultExport';
+import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ConfigLocator } from '#core/config/ConfigLocator';
+import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
+import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { AugmentationBuilder } from './AugmentationBuilder';
 import { renderAugmentation } from './renderAugmentation';
 
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { ModuleLoader } from '#core/modules/ModuleLoader';
 import type { ScannedCommand } from './AugmentationBuilder';
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type { ModuleLoader } from '@core/modules/ModuleLoader';
 import type { EmojiConfig, ILogger, TypedOmit } from '@seedcord/types';
 import type { RESTPostAPIApplicationCommandsJSONBody } from 'discord-api-types/v10';
 

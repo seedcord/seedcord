@@ -1,6 +1,6 @@
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { InteractionGateContext } from './Gate';
-import type { Core } from '@interfaces/Core';
-import type { Repliables } from '@src/handlers/interactionTypes';
 import type { APIUser } from 'discord-api-types/v10';
 
 // autocomplete is skipped before gates run, so the payload here always carries a reply target

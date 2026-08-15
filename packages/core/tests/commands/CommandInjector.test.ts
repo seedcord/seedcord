@@ -3,9 +3,9 @@ import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, it, expect } from 'vitest';
 
-import { CommandInjector, Commands, ContextMenus } from '@src/commands/CommandInjector';
+import { CommandInjector, Commands, ContextMenus } from '#src/commands/CommandInjector';
 
-import type { CommandInfo, ContextMenuInfo } from '@src/commands/CommandInjector';
+import type { CommandInfo, ContextMenuInfo } from '#src/commands/CommandInjector';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 // justified: SlashOptionRegistry is empty in tests, so runtime values read through a plain record

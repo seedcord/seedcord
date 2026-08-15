@@ -1,4 +1,4 @@
-import { SITE_URL } from '@lib/site';
+import { SITE_URL } from '#lib/site';
 
 // not MetadataRoute so it can carry the non-standard Content-Signal directive
 export const dynamic = 'force-static';

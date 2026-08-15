@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { inviteUrl } from '@cli/invite';
+import { inviteUrl } from '#cli/invite';
 
 function tokenFor(applicationId: string): string {
     return `${Buffer.from(applicationId, 'utf8').toString('base64url')}.bbbbbb.${'c'.repeat(38)}`;

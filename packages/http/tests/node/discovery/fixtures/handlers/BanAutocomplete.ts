@@ -1,6 +1,6 @@
 import { AutocompleteRoute } from '@seedcord/core';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
 import '../registry';
 

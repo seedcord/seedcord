@@ -1,8 +1,8 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { Plugin } from '@src/plugin/Plugin';
+import { Plugin } from '#src/plugin/Plugin';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 class Defaults extends Plugin {
     // justified: never invoked, these fixtures exist for type probes only

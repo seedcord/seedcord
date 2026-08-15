@@ -5,8 +5,8 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { Logger } from '@seedcord/logger';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { CONFIRM_DEF } from '@bot/confirm/reserved';
-import { Seedcord } from '@src/Seedcord';
+import { CONFIRM_DEF } from '#bot/confirm/reserved';
+import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
 import { testConfig } from '../utils/test-config';

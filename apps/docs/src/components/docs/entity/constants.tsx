@@ -1,6 +1,6 @@
 import { Hammer, Sigma, SquareDot, Workflow } from 'lucide-react';
 
-import type { MemberPrefix } from '@lib/docs/types';
+import type { MemberPrefix } from '#lib/docs/types';
 import type { LucideIcon } from 'lucide-react';
 
 export const MEMBER_HEADER_ICONS: Record<MemberPrefix, LucideIcon> = {

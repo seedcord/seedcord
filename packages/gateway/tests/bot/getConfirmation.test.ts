@@ -2,19 +2,19 @@ import { ContainerBuilder } from '@discordjs/builders';
 import { PublishDefault } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getConfirmation } from '@bot/confirm';
-import { CONFIRM_DEF } from '@bot/confirm/reserved';
-import { ReplySender } from '@bot/ReplySender';
+import { getConfirmation } from '#bot/confirm';
+import { CONFIRM_DEF } from '#bot/confirm/reserved';
+import { ReplySender } from '#bot/ReplySender';
 
 import { stubBus } from '../utils/stubBus';
 
-import type { DefaultConfirmOptions } from '@bot/confirm';
-import type { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
-import type { ModalHandler } from '@handlers/interaction/components/ModalHandler';
+import type { DefaultConfirmOptions } from '#bot/confirm';
+import type { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import type { ModalHandler } from '#handlers/interaction/components/ModalHandler';
+import type { NonModalInteraction } from '#src/handlers/interactionTypes';
+import type { RepliableHandler } from '#src/handlers/RepliableHandler';
 import type { Bus } from '@seedcord/core';
 import type { ReplyResponse } from '@seedcord/types';
-import type { NonModalInteraction } from '@src/handlers/interactionTypes';
-import type { RepliableHandler } from '@src/handlers/RepliableHandler';
 
 type Prompt = string | ((ids: { confirm: string; cancel: string }) => ReplyResponse);
 // justified: collapses the overloads so one call site can forward either a string or a factory prompt

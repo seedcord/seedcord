@@ -14,12 +14,12 @@ import { GatedMetadataKey } from '@seedcord/core/internal';
 import { PermissionFlagsBits } from 'discord.js';
 import { describe, expect, it } from 'vitest';
 
-import { Gated } from '@bDecorators/Gated';
-import { IgnoreBots, Nsfw } from '@bot/gates';
-import { EventHandler } from '@handlers/event';
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { ModalHandler } from '@handlers/interaction/components';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { Gated } from '#bDecorators/Gated';
+import { IgnoreBots, Nsfw } from '#bot/gates';
+import { EventHandler } from '#handlers/event';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { ModalHandler } from '#handlers/interaction/components';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { Events } from 'discord.js';
 

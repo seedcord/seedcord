@@ -1,6 +1,6 @@
 import { format } from 'prettier';
 
-import type { DocReference, InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '@src/types';
+import type { DocReference, InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '#src/types';
 import type { Options } from 'prettier';
 
 export type ResolveHref = (reference: DocReference) => string | null | undefined;

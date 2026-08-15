@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildPackageFromModel } from '@builders/package-builder';
-import { DocKind } from '@model/kinds';
+import { buildPackageFromModel } from '#builders/package-builder';
+import { DocKind } from '#model/kinds';
 
-import type { DocFlags, DocManifestPackage, DocNode } from '@src/types';
+import type { DocFlags, DocManifestPackage, DocNode } from '#src/types';
 
 const flags: DocFlags = {
     access: null,

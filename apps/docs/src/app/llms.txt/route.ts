@@ -1,5 +1,5 @@
-import { loadDocsCatalog } from '@lib/docs/catalog';
-import { GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_NAME, canonicalUrl } from '@lib/site';
+import { loadDocsCatalog } from '#lib/docs/catalog';
+import { GUIDE_URL, REPO_URL, SITE_DESCRIPTION, SITE_NAME, canonicalUrl } from '#lib/site';
 
 export const dynamic = 'force-static';
 

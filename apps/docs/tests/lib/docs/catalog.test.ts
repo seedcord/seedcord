@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '@lib/docs/types';
+import type { NavigationCategory, PackageCatalogEntry, PackageVersionCatalog } from '#lib/docs/types';
 import type { PackageIndexEntry } from '@seedcord/docs-engine';
 
 const { engineStub } = vi.hoisted(() => ({
@@ -11,7 +11,7 @@ const { engineStub } = vi.hoisted(() => ({
     }
 }));
 
-// stub transitive imports to isolate the test and work around vitest's inability to resolve '@lib/*' alias without vite-tsconfig-paths.
+// stub transitive imports to isolate the test and work around vitest's inability to resolve '#lib/*' alias without vite-tsconfig-paths.
 vi.mock('../../../src/lib/docs/engine', () => ({
     getDocsEngine: () => Promise.resolve(engineStub)
 }));
@@ -20,7 +20,7 @@ vi.mock('@seedcord/docs-engine', async (importOriginal) => ({
     formatVersionLabel: (v: string) => v
 }));
 
-const { findCatalogVersion, loadDocsCatalog, withActiveCategories } = await import('@lib/docs/catalog');
+const { findCatalogVersion, loadDocsCatalog, withActiveCategories } = await import('#lib/docs/catalog');
 
 function makeVersion(
     id: string,

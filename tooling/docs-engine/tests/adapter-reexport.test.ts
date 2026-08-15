@@ -2,12 +2,12 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { ApiAdapter } from '@model/adapter';
-import { createApiModel, loadApiPackage } from '@model/load-model';
+import { ApiAdapter } from '#model/adapter';
+import { createApiModel, loadApiPackage } from '#model/load-model';
 
 import { MOCK_PACKAGE_NAME, TEMP_DIR } from './utils/constants';
 
-import type { DocManifestPackage, DocNode, InlineTagTarget } from '@src/types';
+import type { DocManifestPackage, DocNode, InlineTagTarget } from '#src/types';
 
 type LinkTarget = number | string | InlineTagTarget | undefined;
 

@@ -4,12 +4,12 @@ import { defineGate, Notice } from '@seedcord/core';
 import { GatedMetadataKey } from '@seedcord/core/internal';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
 import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest } from './harness';
 
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 const rest = vi.hoisted(() => {
     interface FakeRestInstance {

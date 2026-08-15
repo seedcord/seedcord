@@ -3,9 +3,9 @@ import 'reflect-metadata';
 import { Envapter, PortableSource } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createCore } from '@src/dispatch/dispatchInteraction';
-import { buildRouteMaps } from '@src/dispatch/resolve';
-import { buildEngine } from '@src/engine';
+import { createCore } from '#src/dispatch/dispatchInteraction';
+import { buildRouteMaps } from '#src/dispatch/resolve';
+import { buildEngine } from '#src/engine';
 
 import { signedRequest, slashPayload } from './harness';
 import { createSigner } from '../../helpers/ed25519';

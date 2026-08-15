@@ -4,7 +4,7 @@ import { SeedcordError } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '@interview/types';
+import type { Step } from '#interview/types';
 
 // an Ed25519 public key is 32 bytes
 const PUBLIC_KEY_CHARS = 64;

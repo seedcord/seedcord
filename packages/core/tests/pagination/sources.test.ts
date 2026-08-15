@@ -1,7 +1,7 @@
 import { SeedcordRangeError } from '@seedcord/errors/internal';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { ArraySource, CursorSource } from '@pagination/sources';
+import { ArraySource, CursorSource } from '#pagination/sources';
 
 // the sources only forward ctx to the loader, so a fake shape is enough
 interface TestCtx {

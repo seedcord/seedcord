@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { awaitReachable } from '@commands/dev/tunnel/probe';
+import { awaitReachable } from '#commands/dev/tunnel/probe';
 
-import type { ProbeDeps } from '@commands/dev/tunnel/probe';
+import type { ProbeDeps } from '#commands/dev/tunnel/probe';
 
 const URL_UNDER_TEST = 'https://bot.example.com';
 const RUNNING = new AbortController().signal;

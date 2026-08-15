@@ -2,7 +2,7 @@ import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/build
 import { ApplicationCommandType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
+import { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
 
 const flat = (name: string): SlashCommandBuilder => new SlashCommandBuilder().setName(name).setDescription('d');
 

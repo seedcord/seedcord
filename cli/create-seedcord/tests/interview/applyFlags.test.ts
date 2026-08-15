@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyFlags } from '@interview/applyFlags';
+import { applyFlags } from '#interview/applyFlags';
 
-import type { AnyStep } from '@interview/types';
+import type { AnyStep } from '#interview/types';
 
 const directory: AnyStep = {
     key: 'directory',

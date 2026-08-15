@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isMacPlatform } from '@lib/platform';
+import { isMacPlatform } from '#lib/platform';
 
 describe('isMacPlatform', () => {
     it('detects mac from navigator.platform', () => {

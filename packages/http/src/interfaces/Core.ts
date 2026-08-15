@@ -1,4 +1,4 @@
-import type { HttpConfig } from '@interfaces/Config';
+import type { HttpConfig } from '#interfaces/Config';
 import type { CoreBase } from '@seedcord/core';
 
 /**

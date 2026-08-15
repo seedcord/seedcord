@@ -2,7 +2,7 @@ import process from 'node:process';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { addCommand, execCommand, runPrefix, runningAgent } from '@cli/packageManager';
+import { addCommand, execCommand, runPrefix, runningAgent } from '#cli/packageManager';
 
 afterEach(() => {
     vi.unstubAllEnvs();

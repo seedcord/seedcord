@@ -1,8 +1,8 @@
 import { DEFAULT_VERSION } from '@seedcord/docs-engine';
 
-import { collectCategories, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
-import { getDocsEngine } from '@lib/docs/engine';
-import { canonicalUrl } from '@lib/site';
+import { collectCategories, findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
+import { getDocsEngine } from '#lib/docs/engine';
+import { canonicalUrl } from '#lib/site';
 
 import type { MetadataRoute } from 'next';
 

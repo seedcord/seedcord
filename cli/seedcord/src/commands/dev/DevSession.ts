@@ -6,15 +6,15 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { SeedcordBrand, type Brandable, type SeedcordInstance } from '@seedcord/types/internal';
 import chalk from 'chalk';
 
-import { profileMark } from '@ui/profile';
-import { resolveDefaultExport } from '@utils/resolveDefaultExport';
+import { profileMark } from '#ui/profile';
+import { resolveDefaultExport } from '#utils/resolveDefaultExport';
 
 import { TscRunner } from './TscRunner';
 
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
+import type { DevStore } from '#ui/stores/DevStore';
 import type { DevRuntime } from './runtime/DevRuntime';
 import type { DevEventHandler } from './runtime/events';
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
-import type { DevStore } from '@ui/stores/DevStore';
 
 function isSeedcordInstance(candidate: unknown): candidate is SeedcordInstance {
     return typeof candidate === 'object' && candidate !== null && (candidate as Brandable)[SeedcordBrand] === true;

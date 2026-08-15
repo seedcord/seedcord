@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf, vi, beforeEach, afterEach } from 'vitest';
 
-import { MemoryRateLimiter } from '@src/MemoryRateLimiter';
+import { MemoryRateLimiter } from '#src/MemoryRateLimiter';
 
 import type { EpochMs, IRateLimiter } from '@seedcord/types';
 

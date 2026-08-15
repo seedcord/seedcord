@@ -22,18 +22,18 @@ import { SeedcordBrand } from '@seedcord/types/internal';
 import { Routes } from 'discord-api-types/v10';
 import { Envapter } from 'envapt';
 
-import { fetchApplicationId } from '@src/applicationId';
-import { buildRouteMaps } from '@src/dispatch/resolve';
-import { EmojiInjector } from '@src/emojis/EmojiInjector';
-import { buildEngine } from '@src/engine';
-import { EMPTY_MANIFEST } from '@src/manifest/RouteManifest';
+import { fetchApplicationId } from '#src/applicationId';
+import { buildRouteMaps } from '#src/dispatch/resolve';
+import { EmojiInjector } from '#src/emojis/EmojiInjector';
+import { buildEngine } from '#src/engine';
+import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
 
 import { InteractionDispatcher } from './InteractionDispatcher';
 import { toWebRequest, writeWebResponse } from './webBridge';
 import { version as packageVersion } from '../version';
 
-import type { HttpConfig } from '@interfaces/Config';
-import type { Core } from '@interfaces/Core';
+import type { HttpConfig } from '#interfaces/Config';
+import type { Core } from '#interfaces/Core';
 import type { IRateLimiter } from '@seedcord/types';
 import type { SeedcordInstance } from '@seedcord/types/internal';
 import type { Server } from 'node:http';

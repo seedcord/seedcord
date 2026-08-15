@@ -1,4 +1,4 @@
-import { ui } from '@ui/palette';
+import { ui } from '#ui/palette';
 
 import type { TextProps } from 'ink';
 

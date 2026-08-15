@@ -6,10 +6,10 @@ import { stripAnsi } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { LoggerChannelRegistry } from '@src/LoggerChannelRegistry';
-import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '@src/node';
+import { LoggerChannelRegistry } from '#src/LoggerChannelRegistry';
+import { formatBody, formatPretty, installNodeDefaults, WinstonConsoleSink, WinstonFileSink } from '#src/node';
 
-import type { ILogSink, LogRecord } from '@src/types';
+import type { ILogSink, LogRecord } from '#src/types';
 
 function record(overrides: Partial<LogRecord>): LogRecord {
     return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: Date.now(), ...overrides };

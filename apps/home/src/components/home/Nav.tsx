@@ -2,10 +2,10 @@ import { cn, GithubIcon, Icon } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
-import { GithubStars } from '@components/GithubStars';
-import { PosterButton } from '@components/ui/PosterButton';
-import { pressable } from '@components/ui/press';
-import { DOCS_URL, GUIDE_URL, REPO_URL } from '@lib/site';
+import { GithubStars } from '#components/GithubStars';
+import { PosterButton } from '#components/ui/PosterButton';
+import { pressable } from '#components/ui/press';
+import { DOCS_URL, GUIDE_URL, REPO_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 

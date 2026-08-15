@@ -1,10 +1,10 @@
 import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { afterEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 
-import { publishResponse } from '@reply/responseReport';
-import { Bus } from '@subscribers/Bus';
+import { publishResponse } from '#reply/responseReport';
+import { Bus } from '#subscribers/Bus';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { LogRecord } from '@seedcord/logger';
 
 // justified: the Bus only stores core, no member is read during publish

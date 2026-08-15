@@ -3,14 +3,14 @@ import { existsSync } from 'node:fs';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { ConfigLoader } from '@core/config/ConfigLoader';
-import { ConfigLocator } from '@core/config/ConfigLocator';
-import { RuntimeModuleLoader } from '@core/modules/RuntimeModuleLoader';
+import { ConfigLoader } from '#core/config/ConfigLoader';
+import { ConfigLocator } from '#core/config/ConfigLocator';
+import { RuntimeModuleLoader } from '#core/modules/RuntimeModuleLoader';
 
 import { BootstrapWriter } from './builder/BootstrapWriter';
 import { TypeScriptProjectBuilder } from './builder/TypeScriptProjectBuilder';
 
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 export class BuildRunner {

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { TypedEventEmitter } from '@src/TypedEventEmitter';
+import { TypedEventEmitter } from '#src/TypedEventEmitter';
 
 class SafeEmitter extends TypedEventEmitter<{ e: [n: number] }> {
     public readonly errors: unknown[] = [];

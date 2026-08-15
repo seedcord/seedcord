@@ -1,9 +1,9 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { formatUptime } from '@ui/format';
-import { isStreaming } from '@ui/stores/devPhase';
-import { LogStore } from '@ui/stores/LogStore';
+import { formatUptime } from '#ui/format';
+import { isStreaming } from '#ui/stores/devPhase';
+import { LogStore } from '#ui/stores/LogStore';
 
 import { Banner } from '../Banner';
 import { StatusBadge } from '../StatusBadge';
@@ -12,10 +12,10 @@ import { FilterChips } from './FilterChips';
 import { FilterKeys, SessionKeys } from './Hotkeys';
 import { Rule } from './Rule';
 
-import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
+import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
+import type { FilterCursor } from '#ui/filterCursor';
+import type { DevState } from '#ui/stores/DevStore';
 import type { LogLevel } from '@seedcord/logger';
-import type { FilterCursor } from '@ui/filterCursor';
-import type { DevState } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 

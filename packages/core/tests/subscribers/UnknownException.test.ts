@@ -4,9 +4,9 @@ import { AckTrace } from '@seedcord/core/internal';
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { UnknownException } from '@subscribers/default/UnknownException';
+import { UnknownException } from '#subscribers/default/UnknownException';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 
 const ESC = String.fromCharCode(27);

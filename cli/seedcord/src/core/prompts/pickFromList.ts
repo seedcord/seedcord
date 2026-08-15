@@ -1,6 +1,6 @@
 import { autocompleteMultiselect, multiselect } from '@clack/prompts';
 
-import { includesIgnoreCase } from '@core/format';
+import { includesIgnoreCase } from '#core/format';
 
 import { requireValue } from './requireValue';
 

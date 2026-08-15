@@ -1,6 +1,6 @@
 import { SlashRoute } from '@seedcord/core';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import '../../registry';
 

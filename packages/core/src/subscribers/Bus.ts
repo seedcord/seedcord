@@ -3,13 +3,14 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger, paint } from '@seedcord/logger';
 
-import { SubscribeMetadataKey } from '@src/metadataKeys';
+import { SubscribeMetadataKey } from '#src/metadataKeys';
 
 import { WebhookLog } from './bases/WebhookLog';
 import { HandledException } from './default/HandledException';
 import { UnknownException } from './default/UnknownException';
 import { PublishDefault } from './publishDefault';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscribeMetadataEntry } from './decorators/Subscribe';
 import type { Subscriber } from './Subscriber';
 import type {
@@ -19,7 +20,6 @@ import type {
     SubscriptionKey,
     SubscriptionTuples
 } from './types/Subscriptions';
-import type { CoreBase } from '@interfaces/CoreBase';
 import type { EventFrequency } from '@seedcord/types';
 
 /**

@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 
-import rule from '@src/rules/use-custom-id-codec';
+import rule from '#src/rules/use-custom-id-codec';
 
 import { createTypedRuleTester } from '../typed-rule-tester';
 

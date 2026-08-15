@@ -2,15 +2,15 @@ import { TextDisplayBuilder } from '@discordjs/builders';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
-import { ModalHandler } from '@handlers/interaction/components/ModalHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import { ModalHandler } from '#handlers/interaction/components/ModalHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { stubBus } from '../../helpers/fixtures';
 
+import type { Core } from '#interfaces/Core';
+import type { SentMessage } from '#reply/ReplySender';
 import type { REST } from '@discordjs/rest';
-import type { Core } from '@interfaces/Core';
-import type { SentMessage } from '@reply/ReplySender';
 import type {
     APIChatInputApplicationCommandInteraction,
     APIMessageComponentButtonInteraction,

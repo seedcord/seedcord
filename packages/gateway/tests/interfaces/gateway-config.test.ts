@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { testConfig } from '../utils/test-config';
 
-import type { GatewayConfig } from '@interfaces/Config';
+import type { GatewayConfig } from '#interfaces/Config';
 
 describe('GatewayConfig', () => {
     it('runtime narrows to server', () => {

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
-import { Bus } from '@subscribers/Bus';
-import { PublishDefault } from '@subscribers/publishDefault';
+import { Bus } from '#subscribers/Bus';
+import { PublishDefault } from '#subscribers/publishDefault';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 // justified: the Bus only stores core, no member is read during publish
 function stubBus(): Bus {

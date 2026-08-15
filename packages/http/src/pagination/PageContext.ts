@@ -1,5 +1,5 @@
-import type { Core } from '@interfaces/Core';
-import type { Repliables } from '@src/handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { APIUser } from 'discord-api-types/v10';
 
 /**

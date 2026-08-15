@@ -1,4 +1,4 @@
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 /**
  * The transport-agnostic gate context, the scalar identity of the acting user resolvable from any

@@ -1,7 +1,7 @@
 import { ExcerptTokenKind } from '@microsoft/api-extractor-model';
 import { describe, expect, it } from 'vitest';
 
-import { tokensToSigParts } from '@model/excerpt-renderer';
+import { tokensToSigParts } from '#model/excerpt-renderer';
 
 import type { ExcerptToken } from '@microsoft/api-extractor-model';
 

@@ -2,9 +2,9 @@
 
 import { Card, Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger, cn, tw } from '@seedcord/ui';
 
-import { formatMemberAccessLabel } from '@lib/memberAccess';
+import { formatMemberAccessLabel } from '#lib/memberAccess';
 
-import type { MemberAccessLevel } from '@lib/memberAccess';
+import type { MemberAccessLevel } from '#lib/memberAccess';
 import type { ReactElement } from 'react';
 
 interface MemberOverviewProps {

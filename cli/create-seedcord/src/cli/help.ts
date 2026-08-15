@@ -1,4 +1,4 @@
-import { STEPS } from '@interview/steps';
+import { STEPS } from '#interview/steps';
 
 const EXTRA = [
     { name: 'no-install', description: 'skip installing dependencies' },

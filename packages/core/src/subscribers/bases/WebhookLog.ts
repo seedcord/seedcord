@@ -3,17 +3,17 @@ import { SeedcordError } from '@seedcord/errors/internal';
 import { paint } from '@seedcord/logger';
 import { Converters, Envapter } from 'envapt';
 
-import { sendFlags } from '@reply/flags';
-import { WebhookUrlMetadataKey } from '@src/metadataKeys';
+import { sendFlags } from '#reply/flags';
+import { WebhookUrlMetadataKey } from '#src/metadataKeys';
 
 import { ReportThrottle } from '../ReportThrottle';
 import { Subscriber } from '../Subscriber';
 import { isDiscordWebhookUrl } from './webhookHelpers';
 import { WebhookSender } from './WebhookSender';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { WebhookFile } from './WebhookSender';
 import type { SubscriptionKey } from '../types/Subscriptions';
-import type { CoreBase } from '@interfaces/CoreBase';
 import type { APIMessageTopLevelComponent } from 'discord-api-types/v10';
 
 /**

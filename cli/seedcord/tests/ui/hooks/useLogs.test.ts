@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { filterLogs } from '@ui/hooks/useLogs';
+import { filterLogs } from '#ui/hooks/useLogs';
 
-import type { LogEntry } from '@ui/stores/LogStore';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 function entry(over: Partial<LogEntry>): LogEntry {
     return {

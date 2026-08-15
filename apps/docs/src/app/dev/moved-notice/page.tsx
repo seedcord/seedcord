@@ -1,7 +1,7 @@
 import { cn } from '@seedcord/ui';
 import { Suspense } from 'react';
 
-import { MovedEntityNotice } from '@components/docs/MovedEntityNotice';
+import { MovedEntityNotice } from '#components/docs/MovedEntityNotice';
 
 import type { ReactElement } from 'react';
 

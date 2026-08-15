@@ -1,9 +1,9 @@
 import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 
-import { CopyCommand } from '@components/ui/CopyCommand';
-import { PosterButton } from '@components/ui/PosterButton';
-import { DOCS_URL, GUIDE_URL } from '@lib/site';
+import { CopyCommand } from '#components/ui/CopyCommand';
+import { PosterButton } from '#components/ui/PosterButton';
+import { DOCS_URL, GUIDE_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 

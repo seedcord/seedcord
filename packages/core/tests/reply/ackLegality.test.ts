@@ -1,12 +1,12 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { checkAckLegality, sendTarget } from '@reply/ackLegality';
-import { AckTrace } from '@reply/AckTrace';
+import { checkAckLegality, sendTarget } from '#reply/ackLegality';
+import { AckTrace } from '#reply/AckTrace';
 
 import { stripAnsi } from './helpers';
 
-import type { AckState, ReplyMethod } from '@reply/ackLegality';
+import type { AckState, ReplyMethod } from '#reply/ackLegality';
 
 const ROUTE = 'slash:ban';
 

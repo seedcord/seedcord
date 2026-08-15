@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { EventHandler } from '@handlers/event/EventHandler';
-import type { EventMiddleware } from '@handlers/event/EventMiddleware';
+import type { EventHandler } from '#handlers/event/EventHandler';
+import type { EventMiddleware } from '#handlers/event/EventMiddleware';
 import type { Events } from 'discord.js';
 
 // justified: variance is the subject here, the members are never read

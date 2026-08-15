@@ -1,6 +1,6 @@
 import { cn } from '@seedcord/ui';
 
-import { OverviewSkeleton } from '@components/docs/OverviewSkeleton';
+import { OverviewSkeleton } from '#components/docs/OverviewSkeleton';
 
 import type { ReactElement } from 'react';
 

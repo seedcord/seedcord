@@ -6,13 +6,13 @@ import { GatedMetadataKey } from '@seedcord/core/internal';
 import { MessageFlags, PermissionFlagsBits } from 'discord-api-types/v10';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 
+import type { InteractionGateContext } from '#src/gates/Gate';
 import type { Gate, GateContextBase } from '@seedcord/core';
 import type { RenderContext, ReplyResponse } from '@seedcord/types';
-import type { InteractionGateContext } from '@src/gates/Gate';
 
 const rest = vi.hoisted(() => {
     interface FakeRestInstance {

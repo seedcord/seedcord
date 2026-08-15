@@ -1,12 +1,12 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { describe, it, expect, expectTypeOf } from 'vitest';
 
-import { RequireBotPermissions, RequirePermissions, RequireRole } from '@gates/catalog/permissions';
-import { MissingPermissions, MissingRole, NotInGuild } from '@notices/index';
+import { RequireBotPermissions, RequirePermissions, RequireRole } from '#gates/catalog/permissions';
+import { MissingPermissions, MissingRole, NotInGuild } from '#notices/index';
 
 import { cardJson } from '../../utils/cardText';
 
-import type { Gate, GateContextBase, GuildPermissionsContext } from '@gates/Gate';
+import type { Gate, GateContextBase, GuildPermissionsContext } from '#gates/Gate';
 
 const { Administrator, BanMembers, KickMembers } = PermissionFlagsBits;
 

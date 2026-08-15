@@ -1,14 +1,14 @@
 import { API } from '@discordjs/core/http-only';
 import { describe, expect, it } from 'vitest';
 
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
-import { createCore } from '@src/dispatch/dispatchInteraction';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
+import { createCore } from '#src/dispatch/dispatchInteraction';
 
 import { nullPathConfig, VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { ValidInteractionTypes } from '@handlers/interactionTypes';
-import type { Core } from '@interfaces/Core';
+import type { ValidInteractionTypes } from '#handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
 
 declare module '@seedcord/core' {
     interface SlashOptionRegistry {

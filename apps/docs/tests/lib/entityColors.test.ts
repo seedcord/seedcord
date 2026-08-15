@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { ENTITY_TONE_HEX, FOREGROUND_HEX } from '@lib/entityColors';
+import { ENTITY_TONE_HEX, FOREGROUND_HEX } from '#lib/entityColors';
 
 const docsTokens = readFileSync(join(import.meta.dirname, '../../src/styles/tokens.css'), 'utf8');
 const uiTokens = readFileSync(join(import.meta.dirname, '../../../../tooling/ui/src/styles/tokens.css'), 'utf8');

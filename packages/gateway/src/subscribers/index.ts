@@ -1,6 +1,6 @@
 import { Subscriber as CoreSubscriber, WebhookLog as CoreWebhookLog } from '@seedcord/core';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { SubscriptionKey } from '@seedcord/core';
 
 /**

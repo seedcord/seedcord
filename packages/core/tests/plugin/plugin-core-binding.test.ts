@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import { Plugin } from '@src/plugin/Plugin';
+import { Plugin } from '#src/plugin/Plugin';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 
 interface TransportCore extends CoreBase {
     readonly extra: { readonly id: string };

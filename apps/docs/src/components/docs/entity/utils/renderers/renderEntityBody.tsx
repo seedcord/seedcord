@@ -3,7 +3,7 @@ import { renderEnum } from './renderEnum';
 import { renderFunction } from './renderFunction';
 import { renderType } from './renderType';
 
-import type { EntityModel } from '@lib/docs/types';
+import type { EntityModel } from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 export function renderEntityBody(model: EntityModel): ReactElement | null {

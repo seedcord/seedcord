@@ -3,9 +3,9 @@ import 'reflect-metadata';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { CommandMetadataKey } from '@src/metadataKeys';
+import { CommandMetadataKey } from '#src/metadataKeys';
 
-import type { BuilderComponent } from '@components/Component';
+import type { BuilderComponent } from '#components/Component';
 import type { Constructor } from 'type-fest';
 
 type CommandCtor = Constructor<BuilderComponent<'command' | 'context_menu'>>;

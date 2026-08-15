@@ -4,16 +4,16 @@ import { Logger } from '@seedcord/logger';
 import { MessageFlags, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { handleInteractionFault as boundary } from '@bot/handleInteractionFault';
-import { ReplySender } from '@bot/ReplySender';
+import { handleInteractionFault as boundary } from '#bot/handleInteractionFault';
+import { ReplySender } from '#bot/ReplySender';
 
 import { harmlessError } from '../utils/harmlessError';
 import { stubBus } from '../utils/stubBus';
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
+import type { Repliables, ValidInteractionTypes } from '#src/handlers/interactionTypes';
 import type { SubscriptionData } from '@seedcord/core';
-import type { Repliables, ValidInteractionTypes } from '@src/handlers/interactionTypes';
 
 const withResponse = { resource: { message: { id: 'sent' } } };
 

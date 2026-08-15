@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-import { KyselyPostgres } from '@src/KyselyPostgres';
+import { KyselyPostgres } from '#src/KyselyPostgres';
 
+import type { KyselyOptions } from '#src/types/KyselyOptions';
 import type { Seedcord as GatewaySeedcord } from '@seedcord/gateway';
 import type { HttpEdgeConfig, HttpServerConfig, Seedcord as HttpSeedcord } from '@seedcord/http';
-import type { KyselyOptions } from '@src/types/KyselyOptions';
 
 const options: KyselyOptions = {
     connectionString: 'postgres://localhost:5432/test',

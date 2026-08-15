@@ -2,10 +2,10 @@ import { ContextMenuCommandBuilder, SlashCommandBuilder } from '@discordjs/build
 import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { describe, it, expect, vi } from 'vitest';
 
-import { CommandRegistry } from '@node/commands/CommandRegistry';
+import { CommandRegistry } from '#node/commands/CommandRegistry';
 
+import type { DeployResult } from '#src/commands/types';
 import type { REST } from '@discordjs/rest';
-import type { DeployResult } from '@src/commands/types';
 import type { APIApplicationCommand } from 'discord-api-types/v10';
 
 const APP = 'app-1';

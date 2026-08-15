@@ -2,8 +2,8 @@ import { ContainerBuilder } from '@discordjs/builders';
 import { ComponentType } from 'discord-api-types/v10';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { setBotColor } from '@components/botColorHolder';
-import { NoticeCard } from '@stops/NoticeCard';
+import { setBotColor } from '#components/botColorHolder';
+import { NoticeCard } from '#stops/NoticeCard';
 
 function cardText(card: ContainerBuilder): string {
     const text = card.toJSON().components.find((c) => c.type === ComponentType.TextDisplay);

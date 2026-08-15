@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { StatusBadge } from '@ui/components/StatusBadge';
+import { StatusBadge } from '#ui/components/StatusBadge';
 
 import { renderAt } from './renderAt';
 import { settled } from './settled';
 
-import type { DevPhase } from '@ui/stores/devPhase';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { ReactElement } from 'react';
 
 const SIZE = { rows: 24, columns: 80 };

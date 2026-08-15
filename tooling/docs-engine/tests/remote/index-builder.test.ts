@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildIndex } from '@remote/index-builder';
-import { validateIndex } from '@remote/index-json';
+import { buildIndex } from '#remote/index-builder';
+import { validateIndex } from '#remote/index-json';
 
 const UPDATED_AT = '2026-06-02T00:00:00.000Z';
 

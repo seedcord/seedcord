@@ -1,7 +1,7 @@
 import { Logger } from '@seedcord/logger';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionKey, AllSubscriptions } from './types/Subscriptions';
-import type { CoreBase } from '@interfaces/CoreBase';
 
 /**
  * Abstract base class for handling application subscribers.

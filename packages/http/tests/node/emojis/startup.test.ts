@@ -4,14 +4,14 @@ import { Routes } from 'discord-api-types/v10';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Emojis } from '@src/emojis/EmojiInjector';
-import { Seedcord } from '@src/node/Seedcord';
+import { Emojis } from '#src/emojis/EmojiInjector';
+import { Seedcord } from '#src/node/Seedcord';
 
 import { createSigner } from '../../helpers/ed25519';
 import { VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { ResolvedEmoji } from '@src/emojis/EmojiInjector';
-import type { HttpConfig } from '@src/interfaces/Config';
+import type { ResolvedEmoji } from '#src/emojis/EmojiInjector';
+import type { HttpConfig } from '#src/interfaces/Config';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 const APP = 'app-1';

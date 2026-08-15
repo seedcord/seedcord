@@ -2,13 +2,13 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 
-import { getDevChannel } from '@hmr/devChannel';
+import { getDevChannel } from '#hmr/devChannel';
 
 import { resolveLifecycleSpec } from './lifecycle';
 
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { ResolvedPluginLifecycleSpec, PluginLifecycleSpec } from './lifecycle';
 import type { TransportOf, PluginOptions, RuntimeOf } from './options';
-import type { CoreBase } from '@interfaces/CoreBase';
 import type { Tail, HmrAware, HmrUpdateEvent } from '@seedcord/types';
 
 export interface Initializeable {

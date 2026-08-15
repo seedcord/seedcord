@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { SeedcordErrorCode } from '@src/index';
-import { SeedcordError } from '@src/internal.index';
+import { SeedcordErrorCode } from '#src/index';
+import { SeedcordError } from '#src/internal.index';
 
 // chalk styles the messages
 const stripAnsi = (input: string): string => input.replaceAll(/\[[0-9;]*m/g, '');

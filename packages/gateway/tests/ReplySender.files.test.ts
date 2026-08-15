@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { mockInteraction, senderFor } from './utils/senderMock';
 
-import type { GatewayReplyResponse } from '@interfaces/ReplyResponse';
+import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
 import type { ReplyResponse } from '@seedcord/types';
 
 const BYTES = new Uint8Array([0x73, 0x65, 0x65, 0x64]);

@@ -12,9 +12,9 @@ import {
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 
-import { CommandListItem } from '@components/search/command-palette/CommandListItem';
+import { CommandListItem } from '#components/search/command-palette/CommandListItem';
 
-import type { CommandAction, SearchResultKind } from '@components/search/command-palette/types';
+import type { CommandAction, SearchResultKind } from '#components/search/command-palette/types';
 import type { ReactElement } from 'react';
 
 // prototype-only, this adds a package field to CommandAction so the mock can group and filter by

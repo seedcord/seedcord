@@ -3,12 +3,12 @@ import { PublishDefault } from '@seedcord/core/internal';
 import { ComponentType, MessageFlags } from 'discord.js';
 import { describe, expect, it, vi } from 'vitest';
 
-import { UnhandledAutocomplete } from '@bot/defaults/UnhandledAutocomplete';
-import { UnhandledRepliable } from '@bot/defaults/UnhandledRepliable';
+import { UnhandledAutocomplete } from '#bot/defaults/UnhandledAutocomplete';
+import { UnhandledRepliable } from '#bot/defaults/UnhandledRepliable';
 
 import { mockInteraction } from '../utils/senderMock';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { AutocompleteInteraction, ChatInputCommandInteraction } from 'discord.js';
 
 // justified: the defaults read only the interaction, the rest of Core is unused here.

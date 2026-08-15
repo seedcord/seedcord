@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it, vi } from 'vitest';
 
-import { CleanRunner } from '@commands/commands/CleanRunner';
+import { CleanRunner } from '#commands/commands/CleanRunner';
 
-import type { Flagged } from '@commands/commands/classify';
+import type { Flagged } from '#commands/commands/classify';
 import type { REST } from '@discordjs/rest';
 import type { Mock } from 'vitest';
 

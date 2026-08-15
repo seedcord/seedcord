@@ -1,7 +1,7 @@
 import { Logger } from '@seedcord/logger';
 
+import type { DevStore } from '#ui/stores/DevStore';
 import type { PreviewContext, PreviewLogLevel } from './scenarios/types';
-import type { DevStore } from '@ui/stores/DevStore';
 
 interface AbortRef {
     aborted: boolean;

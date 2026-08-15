@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CommentParagraph, FormatContext, FormattedComment, CodeRepresentation } from '@lib/docs/types';
+import type { CommentParagraph, FormatContext, FormattedComment, CodeRepresentation } from '#lib/docs/types';
 import type { DocComment, DocFlags, DocNode } from '@seedcord/docs-engine';
 
 // justified: formatting.ts pulls in @lib/sanitizeHtml + @lib/shiki, which vitest can't resolve without vite-tsconfig-paths.
@@ -14,7 +14,7 @@ vi.mock('../../../../src/lib/docs/formatting', () => {
 });
 
 const { selectDescription, stripDuplicateDescription, buildDeprecationStatusFromNodeLike, resolveHeaderSignature } =
-    await import('@lib/docs/builders/utils');
+    await import('#lib/docs/builders/utils');
 
 const emptyFlags: DocFlags = {
     access: null,

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { TypedEventEmitter } from '@src/TypedEventEmitter';
-import { WaitForError } from '@src/WaitForError';
+import { TypedEventEmitter } from '#src/TypedEventEmitter';
+import { WaitForError } from '#src/WaitForError';
 
 interface Events {
     ping: [n: number];

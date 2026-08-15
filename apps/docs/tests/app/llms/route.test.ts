@@ -2,13 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 const { resolveEntityMock } = vi.hoisted(() => ({ resolveEntityMock: vi.fn() }));
 
-vi.mock('@lib/site', () => ({ canonicalUrl: (path: string) => `https://docs.seedcord.org${path}` }));
-vi.mock('@lib/docs/catalog', () => ({
+vi.mock('#lib/site', () => ({ canonicalUrl: (path: string) => `https://docs.seedcord.org${path}` }));
+vi.mock('#lib/docs/catalog', () => ({
     loadDocsCatalog: vi.fn(),
     findCatalogEntry: vi.fn(),
     findCatalogVersion: vi.fn()
 }));
-vi.mock('@lib/docs/resolveEntity', () => ({ resolveEntity: resolveEntityMock }));
+vi.mock('#lib/docs/resolveEntity', () => ({ resolveEntity: resolveEntityMock }));
 
 const { GET } = await import('@/app/llms/[[...path]]/route');
 

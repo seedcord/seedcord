@@ -1,8 +1,8 @@
-export { setBotColor } from '@components/botColorHolder';
+export { setBotColor } from '#components/botColorHolder';
 
-export type { PluginArgs, PluginCtor } from '@src/plugin/Plugin';
+export type { PluginArgs, PluginCtor } from '#src/plugin/Plugin';
 
-export type { CommandMeta } from '@decorators/Command';
+export type { CommandMeta } from '#decorators/Command';
 export {
     areRoutes,
     contextMenuRouteOf,
@@ -11,27 +11,27 @@ export {
     storeComponentRoute,
     storeInteractionRoute,
     type RoutableConstructor
-} from '@decorators/interactionRoutes';
+} from '#decorators/interactionRoutes';
 
-export { routeIdOf, runGates, runHandlerGates } from '@gates/runGates';
-export { slowGateMonitor, type SlowGateMonitor } from '@gates/slowGate';
-export type { GateObserver } from '@gates/runGates';
-export { accessorStore, clearStore, guardedAccessor } from '@src/miscellaneous/guarded';
-export { isEmojiTuple } from '@src/miscellaneous/emojiConfig';
+export { routeIdOf, runGates, runHandlerGates } from '#gates/runGates';
+export { slowGateMonitor, type SlowGateMonitor } from '#gates/slowGate';
+export type { GateObserver } from '#gates/runGates';
+export { accessorStore, clearStore, guardedAccessor } from '#src/miscellaneous/guarded';
+export { isEmojiTuple } from '#src/miscellaneous/emojiConfig';
 
-export { contextMenuLeaves } from '@src/commands/contextMenuLeaves';
-export type { ContextMenuLeaves } from '@src/commands/contextMenuLeaves';
-export { slashRouteLeaves } from '@src/commands/slashRouteLeaves';
-export { CommandInjector } from '@src/commands/CommandInjector';
-export type { CommandBuilder, DeployResult } from '@src/commands/types';
+export { contextMenuLeaves } from '#src/commands/contextMenuLeaves';
+export type { ContextMenuLeaves } from '#src/commands/contextMenuLeaves';
+export { slashRouteLeaves } from '#src/commands/slashRouteLeaves';
+export { CommandInjector } from '#src/commands/CommandInjector';
+export type { CommandBuilder, DeployResult } from '#src/commands/types';
 
-export { pickNotice } from '@gates/catalog/options';
-export { PermissionNames } from '@gates/catalog/permissions';
-export type { GateFitsWith } from '@gates/matching';
+export { pickNotice } from '#gates/catalog/options';
+export { PermissionNames } from '#gates/catalog/permissions';
+export type { GateFitsWith } from '#gates/matching';
 
-export { getDevChannel, setDevChannel } from '@hmr/devChannel';
-export { HmrManager } from '@hmr/HmrManager';
-export { wrapHot } from '@hmr/wrapHot';
+export { getDevChannel, setDevChannel } from '#hmr/devChannel';
+export { HmrManager } from '#hmr/HmrManager';
+export { wrapHot } from '#hmr/wrapHot';
 
 export {
     GateNotice,
@@ -44,7 +44,7 @@ export {
     NotInGuild,
     NotOwner,
     OnCooldown
-} from '@notices/index';
+} from '#notices/index';
 
 export {
     CommandMetadataKey,
@@ -56,12 +56,12 @@ export {
     MiddlewareMetadataKey,
     SubscribeMetadataKey,
     WebhookUrlMetadataKey
-} from '@src/metadataKeys';
+} from '#src/metadataKeys';
 
-export { asError } from '@stops/asError';
-export { NoticeCard } from '@stops/NoticeCard';
+export { asError } from '#stops/asError';
+export { NoticeCard } from '#stops/NoticeCard';
 
-export { prefixOf, decodeFor, type AnyCustomId } from '@customId/CustomId';
+export { prefixOf, decodeFor, type AnyCustomId } from '#customId/CustomId';
 export {
     ComponentDefsKey,
     decodeComponentRoute,
@@ -69,26 +69,26 @@ export {
     type HasComponentDefs,
     type MatchArms,
     type SingleParams
-} from '@customId/routing';
-export type { DecodedParams } from '@customId/Field';
+} from '#customId/routing';
+export type { DecodedParams } from '#customId/Field';
 
-export type { OptionLens } from '@inputs/OptionLens';
-export type { SlashOptions } from '@inputs/SlashOptions';
-export type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '@inputs/AutocompleteOptions';
+export type { OptionLens } from '#inputs/OptionLens';
+export type { SlashOptions } from '#inputs/SlashOptions';
+export type { AutocompletableNames, ChoiceValueOf, EntryFor, FocusedField } from '#inputs/AutocompleteOptions';
 
-export { PAGE_MAX, pageCursor, type PageCursor } from '@pagination/cursor';
+export { PAGE_MAX, pageCursor, type PageCursor } from '#pagination/cursor';
 
-export { deferFlags, sendFlags } from '@reply/flags';
-export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '@reply/ackLegality';
-export { AckTrace } from '@reply/AckTrace';
-export { BaseReplySender, type ModalLike } from '@reply/BaseReplySender';
-export { reportedWrite, type ReplyTelemetry } from '@reply/responseReport';
-export { translateSerializationError } from '@reply/translateSerialization';
-export { serializeReply, type SerializedReply } from '@reply/serializeReply';
+export { deferFlags, sendFlags } from '#reply/flags';
+export { checkAckLegality, sendTarget, type AckState, type ReplyMethod } from '#reply/ackLegality';
+export { AckTrace } from '#reply/AckTrace';
+export { BaseReplySender, type ModalLike } from '#reply/BaseReplySender';
+export { reportedWrite, type ReplyTelemetry } from '#reply/responseReport';
+export { translateSerializationError } from '#reply/translateSerialization';
+export { serializeReply, type SerializedReply } from '#reply/serializeReply';
 
-export { type StoredSubscriberCtor, type SubscriberRegistration } from '@subscribers/Bus';
-export { ReportThrottle } from '@subscribers/ReportThrottle';
-export { PublishDefault } from '@subscribers/publishDefault';
-export { outcomeFor, queuedMsFor, reportDispatch } from '@src/dispatch/dispatchReport';
+export { type StoredSubscriberCtor, type SubscriberRegistration } from '#subscribers/Bus';
+export { ReportThrottle } from '#subscribers/ReportThrottle';
+export { PublishDefault } from '#subscribers/publishDefault';
+export { outcomeFor, queuedMsFor, reportDispatch } from '#src/dispatch/dispatchReport';
 // the transports' augmentation target for their own default keys
-export type { DefaultSubscriptions } from '@subscribers/types/Subscriptions';
+export type { DefaultSubscriptions } from '#subscribers/types/Subscriptions';

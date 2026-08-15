@@ -1,15 +1,15 @@
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { runFlow } from '@interview/runFlow';
-import { botColorStep } from '@interview/steps/botColor';
-import { capabilitiesStep } from '@interview/steps/capabilities';
-import { directoryStep } from '@interview/steps/directory';
-import { publicKeyStep } from '@interview/steps/publicKey';
-import { tokenStep } from '@interview/steps/token';
-import { transportStep } from '@interview/steps/transport';
+import { runFlow } from '#interview/runFlow';
+import { botColorStep } from '#interview/steps/botColor';
+import { capabilitiesStep } from '#interview/steps/capabilities';
+import { directoryStep } from '#interview/steps/directory';
+import { publicKeyStep } from '#interview/steps/publicKey';
+import { tokenStep } from '#interview/steps/token';
+import { transportStep } from '#interview/steps/transport';
 
-import type { Step } from '@interview/types';
+import type { Step } from '#interview/types';
 
 function thrownBy(run: () => unknown): unknown {
     try {

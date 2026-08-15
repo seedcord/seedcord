@@ -1,14 +1,14 @@
 import { cn } from '@seedcord/ui';
 import { notFound } from 'next/navigation';
 
-import { Container } from '@components/layout/sidebar/utils/container/Container';
+import { Container } from '#components/layout/sidebar/utils/container/Container';
 import {
     findCatalogEntry,
     findCatalogVersion,
     loadActiveVersion,
     loadDocsCatalog,
     withActiveCategories
-} from '@lib/docs/catalog';
+} from '#lib/docs/catalog';
 
 import type { ReactNode } from 'react';
 

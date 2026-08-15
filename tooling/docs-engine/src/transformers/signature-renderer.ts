@@ -1,4 +1,4 @@
-import type { InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '@src/types';
+import type { InlineType, RenderedDeclarationHeader, RenderedSignature, SigPart } from '#src/types';
 
 export function sigPartsToText(parts: SigPart[]): string {
     let result = '';

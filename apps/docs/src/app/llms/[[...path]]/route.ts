@@ -1,7 +1,7 @@
-import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '@lib/docs/catalog';
-import { entityToMarkdown } from '@lib/docs/entityMarkdown';
-import { resolveEntity } from '@lib/docs/resolveEntity';
-import { canonicalUrl } from '@lib/site';
+import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
+import { entityToMarkdown } from '#lib/docs/entityMarkdown';
+import { resolveEntity } from '#lib/docs/resolveEntity';
+import { canonicalUrl } from '#lib/site';
 
 // the llms path mirrors the docs page path, `/llms/packages/<pkg>/<ver>/<category>/<slug>`
 export const dynamic = 'force-static';

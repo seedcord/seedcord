@@ -3,10 +3,10 @@ import { Logger } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { Envapter, Environment } from 'envapt';
 
-import { BuildCommand } from '@commands/build/BuildCommand';
-import { CodegenCommand } from '@commands/codegen/CodegenCommand';
-import { CommandsCommand } from '@commands/commands/CommandsCommand';
-import { DevCommand } from '@commands/dev/DevCommand';
+import { BuildCommand } from '#commands/build/BuildCommand';
+import { CodegenCommand } from '#commands/codegen/CodegenCommand';
+import { CommandsCommand } from '#commands/commands/CommandsCommand';
+import { DevCommand } from '#commands/dev/DevCommand';
 
 import { version } from '.';
 

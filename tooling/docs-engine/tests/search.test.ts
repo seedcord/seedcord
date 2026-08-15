@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { MOCK_PACKAGE_FULL_NAME } from './utils/constants';
 import { getEngine } from './utils/test-helpers';
 
-import type { DocsEngine } from '@src/DocsEngine';
+import type { DocsEngine } from '#src/DocsEngine';
 
 let engine: DocsEngine;
 

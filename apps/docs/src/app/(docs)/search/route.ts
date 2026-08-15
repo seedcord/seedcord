@@ -9,9 +9,9 @@ import {
 } from '@seedcord/docs-engine';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { MIN_SEARCH_QUERY_LENGTH } from '@components/search/command-palette/constants';
-import { getDocsEngine } from '@lib/docs/engine';
-import { checkSearchRateLimit } from '@lib/searchRateLimit';
+import { MIN_SEARCH_QUERY_LENGTH } from '#components/search/command-palette/constants';
+import { getDocsEngine } from '#lib/docs/engine';
+import { checkSearchRateLimit } from '#lib/searchRateLimit';
 
 const MAX_RESULTS = 24;
 

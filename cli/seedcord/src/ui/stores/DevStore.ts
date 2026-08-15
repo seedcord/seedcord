@@ -1,9 +1,9 @@
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { assertNever } from '@seedcord/utils';
 
+import type { DevEvent } from '#commands/dev/runtime/events';
+import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { DevPhase } from './devPhase';
-import type { DevEvent } from '@commands/dev/runtime/events';
-import type { TunnelStatus } from '@commands/dev/tunnel/TunnelCoordinator';
 
 export interface DevState {
     readonly phase: DevPhase;

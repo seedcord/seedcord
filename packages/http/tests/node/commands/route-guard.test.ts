@@ -2,9 +2,9 @@ import path from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { InteractionDispatcher } from '@src/node/InteractionDispatcher';
+import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
 
-import type { ResolvedRoute } from '@src/dispatch/resolve';
+import type { ResolvedRoute } from '#src/dispatch/resolve';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 

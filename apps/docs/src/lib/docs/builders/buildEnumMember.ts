@@ -1,12 +1,12 @@
 import { memberFragment } from '@seedcord/docs-engine';
 
-import { cloneCommentParagraphs } from '@lib/docs/comments/creators';
-import { formatCommentRich } from '@lib/docs/comments/formatter';
-import { highlightCode } from '@lib/docs/formatting';
+import { cloneCommentParagraphs } from '#lib/docs/comments/creators';
+import { formatCommentRich } from '#lib/docs/comments/formatter';
+import { highlightCode } from '#lib/docs/formatting';
 
 import { collectMemberTags, buildDeprecationStatusFromNodeLike } from './utils';
 
-import type { EnumMemberModel, FormatContext } from '@lib/docs/types';
+import type { EnumMemberModel, FormatContext } from '#lib/docs/types';
 import type { DocNode } from '@seedcord/docs-engine';
 
 export async function buildEnumMember(node: DocNode, context: FormatContext): Promise<EnumMemberModel> {

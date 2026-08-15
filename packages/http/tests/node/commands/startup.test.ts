@@ -5,13 +5,13 @@ import { ApplicationCommandType, Routes } from 'discord-api-types/v10';
 import { Envapter, merge, PortableSource } from 'envapt';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { InteractionDispatcher } from '@src/node/InteractionDispatcher';
-import { Seedcord } from '@src/node/Seedcord';
+import { InteractionDispatcher } from '#src/node/InteractionDispatcher';
+import { Seedcord } from '#src/node/Seedcord';
 
 import { createSigner } from '../../helpers/ed25519';
 import { VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { HttpConfig } from '@src/interfaces/Config';
+import type { HttpConfig } from '#src/interfaces/Config';
 
 const COMMANDS_DIR = path.resolve(__dirname, './fixtures');
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');

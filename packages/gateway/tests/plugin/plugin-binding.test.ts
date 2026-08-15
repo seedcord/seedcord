@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 
-import { Plugin } from '@src/plugin';
+import { Plugin } from '#src/plugin';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { CoreBase } from '@seedcord/core';
 
 // justified: the test only reads the members it declares

@@ -2,10 +2,10 @@ import { decodeComponentRoute } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { InteractionHandler } from '@handlers/interaction/InteractionHandler';
+import { InteractionHandler } from '#handlers/interaction/InteractionHandler';
 
-import type { SentMessage } from '@bot/ReplySender';
-import type { GatewayReplyResponse } from '@interfaces/ReplyResponse';
+import type { SentMessage } from '#bot/ReplySender';
+import type { GatewayReplyResponse } from '#interfaces/ReplyResponse';
 import type {
     AnyCustomId,
     DecodedComponentRoute,

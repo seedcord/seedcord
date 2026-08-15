@@ -9,8 +9,8 @@ import { InteractionsEndpoint } from './InteractionsEndpoint';
 import { awaitReachable, PROBE_SECONDS } from './probe';
 import { TunnelCoordinator } from './TunnelCoordinator';
 
+import type { ResolvedTunnel } from '#core/config/schema';
 import type { TunnelStatus } from './TunnelCoordinator';
-import type { ResolvedTunnel } from '@core/config/schema';
 import type { ILogger } from '@seedcord/types';
 
 export function missingCloudflaredHint(platform: NodeJS.Platform): string {

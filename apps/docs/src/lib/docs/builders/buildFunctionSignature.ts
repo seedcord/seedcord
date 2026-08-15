@@ -1,12 +1,12 @@
-import { cloneCommentParagraphs } from '@lib/docs/comments/creators';
-import { formatCommentRich } from '@lib/docs/comments/formatter';
-import { formatSignature, highlightCode, inlineTypeText } from '@lib/docs/formatting';
+import { cloneCommentParagraphs } from '#lib/docs/comments/creators';
+import { formatCommentRich } from '#lib/docs/comments/formatter';
+import { formatSignature, highlightCode, inlineTypeText } from '#lib/docs/formatting';
 
 import { buildFunctionParameters } from './buildFunctionParameters';
 import { buildFunctionTypeParams } from './buildFunctionTypeParams';
 import { ensureSignatureAnchor, buildDeprecationStatusFromNodeLike } from './utils';
 
-import type { CodeRepresentation, FormatContext, FunctionSignatureModel } from '@lib/docs/types';
+import type { CodeRepresentation, FormatContext, FunctionSignatureModel } from '#lib/docs/types';
 import type { DocSignature } from '@seedcord/docs-engine';
 
 export async function buildFunctionSignature(

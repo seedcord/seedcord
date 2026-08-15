@@ -1,9 +1,9 @@
 import { paint } from '@seedcord/errors/internal';
 
-import { runPrefix } from '@cli/packageManager';
-import { privilegedFor } from '@interview/capabilities';
+import { runPrefix } from '#cli/packageManager';
+import { privilegedFor } from '#interview/capabilities';
 
-import type { ScaffoldAnswers } from '@template/context';
+import type { ScaffoldAnswers } from '#template/context';
 import type { AgentName } from 'package-manager-detector';
 
 const PORTAL = 'https://discord.com/developers/applications';

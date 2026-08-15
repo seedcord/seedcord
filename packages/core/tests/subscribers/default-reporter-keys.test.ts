@@ -2,13 +2,13 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
-import { Notice } from '@stops/Notice';
-import { HandledException } from '@subscribers/default/HandledException';
-import { UnknownException } from '@subscribers/default/UnknownException';
+import { Notice } from '#stops/Notice';
+import { HandledException } from '#subscribers/default/HandledException';
+import { UnknownException } from '#subscribers/default/UnknownException';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { InteractionFaultSource } from '#subscribers/types/Subscriptions';
 import type { ReplyResponse } from '@seedcord/types';
-import type { InteractionFaultSource } from '@subscribers/types/Subscriptions';
 
 const hoisted = vi.hoisted(() => {
     process.env.UNKNOWN_EXCEPTION_WEBHOOK_URL = 'https://discord.com/api/webhooks/11/unknown-tok';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { includesIgnoreCase, plural } from '@core/format';
+import { includesIgnoreCase, plural } from '#core/format';
 
 describe('includesIgnoreCase', () => {
     it('matches a substring regardless of case on either side', () => {

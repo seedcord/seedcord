@@ -1,6 +1,6 @@
 import { Plugin as CorePlugin } from '@seedcord/core/plugin';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { PluginOptions } from '@seedcord/core/plugin';
 import type { TypedOmit } from '@seedcord/types';
 

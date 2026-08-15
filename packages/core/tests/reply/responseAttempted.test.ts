@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { BaseReplySender } from '@reply/BaseReplySender';
-import { Bus } from '@subscribers/Bus';
+import { BaseReplySender } from '#reply/BaseReplySender';
+import { Bus } from '#subscribers/Bus';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { ModalLike } from '@reply/BaseReplySender';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { ModalLike } from '#reply/BaseReplySender';
+import type { SubscriptionData } from '#subscribers/types/Subscriptions';
 import type { ReplyResponse } from '@seedcord/types';
-import type { SubscriptionData } from '@subscribers/types/Subscriptions';
 
 interface TestMessage {
     id: string;

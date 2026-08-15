@@ -1,5 +1,5 @@
-import type { Core } from '@interfaces/Core';
-import type { Repliables } from '@src/handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 import type { Guild, User } from 'discord.js';
 
 /**

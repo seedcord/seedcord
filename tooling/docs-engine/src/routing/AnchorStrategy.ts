@@ -1,10 +1,10 @@
-import { buildEntityHref } from '@routing/url-builder';
-import { memberFragment } from '@src/anchors';
-import { kindName } from '@src/kinds';
-import { resolveEntityToneStrict } from '@src/tones';
+import { buildEntityHref } from '#routing/url-builder';
+import { memberFragment } from '#src/anchors';
+import { kindName } from '#src/kinds';
+import { resolveEntityToneStrict } from '#src/tones';
 
-import type { NodeLookup } from '@routing/lookup';
-import type { DocNode } from '@src/types';
+import type { NodeLookup } from '#routing/lookup';
+import type { DocNode } from '#src/types';
 
 const ENTITY_RESULT_KINDS = new Set(['class', 'interface', 'enum', 'type', 'function', 'variable']);
 

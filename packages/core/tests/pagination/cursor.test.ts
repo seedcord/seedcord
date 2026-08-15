@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { pageCursor } from '@pagination/cursor';
+import { pageCursor } from '#pagination/cursor';
 
 describe('pageCursor', () => {
     it('round-trips a page and slot through the wire', () => {

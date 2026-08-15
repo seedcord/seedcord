@@ -2,11 +2,11 @@ import { REST } from '@discordjs/rest';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, afterEach } from 'vitest';
 
-import { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import { Pluggable } from '@node/Pluggable';
-import { Plugin } from '@src/plugin/Plugin';
-import { Bus } from '@subscribers/Bus';
+import { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
+import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import { Pluggable } from '#node/Pluggable';
+import { Plugin } from '#src/plugin/Plugin';
+import { Bus } from '#subscribers/Bus';
 
 import type { Config, IRateLimiter } from '@seedcord/types';
 

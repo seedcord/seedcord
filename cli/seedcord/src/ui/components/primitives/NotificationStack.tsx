@@ -1,7 +1,7 @@
 import { Box } from 'ink';
 import React, { Fragment } from 'react';
 
-import type { Notice } from '@ui/notices';
+import type { Notice } from '#ui/notices';
 import type { ReactElement } from 'react';
 
 interface NotificationStackProps {

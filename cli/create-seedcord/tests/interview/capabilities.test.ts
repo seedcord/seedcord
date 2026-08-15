@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CAPABILITIES, intentsFor, isPrivileged, partialsFor, privilegedFor } from '@interview/capabilities';
+import { CAPABILITIES, intentsFor, isPrivileged, partialsFor, privilegedFor } from '#interview/capabilities';
 
 describe('CAPABILITIES', () => {
     it('offers eleven options with unique ids', () => {

@@ -2,7 +2,7 @@ import { ContainerBuilder, FileBuilder, SectionBuilder, TextDisplayBuilder } fro
 import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { translateSerializationError } from '@reply/translateSerialization';
+import { translateSerializationError } from '#reply/translateSerialization';
 
 import { stripAnsi } from './helpers';
 

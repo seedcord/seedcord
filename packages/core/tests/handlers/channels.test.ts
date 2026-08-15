@@ -1,10 +1,10 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BaseHandler } from '@src/handlers/BaseHandler';
-import { Subscriber } from '@subscribers/Subscriber';
+import { BaseHandler } from '#src/handlers/BaseHandler';
+import { Subscriber } from '#subscribers/Subscriber';
 
-import type { CoreBase } from '@interfaces/CoreBase';
+import type { CoreBase } from '#interfaces/CoreBase';
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 
 class FakeSink implements ILogSink {

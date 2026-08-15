@@ -4,8 +4,8 @@ import { cn } from '@seedcord/ui';
 import { useMemo, type ReactElement } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { MemberAccessControls } from '@components/docs/entity/member/MemberAccessControls';
-import { useUIStore, type UIStore } from '@store/ui';
+import { MemberAccessControls } from '#components/docs/entity/member/MemberAccessControls';
+import { useUIStore, type UIStore } from '#store/ui';
 
 import { MemberDetailGroup } from './member/MemberDetailGroup';
 import { MemberList } from './member/MemberList';
@@ -13,7 +13,7 @@ import { MemberOverview } from './member/MemberOverview';
 import { shouldIncludeMember } from './utils/shouldIncludeMember';
 import { useMemberNavigation } from './utils/useMemberNavigation';
 
-import type { EntityMemberSummary, WithParentDeprecationStatus } from '@lib/docs/types';
+import type { EntityMemberSummary, WithParentDeprecationStatus } from '#lib/docs/types';
 
 const EMPTY_MEMBERS: readonly EntityMemberSummary[] = [];
 

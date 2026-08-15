@@ -1,8 +1,8 @@
 import { PermissionFlagsBits } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { HasDangerousPermissions, MissingPermissions } from '@notices/index';
-import { assertPermissions } from '@src/permissions/assert';
+import { HasDangerousPermissions, MissingPermissions } from '#notices/index';
+import { assertPermissions } from '#src/permissions/assert';
 
 const { BanMembers, KickMembers, Administrator, ManageRoles } = PermissionFlagsBits;
 

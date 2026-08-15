@@ -2,11 +2,11 @@ import { CustomId } from '@seedcord/core';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { buildRouteMaps, resolve } from '@src/dispatch/resolve';
+import { buildRouteMaps, resolve } from '#src/dispatch/resolve';
 
 import { FROM } from './harness';
 
-import type { ComponentRoute, RouteManifest, RouteModule } from '@src/manifest/RouteManifest';
+import type { ComponentRoute, RouteManifest, RouteModule } from '#src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
 
 // the module exports an object carrying its own name, so a test can assert which one the route resolved

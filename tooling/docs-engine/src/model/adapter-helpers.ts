@@ -8,11 +8,11 @@ import {
     type HeritageType
 } from '@microsoft/api-extractor-model';
 
-import { referenceFromCanonical } from '@model/canonical-ref';
-import { excerptToInlineType } from '@model/excerpt-renderer';
-import { DocKind, frozenKindLabel } from '@model/kinds';
-import { buildComment, type LinkResolver } from '@model/tsdoc-comment';
-import { formatRenderedSignature } from '@transformers/signature-renderer';
+import { referenceFromCanonical } from '#model/canonical-ref';
+import { excerptToInlineType } from '#model/excerpt-renderer';
+import { DocKind, frozenKindLabel } from '#model/kinds';
+import { buildComment, type LinkResolver } from '#model/tsdoc-comment';
+import { formatRenderedSignature } from '#transformers/signature-renderer';
 
 import type {
     DocFlags,
@@ -25,7 +25,7 @@ import type {
     InlineType,
     RenderedDeclarationHeader,
     RenderedSignature
-} from '@src/types';
+} from '#src/types';
 
 // the entity page lays out sections in this first-seen kind order
 export function synthGroups(children: DocNode[]): DocGroup[] {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeScrollView } from '@ui/hooks/useScroll';
-import { expandRows, messageColumn, rowKey, wrapRows } from '@ui/logRows';
+import { computeScrollView } from '#ui/hooks/useScroll';
+import { expandRows, messageColumn, rowKey, wrapRows } from '#ui/logRows';
 
-import type { LogEntry } from '@ui/stores/LogStore';
+import type { LogEntry } from '#ui/stores/LogStore';
 
 const LABEL_WIDTH = 3;
 const COLUMN = messageColumn(LABEL_WIDTH);

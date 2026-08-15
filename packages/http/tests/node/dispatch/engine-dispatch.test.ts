@@ -1,8 +1,8 @@
 import { CustomId } from '@seedcord/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ButtonHandler } from '@handlers/interaction/components/ButtonHandler';
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { ButtonHandler } from '#handlers/interaction/components/ButtonHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 

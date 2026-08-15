@@ -7,11 +7,11 @@ import { attemptWrite, publishResponse } from './responseReport';
 import { serializeReply } from './serializeReply';
 import { translateSerializationError } from './translateSerialization';
 
+import type { ResponseOutcome } from '#subscribers/types/Subscriptions';
 import type { AckState, ReplyMethod } from './ackLegality';
 import type { ReplyTelemetry } from './responseReport';
 import type { SerializedReply } from './serializeReply';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
-import type { ResponseOutcome } from '@subscribers/types/Subscriptions';
 import type { APIModalInteractionResponseCallbackData } from 'discord-api-types/v10';
 
 /** The shape djs modal builders emit from `toJSON()`. */

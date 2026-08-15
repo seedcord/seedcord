@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
-import { and, or } from '@gates/combinators';
-import { defineEffectGate, defineGate } from '@gates/Gate';
-import { runGates, runHandlerGates } from '@gates/runGates';
-import { GatedMetadataKey, InteractionRouteKeys, InteractionRoutes } from '@src/metadataKeys';
-import { Notice } from '@stops/Notice';
+import { and, or } from '#gates/combinators';
+import { defineEffectGate, defineGate } from '#gates/Gate';
+import { runGates, runHandlerGates } from '#gates/runGates';
+import { GatedMetadataKey, InteractionRouteKeys, InteractionRoutes } from '#src/metadataKeys';
+import { Notice } from '#stops/Notice';
 
 import { TestNotice } from '../utils/TestNotice';
 
-import type { GateContextBase } from '@gates/Gate';
+import type { GateContextBase } from '#gates/Gate';
 
 // gates ignore ctx here, so a minimal cast stands in
 const ctx = {} as unknown as GateContextBase;

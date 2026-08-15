@@ -2,20 +2,20 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
-import { StartupPhase } from '@src/lifecycle/phases';
-import { resolvedLifecycleSpecOf } from '@src/plugin/Plugin';
+import { StartupPhase } from '#src/lifecycle/phases';
+import { resolvedLifecycleSpecOf } from '#src/plugin/Plugin';
 
 import { withTimeout } from './Lifecycle/withTimeout';
 
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
+import type { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import type { ShutdownPhase } from '#src/lifecycle/phases';
+import type { ChannelKeyAssert, Runtime, RuntimeAssert, Transport, TransportAssert } from '#src/plugin/options';
+import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '#src/plugin/Plugin';
+import type { Bus } from '#subscribers/Bus';
 import type { REST } from '@discordjs/rest';
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { CoordinatedShutdown } from '@node/Lifecycle/CoordinatedShutdown';
-import type { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
 import type { Config, IRateLimiter } from '@seedcord/types';
-import type { ShutdownPhase } from '@src/lifecycle/phases';
-import type { ChannelKeyAssert, Runtime, RuntimeAssert, Transport, TransportAssert } from '@src/plugin/options';
-import type { CoreParamAssert, PluginArgs, PluginCtor, PluginLike } from '@src/plugin/Plugin';
-import type { Bus } from '@subscribers/Bus';
 
 interface Attachment {
     readonly key: string;

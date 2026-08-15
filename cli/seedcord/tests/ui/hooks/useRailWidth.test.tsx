@@ -3,11 +3,11 @@ import { render } from 'ink-testing-library';
 import React, { useRef } from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { useRailWidth } from '@ui/hooks/useRailWidth';
+import { useRailWidth } from '#ui/hooks/useRailWidth';
 
 import { settled } from '../settled';
 
-import type { DevPhase } from '@ui/stores/devPhase';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

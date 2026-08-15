@@ -1,7 +1,7 @@
-import { DocKind } from '@model/kinds';
+import { DocKind } from '#model/kinds';
 
-import type { EntityTone } from '@src/tones';
-import type { DocIndexes, DocNode } from '@src/types';
+import type { EntityTone } from '#src/tones';
+import type { DocIndexes, DocNode } from '#src/types';
 
 export type DirectoryEntity = 'classes' | 'interfaces' | 'enums' | 'types' | 'functions' | 'variables';
 

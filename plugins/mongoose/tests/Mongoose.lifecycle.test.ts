@@ -2,7 +2,7 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import mongoose from 'mongoose';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { Mongoose } from '@src/Mongoose';
+import { Mongoose } from '#src/Mongoose';
 
 import { pluginsPath } from './utils/source-path';
 import { TestEnvironment } from './utils/test-env';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { decorateProseLinks } from '@lib/docs/comments/renderers/decorateProseLinks';
+import { decorateProseLinks } from '#lib/docs/comments/renderers/decorateProseLinks';
 
 describe('decorateProseLinks', () => {
     it('leaves a same-package internal link untouched', () => {

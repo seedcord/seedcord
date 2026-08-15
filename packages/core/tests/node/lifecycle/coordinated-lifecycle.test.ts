@@ -2,8 +2,8 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { describe, it, expect } from 'vitest';
 
-import { CoordinatedStartup } from '@node/Lifecycle/CoordinatedStartup';
-import { StartupPhase } from '@src/lifecycle/phases';
+import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
+import { StartupPhase } from '#src/lifecycle/phases';
 
 import type { LogRecord } from '@seedcord/logger';
 

@@ -1,8 +1,8 @@
 import { Plugin } from '@seedcord/core/plugin';
 import { describe, it, expect } from 'vitest';
 
-import type { HttpEdgeConfig, HttpServerConfig } from '@interfaces/Config';
-import type { Seedcord } from '@src/node/Seedcord';
+import type { HttpEdgeConfig, HttpServerConfig } from '#interfaces/Config';
+import type { Seedcord } from '#src/node/Seedcord';
 
 class Anywhere extends Plugin {
     public init(): Promise<void> {

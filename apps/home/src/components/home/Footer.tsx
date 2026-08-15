@@ -2,7 +2,7 @@ import { cn } from '@seedcord/ui';
 import { Materwelon } from '@seedcord/ui/Materwelon';
 import Link from 'next/link';
 
-import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '@lib/site';
+import { DISCORD_URL, DOCS_URL, GUIDE_URL, NPM_URL, REPO_URL } from '#lib/site';
 
 import type { ReactNode } from 'react';
 

@@ -1,12 +1,12 @@
 import { RepliableHandler as CoreRepliableHandler } from '@seedcord/core';
 
-import { ReplySender } from '@reply/ReplySender';
-import { apiFor } from '@src/api';
+import { ReplySender } from '#reply/ReplySender';
+import { apiFor } from '#src/api';
 
+import type { Core } from '#interfaces/Core';
+import type { SentMessage } from '#reply/ReplySender';
 import type { Repliables } from './interactionTypes';
 import type { API } from '@discordjs/core/http-only';
-import type { Core } from '@interfaces/Core';
-import type { SentMessage } from '@reply/ReplySender';
 
 /**
  * Shared base the repliable HTTP interaction handlers extend.

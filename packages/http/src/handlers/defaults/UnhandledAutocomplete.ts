@@ -1,4 +1,4 @@
-import { AutocompleteHandler } from '@handlers/interaction/AutocompleteHandler';
+import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 
 // dispatch falls back here when no manifest row matches
 // discord requires empty choices here, which clears the pending autocomplete state

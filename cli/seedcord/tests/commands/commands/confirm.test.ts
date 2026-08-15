@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { confirmCount } from '@commands/commands/confirm';
+import { confirmCount } from '#commands/commands/confirm';
 
 import { silentLogger } from '../../silentLogger';
 

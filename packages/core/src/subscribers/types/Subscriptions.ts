@@ -1,7 +1,7 @@
-import type { WriteMethod } from '@reply/responseReport';
+import type { WriteMethod } from '#reply/responseReport';
+import type { InteractionRoutes } from '#src/metadataKeys';
+import type { Notice } from '#stops/Notice';
 import type { TypedExclude } from '@seedcord/types';
-import type { InteractionRoutes } from '@src/metadataKeys';
-import type { Notice } from '@stops/Notice';
 import type { UUID } from 'node:crypto';
 
 /**

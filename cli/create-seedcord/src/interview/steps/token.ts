@@ -4,7 +4,7 @@ import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '@interview/types';
+import type { Step } from '#interview/types';
 
 function parseToken(raw: string): string {
     try {

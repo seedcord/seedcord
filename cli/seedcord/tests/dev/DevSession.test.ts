@@ -2,12 +2,12 @@ import { SeedcordErrorCode, isSeedcordError } from '@seedcord/errors';
 import { SeedcordBrand } from '@seedcord/types/internal';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DevSession } from '@commands/dev/DevSession';
-import { DevStore } from '@ui/stores/DevStore';
+import { DevSession } from '#commands/dev/DevSession';
+import { DevStore } from '#ui/stores/DevStore';
 
-import type { DevRuntime, DevRuntimeContext } from '@commands/dev/runtime/DevRuntime';
-import type { DevEvent } from '@commands/dev/runtime/events';
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
+import type { DevRuntime, DevRuntimeContext } from '#commands/dev/runtime/DevRuntime';
+import type { DevEvent } from '#commands/dev/runtime/events';
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 
 function config(): ResolvedSeedcordDevConfig {
     return {

@@ -2,11 +2,11 @@ import { multiselect } from '@clack/prompts';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, paint } from '@seedcord/errors/internal';
 
-import { CAPABILITIES, isPrivileged } from '@interview/capabilities';
+import { CAPABILITIES, isPrivileged } from '#interview/capabilities';
 
 import { requireAnswer } from './requireAnswer';
 
-import type { Step } from '@interview/types';
+import type { Step } from '#interview/types';
 
 function parseCapabilities(raw: string): string[] {
     const ids = raw

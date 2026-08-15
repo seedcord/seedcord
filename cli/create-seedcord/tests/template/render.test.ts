@@ -2,10 +2,10 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { buildContext } from '@template/context';
-import { renderTemplates } from '@template/render';
+import { buildContext } from '#template/context';
+import { renderTemplates } from '#template/render';
 
-import type { ScaffoldAnswers } from '@template/context';
+import type { ScaffoldAnswers } from '#template/context';
 
 const TEMPLATES = resolve(import.meta.dirname, '../../templates');
 const EXTRAS = { developerUsername: 'dhruv', runCommand: 'pnpm run' };

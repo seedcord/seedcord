@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { classifyGuildCommands } from '@commands/commands/classify';
+import { classifyGuildCommands } from '#commands/commands/classify';
 
 describe('classifyGuildCommands', () => {
     it('flags a guild command whose name is also global as overlap, leaves guild-only commands alone', () => {

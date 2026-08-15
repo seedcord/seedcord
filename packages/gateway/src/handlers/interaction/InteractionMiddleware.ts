@@ -1,7 +1,7 @@
-import { BaseHandler } from '@src/handlers/BaseHandler';
+import { BaseHandler } from '#src/handlers/BaseHandler';
 
-import type { Core } from '@interfaces/Core';
-import type { Repliables } from '@src/handlers/interactionTypes';
+import type { Core } from '#interfaces/Core';
+import type { Repliables } from '#src/handlers/interactionTypes';
 
 /**
  * Base class for interaction middleware

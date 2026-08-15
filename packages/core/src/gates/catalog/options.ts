@@ -1,4 +1,4 @@
-import type { Notice } from '@stops/Notice';
+import type { Notice } from '#stops/Notice';
 
 /**
  * The override a catalog gate accepts. A one-line `message` reword or a full `notice` replacement. Accepted by

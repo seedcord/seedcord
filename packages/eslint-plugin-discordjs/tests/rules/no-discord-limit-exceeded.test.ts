@@ -1,6 +1,6 @@
 import dedent from 'dedent';
 
-import rule from '@src/rules/no-discord-limit-exceeded';
+import rule from '#src/rules/no-discord-limit-exceeded';
 
 import { createTypedRuleTester } from '../typed-rule-tester';
 

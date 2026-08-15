@@ -1,7 +1,7 @@
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { describe, it, expect, beforeEach } from 'vitest';
 
-import { Seedcord } from '@src/Seedcord';
+import { Seedcord } from '#src/Seedcord';
 
 import { testConfig } from './utils/test-config';
 

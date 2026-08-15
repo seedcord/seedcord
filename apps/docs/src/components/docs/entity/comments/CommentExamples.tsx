@@ -2,7 +2,7 @@
 
 import { cn, CodeBlock, Disclosure, DisclosureChevron, DisclosurePanel, DisclosureTrigger } from '@seedcord/ui';
 
-import type { CommentExample } from '@lib/docs/types';
+import type { CommentExample } from '#lib/docs/types';
 import type { ReactElement } from 'react';
 
 interface CommentExamplesProps {

@@ -1,13 +1,13 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
-import { ui } from '@ui/palette';
+import { ui } from '#ui/palette';
 
 import { Banner } from '../Banner';
 import { StatusBadge } from '../StatusBadge';
 
-import type { Notice } from '@ui/notices';
-import type { DevState } from '@ui/stores/DevStore';
+import type { Notice } from '#ui/notices';
+import type { DevState } from '#ui/stores/DevStore';
 import type { ReactElement } from 'react';
 
 const HINT = 'resize for full ui';

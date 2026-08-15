@@ -1,6 +1,6 @@
 import { describe, it, expectTypeOf } from 'vitest';
 
-import { TypedEventEmitter } from '@src/TypedEventEmitter';
+import { TypedEventEmitter } from '#src/TypedEventEmitter';
 
 interface Events {
     ping: [n: number];

@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
-import { ApiDocsGenerator } from '@src/generator';
+import { ApiDocsGenerator } from '#src/generator';
 
 import { PACKAGES_DIR } from './utils';
 

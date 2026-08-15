@@ -1,6 +1,6 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import type { SlashOptions } from '@inputs/SlashOptions';
+import type { SlashOptions } from '#inputs/SlashOptions';
 import type { GuildMember, User } from 'discord.js';
 
 // each @ts-expect-error fails the typecheck if its guard stops being an error. vitest never runs these.

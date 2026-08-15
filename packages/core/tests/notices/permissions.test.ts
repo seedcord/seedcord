@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { MissingPermissions, MissingRole } from '@notices/index';
+import { MissingPermissions, MissingRole } from '#notices/index';
 
 import { cardJson } from '../utils/cardText';
 

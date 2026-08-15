@@ -5,8 +5,8 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger, paint } from '@seedcord/logger';
 import { minimatch } from 'minimatch';
 
+import type { ResolvedSeedcordDevConfig } from '#core/config/schema';
 import type { DevEvent } from './events';
-import type { ResolvedSeedcordDevConfig } from '@core/config/schema';
 import type { HmrEventType, HmrUpdateEvent } from '@seedcord/types';
 import type { DevChannel, SeedcordCliEvents, SeedcordFrameworkEvents } from '@seedcord/types/internal';
 import type {

@@ -3,7 +3,7 @@
 import { tw, Button, IconSwap, cn, useTimedToggle } from '@seedcord/ui';
 import { Check, Trash2 } from 'lucide-react';
 
-import { clearDocsHistory } from '@lib/settings/clearHistory';
+import { clearDocsHistory } from '#lib/settings/clearHistory';
 
 import { SettingsRow } from './SettingsRow';
 

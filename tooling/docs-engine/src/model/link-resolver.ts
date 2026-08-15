@@ -1,9 +1,9 @@
-import { referenceFromCanonical } from '@model/canonical-ref';
-import { codeDestinationName } from '@model/tsdoc-comment';
+import { referenceFromCanonical } from '#model/canonical-ref';
+import { codeDestinationName } from '#model/tsdoc-comment';
 
+import type { LinkResolver } from '#model/tsdoc-comment';
+import type { DocReference } from '#src/types';
 import type { ApiItem, ApiModel } from '@microsoft/api-extractor-model';
-import type { LinkResolver } from '@model/tsdoc-comment';
-import type { DocReference } from '@src/types';
 
 /**
  * Builds the `{@link}` resolver for one package, bound to its API model and re-export table.

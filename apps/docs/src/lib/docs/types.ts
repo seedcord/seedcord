@@ -1,5 +1,5 @@
 import type { VersionedDocsEngine } from './engine';
-import type { MemberAccessLevel } from '@lib/memberAccess';
+import type { MemberAccessLevel } from '#lib/memberAccess';
 import type {
     DirectoryEntity,
     DocComment,

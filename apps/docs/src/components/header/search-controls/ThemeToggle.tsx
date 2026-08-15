@@ -3,7 +3,7 @@ import { MonitorSmartphone, Sun, MoonStar } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
-import { log } from '@lib/logger';
+import { log } from '#lib/logger';
 
 import type { ReactElement } from 'react';
 

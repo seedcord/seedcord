@@ -1,9 +1,9 @@
 import { BaseHandler } from './BaseHandler';
 
-import type { CoreBase } from '@interfaces/CoreBase';
-import type { BaseReplySender } from '@reply/BaseReplySender';
+import type { CoreBase } from '#interfaces/CoreBase';
+import type { BaseReplySender } from '#reply/BaseReplySender';
+import type { DispatchContext } from '#src/dispatch/DispatchContext';
 import type { DeferOpts, ReplyResponse, SendOpts } from '@seedcord/types';
-import type { DispatchContext } from '@src/dispatch/DispatchContext';
 
 /**
  * Shared base the repliable handlers on both transports extend. Defines the reply members over the sender

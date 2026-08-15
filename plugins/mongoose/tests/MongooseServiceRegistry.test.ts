@@ -2,20 +2,20 @@ import { Logger } from '@seedcord/logger';
 import mongoose from 'mongoose';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 
-import { RegisterMongooseService } from '@src/decorators/RegisterMongooseService';
-import { MongooseService } from '@src/MongooseService';
-import { MongooseServiceRegistry } from '@src/MongooseServiceRegistry';
+import { RegisterMongooseService } from '#src/decorators/RegisterMongooseService';
+import { MongooseService } from '#src/MongooseService';
+import { MongooseServiceRegistry } from '#src/MongooseServiceRegistry';
 
+import type { Mongoose } from '#src/Mongoose';
+import type { MongooseServiceConstructor } from '#src/MongooseService';
 import type { CoreBase } from '@seedcord/core';
-import type { Mongoose } from '@src/Mongoose';
-import type { MongooseServiceConstructor } from '@src/MongooseService';
 
 interface IUser {
     _id: string;
     username: string;
 }
 
-declare module '@src/types/MongooseServices' {
+declare module '#src/types/MongooseServices' {
     interface MongooseServices {
         adopted: Adopted;
     }

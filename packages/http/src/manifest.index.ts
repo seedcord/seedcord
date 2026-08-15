@@ -1,9 +1,9 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import type { RouteManifest } from '@src/manifest/RouteManifest';
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 
-export type { RouteManifest } from '@src/manifest/RouteManifest';
+export type { RouteManifest } from '#src/manifest/RouteManifest';
 
 const notGenerated = (): never => {
     throw new SeedcordError(SeedcordErrorCode.ConfigManifestNotGenerated);

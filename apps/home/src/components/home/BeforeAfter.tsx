@@ -1,9 +1,9 @@
 import { cn, Icon } from '@seedcord/ui';
 import { ArrowRight } from 'lucide-react';
 
-import { CodeCard } from '@components/code/CodeCard';
-import { Section } from '@components/home/Section';
-import { afterSeedcord, beforeRawDjs } from '@lib/code/samples';
+import { CodeCard } from '#components/code/CodeCard';
+import { Section } from '#components/home/Section';
+import { afterSeedcord, beforeRawDjs } from '#lib/code/samples';
 
 import type { ReactNode } from 'react';
 

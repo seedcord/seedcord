@@ -4,11 +4,11 @@ import { Logger } from '@seedcord/logger';
 import { DiscordAPIError, RESTJSONErrorCodes } from 'discord.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { handleEventFault } from '@bot/handleEventFault';
+import { handleEventFault } from '#bot/handleEventFault';
 
 import { TestNotice } from '../utils/TestNotice';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { SubscriptionData } from '@seedcord/core';
 
 function deadResourceError(): DiscordAPIError {

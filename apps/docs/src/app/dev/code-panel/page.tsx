@@ -1,6 +1,6 @@
 import { CodePanel, cn } from '@seedcord/ui';
 
-import { highlightCode } from '@lib/docs/formatting';
+import { highlightCode } from '#lib/docs/formatting';
 
 import type { ReactElement } from 'react';
 

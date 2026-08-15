@@ -1,4 +1,4 @@
-import type { GatewayConfig } from '@interfaces/Config';
+import type { GatewayConfig } from '#interfaces/Config';
 import type { CustomIdMatcher, HealthCheckOption } from '@seedcord/types';
 
 interface TestConfigOverrides {

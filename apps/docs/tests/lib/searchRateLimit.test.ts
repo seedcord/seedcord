@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { checkSearchRateLimit } from '@lib/searchRateLimit';
+import { checkSearchRateLimit } from '#lib/searchRateLimit';
 
 import type { NextRequest } from 'next/server';
 

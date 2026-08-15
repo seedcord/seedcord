@@ -1,9 +1,9 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 
-import { setBotColor } from '@components/botColorHolder';
-import { Colors } from '@components/colors';
-import { BuilderComponent } from '@components/Component';
-import { resolveColor } from '@components/resolveColor';
+import { setBotColor } from '#components/botColorHolder';
+import { Colors } from '#components/colors';
+import { BuilderComponent } from '#components/Component';
+import { resolveColor } from '#components/resolveColor';
 
 class TestEmbed extends BuilderComponent<'embed'> {
     constructor() {

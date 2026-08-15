@@ -2,10 +2,10 @@ import { SlashRoute } from '@seedcord/core';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, expectTypeOf, it } from 'vitest';
 
-import { SlashHandler } from '@handlers/interaction/SlashHandler';
+import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
-import type { SlashOptions } from '@inputs/SlashOptions';
-import type { Core } from '@interfaces/Core';
+import type { SlashOptions } from '#inputs/SlashOptions';
+import type { Core } from '#interfaces/Core';
 import type { ChatInputCommandInteraction, CommandInteractionOption, User } from 'discord.js';
 
 // Compile-time spec for SlashHandler. The execute() bodies are typechecked but never run, so each guarded

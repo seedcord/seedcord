@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { DocKind } from '@model/kinds';
-import { kindKey, kindLabel, kindName } from '@src/kinds';
+import { DocKind } from '#model/kinds';
+import { kindKey, kindLabel, kindName } from '#src/kinds';
 
 describe('kinds helpers', () => {
     it('returns the frozen kind_<snake> label', () => {

@@ -3,12 +3,12 @@ import { PublishDefault } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
-import { registerSubscribers } from '@src/dispatch/registerSubscribers';
-import { EMPTY_MANIFEST } from '@src/manifest/RouteManifest';
-import { Subscriber } from '@subscribers/index';
+import { registerSubscribers } from '#src/dispatch/registerSubscribers';
+import { EMPTY_MANIFEST } from '#src/manifest/RouteManifest';
+import { Subscriber } from '#subscribers/index';
 
+import type { RouteManifest } from '#src/manifest/RouteManifest';
 import type { CoreBase, SubscriptionData } from '@seedcord/core';
-import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 // justified: the Bus only stores core, no member is read during publish
 function stubBus(): Bus {

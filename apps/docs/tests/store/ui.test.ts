@@ -25,7 +25,7 @@ function installStorageShim(): void {
 
 installStorageShim();
 
-const { useUIStore } = await import('@store/ui');
+const { useUIStore } = await import('#store/ui');
 
 const initialState = useUIStore.getState();
 
@@ -107,7 +107,7 @@ describe('useUIStore', () => {
             const getItem = vi.spyOn(window.localStorage, 'getItem');
 
             vi.resetModules();
-            const { useUIStore: freshStore } = await import('@store/ui');
+            const { useUIStore: freshStore } = await import('#store/ui');
 
             expect(freshStore.getState().memberAccessLevel).toBe('protected');
             expect(getItem).not.toHaveBeenCalled();

@@ -3,15 +3,15 @@
 import { Button, GithubIcon, Icon, cn, ScrollToTopButton } from '@seedcord/ui';
 import Link from 'next/link';
 
-import { ClearHistoryRow } from '@components/header/settings/ClearHistoryRow';
-import { Sidebar } from '@components/layout/sidebar/Sidebar';
-import { SIDEBAR_WIDTH } from '@components/layout/sidebar/utils/constants';
-import { useUIStore } from '@store/ui';
+import { ClearHistoryRow } from '#components/header/settings/ClearHistoryRow';
+import { Sidebar } from '#components/layout/sidebar/Sidebar';
+import { SIDEBAR_WIDTH } from '#components/layout/sidebar/utils/constants';
+import { useUIStore } from '#store/ui';
 
 import { DesktopSidebarFrame } from './DesktopSidebarFrame';
 import { MobilePanelDialog } from './MobilePanelDialog';
 
-import type { DocsCatalog } from '@lib/docs/types';
+import type { DocsCatalog } from '#lib/docs/types';
 import type { CSSProperties, ReactNode } from 'react';
 
 const mobilePanelFooter = (

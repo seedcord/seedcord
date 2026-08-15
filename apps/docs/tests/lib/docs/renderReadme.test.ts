@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { renderReadme } from '@lib/docs/renderReadme';
+import { renderReadme } from '#lib/docs/renderReadme';
 
 const WORDMARK_PICTURE = [
     '<p align="center">',

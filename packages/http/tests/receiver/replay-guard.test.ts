@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ReplayGuard } from '@src/receiver/ReplayGuard';
+import { ReplayGuard } from '#src/receiver/ReplayGuard';
 
 const WINDOW_MS = 300_000;
 const BASE = 1_752_350_000_000;

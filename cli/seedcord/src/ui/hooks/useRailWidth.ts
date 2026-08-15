@@ -1,7 +1,7 @@
 import { measureElement } from 'ink';
 import { useLayoutEffect, useRef, useState } from 'react';
 
-import type { DevPhase } from '@ui/stores/devPhase';
+import type { DevPhase } from '#ui/stores/devPhase';
 import type { DOMElement } from 'ink';
 import type { RefObject } from 'react';
 

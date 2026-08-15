@@ -4,8 +4,8 @@ import { SegmentedControl, cn, tw, type SegmentedControlOption } from '@seedcord
 import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 
-import { MEMBER_ACCESS_LEVELS, formatMemberAccessLabel, type MemberAccessLevel } from '@lib/memberAccess';
-import { useUIStore, type UIStore } from '@store/ui';
+import { MEMBER_ACCESS_LEVELS, formatMemberAccessLabel, type MemberAccessLevel } from '#lib/memberAccess';
+import { useUIStore, type UIStore } from '#store/ui';
 
 import type { ReactElement } from 'react';
 

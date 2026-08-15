@@ -3,12 +3,12 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
-import { UnhandledAutocomplete } from '@handlers/defaults/UnhandledAutocomplete';
-import { UnhandledRepliable } from '@handlers/defaults/UnhandledRepliable';
+import { UnhandledAutocomplete } from '#handlers/defaults/UnhandledAutocomplete';
+import { UnhandledRepliable } from '#handlers/defaults/UnhandledRepliable';
 
 import { slashRouteOf } from './slashRouteOf';
 
-import type { ComponentRoute, RouteManifest, RouteModule } from '@src/manifest/RouteManifest';
+import type { ComponentRoute, RouteManifest, RouteModule } from '#src/manifest/RouteManifest';
 import type { APIInteraction } from 'discord-api-types/v10';
 
 type ResolvedKind = `${InteractionRoutes}`;

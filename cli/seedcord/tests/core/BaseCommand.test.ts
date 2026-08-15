@@ -1,7 +1,7 @@
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BaseCommand } from '@core/BaseCommand';
+import { BaseCommand } from '#core/BaseCommand';
 
 import type { ILogSink, LogRecord } from '@seedcord/logger';
 

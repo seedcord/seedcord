@@ -1,11 +1,11 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 
-import { BaseHandler } from '@src/handlers/BaseHandler';
+import { BaseHandler } from '#src/handlers/BaseHandler';
 
+import type { Core } from '#interfaces/Core';
+import type { ValidNonInteractionKeys } from '#src/handlers/interactionTypes';
 import type { SingleEventPayload } from './payload';
-import type { Core } from '@interfaces/Core';
-import type { ValidNonInteractionKeys } from '@src/handlers/interactionTypes';
 import type { ClientEvents } from 'discord.js';
 import type { Promisable } from 'type-fest';
 

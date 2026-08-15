@@ -2,15 +2,15 @@ import { paint } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
 import { Envapter } from 'envapt';
 
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
-import { SubscribeMetadataKey } from '@src/metadataKeys';
-import { registrationFor, Subscriber } from '@subscribers/index';
+import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
+import { SubscribeMetadataKey } from '#src/metadataKeys';
+import { registrationFor, Subscriber } from '#subscribers/index';
 
+import type { Initializeable } from '#src/plugin/Plugin';
+import type { SubscribeMetadataEntry } from '#subscribers/decorators/Subscribe';
+import type { StoredSubscriberCtor, Bus } from '#subscribers/index';
+import type { SubscriptionKey } from '#subscribers/types/Subscriptions';
 import type { HmrAware, HmrUpdateEvent } from '@seedcord/types';
-import type { Initializeable } from '@src/plugin/Plugin';
-import type { SubscribeMetadataEntry } from '@subscribers/decorators/Subscribe';
-import type { StoredSubscriberCtor, Bus } from '@subscribers/index';
-import type { SubscriptionKey } from '@subscribers/types/Subscriptions';
 
 type SubscriberArtifact = SubscriptionKey[];
 

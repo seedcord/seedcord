@@ -1,9 +1,9 @@
 import { ChannelType } from 'discord-api-types/v10';
 import { describe, it, expect } from 'vitest';
 
-import { renderAugmentation } from '@commands/codegen/renderAugmentation';
+import { renderAugmentation } from '#commands/codegen/renderAugmentation';
 
-import type { SlashTables } from '@commands/codegen/AugmentationBuilder';
+import type { SlashTables } from '#commands/codegen/AugmentationBuilder';
 
 const AUGMENT_TARGET = '@seedcord/gateway';
 

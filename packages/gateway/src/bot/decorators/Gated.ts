@@ -1,6 +1,6 @@
 import { GatedMetadataKey } from '@seedcord/core/internal';
 
-import type { AnyHandlerCtor, FitAll } from '@bot/gates/matching';
+import type { AnyHandlerCtor, FitAll } from '#bot/gates/matching';
 import type { Gate, GateContextBase } from '@seedcord/core';
 import type { NonEmptyTuple } from 'type-fest';
 

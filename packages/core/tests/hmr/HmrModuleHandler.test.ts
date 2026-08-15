@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
+import { HmrModuleHandler } from '#hmr/HmrModuleHandler';
 
 import type { Logger } from '@seedcord/logger';
 

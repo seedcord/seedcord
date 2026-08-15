@@ -1,11 +1,10 @@
 import path from 'node:path';
 
-import { ApiAdapter } from '@model/adapter';
-import { DocKind } from '@model/kinds';
-import { PackageDirectory } from '@src/PackageDirectory';
-import { inlineTypeToText, sigPartsToText } from '@transformers/signature-renderer';
+import { ApiAdapter } from '#model/adapter';
+import { DocKind } from '#model/kinds';
+import { PackageDirectory } from '#src/PackageDirectory';
+import { inlineTypeToText, sigPartsToText } from '#transformers/signature-renderer';
 
-import type { ApiModel, ApiPackage } from '@microsoft/api-extractor-model';
 import type {
     DocComment,
     DocIndexes,
@@ -17,7 +16,8 @@ import type {
     InlineType,
     RenderedSignature,
     SigPart
-} from '@src/types';
+} from '#src/types';
+import type { ApiModel, ApiPackage } from '@microsoft/api-extractor-model';
 
 function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     const byId = new Map<number, DocNode>();

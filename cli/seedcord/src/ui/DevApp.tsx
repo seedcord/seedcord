@@ -1,24 +1,24 @@
 import { Box, useInput, useWindowSize } from 'ink';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-import { Rule } from '@ui/components/primitives/Rule';
-import { INITIAL_CURSOR } from '@ui/filterCursor';
-import { useDevState } from '@ui/hooks/useDevState';
-import { useLogs } from '@ui/hooks/useLogs';
-import { useMeasuredBox } from '@ui/hooks/useMeasuredBox';
-import { useRailWidth } from '@ui/hooks/useRailWidth';
-import { useScroll } from '@ui/hooks/useScroll';
-import { useUptime } from '@ui/hooks/useUptime';
-import { dispatchHotkey } from '@ui/hotkeys';
-import { DevLayout } from '@ui/layout/DevLayout';
-import { expandRows, rowKey, wrapRows } from '@ui/logRows';
-import { noticesOf } from '@ui/notices';
-import { profileWrap } from '@ui/profile';
-import { LogStore } from '@ui/stores/LogStore';
-import { tierFor } from '@ui/tier';
+import { Rule } from '#ui/components/primitives/Rule';
+import { INITIAL_CURSOR } from '#ui/filterCursor';
+import { useDevState } from '#ui/hooks/useDevState';
+import { useLogs } from '#ui/hooks/useLogs';
+import { useMeasuredBox } from '#ui/hooks/useMeasuredBox';
+import { useRailWidth } from '#ui/hooks/useRailWidth';
+import { useScroll } from '#ui/hooks/useScroll';
+import { useUptime } from '#ui/hooks/useUptime';
+import { dispatchHotkey } from '#ui/hotkeys';
+import { DevLayout } from '#ui/layout/DevLayout';
+import { expandRows, rowKey, wrapRows } from '#ui/logRows';
+import { noticesOf } from '#ui/notices';
+import { profileWrap } from '#ui/profile';
+import { LogStore } from '#ui/stores/LogStore';
+import { tierFor } from '#ui/tier';
 
+import type { DevStore } from '#ui/stores/DevStore';
 import type { LogLevel } from '@seedcord/logger';
-import type { DevStore } from '@ui/stores/DevStore';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

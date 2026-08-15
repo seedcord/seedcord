@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { IntentName, PartialName } from '@interview/capabilities';
+import type { IntentName, PartialName } from '#interview/capabilities';
 import type { GatewayIntentBits, Partials } from 'discord.js';
 
 describe('the names the capability map declares', () => {

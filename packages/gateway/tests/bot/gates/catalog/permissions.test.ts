@@ -2,9 +2,9 @@ import { HasDangerousPermissions, MissingPermissions } from '@seedcord/core/inte
 import { Guild, GuildMember, PermissionFlagsBits, PermissionsBitField, Role } from 'discord.js';
 import { describe, it, expect } from 'vitest';
 
-import { checkBotPermissions } from '@bUtilities/permissions/checkBotPermissions';
-import { checkPermissions } from '@bUtilities/permissions/checkPermissions';
-import { hasPermsToAssign } from '@bUtilities/permissions/hasPermsToAssign';
+import { checkBotPermissions } from '#bUtilities/permissions/checkBotPermissions';
+import { checkPermissions } from '#bUtilities/permissions/checkPermissions';
+import { hasPermsToAssign } from '#bUtilities/permissions/hasPermsToAssign';
 
 // a Guild instance so checkPermissions takes its `instanceof Guild` branch and reads member.permissions
 function guildFake(extra: object = {}): Guild {

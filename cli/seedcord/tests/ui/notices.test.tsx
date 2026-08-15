@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { noticesOf } from '@ui/notices';
-import { DevStore } from '@ui/stores/DevStore';
+import { noticesOf } from '#ui/notices';
+import { DevStore } from '#ui/stores/DevStore';
 
-import type { DevState } from '@ui/stores/DevStore';
+import type { DevState } from '#ui/stores/DevStore';
 
 function running(): DevStore {
     const store = new DevStore();

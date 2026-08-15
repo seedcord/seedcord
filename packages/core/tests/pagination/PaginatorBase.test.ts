@@ -1,10 +1,10 @@
 import { ComponentType } from 'discord-api-types/v10';
 import { describe, expect, it } from 'vitest';
 
-import { PaginatorBase } from '@pagination/PaginatorBase';
-import { ArraySource } from '@pagination/sources';
+import { PaginatorBase } from '#pagination/PaginatorBase';
+import { ArraySource } from '#pagination/sources';
 
-import type { PaginatorConfig } from '@pagination/PaginatorBase';
+import type { PaginatorConfig } from '#pagination/PaginatorBase';
 import type { ReplyResponse } from '@seedcord/types';
 import type { APIComponentInContainer, APIContainerComponent } from 'discord-api-types/v10';
 

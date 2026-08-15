@@ -1,6 +1,6 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import type { ColorName } from '@src/Types/Colors';
+import type { ColorName } from '#src/Types/Colors';
 import type { Colors } from 'discord.js';
 
 describe('ColorName pin', () => {

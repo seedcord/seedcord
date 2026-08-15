@@ -2,9 +2,9 @@ import { Notice, CustomId, SelectMenuKind, ButtonRoute, ModalRoute, SelectMenuRo
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, expect, it } from 'vitest';
 
-import { ButtonHandler, ModalHandler, SelectMenuHandler } from '@handlers/interaction/components';
+import { ButtonHandler, ModalHandler, SelectMenuHandler } from '#handlers/interaction/components';
 
-import type { Core } from '@interfaces/Core';
+import type { Core } from '#interfaces/Core';
 import type { MatchArms } from '@seedcord/core/internal';
 import type { ButtonInteraction, ModalSubmitInteraction, UserSelectMenuInteraction } from 'discord.js';
 

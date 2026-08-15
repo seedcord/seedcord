@@ -38,7 +38,7 @@ vi.mock('../../../src/lib/docs/loadEntityModel', () => ({
         )
 }));
 
-const { resolveEntity } = await import('@lib/docs/resolveEntity');
+const { resolveEntity } = await import('#lib/docs/resolveEntity');
 
 describe('resolveEntity', () => {
     it('sets the version and loads the model on one engine instance, with no cache dedup', async () => {

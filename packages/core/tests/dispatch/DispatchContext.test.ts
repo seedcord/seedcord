@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { DispatchContext } from '@src/dispatch/DispatchContext';
+import { DispatchContext } from '#src/dispatch/DispatchContext';
 
 describe('DispatchContext', () => {
     it('carries the routeId it was constructed with', () => {

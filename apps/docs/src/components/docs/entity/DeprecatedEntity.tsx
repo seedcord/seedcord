@@ -3,7 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 
 import { CommentParagraphs } from './comments/CommentParagraphs';
 
-import type { WithDeprecationStatus } from '@lib/docs/types';
+import type { WithDeprecationStatus } from '#lib/docs/types';
 import type { ReactElement, ReactNode } from 'react';
 
 interface DeprecatedEntityProps extends WithDeprecationStatus {

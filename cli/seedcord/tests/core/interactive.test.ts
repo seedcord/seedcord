@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { isInteractive } from '@core/interactive';
+import { isInteractive } from '#core/interactive';
 
 const original = {
     stdin: process.stdin.isTTY,

@@ -1,11 +1,11 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect } from 'vitest';
 
-import { KyselyServiceMetadataKey } from '@src/decorators/RegisterKyselyService';
-import { KyselyService } from '@src/KyselyService';
+import { KyselyServiceMetadataKey } from '#src/decorators/RegisterKyselyService';
+import { KyselyService } from '#src/KyselyService';
 
+import type { KyselyPostgres } from '#src/KyselyPostgres';
 import type { CoreBase } from '@seedcord/core';
-import type { KyselyPostgres } from '@src/KyselyPostgres';
 
 // justified: both guards throw before either argument is read
 const kysely = {} as unknown as KyselyPostgres;

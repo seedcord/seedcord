@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { Slugger, slugForNode, slugifySegment } from '@src/Slugger';
+import { Slugger, slugForNode, slugifySegment } from '#src/Slugger';
 
 describe('Slugger', () => {
     it('slugifies individual segments', () => {

@@ -1,9 +1,9 @@
 import { AnchorStrategy, ReferenceResolver } from '@seedcord/docs-engine';
 import { describe, expect, it } from 'vitest';
 
-import { formatSignature } from '@lib/docs/formatting';
+import { formatSignature } from '#lib/docs/formatting';
 
-import type { FormatContext } from '@lib/docs/types';
+import type { FormatContext } from '#lib/docs/types';
 import type { NodeLookup, PackageRegistry, RenderedSignature } from '@seedcord/docs-engine';
 
 // An empty lookup makes resolve() fall through to the external-URL table, so name-only refs

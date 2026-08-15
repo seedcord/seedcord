@@ -1,4 +1,4 @@
-import { canonicalUrl } from '@lib/site';
+import { canonicalUrl } from '#lib/site';
 
 import type { MetadataRoute } from 'next';
 

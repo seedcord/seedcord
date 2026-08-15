@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { findCloudflared, installHint } from '@commands/dev/tunnel/cloudflared';
+import { findCloudflared, installHint } from '#commands/dev/tunnel/cloudflared';
 
-import type { PathLookup } from '@commands/dev/tunnel/cloudflared';
+import type { PathLookup } from '#commands/dev/tunnel/cloudflared';
 
 function lookup(overrides: Partial<PathLookup> = {}): PathLookup {
     return {

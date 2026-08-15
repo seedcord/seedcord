@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isExternalHref, opensInNewTab } from '@lib/docs/crossPackage';
+import { isExternalHref, opensInNewTab } from '#lib/docs/crossPackage';
 
 describe('isExternalHref', () => {
     it('matches http and https URLs', () => {

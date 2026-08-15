@@ -1,10 +1,10 @@
 import React from 'react';
 import { describe, expect, it } from 'vitest';
 
-import { NO_ROOM } from '@ui/components/primitives/ScrollableLogView';
-import { DevApp } from '@ui/DevApp';
-import { DevStore } from '@ui/stores/DevStore';
-import { LogStore } from '@ui/stores/LogStore';
+import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
+import { DevApp } from '#ui/DevApp';
+import { DevStore } from '#ui/stores/DevStore';
+import { LogStore } from '#ui/stores/LogStore';
 
 import { renderAt } from './renderAt';
 import { settled, stableFrame } from './settled';

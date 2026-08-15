@@ -2,11 +2,11 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { describe, expect, it, vi } from 'vitest';
 
-import { TunnelCoordinator } from '@commands/dev/tunnel/TunnelCoordinator';
+import { TunnelCoordinator } from '#commands/dev/tunnel/TunnelCoordinator';
 
 import { silentLogger } from '../silentLogger';
 
-import type { CoordinatorDeps, CoordinatorTunnel } from '@commands/dev/tunnel/TunnelCoordinator';
+import type { CoordinatorDeps, CoordinatorTunnel } from '#commands/dev/tunnel/TunnelCoordinator';
 
 function urlFor(port: number): string {
     return `https://p${String(port)}.trycloudflare.com`;

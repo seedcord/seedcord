@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { interactionRoutesOf, InteractionRoutes, storeInteractionRoute } from '@src/internal.index';
+import { interactionRoutesOf, InteractionRoutes, storeInteractionRoute } from '#src/internal.index';
 
 describe('interactionRoutesOf', () => {
     it('returns every stored kind with its route strings', () => {
