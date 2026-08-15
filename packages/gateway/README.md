@@ -17,7 +17,7 @@
 
 <div align="center">
 
-[![npm](https://img.shields.io/npm/v/@seedcord/gateway?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/@seedcord/gateway) [![node](https://img.shields.io/node/v/@seedcord/gateway?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![license](https://img.shields.io/npm/l/@seedcord/gateway?style=flat-square&label=&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
+[![npm](https://img.shields.io/npm/v/@seedcord/gateway?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/@seedcord/gateway) [![node](https://img.shields.io/node/v/@seedcord/gateway?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![license](https://img.shields.io/npm/l/@seedcord/gateway?style=flat-square&label=license&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
 
 </div>
 
