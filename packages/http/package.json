@@ -2,7 +2,15 @@
     "name": "@seedcord/http",
     "type": "module",
     "version": "0.2.3",
-    "description": "HTTP-interactions transport for Seedcord bots",
+    "description": "HTTP interactions transport for seedcord bots",
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "interactions",
+        "http",
+        "serverless",
+        "typescript"
+    ],
     "engines": {
         "node": ">=24.11"
     },

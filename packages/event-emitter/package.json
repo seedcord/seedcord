@@ -5,7 +5,14 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Typed, cross-runtime event emitter for Seedcord",
+    "description": "Typed event emitter with waitFor, for Node and the edge",
+    "keywords": [
+        "events",
+        "event-emitter",
+        "typed",
+        "typescript",
+        "edge"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

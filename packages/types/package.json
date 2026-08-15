@@ -5,7 +5,13 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Types for Seedcord packages",
+    "description": "Config shapes and shared types for seedcord bots",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "types",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

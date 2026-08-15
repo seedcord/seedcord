@@ -2,7 +2,15 @@
     "name": "@seedcord/plugin-mongoose",
     "type": "module",
     "version": "0.1.4",
-    "description": "Mongoose database plugin for Seedcord",
+    "description": "Connect a seedcord bot to MongoDB with Mongoose",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "plugin",
+        "mongoose",
+        "mongodb",
+        "database"
+    ],
     "engines": {
         "node": ">=24.11"
     },

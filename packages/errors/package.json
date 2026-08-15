@@ -5,7 +5,13 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Framework error classes for Seedcord packages",
+    "description": "Typed errors with registered codes for seedcord bots",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "errors",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

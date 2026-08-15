@@ -2,7 +2,15 @@
     "name": "@seedcord/plugin-kysely-postgres",
     "type": "module",
     "version": "0.1.4",
-    "description": "Kysely Postgres database plugin for Seedcord",
+    "description": "Connect a seedcord bot to Postgres with Kysely",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "plugin",
+        "kysely",
+        "postgres",
+        "database"
+    ],
     "engines": {
         "node": ">=24.11"
     },

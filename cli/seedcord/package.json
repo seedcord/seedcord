@@ -5,7 +5,15 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "The seedcord CLI and dev tooling",
+    "description": "Run, build, and generate types for a seedcord bot",
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "seedcord",
+        "cli",
+        "hmr",
+        "codegen"
+    ],
     "bin": {
         "seedcord": "./bin/seedcord.mjs"
     },

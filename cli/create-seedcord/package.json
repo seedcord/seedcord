@@ -2,7 +2,15 @@
     "name": "create-seedcord",
     "type": "module",
     "version": "0.1.1",
-    "description": "Scaffold a new seedcord bot project",
+    "description": "Scaffold a new seedcord bot",
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "seedcord",
+        "create",
+        "scaffold",
+        "starter"
+    ],
     "engines": {
         "node": ">=24.11"
     },

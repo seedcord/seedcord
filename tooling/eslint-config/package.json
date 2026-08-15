@@ -5,7 +5,14 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "ESlint config for Seedcord projects",
+    "description": "Shared ESLint config for seedcord projects",
+    "keywords": [
+        "eslint",
+        "eslintconfig",
+        "eslint-config",
+        "seedcord",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

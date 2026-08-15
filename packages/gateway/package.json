@@ -5,7 +5,15 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "A Discord bot framework built on top of Discord.js",
+    "description": "Gateway transport for seedcord bots, built on discord.js",
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "discordjs",
+        "gateway",
+        "framework",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
@@ -77,26 +85,5 @@
     "publishConfig": {
         "access": "public",
         "provenance": true
-    },
-    "keywords": [
-        "discord",
-        "discord-bot",
-        "discord.js",
-        "bot-framework",
-        "typescript",
-        "seedcord",
-        "framework",
-        "discord-bot-framework",
-        "plugin-system",
-        "modular-bot",
-        "decorators",
-        "commands",
-        "discord-api",
-        "typescript-framework",
-        "event-handler",
-        "bot-development",
-        "slash-commands",
-        "middleware",
-        "open-source"
-    ]
+    }
 }

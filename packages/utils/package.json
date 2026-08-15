@@ -5,7 +5,13 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Utility functions for Seedcord packages",
+    "description": "Type helpers and small functions used across seedcord",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "utilities",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

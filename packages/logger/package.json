@@ -5,7 +5,14 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Logging core and winston node sink for Seedcord bots",
+    "description": "Channelled logging for seedcord bots",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "logging",
+        "logger",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

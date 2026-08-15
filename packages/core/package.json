@@ -5,7 +5,14 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Transport-agnostic core for Seedcord bots",
+    "description": "Foundational code shared by both transports",
+    "keywords": [
+        "discord",
+        "discord-bot",
+        "seedcord",
+        "framework",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

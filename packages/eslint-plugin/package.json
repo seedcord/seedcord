@@ -6,6 +6,13 @@
         "node": ">=24.11"
     },
     "description": "ESLint rules for seedcord bots",
+    "keywords": [
+        "eslint",
+        "eslintplugin",
+        "eslint-plugin",
+        "seedcord",
+        "discord-bot"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",

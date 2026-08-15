@@ -5,7 +5,14 @@
     "engines": {
         "node": ">=24.11"
     },
-    "description": "In-memory rate limiter and key helper for Seedcord bots",
+    "description": "Rate limiting and key building for seedcord bots",
+    "keywords": [
+        "discord-bot",
+        "seedcord",
+        "rate-limit",
+        "cooldown",
+        "typescript"
+    ],
     "repository": {
         "type": "git",
         "url": "https://github.com/seedcord/seedcord.git",
