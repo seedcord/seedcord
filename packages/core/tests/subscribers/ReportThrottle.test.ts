@@ -73,7 +73,7 @@ describe('ReportThrottle', () => {
         expect(throttle.take('k')).toBeNull();
     });
 
-    it('leaves a newer window alone when an older send fails late', () => {
+    it('keeps a newer window shut when an older send fails late, and still counts it', () => {
         let now = 1000;
         const throttle = new ReportThrottle(60_000, () => now);
 
@@ -83,6 +83,9 @@ describe('ReportThrottle', () => {
         throttle.restore('k', stale ?? 0);
 
         expect(throttle.take('k')).toBeNull();
+        now += 61_000;
+        // one from the late restore, one from the take above it
+        expect(throttle.take('k')).toBe(2);
     });
 
     it('hands a failed send its count back, so the next one carries it', () => {
