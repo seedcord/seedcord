@@ -1,0 +1,44 @@
+name: Bug report
+description: Something in seedcord behaves in a way you did not expect
+labels:
+  - '🔍 triage'
+
+body:
+  - type: markdown
+    attributes:
+        value: |
+            Only the first field is required. Fill in whatever else you have.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+        label: What happened
+        description: What you did, and what you expected instead.
+        placeholder: |
+            I added a second option to my command and this.options.getString('reason') still returns string | null.
+            I expected it to be a string, since I declared it required.
+    validations:
+        required: true
+
+  - type: input
+    id: version
+    attributes:
+        label: seedcord version
+        description: From your package.json, or `pnpm list seedcord`
+        placeholder: '0.17.4'
+
+  - type: dropdown
+    id: transport
+    attributes:
+        label: Transport
+        options:
+          - gateway
+          - http
+          - not sure
+
+  - type: textarea
+    id: details
+    attributes:
+        label: Code, errors, or logs
+        description: A snippet, a stack trace, a line from the dev terminal, etc.
+        render: text

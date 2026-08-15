@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+
+contact_links:
+  - name: Ask a question
+    url: https://discord.gg/DzFxY58WXf
+    about: Questions, setup help, and anything about seedcord.
+  - name: Read the docs
+    url: https://docs.seedcord.org
+    about: The API reference for every package.
+  - name: Read the guide
+    url: https://guide.seedcord.org
+    about: Guides and tutorials for using seedcord.
