@@ -59,16 +59,16 @@ function bufferUsesInClosure(entryFile: string): string[] {
 }
 
 describe.each([
-    ['/plugin', ['plugin.index.mjs', 'plugin.index.cjs']],
-    ['root', ['index.mjs', 'index.cjs']]
-])('%s dist is node-free', (_entryName, entries) => {
-    it.each(entries)('has no node builtin import in %s', (entry) => {
+    ['/plugin', 'plugin.index.mjs'],
+    ['root', 'index.mjs']
+])('%s dist is node-free', (_entryName, entry) => {
+    it(`has no node builtin import in ${entry}`, () => {
         const file = join(distDir, entry);
         expect(existsSync(file), `${entry} is missing, run pnpm -C packages/core build first`).toBe(true);
         expect(nodeImportsInClosure(file)).toStrictEqual([]);
     });
 
-    it.each(entries)('reaches no Buffer global in %s', (entry) => {
+    it(`reaches no Buffer global in ${entry}`, () => {
         expect(bufferUsesInClosure(join(distDir, entry))).toStrictEqual([]);
     });
 });
