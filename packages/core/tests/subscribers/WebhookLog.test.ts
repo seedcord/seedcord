@@ -137,8 +137,9 @@ describe('WebhookLog', () => {
             }
         }
 
-        await new Chatty(data, freshCore()).execute();
-        await new Chatty(data, core).execute();
+        const own = freshCore();
+        await new Chatty(data, own).execute();
+        await new Chatty(data, own).execute();
 
         expect(hoisted.postMock).toHaveBeenCalledTimes(2);
     });
@@ -168,7 +169,7 @@ describe('WebhookLog', () => {
         expect(sent).toEqual(['n=0', 'n=1']);
     });
 
-    it('keeps sending after a failed send', async () => {
+    it('waits out the window after a failed send, carrying the lost card into the next one', async () => {
         @Subscribe('unknownException')
         @WebhookUrl('REPORTER_WEBHOOK_URL')
         class Retried extends WebhookLog<'unknownException', CoreBase> {
@@ -176,8 +177,8 @@ describe('WebhookLog', () => {
                 return 'retried';
             }
 
-            report(): WebhookReport {
-                return { components: [component] };
+            report(suppressed: number): WebhookReport {
+                return { username: `n=${suppressed}`, components: [component] };
             }
         }
 
@@ -185,36 +186,46 @@ describe('WebhookLog', () => {
         const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
         hoisted.postMock.mockRejectedValueOnce(new Error('down'));
 
+        vi.useFakeTimers();
         await new Retried(data, own).execute();
         await new Retried(data, own).execute();
+        vi.advanceTimersByTime(61_000);
+        await new Retried(data, own).execute();
+        vi.useRealTimers();
 
-        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
+        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        expect(sent).toEqual(['n=0', 'n=2']);
         errorSpy.mockRestore();
     });
 
-    it('reopens the window when report throws', async () => {
-        let built = 0;
+    it('counts a card that report threw on, so the next one carries it', async () => {
+        let calls = 0;
 
         @Subscribe('unknownException')
         @WebhookUrl('REPORTER_WEBHOOK_URL')
-        class Broken extends WebhookLog<'unknownException', CoreBase> {
+        class Flaky extends WebhookLog<'unknownException', CoreBase> {
             protected override throttleKey(): string {
-                return 'broken';
+                return 'flaky';
             }
 
-            report(): WebhookReport {
-                built += 1;
-                throw new Error('render blew up');
+            report(suppressed: number): WebhookReport {
+                calls += 1;
+                if (calls === 1) throw new Error('render blew up');
+                return { username: `n=${suppressed}`, components: [component] };
             }
         }
 
         const own = freshCore();
         const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
 
-        await new Broken(data, own).execute();
-        await new Broken(data, own).execute();
+        vi.useFakeTimers();
+        await new Flaky(data, own).execute();
+        vi.advanceTimersByTime(61_000);
+        await new Flaky(data, own).execute();
+        vi.useRealTimers();
 
-        expect(built).toBe(2);
+        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        expect(sent).toEqual(['n=1']);
         errorSpy.mockRestore();
     });
 

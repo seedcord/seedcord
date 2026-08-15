@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import chalk from 'chalk';
+import { paint } from '@seedcord/logger';
 import { Converters, Envapter } from 'envapt';
 
 import { sendFlags } from '@reply/flags';
@@ -60,7 +60,9 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         const url = WebhookLog.urlOf(WebhookLog.envKeyOf(this.constructor));
         if (url === null) {
             // only an edge host reaches this branch, since it registers reporters lazily
-            this.logger.warn(`${chalk.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`);
+            this.logger.warn(
+                `${paint.sky.bold(this.constructor.name)} has no webhook url set, this reporter is disabled`
+            );
             return;
         }
 
@@ -68,7 +70,7 @@ export abstract class WebhookLog<KeyOfSubscribers extends SubscriptionKey, TCore
         const throttle = ReportThrottle.for(this.core);
         const suppressed = key === null ? 0 : throttle.take(key);
         if (suppressed === null) {
-            this.logger.debug(`counted a repeat into the next ${chalk.bold(this.constructor.name)} card`);
+            this.logger.debug(`counted a repeat into the next ${paint.sky.bold(this.constructor.name)} card`);
             return;
         }
 

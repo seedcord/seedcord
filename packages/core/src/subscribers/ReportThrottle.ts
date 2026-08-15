@@ -35,13 +35,9 @@ export class ReportThrottle {
         return suppressed;
     }
 
-    // undoes a take whose send failed, counting the card that never went out
+    // gives a failed send's count to the open window, plus the one card that never went out
     public restore(key: string, suppressed: number): void {
-        const arrivedSince = this.windows.get(key)?.suppressedSinceSend ?? 0;
-        // backdating past the window makes the next take send
-        this.windows.set(key, {
-            lastSentAt: this.now() - this.windowMs,
-            suppressedSinceSend: suppressed + arrivedSince + 1
-        });
+        const window = this.windows.get(key);
+        if (window) window.suppressedSinceSend += suppressed + 1;
     }
 }

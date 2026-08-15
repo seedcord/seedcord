@@ -10,6 +10,7 @@ import { TestNotice } from '../utils/TestNotice';
 import type { Core } from '@interfaces/Core';
 import type { SubscriptionData } from '@seedcord/core';
 import type { Repliables } from '@src/handlers/interactionTypes';
+import type { Guild, User } from 'discord.js';
 
 function mockCore(publish: ReturnType<typeof vi.fn>): Core {
     // justified: the fixture implements only the Core surface extractErrorResponse reads.
@@ -100,8 +101,8 @@ describe('extractErrorResponse', () => {
     it('publishes scalar guild and user fields, never the discord.js objects', () => {
         const publish = vi.fn();
         // justified: the fixtures carry the fields the scalar mapping reads plus djs baggage it must drop
-        const guild = { id: 'g1', name: 'Guild One', members: {} } as unknown as import('discord.js').Guild;
-        const user = { id: 'u1', username: 'uname', client: {} } as unknown as import('discord.js').User;
+        const guild = { id: 'g1', name: 'Guild One', members: {} } as unknown as Guild;
+        const user = { id: 'u1', username: 'uname', client: {} } as unknown as User;
 
         extractErrorResponse(new Error('a bug'), mockCore(publish), { routeId: 'slash:scalar-probe', guild, user });
 

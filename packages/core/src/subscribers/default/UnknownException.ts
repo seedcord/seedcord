@@ -17,7 +17,7 @@ import type { CoreBase } from '@interfaces/CoreBase';
 @WebhookUrl('UNKNOWN_EXCEPTION_WEBHOOK_URL')
 export class UnknownException extends WebhookLog<'unknownException', CoreBase> {
     protected override throttleKey(): string {
-        return `${this.data.routeId}:${nameOf(this.data.error)}`;
+        return `unknownException:${this.data.routeId}:${nameOf(this.data.error)}`;
     }
 
     report(suppressed: number): WebhookReport {

@@ -54,12 +54,35 @@ describe('ReportThrottle', () => {
     });
 
     it('counts the event whose own card never sent', () => {
+        let now = 1000;
+        const throttle = new ReportThrottle(60_000, () => now);
+
+        const suppressed = throttle.take('k');
+        throttle.restore('k', suppressed ?? 0);
+        now += 61_000;
+
+        expect(throttle.take('k')).toBe(1);
+    });
+
+    it('keeps the window shut after a failed send, so a dead webhook is tried once a minute', () => {
         const throttle = new ReportThrottle(60_000, () => 1000);
 
         const suppressed = throttle.take('k');
         throttle.restore('k', suppressed ?? 0);
 
-        expect(throttle.take('k')).toBe(1);
+        expect(throttle.take('k')).toBeNull();
+    });
+
+    it('leaves a newer window alone when an older send fails late', () => {
+        let now = 1000;
+        const throttle = new ReportThrottle(60_000, () => now);
+
+        const stale = throttle.take('k');
+        now += 61_000;
+        throttle.take('k');
+        throttle.restore('k', stale ?? 0);
+
+        expect(throttle.take('k')).toBeNull();
     });
 
     it('hands a failed send its count back, so the next one carries it', () => {
@@ -72,6 +95,7 @@ describe('ReportThrottle', () => {
         now += 61_000;
         const suppressed = throttle.take('k');
         throttle.restore('k', suppressed ?? 0);
+        now += 61_000;
 
         expect(suppressed).toBe(2);
         expect(throttle.take('k')).toBe(3);
@@ -86,6 +110,7 @@ describe('ReportThrottle', () => {
         throttle.take('k');
         throttle.take('k');
         throttle.restore('k', 5);
+        now += 61_000;
 
         expect(throttle.take('k')).toBe(7);
     });
