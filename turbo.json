@@ -9,7 +9,24 @@
             "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
         "//#docs:extract": {
-            "dependsOn": ["@seedcord/docs-generator#build"],
+            "dependsOn": [
+                "@seedcord/docs-generator#build",
+                "@seedcord/core#build",
+                "@seedcord/errors#build",
+                "@seedcord/eslint-config#build",
+                "@seedcord/eslint-plugin#build",
+                "@seedcord/event-emitter#build",
+                "@seedcord/gateway#build",
+                "@seedcord/http#build",
+                "@seedcord/logger#build",
+                "@seedcord/plugin-kysely-postgres#build",
+                "@seedcord/plugin-mongoose#build",
+                "@seedcord/rate-limiter#build",
+                "@seedcord/types#build",
+                "@seedcord/utils#build",
+                "eslint-plugin-discordjs#build",
+                "seedcord#build"
+            ],
             "inputs": [
                 "scripts/docs/extract-docs.ts",
                 "packages/*/dist/**/*.d.mts",
@@ -21,7 +38,18 @@
                 "tooling/*/dist/**/*.d.mts",
                 "tooling/*/package.json"
             ],
-            "outputs": ["generated/**"]
+            "outputs": ["generated/*.json"]
+        },
+        "//#docs:artifacts": {
+            "dependsOn": ["//#docs:extract", "@seedcord/docs-engine#build"],
+            "inputs": ["scripts/docs/build-docs-artifacts.ts", "generated/*.json"],
+            "outputs": ["generated/artifacts/**"]
+        },
+        "@seedcord/docs#build": {
+            "dependsOn": ["^build", "//#docs:artifacts"],
+            "inputs": ["$TURBO_DEFAULT$", ".env*"],
+            "outputs": [".next/**", "!.next/cache/**"],
+            "env": ["SEEDCORD_DOCS_INDEX_URL"]
         },
         "//#check:catalog": {
             "inputs": ["scripts/check-workspace-catalog.ts", "pnpm-workspace.yaml", "**/package.json"]
