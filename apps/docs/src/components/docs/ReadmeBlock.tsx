@@ -19,7 +19,8 @@ const readmeProseClassName = cn(
     tw`[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-inherit`,
     tw`[&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-(--border) [&_blockquote]:pl-4 [&_blockquote]:italic`,
     tw`[&_hr]:my-6 [&_hr]:border-(--border)`,
-    tw`[&_img]:mx-auto [&_img]:my-4 [&_img]:block [&_img]:w-full [&_img]:max-w-lg [&_img]:rounded-md`,
+    // badges and the wordmark carry their own size
+    tw`[&_img]:inline [&_img]:h-auto [&_img]:max-w-full [&_img]:align-middle`,
     tw`[&_table]:my-4 [&_table]:w-full [&_table]:text-left`,
     tw`[&_th]:border-b [&_th]:border-(--border) [&_th]:py-1 [&_th]:pr-4 [&_th]:font-semibold [&_th]:text-(--text)`,
     tw`[&_td]:border-b [&_td]:border-(--border) [&_td]:py-1 [&_td]:pr-4`

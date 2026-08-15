@@ -4,9 +4,30 @@
     "type": "module",
     "private": false,
     "description": "Mock package exercised by the docs generator tests.",
-    "seedcordDocs": {
-        "entryPoints": [
-            "index.ts"
-        ]
+    "exports": {
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        },
+        "./extra": {
+            "import": {
+                "types": "./dist/extra.d.ts",
+                "default": "./dist/extra.js"
+            }
+        },
+        "./internal": {
+            "import": {
+                "types": "./dist/internal.d.ts",
+                "default": "./dist/internal.js"
+            }
+        },
+        "./node/internal": {
+            "import": {
+                "types": "./dist/node-internal.d.ts",
+                "default": "./dist/node-internal.js"
+            }
+        }
     }
 }

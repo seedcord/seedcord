@@ -4,9 +4,10 @@ import path from 'node:path';
 import { buildPackageFromApi } from '#builders/package-builder';
 import { createApiModel, loadApiPackage } from '#model/load-model';
 
+import type { AdapterEntry } from '#model/merge-entries';
 import type { GlobalId } from '#src/ids';
 import type { DocCollection, DocManifest, DocManifestPackage, DocPackageModel } from '#src/types';
-import type { ApiPackage } from '@microsoft/api-extractor-model';
+import type { ApiModel } from '@microsoft/api-extractor-model';
 
 export interface ResolveOptions {
     workspaceRoot?: string;
@@ -37,11 +38,11 @@ function collectBaseCandidates(options: ResolveOptions): string[] {
 }
 
 function resolvePackageJsonPath(
-    pkg: DocManifestPackage,
+    manifestOutput: string | null,
     baseCandidates: string[],
     options: ResolveOptions
 ): string | null {
-    const output = pkg.output?.trim();
+    const output = manifestOutput?.trim();
     if (!output) {
         return null;
     }
@@ -132,21 +133,38 @@ function relativizeFromManifestOutput(output: string, manifestOutputDir: string)
     return relative;
 }
 
+// A package's root entry and its subpaths all carry the same package name, and one ApiModel holding
+// two packages of one name throws the moment any @link resolves.
+function loadEntries(
+    pkg: DocManifestPackage,
+    sharedModel: ApiModel,
+    resolveOutput: (output: string | null) => string | null
+): AdapterEntry[] {
+    return pkg.entries.reduce<AdapterEntry[]>((acc, entry) => {
+        const apiJsonPath = resolveOutput(entry.output);
+        if (!apiJsonPath) return acc;
+
+        const model = entry.subpath === '.' ? sharedModel : createApiModel();
+        acc.push({ subpath: entry.subpath, apiPackage: loadApiPackage(model, apiJsonPath), model });
+        return acc;
+    }, []);
+}
+
 export function buildCollection(manifest: DocManifest, options: ResolveOptions): DocCollection {
     const baseCandidates = collectBaseCandidates(options);
-    const resolveProject = (pkg: DocManifestPackage): string | null =>
-        resolvePackageJsonPath(pkg, baseCandidates, options);
+    const resolveOutput = (output: string | null): string | null =>
+        resolvePackageJsonPath(output, baseCandidates, options);
 
     const model = createApiModel();
     // Load every package into the shared model before adapting any, so cross-package @link
     // references resolve against the full set.
-    const loaded: { pkg: DocManifestPackage; apiPackage: ApiPackage }[] = [];
+    const loaded: { pkg: DocManifestPackage; entries: AdapterEntry[] }[] = [];
     for (const pkg of manifest.packages) {
-        const apiJsonPath = resolveProject(pkg);
-        if (!apiJsonPath) continue;
-        loaded.push({ pkg, apiPackage: loadApiPackage(model, apiJsonPath) });
+        const entries = loadEntries(pkg, model, resolveOutput);
+        if (entries.length === 0) continue;
+        loaded.push({ pkg, entries });
     }
-    const packages = loaded.map(({ pkg, apiPackage }) => buildPackageFromApi(pkg, apiPackage, model));
+    const packages = loaded.map(({ pkg, entries }) => buildPackageFromApi(pkg, entries, model));
 
     const { byKey, byGlobalSlug } = buildGlobalMaps(packages);
     return { manifest, packages, byKey, byGlobalSlug };

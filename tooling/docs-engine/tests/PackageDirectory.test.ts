@@ -40,7 +40,7 @@ describe('PackageDirectory', () => {
                 'mock-tuple',
                 'mock-union'
             ],
-            functions: ['log-decorator', 'mock-function', 'mock-function-with-rest'],
+            functions: ['extra-function', 'log-decorator', 'mock-function', 'mock-function-with-rest'],
             variables: ['mock-variable']
         });
     });
@@ -74,7 +74,7 @@ describe('PackageDirectory', () => {
 
     it('returns sorted listings for each entity', () => {
         const functionNames = directory.listNames('functions');
-        expect(functionNames).toEqual(['log-decorator', 'mock-function', 'mock-function-with-rest']);
+        expect(functionNames).toEqual(['extra-function', 'log-decorator', 'mock-function', 'mock-function-with-rest']);
     });
 
     it('hides @internal entities from the directory but keeps them resolvable by slug', async () => {

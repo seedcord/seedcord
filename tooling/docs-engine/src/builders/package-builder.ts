@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { ApiAdapter } from '#model/adapter';
 import { DocKind } from '#model/kinds';
+import { mergeEntries, type AdapterEntry } from '#model/merge-entries';
 import { PackageDirectory } from '#src/PackageDirectory';
 import { inlineTypeToText, sigPartsToText } from '#transformers/signature-renderer';
 
@@ -17,7 +18,7 @@ import type {
     RenderedSignature,
     SigPart
 } from '#src/types';
-import type { ApiModel, ApiPackage } from '@microsoft/api-extractor-model';
+import type { ApiModel } from '@microsoft/api-extractor-model';
 
 function buildIndexes(root: DocNode, manifest: DocManifestPackage): DocIndexes {
     const byId = new Map<number, DocNode>();
@@ -254,9 +255,13 @@ function collectTokens(node: DocNode, summary: string, file: string | undefined,
     return [...tokens];
 }
 
-// Requires apiPackage already loaded into the shared model so cross-package @link refs resolve.
-export function buildPackageFromApi(pkg: DocManifestPackage, apiPackage: ApiPackage, model: ApiModel): DocPackageModel {
-    return buildPackageFromModel(pkg, new ApiAdapter(pkg, model).transform(apiPackage));
+// Requires the root entry already loaded into the shared model so cross-package @link refs resolve.
+export function buildPackageFromApi(
+    pkg: DocManifestPackage,
+    entries: readonly AdapterEntry[],
+    model: ApiModel
+): DocPackageModel {
+    return buildPackageFromModel(pkg, mergeEntries(new ApiAdapter(pkg, model), entries));
 }
 
 // buildPackageFromApi runs this after adapting, and the remote project.json loader reuses it directly with no AE adapter.

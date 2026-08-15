@@ -67,6 +67,7 @@ function manifestShell(pkg: DocProjectFile['package'], readme?: string, changelo
         name: pkg.name,
         version: pkg.version,
         entryPoints: [],
+        entries: [],
         output: null,
         warnings: [],
         errors: [],
