@@ -30,6 +30,7 @@ import { excerptToInlineType } from '#model/excerpt-renderer';
 import { buildFlags, type DerivedFlagBits } from '#model/flags';
 import { apiKindToDocKind, DocKind, frozenKindLabel } from '#model/kinds';
 import { createLinkResolver } from '#model/link-resolver';
+import { entryMembers } from '#model/merge-entries';
 import {
     buildComment,
     buildParamComment,
@@ -65,25 +66,31 @@ const TOP_LEVEL: MemberContext = { inheritedFrom: null, ownClassMember: false };
 
 export class ApiAdapter {
     private readonly slugger = new Slugger();
+    private readonly reexportOwners: ReadonlyMap<string, string>;
     private idCounter = 1;
-    private readonly makeResolveLink: (fromItem: ApiItem) => LinkResolver;
+    private makeResolveLink: (fromItem: ApiItem) => LinkResolver;
 
     constructor(
         private readonly manifest: DocManifestPackage,
         model: ApiModel
     ) {
-        const reexportOwners = new Map((manifest.reexports ?? []).map((entry) => [entry.name, entry.owner] as const));
-        this.makeResolveLink = createLinkResolver(model, reexportOwners);
+        this.reexportOwners = new Map((manifest.reexports ?? []).map((entry) => [entry.name, entry.owner] as const));
+        this.makeResolveLink = createLinkResolver(model, this.reexportOwners);
     }
 
     transform(pkg: ApiPackage): DocNode {
         const root = this.baseNode(pkg, [], pkg.displayName, true);
-        const members = pkg.entryPoints[0]?.members ?? [];
-        root.children = this.visitMembers(members, []);
+        root.children = this.visitMembers(entryMembers(pkg), []);
         root.groups = synthGroups(root.children);
         const reexports = this.buildReexports();
         if (reexports.length > 0) root.reexports = reexports;
         return root;
+    }
+
+    /** Adapt members of one subpath, resolving their `{@link}`s against that subpath's own model. */
+    adaptSubpath(model: ApiModel, members: readonly ApiItem[]): DocNode[] {
+        this.makeResolveLink = createLinkResolver(model, this.reexportOwners);
+        return this.visitMembers(members, []);
     }
 
     private buildReexports(): DocReference[] {

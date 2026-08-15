@@ -7,10 +7,7 @@ import { defaultPaths } from './paths';
 import { normalizeRelativePath, pathExists } from './utils';
 
 import type { ApiDocsPaths } from './paths';
-import type { PackageManifest } from './types';
-
-// Fallback entry when package.json has no seedcordDocs.entryPoints override.
-const DEFAULT_ENTRY_POINTS = ['src/index.ts'];
+import type { DocEntryPoint, ExportCondition, PackageManifest } from './types';
 
 const WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
@@ -82,27 +79,54 @@ export function unscopedName(name: string): string {
     return name.split('/').pop() ?? name;
 }
 
+// `./internal` and `./node/internal` are framework wiring, and CLAUDE.md keeps them off the docs
+const INTERNAL_SUBPATH = /(^|\/)internal$/;
+
+function declarationOf(condition: ExportCondition | undefined): string | undefined {
+    if (typeof condition === 'string')
+        return condition.endsWith('.d.ts') || condition.endsWith('.d.mts') ? condition : undefined;
+    if (!condition) return undefined;
+
+    for (const key of ['types', 'import', 'default']) {
+        const found = declarationOf(condition[key]);
+        if (found) return found;
+    }
+    return undefined;
+}
+
+// tsdown names a subpath's output after its source
+async function sourceForDeclaration(packageDir: string, declaration: string): Promise<string | undefined> {
+    const stem = path.basename(declaration).replace(/\.d\.[cm]?ts$/, '');
+    for (const candidate of [`src/${stem}.ts`, `${stem}.ts`, `src/${stem}.tsx`]) {
+        if (await pathExists(path.join(packageDir, candidate))) return candidate;
+    }
+    return undefined;
+}
+
 /**
- * Resolve a package's existing source entry points: `seedcordDocs.entryPoints` overrides, then
- * `src/index.ts`, then the `types` entry. A package with none is treated as not documentable.
+ * Resolve every import path a package documents, taken from its `exports` map. That map is the
+ * authority on what a package exposes.
  */
-export async function resolveEntryPoints(packageDir: string, manifest: PackageManifest): Promise<string[]> {
-    const configured = manifest.seedcordDocs?.entryPoints ?? [];
-    const candidateRelPaths = [...configured, ...DEFAULT_ENTRY_POINTS];
-    const absolute: string[] = [];
+export async function resolveDocEntryPoints(packageDir: string, manifest: PackageManifest): Promise<DocEntryPoint[]> {
+    const entries: DocEntryPoint[] = [];
 
-    for (const candidate of candidateRelPaths) {
-        const normalized = normalizeRelativePath(candidate);
-        if (!normalized) continue;
+    for (const [subpath, condition] of Object.entries(manifest.exports ?? {})) {
+        if (INTERNAL_SUBPATH.test(subpath)) continue;
 
-        const absolutePath = path.join(packageDir, normalized);
-        if (await pathExists(absolutePath)) absolute.push(absolutePath);
+        // a package like @seedcord/tsconfig exports json presets and declares no types at all
+        const declared = declarationOf(condition);
+        if (!declared) continue;
+
+        const declaration = path.join(packageDir, normalizeRelativePath(declared));
+        if (!(await pathExists(declaration))) {
+            throw new Error(
+                `${manifest.name} exports "${subpath}" as ${declared}, which does not exist. Build the package first.`
+            );
+        }
+
+        const sourceEntry = await sourceForDeclaration(packageDir, declared);
+        entries.push({ subpath, declaration, ...(sourceEntry && { sourceEntry }) });
     }
 
-    if (absolute.length === 0 && manifest.types) {
-        const declarationCandidate = path.join(packageDir, normalizeRelativePath(manifest.types));
-        if (await pathExists(declarationCandidate)) absolute.push(declarationCandidate);
-    }
-
-    return absolute;
+    return entries.sort((a, b) => a.subpath.localeCompare(b.subpath));
 }

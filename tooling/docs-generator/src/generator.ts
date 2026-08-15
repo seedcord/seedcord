@@ -142,16 +142,7 @@ export class ApiDocsGenerator {
                 throw new Error(`API Extractor extraction failed for ${result.name}. see logs above.`);
             }
 
-            const scan = buildSourceIndex({
-                packageDir,
-                repoRoot: this.paths.repoRoot,
-                githubBase: this.githubBase ?? '',
-                ref: this.ref,
-                packageNames,
-                ...(result.sourceEntry && { entry: result.sourceEntry })
-            });
-            result.sources = scan.sources;
-            if (scan.reexports.length > 0) result.reexports = scan.reexports;
+            this.attachSourceIndex(result, packageDir, packageNames);
 
             const readme = await readReadme(packageDir);
             if (readme) result.readme = readme;
@@ -184,6 +175,25 @@ export class ApiDocsGenerator {
             relativeOutputDir: this.paths.toRepoRelative(this.paths.outputDir),
             relativeManifestPath: this.paths.toRepoRelative(this.paths.manifestPath)
         };
+    }
+
+    // one scan covers every entry point, because buildSourceIndex walks the whole `src` tree
+    private attachSourceIndex(
+        result: PackageDocResult,
+        packageDir: string,
+        packageNames: Record<string, string>
+    ): void {
+        const scan = buildSourceIndex({
+            packageDir,
+            repoRoot: this.paths.repoRoot,
+            githubBase: this.githubBase ?? '',
+            ref: this.ref,
+            packageNames,
+            ...(result.sourceEntry && { entry: result.sourceEntry })
+        });
+
+        result.sources = scan.sources;
+        if (scan.reexports.length > 0) result.reexports = scan.reexports;
     }
 
     private logPackageResult(result: PackageDocResult): void {

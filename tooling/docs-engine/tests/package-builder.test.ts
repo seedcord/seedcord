@@ -50,6 +50,7 @@ const manifest: DocManifestPackage = {
     name: '@seedcord/mock',
     version: '0.0.0',
     entryPoints: ['index.d.ts'],
+    entries: [],
     output: null,
     warnings: [],
     errors: [],

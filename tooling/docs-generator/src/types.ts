@@ -2,10 +2,12 @@
  * Per-package doc config under `seedcordDocs` in package.json.
  */
 export interface SeedcordDocsConfig {
-    entryPoints?: string[];
     /** Keeps a published package out of the docs */
     skip?: boolean;
 }
+
+/** One `exports` condition, nested to whatever depth the manifest wrote it. */
+export type ExportCondition = string | { [condition: string]: ExportCondition | undefined };
 
 export interface PackageManifest {
     name: string;
@@ -15,6 +17,16 @@ export interface PackageManifest {
     types?: string;
     dependencies?: Record<string, string>;
     seedcordDocs?: SeedcordDocsConfig;
+    exports?: Record<string, ExportCondition>;
+}
+
+/** One documented import path, `.` for the package root and `./hmr` for a subpath. */
+export interface DocEntryPoint {
+    subpath: string;
+    /** Absolute path to the built declaration api-extractor reads. */
+    declaration: string;
+    /** Package-relative path to the `src` file the source pass walks. */
+    sourceEntry?: string;
 }
 
 export interface SourceEntry {
@@ -50,12 +62,26 @@ export interface ManifestRepository {
     commit?: string;
 }
 
+/** One extracted import path and the model api-extractor wrote for it. */
+export interface EntryDocResult {
+    subpath: string;
+    /** Package-relative declaration api-extractor read. */
+    entryPoint: string;
+    /** Package-relative `src` file the source pass walked. */
+    sourceEntry?: string;
+    outputPath: string | null;
+    warnings: string[];
+    errors: string[];
+    succeeded: boolean;
+}
+
 /**
  * API Extractor run summary for one package.
  */
 export interface PackageDocResult {
     name: string;
     version: string;
+    entries: EntryDocResult[];
     entryPoints: string[];
     /** Primary `src` entry (relative to the package dir) the source pass walks. this matches AE's entry. */
     sourceEntry?: string;

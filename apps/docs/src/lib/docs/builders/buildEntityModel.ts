@@ -15,6 +15,14 @@ import { resolveHeaderSignature } from './utils';
 import type { EntityModel } from '#lib/docs/types';
 import type { DocNode, VersionedDocsEngine } from '@seedcord/docs-engine';
 
+// mergeEntries seeds `entries` with the root entry before appending any subpath
+function importPath(manifestPackage: string, entries: DocNode['entries']): string {
+    const display = formatDisplayPackageName(manifestPackage);
+    const [subpath] = entries ?? [];
+    if (!subpath || subpath === '.') return display;
+    return `${display}${subpath.replace(/^\./, '')}`;
+}
+
 export async function buildEntityModel(engine: VersionedDocsEngine, node: DocNode): Promise<EntityModel> {
     const manifestPackage = node.packageName;
     const context = createFormatContext(engine, manifestPackage);
@@ -26,7 +34,7 @@ export async function buildEntityModel(engine: VersionedDocsEngine, node: DocNod
         node,
         kind,
         manifestPackage,
-        displayPackage: formatDisplayPackageName(manifestPackage),
+        displayPackage: importPath(manifestPackage, node.entries),
         summary: formattedSummary.paragraphs,
         summaryExamples: formattedSummary.examples,
         signature,
