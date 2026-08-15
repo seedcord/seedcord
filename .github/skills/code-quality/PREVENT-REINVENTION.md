@@ -71,7 +71,7 @@ Before creating any file, look at sibling packages. The conventions are consiste
 - Lint and tc scripts cover both `src/**` and `tests/**`.
 - ESLint configs at the package root as `eslint.config.mjs` (flat config), composed from `@seedcord/eslint-config`.
 - TypeScript configs extend `@seedcord/tsconfig` and never cross package source-path boundaries (no `paths` or `include` reaching into another package's `src`).
-- Build packages use `@seedcord/tsup-config` via tsup, emitting both `dist/index.d.ts` + `dist/index.mjs` (and `.cjs` where required by the package's `exports` map).
+- Build packages use `@seedcord/tsdown-config` via tsdown, emitting `dist/index.d.mts` + `dist/index.mjs`. Published packages ship ESM only.
 - Shared deps must live in `pnpm-workspace.yaml`'s `catalogs:` (`deps:` for app/runtime, `peer:` for peer deps) and be consumed as `catalog:deps` / `catalog:peer` from every `package.json`. Never pin the same version twice.
 
 If you find yourself dropping a test in `src/`, putting setup in a non-conventional place, or wiring `paths` to another package's source: you're not matching the convention. Mirror an existing package.

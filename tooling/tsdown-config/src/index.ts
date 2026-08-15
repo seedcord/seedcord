@@ -36,9 +36,9 @@ function readPackageVersion(): string {
  */
 // eslint-disable-next-line complexity -- Justified as this sets up default configs for tsdown
 export function createTsdownConfig({
-    format = ['esm', 'cjs'],
+    format = ['esm'],
     entry = ['src/index.ts'],
-    dts = { cjsReexport: true },
+    dts = true,
     shims = true,
     clean = true,
     treeshake = true,

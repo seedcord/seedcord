@@ -28,20 +28,12 @@
             "import": {
                 "types": "./dist/index.d.mts",
                 "default": "./dist/index.mjs"
-            },
-            "require": {
-                "types": "./dist/index.d.cts",
-                "default": "./dist/index.cjs"
             }
         },
         "./internal": {
             "import": {
                 "types": "./dist/internal.index.d.mts",
                 "default": "./dist/internal.index.mjs"
-            },
-            "require": {
-                "types": "./dist/internal.index.d.cts",
-                "default": "./dist/internal.index.cjs"
             }
         }
     },

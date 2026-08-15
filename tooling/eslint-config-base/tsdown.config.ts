@@ -2,9 +2,9 @@ import { defineConfig } from 'tsdown';
 
 // inlined to avoid circular dependency. keep in sync with tooling/tsdown-config/src/index.ts.
 export default defineConfig({
-    format: ['esm', 'cjs'],
+    format: ['esm'],
     entry: ['src/index.ts', 'src/prettier.ts'],
-    dts: { cjsReexport: true },
+    dts: true,
     shims: true,
     clean: true,
     treeshake: true,
