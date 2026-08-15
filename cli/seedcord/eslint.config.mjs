@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 
 export default createConfig({
     tsconfigRootDir: import.meta.dirname,
-    generalIgnores: ['template/**/*.ts'],
+    generalIgnores: ['template/**/*.ts', '**/.build-fixture/**'],
     userConfigs: [
         { ...eslintReact.configs['recommended-typescript'], files: ['**/*.{ts,tsx}'] },
         {
