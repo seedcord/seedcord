@@ -1,7 +1,5 @@
 :root {
-    /* brand accents */
-    --flesh: var(--flesh);
-    --rind: var(--rind);
+    /* darkened brand accents, text-safe on the cream ground */
     --vine-deep: #4d7d33;
     --flesh-deep: #c8341f;
 
