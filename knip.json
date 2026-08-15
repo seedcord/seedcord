@@ -79,7 +79,7 @@
         "plugins/mongoose": {},
         "cli/seedcord": {
             "ignoreDependencies": [
-                "fix-esm-import-path"
+                "tsc-alias"
             ]
         },
         "cli/create-seedcord": {},

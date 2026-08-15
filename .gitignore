@@ -38,6 +38,9 @@ dist/
 # Turborepo
 .turbo/
 
+# scratch projects a test compiles, removed in afterAll unless the run dies
+**/.build-fixture
+
 # Package manager caches
 .pnpm-store/
 .yarn/

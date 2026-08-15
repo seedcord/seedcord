@@ -1,9 +1,11 @@
-import { relative } from 'node:path';
+import { dirname, relative } from 'node:path';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { createServer, createServerModuleRunner, mergeConfig } from 'vite';
 import { EvaluatedModules } from 'vite/module-runner';
+// eslint-disable-next-line import-x/no-rename-default -- the package declares its default as `_default`
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { HmrPlugin } from './HmrPlugin';
 import viteConfig, { logsIgnore } from './vite.config';
@@ -32,10 +34,12 @@ export class ViteDevRuntime implements DevRuntime {
         const hmrPlugin = new HmrPlugin(this.context.config);
         this.hmrPlugin = hmrPlugin;
 
+        // vite searches its own root for a config file
         const config = mergeConfig(viteConfig, {
             root: projectRoot,
+            configFile: false,
             server: { watch: { ignored: [logsIgnore(projectRoot)] } },
-            plugins: [hmrPlugin.plugin]
+            plugins: [tsconfigPaths({ root: dirname(this.context.config.configFile) }), hmrPlugin.plugin]
         });
 
         this.viteServer = await createServer(config);

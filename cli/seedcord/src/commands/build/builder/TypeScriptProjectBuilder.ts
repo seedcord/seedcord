@@ -32,7 +32,7 @@ export class TypeScriptProjectBuilder {
 
         try {
             await this.runTsc(projectDir, tsconfigPath);
-            await this.fixRelativeSpecifiers(config.build.outDir);
+            await this.rewriteSpecifiers(projectDir, tsconfigPath);
         } catch (error: unknown) {
             if (isSeedcordError(error)) throw error;
 
@@ -79,14 +79,21 @@ export class TypeScriptProjectBuilder {
         }
     }
 
-    private async fixRelativeSpecifiers(outDir: string): Promise<void> {
-        const fixPath = this.resolveFixEsmImportPath();
+    // tsc emits every specifier as written
+    private async rewriteSpecifiers(projectDir: string, tsconfigPath: string): Promise<void> {
+        const binPath = this.resolveTscAlias();
 
-        const result = await this.runNodeScript(process.cwd(), fixPath, [outDir]);
+        const result = await this.runNodeScript(projectDir, binPath, [
+            '-p',
+            tsconfigPath,
+            '--resolve-full-paths',
+            '--resolve-full-extension',
+            '.js'
+        ]);
         if (result.exitCode === 0) return;
 
         throw new SeedcordError(SeedcordErrorCode.CliBuildFailed, [
-            `Failed to fix relative import specifiers:\n${this.truncateOutput(result.output)}`
+            `Failed to rewrite import specifiers:\n${this.truncateOutput(result.output)}`
         ]);
     }
 
@@ -103,14 +110,10 @@ export class TypeScriptProjectBuilder {
         }
     }
 
-    private resolveFixEsmImportPath(): string {
+    private resolveTscAlias(): string {
         const selfRequire = createNodeRequire(import.meta.url);
 
-        try {
-            return selfRequire.resolve('fix-esm-import-path/fix-esm-import-path.js');
-        } catch {
-            return selfRequire.resolve('fix-esm-import-path');
-        }
+        return selfRequire.resolve('tsc-alias/dist/bin/index.js');
     }
 
     private createProjectRequire(projectDir: string): NodeJS.Require {

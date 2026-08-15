@@ -78,14 +78,15 @@
         "chalk": "catalog:deps",
         "commander": "^15.0.0",
         "discord-api-types": "catalog:deps",
-        "fix-esm-import-path": "^1.10.3",
         "ink": "^7.1.1",
         "ink-spinner": "^5.0.0",
         "jiti": "^2.7.0",
         "minimatch": "^10.2.6",
         "react": "catalog:react",
+        "tsc-alias": "^1.9.1",
         "tsx": "catalog:deps",
         "vite": "catalog:deps",
+        "vite-tsconfig-paths": "^6.1.1",
         "wrap-ansi": "^10.0.0"
     },
     "devDependencies": {
