@@ -87,7 +87,7 @@ export { translateSerializationError } from '@reply/translateSerialization';
 export { serializeReply, type SerializedReply } from '@reply/serializeReply';
 
 export { type StoredSubscriberCtor, type SubscriberRegistration } from '@subscribers/Bus';
-export { FaultThrottle } from '@subscribers/FaultThrottle';
+export { ReportThrottle } from '@subscribers/ReportThrottle';
 export { PublishDefault } from '@subscribers/publishDefault';
 export { outcomeFor, queuedMsFor, reportDispatch } from '@src/dispatch/dispatchReport';
 // the transports' augmentation target for their own default keys

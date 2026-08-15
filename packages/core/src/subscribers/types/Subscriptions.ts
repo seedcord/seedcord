@@ -67,6 +67,8 @@ export interface DefaultSubscriptions {
     unknownException: {
         uuid: UUID;
         error: Error;
+        /** Where the throw came from, `slash:ban` for an interaction and `event:name:handler` for an event. */
+        routeId: string;
         guild?: { id: string; name: string } | undefined;
         user?: { id: string; username: string } | undefined;
         metadata?: unknown;
@@ -75,6 +77,8 @@ export interface DefaultSubscriptions {
     handledException: {
         denial: Notice;
         uuid: UUID;
+        /** The same id `interactionDispatched` publishes. An event reads `event:name:handler`. */
+        routeId: string;
         source: FaultSource;
     };
     /** Triggered when an interaction dispatch throws past the fault boundary. */

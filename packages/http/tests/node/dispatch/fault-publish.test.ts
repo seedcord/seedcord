@@ -59,12 +59,17 @@ class BoomHandler extends SlashHandler<never> {
     }
 }
 
+class OtherBoomHandler extends SlashHandler<never> {
+    execute(): Promise<void> {
+        throw new Error('rank lookup failed');
+    }
+}
+
 interface Published {
     handled: SubscriptionData<'handledException'>[];
     unknown: SubscriptionData<'unknownException'>[];
 }
 
-// one core is one bot, and the throttle window is per bot
 function watched(): { core: Core; published: Published } {
     const core = createCore(nullPathConfig, VALID_TOKEN);
     const published: Published = { handled: [], unknown: [] };
@@ -122,6 +127,24 @@ describe('http fault publishing', () => {
         expect(unknown[0]?.error.message).toBe('handler exploded');
     });
 
+    it('publishes the dispatch routeId, so a subscriber can group faults by route', async () => {
+        const { unknown } = await faultsFor(BoomHandler);
+
+        expect(unknown[0]?.routeId).toBe('slash:ok');
+    });
+
+    it('publishes both bugs when one route throws two different errors', async () => {
+        const { core, published } = watched();
+
+        await dispatchThrough(core, BoomHandler);
+        await dispatchThrough(core, OtherBoomHandler);
+
+        expect(published.unknown.map((fault) => fault.error.message)).toEqual([
+            'handler exploded',
+            'rank lookup failed'
+        ]);
+    });
+
     it('wraps a non-Error throw, so it reports like any other raw fault', async () => {
         const { handled, unknown } = await faultsFor(RawThrowHandler);
 
@@ -130,29 +153,12 @@ describe('http fault publishing', () => {
         expect(unknown[0]?.error.message).toBe('nope');
     });
 
-    it('reports the same route and error once per throttle window', async () => {
+    it('publishes a repeat of the same fault every time it happens', async () => {
         const { core, published } = watched();
 
         await dispatchThrough(core, BoomHandler);
         await dispatchThrough(core, BoomHandler);
 
-        expect(published.unknown).toHaveLength(1);
-    });
-
-    it('reports a different error on the same route separately', async () => {
-        const { core, published } = watched();
-
-        await dispatchThrough(core, BoomHandler);
-        await dispatchThrough(core, NoticeHandler);
-
-        expect(published.handled).toHaveLength(1);
-    });
-
-    it('keeps a separate window per bot, so one bot never throttles another', async () => {
-        const first = await faultsFor(BoomHandler);
-        const second = await faultsFor(BoomHandler);
-
-        expect(first.unknown).toHaveLength(1);
-        expect(second.unknown).toHaveLength(1);
+        expect(published.unknown).toHaveLength(2);
     });
 });

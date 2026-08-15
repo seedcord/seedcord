@@ -31,6 +31,13 @@ const data = {} as unknown as AllSubscriptions['unknownException'];
 // justified: the Subscriber base only stores core
 const core = {} as unknown as CoreBase;
 
+// the throttle keys on the core
+const freshCore = (): CoreBase => ({}) as unknown as CoreBase;
+
+interface SentBody {
+    body: { username: string; avatar_url?: string };
+}
+
 const component = { toJSON: (): APIMessageTopLevelComponent => ({ type: ComponentType.Container, components: [] }) };
 
 beforeEach(() => {
@@ -67,6 +74,31 @@ describe('WebhookLog', () => {
 
         const [, options] = hoisted.postMock.mock.calls[0] as [string, { body: { username: string } }];
         expect(options.body.username).toBe('NamedReporter');
+    });
+
+    it('sends the avatar url only when the report carries one', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Faced extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { avatarUrl: 'https://cdn.example/av.png', components: [component] };
+            }
+        }
+
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Plain extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        await new Faced(data, freshCore()).execute();
+        await new Plain(data, freshCore()).execute();
+
+        const bodies = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body);
+        expect(bodies[0]?.avatar_url).toBe('https://cdn.example/av.png');
+        expect(bodies[1]).not.toHaveProperty('avatar_url');
     });
 
     it('reuses one sender per url across instances', async () => {
@@ -119,6 +151,107 @@ describe('WebhookLog', () => {
         expect(hoisted.postMock).not.toHaveBeenCalled();
         expect(warnSpy).toHaveBeenCalled();
         warnSpy.mockRestore();
+    });
+
+    it('sends every event when the reporter names no throttle key', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Chatty extends WebhookLog<'unknownException', CoreBase> {
+            report(): WebhookReport {
+                return { components: [component] };
+            }
+        }
+
+        const own = freshCore();
+        await new Chatty(data, own).execute();
+        await new Chatty(data, own).execute();
+
+        expect(hoisted.postMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('puts the suppressed count on the next card', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Grouped extends WebhookLog<'unknownException', CoreBase> {
+            protected override throttleKey(): string {
+                return 'grouped';
+            }
+
+            report(suppressed: number): WebhookReport {
+                return { username: `n=${suppressed}`, components: [component] };
+            }
+        }
+
+        const own = freshCore();
+        vi.useFakeTimers();
+        await new Grouped(data, own).execute();
+        await new Grouped(data, own).execute();
+        vi.advanceTimersByTime(61_000);
+        await new Grouped(data, own).execute();
+        vi.useRealTimers();
+
+        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        expect(sent).toEqual(['n=0', 'n=1']);
+    });
+
+    it('waits out the window after a failed send, carrying the lost card into the next one', async () => {
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Retried extends WebhookLog<'unknownException', CoreBase> {
+            protected override throttleKey(): string {
+                return 'retried';
+            }
+
+            report(suppressed: number): WebhookReport {
+                return { username: `n=${suppressed}`, components: [component] };
+            }
+        }
+
+        const own = freshCore();
+        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+        hoisted.postMock.mockRejectedValueOnce(new Error('down'));
+
+        vi.useFakeTimers();
+        await new Retried(data, own).execute();
+        await new Retried(data, own).execute();
+        vi.advanceTimersByTime(61_000);
+        await new Retried(data, own).execute();
+        vi.useRealTimers();
+
+        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        expect(sent).toEqual(['n=0', 'n=2']);
+        errorSpy.mockRestore();
+    });
+
+    it('counts a card that report threw on, so the next one carries it', async () => {
+        let calls = 0;
+
+        @Subscribe('unknownException')
+        @WebhookUrl('REPORTER_WEBHOOK_URL')
+        class Flaky extends WebhookLog<'unknownException', CoreBase> {
+            protected override throttleKey(): string {
+                return 'flaky';
+            }
+
+            report(suppressed: number): WebhookReport {
+                calls += 1;
+                if (calls === 1) throw new Error('render blew up');
+                return { username: `n=${suppressed}`, components: [component] };
+            }
+        }
+
+        const own = freshCore();
+        const errorSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => undefined);
+
+        vi.useFakeTimers();
+        await new Flaky(data, own).execute();
+        vi.advanceTimersByTime(61_000);
+        await new Flaky(data, own).execute();
+        vi.useRealTimers();
+
+        const sent = hoisted.postMock.mock.calls.map(([, options]) => (options as SentBody).body.username);
+        expect(sent).toEqual(['n=1']);
+        errorSpy.mockRestore();
     });
 
     it('throws at execute when the decorator is missing', async () => {

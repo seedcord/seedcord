@@ -98,7 +98,7 @@ function renderContext(core: Core, uuid: RenderContext['uuid']): RenderContext {
 async function handleNotice(notice: Notice, uuid: RenderContext['uuid'], scope: FaultScope): Promise<void> {
     if (notice.report) {
         logger().error(`${notice.name}: ${paint.mute(uuid)}`, notice);
-        reportFault(notice, uuid, scope.payload, scope.core);
+        reportFault(notice, uuid, scope.routeId, scope.payload, scope.core);
     }
     const { sender } = scope;
     if (!sender) {
@@ -115,7 +115,7 @@ async function handleRawFault(error: Error, uuid: RenderContext['uuid'], scope: 
     if (core.config.errors?.errorStack ?? false) logger().error(paint.mute(uuid), error);
     else logger().error(`${paint.mute(uuid)} | ${error.message}`);
 
-    reportFault(error, uuid, scope.payload, core);
+    reportFault(error, uuid, scope.routeId, scope.payload, core);
 
     if (!sender) {
         await sendGuarded(scope.routeId, () => respondEmptyChoices(scope));

@@ -12,22 +12,25 @@ import type { AllSubscriptions, FaultSource } from '../types/Subscriptions';
 import type { CoreBase } from '@interfaces/CoreBase';
 import type { Notice } from '@stops/Notice';
 
-// FaultThrottle drops repeat faults before they reach this subscriber
 // no HANDLED_EXCEPTION_WEBHOOK_URL disables the reporter with a boot warning
 @Subscribe('handledException')
 @WebhookUrl('HANDLED_EXCEPTION_WEBHOOK_URL')
 export class HandledException extends WebhookLog<'handledException', CoreBase> {
-    report(): WebhookReport {
+    protected override throttleKey(): string {
+        return `handledException:${this.data.routeId}:${this.data.denial.name}`;
+    }
+
+    report(suppressed: number): WebhookReport {
         return {
             username: 'Handled Exception',
-            components: [new HandledExceptionContainer(this.data).component],
+            components: [new HandledExceptionContainer(this.data, suppressed).component],
             files: [jsonAttachment('source.json', 'The raw source the fault came from', this.data.source.raw)]
         };
     }
 }
 
 class HandledExceptionContainer extends BuilderComponent<'container'> {
-    constructor(data: AllSubscriptions['handledException']) {
+    constructor(data: AllSubscriptions['handledException'], suppressed: number) {
         super('container');
 
         const { denial, uuid, source } = data;
@@ -41,11 +44,21 @@ class HandledExceptionContainer extends BuilderComponent<'container'> {
             .addSeparatorComponents(new WebhookSeparator().component)
             .addTextDisplayComponents((text) => text.setContent('### Source'))
             .addFileComponents((file) => file.setURL('attachment://source.json'));
+
+        this.addSuppressedCount(suppressed);
+    }
+
+    private addSuppressedCount(suppressed: number): void {
+        if (suppressed === 0) return;
+
+        this.instance.addTextDisplayComponents((text) =>
+            text.setContent(`-# ${suppressed} more of these since the last report`)
+        );
     }
 }
 
 function faultSummary(denial: Notice, source: FaultSource): string {
-    // name and message carry chalk codes that the webhook payload would otherwise render raw
+    // name and message carry chalk codes
     const head = stripAnsi(`### A handled fault was reported: \`${denial.name}\`\n**Message:** ${denial.message}\n`);
     if (source.kind === 'event') {
         return (
@@ -67,7 +80,7 @@ function faultSummary(denial: Notice, source: FaultSource): string {
     );
 }
 
-// every cause shape returns a string, so building the report never throws on a bigint or circular cause
+// building the report must not throw on a bigint or a circular cause
 function causeStack(denial: Notice): string {
     const { cause } = denial;
     if (Error.isError(cause)) return stripAnsi(cause.stack ?? cause.message);

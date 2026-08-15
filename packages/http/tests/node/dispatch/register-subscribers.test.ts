@@ -7,7 +7,7 @@ import { registerSubscribers } from '@src/dispatch/registerSubscribers';
 import { EMPTY_MANIFEST } from '@src/manifest/RouteManifest';
 import { Subscriber } from '@subscribers/index';
 
-import type { CoreBase } from '@seedcord/core';
+import type { CoreBase, SubscriptionData } from '@seedcord/core';
 import type { RouteManifest } from '@src/manifest/RouteManifest';
 
 // justified: the Bus only stores core, no member is read during publish
@@ -24,9 +24,10 @@ function manifestWith(load: () => Promise<Record<string, unknown>>): RouteManife
     };
 }
 
-const payload = (): { uuid: `${string}-${string}-${string}-${string}-${string}`; error: Error } => ({
+const payload = (): SubscriptionData<'unknownException'> => ({
     uuid: crypto.randomUUID(),
-    error: new Error('boom')
+    error: new Error('boom'),
+    routeId: 'slash:probe'
 });
 
 // the Bus logs the subscriber failure with the thrown error as the last argument

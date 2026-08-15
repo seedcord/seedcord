@@ -17,6 +17,7 @@ export interface WebhookFile extends ReplyFile {
 export interface WebhookSendOptions {
     flags: number;
     username: string;
+    avatarUrl?: string | undefined;
     components: readonly { toJSON(): APIMessageTopLevelComponent }[];
     files?: readonly WebhookFile[] | undefined;
 }
@@ -46,7 +47,7 @@ export class WebhookSender {
     }
 
     async send(options: WebhookSendOptions): Promise<void> {
-        const { flags, username, components, files } = options;
+        const { flags, username, avatarUrl, components, files } = options;
         await this.rest.post(this.route, {
             auth: false,
             // with_components=true makes discord accept a components-v2 payload. wait=true makes it
@@ -55,6 +56,7 @@ export class WebhookSender {
             body: {
                 flags,
                 username,
+                ...(avatarUrl && { avatar_url: avatarUrl }),
                 components: components.map((component) => component.toJSON()),
                 ...(files?.length && {
                     attachments: files.map((file, id) => ({ id, filename: file.name, description: file.description }))

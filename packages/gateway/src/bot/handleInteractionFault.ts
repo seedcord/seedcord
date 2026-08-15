@@ -4,7 +4,6 @@ import { Logger } from '@seedcord/logger';
 import { DiscordAPIError } from 'discord.js';
 
 import { ReplySender } from '@bot/ReplySender';
-import { slashRouteOf } from '@bUtilities/miscellaneous/slashRouteOf';
 import { extractErrorResponse } from '@miscellaneous/extractErrorResponse';
 
 import { HARMLESS_API_CODES } from './harmlessApiCodes';
@@ -40,18 +39,19 @@ export async function handleInteractionFault(
     // autocomplete cannot be replied to, only reported
     if (interaction.isAutocomplete()) {
         extractErrorResponse(error, core, {
+            routeId,
             guild: interaction.guild,
             user: interaction.user,
-            metadata: interaction,
-            route: slashRouteOf(interaction)
+            metadata: interaction
         });
-        // empty choices are the only legal response, and they clear the client's loading spinner
+        // empty choices clear the client's loading spinner
         await sendEmptyChoices(interaction, core, routeId);
         return;
     }
 
     const { response } = extractErrorResponse(error, core, {
         interaction,
+        routeId,
         guild: interaction.guild,
         user: interaction.user,
         metadata: interaction

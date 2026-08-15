@@ -1,7 +1,5 @@
-import { DiscordAPIError } from '@discordjs/rest';
 import { Notice } from '@seedcord/core';
-import { FaultThrottle, prefixOf, PublishDefault } from '@seedcord/core/internal';
-import { Logger, paint } from '@seedcord/logger';
+import { PublishDefault } from '@seedcord/core/internal';
 import { ApplicationCommandType, ComponentType, InteractionType } from 'discord-api-types/v10';
 
 import { slashRouteOf } from './slashRouteOf';
@@ -13,53 +11,21 @@ import type { RenderContext } from '@seedcord/types';
 
 type InteractionFaultSource = Extract<FaultSource, { kind: 'interaction' }>;
 
-// the logger reads env, which binds after this module loads
-let faultLogger: Logger | undefined;
-function logger(): Logger {
-    faultLogger ??= new Logger('Faults', { channel: 'errors' });
-    return faultLogger;
-}
-
 // the raw-payload twin of gateway's extractErrorResponse
 export function reportFault(
     error: Error,
     uuid: RenderContext['uuid'],
+    routeId: string,
     payload: ValidInteractionTypes,
     core: Core
 ): void {
-    const throttle = FaultThrottle.for(core);
-    const key = `${routeKeyOf(payload)}:${nameOf(error)}`;
-    if (!throttle.shouldReport(key)) {
-        logger().debug(`throttled duplicate fault ${paint.mute(key)}`);
-        return;
-    }
-
     const source = interactionSource(payload);
     if (error instanceof Notice && source)
-        core.bus[PublishDefault]('handledException', { denial: error, uuid, source });
-    else core.bus[PublishDefault]('unknownException', { uuid, error, ...actors(payload), metadata: payload });
-
-    throttle.markReported(key);
+        core.bus[PublishDefault]('handledException', { denial: error, uuid, routeId, source });
+    else core.bus[PublishDefault]('unknownException', { uuid, error, routeId, ...actors(payload), metadata: payload });
 }
 
-// a parameterized component collapses to one key
-function routeKeyOf(payload: ValidInteractionTypes): string {
-    if (payload.type === InteractionType.ApplicationCommandAutocomplete)
-        return `autocomplete:${slashRouteOf(payload.data)}`;
-    if (payload.type === InteractionType.ApplicationCommand) {
-        return payload.data.type === ApplicationCommandType.ChatInput ? slashRouteOf(payload.data) : payload.data.name;
-    }
-    // || because an empty prefix (a too-short routeKey) must fall back to the full wire
-    return prefixOf(payload.data.custom_id) || payload.data.custom_id;
-}
-
-function nameOf(error: Error): string {
-    if (error instanceof Notice) return error.name;
-    if (error instanceof DiscordAPIError) return String(error.code);
-    return error.constructor.name;
-}
-
-// discord's raw payload carries guild_id and no guild name
+// the raw payload has guild_id and no guild name
 function actors(payload: ValidInteractionTypes): Pick<SubscriptionData<'unknownException'>, 'guild' | 'user'> {
     const user = payload.member?.user ?? payload.user;
     return { guild: undefined, user: user ? { id: user.id, username: user.username } : undefined };
@@ -80,11 +46,12 @@ function interactionSource(payload: ValidInteractionTypes): InteractionFaultSour
     } as const;
 
     if (payload.type === InteractionType.ApplicationCommand) {
-        const isSlash = payload.data.type === ApplicationCommandType.ChatInput;
+        const { data } = payload;
+        const isSlash = data.type === ApplicationCommandType.ChatInput;
         return {
             ...common,
             interactionKind: isSlash ? 'slash' : 'context-menu',
-            command: routeKeyOf(payload),
+            command: isSlash ? slashRouteOf(data) : data.name,
             customId: null
         };
     }
