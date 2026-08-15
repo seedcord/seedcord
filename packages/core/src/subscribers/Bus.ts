@@ -2,7 +2,6 @@ import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { Logger, paint } from '@seedcord/logger';
-import chalk from 'chalk';
 
 import { SubscribeMetadataKey } from '@src/metadataKeys';
 
@@ -108,7 +107,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
                 const result = await WebhookLog.senderFor(url).verify();
                 if (result === 'missing') missing.push(...envKeys);
                 else if (result === 'unreachable')
-                    this.logger.warn(`could not verify webhook at ${paint.sky.bold(envKeys.join(', '))}`);
+                    this.logger.warn(
+                        `could not verify webhook at ${envKeys.map((key) => paint.amber.bold(key)).join(', ')}`
+                    );
             })
         );
         // collected first so the first boot names every missing webhook at once
@@ -122,7 +123,7 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
         const envKey = WebhookLog.envKeyOf(ctor);
         const url = WebhookLog.urlOf(envKey);
         if (url === null) {
-            this.logger.warn(`${chalk.bold(ctor.name)} disabled, ${paint.sky.bold(envKey)} is not set`);
+            this.logger.warn(`${paint.sky.bold(ctor.name)} disabled, ${paint.amber.bold(envKey)} is not set`);
             return false;
         }
         const envKeys = this.webhookProbes.get(url) ?? [];
@@ -212,7 +213,10 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
             name = Ctor.name;
             await new Ctor(data, this.core).execute();
         } catch (err) {
-            this.logger.error(`Error in subscriber ${String(subscriberName)} handler ${paint.sky.bold(name)}:`, err);
+            this.logger.error(
+                `Error in subscriber ${paint.mute(String(subscriberName))} handler ${paint.sky.bold(name)}:`,
+                err
+            );
         }
     }
 }

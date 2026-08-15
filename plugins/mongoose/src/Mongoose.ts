@@ -4,8 +4,8 @@ import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
-import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';
 
@@ -111,7 +111,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
                 ...keepDefined(this.options.connectionOptions ?? {})
             })
             .then((conn) => {
-                this.logger.info(chalk.green.bold(`Connected to MongoDB: ${chalk.magenta.bold(conn.connection.name)}`));
+                this.logger.info(paint.mint.bold(`Connected to MongoDB: ${paint.sky.bold(conn.connection.name)}`));
                 return conn;
             })
             .catch((err) => {
@@ -133,7 +133,7 @@ export class Mongoose extends Plugin<{ transport: 'any'; runtime: 'server' }> {
 
         await this.connection
             .disconnect()
-            .then(() => this.logger.info(chalk.red.bold('Disconnected from MongoDB')))
+            .then(() => this.logger.info(paint.coral.bold('Disconnected from MongoDB')))
             .catch((err: unknown) => {
                 const error = Error.isError(err) ? err : new Error(String(err));
                 this.logger.error(`Could not disconnect from MongoDB: ${error.message}`);

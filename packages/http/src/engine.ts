@@ -82,7 +82,7 @@ export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
 
     const handle = async (request: Request, ctx?: EngineContext): Promise<Response> => {
         const [response, outcome] = await respond(request, ctx);
-        logger.debug(`${request.method} ${outcome} ${paint.amber(String(response.status))}`);
+        logger.debug(`${paint.sky.bold(request.method)} ${outcome} ${paint.amber(String(response.status))}`);
         return response;
     };
 

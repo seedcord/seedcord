@@ -1,4 +1,4 @@
-import chalk from 'chalk';
+import { paint } from '@seedcord/logger';
 
 import { ShutdownPhase } from '@src/lifecycle/phases';
 
@@ -52,12 +52,12 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
 
     private registerSignalHandlers(): void {
         this.onSigTerm = () => {
-            this.logger.info(`Received ${chalk.yellow.bold('SIGTERM')} signal`);
+            this.logger.info(`Received ${paint.amber.bold('SIGTERM')} signal`);
             void this.run(0);
         };
 
         this.onSigInt = () => {
-            this.logger.info(`Received ${chalk.yellow.bold('SIGINT')} signal`);
+            this.logger.info(`Received ${paint.amber.bold('SIGINT')} signal`);
             void this.run(0);
         };
 
@@ -102,7 +102,7 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
         this.isShuttingDown = true;
         this.exitCode = exitCode;
         this.logger.info(
-            `${chalk.bold.yellow('Starting')} coordinated shutdown with exit code ${chalk.bold.cyan(exitCode)}`
+            `${paint.amber.bold('Starting')} coordinated shutdown with exit code ${paint.sky.bold(exitCode)}`
         );
 
         try {
@@ -118,19 +118,19 @@ export class CoordinatedShutdown extends CoordinatedLifecycle<ShutdownPhase> {
             }
 
             if (failures.length > 0) {
-                this.logger.error(`${chalk.bold.red('Coordinated shutdown failed')}`, ...failures);
+                this.logger.error(`${paint.coral.bold('Coordinated shutdown failed')}`, ...failures);
             } else {
-                this.logger.info(`${chalk.bold.green('Coordinated shutdown completed')} successfully`);
+                this.logger.info(`${paint.mint.bold('Coordinated shutdown completed')} successfully`);
             }
         } finally {
             this.hasShutdown = true;
             if (exitProcess) {
-                this.logger.debug(`${chalk.bold.red('Exiting')} process with code ${chalk.bold.cyan(this.exitCode)}`);
+                this.logger.debug(`${paint.coral.bold('Exiting')} process with code ${paint.sky.bold(this.exitCode)}`);
                 setTimeout(() => {
                     process.exit(this.exitCode);
                 }, LOG_FLUSH_DELAY_MS);
             } else {
-                this.logger.debug(`${chalk.bold.yellow('Skipping')} process exit (dev mode)`);
+                this.logger.debug(`${paint.amber.bold('Skipping')} process exit (dev mode)`);
                 this.isShuttingDown = false;
             }
         }

@@ -501,7 +501,7 @@ export class InteractionDispatcher implements Initializeable, HmrAware {
         if (isFallback) {
             this.logger.warn(`No handler found for key ${paint.sky.bold(key)}. Falling back to ${HandlerCtor.name}.`);
         }
-        this.logger.debug(`Processing ${paint.mint.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
+        this.logger.debug(`Processing ${paint.sky.bold(key)} with ${paint.mute(HandlerCtor.name)}`);
         // @ts-expect-error TS can't infer the type of interaction here
         return new HandlerCtor(interaction, this.core, dispatch);
     }

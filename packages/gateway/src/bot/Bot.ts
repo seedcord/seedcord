@@ -2,8 +2,7 @@ import { CommandInjector } from '@seedcord/core/internal';
 import { CommandRegistry, ShutdownPhase } from '@seedcord/core/node/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
-import { Logger } from '@seedcord/logger';
-import chalk from 'chalk';
+import { Logger, paint } from '@seedcord/logger';
 import { Client, Events } from 'discord.js';
 import { Envapt } from 'envapt/legacy';
 
@@ -150,13 +149,13 @@ export class Bot implements Initializeable, HmrAware {
         this._client.once(Events.ClientReady, () => ready.resolve());
         void this._client.login(token);
         await ready.promise;
-        this.logger.info(`Logged in as ${chalk.bold.magenta(this._client.user?.username)}!`);
+        this.logger.info(`Logged in as ${paint.sky.bold(this._client.user?.username)}!`);
         return this;
     }
 
     private async logout(): Promise<void> {
         await this._client.destroy();
-        this.logger.info(chalk.bold.red('Logged out of Discord!'));
+        this.logger.info(paint.coral.bold('Logged out of Discord!'));
     }
 
     public get client(): Client {

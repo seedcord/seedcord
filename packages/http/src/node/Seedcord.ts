@@ -268,7 +268,7 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
             // justified: the @me payload carries username per the discord api contract
             const me = (await this.rest.get(Routes.user('@me'))) as { username?: string };
             this.fetchedUsername = me.username;
-            if (me.username) this.logger.info(`Running as ${paint.iris.bold(me.username)}`);
+            if (me.username) this.logger.info(`Running as ${paint.sky.bold(me.username)}`);
         } catch (caught) {
             // a bad token errors on the first real send anyway
             this.logger.warn('could not fetch the bot identity', caught);

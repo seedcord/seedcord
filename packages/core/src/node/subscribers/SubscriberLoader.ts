@@ -1,5 +1,5 @@
+import { paint } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
-import chalk from 'chalk';
 import { Envapter } from 'envapt';
 
 import { HmrModuleHandler } from '@hmr/HmrModuleHandler';
@@ -45,11 +45,11 @@ export class SubscriberLoader implements Initializeable, HmrAware {
 
         const { directory } = this;
         if (directory) {
-            this.bus.logger.debug(chalk.bold(directory));
+            this.bus.logger.debug(paint.mute(directory));
             await this.load(directory);
             this.bus.logger.utils.list(
-                [`${chalk.bold.magenta(this.bus.registeredCount)} subscribers`],
-                chalk.bold.green('Loaded'),
+                [`${paint.iris.bold(this.bus.registeredCount)} subscribers`],
+                paint.mint.bold('Loaded'),
                 'debug'
             );
         }

@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import chalk from 'chalk';
+import { paint } from '@seedcord/logger';
 
 import { StartupPhase } from '@src/lifecycle/phases';
 
@@ -72,7 +72,7 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
         }
 
         this.isStartingUp = true;
-        this.logger.info(`${chalk.bold.green('Starting')} coordinated startup sequence`);
+        this.logger.info(`${paint.mint.bold('Starting')} coordinated startup sequence`);
 
         try {
             for (const phase of PHASE_ORDER) {
@@ -85,14 +85,14 @@ export class CoordinatedStartup extends CoordinatedLifecycle<StartupPhase> {
             }
 
             this.hasStarted = true;
-            this.logger.info(`${chalk.bold.green('Coordinated startup completed')} successfully`);
+            this.logger.info(`${paint.mint.bold('Coordinated startup completed')} successfully`);
         } catch (error) {
             // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- abort() can flip isStartingUp to false before this catch runs
             if (!this.isStartingUp) {
                 this.logger.warn('Startup sequence aborted during error handling');
                 return;
             }
-            this.logger.error(`${chalk.bold.red('Coordinated startup failed')}`);
+            this.logger.error(`${paint.coral.bold('Coordinated startup failed')}`);
             throw error;
         } finally {
             this.isStartingUp = false;

@@ -4,8 +4,8 @@ import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
-import chalk from 'chalk';
 import { Envapter } from 'envapt';
 import { Kysely, PostgresDialect } from 'kysely';
 import { Pool, type PoolConfig, type PoolClient } from 'pg';
@@ -155,7 +155,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
             });
 
             const dbLabel = this.databaseName ?? 'unknown';
-            this.logger.info(`Connected to Postgres database ${chalk.bold.magenta(dbLabel)}`);
+            this.logger.info(`Connected to Postgres database ${paint.sky.bold(dbLabel)}`);
         } catch (err) {
             throw new SeedcordError(SeedcordErrorCode.PluginKyselyConnectionFailed, [this.databaseName ?? undefined], {
                 cause: err
@@ -179,13 +179,13 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         this.pool = null;
         this.migrationManager = null;
 
-        this.logger.debug(chalk.gray('Closing Postgres pool.'));
+        this.logger.debug(paint.mute('Closing Postgres pool.'));
         await pool.end().catch((err: unknown) => {
             const error = Error.isError(err) ? err : new Error(String(err));
             this.logger.error(`Could not close pg pool: ${error.message}`);
             throw new SeedcordError(SeedcordErrorCode.PluginKyselyDisconnectFailed, { cause: err });
         });
-        this.logger.info(chalk.red.bold('Disconnected from Postgres'));
+        this.logger.info(paint.coral.bold('Disconnected from Postgres'));
     }
 
     /**
@@ -258,7 +258,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         const { pool: providedPool, connectionString } = this.options;
 
         if (providedPool instanceof Pool) {
-            this.logger.debug(chalk.gray('Reusing provided Postgres pool instance.'));
+            this.logger.debug(paint.mute('Reusing provided Postgres pool instance.'));
             this.databaseName = this.databaseBootstrapper.resolveDatabaseFromPool(providedPool);
             return providedPool;
         }
@@ -267,7 +267,7 @@ export class KyselyPostgres extends Plugin<{ transport: 'any'; runtime: 'server'
         await this.databaseBootstrapper.ensure(baseConfig);
         this.databaseName = this.databaseBootstrapper.resolveDatabaseName(baseConfig);
 
-        this.logger.debug(chalk.gray('Creating new Postgres pool.'));
+        this.logger.debug(paint.mute('Creating new Postgres pool.'));
         return new Pool(baseConfig);
     }
 

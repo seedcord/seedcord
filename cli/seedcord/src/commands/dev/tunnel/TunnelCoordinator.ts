@@ -52,10 +52,10 @@ export class TunnelCoordinator {
 
         try {
             this.deps.onStatus('opening');
-            this.deps.logger.info(`${opening(this.deps.kind)} ${paint.iris(String(port))}`);
+            this.deps.logger.info(`${opening(this.deps.kind)} ${paint.sky.bold(String(port))}`);
             const url = await tunnel.open(attempt.signal, port, () => this.deps.onStatus('resolving'));
             if (superseded(attempt)) return;
-            this.deps.logger.info(`Reachable at ${paint.sky.italic(url)} ${since()}`);
+            this.deps.logger.info(`Reachable at ${paint.sky.bold(url)} ${since()}`);
 
             this.deps.onStatus('registering');
             patched = true;

@@ -70,6 +70,6 @@ export function reportDispatch(bus: Bus, report: DispatchReport): void {
 
     // after publish so a throwing sink doesn't reach the publish above
     logger().trace(
-        `${paint.mint.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+        `${paint.sky.bold(report.routeId)} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
     );
 }

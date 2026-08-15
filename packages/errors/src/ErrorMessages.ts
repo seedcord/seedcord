@@ -1,6 +1,5 @@
-import chalk from 'chalk';
-
 import { SeedcordErrorCode } from './ErrorCodes';
+import { paint } from './palette';
 
 /** @internal */
 const messages = {
@@ -74,20 +73,20 @@ const messages = {
         `Route \`${route}\` failed to import ${from}.`,
 
     [SeedcordErrorCode.ReplyIllegalAckState]: (method: string, reason: string, alternative: string, routeId: string) =>
-        `${chalk.cyan(`${method}()`)} was called when ${reason}.\n${alternative} (route ${chalk.cyan(routeId)})`,
+        `${paint.sky(`${method}()`)} was called when ${reason}.\n${alternative} (route ${paint.mute(routeId)})`,
     [SeedcordErrorCode.ReplyComponentSerialization]: (
         componentClass: string,
         index: number,
         detail: string,
         routeId: string
     ) =>
-        `${chalk.cyan(componentClass)} at components[${index}] failed to serialize: ${detail.replace(/\.$/, '')}. (route ${chalk.cyan(routeId)})`,
+        `${paint.sky(componentClass)} at components[${index}] failed to serialize: ${detail.replace(/\.$/, '')}. (route ${paint.mute(routeId)})`,
     [SeedcordErrorCode.ReplyForeignEditTarget]: (method: string, targetId: string, routeId: string) =>
-        `${chalk.cyan(`${method}()`)} was passed message ${targetId}, which this interaction did not send.\nPass a message this interaction sent, returned by reply(), followUp(), edit(), or update(). (route ${chalk.cyan(routeId)})`,
+        `${paint.sky(`${method}()`)} was passed message ${targetId}, which this interaction did not send.\nPass a message this interaction sent, returned by reply(), followUp(), edit(), or update(). (route ${paint.mute(routeId)})`,
     [SeedcordErrorCode.ReplyUpdateWithoutSource]: (method: string, routeId: string) =>
-        `${chalk.cyan(`${method}()`)} was called on a modal opened from a command, which has no source message.\nUse reply() or defer() instead. (route ${chalk.cyan(routeId)})`,
+        `${paint.sky(`${method}()`)} was called on a modal opened from a command, which has no source message.\nUse reply() or defer() instead. (route ${paint.mute(routeId)})`,
     [SeedcordErrorCode.ReplyCallbackMissingMessage]: (method: string, routeId: string) =>
-        `The interaction callback for ${chalk.cyan(`${method}()`)} returned no message. (route ${chalk.cyan(routeId)})`,
+        `The interaction callback for ${paint.sky(`${method}()`)} returned no message. (route ${paint.mute(routeId)})`,
 
     [SeedcordErrorCode.CustomIdInvalidPrefix]: (prefix: string) =>
         `customId prefix ${JSON.stringify(prefix)} must be a non-empty string without a colon or control character.`,

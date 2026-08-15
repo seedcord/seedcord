@@ -1,6 +1,6 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import chalk from 'chalk';
+import { paint } from '@seedcord/logger';
 import { Pool, type PoolClient, type PoolConfig } from 'pg';
 
 import type { Logger } from '@seedcord/logger';
@@ -49,12 +49,12 @@ export class PostgresDatabaseBootstrapper {
     public async ensure(baseConfig: PoolConfig): Promise<void> {
         const targetDb = this.resolveDatabaseName(baseConfig);
         if (!targetDb) {
-            this.logger.debug(chalk.gray('Skipping database existence check (no database specified).'));
+            this.logger.debug(paint.mute('Skipping database existence check (no database specified).'));
             return;
         }
 
         if (targetDb === PostgresDatabaseBootstrapper.ADMIN_DB) {
-            this.logger.debug(chalk.gray('Target database is postgres, so skipping creation.'));
+            this.logger.debug(paint.mute('Target database is postgres, so skipping creation.'));
             return;
         }
 
@@ -64,14 +64,14 @@ export class PostgresDatabaseBootstrapper {
             return;
         }
 
-        this.logger.debug(chalk.gray(`Ensuring database ${chalk.yellow(targetDb)} exists...`));
+        this.logger.debug(paint.mute(`Ensuring database ${paint.amber(targetDb)} exists...`));
 
         await using adminPool = disposablePool(new Pool(adminConfig));
 
         try {
             const exists = await this.databaseExists(adminPool, targetDb);
             if (exists) {
-                this.logger.debug(chalk.gray(`Database ${chalk.yellow(targetDb)} already exists.`));
+                this.logger.debug(paint.mute(`Database ${paint.amber(targetDb)} already exists.`));
                 return;
             }
 
@@ -112,11 +112,11 @@ export class PostgresDatabaseBootstrapper {
 
         try {
             await client.query(createSql);
-            this.logger.info(chalk.green(`Created database ${chalk.bold(database)}.`));
+            this.logger.info(paint.mint(`Created database ${paint.sky.bold(database)}.`));
         } catch (error) {
             // another process created it first, and the database exists either way
             if (!isDuplicateDatabase(error)) throw error;
-            this.logger.debug(chalk.gray(`Database ${chalk.yellow(database)} was created concurrently.`));
+            this.logger.debug(paint.mute(`Database ${paint.amber(database)} was created concurrently.`));
         }
     }
 

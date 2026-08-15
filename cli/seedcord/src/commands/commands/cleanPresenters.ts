@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordError, paint } from '@seedcord/errors/internal';
 import chalk from 'chalk';
 
 import { plural } from '@core/format';
@@ -128,7 +128,7 @@ export class FlagPresenter implements CleanPresenter {
     public preview(scan: ScanResult): void {
         this.logger.info(chalk.bold(`${plural(scan.flagged.length, 'guild command')} selected for deletion`));
         for (const group of groupByGuild(scan.flagged)) {
-            this.logger.info(chalk.cyan(group.guildName));
+            this.logger.info(paint.sky(group.guildName));
             for (const command of group.commands) this.logger.info(`  ${command.name}`);
         }
         for (const skip of scan.skipped) this.logger.warn(`Skipped ${skip.guildName} (${skip.reason}).`);
@@ -159,14 +159,14 @@ export class FlagPresenter implements CleanPresenter {
         }
         if (skipped.length > 0) this.logger.warn(skippedSummary(skipped));
         this.logger.info(
-            chalk.green(`Deleted ${plural(deletion.deleted, 'guild command')}. Global commands untouched.`)
+            paint.mint(`Deleted ${plural(deletion.deleted, 'guild command')}. Global commands untouched.`)
         );
     }
 
     public nothingToClean(scan: ScanResult, outcome: EmptyOutcome): void {
         const lines = emptyLines(scan, outcome);
         for (const line of lines.info) this.logger.info(line);
-        this.logger.info(chalk.green(lines.outro));
+        this.logger.info(paint.mint(lines.outro));
     }
 
     public dryRunHint(): void {

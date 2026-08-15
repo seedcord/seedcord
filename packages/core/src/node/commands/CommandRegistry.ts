@@ -247,7 +247,7 @@ export class CommandRegistry implements Initializeable, HmrAware {
             result.guilds.set(guildId, indexById(deployed));
             const tag = commands.length === 1 ? 'command' : 'commands';
             this.logger.utils.block(
-                `Deployed ${commands.length} ${tag} to ${paint.amber.bold(guildId)}`,
+                `Deployed ${paint.iris.bold(commands.length)} ${tag} to ${paint.sky.bold(guildId)}`,
                 this.logger.utils.wrap(commands.map((command) => command.name)),
                 'info'
             );

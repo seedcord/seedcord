@@ -85,7 +85,6 @@
         "@seedcord/logger": "workspace:*",
         "@seedcord/types": "workspace:*",
         "@seedcord/utils": "workspace:*",
-        "chalk": "catalog:deps",
         "reflect-metadata": "catalog:deps"
     }
 }

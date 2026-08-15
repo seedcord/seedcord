@@ -62,7 +62,7 @@ export class LoggerUtilities {
     /** Logs component initialization start or end. */
     public initialization(component: string, action: 'start' | 'end', level: LogLevel = 'info'): void {
         const verb = action === 'start' ? 'Initializing' : 'Initialized';
-        this.logger[level](chalk.bold(`${verb} ${component}`));
+        this.logger[level](`${chalk.italic(verb)} ${paint.sky.bold(component)}`);
     }
 
     /** Logs progress as "[current/total]" with an optional item label. */

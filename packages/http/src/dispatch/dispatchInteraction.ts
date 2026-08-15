@@ -245,7 +245,7 @@ export async function dispatchInteraction(args: DispatchArgs): Promise<(() => Pr
     if (!ctor) return null;
 
     const routeId = unhandledRouteId(match);
-    logger().debug(`Processing ${paint.mint.bold(routeId)} with ${paint.mute(ctor.name)}`);
+    logger().debug(`Processing ${paint.sky.bold(routeId)} with ${paint.mute(ctor.name)}`);
 
     const dispatch = new DispatchContext(routeId);
     let handler: HttpHandler;

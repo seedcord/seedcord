@@ -5,8 +5,8 @@ import { inspect } from 'node:util';
 
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError, SeedcordRangeError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
-import chalk from 'chalk';
 import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
 
 import type {
@@ -35,7 +35,7 @@ export class KyselyMigrationManager {
 
         if (target !== undefined) {
             const label = target === NO_MIGRATIONS ? 'NO_MIGRATIONS' : target;
-            await this.runMigration((migrator) => migrator.migrateTo(target), `Migrating to ${chalk.yellow(label)}...`);
+            await this.runMigration((migrator) => migrator.migrateTo(target), `Migrating to ${paint.amber(label)}...`);
             return;
         }
 
@@ -96,10 +96,10 @@ export class KyselyMigrationManager {
         runner: (migrator: Migrator) => Promise<MigrationResultSet>,
         runningMessage = 'Running migrations...'
     ): Promise<void> {
-        this.ctx.logger.debug(chalk.gray('Preparing migrations...'));
+        this.ctx.logger.debug(paint.mute('Preparing migrations...'));
         const migrator = await this.createMigrator();
 
-        this.ctx.logger.info(chalk.gray(runningMessage));
+        this.ctx.logger.info(paint.mute(runningMessage));
         const { error, results } = await runner(migrator);
 
         this.logMigrationResults(results ?? []);
@@ -114,12 +114,12 @@ export class KyselyMigrationManager {
         direction: 'up' | 'down',
         runner: (migrator: Migrator) => Promise<MigrationResultSet>
     ): Promise<void> {
-        this.ctx.logger.debug(chalk.gray('Preparing migrations...'));
+        this.ctx.logger.debug(paint.mute('Preparing migrations...'));
         const migrator = await this.createMigrator();
 
         const directionLabel = direction === 'up' ? 'Running' : 'Reverting';
-        const countLabel = steps === 1 ? 'one migration' : `${chalk.yellow(String(steps))} migrations`;
-        this.ctx.logger.info(chalk.gray(`${directionLabel} ${countLabel}...`));
+        const countLabel = steps === 1 ? 'one migration' : `${paint.amber(String(steps))} migrations`;
+        this.ctx.logger.info(paint.mute(`${directionLabel} ${countLabel}...`));
 
         const aggregated: MigrationResult[] = [];
         let encounteredError: unknown;
@@ -180,7 +180,7 @@ export class KyselyMigrationManager {
 
         if (migrationStat?.isDirectory()) {
             const directory = this.relativePath(resolvedTarget);
-            this.ctx.logger.debug(chalk.gray(`Loading migrations directory ${chalk.yellow(directory)}`));
+            this.ctx.logger.debug(paint.mute(`Loading migrations directory ${paint.amber(directory)}`));
             return new FileMigrationProvider({ fs, path, migrationFolder: resolvedTarget });
         }
 
@@ -240,7 +240,7 @@ export class KyselyMigrationManager {
 
         this.ctx.logger.debug('Loading migration file(s):');
         for (const file of files) {
-            this.ctx.logger.utils.item(`${chalk.yellow(this.relativePath(file))}`, 'debug');
+            this.ctx.logger.utils.item(`${paint.amber(this.relativePath(file))}`, 'debug');
         }
     }
 
@@ -249,13 +249,13 @@ export class KyselyMigrationManager {
 
         this.ctx.logger.debug('Prepared migrations:');
         for (const [name] of entries) {
-            this.ctx.logger.utils.item(`${chalk.green(name)}`, 'debug');
+            this.ctx.logger.utils.item(`${paint.mint(name)}`, 'debug');
         }
     }
 
     private logMigrationResults(results: readonly MigrationResult[]): void {
         if (results.length === 0) {
-            this.ctx.logger.debug(chalk.gray('No migrations executed.'));
+            this.ctx.logger.debug(paint.mute('No migrations executed.'));
             return;
         }
 
@@ -263,16 +263,18 @@ export class KyselyMigrationManager {
 
         for (const result of results) {
             if (result.status === 'Success') {
-                this.ctx.logger.info(`${chalk.green('✔︎')} ${chalk.bold(result.migrationName)}`);
+                this.ctx.logger.info(`${paint.mint('✔︎')} ${paint.sky.bold(result.migrationName)}`);
                 continue;
             }
 
             if (result.status === 'Error') {
-                this.ctx.logger.error(`${chalk.red('✘')} ${chalk.bold(result.migrationName)}`);
+                this.ctx.logger.error(`${paint.coral('✘')} ${paint.sky.bold(result.migrationName)}`);
                 continue;
             }
 
-            this.ctx.logger.info(`${chalk.yellow('•')} ${chalk.bold(result.migrationName)} ${chalk.gray('(skipped)')}`);
+            this.ctx.logger.info(
+                `${paint.amber('•')} ${paint.sky.bold(result.migrationName)} ${paint.mute('(skipped)')}`
+            );
         }
     }
 

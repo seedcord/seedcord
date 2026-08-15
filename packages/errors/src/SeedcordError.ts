@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unnecessary-condition */
-import chalk from 'chalk';
-
 import { SeedcordErrorCode } from './ErrorCodes';
 import { formatSeedcordErrorMessage, type SeedcordErrorArguments } from './ErrorMessages';
+import { paint } from './palette';
 
 /**
  * String literal type for Seedcord error identifiers.
@@ -61,7 +60,7 @@ function resolveMessage<Code extends SeedcordErrorCode>(code: Code, args: Seedco
 }
 
 function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, code: SeedcordErrorCode): string {
-    return `${chalk.bold.red(name)}[${chalk.gray(code)}]`;
+    return `${paint.coral.bold(name)}[${paint.mute(code)}]`;
 }
 
 /**

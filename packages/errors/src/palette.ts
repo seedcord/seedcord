@@ -9,13 +9,14 @@ export const BRAND = {
 
 // truecolor because a terminal theme remaps chalk's 16-color names (blue turns orange in monokai)
 export const paint = {
-    sky: chalk.hex('#8fc7ff'),
-    iris: chalk.hex('#e29bff'),
-    mint: chalk.hex('#66d98a'),
-    amber: chalk.hex('#ffc061'),
-    coral: chalk.hex('#ff6b85'),
+    sky: chalk.hex('#8fc7ff'), // what the line is about, one per line
+    iris: chalk.hex('#e29bff'), // a count
+    mint: chalk.hex('#66d98a'), // success
+    amber: chalk.hex('#ffc061'), // go do something about this
+    coral: chalk.hex('#ff6b85'), // failure
+    // brand marks
     flesh: chalk.hex(BRAND.flesh),
     rind: chalk.hex(BRAND.rind),
     pith: chalk.hex(BRAND.pith),
-    mute: chalk.dim
+    mute: chalk.dim // context around the subject
 } as const;

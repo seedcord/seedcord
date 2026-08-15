@@ -1,7 +1,7 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/logger';
 import { traverseDirectory } from '@seedcord/utils/node';
-import chalk from 'chalk';
 import mongoose from 'mongoose';
 
 import { ModelNameMetadataKey, ServiceMetadataKey } from './decorators/RegisterMongooseService';
@@ -49,7 +49,7 @@ export class MongooseServiceRegistry {
         dir: string,
         track: (file: string, ctor: MongooseServiceConstructor) => void
     ): Promise<void> {
-        this.logger.debug(chalk.bold(dir));
+        this.logger.debug(paint.mute(dir));
 
         await traverseDirectory(dir, (fullPath, rel, mod) => {
             for (const Service of Object.values(mod)) {
@@ -62,8 +62,8 @@ export class MongooseServiceRegistry {
         });
 
         this.logger.utils.list(
-            [`${chalk.magenta(Object.keys(this.services).length)} services`],
-            chalk.bold.green('Loaded'),
+            [`${paint.iris.bold(Object.keys(this.services).length)} services`],
+            paint.mint.bold('Loaded'),
             'debug'
         );
     }

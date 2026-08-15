@@ -46,7 +46,7 @@ export function publishResponse(telemetry: ReplyTelemetry, report: ResponseRepor
 
     // after publish so a throwing sink doesn't reach the publish above
     logger().trace(
-        `${paint.mint.bold(report.routeId)} ${report.method} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
+        `${paint.sky.bold(report.routeId)} ${report.method} ${report.outcome} ${paint.mute('in')} ${Math.round(durationMs)}ms`
     );
 }
 

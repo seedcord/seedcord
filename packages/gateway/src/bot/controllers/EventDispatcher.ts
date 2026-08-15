@@ -305,7 +305,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
 
         const handlerEntries = this.eventMap.get(eventName);
         this.logger.debug(
-            `Attaching ${paint.mint.bold(eventName)} to the client with ${paint.mute(handlerEntries?.length ?? 0)} handler(s)`
+            `Attaching ${paint.sky.bold(eventName)} to the client with ${paint.mute(handlerEntries?.length ?? 0)} handler(s)`
         );
 
         this.core.bot.client.on(eventName, (...args: ClientEvents[typeof eventName]) => {
@@ -365,7 +365,7 @@ export class EventDispatcher implements Initializeable, HmrAware {
         args: ClientEvents[KeyOfEvents]
     ): Promise<void> {
         try {
-            this.logger.debug(`Processing ${paint.mint.bold(eventName)} with ${paint.mute(ctor.name)}`);
+            this.logger.debug(`Processing ${paint.sky.bold(eventName)} with ${paint.mute(ctor.name)}`);
             const handler = new ctor(args, this.core, eventName); // event name so match can route by it
             const eventCtx = eventGateContext(eventName, args, this.core);
             await runHandlerGates(ctor, eventCtx);
