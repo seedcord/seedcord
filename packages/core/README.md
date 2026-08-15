@@ -1,12 +1,42 @@
-<p align="center">
+<div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://cdn.seedcord.org/assets/wordmark-dark.webp" />
     <img src="https://cdn.seedcord.org/assets/wordmark-light.webp" alt="seedcord" width="440" />
   </picture>
-</p>
+</div>
 
-# @seedcord/core
+<div align="center">
+  <h3>The whole Discord bot, wired and typed</h3>
+  <a href="https://seedcord.org">Website</a> ·
+  <a href="https://guide.seedcord.org">Guide</a> ·
+  <a href="https://docs.seedcord.org">Reference</a> ·
+  <a href="https://discord.gg/DzFxY58WXf">Discord</a>
+</div>
 
-Transport-agnostic core for Seedcord bots
+<br />
 
-Part of the [seedcord](https://github.com/seedcord/seedcord) framework. Until a major v1.0.0 release, expect breaking changes in minor versions.
+<div align="center">
+
+[![npm](https://img.shields.io/npm/v/@seedcord/core?style=flat-square&logo=npm&logoColor=c8341f&label=&labelColor=1f1f1f&color=c8341f)](https://www.npmjs.com/package/@seedcord/core) [![node](https://img.shields.io/node/v/@seedcord/core?style=flat-square&label=node&labelColor=1f1f1f&color=4d7d33)](https://nodejs.org) [![license](https://img.shields.io/npm/l/@seedcord/core?style=flat-square&label=&labelColor=1f1f1f&color=f8f6e8)](LICENSE)
+
+</div>
+
+## About
+
+`@seedcord/core` is the foundational code both seedcord transports share. Command and context-menu injection, the interaction route decorators, the handler bases, gates, the startup and shutdown phases, and the plugin base all live here.
+
+Nothing in it opens a connection to Discord. `@seedcord/gateway` and `@seedcord/http` each bind their own transport into these pieces.
+
+Until v1.0.0, minor versions can break.
+
+## Installation
+
+Both transports depend on this package and re-export all of it, so a bot gets it from `@seedcord/gateway` or `@seedcord/http` with no separate install.
+
+Install it directly when you are writing a plugin against the framework:
+
+```sh
+pnpm add @seedcord/core
+```
+
+`@seedcord/core/plugin` holds the base a plugin extends.
