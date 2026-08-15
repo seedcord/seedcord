@@ -6,9 +6,9 @@
 
 // the root entry exports both of these too, the way @seedcord/http/edge re-exports the http root.
 // mockFunction is overloaded.
-export { mockVariable } from './variable';
+export { mockVariable } from './variable.js';
 // eslint-disable-next-line @typescript-eslint/no-deprecated -- deprecated on purpose, the fixture tests deprecation rendering
-export { mockFunction } from './function';
+export { mockFunction } from './function.js';
 
 // never exported, the way @seedcord/core/hmr references HmrModuleHandlerOptions without exporting it.
 // includeForgottenExports still puts it in the model.
