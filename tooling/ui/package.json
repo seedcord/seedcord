@@ -32,6 +32,12 @@
                 "default": "./dist/MaterwelonGlyph.mjs"
             }
         },
+        "./MaterwelonFavicon": {
+            "import": {
+                "types": "./dist/MaterwelonFavicon.d.mts",
+                "default": "./dist/MaterwelonFavicon.mjs"
+            }
+        },
         "./Materwelon": {
             "import": {
                 "types": "./dist/Materwelon.d.mts",

@@ -36,7 +36,6 @@ export const metadata: Metadata = {
     title: { default: 'seedcord docs', template: '%s · seedcord' },
     description: SITE_DESCRIPTION,
     applicationName: SITE_NAME,
-    icons: { icon: '/icon.svg' },
     openGraph: {
         type: 'website',
         siteName: OG_SITE_NAME,
