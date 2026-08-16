@@ -1,6 +1,7 @@
 import { Box, Text } from 'ink';
 import React from 'react';
 
+import { version } from '#core/version';
 import { formatUptime } from '#ui/format';
 import { isStreaming } from '#ui/stores/devPhase';
 import { LogStore } from '#ui/stores/LogStore';
@@ -14,14 +15,15 @@ import { Rule } from './Rule';
 
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { FilterCursor } from '#ui/filterCursor';
-import type { DevState } from '#ui/stores/DevStore';
+import type { DevState, DevTransport } from '#ui/stores/DevStore';
 import type { LogLevel } from '@seedcord/logger';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 
 export const MAX_RAIL = 40;
 
-const META_LABEL_WIDTH = 7;
+// the widest label is 'gateway' at 7
+const META_LABEL_WIDTH = 8;
 
 const LOG_DIR = 'logs/'; // the dev default writes one combined file into this folder
 
@@ -51,11 +53,18 @@ function tunnelValue(status: TunnelStatus): string {
     return status === 'live' || status === 'lost' ? status : `${status}…`;
 }
 
+function transportLabel({ name }: DevTransport): string {
+    return name.replace('@seedcord/', '');
+}
+
 function StatusBlock({ state, uptimeMs }: { state: DevState; uptimeMs: number | null }): ReactElement {
     return (
         <Box flexDirection="column">
             <StatusBadge phase={state.phase} animate={state.idleAnimation} />
             {state.status ? <Text>{state.status}</Text> : null}
+            {state.transport === null ? null : (
+                <Meta label={transportLabel(state.transport)} value={`v${state.transport.version}`} />
+            )}
             {uptimeMs === null ? null : <Meta label="up" value={formatUptime(uptimeMs)} />}
             {/* only the http host reports a port */}
             {state.port === null ? null : <Meta label="port" value={String(state.port)} />}
@@ -89,7 +98,7 @@ export function Sidebar({
             overflow="hidden"
         >
             <Box flexShrink={0}>
-                <Banner version={state.frameworkVersion} />
+                <Banner version={version} />
             </Box>
             <Box flexShrink={0} marginTop={1}>
                 <StatusBlock state={state} uptimeMs={uptimeMs} />

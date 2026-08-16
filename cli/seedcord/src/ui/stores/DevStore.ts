@@ -5,12 +5,18 @@ import type { DevEvent } from '#commands/dev/runtime/events';
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { DevPhase } from './devPhase';
 
+export interface DevTransport {
+    // the transport package, '@seedcord/gateway' or '@seedcord/http'
+    readonly name: string;
+    readonly version: string;
+}
+
 export interface DevState {
     readonly phase: DevPhase;
     readonly status: string;
     readonly error: Error | null;
     readonly isBusy: boolean;
-    readonly frameworkVersion: string | null;
+    readonly transport: DevTransport | null;
     readonly restartRequired: boolean;
     readonly commandUpdatePrompt: string[] | null;
     readonly port: number | null;
@@ -24,7 +30,7 @@ const INITIAL: DevState = {
     status: 'Initializing…',
     error: null,
     isBusy: true,
-    frameworkVersion: null,
+    transport: null,
     restartRequired: false,
     commandUpdatePrompt: null,
     port: null,
@@ -57,8 +63,8 @@ export class DevStore extends TypedEventEmitter<{ change: [] }> {
         this.patch({ error });
     }
 
-    public setFrameworkVersion(frameworkVersion: string | null): void {
-        this.patch({ frameworkVersion });
+    public setTransport(transport: DevTransport | null): void {
+        this.patch({ transport });
     }
 
     public setTunnel(tunnel: TunnelStatus | null): void {

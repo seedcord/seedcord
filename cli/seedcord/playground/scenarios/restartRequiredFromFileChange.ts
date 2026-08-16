@@ -6,7 +6,7 @@ export const restartRequiredFromFileChange: Scenario = {
     name: 'restart-required',
     description: 'Running, then a critical file change forces restart-required',
     async run(ctx) {
-        ctx.store.setFrameworkVersion('0.16.0');
+        ctx.store.setTransport({ name: '@seedcord/gateway', version: '0.16.0' });
         ctx.store.setPhase('running');
         ctx.store.setBusy(false);
         ctx.store.setStatus('Connected as PreviewBot#0001');

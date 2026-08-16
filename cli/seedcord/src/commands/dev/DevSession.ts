@@ -78,7 +78,7 @@ export class DevSession {
         }
 
         this.instance = instance;
-        this.store.setFrameworkVersion(instance.version);
+        this.store.setTransport({ name: instance.augmentTarget, version: instance.version });
 
         try {
             this.store.setPhase('starting');

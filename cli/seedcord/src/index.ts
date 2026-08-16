@@ -6,4 +6,4 @@ export {
     type SeedcordHmrConfig
 } from '#core/config/schema';
 
-export const version = process.env.PACKAGE_VERSION ?? '0.0.0';
+export { version } from '#core/version';

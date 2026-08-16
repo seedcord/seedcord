@@ -5,6 +5,7 @@ import { NO_ROOM } from '#ui/components/primitives/ScrollableLogView';
 import { DevApp } from '#ui/DevApp';
 import { DevStore } from '#ui/stores/DevStore';
 import { LogStore } from '#ui/stores/LogStore';
+import { COMPACT_ROWS } from '#ui/tier';
 
 import { renderAt } from './renderAt';
 import { settled, stableFrame } from './settled';
@@ -12,7 +13,7 @@ import { settled, stableFrame } from './settled';
 import type { LogRecord } from '@seedcord/logger';
 
 const FULL = { rows: 40, columns: 120 };
-const COMPACT = { rows: 20, columns: 120 };
+const COMPACT = { rows: COMPACT_ROWS, columns: 120 };
 const LOGS = { rows: 12, columns: 120 };
 
 function runningStore(): DevStore {

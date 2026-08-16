@@ -88,6 +88,7 @@ describe('DevSession', () => {
         const instance = {
             [SeedcordBrand]: true,
             version: '1.2.3',
+            augmentTarget: '@seedcord/gateway',
             username: 'TestBot',
             start: () => Promise.resolve(),
             startup: { abort: () => undefined },
@@ -97,7 +98,9 @@ describe('DevSession', () => {
         const session = new DevSession(config(), runtime({ default: instance }), store, () => undefined);
 
         const running = session.start();
-        await vi.waitFor(() => expect(store.getState().frameworkVersion).toBe('1.2.3'));
+        await vi.waitFor(() =>
+            expect(store.getState().transport).toEqual({ name: '@seedcord/gateway', version: '1.2.3' })
+        );
 
         await session.stop();
         await running;

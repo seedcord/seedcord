@@ -13,7 +13,7 @@ export const errorThenRestart: Scenario = {
     name: 'error-then-restart',
     description: 'Running, then an uncaught error card; press r to restart',
     async run(ctx) {
-        ctx.store.setFrameworkVersion('0.16.0');
+        ctx.store.setTransport({ name: '@seedcord/gateway', version: '0.16.0' });
         ctx.store.setPhase('running');
         ctx.store.setBusy(false);
         ctx.store.setStatus('Connected as PreviewBot#0001');

@@ -21,7 +21,7 @@ export const happyStartup: Scenario = {
     name: 'happy-startup',
     description: 'Starting to running, then a steady stream of multi-channel logs (good for scroll + filter)',
     async run(ctx) {
-        ctx.store.setFrameworkVersion('0.16.0');
+        ctx.store.setTransport({ name: '@seedcord/gateway', version: '0.16.0' });
         ctx.store.setPhase('starting');
         ctx.store.setStatus('Loading config…');
         await ctx.wait(LOAD_MS);

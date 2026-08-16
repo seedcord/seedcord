@@ -3,6 +3,7 @@ import { render } from 'ink-testing-library';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { version } from '#core/version';
 import { Sidebar } from '#ui/components/primitives/Sidebar';
 import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { DevStore } from '#ui/stores/DevStore';
@@ -40,6 +41,7 @@ function runningState(): DevState {
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
+    store.setTransport({ name: '@seedcord/gateway', version: '0.1.4' });
     return store.getState();
 }
 const RUNNING = runningState();
@@ -50,6 +52,7 @@ function httpState(): DevState {
     store.setPhase('running');
     store.setBusy(false);
     store.setStatus('Connected as TestBot');
+    store.setTransport({ name: '@seedcord/http', version: '0.2.3' });
     store.apply({ type: 'server-listening', port: 4321 });
     store.setTunnel('live');
     return store.getState();
@@ -172,5 +175,25 @@ describe('Sidebar', () => {
 
         expect(frame).not.toContain('port');
         expect(frame).not.toContain('url');
+    });
+
+    it('shows the cli version in the banner and the transport version in its own row', () => {
+        const store = new DevStore();
+        store.setTransport({ name: '@seedcord/http', version: '9.9.9' });
+
+        const frame = frameFor(store.getState());
+        const [banner] = frame.split('\n');
+
+        expect(banner).toContain(version);
+        expect(banner).not.toContain('9.9.9');
+        expect(frame).toContain('http');
+        expect(frame).toContain('v9.9.9');
+    });
+
+    it('leaves a column between the widest label and its value', () => {
+        const store = new DevStore();
+        store.setTransport({ name: '@seedcord/gateway', version: '0.1.4' });
+
+        expect(frameFor(store.getState())).toContain('gateway v0.1.4');
     });
 }, 20_000);
