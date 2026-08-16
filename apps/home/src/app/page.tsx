@@ -1,5 +1,6 @@
 import { BeforeAfter } from '#components/home/BeforeAfter';
 import { Codec } from '#components/home/Codec';
+import { DevTui } from '#components/home/DevTui';
 import { FeatureGrid } from '#components/home/FeatureGrid';
 import { Footer } from '#components/home/Footer';
 import { Gates } from '#components/home/Gates';
@@ -26,6 +27,7 @@ function Home(): ReactNode {
                 <BeforeAfter />
                 <Codec />
                 <Gates />
+                <DevTui />
                 <FeatureGrid />
                 <GetStarted />
             </main>

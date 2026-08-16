@@ -11,6 +11,7 @@ export const GUIDE_URL = 'https://guide.seedcord.org';
 export const DOCS_URL = 'https://docs.seedcord.org';
 export const NPM_URL = 'https://www.npmjs.com/package/seedcord';
 export const DISCORD_URL = 'https://discord.gg/DzFxY58WXf';
+export const CDN_URL = 'https://cdn.seedcord.org';
 
 export function canonicalUrl(path: string): string {
     return new URL(path, SITE_URL).toString();
