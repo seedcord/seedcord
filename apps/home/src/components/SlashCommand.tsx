@@ -179,7 +179,7 @@ function ReplyBubble({ text }: { text: string }): ReactNode {
             <div>
                 <div className={cn('flex items-center gap-1.5')}>
                     <span className={cn('font-display text-sm font-semibold text-(--seed-dark)')}>seedcord</span>
-                    <span className={cn('rounded-sm bg-(--vine-deep) px-1 text-[10px] font-semibold text-(--pith)')}>
+                    <span className={cn('rounded-sm bg-(--rind-deep) px-1 text-[10px] font-semibold text-(--pith)')}>
                         APP
                     </span>
                 </div>

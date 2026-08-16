@@ -1,5 +1,4 @@
 @import '@seedcord/ui/styles/globals.css';
-@import '../styles/tokens.css';
 @import '../styles/utilities.css';
 
 @layer base {

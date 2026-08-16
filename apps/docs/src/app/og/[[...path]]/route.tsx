@@ -1,4 +1,5 @@
-import { OG, OG_SIZE } from '@seedcord/ui/og';
+import { OG_SIZE } from '@seedcord/ui/og';
+import { BRAND } from '@seedcord/ui/palette';
 import { ImageResponse } from 'next/og';
 
 import { findCatalogEntry, findCatalogVersion, loadDocsCatalog } from '#lib/docs/catalog';
@@ -23,7 +24,7 @@ function notFoundCard(): ImageResponse {
     return new ImageResponse(
         <DocOgCard
             pill="404"
-            accent={OG.seedDark}
+            accent={BRAND.seedDark}
             meta={[]}
             name="Not found"
             description="This documentation page does not exist."
@@ -36,7 +37,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path?: 
     const { path = [] } = await params;
 
     if (path.length === 0) {
-        return render({ pill: 'docs', accent: OG.seedDark, meta: [], name: 'seedcord', description: SITE_DESCRIPTION });
+        return render({
+            pill: 'docs',
+            accent: BRAND.seedDark,
+            meta: [],
+            name: 'seedcord',
+            description: SITE_DESCRIPTION
+        });
     }
 
     const [root, packageId, versionId, ...entitySegments] = path;
@@ -49,7 +56,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path?: 
         if (!entry || !version) return notFoundCard();
         return render({
             pill: 'package',
-            accent: OG.seedDark,
+            accent: BRAND.seedDark,
             meta: [version.label],
             name: entry.label,
             description: entry.description

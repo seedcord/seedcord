@@ -170,7 +170,7 @@ const GROUPS: Group[] = [
 
 const ACCENT_TEXT: Record<Accent, string> = {
     flesh: tw`text-(--flesh-deep)`,
-    rind: tw`text-(--vine-deep)`
+    rind: tw`text-(--rind-deep)`
 };
 
 const ROW = tw`group flex items-start gap-3 py-2`;

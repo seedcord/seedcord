@@ -34,7 +34,7 @@ export function NpmVersion(): ReactNode {
             rel="noreferrer"
             aria-label={`seedcord v${version} on npm`}
             className={cn(
-                'font-mono-code rounded-sm bg-(--vine-deep) px-1.5 py-0.5 text-[11px] font-semibold text-(--pith)',
+                'font-mono-code rounded-sm bg-(--rind-deep) px-1.5 py-0.5 text-[11px] font-semibold text-(--pith)',
                 pressable
             )}
         >

@@ -13,6 +13,9 @@ const MOVED_PERMANENTLY = 301;
 // RFC 8288 discovery hints for agents, points at the human docs + the machine-readable index
 const LINK_HEADER = '<https://docs.seedcord.org/>; rel="service-doc", </llms.txt>; rel="alternate"; type="text/plain"';
 
+// cloudflare serves the extension-less file next writes here with no content-type at all
+const ICON_PATH = '/icon';
+
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
         const url = new URL(request.url);
@@ -31,10 +34,12 @@ const handler = {
 
         const isHtml = (normalized.headers.get('content-type') ?? '').includes('text/html');
         const isProduction = url.hostname === PRODUCTION_HOST;
+        const isIcon = url.pathname === ICON_PATH;
 
-        if (isProduction && !isHtml) return normalized;
+        if (isProduction && !isHtml && !isIcon) return normalized;
 
         const response = new Response(normalized.body, normalized);
+        if (isIcon) response.headers.set('Content-Type', 'image/png');
         if (isHtml) response.headers.set('Link', LINK_HEADER);
         if (!isProduction) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
         return response;

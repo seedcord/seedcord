@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GET } from '@/app/(docs)/entity/route';
+import { GET } from '#src/app/(docs)/entity/route';
 
 import type { EntityModel } from '#lib/docs/types';
 import type { NextRequest } from 'next/server';

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Dropdown, type DropdownGroup, type DropdownOption } from '@/Dropdown';
+import { Dropdown, type DropdownGroup, type DropdownOption } from '#src/Dropdown';
 
 const options: readonly DropdownOption[] = [
     { value: 'one', label: 'One' },

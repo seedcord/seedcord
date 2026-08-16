@@ -20,6 +20,12 @@
                 "default": "./dist/index.mjs"
             }
         },
+        "./palette": {
+            "import": {
+                "types": "./dist/palette.d.mts",
+                "default": "./dist/palette.mjs"
+            }
+        },
         "./og": {
             "import": {
                 "types": "./dist/og.d.mts",
@@ -30,6 +36,12 @@
             "import": {
                 "types": "./dist/MaterwelonGlyph.d.mts",
                 "default": "./dist/MaterwelonGlyph.mjs"
+            }
+        },
+        "./MaterwelonFavicon": {
+            "import": {
+                "types": "./dist/MaterwelonFavicon.d.mts",
+                "default": "./dist/MaterwelonFavicon.mjs"
             }
         },
         "./Materwelon": {

@@ -1,41 +1,23 @@
-const SEED_DARK = '#2d3328';
-const PITH = '#f8f6e8';
+import { BRAND } from './palette';
 
-const CREAM = '#f4f0df';
-const INK = '#3a4233';
+// the light theme takes the darker value of each pair, since it renders on cream
+const HUES = {
+    ground: { dark: BRAND.seedDark, light: BRAND.pith },
+    text: { dark: '#f4f0df', light: '#3a4233' },
+    comment: { dark: '#7d8675', light: '#8a9079' },
+    linen: { dark: '#ecebd9', light: '#4a5142' },
+    rind: { dark: BRAND.rind, light: '#3f7d2e' },
+    flesh: { dark: BRAND.flesh, light: '#c4452c' },
+    amber: { dark: '#e3b552', light: '#a8781a' },
+    coral: { dark: '#ea8568', light: '#bf5a3c' },
+    wheat: { dark: '#ead98a', light: '#7a651c' },
+    sand: { dark: '#d8c8a4', light: '#6a5f44' },
+    tan: { dark: '#c9bb96', light: '#7a6a45' },
+    clay: { dark: '#b89a6a', light: '#8a6d3f' },
+    husk: { dark: '#9aa089', light: '#6b7363' }
+} as const;
 
-const RIND = '#6fab49';
-const RIND_DEEP = '#3f7d2e';
-
-const FLESH = '#f04e36';
-const FLESH_DEEP = '#c4452c';
-
-const AMBER = '#e3b552';
-const AMBER_DEEP = '#a8781a';
-
-const CORAL = '#ea8568';
-const CORAL_DEEP = '#bf5a3c';
-
-const WHEAT = '#ead98a';
-const WHEAT_DEEP = '#7a651c';
-
-const SAND = '#d8c8a4';
-const SAND_DEEP = '#6a5f44';
-
-const LINEN = '#ecebd9';
-const BARK = '#4a5142';
-
-const TAN = '#c9bb96';
-const TAN_DEEP = '#7a6a45';
-
-const CLAY = '#b89a6a';
-const CLAY_DEEP = '#8a6d3f';
-
-const HUSK = '#9aa089';
-const HUSK_DEEP = '#6b7363';
-
-const SAGE = '#7d8675';
-const SAGE_WARM = '#8a9079';
+type ThemeMode = 'dark' | 'light';
 
 interface BrandPalette {
     bg: string;
@@ -61,7 +43,7 @@ interface BrandThemeSetting {
 
 interface BrandTheme {
     name: string;
-    type: 'dark' | 'light';
+    type: ThemeMode;
     colors: Record<string, string>;
     settings: BrandThemeSetting[];
 }
@@ -144,45 +126,34 @@ function buildSettings(p: BrandPalette): BrandThemeSetting[] {
     ];
 }
 
-function buildTheme(name: string, type: 'dark' | 'light', p: BrandPalette): BrandTheme {
+function palette(mode: ThemeMode): BrandPalette {
+    return {
+        bg: HUES.ground[mode],
+        fg: HUES.text[mode],
+        comment: HUES.comment[mode],
+        string: HUES.flesh[mode],
+        number: HUES.amber[mode],
+        keyword: HUES.rind[mode],
+        type: HUES.wheat[mode],
+        fn: HUES.coral[mode],
+        decoratorAt: HUES.clay[mode],
+        parameter: HUES.sand[mode],
+        variable: HUES.linen[mode],
+        property: HUES.tan[mode],
+        operator: HUES.clay[mode],
+        punctuation: HUES.husk[mode]
+    };
+}
+
+function buildTheme(name: string, mode: ThemeMode): BrandTheme {
+    const p = palette(mode);
     return {
         name,
-        type,
+        type: mode,
         colors: { 'editor.background': p.bg, 'editor.foreground': p.fg },
         settings: buildSettings(p)
     };
 }
 
-export const seedcordBrandDark = buildTheme('seedcord-dark', 'dark', {
-    bg: SEED_DARK,
-    fg: CREAM,
-    comment: SAGE,
-    string: FLESH,
-    number: AMBER,
-    keyword: RIND,
-    type: WHEAT,
-    fn: CORAL,
-    decoratorAt: CLAY,
-    parameter: SAND,
-    variable: LINEN,
-    property: TAN,
-    operator: CLAY,
-    punctuation: HUSK
-});
-
-export const seedcordBrandLight = buildTheme('seedcord-light', 'light', {
-    bg: PITH,
-    fg: INK,
-    comment: SAGE_WARM,
-    string: FLESH_DEEP,
-    number: AMBER_DEEP,
-    keyword: RIND_DEEP,
-    type: WHEAT_DEEP,
-    fn: CORAL_DEEP,
-    decoratorAt: CLAY_DEEP,
-    parameter: SAND_DEEP,
-    variable: BARK,
-    property: TAN_DEEP,
-    operator: CLAY_DEEP,
-    punctuation: HUSK_DEEP
-});
+export const seedcordBrandDark = buildTheme('seedcord-dark', 'dark');
+export const seedcordBrandLight = buildTheme('seedcord-light', 'light');

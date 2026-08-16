@@ -1,11 +1,12 @@
 import { MaterwelonGlyph } from '@seedcord/ui/MaterwelonGlyph';
-import { GLYPH_SIZE, OG, OG_SIZE } from '@seedcord/ui/og';
+import { GLYPH_SIZE, OG_SIZE } from '@seedcord/ui/og';
+import { BRAND } from '@seedcord/ui/palette';
 
 import type { ReactElement } from 'react';
 
 // a seed-dark copy offset behind the glyph fakes the hard drop-shadow (Satori has no filter)
 function GlyphShadow({ width }: { width: number }): ReactElement {
-    const ink = OG.seedDark;
+    const ink = BRAND.seedDark;
     return (
         <MaterwelonGlyph
             width={width}
@@ -25,7 +26,7 @@ function Mark(): ReactElement {
             </div>
             <MaterwelonGlyph
                 width={width}
-                fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, pith: OG.pith }}
+                fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
             />
         </div>
     );
@@ -43,15 +44,15 @@ function Headline(): ReactElement {
                 fontSize: 56,
                 lineHeight: 1,
                 letterSpacing: -1.7,
-                color: OG.seedDark
+                color: BRAND.seedDark
             }}
         >
             <div style={{ display: 'flex' }}>The whole Discord bot,</div>
             <div style={{ display: 'flex', gap: 18, marginTop: 8 }}>
-                <span style={{ color: OG.vineDeep }}>wired</span>
+                <span style={{ color: BRAND.rindDeep }}>wired</span>
                 <span>and</span>
                 <div style={{ display: 'flex' }}>
-                    <span style={{ color: OG.fleshDeep }}>typed</span>
+                    <span style={{ color: BRAND.fleshDeep }}>typed</span>
                     <span>.</span>
                 </div>
             </div>
@@ -68,7 +69,7 @@ function Footer(): ReactElement {
                 justifyContent: 'space-between',
                 height: 104,
                 padding: '0 56px',
-                borderTop: `3px solid ${OG.seedDark}`
+                borderTop: `3px solid ${BRAND.seedDark}`
             }}
         >
             <div
@@ -78,7 +79,7 @@ function Footer(): ReactElement {
                     fontWeight: 600,
                     fontSize: 40,
                     letterSpacing: -1.2,
-                    color: OG.seedDark
+                    color: BRAND.seedDark
                 }}
             >
                 seedcord
@@ -88,15 +89,15 @@ function Footer(): ReactElement {
                     display: 'flex',
                     fontFamily: 'JetBrains Mono',
                     fontSize: 23,
-                    backgroundColor: OG.seedDark,
-                    color: OG.pith,
+                    backgroundColor: BRAND.seedDark,
+                    color: BRAND.pith,
                     padding: '13px 22px',
                     borderRadius: 4
                 }}
             >
                 pnpm create seedcord
             </div>
-            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 23, color: OG.seedDark }}>
+            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 23, color: BRAND.seedDark }}>
                 seedcord.org
             </div>
         </div>
@@ -111,7 +112,7 @@ export function OgCard(): ReactElement {
                 display: 'flex',
                 width: OG_SIZE.width,
                 height: OG_SIZE.height,
-                backgroundColor: OG.pith
+                backgroundColor: BRAND.pith
             }}
         >
             <div
@@ -121,7 +122,7 @@ export function OgCard(): ReactElement {
                     top: 48,
                     width: 1104,
                     height: 534,
-                    backgroundColor: OG.seedDark,
+                    backgroundColor: BRAND.seedDark,
                     borderRadius: 4,
                     transform: 'translate(10px, 10px)'
                 }}
@@ -135,8 +136,8 @@ export function OgCard(): ReactElement {
                     height: 534,
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: OG.pith,
-                    border: `3px solid ${OG.seedDark}`,
+                    backgroundColor: BRAND.pith,
+                    border: `3px solid ${BRAND.seedDark}`,
                     borderRadius: 4
                 }}
             >
@@ -161,7 +162,7 @@ export function OgCard(): ReactElement {
                             fontFamily: 'Hanken Grotesk',
                             fontSize: 25,
                             lineHeight: 1.34,
-                            color: OG.sub
+                            color: BRAND.sub
                         }}
                     >
                         Generated option types, a typed customId codec, composable gates, and hot reload, on top of
