@@ -4,7 +4,7 @@
  */
 
 import { SeedcordErrorCode, paint } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 
@@ -73,10 +73,16 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
         const results: PromiseSettledResult<void>[] = await this.executeTasksInPhase(phase, tasks);
 
-        const failures = results.filter((r) => r.status === 'rejected').length;
-        if (failures > 0) {
+        const reasons = results.reduce<unknown[]>((rejected, result) => {
+            if (result.status === 'rejected') rejected.push(result.reason as unknown);
+            return rejected;
+        }, []);
+        if (reasons.length > 0) {
             // chalk here would leak ANSI codes into the serialized error message (the unknown-exception webhook)
-            throw new SeedcordError(SeedcordErrorCode.LifecyclePhaseFailures, [this.phaseEnum[phase], failures]);
+            throw new SeedcordAggregateError(SeedcordErrorCode.LifecyclePhaseFailures, reasons, [
+                this.phaseEnum[phase],
+                reasons.length
+            ]);
         }
 
         this.logger.debug(

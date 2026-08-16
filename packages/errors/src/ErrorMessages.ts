@@ -132,6 +132,7 @@ const messages = {
 
     [SeedcordErrorCode.PluginOptionsRejected]: (pluginName: string, reason: string) =>
         `${pluginName} rejected its options, ${reason.replace(/\.$/, '')}.`,
+    [SeedcordErrorCode.PluginDisposeFailures]: (count: number) => `${count} plugins failed to dispose.`,
 
     [SeedcordErrorCode.PluginMongooseServiceDecoratorMissing]: (className: string) =>
         `Missing @RegisterMongooseService on ${className}.`,

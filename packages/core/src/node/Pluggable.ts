@@ -1,5 +1,5 @@
 import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError } from '@seedcord/errors/internal';
+import { SeedcordAggregateError, SeedcordError } from '@seedcord/errors/internal';
 import { FRAMEWORK_CHANNELS, Logger } from '@seedcord/logger';
 
 import { StartupPhase } from '#src/lifecycle/phases';
@@ -244,7 +244,9 @@ export abstract class Pluggable<BotT extends Transport, BotRt extends Runtime> i
         // keep disposing the rest even when one fails
         await this.disposeCompleted(phase, (caught) => failures.push(caught));
         if (failures.length === 1) throw failures[0];
-        if (failures.length > 1) throw new AggregateError(failures, 'plugin dispose failures');
+        if (failures.length > 1) {
+            throw new SeedcordAggregateError(SeedcordErrorCode.PluginDisposeFailures, failures, [failures.length]);
+        }
     }
 
     private async disposeCompleted(

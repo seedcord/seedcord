@@ -78,6 +78,40 @@ describe('ObjectConsoleSink', () => {
         });
     });
 
+    it('serializes every aggregate member into an errors array', () => {
+        const cap = capture('error');
+        const err = new AggregateError([new Error('mongo closed'), new Error('pool stuck')], 'two failed');
+        new ObjectConsoleSink().onLog(record({ level: 'error', message: 'shutdown caught', args: [err] }));
+        expect(cap.payload()).toMatchObject({
+            error: {
+                message: 'two failed',
+                errors: [{ message: 'mongo closed' }, { message: 'pool stuck' }]
+            }
+        });
+    });
+
+    it('caps the members it serializes', () => {
+        const cap = capture('error');
+        const many = Array.from({ length: 9 }, (_, i) => new Error(`boom ${i}`));
+        new ObjectConsoleSink().onLog(
+            record({ level: 'error', message: 'x', args: [new AggregateError(many, 'nine')] })
+        );
+        const error = cap.payload().error as { errors: unknown[]; omittedErrors: number };
+        expect(error.errors).toHaveLength(5);
+        expect(error.omittedErrors).toBe(4);
+    });
+
+    it('survives an aggregate whose members reach itself', () => {
+        const cap = capture('error');
+        const cyclic = new AggregateError([], 'loops');
+        cyclic.errors.push(cyclic);
+
+        expect(() =>
+            new ObjectConsoleSink().onLog(record({ level: 'error', message: 'x', args: [cyclic] }))
+        ).not.toThrow();
+        expect(cap.payload().error).toBeDefined();
+    });
+
     it('keeps leftover primitives in an args field', () => {
         const cap = capture();
         new ObjectConsoleSink().onLog(record({ message: 'note', args: ['tail', 7] }));

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { SeedcordErrorCode } from './ErrorCodes';
 import { formatSeedcordErrorMessage, type SeedcordErrorArguments } from './ErrorMessages';
 import { paint } from './palette';
@@ -67,7 +66,7 @@ function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, cod
  * String literal type for Seedcord error class names. Names the `type` argument of
  * {@link isSeedcordError}.
  */
-export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError'}`;
+export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError' | 'AggregateError'}`;
 
 interface BaseSeedcordError {
     readonly code: SeedcordErrorCode;
@@ -75,9 +74,17 @@ interface BaseSeedcordError {
     readonly type: SeedcordErrorTypeString;
 }
 
-/**
- * Base class for Seedcord errors.
- */
+// instanceof fails across two installed copies of this package
+const CODED = Symbol.for('seedcord.errors.coded');
+
+function brand(prototype: object): void {
+    Object.defineProperty(prototype, CODED, { value: true });
+}
+
+function isCoded(error: unknown): error is BaseSeedcordError {
+    return typeof error === 'object' && error !== null && CODED in error;
+}
+
 export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends Error
     implements BaseSeedcordError
@@ -100,9 +107,8 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     }
 }
 
-/**
- * TypeError class for Seedcord errors.
- */
+brand(SeedcordError.prototype);
+
 export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends TypeError
     implements BaseSeedcordError
@@ -125,9 +131,8 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
     }
 }
 
-/**
- * RangeError class for Seedcord errors.
- */
+brand(SeedcordTypeError.prototype);
+
 export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends RangeError
     implements BaseSeedcordError
@@ -150,6 +155,32 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
     }
 }
 
+brand(SeedcordRangeError.prototype);
+
+export class SeedcordAggregateError<Code extends SeedcordErrorCode = SeedcordErrorCode>
+    extends AggregateError
+    implements BaseSeedcordError
+{
+    public readonly code: Code;
+    public readonly identifier: SeedcordErrorIdentifier;
+    public readonly type = 'SeedcordAggregateError';
+
+    constructor(code: Code, errors: readonly unknown[], ...rest: SeedcordErrorCtorRest<Code>) {
+        const { args, options } = resolveCtorInputs(rest);
+        const message = resolveMessage(code, args);
+        super(errors, message, options);
+        this.code = code;
+        this.identifier = resolveIdentifier(code);
+        this.name = formatErrorName(new.target.name, this.identifier, this.code);
+        Object.setPrototypeOf(this, new.target.prototype);
+        if (typeof Error.captureStackTrace === 'function') {
+            Error.captureStackTrace(this, new.target);
+        }
+    }
+}
+
+brand(SeedcordAggregateError.prototype);
+
 /**
  * Variant type for Seedcord error classes.
  *
@@ -162,7 +193,9 @@ type SeedcordErrorVariant<
     ? SeedcordError<Code>
     : Type extends 'SeedcordTypeError'
       ? SeedcordTypeError<Code>
-      : SeedcordRangeError<Code>;
+      : Type extends 'SeedcordRangeError'
+        ? SeedcordRangeError<Code>
+        : SeedcordAggregateError<Code>;
 
 /**
  * Union type of all Seedcord error variants for a specific error code.
@@ -202,7 +235,7 @@ export type ErrorCodeFilter<
  * Determines whether an unknown value is a Seedcord error, with optional narrowing by class and error code.
  *
  * @param error - The value to inspect.
- * @param type - Optional error class discriminator (Error, TypeError, or RangeError).
+ * @param type - Optional error class discriminator.
  * @param code - Optional {@link SeedcordErrorCode} discriminator to narrow by code.
  * @typeParam Type - What kind of {@link SeedcordErrorTypeString} to filter by.
  * @typeParam Code - The specific {@link SeedcordErrorCode} to filter by.
@@ -211,21 +244,9 @@ export function isSeedcordError<
     Type extends SeedcordErrorTypeString | undefined,
     Code extends SeedcordErrorCode | undefined
 >(error: unknown, type?: Type, code?: Code): error is ErrorCodeFilter<Type, Code> {
-    const isSeedcordErrorInstance = error instanceof SeedcordError && error.type === 'SeedcordError';
-    const isSeedcordTypeErrorInstance = error instanceof SeedcordTypeError && error.type === 'SeedcordTypeError';
-    const isSeedcordRangeErrorInstance = error instanceof SeedcordRangeError && error.type === 'SeedcordRangeError';
-
-    if (!isSeedcordErrorInstance && !isSeedcordTypeErrorInstance && !isSeedcordRangeErrorInstance) {
-        return false;
-    }
-
-    const matchesType = type
-        ? (type === 'SeedcordError' && isSeedcordErrorInstance) ||
-          (type === 'SeedcordTypeError' && isSeedcordTypeErrorInstance) ||
-          (type === 'SeedcordRangeError' && isSeedcordRangeErrorInstance)
-        : true;
-
-    if (!matchesType) return false;
+    if (!isCoded(error)) return false;
+    if (type && error.type !== type) return false;
     if (code === undefined) return true;
-    return error.code === code;
+    // another copy of this package may number the same identifier differently
+    return error.identifier === resolveIdentifier(code);
 }

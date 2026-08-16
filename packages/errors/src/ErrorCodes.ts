@@ -142,6 +142,8 @@ export enum SeedcordErrorCode {
 
     /** A plugin's constructor rejected its options through `rejectOptions`. */
     PluginOptionsRejected = 2001,
+    /** Two or more plugins threw while disposing. */
+    PluginDisposeFailures = 2002,
 
     /** Mongoose service class is missing the `@RegisterMongooseService` decorator. */
     PluginMongooseServiceDecoratorMissing = 2101,

@@ -9,6 +9,11 @@ import type { Logform } from 'winston';
 
 const DEFAULT_PADDING = 5;
 const CAUSE_DEPTH_CAP = 4;
+// authored, never measured. ObjectConsoleSink caps at the same number, change both.
+const MEMBER_CAP = 5;
+// six reaches past the framework frames to the plugin or driver that threw
+const MEMBER_FRAME_CAP = 6;
+const STACK_FRAME = /^\s+at /;
 const SPLAT = Symbol.for('splat'); // winston triple-beam splat key
 // local symbols keep this internal state out of the global Symbol.for registry
 const HAD_FORMAT_KEY = Symbol('hadFormatSpecifiers');
@@ -38,15 +43,30 @@ export class LogFormatter {
         return '';
     }
 
-    private sanitizeAnsi(value: unknown): unknown {
+    // memberBlock prints the first MEMBER_CAP and only counts the rest
+    private sanitizeMembers(members: readonly unknown[], seen: Set<Error>): unknown[] {
+        return members.map((member, index) => (index < MEMBER_CAP ? this.sanitizeAnsi(member, seen) : member));
+    }
+
+    // an aggregate can hold itself as a member, and a cause chain can loop
+    private sanitizeAnsi(value: unknown, seen = new Set<Error>(), causeDepth = 0): unknown {
         if (typeof value === 'string') return stripAnsi(value);
         if (Error.isError(value)) {
             const error = value;
-            const sanitized = new Error(stripAnsi(error.message));
+            const looped = seen.has(error);
+            seen.add(error);
+
+            const message = stripAnsi(error.message);
+            // memberBlock renders members only for an AggregateError
+            const sanitized =
+                error instanceof AggregateError
+                    ? new AggregateError(looped ? [] : this.sanitizeMembers(error.errors, seen), message)
+                    : new Error(message);
             sanitized.name = error.name;
             if (typeof error.stack === 'string') sanitized.stack = stripAnsi(error.stack);
             // carry the cause so a cause block still renders on the stripped copy
-            if (Error.isError(error.cause)) sanitized.cause = this.sanitizeAnsi(error.cause);
+            if (!looped && causeDepth < CAUSE_DEPTH_CAP && Error.isError(error.cause))
+                sanitized.cause = this.sanitizeAnsi(error.cause, seen, causeDepth + 1);
             return sanitized;
         }
         return value;
@@ -70,6 +90,44 @@ export class LogFormatter {
             cause = cause.cause;
         }
         return blocks;
+    }
+
+    // every member's stack repeats the same framework tail
+    private trimFrames(stack: string): string {
+        const lines = stack.split('\n');
+        const start = lines.findIndex((line) => STACK_FRAME.test(line));
+        if (start === -1) return stack;
+
+        const hidden = lines.length - start - MEMBER_FRAME_CAP;
+        if (hidden <= 0) return stack;
+        return `${lines.slice(0, start + MEMBER_FRAME_CAP).join('\n')}\n${paint.mute(`    ${hidden} more frames`)}`;
+    }
+
+    private memberBody(member: unknown, strip: boolean): string {
+        if (!Error.isError(member)) return String(member);
+        const stack = typeof member.stack === 'string' ? member.stack : `${member.name}: ${member.message}`;
+        return this.trimFrames(stack) + this.causeBlock(member, strip);
+    }
+
+    private memberBlock(error: Error, strip: boolean): string {
+        if (!(error instanceof AggregateError)) return '';
+        const members: unknown[] = error.errors;
+        const heading = (text: string): string => (strip ? text : paint.iris.bold(text));
+        const aside = (text: string): string => (strip ? text : paint.mute(text));
+
+        let blocks = '';
+        for (const [index, member] of members.slice(0, MEMBER_CAP).entries()) {
+            const body = this.memberBody(member, strip);
+            blocks += `\n${heading(`Failure ${index + 1} of ${members.length}:`)}\n${strip ? stripAnsi(body) : body}`;
+        }
+
+        const hidden = members.length - MEMBER_CAP;
+        if (hidden > 0) blocks += `\n${aside(`and ${hidden} more failure${hidden === 1 ? '' : 's'}`)}`;
+        return blocks;
+    }
+
+    private detailBlock(error: Error, strip: boolean): string {
+        return this.causeBlock(error, strip) + this.memberBlock(error, strip);
     }
 
     private markFormatSpecifiers(): Logform.Format {
@@ -162,7 +220,7 @@ export class LogFormatter {
                     rendered += `\n${stack}`;
                     // the stringified info.stack dropped the cause, re-derive it from the Error
                     const firstError = extras.find((entry): entry is Error => Error.isError(entry));
-                    if (firstError) rendered += this.causeBlock(firstError, options.stripExtras === true);
+                    if (firstError) rendered += this.detailBlock(firstError, options.stripExtras === true);
                 }
 
                 const rawFormatCount = info[HAD_FORMAT_KEY];
@@ -205,7 +263,7 @@ export class LogFormatter {
         for (const x of filtered) {
             if (Error.isError(x))
                 objects.push(
-                    (typeof x.stack === 'string' ? x.stack : `${x.name}: ${x.message}`) + this.causeBlock(x, strip)
+                    (typeof x.stack === 'string' ? x.stack : `${x.name}: ${x.message}`) + this.detailBlock(x, strip)
                 );
             else if (typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean')
                 primitives.push(String(x));
@@ -234,7 +292,7 @@ export class LogFormatter {
                     if (typeof info.stack === 'string') {
                         // the stringified info.stack dropped the cause, re-derive it from the Error
                         const firstError = extras.find((entry): entry is Error => Error.isError(entry));
-                        info.stack = stripAnsi(info.stack) + (firstError ? this.causeBlock(firstError, true) : '');
+                        info.stack = stripAnsi(info.stack) + (firstError ? this.detailBlock(firstError, true) : '');
                     }
                     if (extras.length > 0) info.extras = extras.map((entry) => this.sanitizeAnsi(entry));
                     return info;
