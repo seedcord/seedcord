@@ -1,5 +1,5 @@
 import { MaterwelonGlyph } from './MaterwelonGlyph';
-import { OG } from './og';
+import { BRAND } from './palette';
 
 import type { ReactElement } from 'react';
 
@@ -40,13 +40,13 @@ export function MaterwelonFavicon({ ring }: MaterwelonFaviconProps): ReactElemen
                     justifyContent: 'center',
                     width: INNER_SIZE,
                     height: INNER_SIZE,
-                    backgroundColor: OG.seedDark,
+                    backgroundColor: BRAND.seedDark,
                     borderRadius: INNER_CORNER
                 }}
             >
                 <MaterwelonGlyph
                     width={GLYPH_WIDTH}
-                    fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, pith: OG.pith }}
+                    fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
                 />
             </div>
         </div>

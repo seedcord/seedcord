@@ -1,3 +1,5 @@
+import { BRAND } from '@seedcord/ui/palette';
+
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
 // hardcoded from styles/tokens.css because viewport themeColor and Satori OG images can't read CSS variables
@@ -11,4 +13,4 @@ export const ENTITY_TONE_HEX = {
 } as const satisfies Record<EntityTone, { light: string; dark: string }>;
 
 // the page foreground (--color-text), used as the theme-color on non-entity pages (root, overview, 404)
-export const FOREGROUND_HEX = { light: '#2d3328', dark: '#f8f6e8' } as const;
+export const FOREGROUND_HEX = { light: BRAND.seedDark, dark: BRAND.pith } as const;

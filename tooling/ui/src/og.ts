@@ -3,17 +3,6 @@
 // path resolution. OFL 1.1 (https://openfontlicense.org), (c) Florian Karsten (Space Grotesk) and
 // the Hanken Grotesk and JetBrains Mono project authors.
 
-// hardcoded from tokens.css because Satori can't read CSS variables
-export const OG = {
-    pith: '#f8f6e8',
-    seedDark: '#2d3328',
-    flesh: '#f04e36',
-    fleshDeep: '#c8341f',
-    rind: '#6fab49',
-    vineDeep: '#4d7d33',
-    sub: 'rgba(45, 51, 40, 0.85)'
-} as const;
-
 export const OG_SIZE = { width: 1200, height: 630 } as const;
 
 // the Materwelon glyph's intrinsic viewBox, used to size it to a round aspect in OG cards

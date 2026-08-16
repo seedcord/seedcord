@@ -1,6 +1,7 @@
 /* eslint-disable no-magic-numbers -- OG card layout, the pixel and typography values are intrinsic to the 1200x630 Satori canvas */
 import { MaterwelonGlyph } from '@seedcord/ui/MaterwelonGlyph';
-import { GLYPH_SIZE, OG, OG_SIZE } from '@seedcord/ui/og';
+import { GLYPH_SIZE, OG_SIZE } from '@seedcord/ui/og';
+import { BRAND } from '@seedcord/ui/palette';
 
 import type { CSSProperties, ReactElement } from 'react';
 
@@ -17,7 +18,7 @@ export interface DocOgCardProps {
 
 // a seed-dark copy offset behind the glyph fakes the hard drop-shadow (Satori has no filter)
 function Mark({ width }: { width: number }): ReactElement {
-    const ink = OG.seedDark;
+    const ink = BRAND.seedDark;
     const height = (width * GLYPH_SIZE.height) / GLYPH_SIZE.width;
     const off = Math.max(2, Math.round(width * 0.06));
     return (
@@ -39,7 +40,7 @@ function Mark({ width }: { width: number }): ReactElement {
             </div>
             <MaterwelonGlyph
                 width={width}
-                fills={{ flesh: OG.flesh, seeds: OG.seedDark, rind: OG.rind, pith: OG.pith }}
+                fills={{ flesh: BRAND.flesh, seeds: BRAND.seedDark, rind: BRAND.rind, pith: BRAND.pith }}
             />
         </div>
     );
@@ -55,12 +56,12 @@ const badgeBase: CSSProperties = {
 };
 
 function Pill({ label, accent }: { label: string; accent: string }): ReactElement {
-    return <div style={{ ...badgeBase, color: OG.pith, backgroundColor: accent, padding: '6px 15px' }}>{label}</div>;
+    return <div style={{ ...badgeBase, color: BRAND.pith, backgroundColor: accent, padding: '6px 15px' }}>{label}</div>;
 }
 
 function Badge({ label }: { label: string }): ReactElement {
     return (
-        <div style={{ ...badgeBase, color: OG.sub, border: '2px solid rgba(45,51,40,0.28)', padding: '5px 14px' }}>
+        <div style={{ ...badgeBase, color: BRAND.sub, border: '2px solid rgba(45,51,40,0.28)', padding: '5px 14px' }}>
             {label}
         </div>
     );
@@ -75,7 +76,7 @@ function Footer(): ReactElement {
                 justifyContent: 'space-between',
                 height: 84,
                 padding: '0 46px',
-                borderTop: `3px solid ${OG.seedDark}`
+                borderTop: `3px solid ${BRAND.seedDark}`
             }}
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -87,13 +88,13 @@ function Footer(): ReactElement {
                         fontWeight: 600,
                         fontSize: 31,
                         letterSpacing: -1.2,
-                        color: OG.seedDark
+                        color: BRAND.seedDark
                     }}
                 >
                     seedcord
                 </div>
             </div>
-            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 20, color: OG.seedDark }}>
+            <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 20, color: BRAND.seedDark }}>
                 docs.seedcord.org
             </div>
         </div>
@@ -142,7 +143,7 @@ function CardBody({ pill, accent, meta, name, description }: DocOgCardProps): Re
                     fontFamily: 'Hanken Grotesk',
                     fontSize: 32,
                     lineHeight: 1.4,
-                    color: OG.sub,
+                    color: BRAND.sub,
                     lineClamp: descLines
                 }}
             >
@@ -161,7 +162,7 @@ export function DocOgCard(props: DocOgCardProps): ReactElement {
                 display: 'flex',
                 width: OG_SIZE.width,
                 height: OG_SIZE.height,
-                backgroundColor: OG.pith
+                backgroundColor: BRAND.pith
             }}
         >
             <div
@@ -171,7 +172,7 @@ export function DocOgCard(props: DocOgCardProps): ReactElement {
                     top: 48,
                     width: PANEL_W,
                     height: PANEL_H,
-                    backgroundColor: OG.seedDark,
+                    backgroundColor: BRAND.seedDark,
                     borderRadius: 4,
                     transform: 'translate(10px, 10px)'
                 }}
@@ -185,8 +186,8 @@ export function DocOgCard(props: DocOgCardProps): ReactElement {
                     height: PANEL_H,
                     display: 'flex',
                     flexDirection: 'column',
-                    backgroundColor: OG.pith,
-                    border: `3px solid ${OG.seedDark}`,
+                    backgroundColor: BRAND.pith,
+                    border: `3px solid ${BRAND.seedDark}`,
                     borderRadius: 4
                 }}
             >

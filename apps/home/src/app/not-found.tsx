@@ -18,7 +18,7 @@ export default function NotFound(): ReactNode {
                 )}
             >
                 <Materwelon className={cn('drop-shadow-mark size-20')} />
-                <p className={cn('font-mono-code text-sm font-semibold text-(--vine-deep)')}>error 404</p>
+                <p className={cn('font-mono-code text-sm font-semibold text-(--rind-deep)')}>error 404</p>
                 <h1
                     className={cn(
                         'font-display text-[clamp(3rem,9vw,6rem)] leading-[0.92] font-semibold tracking-tight text-(--seed-dark)'

@@ -30,7 +30,7 @@ export function Hero(): ReactNode {
                         )}
                     >
                         The whole Discord bot,
-                        <span className={cn('text-(--vine-deep)')}> wired</span> and{' '}
+                        <span className={cn('text-(--rind-deep)')}> wired</span> and{' '}
                         <span className={cn('text-(--flesh-deep)')}>typed</span>.
                     </h1>
                     <p className={cn('mt-7 max-w-xl text-lg/snug font-medium text-(--seed-dark)/85 md:text-xl')}>
@@ -60,7 +60,7 @@ export function Hero(): ReactNode {
 
                 <div className={cn('relative hidden items-center justify-center lg:flex lg:h-124')}>
                     {/* deeper green so the green in the materwelon doesn't blend with that square in the back */}
-                    <div className={cn('blk absolute top-6 right-0 size-[78%] rounded-sm bg-(--vine-deep)')} />
+                    <div className={cn('blk absolute top-6 right-0 size-[78%] rounded-sm bg-(--rind-deep)')} />
                     <Materwelon className={cn('drop-shadow-mark-lg relative z-10 w-[84%] max-w-124')} />
                 </div>
             </div>

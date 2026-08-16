@@ -20,6 +20,12 @@
                 "default": "./dist/index.mjs"
             }
         },
+        "./palette": {
+            "import": {
+                "types": "./dist/palette.d.mts",
+                "default": "./dist/palette.mjs"
+            }
+        },
         "./og": {
             "import": {
                 "types": "./dist/og.d.mts",

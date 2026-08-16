@@ -1,3 +1,4 @@
+import { BRAND } from '@seedcord/ui/palette';
 import { cn } from '@seedcord/ui';
 import { Hanken_Grotesk, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-    themeColor: '#f8f6e8'
+    themeColor: BRAND.pith
 };
 
 const jsonLd = {
