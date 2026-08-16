@@ -195,6 +195,58 @@ describe('LogFormatter', () => {
             expect(output[0]).toContain('B middle');
             expect(output[0]).toContain('C deepest');
         });
+
+        it('renders every member of an aggregate under a numbered heading', () => {
+            const { logger, output } = createTestLogger(formatter);
+            const aggregate = new AggregateError([new Error('mongo closed'), new Error('pool stuck')], 'two failed');
+            logger.error('shutdown caught', aggregate);
+            expect(output[0]).toContain('Failure 1 of 2:');
+            expect(output[0]).toContain('mongo closed');
+            expect(output[0]).toContain('Failure 2 of 2:');
+            expect(output[0]).toContain('pool stuck');
+        });
+
+        it('caps the members it renders and counts the rest', () => {
+            const { logger, output } = createTestLogger(formatter);
+            const many = Array.from({ length: 9 }, (_, i) => new Error(`boom ${i}`));
+            logger.error('shutdown caught', new AggregateError(many, 'nine failed'));
+            expect(output[0]).toContain('boom 0');
+            expect(output[0]).toContain('boom 4');
+            expect(output[0]).not.toContain('boom 5');
+            expect(output[0]).toContain('and 4 more failures');
+        });
+
+        it('trims a member stack to its top frames and counts the rest', () => {
+            const { logger, output } = createTestLogger(formatter);
+            const member = new Error('telemetry flush exceeded its window');
+            const frames = Array.from({ length: 30 }, (_, i) => `    at frame${i} (/app/x.mjs:1:1)`);
+            member.stack = `Error: telemetry flush exceeded its window\n${frames.join('\n')}`;
+            logger.error('shutdown caught', new AggregateError([member], 'one failed'));
+
+            expect(output[0]).toContain('telemetry flush exceeded its window');
+            expect(output[0]).toContain('at frame0 ');
+            expect(output[0]).toContain('at frame5 ');
+            expect(output[0]).not.toContain('at frame6 ');
+            expect(output[0]).toContain('24 more frames');
+        });
+
+        it('leaves a short member stack whole', () => {
+            const { logger, output } = createTestLogger(formatter);
+            const member = new Error('pool stuck');
+            member.stack = 'Error: pool stuck\n    at only (/app/x.mjs:1:1)';
+            logger.error('shutdown caught', new AggregateError([member], 'one failed'));
+
+            expect(output[0]).toContain('at only ');
+            expect(output[0]).not.toContain('more frames');
+        });
+
+        it('renders a member that carries its own cause', () => {
+            const { logger, output } = createTestLogger(formatter);
+            const member = new Error('driver refused', { cause: new Error('socket hang up') });
+            logger.error('shutdown caught', new AggregateError([member], 'one failed'));
+            expect(output[0]).toContain('driver refused');
+            expect(output[0]).toContain('socket hang up');
+        });
     });
 
     describe('level coloring', () => {

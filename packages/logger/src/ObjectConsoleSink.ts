@@ -3,6 +3,8 @@ import { filterCirculars, stripAnsi } from '@seedcord/utils';
 import type { ILogSink, LogLevel, LogRecord } from '@seedcord/types';
 
 const SPECIFIER = /%[sdifjoO%]/gu;
+// LogFormatter sets the same cap. change both.
+const MEMBER_CAP = 5;
 
 function jsonish(value: unknown): string {
     try {
@@ -43,13 +45,21 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null && !Array.isArray(value) && !Error.isError(value);
 }
 
+function memberShape(member: unknown): Record<string, unknown> {
+    return Error.isError(member) ? errorShape(member, false) : { message: String(member) };
+}
+
 function errorShape(error: Error, withCause = true): Record<string, unknown> {
+    const members = error instanceof AggregateError ? (error.errors as unknown[]) : [];
+    const omitted = members.length - MEMBER_CAP;
     return {
         name: stripAnsi(error.name),
         message: stripAnsi(error.message),
         ...(error.stack !== undefined && { stack: stripAnsi(error.stack) }),
         // one level, so a deeper chain never recurses without bound
-        ...(withCause && Error.isError(error.cause) && { cause: errorShape(error.cause, false) })
+        ...(withCause && Error.isError(error.cause) && { cause: errorShape(error.cause, false) }),
+        ...(members.length > 0 && { errors: members.slice(0, MEMBER_CAP).map(memberShape) }),
+        ...(omitted > 0 && { omittedErrors: omitted })
     };
 }
 

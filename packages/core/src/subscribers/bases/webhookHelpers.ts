@@ -23,16 +23,39 @@ export function neutralizeFences(text: string): string {
     return text.replaceAll('```', '`​`​`');
 }
 
+// discord caps a message at 2000 characters. the fence and heading take the rest.
+const REPORT_BUDGET = 1800;
+
+function trace(error: Error): string {
+    return error.stack ?? `${error.name}: ${error.message}`;
+}
+
+function clamp(text: string, budget: number): string {
+    return text.length > budget ? `${text.slice(0, budget - 1)}…` : text;
+}
+
+// a long first stack would otherwise eat the whole budget
+function memberReport(members: readonly unknown[], budget: number): string {
+    const share = Math.floor(budget / members.length);
+    return members
+        .map((member, index) => {
+            const body = Error.isError(member) ? trace(member) : String(member);
+            return `\n\nFailure ${index + 1} of ${members.length}:\n${clamp(body, share)}`;
+        })
+        .join('');
+}
+
 // stack plus one level of cause, ansi codes stripped since discord won't render them
 export function errorReport(error: Error): string {
-    let report = error.stack ?? `${error.name}: ${error.message}`;
-    if (Error.isError(error.cause)) {
-        const cause = error.cause.stack ?? `${error.cause.name}: ${error.cause.message}`;
-        report += `\n\nCaused by:\n${cause}`;
+    let report = trace(error);
+    if (Error.isError(error.cause)) report += `\n\nCaused by:\n${trace(error.cause)}`;
+
+    if (error instanceof AggregateError && error.errors.length > 0) {
+        const members: unknown[] = error.errors;
+        report += memberReport(members, Math.max(REPORT_BUDGET - report.length, 0));
     }
-    const stripped = neutralizeFences(stripAnsi(report));
-    // eslint-disable-next-line no-magic-numbers
-    return stripped.length > 1800 ? `${stripped.slice(0, 1799)}…` : stripped;
+
+    return clamp(neutralizeFences(stripAnsi(report)), REPORT_BUDGET);
 }
 
 export class WebhookSeparator extends BuilderComponent<'separator'> {

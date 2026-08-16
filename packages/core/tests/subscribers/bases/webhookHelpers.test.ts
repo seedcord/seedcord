@@ -34,4 +34,36 @@ describe('errorReport', () => {
 
         expect(errorReport(error)).not.toContain('```');
     });
+
+    it('reports every aggregate member under a numbered heading', () => {
+        const first = new Error('mongo closed');
+        first.stack = 'Error: mongo closed\n    at Mongoose.dispose';
+        const second = new Error('pool stuck');
+        second.stack = 'Error: pool stuck\n    at Kysely.dispose';
+        const error = new AggregateError([first, second], 'two failed');
+        error.stack = 'AggregateError: two failed';
+
+        const report = errorReport(error);
+
+        expect(report).toContain('Failure 1 of 2:');
+        expect(report).toContain('at Mongoose.dispose');
+        expect(report).toContain('Failure 2 of 2:');
+        expect(report).toContain('at Kysely.dispose');
+    });
+
+    it('gives each member an equal share so a late member survives the cap', () => {
+        const members = Array.from({ length: 6 }, (_, i) => {
+            const member = new Error(`member-${i}`);
+            member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(80)}`;
+            return member;
+        });
+        const error = new AggregateError(members, 'six failed');
+        error.stack = 'AggregateError: six failed';
+
+        const report = errorReport(error);
+
+        expect(report.length).toBeLessThanOrEqual(1800);
+        expect(report).toContain('member-0');
+        expect(report).toContain('member-5');
+    });
 });
