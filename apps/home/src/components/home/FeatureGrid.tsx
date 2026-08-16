@@ -1,14 +1,23 @@
 import { cn, Icon, tw } from '@seedcord/ui';
 import {
+    Activity,
     AtSign,
+    Blocks,
+    Cable,
     Component,
+    Database,
+    FileCode2,
     GalleryHorizontalEnd,
+    Gauge,
     GitMerge,
     HeartPulse,
     Hourglass,
+    KeyRound,
+    Leaf,
     ListTree,
     MessageSquareWarning,
     MousePointerClick,
+    PackagePlus,
     Plug,
     Radio,
     RadioTower,
@@ -16,14 +25,17 @@ import {
     Rss,
     ScrollText,
     ShieldAlert,
+    ShieldCheck,
+    SlidersHorizontal,
     Smile,
     Sparkles,
+    SpellCheck,
     Split,
     SquareTerminal,
-    Timer,
+    TimerReset,
     WandSparkles,
     Waypoints,
-    Wrench
+    Webhook
 } from 'lucide-react';
 
 import { Section } from '#components/home/Section';
@@ -41,27 +53,44 @@ interface Group {
 
 const GROUPS: Group[] = [
     {
-        area: 'Commands & interactions',
+        area: 'Commands',
         accent: 'flesh',
         rows: [
             {
                 icon: Waypoints,
                 label: 'decorator routing',
-                gloss: '@SlashRoute, @RegisterEvent and friends wire handlers at boot'
+                gloss: '@SlashRoute, @ButtonRoute and four more bind handlers at startup'
             },
             { icon: ListTree, label: 'subcommand routing', gloss: 'subcommands and groups, routed by name' },
-            { icon: AtSign, label: 'command mentions', gloss: 'typed, clickable, compile-checked' },
-            { icon: Smile, label: 'emojis', gloss: 'resolved at startup, typed by name' },
+            {
+                icon: SlidersHorizontal,
+                label: 'typed slash options',
+                gloss: 'accessors generated from your command definitions'
+            },
             {
                 icon: Sparkles,
                 label: 'typed autocomplete',
-                gloss: 'a typed handler per option, missing one is a compile error'
+                gloss: 'a handler per option, missing one is a compile error'
             },
-            { icon: MousePointerClick, label: 'context menus', gloss: 'user and message, typed and routed' },
+            { icon: AtSign, label: 'command mentions', gloss: 'renders </route:id> once Discord assigns the id' },
+            { icon: Smile, label: 'emojis', gloss: 'resolved at startup, reached by name' }
+        ]
+    },
+    {
+        area: 'Components & replies',
+        accent: 'rind',
+        rows: [
             {
                 icon: Component,
                 label: 'component handlers',
-                gloss: 'buttons, selects and modals, each routed to a typed handler'
+                gloss: 'buttons, selects and modals, routed by customId'
+            },
+            { icon: KeyRound, label: 'customId codec', gloss: 'pack fields into 100 characters, decode them typed' },
+            { icon: MousePointerClick, label: 'context menus', gloss: 'user and message commands' },
+            {
+                icon: Split,
+                label: 'multi-route handlers',
+                gloss: 'one class serves several routes, narrowed by this.match'
             },
             {
                 icon: MessageSquareWarning,
@@ -69,57 +98,72 @@ const GROUPS: Group[] = [
                 gloss: 'an ephemeral confirm, resolves to a boolean'
             },
             {
-                icon: Split,
-                label: 'multi-route handlers',
-                gloss: 'one class serves several routes, each typed via this.match'
-            },
-            {
                 icon: GalleryHorizontalEnd,
                 label: 'pagination',
-                gloss: 'restart-proof pages, each nav button carries its target'
+                gloss: 'each nav button carries its page, so a restart keeps working'
             }
         ]
     },
     {
         area: 'Events',
-        accent: 'rind',
+        accent: 'flesh',
         rows: [
             { icon: Radio, label: 'event handlers', gloss: 'body typed to the exact event' },
-            { icon: RadioTower, label: 'event emitter', gloss: 'a fully typed EventEmitter' },
+            { icon: RadioTower, label: 'event emitter', gloss: 'event names and payloads typed together' },
             { icon: Hourglass, label: 'typed waitFor', gloss: 'await a single typed event inline' },
-            { icon: Rss, label: 'pub/sub bus', gloss: 'an application event bus, add your own' },
-            { icon: GitMerge, label: 'middleware', gloss: 'typed, runs before your handlers' }
+            { icon: Rss, label: 'pub/sub bus', gloss: 'framework events publish on default keys' },
+            { icon: GitMerge, label: 'middleware', gloss: 'runs before your handler, typed the same way' }
+        ]
+    },
+    {
+        area: 'Guards & failures',
+        accent: 'rind',
+        rows: [
+            { icon: ShieldCheck, label: 'permission & role gates', gloss: 'checked before the handler runs' },
+            { icon: Blocks, label: 'composable gates', gloss: 'stack them with and, or' },
+            { icon: TimerReset, label: 'cooldowns', gloss: 'scoped per user, guild or channel' },
+            { icon: Gauge, label: 'rate limiter', gloss: 'a sliding window per key' },
+            { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to report, Silence to drop' }
         ]
     },
     {
         area: 'Runtime',
         accent: 'flesh',
         rows: [
-            { icon: ShieldAlert, label: 'errors', gloss: 'Notice to refuse, Fault to report, Silence to drop' },
-            { icon: Timer, label: 'rate limiter', gloss: 'per-key sliding window' },
-            { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup, shutdown and health' },
-            { icon: ScrollText, label: 'logger', gloss: 'scoped channels, rotation, sinks' }
+            { icon: HeartPulse, label: 'lifecycle', gloss: 'phased startup and shutdown' },
+            { icon: ScrollText, label: 'logger', gloss: 'named channels, levels and sinks' },
+            { icon: Activity, label: 'health check', gloss: 'an HTTP endpoint that reports readiness' },
+            { icon: Webhook, label: 'webhook reporters', gloss: 'faults posted to a Discord webhook' }
         ]
     },
     {
-        area: 'Dev experience',
+        area: 'Tooling',
         accent: 'rind',
         rows: [
-            { icon: RefreshCw, label: 'hot reload', gloss: 'Vite HMR swaps your code live, the gateway stays up' },
+            { icon: PackagePlus, label: 'create seedcord', gloss: 'answers a few questions, writes the project' },
+            { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' },
+            {
+                icon: RefreshCw,
+                label: 'hot reload',
+                gloss: 'Vite HMR swaps changed modules, the gateway stays connected'
+            },
+            { icon: Cable, label: 'dev tunnel', gloss: 'opens cloudflared and points Discord at it' },
+            { icon: FileCode2, label: 'codegen', gloss: 'writes the types for your commands and config' },
             {
                 icon: WandSparkles,
                 label: 'seedcord commands',
-                gloss: 'inspect and clean deployed guild commands'
+                gloss: 'inspect and clean commands already deployed'
             },
-            { icon: SquareTerminal, label: 'seedcord dev', gloss: 'a full-screen dev terminal' }
+            { icon: SpellCheck, label: 'eslint rules', gloss: 'flags payloads Discord rejects, before you send them' }
         ]
     },
     {
-        area: 'Extensibility',
+        area: 'Plugins',
         accent: 'flesh',
         rows: [
-            { icon: Plug, label: 'plugins', gloss: 'attach one, reach it typed in any handler' },
-            { icon: Wrench, label: 'utils', gloss: 'duration parsing, ascii tables and more' }
+            { icon: Plug, label: 'typed plugins', gloss: 'attach once, codegen types it on core' },
+            { icon: Leaf, label: 'Mongoose', gloss: 'MongoDB, services typed by key' },
+            { icon: Database, label: 'Kysely', gloss: 'Postgres, queries typed off your schema' }
         ]
     }
 ];

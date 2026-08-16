@@ -1,5 +1,6 @@
 import { BeforeAfter } from '#components/home/BeforeAfter';
 import { Codec } from '#components/home/Codec';
+import { DevTui } from '#components/home/DevTui';
 import { FeatureGrid } from '#components/home/FeatureGrid';
 import { Footer } from '#components/home/Footer';
 import { Gates } from '#components/home/Gates';
@@ -8,6 +9,7 @@ import { Hero } from '#components/home/Hero';
 import { FeatureMarquee } from '#components/home/Marquee';
 import { Nav } from '#components/home/Nav';
 import { ResolvedType } from '#components/home/ResolvedType';
+import { Transports } from '#components/home/Transports';
 import { TypedDx } from '#components/home/TypedDx';
 import { SlashCommand } from '#components/SlashCommand';
 import { FEATURES } from '#lib/features';
@@ -26,7 +28,9 @@ function Home(): ReactNode {
                 <BeforeAfter />
                 <Codec />
                 <Gates />
+                <DevTui />
                 <FeatureGrid />
+                <Transports />
                 <GetStarted />
             </main>
             <Footer />

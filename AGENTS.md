@@ -114,6 +114,10 @@ Reproduce a bug with a failing test before fixing it. A test that passes before 
 
 Tests reach behavior through public interfaces. A test that reads a private method breaks on the next refactor and tells you nothing about the contract.
 
+A test pins behavior. `tsc`, ESLint, and the build already reject a missing export, a renamed symbol, a wrong type, and a malformed manifest, so a test asserting any of those gives you a second place to edit when the rule changes.
+
+Nothing gets a test for staying absent. A deleted export leaves no caller that compiles, and that is the proof.
+
 A fixture cast is fine with a short comment naming what makes it safe. `any` stays banned in tests.
 
 ---

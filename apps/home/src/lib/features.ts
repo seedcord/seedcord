@@ -1,4 +1,5 @@
 export const FEATURES = [
+    'gateway & http transports',
     'typed slash commands',
     'typed slash options',
     'subcommand routing',
@@ -21,14 +22,17 @@ export const FEATURES = [
     'webhook fault reporters',
     'coordinated startup & shutdown',
     'HTTP health check',
-    'scoped logger + transports',
+    'logger with channels & sinks',
     'typed pub/sub bus',
     'interaction & event middleware',
     'typed event handlers & waitFor',
     'Vite HMR hot reload, gateway stays alive',
     'Ink dev UI',
+    'cloudflared dev tunnel',
+    'project scaffolding',
     'seedcord codegen',
     'seedcord commands wizard',
-    'plugin system',
-    'Postgres & Mongo plugins'
+    'typed plugins',
+    'Postgres & Mongo plugins',
+    'eslint rules for discord.js'
 ] as const;

@@ -21,7 +21,7 @@ export function Hero(): ReactNode {
                             'font-mono-code mb-6 inline-flex items-center gap-2 rounded-sm bg-(--seed-dark) px-2.5 py-1 text-xs font-semibold text-(--pith) sm:px-3 sm:py-1.5 sm:text-sm'
                         )}
                     >
-                        discord.js 14 · typescript · class + decorator framework
+                        discord.js 14 · typescript · gateway/http bot framework
                     </div>
                     <h1
                         className={cn(
@@ -38,7 +38,7 @@ export function Hero(): ReactNode {
                         ever connects.
                     </p>
                     {/* ml-1 matches the poster button's 4px rest translate, aligning the chip with the button face */}
-                    <CopyCommand command="pnpm add seedcord" className={cn('mt-7 ml-1')} />
+                    <CopyCommand command="pnpm create seedcord" className={cn('mt-7 ml-1')} />
                     <div className={cn('mt-3 flex flex-wrap items-center gap-3')}>
                         <PosterButton href={GUIDE_URL} variant="solid" className={cn('font-display px-7 py-3 text-lg')}>
                             Get started

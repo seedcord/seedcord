@@ -100,7 +100,7 @@ Same for anything you write in the repo. Issues, PR descriptions, and review rep
 
 AI code often looks correct and misses edge cases, so the testing rules matter more here. Your agents should always have these four skills in `.github/skills` loaded: `tdd`, `code-quality`, `code-commenting-guidelines`, and `writing-voice`.
 
-Point your agent at [`AGENTS.md`](../AGENTS.md) in the repo root. `apps/` and `packages/` each add their own file on top of it.
+Point your agent at `AGENTS.md` in the repo root. `apps/` and `packages/` each add their own file on top of it.
 
 ## CI and checks
 
