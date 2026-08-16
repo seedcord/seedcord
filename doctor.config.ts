@@ -38,6 +38,11 @@ export default defineConfig({
                 rules: ['react-doctor/no-inline-exhaustive-style']
             },
             {
+                // next/image emits a single src under the export's unoptimized flag
+                files: ['**/components/home/DevTui.tsx'],
+                rules: ['react-doctor/nextjs-no-img-element']
+            },
+            {
                 // the docs builder runs this server-side, with no security exposure
                 files: ['**/lib/docs/builders/buildSignatureDetails.ts'],
                 rules: ['react-doctor/insecure-crypto-risk']

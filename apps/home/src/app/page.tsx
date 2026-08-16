@@ -9,6 +9,7 @@ import { Hero } from '#components/home/Hero';
 import { FeatureMarquee } from '#components/home/Marquee';
 import { Nav } from '#components/home/Nav';
 import { ResolvedType } from '#components/home/ResolvedType';
+import { Transports } from '#components/home/Transports';
 import { TypedDx } from '#components/home/TypedDx';
 import { SlashCommand } from '#components/SlashCommand';
 import { FEATURES } from '#lib/features';
@@ -29,6 +30,7 @@ function Home(): ReactNode {
                 <Gates />
                 <DevTui />
                 <FeatureGrid />
+                <Transports />
                 <GetStarted />
             </main>
             <Footer />
