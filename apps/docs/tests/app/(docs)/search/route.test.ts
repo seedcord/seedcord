@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GET } from '@/app/(docs)/search/route';
+import { GET } from '#src/app/(docs)/search/route';
 
 import { MIN_SEARCH_QUERY_LENGTH } from '#components/search/command-palette/constants';
 

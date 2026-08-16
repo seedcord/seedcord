@@ -32,7 +32,7 @@ export const IMPORT_RULES: Linter.RulesRecord = {
             distinctGroup: true,
             pathGroups: [
                 {
-                    pattern: '@/**',
+                    pattern: '#**',
                     group: 'internal',
                     position: 'before'
                 }

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { createRef } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Button } from '@/Button';
+import { Button } from '#src/Button';
 
 describe('Button behavior', () => {
     it('fires onClick when clicked', async () => {

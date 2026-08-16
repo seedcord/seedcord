@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { easeDrawer, easeInOutStrong, easeOutStrong } from '@/lib/motion';
+import { easeDrawer, easeInOutStrong, easeOutStrong } from '#src/lib/motion';
 
 // the JS easing arrays mirror the --ease-* cubic-beziers in tokens.css, this catches a drift in either
 const tokens = readFileSync(join(import.meta.dirname, '../../src/styles/tokens.css'), 'utf8');
