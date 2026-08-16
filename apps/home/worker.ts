@@ -4,15 +4,23 @@ interface Env {
 
 // every other host serves the same content, so it gets an X-Robots-Tag noindex to keep duplicates out of Google
 const PRODUCTION_HOST = 'seedcord.org';
+const WWW_HOST = `www.${PRODUCTION_HOST}`;
 
 const TRAILING_SLASH_REDIRECT = 307;
 const PERMANENT_REDIRECT = 308;
+const MOVED_PERMANENTLY = 301;
 
 // RFC 8288 discovery hints for agents, points at the human docs + the machine-readable index
 const LINK_HEADER = '<https://docs.seedcord.org/>; rel="service-doc", </llms.txt>; rel="alternate"; type="text/plain"';
 
 const handler = {
     async fetch(request: Request, env: Env): Promise<Response> {
+        const url = new URL(request.url);
+        if (url.hostname === WWW_HOST) {
+            url.hostname = PRODUCTION_HOST;
+            return Response.redirect(url.toString(), MOVED_PERMANENTLY);
+        }
+
         const asset = await env.ASSETS.fetch(request);
 
         // collapse the slash/non-slash duplicate into one permanent redirect
@@ -22,7 +30,7 @@ const handler = {
                 : asset;
 
         const isHtml = (normalized.headers.get('content-type') ?? '').includes('text/html');
-        const isProduction = new URL(request.url).hostname === PRODUCTION_HOST;
+        const isProduction = url.hostname === PRODUCTION_HOST;
 
         if (isProduction && !isHtml) return normalized;
 

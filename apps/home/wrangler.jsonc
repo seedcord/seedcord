@@ -3,26 +3,16 @@
     "name": "seedcord-home",
     "compatibility_date": "2026-06-23",
     "main": "./worker.ts",
+    "routes": [
+        { "pattern": "seedcord.org", "custom_domain": true },
+        { "pattern": "www.seedcord.org", "custom_domain": true }
+    ],
     "assets": {
         "directory": "./out",
         "binding": "ASSETS",
-        // 404-page serves the static export's 404.html; auto-trailing-slash mirrors next.config trailingSlash
         "not_found_handling": "404-page",
         "html_handling": "auto-trailing-slash",
         // route every request through worker.ts so it can noindex non-production hosts
         "run_worker_first": true
-    },
-    "env": {
-        // wrangler can't inherit the assets block, so the prerelease worker re-declares it
-        "next": {
-            "name": "seedcord-home-next",
-            "assets": {
-                "directory": "./out",
-                "binding": "ASSETS",
-                "not_found_handling": "404-page",
-                "html_handling": "auto-trailing-slash",
-                "run_worker_first": true
-            }
-        }
     }
 }

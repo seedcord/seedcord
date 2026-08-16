@@ -1,0 +1,51 @@
+name: home-deploy
+
+on:
+    push:
+        branches: [main]
+        paths:
+            - 'apps/home/**'
+            - 'tooling/ui/**'
+            - '.github/workflows/home-deploy.yml'
+    workflow_dispatch:
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions:
+    contents: read
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v7
+              with:
+                  fetch-depth: 0
+
+            - name: Turbo cache
+              uses: ./.github/actions/turbo-cache
+              with:
+                  turbo_token: ${{ secrets.TURBO_TOKEN }}
+                  turbo_team: ${{ vars.TURBO_TEAM }}
+                  enable_fallback_cache: 'true'
+
+            - name: Setup workspace
+              uses: ./.github/actions/setup
+
+            - name: Build
+              run: pnpm build
+              env:
+                  NEXT_PUBLIC_SITE_URL: https://seedcord.org
+
+            - name: Deploy
+              uses: cloudflare/wrangler-action@ebbaa1584979971c8614a24965b4405ff95890e0 # v4
+              with:
+                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+                  workingDirectory: apps/home
+                  packageManager: pnpm
+                  command: deploy
