@@ -6,6 +6,7 @@ on:
         paths:
             - 'apps/guide/**'
             - 'tooling/ui/**'
+            - 'pnpm-workspace.yaml'
             - '.github/workflows/guide-deploy.yml'
     workflow_dispatch:
 

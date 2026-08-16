@@ -6,6 +6,7 @@ on:
         paths:
             - 'apps/home/**'
             - 'tooling/ui/**'
+            - 'pnpm-workspace.yaml'
             - '.github/workflows/home-deploy.yml'
     workflow_dispatch:
 
