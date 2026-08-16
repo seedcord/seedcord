@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
 
 import { formatUptime } from '#ui/format';
 

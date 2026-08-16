@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 import { stripAnsi } from '@seedcord/utils';
 import chalk from 'chalk';
 import { format } from 'winston';

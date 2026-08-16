@@ -9,7 +9,8 @@ import {
     runHandlerGates,
     slowGateMonitor
 } from '@seedcord/core/internal';
-import { Logger, paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { InteractionResponseType, InteractionType, RESTJSONErrorCodes, Routes } from 'discord-api-types/v10';
 

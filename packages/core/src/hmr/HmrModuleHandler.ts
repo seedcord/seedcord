@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
 
 import type { Logger } from '@seedcord/logger';

@@ -1,4 +1,4 @@
-import type { LogLevel } from './types';
+import type { LogLevel } from '@seedcord/types';
 
 // truecolor because a terminal theme remaps chalk's 16-color names (blue turns orange in monokai)
 export const LEVEL_COLOR: Record<LogLevel, string> = {

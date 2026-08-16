@@ -5,7 +5,7 @@ import { format } from 'winston';
 
 import { LogFormatter } from './LogFormatter';
 
-import type { LogLevel, LogRecord } from '../types';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 import type { Logform, LogEntry } from 'winston';
 
 // Logger.log requires LogEntry (message: string), while a format transform requires TransformableInfo (symbol index)

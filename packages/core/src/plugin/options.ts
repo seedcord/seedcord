@@ -1,5 +1,4 @@
-import type { FrameworkChannel } from '@seedcord/logger';
-import type { TypedExclude } from '@seedcord/types';
+import type { FrameworkChannel, TypedExclude } from '@seedcord/types';
 
 /** The options a plugin declares as its `Plugin<Opts>` type argument. */
 export interface PluginOptions {

@@ -1,9 +1,8 @@
-import { paint } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 import { formatFilePath } from '@seedcord/utils';
 import chalk from 'chalk';
 
-import type { LogLevel } from './types';
-import type { ILogger } from '@seedcord/types';
+import type { LogLevel, ILogger } from '@seedcord/types';
 
 const COUNT_WRAP_WIDTH = 64;
 const CHIP_SEPARATOR = ' · ';

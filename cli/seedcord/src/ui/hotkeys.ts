@@ -7,7 +7,7 @@ import type { CursorMove, FilterCursor } from '#ui/filterCursor';
 import type { ScrollApi } from '#ui/hooks/useScroll';
 import type { LogRow } from '#ui/logRows';
 import type { DevState, DevStore } from '#ui/stores/DevStore';
-import type { LogLevel } from '@seedcord/logger';
+import type { LogLevel } from '@seedcord/types';
 import type { Key } from 'ink';
 
 // empty set means all. toggling every channel on collapses back to empty, keeping later channels visible by default

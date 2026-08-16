@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 
 import { runPrefix } from '#cli/packageManager';
 import { privilegedFor } from '#interview/capabilities';

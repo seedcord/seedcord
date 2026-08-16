@@ -4,7 +4,7 @@ import { INITIAL_CURSOR } from '#ui/filterCursor';
 import { dispatchHotkey } from '#ui/hotkeys';
 import { LogStore } from '#ui/stores/LogStore';
 
-import type { LogLevel, LogRecord } from '@seedcord/logger';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 import type { Key } from 'ink';
 
 type Ctx = Parameters<typeof dispatchHotkey>[0];

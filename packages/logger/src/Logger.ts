@@ -2,8 +2,8 @@ import { DEFAULT_CHANNEL } from './levels';
 import { LoggerChannelRegistry } from './LoggerChannelRegistry';
 import { LoggerUtilities } from './LoggerUtilities';
 
-import type { LogLevel, LoggerChannelId, LoggerConfig, LoggerOptions } from './types';
-import type { ILogger } from '@seedcord/types';
+import type { LoggerOptions } from './types';
+import type { ILogger, LogLevel, LoggerChannelId, LoggerConfig } from '@seedcord/types';
 
 /**
  * Channel-aware logging service.

@@ -1,4 +1,4 @@
-import type { FrameworkChannel } from './types';
+import type { FrameworkChannel } from '@seedcord/types';
 
 // the union stays in @seedcord/types (LoggerConfig reads it) and that entry is type-only,
 // so this list is pinned to it by a type test

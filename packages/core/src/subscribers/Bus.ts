@@ -1,7 +1,7 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-import { Logger, paint } from '@seedcord/logger';
+import { Logger } from '@seedcord/logger';
 
 import { SubscribeMetadataKey } from '#src/metadataKeys';
 

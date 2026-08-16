@@ -5,7 +5,7 @@ import { publishResponse } from '#reply/responseReport';
 import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 // justified: the Bus only stores core, no member is read during publish
 function stubBus(): Bus {

@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 
-import { Logger, paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 

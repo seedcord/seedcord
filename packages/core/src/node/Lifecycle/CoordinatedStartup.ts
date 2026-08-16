@@ -1,6 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { paint } from '@seedcord/logger';
 
 import { StartupPhase } from '#src/lifecycle/phases';
 

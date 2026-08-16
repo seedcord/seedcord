@@ -10,7 +10,7 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 import { mockInteraction } from '../utils/senderMock';
 
 import type { Core } from '#interfaces/Core';
-import type { ILogSink, LogRecord } from '@seedcord/logger';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { AutocompleteInteraction, ChatInputCommandInteraction, ClientEvents } from 'discord.js';
 
 class FakeSink implements ILogSink {

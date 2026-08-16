@@ -1,4 +1,5 @@
-import { Logger, paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 
 import { asError } from '#stops/asError';
 import { PublishDefault } from '#subscribers/publishDefault';

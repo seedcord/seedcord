@@ -5,6 +5,7 @@ export { ManifestReader, type ManifestReaderOptions } from '#src/ManifestReader'
 export { resolveGeneratedDir, resolveManifestPath, MANIFEST_FILENAME } from '#src/constants';
 export { kindLabel, kindKey, kindName } from '#src/kinds';
 export { PackageDirectory, type DirectoryEntity, type DirectorySnapshot } from '#src/PackageDirectory';
+export { findReexportsMissingFromOwner, type PackageReexports } from '#model/reexport-owners';
 export {
     formatInlineTypePretty,
     formatRenderedDeclarationHeaderPretty,

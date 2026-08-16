@@ -1,6 +1,6 @@
 import { filterCirculars, stripAnsi } from '@seedcord/utils';
 
-import type { ILogSink, LogLevel, LogRecord } from './types';
+import type { ILogSink, LogLevel, LogRecord } from '@seedcord/types';
 
 const SPECIFIER = /%[sdifjoO%]/gu;
 

@@ -2,7 +2,7 @@ import { Logger } from '@seedcord/logger';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { DispatchContext } from '#src/dispatch/DispatchContext';
-import type { LoggerChannelId } from '@seedcord/logger';
+import type { LoggerChannelId } from '@seedcord/types';
 
 /**
  * Base class every transport handler extends. Don't register handlers directly. Use the more specific

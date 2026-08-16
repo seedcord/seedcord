@@ -3,7 +3,7 @@ import { createLogger, transports } from 'winston';
 import { consoleFormat, NODE_LEVELS, preFormat, toInfo } from './winston';
 
 import type { SinkFormat } from './winston';
-import type { ILogSink, LogRecord } from '../types';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 
 /** Node console sink. Pretty output for dev, JSON for prod, both through the shared winston pipeline. */

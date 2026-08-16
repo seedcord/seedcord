@@ -1,6 +1,7 @@
 // scoped here so import.meta.hot stays untyped in the rest of the package
 /// <reference types="vite/client" />
-import { Logger, paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { Envapter } from 'envapt';
 
 import { setDevChannel } from './devChannel';

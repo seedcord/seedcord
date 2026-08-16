@@ -3,7 +3,7 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogEntry } from '#ui/stores/LogStore';
-import type { LogLevel } from '@seedcord/logger';
+import type { LogLevel } from '@seedcord/types';
 
 const EMPTY_CHANNELS: ReadonlySet<string> = new Set();
 const EMPTY_LEVELS: ReadonlySet<LogLevel> = new Set();

@@ -2,9 +2,8 @@ import 'reflect-metadata';
 
 import { HmrModuleHandler } from '@seedcord/core/hmr';
 import { Plugin } from '@seedcord/core/plugin';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { paint } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import { Envapter } from 'envapt';
 import mongoose from 'mongoose';

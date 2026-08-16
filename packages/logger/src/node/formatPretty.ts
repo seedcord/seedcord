@@ -1,6 +1,6 @@
 import { bodyPipeline, prettyPipeline, toInfo } from './winston';
 
-import type { LogRecord } from '../types';
+import type { LogRecord } from '@seedcord/types';
 
 const MESSAGE = Symbol.for('message');
 const pretty = prettyPipeline();

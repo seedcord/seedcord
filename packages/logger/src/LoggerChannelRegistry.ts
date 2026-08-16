@@ -1,7 +1,7 @@
 import { defaultLevel, passesLevel } from './levels';
 import { ObjectConsoleSink } from './ObjectConsoleSink';
 
-import type { ILogSink, LogLevel, LogRecord, LoggerConfig, LogSinkHandle } from './types';
+import type { ILogSink, LogLevel, LogRecord, LoggerConfig, LogSinkHandle } from '@seedcord/types';
 
 interface CaptureEntry {
     readonly sink: ILogSink;

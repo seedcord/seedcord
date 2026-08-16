@@ -13,9 +13,9 @@ import {
     StartupPhase,
     SubscriberLoader
 } from '@seedcord/core/node/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
-import { Logger, LoggerChannelRegistry, paint } from '@seedcord/logger';
+import { Logger, LoggerChannelRegistry } from '@seedcord/logger';
 import { installNodeDefaults } from '@seedcord/logger/node';
 import { MemoryRateLimiter } from '@seedcord/rate-limiter';
 import { SeedcordBrand } from '@seedcord/types/internal';

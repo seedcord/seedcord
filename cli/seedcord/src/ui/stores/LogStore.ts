@@ -2,7 +2,7 @@ import { TypedEventEmitter } from '@seedcord/event-emitter';
 import { LoggerChannelRegistry } from '@seedcord/logger';
 import { formatBody } from '@seedcord/logger/node';
 
-import type { ILogSink, LogLevel, LogRecord, LogSinkHandle } from '@seedcord/logger';
+import type { ILogSink, LogLevel, LogRecord, LogSinkHandle } from '@seedcord/types';
 
 export interface LogEntry {
     id: number;

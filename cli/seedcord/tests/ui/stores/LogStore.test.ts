@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { LogStore } from '#ui/stores/LogStore';
 
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 function record(overrides: Partial<LogRecord>): LogRecord {
     return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: 1_700_000_000_000, ...overrides };

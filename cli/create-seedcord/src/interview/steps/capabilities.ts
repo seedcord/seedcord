@@ -1,6 +1,6 @@
 import { multiselect } from '@clack/prompts';
-import { SeedcordErrorCode } from '@seedcord/errors';
-import { SeedcordError, paint } from '@seedcord/errors/internal';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
+import { SeedcordError } from '@seedcord/errors/internal';
 
 import { CAPABILITIES, isPrivileged } from '#interview/capabilities';
 

@@ -14,7 +14,7 @@ import { settled } from './settled';
 
 import type { TunnelStatus } from '#commands/dev/tunnel/TunnelCoordinator';
 import type { DevState } from '#ui/stores/DevStore';
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

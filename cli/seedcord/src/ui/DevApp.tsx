@@ -18,7 +18,7 @@ import { LogStore } from '#ui/stores/LogStore';
 import { tierFor } from '#ui/tier';
 
 import type { DevStore } from '#ui/stores/DevStore';
-import type { LogLevel } from '@seedcord/logger';
+import type { LogLevel } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement } from 'react';
 

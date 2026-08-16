@@ -1,5 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { Logger, paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { routeLeavesOf } from '@seedcord/utils/internal';
 import { ApplicationCommandType } from 'discord-api-types/v10';
 

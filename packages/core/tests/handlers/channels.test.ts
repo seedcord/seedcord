@@ -5,7 +5,7 @@ import { BaseHandler } from '#src/handlers/BaseHandler';
 import { Subscriber } from '#subscribers/Subscriber';
 
 import type { CoreBase } from '#interfaces/CoreBase';
-import type { ILogSink, LogRecord } from '@seedcord/logger';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];

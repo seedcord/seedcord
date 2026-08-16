@@ -6,7 +6,7 @@ import { NO_ROOM, ScrollableLogView } from '#ui/components/primitives/Scrollable
 import { expandRows, messageColumn, wrapRows } from '#ui/logRows';
 import { LogStore } from '#ui/stores/LogStore';
 
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 function record(over: Partial<LogRecord>): LogRecord {
     return { level: 'info', message: '', label: 'Bot', channel: 'default', timestamp: 1_700_000_000_000, ...over };

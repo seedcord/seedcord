@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 
 export function banner(version = process.env.PACKAGE_VERSION): string {
     const wordmark = `${paint.flesh.bold('seed')}${paint.rind.bold('cord')}${paint.mute(' create')}`;

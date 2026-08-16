@@ -5,7 +5,7 @@ import { AutocompleteHandler } from '#handlers/interaction/AutocompleteHandler';
 import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import type { Core } from '#interfaces/Core';
-import type { ILogSink, LogRecord } from '@seedcord/logger';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 import type {
     APIApplicationCommandAutocompleteInteraction,
     APIChatInputApplicationCommandInteraction

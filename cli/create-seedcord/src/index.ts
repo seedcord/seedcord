@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import process from 'node:process';
 
 import { cancel, intro, isCI, isTTY, log, note, outro } from '@clack/prompts';
-import { paint } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 
 import { banner } from '#cli/banner';
 import { helpText } from '#cli/help';

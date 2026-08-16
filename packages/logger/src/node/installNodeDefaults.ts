@@ -5,7 +5,7 @@ import { LoggerChannelRegistry } from '../LoggerChannelRegistry';
 import { WinstonConsoleSink } from './WinstonConsoleSink';
 import { WinstonFileSink } from './WinstonFileSink';
 
-import type { ILogSink, LoggerConfig } from '../types';
+import type { ILogSink, LoggerConfig } from '@seedcord/types';
 
 function buildDefaultSinks(): ILogSink[] {
     const dev = Envapter.isDevelopment;

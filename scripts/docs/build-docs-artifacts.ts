@@ -5,12 +5,13 @@ import path from 'node:path';
 import {
     buildIndex,
     DocsEngine,
+    findReexportsMissingFromOwner,
     formatDisplayPackageName,
     isPrerelease,
     serializeProject
 } from '@seedcord/docs-engine';
 
-import type { DocProjectFile, IndexJson, PackageVersionsInput } from '@seedcord/docs-engine';
+import type { DocProjectFile, IndexJson, PackageReexports, PackageVersionsInput } from '@seedcord/docs-engine';
 
 // `--fixtures` adds synthetic versions per package so the version dropdown is testable locally.
 
@@ -76,6 +77,7 @@ async function main(): Promise<void> {
 
     const inputs: PackageVersionsInput[] = [];
     const projects: ProjectArtifact[] = [];
+    const ownership: PackageReexports[] = [];
 
     for (const fullName of engine.listPackages()) {
         const pkg = engine.getPackage(fullName);
@@ -101,6 +103,17 @@ async function main(): Promise<void> {
         for (const { version, channel } of versions) {
             projects.push({ folder, version, channel, file, apiSource });
         }
+
+        ownership.push({
+            name: fullName,
+            reexports: pkg.root.reexports ?? [],
+            exportedNames: pkg.root.children.filter((node) => node.isExported).map((node) => node.name)
+        });
+    }
+
+    const missing = findReexportsMissingFromOwner(ownership);
+    if (missing.length > 0) {
+        throw new Error(`Re-exported symbols with no public home:\n  ${missing.join('\n  ')}`);
     }
 
     const index = buildIndex(inputs, { updatedAt: new Date().toISOString() });

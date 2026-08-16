@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
 import { traverseDirectory } from '@seedcord/utils/node';
 
 import { KyselyServiceMetadataKey } from './decorators/RegisterKyselyService';

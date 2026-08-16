@@ -1,6 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { paint } from '@seedcord/logger';
 import { Pool, type PoolClient, type PoolConfig } from 'pg';
 
 import type { Logger } from '@seedcord/logger';

@@ -5,7 +5,7 @@ import { describe, it, expect } from 'vitest';
 import { CoordinatedStartup } from '#node/Lifecycle/CoordinatedStartup';
 import { StartupPhase } from '#src/lifecycle/phases';
 
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 // the base runs through CoordinatedStartup here, CoordinatedShutdown's signal handlers and
 // process.exit would kill the test run

@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger, paint } from '@seedcord/logger';
+import { Logger } from '@seedcord/logger';
 import { formatFilePath } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';

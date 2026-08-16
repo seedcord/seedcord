@@ -14,7 +14,7 @@ import type { LogRow } from '#ui/logRows';
 import type { Notice } from '#ui/notices';
 import type { DevState } from '#ui/stores/DevStore';
 import type { Tier } from '#ui/tier';
-import type { LogLevel } from '@seedcord/logger';
+import type { LogLevel } from '@seedcord/types';
 import type { DOMElement } from 'ink';
 import type { ReactElement, Ref } from 'react';
 

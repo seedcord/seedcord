@@ -1,4 +1,4 @@
-import { paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
 
 import { ShutdownPhase } from '#src/lifecycle/phases';
 

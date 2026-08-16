@@ -1,8 +1,9 @@
 import { relative, resolve } from 'node:path';
 
 import { wrapHot } from '@seedcord/core/internal';
+import { paint } from '@seedcord/errors';
 import { TypedEventEmitter } from '@seedcord/event-emitter';
-import { Logger, paint } from '@seedcord/logger';
+import { Logger } from '@seedcord/logger';
 import { minimatch } from 'minimatch';
 
 import type { ResolvedSeedcordDevConfig } from '#core/config/schema';

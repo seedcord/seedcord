@@ -3,9 +3,9 @@
  * and Lewis's implementation in a private repo elsewhere (https://github.com/Yomanz)
  */
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger, paint } from '@seedcord/logger';
+import { Logger } from '@seedcord/logger';
 import chalk from 'chalk';
 
 import { withTimeout } from './withTimeout';

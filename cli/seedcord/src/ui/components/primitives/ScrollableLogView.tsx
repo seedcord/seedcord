@@ -11,7 +11,7 @@ import { LogStore } from '#ui/stores/LogStore';
 
 import type { LogRow } from '#ui/logRows';
 import type { LogEntry } from '#ui/stores/LogStore';
-import type { LogLevel } from '@seedcord/logger';
+import type { LogLevel } from '@seedcord/types';
 import type { ReactElement } from 'react';
 
 const MIN_LOG_LINES = 5; // fits an error head plus a few stack frames

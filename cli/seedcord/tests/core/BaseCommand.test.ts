@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BaseCommand } from '#core/BaseCommand';
 
-import type { ILogSink, LogRecord } from '@seedcord/logger';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];

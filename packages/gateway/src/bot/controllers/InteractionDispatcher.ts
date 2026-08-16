@@ -18,9 +18,9 @@ import {
     areRoutes
 } from '@seedcord/core/internal';
 import { settleWithin } from '@seedcord/core/node/internal';
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
-import { Logger, paint } from '@seedcord/logger';
+import { Logger } from '@seedcord/logger';
 import { formatFilePath, hasKeys } from '@seedcord/utils';
 import { traverseDirectory } from '@seedcord/utils/node';
 import chalk from 'chalk';

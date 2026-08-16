@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import { paint } from '@seedcord/errors/internal';
+import { paint } from '@seedcord/errors';
 
 const run = promisify(execFile);
 

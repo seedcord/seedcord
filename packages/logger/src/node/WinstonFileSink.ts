@@ -3,7 +3,7 @@ import { createLogger, transports } from 'winston';
 import { ensureDir, fileFormat, NODE_LEVELS, preFormat, resolveFilename, toInfo } from './winston';
 
 import type { SinkFormat } from './winston';
-import type { ILogSink, LogRecord } from '../types';
+import type { ILogSink, LogRecord } from '@seedcord/types';
 import type { Logger as Winston } from 'winston';
 
 /** Node file sink. One combined file for every channel, `channel` carried as a field. */

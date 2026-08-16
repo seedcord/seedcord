@@ -9,8 +9,7 @@ import { Bus } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { SubscriptionData } from '#subscribers/types/Subscriptions';
-import type { LogRecord } from '@seedcord/logger';
-import type { ReplyResponse } from '@seedcord/types';
+import type { LogRecord, ReplyResponse } from '@seedcord/types';
 
 // 2022-01-01, so the gap to now is always positive
 const SNOWFLAKE = '926845371392000000';

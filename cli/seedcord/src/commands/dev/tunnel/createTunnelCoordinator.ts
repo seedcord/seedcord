@@ -1,6 +1,5 @@
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, validateDiscordToken } from '@seedcord/errors/internal';
-import { paint } from '@seedcord/logger';
 import { Envapter } from 'envapt';
 
 import { findCloudflared, installHint, systemLookup } from './cloudflared';

@@ -1,4 +1,5 @@
-import { Logger, paint } from '@seedcord/logger';
+import { paint } from '@seedcord/errors';
+import { Logger } from '@seedcord/logger';
 import { timestampFromSnowflake } from '@seedcord/utils';
 
 import { Notice } from '#stops/Notice';

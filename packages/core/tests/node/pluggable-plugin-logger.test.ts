@@ -9,8 +9,7 @@ import { Pluggable } from '#node/Pluggable';
 import { Plugin } from '#src/plugin/Plugin';
 import { Bus } from '#subscribers/Bus';
 
-import type { ILogSink, LogRecord } from '@seedcord/logger';
-import type { Config, IRateLimiter } from '@seedcord/types';
+import type { ILogSink, LogRecord, Config, IRateLimiter } from '@seedcord/types';
 
 class FakeSink implements ILogSink {
     public readonly records: LogRecord[] = [];

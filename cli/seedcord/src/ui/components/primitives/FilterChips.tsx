@@ -7,7 +7,7 @@ import { focusedIn } from '#ui/filterCursor';
 import { ui } from '#ui/palette';
 
 import type { FilterCursor } from '#ui/filterCursor';
-import type { LogLevel } from '@seedcord/logger';
+import type { LogLevel } from '@seedcord/types';
 import type { ReactElement } from 'react';
 
 export const FILTER_LEVELS: readonly LogLevel[] = ['error', 'warn', 'info', 'debug', 'trace'];

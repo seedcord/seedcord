@@ -5,7 +5,7 @@ import { SlashHandler } from '#handlers/interaction/SlashHandler';
 
 import { FROM, capturingCtx, emptyManifest, readyEngine, signedRequest, slashPayload } from './harness';
 
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 const rest = vi.hoisted(() => {
     class FakeRest {

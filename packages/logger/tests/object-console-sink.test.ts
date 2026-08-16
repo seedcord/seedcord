@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ObjectConsoleSink } from '#src/ObjectConsoleSink';
 
-import type { LogLevel, LogRecord } from '#src/types';
+import type { LogLevel, LogRecord } from '@seedcord/types';
 
 function record(overrides: Partial<LogRecord>): LogRecord {
     return { level: 'info', message: '', label: 'X', channel: 'default', timestamp: 1, ...overrides };

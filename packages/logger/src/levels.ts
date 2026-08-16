@@ -1,6 +1,6 @@
 import { Envapter } from 'envapt';
 
-import type { LogLevel } from './types';
+import type { LogLevel } from '@seedcord/types';
 
 // error is the most severe, at rank 0
 const LEVEL_RANK: Record<LogLevel, number> = {

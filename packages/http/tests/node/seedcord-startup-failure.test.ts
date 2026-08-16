@@ -11,7 +11,7 @@ import { createSigner } from '../helpers/ed25519';
 import { VALID_TOKEN } from '../helpers/fixtures';
 
 import type { HttpServerConfig } from '#src/interfaces/Config';
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 const HANDLERS_DIR = path.resolve(__dirname, './discovery/fixtures/handlers');
 

@@ -10,7 +10,7 @@ import { COMPACT_ROWS } from '#ui/tier';
 import { renderAt } from './renderAt';
 import { settled, stableFrame } from './settled';
 
-import type { LogRecord } from '@seedcord/logger';
+import type { LogRecord } from '@seedcord/types';
 
 const FULL = { rows: 40, columns: 120 };
 const COMPACT = { rows: COMPACT_ROWS, columns: 120 };

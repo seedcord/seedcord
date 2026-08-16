@@ -3,9 +3,8 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { inspect } from 'node:util';
 
-import { SeedcordErrorCode } from '@seedcord/errors';
+import { SeedcordErrorCode, paint } from '@seedcord/errors';
 import { SeedcordError, SeedcordRangeError } from '@seedcord/errors/internal';
-import { paint } from '@seedcord/logger';
 import { keepDefined } from '@seedcord/utils';
 import { FileMigrationProvider, Migrator, NO_MIGRATIONS } from 'kysely/migration';
 
