@@ -3,10 +3,10 @@ import path from 'node:path';
 import { Extractor, ExtractorConfig, ExtractorLogLevel, type IConfigFile } from '@microsoft/api-extractor';
 
 import { pathExists } from './utils';
-import { readPackageManifest, resolveEntryPoints, unscopedName } from './workspace';
+import { readPackageManifest, resolveDocEntryPoints, unscopedName } from './workspace';
 
 import type { ApiDocsPaths } from './paths';
-import type { PackageDocResult } from './types';
+import type { EntryDocResult, PackageDocResult } from './types';
 
 function buildConfigObject(options: {
     packageDir: string;
@@ -52,57 +52,23 @@ function buildConfigObject(options: {
     };
 }
 
-// tsdown emits `index.d.mts` and tsc emits `index.d.ts`. The bundler output comes first because
-// that is what the published packages contain. The tsc output only exists for the test fixture.
-const DECLARATION_ENTRY_CANDIDATES = ['dist/index.d.mts', 'dist/index.d.ts'];
-
-async function resolveDeclarationEntry(packageDir: string): Promise<string | null> {
-    for (const candidate of DECLARATION_ENTRY_CANDIDATES) {
-        const absolute = path.join(packageDir, candidate);
-        if (await pathExists(absolute)) return absolute;
-    }
-    return null;
+// doubling the hyphen first keeps `./a/b` and `./a-b` on separate files
+function apiJsonNameFor(packageName: string, subpath: string): string {
+    const unscoped = unscopedName(packageName);
+    if (subpath === '.') return `${unscoped}.api.json`;
+    const slug = subpath.replace(/^\.\//, '').replaceAll('-', '--').replaceAll('/', '-');
+    return `${unscoped}.${slug}.api.json`;
 }
 
-/**
- * Extract one package's API doc model with API Extractor, emitting `<unscoped>.api.json`.
- */
-export async function extractPackageApiModel(
-    packageDir: string,
-    paths: ApiDocsPaths
-): Promise<PackageDocResult | null> {
-    const manifest = await readPackageManifest(packageDir);
-    if (manifest.private) return null;
-
-    const srcEntries = await resolveEntryPoints(packageDir, manifest);
-    const primaryEntry = srcEntries[0];
-    if (!primaryEntry) return null;
-
-    const entryPoint = await resolveDeclarationEntry(packageDir);
-    if (!entryPoint) {
-        throw new Error(
-            `API Extractor needs a built declaration entry for ${manifest.name}: ${paths.toRepoRelative(
-                path.join(packageDir, 'dist/index.d.mts')
-            )} is missing. Run the package build first.`
-        );
-    }
-
-    const tsconfigPath = path.join(packageDir, 'tsconfig.json');
-    if (!(await pathExists(tsconfigPath))) {
-        throw new Error(`Missing tsconfig for ${manifest.name} at ${paths.toRepoRelative(tsconfigPath)}.`);
-    }
-
-    const apiJsonPath = path.join(paths.outputDir, `${unscopedName(manifest.name)}.api.json`);
-
+function runExtractor(options: { packageDir: string; entryPoint: string; tsconfigPath: string; apiJsonPath: string }): {
+    succeeded: boolean;
+    warnings: string[];
+    errors: string[];
+} {
     const config = ExtractorConfig.prepare({
-        configObjectFullPath: path.join(packageDir, 'api-extractor.json'),
-        packageJsonFullPath: path.join(packageDir, 'package.json'),
-        configObject: buildConfigObject({
-            packageDir,
-            entryPoint,
-            tsconfigPath,
-            apiJsonPath
-        })
+        configObjectFullPath: path.join(options.packageDir, 'api-extractor.json'),
+        packageJsonFullPath: path.join(options.packageDir, 'package.json'),
+        configObject: buildConfigObject(options)
     });
 
     const warnings: string[] = [];
@@ -117,15 +83,61 @@ export async function extractPackageApiModel(
         }
     });
 
+    return { succeeded: result.succeeded, warnings, errors };
+}
+
+/**
+ * Extract one package's API doc models with API Extractor, one `.api.json` per public entry point.
+ */
+export async function extractPackageApiModel(
+    packageDir: string,
+    paths: ApiDocsPaths
+): Promise<PackageDocResult | null> {
+    const manifest = await readPackageManifest(packageDir);
+    if (manifest.private) return null;
+
+    // @seedcord/tsconfig publishes json presets and declares no types
+    const entryPoints = await resolveDocEntryPoints(packageDir, manifest);
+    if (entryPoints.length === 0) return null;
+
+    const tsconfigPath = path.join(packageDir, 'tsconfig.json');
+    if (!(await pathExists(tsconfigPath))) {
+        throw new Error(`Missing tsconfig for ${manifest.name} at ${paths.toRepoRelative(tsconfigPath)}.`);
+    }
+
+    const entries: EntryDocResult[] = entryPoints.map((entry) => {
+        const apiJsonPath = path.join(paths.outputDir, apiJsonNameFor(manifest.name, entry.subpath));
+        const run = runExtractor({
+            packageDir,
+            entryPoint: entry.declaration,
+            tsconfigPath,
+            apiJsonPath
+        });
+
+        return {
+            subpath: entry.subpath,
+            entryPoint: path.relative(packageDir, entry.declaration),
+            ...(entry.sourceEntry && { sourceEntry: entry.sourceEntry }),
+            outputPath: run.succeeded ? apiJsonPath : null,
+            warnings: run.warnings,
+            errors: run.errors,
+            succeeded: run.succeeded
+        };
+    });
+
+    const [first] = entries;
+    const root = entries.find((entry) => entry.subpath === '.') ?? first;
+    if (!root) return null;
+
     return {
         name: manifest.name,
         version: manifest.version,
-        entryPoints: [path.relative(packageDir, entryPoint)],
-        // the source pass walks this, and a `seedcordDocs` override can move it off src/index.ts
-        sourceEntry: path.relative(packageDir, primaryEntry).split(path.sep).join('/'),
-        outputPath: result.succeeded ? apiJsonPath : null,
-        warnings,
-        errors,
-        succeeded: result.succeeded
+        entries,
+        entryPoints: entries.map((entry) => entry.entryPoint),
+        ...(root.sourceEntry && { sourceEntry: root.sourceEntry }),
+        outputPath: root.outputPath,
+        warnings: entries.flatMap((entry) => entry.warnings),
+        errors: entries.flatMap((entry) => entry.errors),
+        succeeded: entries.every((entry) => entry.succeeded)
     };
 }

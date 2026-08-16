@@ -22,6 +22,10 @@ export async function writeManifest(
             name: result.name,
             version: result.version,
             entryPoints: result.entryPoints,
+            entries: result.entries.map((entry) => ({
+                subpath: entry.subpath,
+                output: entry.outputPath ? paths.toRepoRelative(entry.outputPath) : null
+            })),
             output: result.outputPath ? paths.toRepoRelative(result.outputPath) : null,
             warningCount: result.warnings.length,
             errorCount: result.errors.length,

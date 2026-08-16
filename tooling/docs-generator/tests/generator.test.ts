@@ -47,7 +47,13 @@ describe('ApiDocsGenerator', () => {
             expect(entry!.version).toBe('0.0.0');
             expect(entry!.succeeded).toBe(true);
             expect(entry!.output).toMatch(/mock-docs\.api\.json$/);
-            expect(entry!.entryPoints).toEqual(['dist/index.d.ts']);
+            // the repeat is deliberate. `./deep-entry` and `./deep/entry` share one declaration.
+            expect(entry!.entryPoints).toEqual([
+                'dist/index.d.ts',
+                'dist/variable.d.ts',
+                'dist/variable.d.ts',
+                'dist/extra.d.ts'
+            ]);
         });
 
         it('captures the package.json description', () => {

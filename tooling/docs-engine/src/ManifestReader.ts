@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 
 import { resolveManifestPath } from '#src/constants';
 
-import type { DocManifest, DocManifestPackage, PackageSourceIndex } from '#src/types';
+import type { DocManifest, DocManifestEntry, DocManifestPackage, PackageSourceIndex } from '#src/types';
 
 export interface ManifestReaderOptions {
     rootDir?: string;
@@ -75,6 +75,7 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
         name,
         version,
         entryPoints,
+        entries: normalizeEntries(pkg.entries),
         output: typeof pkg.output === 'string' ? pkg.output : null,
         warnings,
         errors,
@@ -86,6 +87,22 @@ function normalizePackage(value: unknown): DocManifestPackage | null {
     attachOptionalFields(result, pkg);
 
     return result;
+}
+
+function normalizeEntries(value: unknown): DocManifestEntry[] {
+    if (!Array.isArray(value)) return [];
+
+    return value.reduce<DocManifestEntry[]>((acc, raw) => {
+        if (!raw || typeof raw !== 'object') return acc;
+        const entry = raw as Partial<DocManifestEntry>;
+        if (typeof entry.subpath !== 'string' || entry.subpath.length === 0) return acc;
+
+        acc.push({
+            subpath: entry.subpath,
+            output: typeof entry.output === 'string' ? entry.output : null
+        });
+        return acc;
+    }, []);
 }
 
 function attachOptionalFields(result: DocManifestPackage, pkg: Partial<DocManifestPackage>): void {

@@ -37,7 +37,12 @@ describe('DocsEngine mock package integration', () => {
         expect(manifest.packages).toHaveLength(1);
         const [manifestPackage] = manifest.packages;
         expect(manifestPackage!.name).toBe(MOCK_PACKAGE_FULL_NAME);
-        expect(manifestPackage!.entryPoints).toEqual(['dist/index.d.ts']);
+        expect(manifestPackage!.entryPoints).toEqual([
+            'dist/index.d.ts',
+            'dist/variable.d.ts',
+            'dist/variable.d.ts',
+            'dist/extra.d.ts'
+        ]);
         expect(manifestPackage!.version).toBe('0.0.0');
         expect(engine.getPackageDirectory(MOCK_PACKAGE_FULL_NAME)).toBe(pkg.directory);
     });
@@ -220,8 +225,7 @@ describe('DocsEngine mock package integration', () => {
     });
 
     it('extracts @see blocks as @see block tags (entity comment and function signature)', async () => {
-        // @see is a standard TSDoc tag (parsed into seeBlocks, not customBlocks); the engine must
-        // still surface it so the app's see-also renderer can resolve the targets.
+        // @see parses into seeBlocks. The app's see-also renderer needs it surfaced.
         const mockClass = await getNodeBySlug('mock-class');
         const classSee = mockClass.comment?.blockTags.filter((tag) => tag.tag === '@see') ?? [];
         expect(classSee.length).toBeGreaterThan(0);

@@ -22,7 +22,8 @@ describe('PackageDirectory', () => {
                 'indexable-interface',
                 'mock-interface',
                 'mock-object',
-                'mock-recursive'
+                'mock-recursive',
+                'promoted-shape'
             ],
             enums: ['mock-enum'],
             types: [
@@ -40,7 +41,7 @@ describe('PackageDirectory', () => {
                 'mock-tuple',
                 'mock-union'
             ],
-            functions: ['log-decorator', 'mock-function', 'mock-function-with-rest'],
+            functions: ['extra-function', 'log-decorator', 'mock-function', 'mock-function-with-rest', 'uses-promoted'],
             variables: ['mock-variable']
         });
     });
@@ -74,7 +75,13 @@ describe('PackageDirectory', () => {
 
     it('returns sorted listings for each entity', () => {
         const functionNames = directory.listNames('functions');
-        expect(functionNames).toEqual(['log-decorator', 'mock-function', 'mock-function-with-rest']);
+        expect(functionNames).toEqual([
+            'extra-function',
+            'log-decorator',
+            'mock-function',
+            'mock-function-with-rest',
+            'uses-promoted'
+        ]);
     });
 
     it('hides @internal entities from the directory but keeps them resolvable by slug', async () => {

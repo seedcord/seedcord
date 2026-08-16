@@ -1,3 +1,10 @@
+import type { PromotedShape } from './promoted.js';
+
+/** Puts PromotedShape in the root model without the root exporting it. */
+export function usesPromoted(): PromotedShape {
+    return { tag: 'promoted' };
+}
+
 /**
  * A complex mock function for testing documentation generation.
  *

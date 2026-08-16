@@ -21,6 +21,7 @@ function transformMock(reexports: DocManifestPackage['reexports']): DocNode {
         name: '@seedcord/mock-docs',
         version: '0.0.0',
         entryPoints: ['index.d.ts'],
+        entries: [],
         output: null,
         warnings: [],
         errors: [],

@@ -45,10 +45,17 @@ export interface RenderedDeclarationHeader {
     };
 }
 
+/** One import path a package documents, paired with the api model extracted for it. */
+export interface DocManifestEntry {
+    subpath: string;
+    output: string | null;
+}
+
 export interface DocManifestPackage {
     name: string;
     version: string;
     entryPoints: string[];
+    entries: DocManifestEntry[];
     output: string | null;
     warnings: string[];
     errors: string[];
@@ -244,6 +251,9 @@ export interface DocNode {
     // Set on the package root only: symbols re-exported from a workspace dependency, each a
     // cross-package reference to its owner's page.
     reexports?: DocReference[];
+    // Set on top-level members only: the `exports` map subpaths that expose this symbol, `.` for the
+    // root entry.
+    entries?: string[];
 }
 
 export interface DocSearchEntry {
