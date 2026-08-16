@@ -52,7 +52,7 @@ export class LogFormatter {
             seen.add(error);
 
             const message = stripAnsi(error.message);
-            // memberBlock re-checks instanceof
+            // memberBlock renders members only for an AggregateError
             const sanitized =
                 error instanceof AggregateError
                     ? new AggregateError(

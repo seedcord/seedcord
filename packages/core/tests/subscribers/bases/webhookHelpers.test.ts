@@ -19,14 +19,14 @@ describe('jsonAttachment', () => {
 });
 
 describe('errorReport', () => {
-    it('neutralizes triple-backtick fences so the downstream code block cannot break', () => {
+    it('breaks a triple-backtick run so the downstream code block cannot close early', () => {
         const error = new Error('boom');
         error.stack = 'Error: boom ``` still open ``` end';
 
         expect(errorReport(error)).not.toContain('```');
     });
 
-    it('neutralizes a fence carried by the cause', () => {
+    it('breaks a triple-backtick run carried by the cause', () => {
         const cause = new Error('inner');
         cause.stack = 'Error: inner ``` broken';
         const error = new Error('outer', { cause });
@@ -49,6 +49,23 @@ describe('errorReport', () => {
         expect(report).toContain('at Mongoose.dispose');
         expect(report).toContain('Failure 2 of 2:');
         expect(report).toContain('at Kysely.dispose');
+    });
+
+    it('never drops a member without counting it when a stack carries backticks', () => {
+        const members = Array.from({ length: 40 }, (_, i) => {
+            const member = new Error(`member-${i}`);
+            member.stack = `Error: \`\`\`member-${i}\`\`\`\n${'    at frame\n'.repeat(60)}`;
+            return member;
+        });
+        const error = new AggregateError(members, 'forty failed');
+        error.stack = 'AggregateError: forty failed';
+
+        const report = errorReport(error);
+        const shown = report.match(/Failure \d+ of 40:/gu)?.length ?? 0;
+        const counted = Number(/and (\d+) more failures/u.exec(report)?.[1] ?? 0);
+
+        expect(report.length).toBeLessThanOrEqual(1800);
+        expect(shown + counted).toBe(40);
     });
 
     it('never drops a member without counting it', () => {

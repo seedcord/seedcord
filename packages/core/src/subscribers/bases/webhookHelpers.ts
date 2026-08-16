@@ -18,16 +18,18 @@ export function jsonAttachment(name: string, description: string, data: unknown)
     return { name, description, data: new TextEncoder().encode(JSON.stringify(content, undefined, 2)) };
 }
 
-// the report renders inside a ``` fence, so break any triple-backtick run to keep it from closing early
-export function neutralizeFences(text: string): string {
+// the report goes inside a ``` code block, so a stray ``` in the text would close it early
+export function breakBackticks(text: string): string {
     return text.replaceAll('```', '`​`​`');
 }
 
-// discord caps a message at 2000 characters. the fence and heading take the rest.
+// discord caps a message at 2000 characters. the backticks and heading take the rest.
 const REPORT_BUDGET = 1800;
 
-function trace(error: Error): string {
-    return error.stack ?? `${error.name}: ${error.message}`;
+// breakBackticks grows the text by 2 chars per run
+function body(value: unknown): string {
+    const raw = Error.isError(value) ? (value.stack ?? `${value.name}: ${value.message}`) : String(value);
+    return breakBackticks(stripAnsi(raw));
 }
 
 function clamp(text: string, budget: number): string {
@@ -48,8 +50,7 @@ function memberReport(members: readonly unknown[], budget: number): string {
     let shown = 0;
     for (const [index, member] of members.entries()) {
         const heading = `\n\nFailure ${index + 1} of ${members.length}:\n`;
-        const body = Error.isError(member) ? trace(member) : String(member);
-        const entry = heading + clamp(body, Math.max(share - heading.length, 0));
+        const entry = heading + clamp(body(member), Math.max(share - heading.length, 0));
         if (report.length + entry.length > room) break;
         report += entry;
         shown++;
@@ -61,15 +62,15 @@ function memberReport(members: readonly unknown[], budget: number): string {
 
 // ansi codes are stripped because discord won't render them
 export function errorReport(error: Error): string {
-    let report = trace(error);
-    if (Error.isError(error.cause)) report += `\n\nCaused by:\n${trace(error.cause)}`;
+    let report = body(error);
+    if (Error.isError(error.cause)) report += `\n\nCaused by:\n${body(error.cause)}`;
 
     if (error instanceof AggregateError && error.errors.length > 0) {
         const members: unknown[] = error.errors;
         report += memberReport(members, Math.max(REPORT_BUDGET - report.length, 0));
     }
 
-    return clamp(neutralizeFences(stripAnsi(report)), REPORT_BUDGET);
+    return clamp(report, REPORT_BUDGET);
 }
 
 export class WebhookSeparator extends BuilderComponent<'separator'> {

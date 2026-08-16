@@ -109,11 +109,11 @@ describe('HandledException.report', () => {
         expect(rawText(fault, interactionSource)).not.toContain(ESC);
     });
 
-    it('neutralizes a triple-backtick fence in the cause so the report code block keeps its two delimiters', () => {
+    it('breaks a triple-backtick run in the cause so the report code block keeps its two delimiters', () => {
         const cause = new Error('boom');
         cause.stack = 'Error: boom ``` still open ``` end';
-        const fences = rawText(new TestFault('x', cause), interactionSource).match(/```/gu) ?? [];
-        expect(fences).toHaveLength(2);
+        const runs = rawText(new TestFault('x', cause), interactionSource).match(/```/gu) ?? [];
+        expect(runs).toHaveLength(2);
     });
 
     it('prints the suppressed count', () => {
