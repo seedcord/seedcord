@@ -9,7 +9,7 @@ import type { Logform } from 'winston';
 
 const DEFAULT_PADDING = 5;
 const CAUSE_DEPTH_CAP = 4;
-// authored, never measured. Promise.any over a big list can reject with dozens of members.
+// authored, never measured. ObjectConsoleSink caps at the same number, change both.
 const MEMBER_CAP = 5;
 // six reaches past the framework frames to the plugin or driver that threw
 const MEMBER_FRAME_CAP = 6;
@@ -48,7 +48,7 @@ export class LogFormatter {
         if (Error.isError(value)) {
             const error = value;
             const message = stripAnsi(error.message);
-            // the copy stays an AggregateError so the member block reads it back the same way
+            // memberBlock re-checks instanceof
             const sanitized =
                 error instanceof AggregateError
                     ? new AggregateError(
@@ -85,7 +85,7 @@ export class LogFormatter {
         return blocks;
     }
 
-    // one member's stack carries the whole framework tail, and every member repeats it
+    // every member's stack repeats the same framework tail
     private trimFrames(stack: string): string {
         const lines = stack.split('\n');
         const start = lines.findIndex((line) => STACK_FRAME.test(line));
@@ -96,7 +96,6 @@ export class LogFormatter {
         return `${lines.slice(0, start + MEMBER_FRAME_CAP).join('\n')}\n${paint.mute(`    ${hidden} more frames`)}`;
     }
 
-    // a member types as unknown, since a plugin's dispose can throw a string
     private memberBody(member: unknown, strip: boolean): string {
         if (!Error.isError(member)) return String(member);
         const stack = typeof member.stack === 'string' ? member.stack : `${member.name}: ${member.message}`;
@@ -106,7 +105,6 @@ export class LogFormatter {
     private memberBlock(error: Error, strip: boolean): string {
         if (!(error instanceof AggregateError)) return '';
         const members: unknown[] = error.errors;
-        // the heading is the only divider between two stacks, and dim loses it in the wall
         const heading = (text: string): string => (strip ? text : paint.iris.bold(text));
         const aside = (text: string): string => (strip ? text : paint.mute(text));
 

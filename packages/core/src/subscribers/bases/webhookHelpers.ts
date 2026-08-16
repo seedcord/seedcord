@@ -34,7 +34,6 @@ function clamp(text: string, budget: number): string {
     return text.length > budget ? `${text.slice(0, budget - 1)}…` : text;
 }
 
-// a long first stack would otherwise eat the whole budget
 function memberReport(members: readonly unknown[], budget: number): string {
     const share = Math.floor(budget / members.length);
     return members
@@ -45,7 +44,7 @@ function memberReport(members: readonly unknown[], budget: number): string {
         .join('');
 }
 
-// stack plus one level of cause, ansi codes stripped since discord won't render them
+// ansi codes are stripped because discord won't render them
 export function errorReport(error: Error): string {
     let report = trace(error);
     if (Error.isError(error.cause)) report += `\n\nCaused by:\n${trace(error.cause)}`;

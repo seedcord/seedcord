@@ -74,8 +74,7 @@ interface BaseSeedcordError {
     readonly type: SeedcordErrorTypeString;
 }
 
-// instanceof fails across two installed copies of this package. Both copies resolve the same
-// Symbol.for key.
+// instanceof fails across two installed copies of this package
 const CODED = Symbol.for('seedcord.errors.coded');
 
 function brand(prototype: object): void {
@@ -86,9 +85,6 @@ function isCoded(error: unknown): error is BaseSeedcordError {
     return typeof error === 'object' && error !== null && CODED in error;
 }
 
-/**
- * Base class for Seedcord errors.
- */
 export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends Error
     implements BaseSeedcordError
@@ -113,9 +109,6 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
 
 brand(SeedcordError.prototype);
 
-/**
- * TypeError class for Seedcord errors.
- */
 export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends TypeError
     implements BaseSeedcordError
@@ -140,9 +133,6 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
 
 brand(SeedcordTypeError.prototype);
 
-/**
- * RangeError class for Seedcord errors.
- */
 export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends RangeError
     implements BaseSeedcordError
@@ -167,9 +157,6 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
 
 brand(SeedcordRangeError.prototype);
 
-/**
- * AggregateError class for Seedcord errors. Carries the failures that produced it on `errors`.
- */
 export class SeedcordAggregateError<Code extends SeedcordErrorCode = SeedcordErrorCode>
     extends AggregateError
     implements BaseSeedcordError
@@ -248,7 +235,7 @@ export type ErrorCodeFilter<
  * Determines whether an unknown value is a Seedcord error, with optional narrowing by class and error code.
  *
  * @param error - The value to inspect.
- * @param type - Optional error class discriminator (Error, TypeError, or RangeError).
+ * @param type - Optional error class discriminator.
  * @param code - Optional {@link SeedcordErrorCode} discriminator to narrow by code.
  * @typeParam Type - What kind of {@link SeedcordErrorTypeString} to filter by.
  * @typeParam Code - The specific {@link SeedcordErrorCode} to filter by.
