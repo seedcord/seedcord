@@ -17,6 +17,18 @@
                 "default": "./dist/extra.js"
             }
         },
+        "./deep-entry": {
+            "import": {
+                "types": "./dist/variable.d.ts",
+                "default": "./dist/variable.js"
+            }
+        },
+        "./deep/entry": {
+            "import": {
+                "types": "./dist/variable.d.ts",
+                "default": "./dist/variable.js"
+            }
+        },
         "./internal": {
             "import": {
                 "types": "./dist/internal.d.ts",

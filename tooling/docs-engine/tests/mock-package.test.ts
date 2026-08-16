@@ -37,7 +37,12 @@ describe('DocsEngine mock package integration', () => {
         expect(manifest.packages).toHaveLength(1);
         const [manifestPackage] = manifest.packages;
         expect(manifestPackage!.name).toBe(MOCK_PACKAGE_FULL_NAME);
-        expect(manifestPackage!.entryPoints).toEqual(['dist/index.d.ts', 'dist/extra.d.ts']);
+        expect(manifestPackage!.entryPoints).toEqual([
+            'dist/index.d.ts',
+            'dist/variable.d.ts',
+            'dist/variable.d.ts',
+            'dist/extra.d.ts'
+        ]);
         expect(manifestPackage!.version).toBe('0.0.0');
         expect(engine.getPackageDirectory(MOCK_PACKAGE_FULL_NAME)).toBe(pkg.directory);
     });

@@ -28,12 +28,20 @@ describe('subpath entry points', () => {
         expect(node?.entries).toBeUndefined();
     });
 
-    it('keeps a symbol both entries export to a single node', () => {
+    // the root model carries PromotedShape as a forgotten declaration, and `./extra` exports it
+    it('promotes a forgotten root node when a subpath exports the same symbol', () => {
+        const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'promoted-shape');
+        expect(node?.isExported).toBe(true);
+        expect(node?.entries).toEqual(['./extra']);
+        expect(pkg.directory.listNames('interfaces')).toContain('promoted-shape');
+    });
+
+    it('keeps a symbol four entries export to a single node', () => {
         const variables = pkg.directory.listNames('variables').filter((slug) => slug.startsWith('mock-variable'));
         expect(variables).toEqual(['mock-variable']);
 
         const node = engine.getNodeBySlug(MOCK_PACKAGE_FULL_NAME, 'mock-variable');
-        expect(node?.entries).toEqual(['.', './extra']);
+        expect(node?.entries).toEqual(['.', './deep-entry', './deep/entry', './extra']);
     });
 
     it('records an overloaded symbol once per entry, not once per overload', () => {

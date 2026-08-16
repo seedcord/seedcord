@@ -29,7 +29,19 @@ describe('a package with more than one public entry point', () => {
     });
 
     it('documents the root and every public subpath', () => {
-        expect(mock.entries.map((entry) => entry.subpath).sort()).toEqual(['.', './extra']);
+        expect(mock.entries.map((entry) => entry.subpath).sort()).toEqual([
+            '.',
+            './deep-entry',
+            './deep/entry',
+            './extra'
+        ]);
+    });
+
+    // `./deep-entry` and `./deep/entry` collided on one filename before the hyphen got doubled
+    it('names a nested subpath apart from a hyphenated one', () => {
+        const names = mock.entries.map((entry) => basename(entry.output));
+        expect(names).toContain('mock-docs.deep--entry.api.json');
+        expect(names).toContain('mock-docs.deep-entry.api.json');
     });
 
     it('skips a top-level and a nested internal subpath', () => {

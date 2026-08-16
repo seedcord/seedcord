@@ -1,9 +1,10 @@
+import { ApiExportedMixin, type ApiItem, type ApiModel, type ApiPackage } from '@microsoft/api-extractor-model';
+
 import { groupOverloads, synthGroups } from '#model/adapter-helpers';
 import { apiKindToDocKind } from '#model/kinds';
 
 import type { ApiAdapter } from '#model/adapter';
 import type { DocNode } from '#src/types';
-import type { ApiItem, ApiModel, ApiPackage } from '@microsoft/api-extractor-model';
 
 /** One entry point of a package, its `exports` map subpath paired with that subpath's own API model. */
 export interface AdapterEntry {
@@ -21,10 +22,12 @@ const nodeKey = (kind: number, name: string): string => `${kind}:${name}`;
 
 const memberKey = (member: ApiItem): string => nodeKey(apiKindToDocKind(member), member.displayName);
 
+const exportsMember = (member: ApiItem): boolean => (ApiExportedMixin.isBaseClassOf(member) ? member.isExported : true);
+
 // groupOverloads matches how the adapter builds nodes
-function nodeKeysOf(apiPackage: ApiPackage): string[] {
+function exportedKeysOf(apiPackage: ApiPackage): string[] {
     return groupOverloads(entryMembers(apiPackage)).reduce<string[]>((acc, [primary]) => {
-        if (primary) acc.push(memberKey(primary));
+        if (primary && exportsMember(primary)) acc.push(memberKey(primary));
         return acc;
     }, []);
 }
@@ -47,8 +50,12 @@ export function mergeEntries(adapter: ApiAdapter, entries: readonly AdapterEntry
     }
 
     for (const entry of subpaths) {
-        for (const key of nodeKeysOf(entry.apiPackage)) {
-            byKey.get(key)?.entries?.push(entry.subpath);
+        for (const key of exportedKeysOf(entry.apiPackage)) {
+            const node = byKey.get(key);
+            if (!node) continue;
+            // the root model can carry this as a forgotten declaration while the subpath exports it
+            node.isExported = true;
+            (node.entries ??= []).push(entry.subpath);
         }
 
         // every overload of an unseen member stays in the list, since visitMembers regroups them

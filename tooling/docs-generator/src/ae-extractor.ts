@@ -52,10 +52,12 @@ function buildConfigObject(options: {
     };
 }
 
+// doubling the hyphen first keeps `./a/b` and `./a-b` on separate files
 function apiJsonNameFor(packageName: string, subpath: string): string {
     const unscoped = unscopedName(packageName);
     if (subpath === '.') return `${unscoped}.api.json`;
-    return `${unscoped}.${subpath.replace(/^\.\//, '').replaceAll('/', '-')}.api.json`;
+    const slug = subpath.replace(/^\.\//, '').replaceAll('-', '--').replaceAll('/', '-');
+    return `${unscoped}.${slug}.api.json`;
 }
 
 function runExtractor(options: { packageDir: string; entryPoint: string; tsconfigPath: string; apiJsonPath: string }): {
