@@ -87,7 +87,7 @@ export const rawExternalLinks = {
     Capitalize: 'https://www.typescriptlang.org/docs/handbook/utility-types.html#capitalizestringtype',
     Uncapitalize: 'https://www.typescriptlang.org/docs/handbook/utility-types.html#uncapitalizestringtype',
 
-    // Undocumented TypeScript types: nearest relevant page, not an exact match
+    // TypeScript publishes no page for these. the nearest one is the best available.
     TypedPropertyDescriptor: 'https://www.typescriptlang.org/docs/handbook/decorators.html#parameter-decorators',
 
     // Node.js APIs (@types/node)
@@ -112,6 +112,8 @@ export const rawExternalLinks = {
     '@discordjs/collection': 'https://discord.js.org/docs',
     '@discordjs/util': 'https://discord.js.org/docs',
     'discord-api-types': 'https://discord.js.org/docs',
+    chalk: 'https://github.com/chalk/chalk',
+    envapt: 'https://envapt.materwelon.dev',
     mongoose: 'https://mongoosejs.com/docs/guide.html',
     prettier: 'https://prettier.io/docs/api',
     'prettier.io': 'https://prettier.io/docs/api',
