@@ -189,6 +189,30 @@ describe('Pluggable', () => {
             expect((failure as Error).message).toContain('Disconnect');
         });
 
+        it('throws a coded error carrying every dispose failure', async () => {
+            class FailingDispose extends TestPlugin {
+                public override dispose(): Promise<void> {
+                    return Promise.reject(new Error(`dispose-failed-${this.tag}`));
+                }
+            }
+
+            const { host, shutdown } = makeHost();
+            host.attach('a', FailingDispose, 'a');
+            host.attach('b', FailingDispose, 'b');
+            await host.run();
+
+            const errors = vi.spyOn(Logger.prototype, 'error');
+            await shutdown.run(0, false);
+
+            const call = errors.mock.calls.find(([msg]) => String(msg).includes('plugins-dispose'));
+            const [thrown] = call?.slice(1) ?? [];
+            expect(isSeedcordError(thrown, 'SeedcordAggregateError', SeedcordErrorCode.PluginDisposeFailures)).toBe(
+                true
+            );
+            expect((thrown as AggregateError).errors).toHaveLength(2);
+            expect((thrown as Error).message).toContain('2 plugins failed to dispose');
+        });
+
         it('a shared non-default dispose phase runs both disposes in reverse attach order', async () => {
             const order: string[] = [];
             class LogoutDisposer extends Plugin {

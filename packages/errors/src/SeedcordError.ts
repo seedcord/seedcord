@@ -66,7 +66,7 @@ function formatErrorName(name: string, _identifier: SeedcordErrorIdentifier, cod
  * String literal type for Seedcord error class names. Names the `type` argument of
  * {@link isSeedcordError}.
  */
-export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError'}`;
+export type SeedcordErrorTypeString = `Seedcord${'Error' | 'TypeError' | 'RangeError' | 'AggregateError'}`;
 
 interface BaseSeedcordError {
     readonly code: SeedcordErrorCode;
@@ -168,6 +168,33 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
 brand(SeedcordRangeError.prototype);
 
 /**
+ * AggregateError class for Seedcord errors. Carries the failures that produced it on `errors`.
+ */
+export class SeedcordAggregateError<Code extends SeedcordErrorCode = SeedcordErrorCode>
+    extends AggregateError
+    implements BaseSeedcordError
+{
+    public readonly code: Code;
+    public readonly identifier: SeedcordErrorIdentifier;
+    public readonly type = 'SeedcordAggregateError';
+
+    constructor(code: Code, errors: readonly unknown[], ...rest: SeedcordErrorCtorRest<Code>) {
+        const { args, options } = resolveCtorInputs(rest);
+        const message = resolveMessage(code, args);
+        super(errors, message, options);
+        this.code = code;
+        this.identifier = resolveIdentifier(code);
+        this.name = formatErrorName(new.target.name, this.identifier, this.code);
+        Object.setPrototypeOf(this, new.target.prototype);
+        if (typeof Error.captureStackTrace === 'function') {
+            Error.captureStackTrace(this, new.target);
+        }
+    }
+}
+
+brand(SeedcordAggregateError.prototype);
+
+/**
  * Variant type for Seedcord error classes.
  *
  * @internal
@@ -179,7 +206,9 @@ type SeedcordErrorVariant<
     ? SeedcordError<Code>
     : Type extends 'SeedcordTypeError'
       ? SeedcordTypeError<Code>
-      : SeedcordRangeError<Code>;
+      : Type extends 'SeedcordRangeError'
+        ? SeedcordRangeError<Code>
+        : SeedcordAggregateError<Code>;
 
 /**
  * Union type of all Seedcord error variants for a specific error code.
