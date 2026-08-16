@@ -1,6 +1,7 @@
 {
     "name": "@seedcord/docs",
     "version": "0.1.9",
+    "type": "module",
     "engines": {
         "node": ">=24.11"
     },

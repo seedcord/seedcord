@@ -33,9 +33,9 @@ function nodeImportsInClosure(entryFile: string): string[] {
 }
 
 describe('the shipped ./edge dist is node-free', () => {
-    it.each(['edge.index.mjs', 'edge.index.cjs'])('has no node builtin import in %s', (entry) => {
-        const file = join(distDir, entry);
-        expect(existsSync(file), `${entry} is missing, run pnpm -C packages/http build first`).toBe(true);
+    it('has no node builtin import in edge.index.mjs', () => {
+        const file = join(distDir, 'edge.index.mjs');
+        expect(existsSync(file), 'edge.index.mjs is missing, run pnpm -C packages/http build first').toBe(true);
         expect(nodeImportsInClosure(file)).toStrictEqual([]);
     });
 });

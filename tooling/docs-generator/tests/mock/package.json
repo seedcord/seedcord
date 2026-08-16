@@ -1,6 +1,7 @@
 {
     "name": "@seedcord/mock-docs",
     "version": "0.0.0",
+    "type": "module",
     "private": false,
     "description": "Mock package exercised by the docs generator tests.",
     "seedcordDocs": {
