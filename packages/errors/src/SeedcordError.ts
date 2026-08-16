@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { SeedcordErrorCode } from './ErrorCodes';
 import { formatSeedcordErrorMessage, type SeedcordErrorArguments } from './ErrorMessages';
 import { paint } from './palette';
@@ -75,6 +74,18 @@ interface BaseSeedcordError {
     readonly type: SeedcordErrorTypeString;
 }
 
+// instanceof fails across two installed copies of this package. Both copies resolve the same
+// Symbol.for key.
+const CODED = Symbol.for('seedcord.errors.coded');
+
+function brand(prototype: object): void {
+    Object.defineProperty(prototype, CODED, { value: true });
+}
+
+function isCoded(error: unknown): error is BaseSeedcordError {
+    return typeof error === 'object' && error !== null && CODED in error;
+}
+
 /**
  * Base class for Seedcord errors.
  */
@@ -99,6 +110,8 @@ export class SeedcordError<Code extends SeedcordErrorCode = SeedcordErrorCode>
         }
     }
 }
+
+brand(SeedcordError.prototype);
 
 /**
  * TypeError class for Seedcord errors.
@@ -125,6 +138,8 @@ export class SeedcordTypeError<Code extends SeedcordErrorCode = SeedcordErrorCod
     }
 }
 
+brand(SeedcordTypeError.prototype);
+
 /**
  * RangeError class for Seedcord errors.
  */
@@ -149,6 +164,8 @@ export class SeedcordRangeError<Code extends SeedcordErrorCode = SeedcordErrorCo
         }
     }
 }
+
+brand(SeedcordRangeError.prototype);
 
 /**
  * Variant type for Seedcord error classes.
@@ -211,21 +228,8 @@ export function isSeedcordError<
     Type extends SeedcordErrorTypeString | undefined,
     Code extends SeedcordErrorCode | undefined
 >(error: unknown, type?: Type, code?: Code): error is ErrorCodeFilter<Type, Code> {
-    const isSeedcordErrorInstance = error instanceof SeedcordError && error.type === 'SeedcordError';
-    const isSeedcordTypeErrorInstance = error instanceof SeedcordTypeError && error.type === 'SeedcordTypeError';
-    const isSeedcordRangeErrorInstance = error instanceof SeedcordRangeError && error.type === 'SeedcordRangeError';
-
-    if (!isSeedcordErrorInstance && !isSeedcordTypeErrorInstance && !isSeedcordRangeErrorInstance) {
-        return false;
-    }
-
-    const matchesType = type
-        ? (type === 'SeedcordError' && isSeedcordErrorInstance) ||
-          (type === 'SeedcordTypeError' && isSeedcordTypeErrorInstance) ||
-          (type === 'SeedcordRangeError' && isSeedcordRangeErrorInstance)
-        : true;
-
-    if (!matchesType) return false;
+    if (!isCoded(error)) return false;
+    if (type && error.type !== type) return false;
     if (code === undefined) return true;
     return error.code === code;
 }
