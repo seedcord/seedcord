@@ -43,6 +43,11 @@ export class LogFormatter {
         return '';
     }
 
+    // memberBlock prints the first MEMBER_CAP and only counts the rest
+    private sanitizeMembers(members: readonly unknown[], seen: Set<Error>): unknown[] {
+        return members.map((member, index) => (index < MEMBER_CAP ? this.sanitizeAnsi(member, seen) : member));
+    }
+
     // an aggregate can hold itself as a member, and a cause chain can loop
     private sanitizeAnsi(value: unknown, seen = new Set<Error>()): unknown {
         if (typeof value === 'string') return stripAnsi(value);
@@ -55,10 +60,7 @@ export class LogFormatter {
             // memberBlock renders members only for an AggregateError
             const sanitized =
                 error instanceof AggregateError
-                    ? new AggregateError(
-                          looped ? [] : error.errors.map((member: unknown) => this.sanitizeAnsi(member, seen)),
-                          message
-                      )
+                    ? new AggregateError(looped ? [] : this.sanitizeMembers(error.errors, seen), message)
                     : new Error(message);
             sanitized.name = error.name;
             if (typeof error.stack === 'string') sanitized.stack = stripAnsi(error.stack);

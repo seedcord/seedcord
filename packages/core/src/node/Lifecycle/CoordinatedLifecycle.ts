@@ -73,7 +73,10 @@ export abstract class CoordinatedLifecycle<TPhase extends number> {
 
         const results: PromiseSettledResult<void>[] = await this.executeTasksInPhase(phase, tasks);
 
-        const reasons = results.filter((r) => r.status === 'rejected').map((r) => r.reason as unknown);
+        const reasons = results.reduce<unknown[]>((rejected, result) => {
+            if (result.status === 'rejected') rejected.push(result.reason as unknown);
+            return rejected;
+        }, []);
         if (reasons.length > 0) {
             // chalk here would leak ANSI codes into the serialized error message (the unknown-exception webhook)
             throw new SeedcordAggregateError(SeedcordErrorCode.LifecyclePhaseFailures, reasons, [

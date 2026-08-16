@@ -247,5 +247,6 @@ export function isSeedcordError<
     if (!isCoded(error)) return false;
     if (type && error.type !== type) return false;
     if (code === undefined) return true;
-    return error.code === code;
+    // another copy of this package may number the same identifier differently
+    return error.identifier === resolveIdentifier(code);
 }

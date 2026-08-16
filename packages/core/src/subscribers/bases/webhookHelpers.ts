@@ -62,15 +62,15 @@ function memberReport(members: readonly unknown[], budget: number): string {
 
 // ansi codes are stripped because discord won't render them
 export function errorReport(error: Error): string {
-    let report = body(error);
-    if (Error.isError(error.cause)) report += `\n\nCaused by:\n${body(error.cause)}`;
+    let head = body(error);
+    if (Error.isError(error.cause)) head += `\n\nCaused by:\n${body(error.cause)}`;
 
-    if (error instanceof AggregateError && error.errors.length > 0) {
-        const members: unknown[] = error.errors;
-        report += memberReport(members, Math.max(REPORT_BUDGET - report.length, 0));
-    }
+    const members: unknown[] = error instanceof AggregateError ? error.errors : [];
+    if (members.length === 0) return clamp(head, REPORT_BUDGET);
 
-    return clamp(report, REPORT_BUDGET);
+    // a long parent stack would otherwise push the dropped-count line off the end
+    const report = clamp(head, REPORT_BUDGET - omittedLine(members.length).length);
+    return report + memberReport(members, REPORT_BUDGET - report.length);
 }
 
 export class WebhookSeparator extends BuilderComponent<'separator'> {

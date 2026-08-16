@@ -51,6 +51,17 @@ describe('errorReport', () => {
         expect(report).toContain('at Kysely.dispose');
     });
 
+    it('keeps the dropped count when the parent stack fills the budget', () => {
+        const members = Array.from({ length: 40 }, (_, i) => new Error(`member-${i}`));
+        const error = new AggregateError(members, 'forty failed');
+        error.stack = `AggregateError: forty failed\n${'    at frame\n'.repeat(200)}`;
+
+        const report = errorReport(error);
+
+        expect(report.length).toBeLessThanOrEqual(1800);
+        expect(report).toContain('and 40 more failures');
+    });
+
     it('never drops a member without counting it when a stack carries backticks', () => {
         const members = Array.from({ length: 40 }, (_, i) => {
             const member = new Error(`member-${i}`);

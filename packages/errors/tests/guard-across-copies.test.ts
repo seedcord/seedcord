@@ -30,6 +30,22 @@ describe('isSeedcordError across two copies of the package', () => {
         expect(catcher.isSeedcordError(error, undefined, SeedcordErrorCode.CoreSingletonViolation)).toBe(false);
     });
 
+    it('matches on the identifier when the other copy numbers the code differently', async () => {
+        const [, catcher] = await loadTwoCopies();
+        const { SeedcordErrorCode } = await import('#src/ErrorCodes');
+
+        const renumbered = Object.defineProperty(new Error('from an older copy'), Symbol.for('seedcord.errors.coded'), {
+            value: true
+        });
+        Object.assign(renumbered, {
+            type: 'SeedcordError',
+            identifier: 'CorePluginAfterInit',
+            code: 9999
+        });
+
+        expect(catcher.isSeedcordError(renumbered, undefined, SeedcordErrorCode.CorePluginAfterInit)).toBe(true);
+    });
+
     it('rejects a plain error and a foreign object', async () => {
         const [, catcher] = await loadTwoCopies();
 
