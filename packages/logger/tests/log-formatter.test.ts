@@ -396,5 +396,29 @@ describe('LogFormatter', () => {
             expect(() => logger.error('shutdown caught', cyclic)).not.toThrow();
             expect(output.join('')).toContain('loops');
         });
+
+        it('strips a cause chain too deep to recurse', () => {
+            const stream = new Writable({
+                write(_chunk: Buffer, _encoding, callback) {
+                    callback();
+                }
+            });
+            const logger = winston.createLogger({
+                levels: NODE_LEVELS,
+                level: 'trace',
+                format: winston.format.combine(formatter.createPreFormat()),
+                transports: [
+                    new winston.transports.Stream({
+                        stream,
+                        format: winston.format.combine(...formatter.json({ stripAnsi: true }))
+                    })
+                ]
+            });
+
+            let deep = new Error('leaf');
+            for (let level = 0; level < 20_000; level++) deep = new Error(`level ${level}`, { cause: deep });
+
+            expect(() => logger.error('boundary caught', deep)).not.toThrow();
+        });
     });
 });
