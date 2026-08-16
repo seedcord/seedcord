@@ -1,7 +1,10 @@
-export const typedDxCommand = `import { RegisterCommand, BuilderComponent } from '@seedcord/gateway';
+export const typedDxCommand = `import {
+    RegisterCommand, BuilderComponent
+} from '@seedcord/gateway';
 
 @RegisterCommand('global')
-export class SearchCommand extends BuilderComponent<'command'> {
+export class SearchCommand extends
+    BuilderComponent<'command'> {
     constructor() {
         super('command');
 
@@ -21,13 +24,18 @@ export class SearchCommand extends BuilderComponent<'command'> {
     }
 }`;
 
-export const typedDxHandler = `import { SlashRoute, SlashHandler } from '@seedcord/gateway';
+export const typedDxHandler = `import {
+    SlashRoute, SlashHandler
+} from '@seedcord/gateway';
 
 @SlashRoute('search')
-export class SearchHandler extends SlashHandler<'search'> {
+export class SearchHandler extends
+    SlashHandler<'search'> {
     public async execute(): Promise<void> {
-        // generated accessor, no cast and no null check
-        const category = this.options.getString('category');
+        // generated accessor, no cast,
+        // no null check
+        const category =
+            this.options.getString('category');
         //    ^?  'books' | 'films'
 
         await this.reply(\`Searching \${category}\`);
@@ -40,10 +48,13 @@ export const resolvedCheck = `const category = getString('category');
 const valid: 'books' | 'films' = category; // OK
 const wrong: 'audio' = category; // Error 2322`;
 
-export const beforeRawDjs = `// build it, route to the subcommand, validate, all by hand
+export const beforeRawDjs = `// build it, route to the subcommand,
+// validate, all by hand
 const data = new SlashCommandBuilder()
     .setName('library')
-    .addSubcommand((s) => s.setName('search').addStringOption(...));
+    .addSubcommand((s) =>
+        s.setName('search').addStringOption(...)
+    );
 
 client.on(Events.InteractionCreate, async (i) => {
     if (!i.isChatInputCommand()) return;
@@ -58,14 +69,19 @@ client.on(Events.InteractionCreate, async (i) => {
     await i.reply(\`Searching for \${query}\`);
 });
 
-// plus a REST register script, plus a switch per subcommand,
+// plus a REST register script, plus a
+// switch per subcommand,
 // plus a full process restart on every edit`;
 
-export const afterSeedcord = `import { SlashRoute, SlashHandler, Gated, GuildOnly } from '@seedcord/gateway';
+export const afterSeedcord = `import {
+    SlashRoute, SlashHandler,
+    Gated, GuildOnly
+} from '@seedcord/gateway';
 
 @Gated(GuildOnly())
 @SlashRoute('library/search')
-export class SearchHandler extends SlashHandler<'library/search'> {
+export class SearchHandler extends
+    SlashHandler<'library/search'> {
     public async execute() {
         const query = this.options.getString('query');
         //    ^?  'fiction' | 'nonfiction'
@@ -74,10 +90,12 @@ export class SearchHandler extends SlashHandler<'library/search'> {
     }
 }
 
-// the subcommand route, registration and guards are handled.
-// edit, save, hot reload runs and the gateway stays up.`;
+// the route, registration and guards are done.
+// edit, save, hot reload, the gateway stays up.`;
 
-export const codecComponent = `import { BuilderComponent, CustomId } from '@seedcord/gateway';
+export const codecComponent = `import {
+    BuilderComponent, CustomId
+} from '@seedcord/gateway';
 
 export const Roles = new CustomId('roles')
     .snowflake('memberId')
@@ -134,7 +152,7 @@ declare module '@seedcord/gateway' {
 
 export const startTerminal = `$ pnpm create seedcord my-bot # scaffold a typed bot
 $ cd my-bot
-$ seedcord dev # tui | hot reload, the gateway stays alive
+$ seedcord dev # tui | hot reload, gateway alive
 
 # bot online, every slash option fully typed`;
 
@@ -144,7 +162,10 @@ export const gatesSample = `import {
     SlashRoute, SlashHandler
 } from '@seedcord/gateway';
 
-@Gated(or(OwnerOnly(), and(GuildOnly(), RequireRole(modRoleId))))
+@Gated(or(
+    OwnerOnly(),
+    and(GuildOnly(), RequireRole(modRoleId))
+))
 @SlashRoute('ban')
 export class BanHandler extends SlashHandler<'ban'> {
     public async execute() {

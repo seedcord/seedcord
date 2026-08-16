@@ -30,14 +30,14 @@ export function GetStarted(): ReactNode {
                         <PosterButton
                             href={GUIDE_URL}
                             variant="solidDark"
-                            className={cn('font-display px-7 py-3 text-lg')}
+                            className={cn('font-display px-4 py-2.5 text-base sm:px-7 sm:py-3 sm:text-lg')}
                         >
                             Read the guide
                         </PosterButton>
                         <PosterButton
                             href={REPO_URL}
                             variant="outlineDark"
-                            className={cn('font-display px-7 py-3 text-lg')}
+                            className={cn('font-display px-4 py-2.5 text-base sm:px-7 sm:py-3 sm:text-lg')}
                         >
                             Star on GitHub
                         </PosterButton>

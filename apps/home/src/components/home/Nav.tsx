@@ -29,7 +29,7 @@ export function Nav(): ReactNode {
                     <NpmVersion />
                 </div>
                 <div className={cn('flex items-center gap-2')}>
-                    <nav aria-label="Primary" className={cn('flex items-center gap-1')}>
+                    <nav aria-label="Primary" className={cn('hidden items-center gap-1 sm:flex')}>
                         {LINKS.map((l) => (
                             <Link
                                 key={l.label}

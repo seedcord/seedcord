@@ -25,7 +25,7 @@ export function BeforeAfter(): ReactNode {
                 <div className={cn('font-mono-code flex items-center gap-3 text-sm font-semibold')}>
                     <span className={cn('rounded-sm bg-(--seed-dark) px-3 py-2 text-(--pith)')}>by hand</span>
                     <Icon icon={ArrowRight} size={20} className={cn('text-(--seed-dark)')} />
-                    <span className={cn('blk-sm rounded-sm bg-(--flesh-deep) px-3 py-2 text-(--pith)')}>
+                    <span className={cn('rounded-sm bg-(--flesh-deep) px-3 py-2 text-(--pith)')}>
                         seedcord · one handler
                     </span>
                 </div>

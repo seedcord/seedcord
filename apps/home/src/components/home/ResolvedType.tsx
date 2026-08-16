@@ -25,7 +25,7 @@ export function ResolvedType(): ReactNode {
                     . You never typed that union.
                 </p>
             </div>
-            <CodeCard code={resolvedCheck} filename="proof.ts" className={cn('rule-pith blk-pith w-full')} />
+            <CodeCard code={resolvedCheck} filename="proof.ts" className={cn('rule-pith blk-pith')} />
         </Section>
     );
 }

@@ -32,6 +32,18 @@
     }
 }
 
+/* the shadow draws outside the box, so a full-width card reads 10px left of centre without this */
+@media (width < 64rem) {
+    .blk,
+    .blk-pith,
+    .blk-rind {
+        margin-right: 10px;
+    }
+    .blk-sm {
+        margin-right: 6px;
+    }
+}
+
 @keyframes marquee-x {
     to {
         transform: translateX(-50%);

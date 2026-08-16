@@ -24,7 +24,13 @@ export async function CodeCard({ code, filename, lang = 'ts', note, className }:
                 </span>
                 <span className={cn('font-mono-code truncate text-xs text-(--pith)/55')}>{filename}</span>
                 {note ? (
-                    <span className={cn('font-mono-code ml-auto text-xs font-semibold text-(--pith)/80')}>{note}</span>
+                    <span
+                        className={cn(
+                            'font-mono-code ml-auto hidden shrink-0 text-xs font-semibold text-(--pith)/80 sm:inline'
+                        )}
+                    >
+                        {note}
+                    </span>
                 ) : null}
             </figcaption>
             <div className={cn('font-mono-code')} dangerouslySetInnerHTML={{ __html: html }} />

@@ -94,7 +94,7 @@ function Footer(): ReactElement {
                     borderRadius: 4
                 }}
             >
-                pnpm add seedcord
+                pnpm create seedcord
             </div>
             <div style={{ display: 'flex', fontFamily: 'JetBrains Mono', fontSize: 23, color: OG.seedDark }}>
                 seedcord.org
