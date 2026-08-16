@@ -1,5 +1,5 @@
 {
-    "name": "@seedcord/home",
+    "name": "@seedcord/guide",
     "version": "0.0.1",
     "type": "module",
     "engines": {
@@ -11,7 +11,6 @@
         "build": "next build",
         "start": "pnpm dlx serve out",
         "deploy": "wrangler deploy",
-        "deploy:preview": "wrangler versions upload",
         "lint": "eslint 'src/**/*.{ts,tsx}' --cache",
         "lint:fix": "eslint 'src/**/*.{ts,tsx}' --fix --cache",
         "fmt": "prettier --write 'src/**/*.{ts,tsx,json,md,css}' --cache",
@@ -20,11 +19,9 @@
     },
     "dependencies": {
         "@seedcord/ui": "workspace:*",
-        "lucide-react": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",
-        "react-dom": "catalog:react",
-        "shiki": "catalog:deps"
+        "react-dom": "catalog:react"
     },
     "devDependencies": {
         "@seedcord/eslint-config": "workspace:*",

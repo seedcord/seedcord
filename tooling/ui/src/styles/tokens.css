@@ -14,6 +14,11 @@
     --flesh: #f04e36;
     /* welon green */
     --rind: #6fab49;
+    /* --flesh and --rind darkened until they pass contrast as text on --pith */
+    --flesh-deep: #c8341f;
+    --vine-deep: #4d7d33;
+    /* muted text on the warm-dark grounds */
+    --husk: #9aa089;
     /* resource accent */
     --accent-r: #8b90a7;
     /* switch thumb, kept constant in both themes so it stays light on the gray off-track and green on-track */

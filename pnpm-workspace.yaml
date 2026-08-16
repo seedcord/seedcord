@@ -66,6 +66,7 @@ catalogs:
     tsx: ^4.23.5
     type-fest: ^5.8.0
     vite: ^8.2.0
+    wrangler: ^4.118.0
   eslint:
     '@typescript-eslint/rule-tester': ^8.65.0
     '@typescript-eslint/utils': ^8.65.0

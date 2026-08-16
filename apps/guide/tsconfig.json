@@ -1,0 +1,25 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "extends": "@seedcord/tsconfig/base",
+    "compilerOptions": {
+        "lib": ["ESNext", "DOM", "DOM.Iterable"],
+        "allowJs": true,
+        "jsx": "preserve",
+        "rootDir": ".",
+        "plugins": [
+            {
+                "name": "next"
+            }
+        ],
+        "paths": {
+            "@/*": ["./src/*"],
+            "#components/*": ["./src/components/*"],
+            "#lib/*": ["./src/lib/*"],
+            "#styles/*": ["./src/app/*"]
+        },
+        "incremental": true,
+        "esModuleInterop": true
+    },
+    "include": ["next-env.d.ts", "src/**/*.ts", "src/**/*.tsx", "next.config.ts", ".next/types/**/*.ts", "worker.ts"],
+    "exclude": ["node_modules", "dist"]
+}
