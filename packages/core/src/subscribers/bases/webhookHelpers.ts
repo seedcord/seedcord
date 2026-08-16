@@ -31,17 +31,32 @@ function trace(error: Error): string {
 }
 
 function clamp(text: string, budget: number): string {
-    return text.length > budget ? `${text.slice(0, budget - 1)}…` : text;
+    if (text.length <= budget) return text;
+    return budget > 0 ? `${text.slice(0, budget - 1)}…` : '';
+}
+
+function omittedLine(count: number): string {
+    return `\n\nand ${count} more failure${count === 1 ? '' : 's'}`;
 }
 
 function memberReport(members: readonly unknown[], budget: number): string {
-    const share = Math.floor(budget / members.length);
-    return members
-        .map((member, index) => {
-            const body = Error.isError(member) ? trace(member) : String(member);
-            return `\n\nFailure ${index + 1} of ${members.length}:\n${clamp(body, share)}`;
-        })
-        .join('');
+    // the dropped-count line has to fit even when every member is dropped
+    const room = Math.max(budget - omittedLine(members.length).length, 0);
+    const share = Math.floor(room / members.length);
+
+    let report = '';
+    let shown = 0;
+    for (const [index, member] of members.entries()) {
+        const heading = `\n\nFailure ${index + 1} of ${members.length}:\n`;
+        const body = Error.isError(member) ? trace(member) : String(member);
+        const entry = heading + clamp(body, Math.max(share - heading.length, 0));
+        if (report.length + entry.length > room) break;
+        report += entry;
+        shown++;
+    }
+
+    const hidden = members.length - shown;
+    return hidden > 0 ? report + omittedLine(hidden) : report;
 }
 
 // ansi codes are stripped because discord won't render them

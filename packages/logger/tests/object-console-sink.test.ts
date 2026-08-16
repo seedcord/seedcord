@@ -101,6 +101,17 @@ describe('ObjectConsoleSink', () => {
         expect(error.omittedErrors).toBe(4);
     });
 
+    it('survives an aggregate whose members reach itself', () => {
+        const cap = capture('error');
+        const cyclic = new AggregateError([], 'loops');
+        cyclic.errors.push(cyclic);
+
+        expect(() =>
+            new ObjectConsoleSink().onLog(record({ level: 'error', message: 'x', args: [cyclic] }))
+        ).not.toThrow();
+        expect(cap.payload().error).toBeDefined();
+    });
+
     it('keeps leftover primitives in an args field', () => {
         const cap = capture();
         new ObjectConsoleSink().onLog(record({ message: 'note', args: ['tail', 7] }));

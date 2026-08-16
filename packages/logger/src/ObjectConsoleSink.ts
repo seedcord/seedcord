@@ -46,18 +46,18 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 function memberShape(member: unknown): Record<string, unknown> {
-    return Error.isError(member) ? errorShape(member, false) : { message: String(member) };
+    return Error.isError(member) ? errorShape(member, true) : { message: String(member) };
 }
 
-function errorShape(error: Error, withCause = true): Record<string, unknown> {
-    const members = error instanceof AggregateError ? (error.errors as unknown[]) : [];
+// an aggregate can hold itself as a member
+function errorShape(error: Error, nested = false): Record<string, unknown> {
+    const members = !nested && error instanceof AggregateError ? (error.errors as unknown[]) : [];
     const omitted = members.length - MEMBER_CAP;
     return {
         name: stripAnsi(error.name),
         message: stripAnsi(error.message),
         ...(error.stack !== undefined && { stack: stripAnsi(error.stack) }),
-        // one level, so a deeper chain never recurses without bound
-        ...(withCause && Error.isError(error.cause) && { cause: errorShape(error.cause, false) }),
+        ...(!nested && Error.isError(error.cause) && { cause: errorShape(error.cause, true) }),
         ...(members.length > 0 && { errors: members.slice(0, MEMBER_CAP).map(memberShape) }),
         ...(omitted > 0 && { omittedErrors: omitted })
     };

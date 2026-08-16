@@ -187,6 +187,10 @@ describe('Pluggable', () => {
             const [failure] = call?.slice(1) ?? [];
             expect(isSeedcordError(failure, undefined, SeedcordErrorCode.LifecyclePhaseFailures)).toBe(true);
             expect((failure as Error).message).toContain('Disconnect');
+
+            const rejections = (failure as AggregateError).errors as AggregateError[];
+            const disposeFailures = rejections.flatMap((task) => task.errors as Error[]);
+            expect(disposeFailures.map((error) => error.message)).toEqual(['dispose-failed-b', 'dispose-failed-a']);
         });
 
         it('throws a coded error carrying every dispose failure', async () => {

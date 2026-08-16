@@ -369,5 +369,32 @@ describe('LogFormatter', () => {
             expect(parsed.message).toContain('failed');
             expect(parsed.stack).toContain('SeedcordError');
         });
+
+        it('strips an aggregate whose members reach itself', () => {
+            const output: string[] = [];
+            const stream = new Writable({
+                write(chunk: Buffer, _encoding, callback) {
+                    output.push(chunk.toString());
+                    callback();
+                }
+            });
+            const logger = winston.createLogger({
+                levels: NODE_LEVELS,
+                level: 'trace',
+                format: winston.format.combine(formatter.createPreFormat()),
+                transports: [
+                    new winston.transports.Stream({
+                        stream,
+                        format: winston.format.combine(...formatter.json({ stripAnsi: true }))
+                    })
+                ]
+            });
+
+            const cyclic = new AggregateError([], 'loops');
+            cyclic.errors.push(cyclic);
+
+            expect(() => logger.error('shutdown caught', cyclic)).not.toThrow();
+            expect(output.join('')).toContain('loops');
+        });
     });
 });

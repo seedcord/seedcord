@@ -51,6 +51,23 @@ describe('errorReport', () => {
         expect(report).toContain('at Kysely.dispose');
     });
 
+    it('never drops a member without counting it', () => {
+        const members = Array.from({ length: 40 }, (_, i) => {
+            const member = new Error(`member-${i}`);
+            member.stack = `Error: member-${i}\n${'    at frame\n'.repeat(60)}`;
+            return member;
+        });
+        const error = new AggregateError(members, 'forty failed');
+        error.stack = 'AggregateError: forty failed';
+
+        const report = errorReport(error);
+        const shown = report.match(/Failure \d+ of 40:/gu)?.length ?? 0;
+        const counted = Number(/and (\d+) more failures/u.exec(report)?.[1] ?? 0);
+
+        expect(report.length).toBeLessThanOrEqual(1800);
+        expect(shown + counted).toBe(40);
+    });
+
     it('gives each member an equal share so a late member survives the cap', () => {
         const members = Array.from({ length: 6 }, (_, i) => {
             const member = new Error(`member-${i}`);

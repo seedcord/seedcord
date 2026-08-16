@@ -43,23 +43,27 @@ export class LogFormatter {
         return '';
     }
 
-    private sanitizeAnsi(value: unknown): unknown {
+    // an aggregate can hold itself as a member, and a cause chain can loop
+    private sanitizeAnsi(value: unknown, seen = new Set<Error>()): unknown {
         if (typeof value === 'string') return stripAnsi(value);
         if (Error.isError(value)) {
             const error = value;
+            const looped = seen.has(error);
+            seen.add(error);
+
             const message = stripAnsi(error.message);
             // memberBlock re-checks instanceof
             const sanitized =
                 error instanceof AggregateError
                     ? new AggregateError(
-                          error.errors.map((member: unknown) => this.sanitizeAnsi(member)),
+                          looped ? [] : error.errors.map((member: unknown) => this.sanitizeAnsi(member, seen)),
                           message
                       )
                     : new Error(message);
             sanitized.name = error.name;
             if (typeof error.stack === 'string') sanitized.stack = stripAnsi(error.stack);
             // carry the cause so a cause block still renders on the stripped copy
-            if (Error.isError(error.cause)) sanitized.cause = this.sanitizeAnsi(error.cause);
+            if (!looped && Error.isError(error.cause)) sanitized.cause = this.sanitizeAnsi(error.cause, seen);
             return sanitized;
         }
         return value;
