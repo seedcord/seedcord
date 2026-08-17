@@ -1,11 +1,11 @@
 {
     "name": "seedcord",
     "type": "module",
-    "version": "0.18.0",
+    "version": "0.18.1",
     "engines": {
         "node": ">=24.11"
     },
-    "description": "Run, build, and generate types for a seedcord bot",
+    "description": "The seedcord CLI. Dev server, build, and codegen for a typed Discord bot.",
     "keywords": [
         "discord",
         "discord-bot",
