@@ -1,6 +1,6 @@
 # @seedcord/tsconfig
 
-## 2.0.3-next.0
+## 2.0.3
 
 ### Patch Changes
 

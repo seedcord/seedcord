@@ -1,6 +1,6 @@
 # @seedcord/core
 
-## 0.2.0-next.0
+## 0.2.0
 
 ### Minor Changes
 
@@ -33,11 +33,11 @@
 - Updated dependencies [c343f4a]
 - Updated dependencies [e11cbb3]
 - Updated dependencies [1364c82]
-    - @seedcord/errors@0.4.0-next.0
-    - @seedcord/logger@0.2.0-next.0
-    - @seedcord/event-emitter@0.1.3-next.0
-    - @seedcord/types@0.9.0-next.0
-    - @seedcord/utils@0.8.5-next.0
+    - @seedcord/errors@0.4.0
+    - @seedcord/logger@0.2.0
+    - @seedcord/event-emitter@0.1.3
+    - @seedcord/types@0.9.0
+    - @seedcord/utils@0.8.5
 
 ## 0.1.4
 

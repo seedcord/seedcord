@@ -1,6 +1,6 @@
 # @seedcord/eslint-plugin
 
-## 0.2.0-next.0
+## 0.2.0
 
 ### Minor Changes
 
@@ -19,7 +19,7 @@
 - Updated dependencies [660a94d]
 - Updated dependencies [c50ad6c]
 - Updated dependencies [c75f837]
-    - eslint-plugin-discordjs@0.1.3-next.0
+    - eslint-plugin-discordjs@0.1.3
 
 ## 0.1.2
 

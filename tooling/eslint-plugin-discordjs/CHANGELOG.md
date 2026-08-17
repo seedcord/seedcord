@@ -1,6 +1,6 @@
 # eslint-plugin-discordjs
 
-## 0.1.3-next.0
+## 0.1.3
 
 ### Patch Changes
 

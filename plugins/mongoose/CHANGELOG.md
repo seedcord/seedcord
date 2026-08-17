@@ -1,6 +1,6 @@
 # @seedcord/plugin-mongoose
 
-## 1.0.0-next.0
+## 1.0.0
 
 ### Patch Changes
 
@@ -12,25 +12,20 @@
 - c50ad6c: Every package now has a README describing that package, with badges and an install line. Seven of them previously shipped a copy of the root README that named no package at all.
 - Updated dependencies [1364c82]
 - Updated dependencies [97b62ef]
-- Updated dependencies [ad1e4d5]
 - Updated dependencies [aa6bb3a]
 - Updated dependencies [7553449]
 - Updated dependencies [f39cde0]
-- Updated dependencies [5c7c3e2]
 - Updated dependencies [a259cdc]
-- Updated dependencies [1364c82]
 - Updated dependencies [a8d7b5f]
 - Updated dependencies [660a94d]
 - Updated dependencies [c50ad6c]
 - Updated dependencies [c343f4a]
 - Updated dependencies [e11cbb3]
-- Updated dependencies [ad1e4d5]
 - Updated dependencies [1364c82]
-    - @seedcord/errors@0.4.0-next.0
-    - @seedcord/logger@0.2.0-next.0
-    - @seedcord/core@0.2.0-next.0
-    - @seedcord/types@0.9.0-next.0
-    - @seedcord/utils@0.8.5-next.0
+    - @seedcord/errors@0.4.0
+    - @seedcord/logger@0.2.0
+    - @seedcord/types@0.9.0
+    - @seedcord/utils@0.8.5
 
 ## 0.1.4
 

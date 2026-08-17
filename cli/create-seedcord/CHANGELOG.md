@@ -1,6 +1,6 @@
 # create-seedcord
 
-## 0.1.2-next.0
+## 0.1.2
 
 ### Patch Changes
 

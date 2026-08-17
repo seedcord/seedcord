@@ -1,6 +1,6 @@
 # @seedcord/types
 
-## 0.9.0-next.0
+## 0.9.0
 
 ### Minor Changes
 
