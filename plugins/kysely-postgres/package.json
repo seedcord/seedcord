@@ -59,13 +59,13 @@
         "typescript": "catalog:peer"
     },
     "devDependencies": {
-        "@seedcord/core": "workspace:*",
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/gateway": "workspace:*",
-        "@seedcord/http": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/core": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/gateway": "workspace:^",
+        "@seedcord/http": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@types/pg": "^8.20.3",
         "envapt": "catalog:peer",
         "kysely": "^0.29.4",
@@ -77,10 +77,10 @@
         "provenance": true
     },
     "dependencies": {
-        "@seedcord/errors": "workspace:*",
-        "@seedcord/logger": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/logger": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "reflect-metadata": "catalog:deps"
     }
 }

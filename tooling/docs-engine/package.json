@@ -55,11 +55,11 @@
         "semver": "^7.8.5"
     },
     "devDependencies": {
-        "@seedcord/docs-generator": "workspace:*",
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/docs-generator": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@types/semver": "^7.8.0"
     }
 }

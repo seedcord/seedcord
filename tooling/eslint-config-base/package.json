@@ -77,7 +77,7 @@
         "typescript-eslint": "catalog:eslint"
     },
     "devDependencies": {
-        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/tsconfig": "workspace:^",
         "@types/lodash.merge": "^4.6.9",
         "eslint": "catalog:eslint"
     }

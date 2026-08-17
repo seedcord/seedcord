@@ -30,15 +30,15 @@
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
-        "@seedcord/gateway": "workspace:*",
-        "@seedcord/plugin-mongoose": "workspace:*",
+        "@seedcord/gateway": "workspace:^",
+        "@seedcord/plugin-mongoose": "workspace:^",
         "discord.js": "catalog:peer",
         "envapt": "catalog:peer",
         "mongoose": "catalog:peer"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "seedcord": "workspace:*"
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "seedcord": "workspace:^"
     }
 }

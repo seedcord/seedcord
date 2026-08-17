@@ -56,14 +56,14 @@
     },
     "dependencies": {
         "@typescript-eslint/utils": "catalog:eslint",
-        "eslint-plugin-discordjs": "workspace:*"
+        "eslint-plugin-discordjs": "workspace:^"
     },
     "devDependencies": {
-        "@seedcord/eslint-config-base": "workspace:*",
-        "@seedcord/eslint-utils": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:^",
+        "@seedcord/eslint-utils": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@typescript-eslint/rule-tester": "catalog:eslint",
         "dedent": "catalog:test",
         "discord.js": "catalog:peer",

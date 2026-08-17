@@ -83,12 +83,12 @@
         }
     },
     "dependencies": {
-        "@seedcord/eslint-plugin": "workspace:*",
+        "@seedcord/eslint-plugin": "workspace:^",
         "@types/eslint-plugin-security": "catalog:eslint",
         "@typescript-eslint/parser": "catalog:eslint",
         "eslint-config-prettier": "catalog:eslint",
         "eslint-import-resolver-typescript": "catalog:eslint",
-        "eslint-plugin-discordjs": "workspace:*",
+        "eslint-plugin-discordjs": "workspace:^",
         "eslint-plugin-import-x": "catalog:eslint",
         "eslint-plugin-prettier": "catalog:eslint",
         "eslint-plugin-security": "catalog:eslint",
@@ -99,8 +99,8 @@
         "typescript-eslint": "catalog:eslint"
     },
     "devDependencies": {
-        "@seedcord/eslint-config-base": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@typescript-eslint/utils": "catalog:eslint",
         "eslint": "catalog:eslint"
     },

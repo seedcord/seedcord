@@ -287,19 +287,19 @@ importers:
         specifier: ^1.1.23
         version: 1.1.23(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@seedcord/docs-engine':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/docs-engine
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/rate-limiter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/rate-limiter
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/types
       '@seedcord/ui':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/ui
       '@shikijs/langs':
         specifier: ^4.4.1
@@ -357,10 +357,10 @@ importers:
         version: 5.0.14(@types/react@19.2.18)(react@19.2.8)
     devDependencies:
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       '@testing-library/dom':
         specifier: catalog:test
@@ -411,7 +411,7 @@ importers:
   apps/guide:
     dependencies:
       '@seedcord/ui':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/ui
       next:
         specifier: catalog:deps
@@ -424,10 +424,10 @@ importers:
         version: 19.2.8(react@19.2.8)
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@tailwindcss/postcss':
         specifier: catalog:deps
@@ -472,7 +472,7 @@ importers:
   apps/home:
     dependencies:
       '@seedcord/ui':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/ui
       lucide-react:
         specifier: catalog:deps
@@ -491,10 +491,10 @@ importers:
         version: 4.4.1
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@tailwindcss/postcss':
         specifier: catalog:deps
@@ -542,22 +542,22 @@ importers:
         specifier: catalog:deps
         version: 1.7.0
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/errors
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/types
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       discord.js:
         specifier: catalog:peer
@@ -587,22 +587,22 @@ importers:
         specifier: catalog:deps
         version: 2.6.3
       '@seedcord/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/core
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/errors
       '@seedcord/event-emitter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/event-emitter
       '@seedcord/logger':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/logger
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/utils
       chalk:
         specifier: catalog:deps
@@ -648,16 +648,16 @@ importers:
         specifier: ^5.18.1
         version: 5.18.1(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       '@types/react':
         specifier: catalog:react
@@ -684,10 +684,10 @@ importers:
         specifier: catalog:deps
         version: 1.14.1
       '@seedcord/gateway':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/gateway
       '@seedcord/plugin-mongoose':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../plugins/mongoose
       discord.js:
         specifier: catalog:peer
@@ -703,13 +703,13 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       seedcord:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../cli/seedcord
 
   mocks/http:
@@ -718,7 +718,7 @@ importers:
         specifier: catalog:deps
         version: 1.14.1
       '@seedcord/http':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/http
       envapt:
         specifier: catalog:peer
@@ -728,13 +728,13 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       seedcord:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../cli/seedcord
 
   packages/core:
@@ -746,19 +746,19 @@ importers:
         specifier: catalog:deps
         version: 2.6.3
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../errors
       '@seedcord/event-emitter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../event-emitter
       '@seedcord/logger':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../logger
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../utils
       chalk:
         specifier: catalog:deps
@@ -774,19 +774,19 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/rate-limiter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../rate-limiter
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       envapt:
         specifier: catalog:peer
@@ -808,16 +808,16 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
 
   packages/eslint-plugin:
@@ -826,26 +826,26 @@ importers:
         specifier: catalog:eslint
         version: 8.65.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
       eslint-plugin-discordjs:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-plugin-discordjs
       typescript:
         specifier: catalog:peer
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config-base
       '@seedcord/eslint-utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-utils
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       '@typescript-eslint/rule-tester':
         specifier: catalog:eslint
@@ -870,19 +870,19 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config-base
       '@seedcord/eslint-utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-utils
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       '@typescript-eslint/rule-tester':
         specifier: catalog:eslint
@@ -907,13 +907,13 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config-base
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       eslint:
         specifier: catalog:eslint
@@ -926,16 +926,16 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
 
   packages/gateway:
@@ -947,25 +947,25 @@ importers:
         specifier: catalog:deps
         version: 2.6.3
       '@seedcord/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../errors
       '@seedcord/event-emitter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../event-emitter
       '@seedcord/logger':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../logger
       '@seedcord/rate-limiter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../rate-limiter
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../utils
       chalk:
         specifier: catalog:deps
@@ -978,16 +978,16 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       discord.js:
         specifier: catalog:peer
@@ -1008,25 +1008,25 @@ importers:
         specifier: catalog:deps
         version: 2.6.3
       '@seedcord/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../errors
       '@seedcord/event-emitter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../event-emitter
       '@seedcord/logger':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../logger
       '@seedcord/rate-limiter':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../rate-limiter
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../utils
       chalk:
         specifier: catalog:deps
@@ -1051,16 +1051,16 @@ importers:
         specifier: catalog:deps
         version: 1.14.1
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       '@vitest/coverage-istanbul':
         specifier: ^4.1.10
@@ -1078,13 +1078,13 @@ importers:
   packages/logger:
     dependencies:
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../errors
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../utils
       chalk:
         specifier: catalog:deps
@@ -1097,16 +1097,16 @@ importers:
         version: 3.19.0
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       envapt:
         specifier: catalog:peer
@@ -1115,23 +1115,23 @@ importers:
   packages/rate-limiter:
     dependencies:
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../types
       typescript:
         specifier: catalog:peer
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
 
   packages/types:
@@ -1144,16 +1144,16 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       discord.js:
         specifier: catalog:peer
@@ -1165,10 +1165,10 @@ importers:
   packages/utils:
     dependencies:
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../errors
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../types
       discord-api-types:
         specifier: ^0.38.52
@@ -1181,16 +1181,16 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       discord.js:
         specifier: catalog:peer
@@ -1202,16 +1202,16 @@ importers:
   plugins/kysely-postgres:
     dependencies:
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/errors
       '@seedcord/logger':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/logger
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/utils
       reflect-metadata:
         specifier: catalog:deps
@@ -1221,25 +1221,25 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/core
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/gateway':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/gateway
       '@seedcord/http':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/http
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       '@types/pg':
         specifier: ^8.20.3
@@ -1260,16 +1260,16 @@ importers:
   plugins/mongoose:
     dependencies:
       '@seedcord/errors':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/errors
       '@seedcord/logger':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/logger
       '@seedcord/types':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/types
       '@seedcord/utils':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/utils
       reflect-metadata:
         specifier: catalog:deps
@@ -1279,25 +1279,25 @@ importers:
         version: 6.0.3
     devDependencies:
       '@seedcord/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/core
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/eslint-config
       '@seedcord/gateway':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/gateway
       '@seedcord/http':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/http
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../tooling/vitest-config
       envapt:
         specifier: catalog:peer
@@ -1328,19 +1328,19 @@ importers:
         version: 7.8.5
     devDependencies:
       '@seedcord/docs-generator':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../docs-generator
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vitest-config
       '@types/semver':
         specifier: ^7.8.0
@@ -1359,22 +1359,22 @@ importers:
         version: 2.9.0
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vitest-config
 
   tooling/eslint-config:
     dependencies:
       '@seedcord/eslint-plugin':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/eslint-plugin
       '@types/eslint-plugin-security':
         specifier: catalog:eslint
@@ -1392,7 +1392,7 @@ importers:
         specifier: catalog:eslint
         version: 4.7.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(oxlint@1.76.0)(tailwindcss@4.3.3)(typescript@6.0.3)
       eslint-plugin-discordjs:
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../../packages/eslint-plugin-discordjs
       eslint-plugin-import-x:
         specifier: catalog:eslint
@@ -1435,10 +1435,10 @@ importers:
         version: 8.65.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
     devDependencies:
       '@seedcord/eslint-config-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-config-base
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vitest-config
       '@typescript-eslint/utils':
         specifier: catalog:eslint
@@ -1505,7 +1505,7 @@ importers:
         version: 8.65.0(eslint@10.8.0(jiti@2.7.0)(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
     devDependencies:
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsconfig
       '@types/lodash.merge':
         specifier: ^4.6.9
@@ -1523,10 +1523,10 @@ importers:
         version: 0.22.14(@typescript/native-preview@7.0.0-dev.20260630.1)(oxc-resolver@11.24.2)(tsx@4.23.5)(typescript@6.0.3)
     devDependencies:
       '@seedcord/eslint-config-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-config-base
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsconfig
       '@types/node':
         specifier: catalog:deps
@@ -1572,16 +1572,16 @@ importers:
         version: 1.4.0
     devDependencies:
       '@seedcord/eslint-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-config
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsdown-config
       '@seedcord/vitest-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../vitest-config
       '@testing-library/dom':
         specifier: catalog:test
@@ -1627,13 +1627,13 @@ importers:
         version: 4.1.10(@opentelemetry/api@1.9.1)(@types/node@26.1.2)(@vitest/coverage-istanbul@4.1.10)(@vitest/coverage-v8@4.1.10)(jsdom@30.0.1)(vite@8.2.0(@types/node@26.1.2)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0))
     devDependencies:
       '@seedcord/eslint-config-base':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../eslint-config-base
       '@seedcord/tsconfig':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsconfig
       '@seedcord/tsdown-config':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../tsdown-config
       '@types/node':
         specifier: catalog:deps

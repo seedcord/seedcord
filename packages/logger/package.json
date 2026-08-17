@@ -61,17 +61,17 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/errors": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "chalk": "catalog:deps",
         "winston": "^3.19.0"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer"
     },
     "publishConfig": {

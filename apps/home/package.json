@@ -19,7 +19,7 @@
         "tc": "tsgo --noEmit"
     },
     "dependencies": {
-        "@seedcord/ui": "workspace:*",
+        "@seedcord/ui": "workspace:^",
         "lucide-react": "catalog:deps",
         "next": "catalog:deps",
         "react": "catalog:react",
@@ -27,8 +27,8 @@
         "shiki": "catalog:deps"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
         "@tailwindcss/postcss": "catalog:deps",
         "@types/react": "catalog:react",
         "@types/react-dom": "catalog:react",

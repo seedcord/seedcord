@@ -23,11 +23,11 @@
     },
     "dependencies": {
         "@radix-ui/react-dialog": "^1.1.23",
-        "@seedcord/docs-engine": "workspace:*",
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/rate-limiter": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/ui": "workspace:*",
+        "@seedcord/docs-engine": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/rate-limiter": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/ui": "workspace:^",
         "@shikijs/langs": "^4.4.1",
         "@shikijs/themes": "^4.4.1",
         "@tailwindcss/postcss": "catalog:deps",
@@ -48,8 +48,8 @@
         "zustand": "^5.0.14"
     },
     "devDependencies": {
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "@testing-library/dom": "catalog:test",
         "@testing-library/jest-dom": "catalog:test",
         "@testing-library/react": "catalog:test",

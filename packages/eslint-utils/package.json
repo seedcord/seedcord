@@ -37,9 +37,9 @@
         "@typescript-eslint/utils": "catalog:eslint"
     },
     "devDependencies": {
-        "@seedcord/eslint-config-base": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
         "eslint": "catalog:eslint"
     }
 }

@@ -54,13 +54,13 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/types": "workspace:*"
+        "@seedcord/types": "workspace:^"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*"
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^"
     },
     "publishConfig": {
         "access": "public",

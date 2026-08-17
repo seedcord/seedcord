@@ -30,12 +30,12 @@
     },
     "dependencies": {
         "@discordjs/builders": "catalog:deps",
-        "@seedcord/http": "workspace:*",
+        "@seedcord/http": "workspace:^",
         "envapt": "catalog:peer"
     },
     "devDependencies": {
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "seedcord": "workspace:*"
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "seedcord": "workspace:^"
     }
 }

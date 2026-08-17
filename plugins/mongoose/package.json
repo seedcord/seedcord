@@ -58,20 +58,20 @@
         "typescript": "catalog:peer"
     },
     "dependencies": {
-        "@seedcord/errors": "workspace:*",
-        "@seedcord/logger": "workspace:*",
-        "@seedcord/types": "workspace:*",
-        "@seedcord/utils": "workspace:*",
+        "@seedcord/errors": "workspace:^",
+        "@seedcord/logger": "workspace:^",
+        "@seedcord/types": "workspace:^",
+        "@seedcord/utils": "workspace:^",
         "reflect-metadata": "catalog:deps"
     },
     "devDependencies": {
-        "@seedcord/core": "workspace:*",
-        "@seedcord/eslint-config": "workspace:*",
-        "@seedcord/gateway": "workspace:*",
-        "@seedcord/http": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
-        "@seedcord/tsdown-config": "workspace:*",
-        "@seedcord/vitest-config": "workspace:*",
+        "@seedcord/core": "workspace:^",
+        "@seedcord/eslint-config": "workspace:^",
+        "@seedcord/gateway": "workspace:^",
+        "@seedcord/http": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
+        "@seedcord/tsdown-config": "workspace:^",
+        "@seedcord/vitest-config": "workspace:^",
         "envapt": "catalog:peer",
         "mongoose": "catalog:peer",
         "type-fest": "catalog:deps"

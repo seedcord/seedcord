@@ -42,8 +42,8 @@
         "tsdown": "catalog:deps"
     },
     "devDependencies": {
-        "@seedcord/eslint-config-base": "workspace:*",
-        "@seedcord/tsconfig": "workspace:*",
+        "@seedcord/eslint-config-base": "workspace:^",
+        "@seedcord/tsconfig": "workspace:^",
         "@types/node": "catalog:deps",
         "typescript": "catalog:peer"
     }
