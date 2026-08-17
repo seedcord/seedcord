@@ -52,8 +52,8 @@ _**seedcord is pre-1.0, so minor versions can break.** I've already completed ne
 | [`@seedcord/event-emitter`](packages/event-emitter) | typed event emitter with `waitFor` |
 | [`@seedcord/plugin-mongoose`](plugins/mongoose) | MongoDB through Mongoose |
 | [`@seedcord/plugin-kysely-postgres`](plugins/kysely-postgres) | Postgres through Kysely |
-| [`@seedcord/eslint-plugin`](packages/eslint-plugin) | ESLint rules for seedcord bots |
-| [`eslint-plugin-discordjs`](packages/eslint-plugin-discordjs) | ESLint rules for discord.js bots |
+| [`@seedcord/eslint-plugin`](tooling/eslint-plugin) | ESLint rules for seedcord bots |
+| [`eslint-plugin-discordjs`](tooling/eslint-plugin-discordjs) | ESLint rules for discord.js bots |
 | [`@seedcord/eslint-config`](tooling/eslint-config) | shared ESLint config |
 | [`@seedcord/tsconfig`](tooling/tsconfig) | shared TypeScript config |
 

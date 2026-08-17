@@ -45,13 +45,13 @@
       - any-glob-to-any-file: 'tooling/eslint-config-base/**'
 '📦 eslint-plugin':
   - changed-files:
-      - any-glob-to-any-file: 'packages/eslint-plugin/**'
+      - any-glob-to-any-file: 'tooling/eslint-plugin/**'
 '📦 eslint-plugin-discordjs':
   - changed-files:
-      - any-glob-to-any-file: 'packages/eslint-plugin-discordjs/**'
+      - any-glob-to-any-file: 'tooling/eslint-plugin-discordjs/**'
 '📦 eslint-utils':
   - changed-files:
-      - any-glob-to-any-file: 'packages/eslint-utils/**'
+      - any-glob-to-any-file: 'tooling/eslint-utils/**'
 '📦 tsconfig':
   - changed-files:
       - any-glob-to-any-file: 'tooling/tsconfig/**'

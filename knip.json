@@ -41,7 +41,7 @@
         },
         "packages/core": {},
         "packages/errors": {},
-        "packages/eslint-plugin": {
+        "tooling/eslint-plugin": {
             "ignore": [
                 "tests/fixtures/**"
             ],
@@ -49,7 +49,7 @@
                 "discord.js"
             ]
         },
-        "packages/eslint-plugin-discordjs": {
+        "tooling/eslint-plugin-discordjs": {
             "ignore": [
                 "tests/fixtures/**"
             ],
@@ -57,7 +57,7 @@
                 "discord.js"
             ]
         },
-        "packages/eslint-utils": {},
+        "tooling/eslint-utils": {},
         "packages/event-emitter": {},
         "packages/gateway": {},
         "packages/http": {

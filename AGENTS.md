@@ -31,7 +31,7 @@ Six workspace globs, declared in `pnpm-workspace.yaml`.
 | `packages/*` | framework leaves |
 | `plugins/*` | one plugin per backing service |
 | `cli/*` | command-line tools |
-| `tooling/*` | shared configs, the docs pipeline, and the UI kit |
+| `tooling/*` | shared configs, the lint rules, the docs pipeline, and the UI kit |
 | `apps/*` | the Next.js sites |
 | `mocks/*` | one runnable bot per transport |
 
