@@ -56,6 +56,8 @@ export { Silence } from '#stops/Silence';
 
 export { CustomId } from '#customId/CustomId';
 
+export { ResolvedEmoji } from '#src/miscellaneous/emoji';
+
 export type { AutocompleteOptions } from '#inputs/AutocompleteOptions';
 
 export { paginate } from '#pagination/paginate';

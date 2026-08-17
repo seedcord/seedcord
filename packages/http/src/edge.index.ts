@@ -12,7 +12,7 @@ export type { HttpConfig, HttpEdgeConfig, HttpServerConfig } from '#interfaces/C
 export type { SlashOptions } from '#inputs/SlashOptions';
 
 export { Emojis } from '#src/emojis/EmojiInjector';
-export type { InjectedEmojiMap, ResolvedEmoji } from '#src/emojis/EmojiInjector';
+export type { InjectedEmojiMap } from '#src/emojis/EmojiInjector';
 
 export * from '@seedcord/core';
 export * from '@seedcord/errors';

@@ -1,14 +1,22 @@
+import { ButtonBuilder } from '@discordjs/builders';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { Collection } from 'discord.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EmojiInjector, Emojis } from '#bot/injectors/EmojiInjector';
 
+import type { GatewayEmoji } from '#bot/injectors/index';
 import type { Core } from '#interfaces/Core';
 
+type EmojiArgument = Parameters<ButtonBuilder['setEmoji']>[0];
+
+// a real GuildEmoji carries client, guild, roles, and more. setEmoji rejects every one of them.
 interface EmojiStub {
     id: string;
     name: string;
+    animated?: boolean;
+    client?: unknown;
+    managed?: boolean;
 }
 
 interface StubOptions {
@@ -62,16 +70,26 @@ describe('EmojiInjector', () => {
         await expect(new EmojiInjector(stubCore({ emojis: {} })).init()).resolves.toBeUndefined();
     });
 
-    it('stores the resolved emoji object on a hit', async () => {
+    it('stores the wire fields on a hit and keeps the discord.js emoji on source', async () => {
         const check: EmojiStub = { id: '1', name: 'check' };
         await new EmojiInjector(stubCore({ emojis: { Confirm: 'check' }, appEmojis: [check] })).init();
-        expect(stored.Confirm).toBe(check);
+
+        expect(stored.Confirm).toMatchObject({ id: '1', name: 'check', animated: false });
+        expect((stored.Confirm as GatewayEmoji).source).toBe(check);
+        expect(String(stored.Confirm)).toBe('<:check:1>');
+    });
+
+    it('stores an emoji that a discord.js builder accepts', async () => {
+        const check: EmojiStub = { id: '1', name: 'check', animated: false, client: {}, managed: false };
+        await new EmojiInjector(stubCore({ emojis: { Confirm: 'check' }, appEmojis: [check] })).init();
+
+        expect(() => new ButtonBuilder().setCustomId('c').setEmoji(stored.Confirm as EmojiArgument)).not.toThrow();
     });
 
     it('resolves a tuple emoji from its guild', async () => {
         const wave: EmojiStub = { id: '9', name: 'wave' };
         await new EmojiInjector(stubCore({ emojis: { Wave: ['wave', 'g1'] }, guilds: { g1: [wave] } })).init();
-        expect(stored.Wave).toBe(wave);
+        expect((stored.Wave as GatewayEmoji).source).toBe(wave);
     });
 
     it('collects every unresolvable emoji into one error rather than throwing on the first', async () => {
@@ -133,7 +151,7 @@ describe('EmojiInjector', () => {
         await new EmojiInjector(core).init();
 
         expect(guild.emojis.fetch).toHaveBeenCalled();
-        expect(stored.Wave).toBe(wave);
+        expect((stored.Wave as GatewayEmoji).source).toBe(wave);
     });
 
     it('fetches a guild only once when several emojis come from it', async () => {
@@ -156,7 +174,7 @@ describe('EmojiInjector', () => {
         await new EmojiInjector(core).init();
 
         expect(fetch).toHaveBeenCalledTimes(1);
-        expect(stored.Wave).toBe(wave);
-        expect(stored.Smile).toBe(smile);
+        expect((stored.Wave as GatewayEmoji).source).toBe(wave);
+        expect((stored.Smile as GatewayEmoji).source).toBe(smile);
     });
 });

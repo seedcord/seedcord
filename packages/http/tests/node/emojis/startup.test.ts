@@ -10,8 +10,8 @@ import { Seedcord } from '#src/node/Seedcord';
 import { createSigner } from '../../helpers/ed25519';
 import { VALID_TOKEN } from '../../helpers/fixtures';
 
-import type { ResolvedEmoji } from '#src/emojis/EmojiInjector';
 import type { HttpConfig } from '#src/interfaces/Config';
+import type { ResolvedEmoji } from '@seedcord/core';
 
 const HANDLERS_DIR = path.resolve(__dirname, '../discovery/fixtures/handlers');
 const APP = 'app-1';

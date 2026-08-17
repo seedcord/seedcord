@@ -1,1 +1,1 @@
-export { Emojis, type InjectedEmojiMap } from './EmojiInjector';
+export { Emojis, GatewayEmoji, type InjectedEmojiMap } from './EmojiInjector';

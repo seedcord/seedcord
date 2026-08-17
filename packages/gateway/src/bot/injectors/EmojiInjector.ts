@@ -1,3 +1,4 @@
+import { ResolvedEmoji } from '@seedcord/core';
 import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -9,14 +10,31 @@ import type { ApplicationEmoji, GuildEmoji } from 'discord.js';
 
 type SavedEmojiType = GuildEmoji | ApplicationEmoji;
 
-const emojiStorage = accessorStore<SavedEmojiType>();
+/** A resolved emoji, plus the discord.js emoji it came from on {@link GatewayEmoji.source}. */
+export class GatewayEmoji<Source extends SavedEmojiType = SavedEmojiType> extends ResolvedEmoji {
+    // Object.entries skips a private field
+    readonly #source: Source;
+
+    constructor(source: Source) {
+        super(source.name, source.id, source.animated);
+        this.#source = source;
+    }
+
+    /** What discord.js resolved, for `.url` and the management calls. */
+    public get source(): Source {
+        return this.#source;
+    }
+}
+
+const emojiStorage = accessorStore<GatewayEmoji>();
 
 /**
- * The global {@link Emojis} accessor type. Each key resolves to its precise class, `GuildEmoji` for a `'guild'`
- * tag and `ApplicationEmoji` for an `'application'` tag, the tags `seedcord codegen` writes into {@link EmojiMap}.
+ * The global {@link Emojis} accessor type. Each key's `source` resolves to its precise class, `GuildEmoji`
+ * for a `'guild'` tag and `ApplicationEmoji` for an `'application'` tag, the tags `seedcord codegen`
+ * writes into {@link EmojiMap}.
  */
 export type InjectedEmojiMap = {
-    [K in keyof EmojiMap]: EmojiMap[K] extends 'guild' ? GuildEmoji : ApplicationEmoji;
+    [K in keyof EmojiMap]: EmojiMap[K] extends 'guild' ? GatewayEmoji<GuildEmoji> : GatewayEmoji<ApplicationEmoji>;
 };
 
 /**
@@ -87,7 +105,7 @@ export class EmojiInjector {
             return;
         }
 
-        emojiStorage[key] = guildEmoji;
+        emojiStorage[key] = new GatewayEmoji(guildEmoji);
     }
 
     private resolveString(key: string, emojiName: string, failures: string[]): void {
@@ -97,7 +115,7 @@ export class EmojiInjector {
             return;
         }
 
-        emojiStorage[key] = appEmoji;
+        emojiStorage[key] = new GatewayEmoji(appEmoji);
     }
 
     private clearEmojis(): void {

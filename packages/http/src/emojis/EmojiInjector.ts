@@ -1,3 +1,4 @@
+import { ResolvedEmoji } from '@seedcord/core';
 import { accessorStore, clearStore, guardedAccessor, isEmojiTuple } from '@seedcord/core/internal';
 import { SeedcordErrorCode } from '@seedcord/errors';
 import { SeedcordError } from '@seedcord/errors/internal';
@@ -8,28 +9,7 @@ import { fetchApplicationId } from '#src/applicationId';
 
 import type { Core } from '#interfaces/Core';
 import type { EmojiMap } from '@seedcord/types';
-import type { APIEmoji, APIMessageComponentEmoji } from 'discord-api-types/v10';
-
-/** A resolved emoji. Renders as `<:name:id>` in message content, or `<a:name:id>` when animated. */
-export interface ResolvedEmoji extends APIMessageComponentEmoji {
-    readonly id: string;
-    readonly name: string;
-    readonly animated: boolean;
-    toString(): string;
-}
-
-// a class keeps toString off the own keys, which setEmoji rejects past the three wire fields
-class Emoji implements ResolvedEmoji {
-    constructor(
-        public readonly name: string,
-        public readonly id: string,
-        public readonly animated = false
-    ) {}
-
-    public toString(): string {
-        return `<${this.animated ? 'a' : ''}:${this.name}:${this.id}>`;
-    }
-}
+import type { APIEmoji } from 'discord-api-types/v10';
 
 const emojiStorage = accessorStore<ResolvedEmoji>();
 
@@ -137,6 +117,6 @@ export class EmojiInjector {
             return;
         }
 
-        emojiStorage[key] = new Emoji(name, found.id, found.animated ?? false);
+        emojiStorage[key] = new ResolvedEmoji(name, found.id, found.animated ?? false);
     }
 }

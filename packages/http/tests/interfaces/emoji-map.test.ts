@@ -2,7 +2,7 @@ import { describe, expect, expectTypeOf, it } from 'vitest';
 
 import { Emojis } from '#src/emojis/EmojiInjector';
 
-import type { ResolvedEmoji } from '#src/emojis/EmojiInjector';
+import type { ResolvedEmoji } from '@seedcord/core';
 
 // typecheck-only, vitest never calls typeChecks
 
