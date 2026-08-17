@@ -1,5 +1,11 @@
 # seedcord
 
+## 0.18.1
+
+### Patch Changes
+
+- Update package.json desc
+
 ## 0.18.0
 
 ### Minor Changes
