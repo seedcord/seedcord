@@ -6,10 +6,12 @@
         "moduleResolution": "Bundler",
         "esModuleInterop": true,
         "skipLibCheck": true,
-        "baseUrl": ".",
+        "rootDir": ".",
         "paths": {
             "seedcord": ["./seedcord.ts"],
-            "@seedcord/core": ["./seedcord.ts"]
+            "@seedcord/core": ["./seedcord.ts"],
+            "@seedcord/logger": ["./pkg/@seedcord/logger/index.ts"],
+            "chalk": ["./chalk.ts"]
         }
     }
 }
