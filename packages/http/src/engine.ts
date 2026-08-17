@@ -47,7 +47,8 @@ export interface EngineParts {
 }
 
 export function buildEngine(core: Core, maps: RouteMaps): EngineParts {
-    if (!Envapter.has('DISCORD_PUBLIC_KEY')) throw new SeedcordError(SeedcordErrorCode.ConfigMissingPublicKey);
+    if (!Envapter.has('DISCORD_PUBLIC_KEY'))
+        throw new SeedcordError(SeedcordErrorCode.ConfigMissingEnv, ['DISCORD_PUBLIC_KEY']);
     const publicKey = Envapter.getRequired('DISCORD_PUBLIC_KEY', Converters.String);
 
     const verifier = new Ed25519Verifier(publicKey);

@@ -23,7 +23,8 @@ export class Ed25519Verifier {
 
     constructor(publicKeyHex: string) {
         const publicKey = hexToBytes(publicKeyHex, PUBLIC_KEY_BYTES);
-        if (!publicKey) throw new SeedcordError(SeedcordErrorCode.ConfigIncorrectPublicKey);
+        if (!publicKey)
+            throw new SeedcordError(SeedcordErrorCode.ConfigInvalidEnv, ['DISCORD_PUBLIC_KEY', '64 hex characters']);
 
         this.key = crypto.subtle.importKey('raw', publicKey, 'Ed25519', false, ['verify']);
     }

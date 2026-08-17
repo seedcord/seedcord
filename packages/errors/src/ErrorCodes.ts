@@ -4,22 +4,18 @@
  * All Seedcord error codes.
  */
 export enum SeedcordErrorCode {
-    /** DISCORD_BOT_TOKEN is not present in the environment. */
-    ConfigMissingDiscordToken = 1001,
-    /** DISCORD_BOT_TOKEN is present but fails validation. */
-    ConfigIncorrectDiscordToken = 1002,
     /** One or more configured emojis could not be resolved at startup. */
-    ConfigEmojiUnresolved = 1003,
+    ConfigEmojiUnresolved = 1001,
     /** A webhook reporter's env var is set but fails webhook URL validation. */
-    ConfigWebhookUrlInvalid = 1004,
+    ConfigWebhookUrlInvalid = 1002,
     /** A configured webhook does not exist on Discord (deleted, or a wrong id or token). */
-    ConfigWebhookNotFound = 1005,
-    /** DISCORD_PUBLIC_KEY is not present in the environment. */
-    ConfigMissingPublicKey = 1006,
-    /** DISCORD_PUBLIC_KEY is present but fails validation. */
-    ConfigIncorrectPublicKey = 1007,
+    ConfigWebhookNotFound = 1003,
     /** The generated route manifest was imported before `seedcord build` generated it. */
-    ConfigManifestNotGenerated = 1008,
+    ConfigManifestNotGenerated = 1004,
+    /** A required environment variable is not present. */
+    ConfigMissingEnv = 1005,
+    /** An environment variable is present and fails validation. */
+    ConfigInvalidEnv = 1006,
 
     /** Attempted to add lifecycle tasks after startup already completed. */
     LifecycleAddAfterCompletion = 1101,
@@ -59,18 +55,16 @@ export enum SeedcordErrorCode {
 
     /** Interaction middleware decorated with disallowed event filters. */
     DecoratorInteractionEventFilter = 1301,
-    /** A decorator could not find the original method being decorated. */
-    DecoratorMethodNotFound = 1302,
     /** A command decorator attempted to re-register an existing command scope. */
-    DecoratorCommandAlreadyRegistered = 1303,
+    DecoratorCommandAlreadyRegistered = 1302,
     /** A global command decorator specified guild IDs, which is not allowed. */
-    DecoratorCommandGlobalWithGuilds = 1304,
+    DecoratorCommandGlobalWithGuilds = 1303,
     /** A guild command decorator omitted the required guild ID list. */
-    DecoratorCommandGuildWithoutGuilds = 1305,
+    DecoratorCommandGuildWithoutGuilds = 1304,
     /** Middleware priority provided by the decorator was not a finite number. */
-    DecoratorInvalidMiddlewarePriority = 1306,
+    DecoratorInvalidMiddlewarePriority = 1305,
     /** A WebhookLog subclass is missing its `@WebhookUrl` decorator. */
-    DecoratorWebhookUrlMissing = 1307,
+    DecoratorWebhookUrlMissing = 1306,
 
     /** Two interaction handlers registered the same route within a scope. */
     InteractionDuplicateRoute = 1401,
@@ -187,76 +181,54 @@ export enum SeedcordErrorCode {
     CliConfigInvalidExport = 3101,
     /** Config is missing the required instance string. */
     CliConfigMissingInstance = 3102,
-    /** Config root was provided but not a string. */
-    CliConfigInvalidRoot = 3103,
     /** Unable to locate a Seedcord config file. */
-    CliConfigNotFound = 3104,
+    CliConfigNotFound = 3103,
     /** CLI entry file does not exist. */
-    CliEntryNotFound = 3105,
+    CliEntryNotFound = 3104,
     /** tsx failed to import the provided entry file. */
-    CliTsxImportFailed = 3106,
+    CliTsxImportFailed = 3105,
     /** Native import and jiti fallback both failed. */
-    CliImportFailed = 3107,
+    CliImportFailed = 3106,
     /** Seedcord instance export is missing a start() method. */
-    CliInstanceInvalid = 3108,
+    CliInstanceInvalid = 3107,
     /** Seedcord instance threw during startup. */
-    CliStartFailed = 3109,
+    CliStartFailed = 3108,
     /** Config is missing the required entry string. */
-    CliConfigMissingEntry = 3110,
-    /** Config build options must be an object when provided. */
-    CliConfigInvalidBuild = 3111,
-    /** Config build outDir must be a string when provided. */
-    CliConfigInvalidBuildOutDir = 3112,
-    /** Config build tsconfig must be a string when provided. */
-    CliConfigInvalidBuildTsconfig = 3113,
-    /** Config build bootstrap must be a string when provided. */
-    CliConfigInvalidBuildBootstrap = 3114,
+    CliConfigMissingEntry = 3109,
     /** Entry file must be inside the configured root directory. */
-    CliConfigEntryOutsideRoot = 3115,
+    CliConfigEntryOutsideRoot = 3110,
     /** Unable to locate a TypeScript config file for builds. */
-    CliBuildTsconfigNotFound = 3116,
+    CliBuildTsconfigNotFound = 3111,
     /** TypeScript reported diagnostics during emit. */
-    CliBuildFailed = 3117,
+    CliBuildFailed = 3112,
     /** Unable to write the generated bootstrap file. */
-    CliBootstrapWriteFailed = 3118,
-    /** Config hmr typecheck tsconfig must be a string when provided. */
-    CliConfigInvalidTsconfig = 3119,
-    /** Config hmr options must be an object when provided. */
-    CliConfigInvalidHmr = 3120,
-    /** Config hmr restart patterns must be an array of strings when provided. */
-    CliConfigInvalidHmrRestart = 3121,
+    CliBootstrapWriteFailed = 3113,
     /** Two commands resolve to the same slash route during codegen. */
-    CliCodegenDuplicateRoute = 3122,
+    CliCodegenDuplicateRoute = 3114,
     /** The commands directory could not be read during codegen. */
-    CliCodegenCommandsDirUnreadable = 3123,
+    CliCodegenCommandsDirUnreadable = 3115,
     /** Two context-menu commands of the same kind share a name during codegen. */
-    CliCodegenDuplicateContextMenu = 3124,
+    CliCodegenDuplicateContextMenu = 3116,
     /** Could not resolve the application from the bot token during `commands --clean`. */
-    CliCleanAppFetchFailed = 3125,
+    CliCleanAppFetchFailed = 3117,
     /** `commands --clean` ran with neither --guild nor --all-guilds. */
-    CliCleanNoGuilds = 3126,
+    CliCleanNoGuilds = 3118,
     /** `commands --clean` combined --purge with --all-guilds, which would wipe every guild. */
-    CliCleanPurgeAllGuilds = 3127,
+    CliCleanPurgeAllGuilds = 3119,
     /** An interactive prompt was cancelled (Ctrl-C), so the command aborts without changes. */
-    CliCancelled = 3128,
+    CliCancelled = 3120,
     /** `commands --clean --all-guilds` matched more guilds than the safety threshold without `--yes`. */
-    CliCleanLargeBotUnconfirmed = 3129,
+    CliCleanLargeBotUnconfirmed = 3121,
     /** `commands --clean --apply` ran in a non-interactive environment without `--yes`, where it cannot prompt. */
-    CliCleanApplyNeedsYes = 3130,
-    /** Config hmr rollback flag must be a boolean when provided. */
-    CliConfigInvalidHmrRollback = 3131,
-    /** Config tunnel must be a boolean or an https URL when provided. */
-    CliConfigInvalidTunnel = 3132,
+    CliCleanApplyNeedsYes = 3122,
     /** The cloudflared metrics server never reported a quick-tunnel hostname. */
-    CliTunnelUrlUnavailable = 3133,
+    CliTunnelUrlUnavailable = 3123,
     /** Discord rejected the tunnel URL as an interactions endpoint. */
-    CliTunnelNotVerified = 3134,
+    CliTunnelNotVerified = 3124,
     /** The tunnel URL never answered its health probe. */
-    CliTunnelUnreachable = 3135,
-    /** Config hmr typecheck flag must be a boolean or object when provided. */
-    CliConfigInvalidHmrTypecheck = 3136,
-    /** Config idleAnimation flag must be a boolean when provided. */
-    CliConfigInvalidIdleAnimation = 3137,
+    CliTunnelUnreachable = 3125,
+    /** A config field is present with the wrong shape. */
+    CliConfigInvalidField = 3126,
 
     /** A create prompt was cancelled (Ctrl-C), and nothing has been written yet. */
     CreateCancelled = 3201,

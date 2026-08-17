@@ -29,28 +29,32 @@ function isStringArray(value: unknown): value is string[] {
     return Array.isArray(value) && value.every((item) => typeof item === 'string');
 }
 
+function invalidField(field: string, expected: string): SeedcordError {
+    return new SeedcordError(SeedcordErrorCode.CliConfigInvalidField, [field, expected]);
+}
+
 function validateBuild(value: unknown): void {
     if (value === undefined) return;
-    if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuild);
-    if (!isOptionalString(value.outDir)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildOutDir);
-    if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildTsconfig);
-    if (!isOptionalString(value.bootstrap)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidBuildBootstrap);
+    if (!isPlainObject(value)) throw invalidField('build', 'an object');
+    if (!isOptionalString(value.outDir)) throw invalidField('build.outDir', 'a string');
+    if (!isOptionalString(value.tsconfig)) throw invalidField('build.tsconfig', 'a string');
+    if (!isOptionalString(value.bootstrap)) throw invalidField('build.bootstrap', 'a string');
 }
 
 function validateTypecheck(value: unknown): void {
     if (value === undefined || typeof value === 'boolean') return;
-    if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrTypecheck);
-    if (!isOptionalString(value.tsconfig)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTsconfig);
+    if (!isPlainObject(value)) throw invalidField('hmr.typecheck', 'a boolean or an object');
+    if (!isOptionalString(value.tsconfig)) throw invalidField('hmr.typecheck.tsconfig', 'a string');
 }
 
 function validateHmr(value: unknown): void {
     if (value === undefined) return;
-    if (!isPlainObject(value)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmr);
+    if (!isPlainObject(value)) throw invalidField('hmr', 'an object');
     if (value.restart !== undefined && !isStringArray(value.restart)) {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRestart);
+        throw invalidField('hmr.restart', 'an array of strings');
     }
     if (value.rollback !== undefined && typeof value.rollback !== 'boolean') {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidHmrRollback);
+        throw invalidField('hmr.rollback', 'a boolean');
     }
     validateTypecheck(value.typecheck);
 }
@@ -59,7 +63,7 @@ function validateTunnel(value: unknown): void {
     if (value === undefined || typeof value === 'boolean') return;
     // discord only accepts an https interactions endpoint
     if (typeof value !== 'string' || URL.parse(value)?.protocol !== 'https:') {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidTunnel);
+        throw invalidField('tunnel', 'a boolean or an https URL');
     }
 }
 
@@ -84,9 +88,9 @@ function validateConfig(raw: unknown): asserts raw is SeedcordDevConfig {
     if (typeof raw.entry !== 'string' || raw.entry.length === 0) {
         throw new SeedcordError(SeedcordErrorCode.CliConfigMissingEntry);
     }
-    if (!isOptionalString(raw.root)) throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidRoot);
+    if (!isOptionalString(raw.root)) throw invalidField('root', 'a string');
     if (raw.idleAnimation !== undefined && typeof raw.idleAnimation !== 'boolean') {
-        throw new SeedcordError(SeedcordErrorCode.CliConfigInvalidIdleAnimation);
+        throw invalidField('idleAnimation', 'a boolean');
     }
     validateTunnel(raw.tunnel);
     validateBuild(raw.build);

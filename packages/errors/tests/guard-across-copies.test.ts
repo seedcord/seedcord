@@ -48,8 +48,10 @@ describe('isSeedcordError across two copies of the package', () => {
 
     it('rejects a plain error and a foreign object', async () => {
         const [, catcher] = await loadTwoCopies();
+        const { SeedcordErrorCode } = await import('#src/ErrorCodes');
 
         expect(catcher.isSeedcordError(new Error('plain'))).toBe(false);
-        expect(catcher.isSeedcordError({ code: 1201, type: 'SeedcordError' })).toBe(false);
+        const unbranded = { code: SeedcordErrorCode.CoreSingletonViolation, type: 'SeedcordError' };
+        expect(catcher.isSeedcordError(unbranded)).toBe(false);
     });
 });

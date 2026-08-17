@@ -182,7 +182,7 @@ describe('createSeedcord', () => {
             createSeedcord(nullPathConfig, emptyManifest());
             expect.unreachable('createSeedcord should throw');
         } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingPublicKey)).toBe(true);
+            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
         }
     });
 
@@ -193,7 +193,7 @@ describe('createSeedcord', () => {
             createSeedcord(nullPathConfig, emptyManifest());
             expect.unreachable('createSeedcord should throw');
         } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigIncorrectPublicKey)).toBe(true);
+            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigInvalidEnv)).toBe(true);
         }
     });
 
@@ -204,7 +204,7 @@ describe('createSeedcord', () => {
             createSeedcord(nullPathConfig, emptyManifest());
             expect.unreachable('createSeedcord should throw');
         } catch (error) {
-            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingDiscordToken)).toBe(true);
+            expect(isSeedcordError(error, 'SeedcordError', SeedcordErrorCode.ConfigMissingEnv)).toBe(true);
         }
     });
 });

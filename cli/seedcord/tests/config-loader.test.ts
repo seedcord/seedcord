@@ -74,7 +74,7 @@ describe('ConfigLoader', () => {
         const loader = new ConfigLoader(moduleLoader, silentLogger);
 
         await expect(loader.load(join(process.cwd(), 'seedcord.config.ts'))).rejects.toThrow(
-            'Config `tunnel` must be a boolean or an https URL.'
+            'Config `tunnel` must be a boolean or an https URL when provided.'
         );
     });
 
@@ -163,7 +163,10 @@ describe('ConfigLoader', () => {
 
         await expect(
             new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRestart });
+        ).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: 'Config `hmr.restart` must be an array of strings when provided.'
+        });
     });
 
     it('rejects a non-boolean hmr.rollback', async () => {
@@ -177,7 +180,10 @@ describe('ConfigLoader', () => {
 
         await expect(
             new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrRollback });
+        ).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: 'Config `hmr.rollback` must be a boolean when provided.'
+        });
     });
 
     it('leaves idleAnimation on when the config omits it', async () => {
@@ -207,7 +213,10 @@ describe('ConfigLoader', () => {
 
         await expect(
             new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidIdleAnimation });
+        ).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: 'Config `idleAnimation` must be a boolean when provided.'
+        });
     });
 
     it('rejects a non-boolean hmr.typecheck', async () => {
@@ -221,7 +230,10 @@ describe('ConfigLoader', () => {
 
         await expect(
             new ConfigLoader(moduleLoader, silentLogger).load(join(process.cwd(), 'seedcord.config.ts'))
-        ).rejects.toMatchObject({ code: SeedcordErrorCode.CliConfigInvalidHmrTypecheck });
+        ).rejects.toMatchObject({
+            code: SeedcordErrorCode.CliConfigInvalidField,
+            message: 'Config `hmr.typecheck` must be a boolean or an object when provided.'
+        });
     });
 });
 
