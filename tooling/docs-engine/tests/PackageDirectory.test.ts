@@ -41,7 +41,14 @@ describe('PackageDirectory', () => {
                 'mock-tuple',
                 'mock-union'
             ],
-            functions: ['extra-function', 'log-decorator', 'mock-function', 'mock-function-with-rest', 'uses-promoted'],
+            functions: [
+                'extra-function',
+                'log-decorator',
+                'mock-function',
+                'mock-function-with-rest',
+                'shared-only-function',
+                'uses-promoted'
+            ],
             variables: ['mock-variable']
         });
     });
@@ -80,6 +87,7 @@ describe('PackageDirectory', () => {
             'log-decorator',
             'mock-function',
             'mock-function-with-rest',
+            'shared-only-function',
             'uses-promoted'
         ]);
     });

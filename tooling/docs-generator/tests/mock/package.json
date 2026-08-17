@@ -29,6 +29,12 @@
                 "default": "./dist/variable.js"
             }
         },
+        "./shared": {
+            "import": {
+                "types": "./dist/shared.d.ts",
+                "default": "./dist/shared.js"
+            }
+        },
         "./internal": {
             "import": {
                 "types": "./dist/internal.d.ts",

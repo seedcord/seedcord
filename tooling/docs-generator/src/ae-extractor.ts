@@ -61,7 +61,8 @@ function apiJsonNameFor(packageName: string, subpath: string): string {
     return `${unscoped}.${slug}.api.json`;
 }
 
-const sharedModelNameFor = (packageName: string): string => `${unscopedName(packageName)}.shared.api.json`;
+// every entry output ends in `.api.json`
+const sharedModelNameFor = (packageName: string): string => `${unscopedName(packageName)}.shared-model.json`;
 
 function runExtractor(options: { packageDir: string; entryPoint: string; tsconfigPath: string; apiJsonPath: string }): {
     succeeded: boolean;
