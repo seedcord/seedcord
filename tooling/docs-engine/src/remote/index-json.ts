@@ -26,11 +26,12 @@ export interface PackageIndexEntry {
     prerelease: { latest: string } | null;
     // Entity slug -> tone for the latest version (`logger` -> `class`). The lazy engine reads this to
     // build `/tone/version/slug` URLs for an unloaded package and to drop links to non-entities
-    // (params, mis-attributed externals). Absent on legacy indexes.
-    entities?: Record<string, EntityTone>;
-    // package.json description of the latest version, version-independent so the catalog reads it
-    // without loading a project.json. Absent on legacy indexes.
-    description?: string;
+    // (params, mis-attributed externals).
+    entities?: Record<string, EntityTone>; // Absent on legacy indexes.
+    // package.json description of the latest version.
+    description?: string; // Absent on legacy indexes.
+    // the workspace glob the package sits under.
+    workspace?: string; // Absent on legacy indexes.
 }
 
 export function validateIndex(value: unknown): IndexJson {
@@ -80,6 +81,10 @@ function validateEntry(folder: string, value: unknown): PackageIndexEntry {
 
     if (typeof entry.description === 'string') {
         base.description = entry.description;
+    }
+
+    if (typeof entry.workspace === 'string') {
+        base.workspace = entry.workspace;
     }
 
     return base;

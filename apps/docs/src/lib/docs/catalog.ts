@@ -9,6 +9,8 @@ import {
 } from '@seedcord/docs-engine';
 import { cache } from 'react';
 
+import { getToneTitle, TONE_ORDER } from '../tonePresentation';
+
 import { getDocsEngine } from './engine';
 
 import type { VersionedDocsEngine } from './engine';
@@ -20,19 +22,25 @@ import type {
     PackageCatalogEntry,
     PackageVersionCatalog
 } from './types';
-import type { PackageIndexEntry } from '@seedcord/docs-engine';
+import type { DirectoryEntity, PackageIndexEntry } from '@seedcord/docs-engine';
 import type { EntityTone } from '@seedcord/docs-engine/client';
 
 type GetPackageDirectoryReturn = ReturnType<VersionedDocsEngine['getPackageDirectory']>;
 
-const CATEGORY_CONFIG: readonly CategoryConfig[] = [
-    { entity: 'classes', title: 'Classes', tone: 'class' },
-    { entity: 'interfaces', title: 'Interfaces', tone: 'interface' },
-    { entity: 'functions', title: 'Functions', tone: 'function' },
-    { entity: 'enums', title: 'Enums', tone: 'enum' },
-    { entity: 'types', title: 'Types', tone: 'type' },
-    { entity: 'variables', title: 'Variables', tone: 'variable' }
-] as const;
+const TONE_ENTITIES = {
+    class: 'classes',
+    interface: 'interfaces',
+    function: 'functions',
+    enum: 'enums',
+    type: 'types',
+    variable: 'variables'
+} as const satisfies Record<EntityTone, DirectoryEntity>;
+
+const CATEGORY_CONFIG: readonly CategoryConfig[] = TONE_ORDER.map((tone) => ({
+    entity: TONE_ENTITIES[tone],
+    tone,
+    title: getToneTitle(tone)
+}));
 
 const createNavigationItem = (
     manifestPackage: string,
@@ -117,6 +125,14 @@ function buildVersions(fullName: string, entry: PackageIndexEntry): PackageVersi
     return versions;
 }
 
+function countByTone(entities: PackageIndexEntry['entities']): ReadonlyMap<EntityTone, number> {
+    const counts = new Map<EntityTone, number>();
+    for (const tone of Object.values(entities ?? {})) {
+        counts.set(tone, (counts.get(tone) ?? 0) + 1);
+    }
+    return counts;
+}
+
 function buildPackageEntry(fullName: string, entry: PackageIndexEntry): PackageCatalogEntry {
     const displayName = formatDisplayPackageName(fullName);
 
@@ -125,6 +141,8 @@ function buildPackageEntry(fullName: string, entry: PackageIndexEntry): PackageC
         manifestName: fullName,
         label: displayName,
         description: entry.description ?? `Reference documentation for ${displayName}.`,
+        workspace: entry.workspace ?? null,
+        symbolCounts: countByTone(entry.entities),
         versions: buildVersions(fullName, entry)
     } satisfies PackageCatalogEntry;
 }

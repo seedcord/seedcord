@@ -1,5 +1,5 @@
 /* eslint-disable no-console -- CLI script so console is ok */
-import { copyFile, mkdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -72,8 +72,24 @@ async function writeArtifacts(index: IndexJson, projects: readonly ProjectArtifa
     }
 }
 
+// manifest.json records source files relative to the repo root. first segment is the workspace glob
+async function readWorkspaces(): Promise<Map<string, string>> {
+    const raw = await readFile(path.join(GENERATED_ROOT, 'manifest.json'), 'utf8');
+    const manifest = JSON.parse(raw) as { packages?: { name: string; sources?: Record<string, { file: string }[]> }[] };
+    const workspaces = new Map<string, string>();
+
+    for (const pkg of manifest.packages ?? []) {
+        const file = Object.values(pkg.sources ?? {})[0]?.[0]?.file;
+        const workspace = file?.split('/')[0];
+        if (workspace) workspaces.set(pkg.name, workspace);
+    }
+
+    return workspaces;
+}
+
 async function main(): Promise<void> {
     const engine = await DocsEngine.create({ generatedRoot: GENERATED_ROOT });
+    const workspaces = await readWorkspaces();
 
     const inputs: PackageVersionsInput[] = [];
     const projects: ProjectArtifact[] = [];
@@ -89,6 +105,7 @@ async function main(): Promise<void> {
         // display folder when a displayName override is set.
         const apiSource = path.join(GENERATED_ROOT, `${fullName.split('/').pop() ?? fullName}.api.json`);
         const file = serializeProject(pkg);
+        const workspace = workspaces.get(fullName);
         const versions = USE_FIXTURES
             ? syntheticVersions(real)
             : [{ version: real, channel: isPrerelease(real) ? 'prerelease' : 'stable' } satisfies SyntheticVersion];
@@ -98,7 +115,8 @@ async function main(): Promise<void> {
             fullName,
             versions: versions.map((entry) => entry.version),
             entities: pkg.directory.toneMap(),
-            ...(pkg.manifest.description && { description: pkg.manifest.description })
+            ...(pkg.manifest.description && { description: pkg.manifest.description }),
+            ...(workspace && { workspace })
         });
         for (const { version, channel } of versions) {
             projects.push({ folder, version, channel, file, apiSource });

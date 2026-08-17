@@ -41,7 +41,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ path?: 
             pill: 'docs',
             accent: BRAND.seedDark,
             meta: [],
-            name: 'seedcord',
+            name: 'Reference',
             description: SITE_DESCRIPTION
         });
     }

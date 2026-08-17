@@ -9,6 +9,7 @@ export interface PackageVersionsInput {
     versions: readonly string[];
     entities?: Record<string, EntityTone>;
     description?: string;
+    workspace?: string;
 }
 
 export interface BuildIndexOptions {
@@ -57,6 +58,10 @@ function buildEntry(pkg: PackageVersionsInput): PackageIndexEntry {
 
     if (pkg.description) {
         entry.description = pkg.description;
+    }
+
+    if (pkg.workspace) {
+        entry.workspace = pkg.workspace;
     }
 
     return entry;

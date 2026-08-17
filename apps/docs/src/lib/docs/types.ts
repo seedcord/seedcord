@@ -119,6 +119,8 @@ export interface PackageCatalogEntry {
     manifestName: string;
     label: string;
     description: string;
+    workspace: string | null;
+    symbolCounts: ReadonlyMap<EntityTone, number>;
     versions: readonly PackageVersionCatalog[];
 }
 

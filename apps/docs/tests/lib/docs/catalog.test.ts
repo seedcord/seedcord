@@ -43,6 +43,8 @@ function makeEntry(versions: PackageVersionCatalog[]): PackageCatalogEntry {
         manifestName: 'seedcord',
         label: 'seedcord',
         description: 'desc',
+        workspace: 'packages',
+        symbolCounts: new Map(),
         versions
     };
 }
