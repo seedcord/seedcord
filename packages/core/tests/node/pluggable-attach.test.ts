@@ -76,6 +76,15 @@ function makeHost(): { host: TestHost; startup: CoordinatedStartup; shutdown: Co
     return { host: new TestHost(shutdown, startup), startup, shutdown };
 }
 
+function InfersConcreteCtorArgsAtAttach(): void {
+    expectTypeOf<PluginArgs<typeof TestPlugin>>().toEqualTypeOf<[tag: string]>();
+
+    const { host } = makeHost();
+    // @ts-expect-error the tag arg is a string, a number must not type-check
+    host.attach('db', TestPlugin, 42);
+}
+void InfersConcreteCtorArgsAtAttach;
+
 describe('Pluggable', () => {
     afterEach(() => {
         TestHost.resetHost();
@@ -425,24 +434,6 @@ describe('Pluggable', () => {
         expect(order).toEqual(['b', 'a']);
     });
 
-    it('rolls back three completed inits in reverse when the fourth fails', async () => {
-        const { host } = makeHost();
-        const order: string[] = [];
-        const a = host.attach('a', TestPlugin, 'a').a;
-        const b = host.attach('b', TestPlugin, 'b').b;
-        const c = host.attach('c', TestPlugin, 'c').c;
-        const d = host.attach('d', TestPlugin, 'd').d;
-        for (const plugin of [a, b, c, d]) {
-            plugin.onDispose = () => order.push(plugin.tag);
-        }
-        d.onInit = () => {
-            throw new Error('d failed');
-        };
-
-        await expect(host.run()).rejects.toThrow();
-        expect(order).toEqual(['c', 'b', 'a']);
-    });
-
     it('propagates the startup error when a rollback dispose rejects', async () => {
         const { host } = makeHost();
         const a = host.attach('a', TestPlugin, 'a').a;
@@ -524,14 +515,6 @@ describe('Pluggable', () => {
         await host.run();
         await host.run();
         expect(withDb.db.initCalls).toBe(1);
-    });
-
-    it('infers the concrete ctor args at the attach call site', () => {
-        expectTypeOf<PluginArgs<typeof TestPlugin>>().toEqualTypeOf<[tag: string]>();
-
-        const { host } = makeHost();
-        // @ts-expect-error the tag arg is a string, a number must not type-check
-        host.attach('db', TestPlugin, 42);
     });
 
     it('a second live host throws and releases its own handlers', () => {

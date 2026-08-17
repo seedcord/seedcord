@@ -1,5 +1,4 @@
 import { Plugin } from '@seedcord/core/plugin';
-import { describe, it, expect } from 'vitest';
 
 import type { Seedcord } from '#src/Seedcord';
 
@@ -40,8 +39,5 @@ function probeRejects(bot: Seedcord): void {
     bot.attach('edge', EdgeOnly);
 }
 
-describe('gateway attach scopes', () => {
-    it('pins the host to the gateway transport and the server runtime', () => {
-        expect([probeAccepts, probeRejects]).toHaveLength(2);
-    });
-});
+void probeAccepts;
+void probeRejects;

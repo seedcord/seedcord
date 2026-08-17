@@ -52,6 +52,12 @@ class WithoutSchema extends MongooseService<IUser> {}
 void WithOverride;
 void WithoutSchema;
 
+expectTypeOf<WithSchema['model']>().toEqualTypeOf<mongoose.Model<IUser>>();
+
+expectTypeOf<
+    Awaited<ReturnType<WithSchema['model']['findOne']>>
+>().toEqualTypeOf<mongoose.HydratedDocument<IUser> | null>();
+
 describe('empty override', () => {
     it('rejects an empty modelName at decoration time', () => {
         expect(() => {
@@ -62,17 +68,5 @@ describe('empty override', () => {
             }
             void Empty;
         }).toThrow(expect.objectContaining({ code: SeedcordErrorCode.PluginMongooseModelNameMissing }));
-    });
-});
-
-describe('MongooseService contract', () => {
-    it('types the model against the service document', () => {
-        expectTypeOf<WithSchema['model']>().toEqualTypeOf<mongoose.Model<IUser>>();
-    });
-
-    it('keeps result documents typed', () => {
-        expectTypeOf<
-            Awaited<ReturnType<WithSchema['model']['findOne']>>
-        >().toEqualTypeOf<mongoose.HydratedDocument<IUser> | null>();
     });
 });

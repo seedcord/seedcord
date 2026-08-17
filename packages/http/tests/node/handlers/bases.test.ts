@@ -61,6 +61,29 @@ function modalEvent(extra: Record<string, unknown> = {}): APIModalSubmitInteract
 const reply = { components: [new TextDisplayBuilder().setContent('hi')] };
 const serialized = reply.components.map((c) => c.toJSON());
 
+const modal = {
+    toJSON: (): { title: string; custom_id: string; components: never[] } => ({
+        title: 'x',
+        custom_id: 'y',
+        components: []
+    })
+};
+
+class RejectsShowModalModalKindAt extends ModalHandler<never> {
+    async execute(): Promise<void> {
+        // @ts-expect-error a modal cannot open another modal
+        await this.showModal(modal);
+    }
+}
+void RejectsShowModalModalKindAt;
+
+class KeepsShowModalComponentKinds extends ButtonHandler<never> {
+    async execute(): Promise<void> {
+        await this.showModal(modal);
+    }
+}
+void KeepsShowModalComponentKinds;
+
 describe('SlashHandler base', () => {
     class Ban extends SlashHandler<never> {
         async execute(): Promise<void> {
@@ -112,35 +135,6 @@ describe('ButtonHandler base', () => {
         expect(route).toBe(CALLBACK_ROUTE);
         expect(options.body.type).toBe(7);
         expect(options.body.data.components).toEqual(serialized);
-    });
-});
-
-describe('showModal kind gating', () => {
-    const modal = {
-        toJSON: (): { title: string; custom_id: string; components: never[] } => ({
-            title: 'x',
-            custom_id: 'y',
-            components: []
-        })
-    };
-
-    it('rejects showModal on the modal kind at compile time', () => {
-        class Blocked extends ModalHandler<never> {
-            async execute(): Promise<void> {
-                // @ts-expect-error a modal cannot open another modal
-                await this.showModal(modal);
-            }
-        }
-        expect(Blocked).toBeDefined();
-    });
-
-    it('keeps showModal on the component kinds', () => {
-        class Opens extends ButtonHandler<never> {
-            async execute(): Promise<void> {
-                await this.showModal(modal);
-            }
-        }
-        expect(Opens).toBeDefined();
     });
 });
 

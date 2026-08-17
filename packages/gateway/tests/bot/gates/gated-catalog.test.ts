@@ -31,25 +31,189 @@ declare module '@seedcord/core' {
 
 const ModalProbeId = new CustomId('catalogmodal').str('x');
 
+@Gated(OwnerOnly())
+class AttachesAgnosticCatalogGate extends SlashHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+@Gated(Cooldown(5))
+class AttachesAgnosticCatalogGate2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesAgnosticCatalogGate;
+void AttachesAgnosticCatalogGate2;
+
+@Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
+@ModalRoute(ModalProbeId)
+class AttachesChannelScopedRequirePermissions extends ModalHandler<[typeof ModalProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesChannelScopedRequirePermissions;
+
+@Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
+class AttachesChannelScopedRequirePermissions2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesChannelScopedRequirePermissions2;
+
+@Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
+class AttachesGuildScopedRequirePermissions extends SlashHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+@Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
+class AttachesGuildScopedRequirePermissions2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesGuildScopedRequirePermissions;
+void AttachesGuildScopedRequirePermissions2;
+
+// @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+@Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
+class RejectsRequirePermissionsAutocomplete extends AutocompleteHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsRequirePermissionsAutocomplete;
+
+// @ts-expect-error Nsfw excludes ModalSubmit, which has no reliable channel
+@Gated(Nsfw())
+@ModalRoute(ModalProbeId)
+class RejectsNsfwModalHandler extends ModalHandler<[typeof ModalProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsNsfwModalHandler;
+
+@Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
+@ModalRoute(ModalProbeId)
+class AttachesRequireBotPermissions extends ModalHandler<[typeof ModalProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+@Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
+class AttachesRequireBotPermissions2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesRequireBotPermissions;
+void AttachesRequireBotPermissions2;
+
+// @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+@Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
+class RejectsRequireBotPermissions extends AutocompleteHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsRequireBotPermissions;
+
+@Gated(RequireRole('123456789012345678'))
+@ModalRoute(ModalProbeId)
+class AttachesRequireRoleModalEvent extends ModalHandler<[typeof ModalProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+@Gated(RequireRole('123456789012345678'))
+class AttachesRequireRoleModalEvent2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesRequireRoleModalEvent;
+void AttachesRequireRoleModalEvent2;
+
+// @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+@Gated(RequireRole('123456789012345678'))
+class RejectsRequireRoleAutocomplete extends AutocompleteHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsRequireRoleAutocomplete;
+
+@Gated(IgnoreBots)
+class AttachesIgnoreBotsEventHandler extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AttachesIgnoreBotsEventHandler;
+
+// @ts-expect-error IgnoreBots is event-only, a Silence on an interaction leaves "interaction failed"
+@Gated(IgnoreBots)
+class RejectsIgnoreBotsSlashHandler extends SlashHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsIgnoreBotsSlashHandler;
+
+@Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
+class AcceptsAgnosticRequirePermissions extends SlashHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+@Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
+@ModalRoute(ModalProbeId)
+class AcceptsAgnosticRequirePermissions2 extends ModalHandler<[typeof ModalProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsAgnosticRequirePermissions;
+void AcceptsAgnosticRequirePermissions2;
+
+// @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+@Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
+class RejectsAgnosticRequirePermissions extends AutocompleteHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsAgnosticRequirePermissions;
+
+@Gated(or(OwnerOnly(), Cooldown(5)))
+class AcceptsOrAgnosticAgnosticBoth extends SlashHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+@Gated(or(OwnerOnly(), Cooldown(5)))
+class AcceptsOrAgnosticAgnosticBoth2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsOrAgnosticAgnosticBoth;
+void AcceptsOrAgnosticAgnosticBoth2;
+
+// @ts-expect-error IgnoreBots is event-only, so the and fits no interaction handler
+@Gated(and(IgnoreBots, RequirePermissions([PermissionFlagsBits.BanMembers])))
+class RejectsEventOnlyAgnosticPermission extends SlashHandler<'catalogprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsEventOnlyAgnosticPermission;
+
 describe('@Gated catalog gates', () => {
-    it('attaches an agnostic catalog gate to a slash and an event handler', () => {
-        @Gated(OwnerOnly())
-        class Slash extends SlashHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        @Gated(Cooldown(5))
-        class Event extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Slash).toBeDefined();
-        expect(Event).toBeDefined();
-    });
-
     it('attaches RequirePermissions to a slash handler', () => {
         @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
         class Handler extends SlashHandler<'catalogprobe'> {
@@ -58,221 +222,6 @@ describe('@Gated catalog gates', () => {
             }
         }
 
-        expect(Handler).toBeDefined();
         expect((Reflect.getMetadata(GatedMetadataKey, Handler) as unknown[]).length).toBe(1);
-    });
-
-    it('attaches the channel-scoped RequirePermissions to a modal handler', () => {
-        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
-        @ModalRoute(ModalProbeId)
-        class Handler extends ModalHandler<[typeof ModalProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('attaches the channel-scoped RequirePermissions to an event handler', () => {
-        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('attaches the guild-scoped RequirePermissions to a slash and an event handler', () => {
-        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
-        class Slash extends SlashHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers], { in: 'guild' }))
-        class Event extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Slash).toBeDefined();
-        expect(Event).toBeDefined();
-    });
-
-    it('rejects RequirePermissions on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
-        @Gated(RequirePermissions([PermissionFlagsBits.BanMembers]))
-        class Handler extends AutocompleteHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects Nsfw on a modal handler', () => {
-        // @ts-expect-error Nsfw excludes ModalSubmit, which has no reliable channel
-        @Gated(Nsfw())
-        @ModalRoute(ModalProbeId)
-        class Handler extends ModalHandler<[typeof ModalProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('attaches RequireBotPermissions to a modal and an event handler', () => {
-        @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
-        @ModalRoute(ModalProbeId)
-        class Modal extends ModalHandler<[typeof ModalProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
-        class Event extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Modal).toBeDefined();
-        expect(Event).toBeDefined();
-    });
-
-    it('rejects RequireBotPermissions on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
-        @Gated(RequireBotPermissions([PermissionFlagsBits.BanMembers]))
-        class Handler extends AutocompleteHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('attaches RequireRole to a modal and an event handler', () => {
-        @Gated(RequireRole('123456789012345678'))
-        @ModalRoute(ModalProbeId)
-        class Modal extends ModalHandler<[typeof ModalProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        @Gated(RequireRole('123456789012345678'))
-        class Event extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Modal).toBeDefined();
-        expect(Event).toBeDefined();
-    });
-
-    it('rejects RequireRole on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
-        @Gated(RequireRole('123456789012345678'))
-        class Handler extends AutocompleteHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('attaches IgnoreBots to an event handler', () => {
-        @Gated(IgnoreBots)
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects IgnoreBots on a slash handler', () => {
-        // @ts-expect-error IgnoreBots is event-only, a Silence on an interaction leaves "interaction failed"
-        @Gated(IgnoreBots)
-        class Handler extends SlashHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-});
-
-describe('@Gated catalog gate combinators', () => {
-    it('accepts and(agnostic, RequirePermissions) on a slash and a modal handler', () => {
-        @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
-        class Slash extends SlashHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
-        @ModalRoute(ModalProbeId)
-        class Modal extends ModalHandler<[typeof ModalProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Slash).toBeDefined();
-        expect(Modal).toBeDefined();
-    });
-
-    it('rejects and(agnostic, RequirePermissions) on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
-        @Gated(and(GuildOnly(), RequirePermissions([PermissionFlagsBits.BanMembers])))
-        class Handler extends AutocompleteHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts or(agnostic, agnostic) on both a slash and an event handler', () => {
-        @Gated(or(OwnerOnly(), Cooldown(5)))
-        class Slash extends SlashHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-        @Gated(or(OwnerOnly(), Cooldown(5)))
-        class Event extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Slash).toBeDefined();
-        expect(Event).toBeDefined();
-    });
-
-    it('rejects and(event-only, agnostic-permission) on a slash handler', () => {
-        // @ts-expect-error IgnoreBots is event-only, so the and fits no interaction handler
-        @Gated(and(IgnoreBots, RequirePermissions([PermissionFlagsBits.BanMembers])))
-        class Handler extends SlashHandler<'catalogprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
     });
 });

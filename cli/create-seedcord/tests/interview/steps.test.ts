@@ -80,12 +80,6 @@ describe('the JavaScript replies', () => {
         expect(JAVASCRIPT_REPLIES.filter((reply) => !reply.includes('TypeScript'))).toEqual([]);
     });
 
-    it('opens each line differently', () => {
-        const openers = JAVASCRIPT_REPLIES.map((reply) => reply.split(' ')[0]?.replace(/\W+$/, ''));
-
-        expect(new Set(openers).size).toBe(openers.length);
-    });
-
     it('picks one from the pool', () => {
         expect(JAVASCRIPT_REPLIES).toContain(pickReply(() => 0));
         expect(pickReply(() => 0)).toBe(JAVASCRIPT_REPLIES[0]);

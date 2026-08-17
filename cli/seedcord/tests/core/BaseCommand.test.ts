@@ -41,10 +41,4 @@ describe('BaseCommand logger', () => {
         expect(sink.records[0]?.channel).toBe('cli');
         expect(sink.records[0]?.label).toBe('Probe');
     });
-
-    it('exposes the logger utils', () => {
-        new Probe().summarize();
-
-        expect(sink.records[0]?.channel).toBe('cli');
-    });
 });

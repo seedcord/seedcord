@@ -53,6 +53,7 @@ class SingleType extends EventMiddleware<Events.MessageCreate> {
         await Promise.resolve();
     }
 }
+void SingleType;
 
 class MultiType extends EventMiddleware<Events.MessageCreate | Events.MessageUpdate> {
     async execute(): Promise<void> {
@@ -63,6 +64,7 @@ class MultiType extends EventMiddleware<Events.MessageCreate | Events.MessageUpd
         await Promise.resolve();
     }
 }
+void MultiType;
 
 class CatchallType extends EventMiddleware {
     async execute(): Promise<void> {
@@ -71,6 +73,7 @@ class CatchallType extends EventMiddleware {
         await Promise.resolve();
     }
 }
+void CatchallType;
 
 describe('EventMiddleware', () => {
     it('threads the fired event name into the ctor', () => {
@@ -94,10 +97,6 @@ describe('EventMiddleware', () => {
             expect.objectContaining({ code: SeedcordErrorCode.EventMiddlewareNameUnavailable })
         );
     });
-
-    it('exposes the type specs', () => {
-        expect([SingleType, MultiType, CatchallType]).toHaveLength(3);
-    });
 });
 
 // --- @Middleware <-> EventMiddleware generic cross-check (compile-time) ---
@@ -108,6 +107,7 @@ class GoodCatchall extends EventMiddleware {
         await Promise.resolve();
     }
 }
+void GoodCatchall;
 
 @Middleware(MiddlewareType.Event, 0, { events: [Events.MessageCreate] })
 class GoodSingle extends EventMiddleware<Events.MessageCreate> {
@@ -115,6 +115,7 @@ class GoodSingle extends EventMiddleware<Events.MessageCreate> {
         await Promise.resolve();
     }
 }
+void GoodSingle;
 
 @Middleware(MiddlewareType.Event, 0, { events: [Events.MessageCreate, Events.MessageUpdate] })
 class GoodMulti extends EventMiddleware<Events.MessageCreate | Events.MessageUpdate> {
@@ -122,6 +123,7 @@ class GoodMulti extends EventMiddleware<Events.MessageCreate | Events.MessageUpd
         await Promise.resolve();
     }
 }
+void GoodMulti;
 
 // the generic names an event { events } omits
 // @ts-expect-error events lists messageCreate, the generic is guildMemberAdd
@@ -131,6 +133,7 @@ class BadMismatch extends EventMiddleware<Events.GuildMemberAdd> {
         await Promise.resolve();
     }
 }
+void BadMismatch;
 
 // { events } is a superset of the generic
 // @ts-expect-error events lists messageUpdate, the generic omits it
@@ -140,6 +143,7 @@ class BadNarrowGeneric extends EventMiddleware<Events.MessageCreate> {
         await Promise.resolve();
     }
 }
+void BadNarrowGeneric;
 
 // the generic is a superset of { events }
 // @ts-expect-error the generic lists guildMemberAdd, { events } omits it
@@ -149,6 +153,7 @@ class BadWideGeneric extends EventMiddleware<Events.MessageCreate | Events.Guild
         await Promise.resolve();
     }
 }
+void BadWideGeneric;
 
 // interaction middleware is unchanged, catchall over Repliables, no events
 @Middleware(MiddlewareType.Interaction, 0)
@@ -157,16 +162,9 @@ class GoodInteraction extends InteractionMiddleware<Repliables> {
         await Promise.resolve();
     }
 }
+void GoodInteraction;
 
 describe('Middleware event cross-check', () => {
-    it('accepts an EventMiddleware whose generic matches { events }, in both directions and catchall', () => {
-        expect([GoodCatchall, GoodSingle, GoodMulti, BadMismatch, BadNarrowGeneric, BadWideGeneric]).toHaveLength(6);
-    });
-
-    it('leaves interaction middleware unchanged', () => {
-        expect(GoodInteraction).toBeDefined();
-    });
-
     it('rejects event filters on interaction middleware at decoration time', () => {
         expect(() => {
             // justified: a JS consumer without types passing events to interaction middleware, the cast mimics that

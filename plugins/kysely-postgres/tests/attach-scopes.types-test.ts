@@ -1,5 +1,3 @@
-import { describe, it, expect } from 'vitest';
-
 import { KyselyPostgres } from '#src/KyselyPostgres';
 
 import type { KyselyOptions } from '#src/types/KyselyOptions';
@@ -25,8 +23,6 @@ function probeEdgeRejects(bot: HttpSeedcord<HttpEdgeConfig>): void {
     bot.attach('sql', KyselyPostgres, options);
 }
 
-describe('KyselyPostgres attach scopes', () => {
-    it('attaches to a gateway bot and an http server bot, and an edge bot rejects it', () => {
-        expect([probeGatewayAccepts, probeHttpServerAccepts, probeEdgeRejects]).toHaveLength(3);
-    });
-});
+void probeGatewayAccepts;
+void probeHttpServerAccepts;
+void probeEdgeRejects;

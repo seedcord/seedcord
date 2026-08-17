@@ -1,5 +1,4 @@
 import { Plugin } from '@seedcord/core/plugin';
-import { describe, it, expect } from 'vitest';
 
 import type { HttpEdgeConfig, HttpServerConfig } from '#interfaces/Config';
 import type { Seedcord } from '#src/node/Seedcord';
@@ -39,8 +38,6 @@ function probeEdgeRejectsEverything(bot: Seedcord<HttpEdgeConfig>): void {
     bot.attach('http', HttpOnly);
 }
 
-describe('http attach scopes', () => {
-    it('reads the runtime off the config literal the host is constructed with', () => {
-        expect([probeServerAccepts, probeServerRejects, probeEdgeRejectsEverything]).toHaveLength(3);
-    });
-});
+void probeServerAccepts;
+void probeServerRejects;
+void probeEdgeRejectsEverything;

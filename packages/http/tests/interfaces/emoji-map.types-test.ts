@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import { Emojis } from '#src/emojis/EmojiInjector';
 
@@ -23,8 +23,4 @@ function typeChecks(): void {
     void Emojis.Nope;
 }
 
-describe('Emojis', () => {
-    it('types every configured key as a resolved emoji', () => {
-        expect(typeof typeChecks).toBe('function');
-    });
-});
+void typeChecks;

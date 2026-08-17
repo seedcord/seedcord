@@ -1,4 +1,4 @@
-import { describe, it, expectTypeOf } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import { RegisterKyselyService } from '#src/decorators/RegisterKyselyService';
 import { KyselyService } from '#src/KyselyService';
@@ -59,21 +59,11 @@ void OverrideDisagrees;
 void KeyDisagrees;
 void LooseOverrideDisagrees;
 
-describe('schema augmentation', () => {
-    it('resolves the declared schema without a type argument on the plugin', () => {
-        expectTypeOf<KyselySchema>().toEqualTypeOf<{ users: UserRow; products: ProductRow }>();
-    });
+expectTypeOf<KyselySchema>().toEqualTypeOf<{ users: UserRow; products: ProductRow }>();
 
-    it('narrows the table union to the declared tables', () => {
-        expectTypeOf<KyselyTable>().toEqualTypeOf<'users' | 'products'>();
-    });
+expectTypeOf<KyselyTable>().toEqualTypeOf<'users' | 'products'>();
 
-    it('types a service query builder against the declared schema', () => {
-        expectTypeOf<Users['db']>().toEqualTypeOf<Kysely<{ users: UserRow; products: ProductRow }>>();
-        expectTypeOf<Users>().toHaveProperty('table').toEqualTypeOf<'users'>();
-    });
+expectTypeOf<Users['db']>().toEqualTypeOf<Kysely<{ users: UserRow; products: ProductRow }>>();
+expectTypeOf<Users>().toHaveProperty('table').toEqualTypeOf<'users'>();
 
-    it('defaults the table to every declared table when the service declares none', () => {
-        expectTypeOf<AnyTable>().toHaveProperty('table').toEqualTypeOf<'users' | 'products'>();
-    });
-});
+expectTypeOf<AnyTable>().toHaveProperty('table').toEqualTypeOf<'users' | 'products'>();

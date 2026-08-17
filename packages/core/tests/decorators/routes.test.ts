@@ -64,6 +64,56 @@ function routes(route: InteractionRoutes, ctor: object): unknown {
     return Reflect.getMetadata(InteractionRouteKeys[route], ctor);
 }
 
+// @ts-expect-error the decorator lists a route the handler does not declare
+@SlashRoute('rtKick')
+class RejectsMismatchesAtCompile extends SlashBase<'rtBan'> {
+    async execute(): Promise<void> {}
+}
+
+// @ts-expect-error the handler declares a route the decorator omits
+@SlashRoute('rtBan')
+class RejectsMismatchesAtCompile2 extends SlashBase<'rtBan' | 'rtKick'> {
+    async execute(): Promise<void> {}
+}
+
+// @ts-expect-error a slash decorator rejects an autocomplete handler
+@SlashRoute('rtFind')
+class RejectsMismatchesAtCompile3 extends AutocompleteBase<'rtFind'> {
+    async execute(): Promise<void> {}
+}
+
+// @ts-expect-error the kind does not match the handler generic
+@ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
+class RejectsMismatchesAtCompile4 extends ContextMenuBase<ApplicationCommandType.User> {
+    async execute(): Promise<void> {}
+}
+
+// @ts-expect-error a button decorator rejects a modal handler
+@ButtonRoute(ApproveId)
+class RejectsMismatchesAtCompile5 extends ComponentBase<'modal', [typeof ApproveId]> {
+    async execute(): Promise<void> {}
+}
+
+// @ts-expect-error the defs do not match the handler generic
+@ButtonRoute(ApproveId)
+class RejectsMismatchesAtCompile6 extends ComponentBase<'button', [typeof ApproveId, typeof RejectId]> {
+    async execute(): Promise<void> {}
+}
+
+// @ts-expect-error the select kind does not match the handler generic
+@SelectMenuRoute(SelectMenuKind.Role, ApproveId)
+class RejectsMismatchesAtCompile7 extends ComponentBase<SelectMenuKind.User, [typeof ApproveId]> {
+    async execute(): Promise<void> {}
+}
+
+void RejectsMismatchesAtCompile;
+void RejectsMismatchesAtCompile2;
+void RejectsMismatchesAtCompile3;
+void RejectsMismatchesAtCompile4;
+void RejectsMismatchesAtCompile5;
+void RejectsMismatchesAtCompile6;
+void RejectsMismatchesAtCompile7;
+
 describe('route metadata writes', () => {
     it('SlashRoute stores the routes under the slash key', () => {
         @SlashRoute('rtBan', 'rtKick')
@@ -112,63 +162,5 @@ describe('route metadata writes', () => {
             async execute(): Promise<void> {}
         }
         expect(routes(InteractionRoutes.Modal, Config)).toEqual(['approve']);
-    });
-});
-
-describe('route compile pins', () => {
-    it('rejects the mismatches at compile time', () => {
-        // @ts-expect-error the decorator lists a route the handler does not declare
-        @SlashRoute('rtKick')
-        class WrongRoute extends SlashBase<'rtBan'> {
-            async execute(): Promise<void> {}
-        }
-
-        // @ts-expect-error the handler declares a route the decorator omits
-        @SlashRoute('rtBan')
-        class MissingRoute extends SlashBase<'rtBan' | 'rtKick'> {
-            async execute(): Promise<void> {}
-        }
-
-        // @ts-expect-error a slash decorator rejects an autocomplete handler
-        @SlashRoute('rtFind')
-        class WrongFamily extends AutocompleteBase<'rtFind'> {
-            async execute(): Promise<void> {}
-        }
-
-        // @ts-expect-error the kind does not match the handler generic
-        @ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
-        class WrongKind extends ContextMenuBase<ApplicationCommandType.User> {
-            async execute(): Promise<void> {}
-        }
-
-        // @ts-expect-error a button decorator rejects a modal handler
-        @ButtonRoute(ApproveId)
-        class WrongComponent extends ComponentBase<'modal', [typeof ApproveId]> {
-            async execute(): Promise<void> {}
-        }
-
-        // @ts-expect-error the defs do not match the handler generic
-        @ButtonRoute(ApproveId)
-        class MissingDef extends ComponentBase<'button', [typeof ApproveId, typeof RejectId]> {
-            async execute(): Promise<void> {}
-        }
-
-        // @ts-expect-error the select kind does not match the handler generic
-        @SelectMenuRoute(SelectMenuKind.Role, ApproveId)
-        class WrongSelectKind extends ComponentBase<SelectMenuKind.User, [typeof ApproveId]> {
-            async execute(): Promise<void> {}
-        }
-
-        for (const ctor of [
-            WrongRoute,
-            MissingRoute,
-            WrongFamily,
-            WrongKind,
-            WrongComponent,
-            MissingDef,
-            WrongSelectKind
-        ]) {
-            expect(ctor).toBeDefined();
-        }
     });
 });

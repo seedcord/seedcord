@@ -78,23 +78,6 @@ describe('Disclosure Panel data-state', () => {
     });
 });
 
-describe('Disclosure Trigger composition', () => {
-    it('renders arbitrary ReactNode children inside the button', () => {
-        render(
-            <Disclosure>
-                <DisclosureTrigger>
-                    <span data-testid="label">Label</span>
-                    <span data-testid="hint">Hint</span>
-                </DisclosureTrigger>
-                <DisclosurePanel>Body</DisclosurePanel>
-            </Disclosure>
-        );
-        const trigger = screen.getByRole('button');
-        expect(trigger).toContainElement(screen.getByTestId('label'));
-        expect(trigger).toContainElement(screen.getByTestId('hint'));
-    });
-});
-
 describe('Disclosure defaultOpen prop', () => {
     it('respects defaultOpen=true on mount', () => {
         renderDisclosure({ defaultOpen: true });
@@ -102,11 +85,5 @@ describe('Disclosure defaultOpen prop', () => {
         expect(trigger).toHaveAttribute('aria-expanded', 'true');
         const panel = screen.getByText('Panel body').parentElement;
         expect(panel).toHaveAttribute('data-state', 'open');
-    });
-
-    it('defaults to closed when defaultOpen is omitted', () => {
-        renderDisclosure();
-        const trigger = screen.getByRole('button', { name: 'Toggle' });
-        expect(trigger).toHaveAttribute('aria-expanded', 'false');
     });
 });

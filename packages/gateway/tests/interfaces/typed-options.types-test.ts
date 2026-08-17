@@ -1,9 +1,7 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type { GuildMember, User } from 'discord.js';
-
-// each @ts-expect-error fails the typecheck if its guard stops being an error. vitest never runs these.
 
 // augment the registry exactly as `seedcord codegen` would emit it for one command
 declare module '@seedcord/core' {
@@ -32,8 +30,4 @@ function typeChecks(options: SlashOptions<'ban'>): void {
     void options.getChannel;
 }
 
-describe('SlashOptions', () => {
-    it('exposes the type-checked option surface', () => {
-        expect(typeof typeChecks).toBe('function');
-    });
-});
+void typeChecks;

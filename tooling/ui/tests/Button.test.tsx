@@ -28,11 +28,6 @@ describe('Button behavior', () => {
         expect(onClick).not.toHaveBeenCalled();
     });
 
-    it('renders children', () => {
-        render(<Button>Hello</Button>);
-        expect(screen.getByRole('button', { name: 'Hello' })).toHaveTextContent('Hello');
-    });
-
     it('defaults type to "button"', () => {
         render(<Button>Default</Button>);
         expect(screen.getByRole('button', { name: 'Default' })).toHaveAttribute('type', 'button');

@@ -30,12 +30,15 @@ class WrongTransport extends Plugin<{ transport: 'gateway' }> {
         return Promise.resolve();
     }
 }
+void WrongTransport;
 
+// the http base accepts a plugin declaring any transport
 class Portable extends Plugin<{ transport: 'any' }> {
     public init(): Promise<void> {
         return Promise.resolve();
     }
 }
+void Portable;
 
 describe('the http plugin base', () => {
     it('binds this.core to the http Core', () => {
@@ -43,15 +46,5 @@ describe('the http plugin base', () => {
 
         expect(plugin.peek()).toBe(core);
         expect(plugin.readRest()).toBe(core.rest.options);
-    });
-
-    it('accepts a plugin declaring any transport', () => {
-        const plugin = new Portable(core);
-
-        expect(plugin).toBeInstanceOf(Plugin);
-    });
-
-    it('keeps WrongTransport referenced so its directive stays consumed', () => {
-        expect(typeof WrongTransport).toBe('function');
     });
 });

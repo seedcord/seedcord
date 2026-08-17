@@ -99,6 +99,7 @@ class MissingArm extends AutocompleteHandler<'search'> {
         });
     }
 }
+void MissingArm;
 
 // respond choice values are pinned to the focused field's kind
 class BadRespond extends AutocompleteHandler<'search'> {
@@ -111,6 +112,7 @@ class BadRespond extends AutocompleteHandler<'search'> {
         });
     }
 }
+void BadRespond;
 
 // sibling reads are restricted to the four resolvable kinds, every read nullable, choices narrowing kept
 class Siblings extends AutocompleteHandler<'search'> {
@@ -129,6 +131,7 @@ class Siblings extends AutocompleteHandler<'search'> {
         await Promise.resolve();
     }
 }
+void Siblings;
 
 // this.route is the firing command, typed as the registered union
 class RouteTyped extends AutocompleteHandler<'search' | 'find'> {
@@ -137,6 +140,7 @@ class RouteTyped extends AutocompleteHandler<'search' | 'find'> {
         await Promise.resolve();
     }
 }
+void RouteTyped;
 
 // a multi-command handler's arms span every autocompletable field across both commands
 class MultiCommand extends AutocompleteHandler<'search' | 'find'> {
@@ -149,6 +153,7 @@ class MultiCommand extends AutocompleteHandler<'search' | 'find'> {
         });
     }
 }
+void MultiCommand;
 
 // the sibling view across commands is the union of their options, an option absent on the firing command reads null
 class UnionSiblings extends AutocompleteHandler<'search' | 'find'> {
@@ -159,6 +164,7 @@ class UnionSiblings extends AutocompleteHandler<'search' | 'find'> {
         await Promise.resolve();
     }
 }
+void UnionSiblings;
 
 // the four-kind nullable sibling view, reading through to the djs resolver
 class SiblingReader extends AutocompleteHandler<'search'> {
@@ -177,6 +183,7 @@ class DecoratedSingle extends AutocompleteHandler<'search'> {
         await Promise.resolve();
     }
 }
+void DecoratedSingle;
 
 @AutocompleteRoute('search', 'find')
 class DecoratedMulti extends AutocompleteHandler<'search' | 'find'> {
@@ -184,6 +191,7 @@ class DecoratedMulti extends AutocompleteHandler<'search' | 'find'> {
         await Promise.resolve();
     }
 }
+void DecoratedMulti;
 
 // the handler declares a command the decorator omits
 // @ts-expect-error 'find' is in the generic but not listed on the decorator.
@@ -193,6 +201,7 @@ class OmitsCommand extends AutocompleteHandler<'search' | 'find'> {
         await Promise.resolve();
     }
 }
+void OmitsCommand;
 
 // the decorator lists a command the handler does not declare
 // @ts-expect-error 'find' is listed on the decorator but not in the generic.
@@ -202,6 +211,7 @@ class ExtraCommand extends AutocompleteHandler<'search'> {
         await Promise.resolve();
     }
 }
+void ExtraCommand;
 
 // the decorator only accepts registered routes
 // @ts-expect-error 'ghost' is not a key of SlashOptionRegistry.
@@ -211,6 +221,7 @@ class UnknownCommand extends AutocompleteHandler<'search'> {
         await Promise.resolve();
     }
 }
+void UnknownCommand;
 
 describe('AutocompleteHandler', () => {
     it('reads the focused option lazily, typed to the autocompletable union with a string value', () => {
@@ -225,10 +236,6 @@ describe('AutocompleteHandler', () => {
 
     it('exposes the focused type spec', () => {
         expect(FocusedTypes).toBeTypeOf('function');
-    });
-
-    it('cross-checks @AutocompleteRoute against the handler generic', () => {
-        expect([DecoratedSingle, DecoratedMulti, OmitsCommand, ExtraCommand, UnknownCommand]).toHaveLength(5);
     });
 
     it('runs the arm for the focused field with the partial value', async () => {
@@ -252,16 +259,8 @@ describe('AutocompleteHandler', () => {
         });
     });
 
-    it('exposes the match type specs', () => {
-        expect([MissingArm, BadRespond]).toHaveLength(2);
-    });
-
     it('reads sibling options through the restricted nullable view', () => {
         expect(new SiblingReader(autocompleteSiblings('query', { limit: 7 }), core).readLimit()).toBe(7);
         expect(new SiblingReader(autocompleteSiblings('query', {}), core).readLimit()).toBeNull();
-    });
-
-    it('exposes the sibling and multi-command type specs', () => {
-        expect([Siblings, RouteTyped, MultiCommand, UnionSiblings]).toHaveLength(4);
     });
 });

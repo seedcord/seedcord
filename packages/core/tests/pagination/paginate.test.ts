@@ -5,6 +5,12 @@ import { paginate } from '#pagination/paginate';
 
 const items = Array.from({ length: 25 }, (_, i) => i);
 
+function InfersItemTypeFromInput(): void {
+    const view = paginate(['a', 'b', 'c'], 0, 2);
+    expectTypeOf(view.items).toEqualTypeOf<string[]>();
+}
+void InfersItemTypeFromInput;
+
 describe('paginate', () => {
     it('slices the requested page and reports the bounds', () => {
         const view = paginate(items, 0, 10);
@@ -54,10 +60,5 @@ describe('paginate', () => {
         expect(() => paginate(items, 0, 0)).toThrow(SeedcordRangeError);
         expect(() => paginate(items, 0, -1)).toThrow(SeedcordRangeError);
         expect(() => paginate(items, 0, 2.5)).toThrow(SeedcordRangeError);
-    });
-
-    it('infers the item type from the input', () => {
-        const view = paginate(['a', 'b', 'c'], 0, 2);
-        expectTypeOf(view.items).toEqualTypeOf<string[]>();
     });
 });

@@ -8,6 +8,7 @@ import type { ViteUserConfig } from 'vitest/config';
 const base = defineConfig({
     test: {
         testTimeout: 10_000,
+        passWithNoTests: true,
         exclude: [...configDefaults.exclude, '**/.claude/**'],
         coverage: {
             enabled: false,

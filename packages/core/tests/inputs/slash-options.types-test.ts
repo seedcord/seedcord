@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import type { OptionLens, SlashOptions } from '#src/internal.index';
 
@@ -129,14 +129,11 @@ function unionRouteIntersects(o: SlashOptions<'coreReq' | 'coreOpt', StubLens>):
 }
 
 // the assertions are type-level, tc is the gate that checks them
-describe('core SlashOptions machinery', () => {
-    it('defines the type-only probes', () => {
-        expect(typeof requiredKinds).toBe('function');
-        expect(typeof optionalKinds).toBe('function');
-        expect(typeof choiceKinds).toBe('function');
-        expect(typeof channelNarrowing).toBe('function');
-        expect(typeof onlyPresentKinds).toBe('function');
-        expect(typeof unknownAndWrongKind).toBe('function');
-        expect(typeof unionRouteIntersects).toBe('function');
-    });
-});
+
+void requiredKinds;
+void optionalKinds;
+void choiceKinds;
+void channelNarrowing;
+void onlyPresentKinds;
+void unknownAndWrongKind;
+void unionRouteIntersects;

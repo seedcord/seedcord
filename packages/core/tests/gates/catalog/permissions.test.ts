@@ -31,6 +31,16 @@ function permCtx(fields: CtxFields = {}): GuildPermissionsContext {
     } as unknown as GuildPermissionsContext;
 }
 
+expectTypeOf(RequirePermissions([BanMembers])).toEqualTypeOf<Gate<GateContextBase, 'RequirePermissions'>>();
+expectTypeOf(RequirePermissions([BanMembers], { in: 'guild' })).toEqualTypeOf<
+    Gate<GuildPermissionsContext, 'RequirePermissions'>
+>();
+
+expectTypeOf(RequireBotPermissions([BanMembers])).toEqualTypeOf<Gate<GateContextBase, 'RequireBotPermissions'>>();
+expectTypeOf(RequireBotPermissions([BanMembers], { in: 'guild' })).toEqualTypeOf<
+    Gate<GuildPermissionsContext, 'RequireBotPermissions'>
+>();
+
 describe('RequirePermissions', () => {
     it('passes when the channel set holds every scope bit', async () => {
         await expect(
@@ -135,13 +145,6 @@ describe('RequirePermissions', () => {
             )
         ).rejects.toBe(custom);
     });
-
-    it('returns a base-context gate on the channel arm and a guild-context gate on the guild arm', () => {
-        expectTypeOf(RequirePermissions([BanMembers])).toEqualTypeOf<Gate<GateContextBase, 'RequirePermissions'>>();
-        expectTypeOf(RequirePermissions([BanMembers], { in: 'guild' })).toEqualTypeOf<
-            Gate<GuildPermissionsContext, 'RequirePermissions'>
-        >();
-    });
 });
 
 describe('RequireBotPermissions', () => {
@@ -209,15 +212,6 @@ describe('RequireBotPermissions', () => {
         await expect(
             RequireBotPermissions([BanMembers, KickMembers]).check(permCtx({ appPermissions: Administrator }))
         ).resolves.toBeUndefined();
-    });
-
-    it('returns a base-context gate on the channel arm and a guild-context gate on the guild arm', () => {
-        expectTypeOf(RequireBotPermissions([BanMembers])).toEqualTypeOf<
-            Gate<GateContextBase, 'RequireBotPermissions'>
-        >();
-        expectTypeOf(RequireBotPermissions([BanMembers], { in: 'guild' })).toEqualTypeOf<
-            Gate<GuildPermissionsContext, 'RequireBotPermissions'>
-        >();
     });
 });
 

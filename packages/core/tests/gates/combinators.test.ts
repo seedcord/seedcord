@@ -17,6 +17,10 @@ const ctx = {} as unknown as GateContextBase;
 
 const AgnosticGate = defineGate('any', () => {});
 
+expectTypeOf(and(AgnosticGate, AgnosticGate)).toEqualTypeOf<Gate<GateContextBase, 'any & any'>>();
+
+expectTypeOf<RequiredOf<string>>().toEqualTypeOf<never>();
+
 describe('and', () => {
     it('runs every arm in order and passes when all pass', async () => {
         const order: string[] = [];
@@ -44,10 +48,6 @@ describe('and', () => {
 
         await expect(and(A, B).check(ctx)).rejects.toBeInstanceOf(Notice);
         expect(order).toEqual(['a']);
-    });
-
-    it('and of two agnostic gates stays the identity base', () => {
-        expectTypeOf(and(AgnosticGate, AgnosticGate)).toEqualTypeOf<Gate<GateContextBase, 'any & any'>>();
     });
 
     it('names itself after its arms at runtime, matching the type-level name', () => {
@@ -236,10 +236,6 @@ describe('or', () => {
 });
 
 describe('combinator typing on the scalar base', () => {
-    it('RequiredOf of a non-gate is never', () => {
-        expectTypeOf<RequiredOf<string>>().toEqualTypeOf<never>();
-    });
-
     it('rejects or() with no arms at compile time', () => {
         // @ts-expect-error or requires at least two arms
         or();

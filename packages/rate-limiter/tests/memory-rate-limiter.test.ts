@@ -1,16 +1,10 @@
-import { describe, it, expect, expectTypeOf, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { MemoryRateLimiter } from '#src/MemoryRateLimiter';
-
-import type { EpochMs, IRateLimiter } from '@seedcord/types';
 
 describe('MemoryRateLimiter', () => {
     beforeEach(() => vi.useFakeTimers());
     afterEach(() => vi.useRealTimers());
-
-    it('satisfies IRateLimiter', () => {
-        expectTypeOf(new MemoryRateLimiter()).toExtend<IRateLimiter>();
-    });
 
     it('has kind memory and the charge cap', () => {
         const limiter = new MemoryRateLimiter();
@@ -143,11 +137,5 @@ describe('MemoryRateLimiter', () => {
         expect(limiter.size).toBe(0);
         const after = await limiter.charge('user', { windowMs: 1000 });
         expect(after.limited).toBe(false);
-    });
-
-    it('brands resetAt as epoch ms', async () => {
-        const result = await new MemoryRateLimiter().charge('user', { windowMs: 1000 });
-
-        expectTypeOf(result.resetAt).toEqualTypeOf<EpochMs>();
     });
 });

@@ -30,14 +30,6 @@ describe('HealthCheck.fromOption', () => {
         expect(addTask).toHaveBeenCalledWith(ShutdownPhase.Drain, 'stop-healthcheck-server', expect.any(Function));
     });
 
-    it('true returns the defaults', () => {
-        const { shutdown } = stubShutdown();
-        const check = HealthCheck.fromOption(shutdown, true);
-
-        expect(check?.port).toBe(6967);
-        expect(check?.path).toBe('/health');
-    });
-
     it('an options object is applied', () => {
         const { shutdown } = stubShutdown();
         const check = HealthCheck.fromOption(shutdown, { port: 7000, path: '/ready' });

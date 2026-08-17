@@ -160,14 +160,25 @@ class ThrowingMulti extends EventHandler<Events.MessageCreate | Events.MessageUp
     }
 }
 
+void EventTypes;
+void MultiNever;
+
+void PingMulti;
+void SingleRead;
+void MissingArm;
+void ArmArity;
+void ArmParamTypes;
+void GoodSingle;
+void GoodMulti;
+void DecoratorSuperset;
+void GenericSuperset;
+void BoomError;
+void ThrowingMulti;
+
 describe('EventHandler.match', () => {
     it('propagates a throw from a match arm out of execute, where the controller boundary catches it', async () => {
         const handler = new ThrowingMulti(createPayload(fakeMessage()), core, Events.MessageCreate);
         await expect(handler.execute()).rejects.toBeInstanceOf(BoomError);
-    });
-
-    it('cross-checks @RegisterEvent against the handler generic in both directions', () => {
-        expect([GoodSingle, GoodMulti, DecoratorSuperset, GenericSuperset]).toHaveLength(4);
     });
 
     it('routes by the fired event name, not the payload shape', async () => {
@@ -200,9 +211,5 @@ describe('EventHandler.match', () => {
     it('throws EventMatchArmMissing when constructed without an event name', async () => {
         const handler = new PingMulti(createPayload(fakeMessage()), core);
         await expect(handler.execute()).rejects.toMatchObject({ code: SeedcordErrorCode.EventMatchArmMissing });
-    });
-
-    it('exposes the type specs', () => {
-        expect([EventTypes, MultiNever, MissingArm, ArmArity, ArmParamTypes]).toHaveLength(5);
     });
 });

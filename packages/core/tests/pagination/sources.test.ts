@@ -9,6 +9,13 @@ interface TestCtx {
 }
 const ctx: TestCtx = { tag: 'ctx' };
 
+async function InfersItemTypeFromLoader(): Promise<void> {
+    const source = new ArraySource(() => ['a', 'b']);
+    const view = await source.page(ctx, 0);
+    expectTypeOf(view.items).toEqualTypeOf<string[]>();
+}
+void InfersItemTypeFromLoader;
+
 describe('ArraySource', () => {
     it('pages a loaded array through the pure math', async () => {
         const source = new ArraySource(() => Array.from({ length: 25 }, (_, i) => i), { perPage: 10 });
@@ -40,12 +47,6 @@ describe('ArraySource', () => {
         const source = new ArraySource(() => Promise.resolve([1, 2, 3]), { perPage: 2 });
         const view = await source.page(ctx, 1);
         expect(view.items).toEqual([3]);
-    });
-
-    it('infers the item type from the loader', async () => {
-        const source = new ArraySource(() => ['a', 'b']);
-        const view = await source.page(ctx, 0);
-        expectTypeOf(view.items).toEqualTypeOf<string[]>();
     });
 
     it('rejects a non-positive or non-integer perPage at construction', () => {

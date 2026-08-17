@@ -1,5 +1,3 @@
-import { describe, it, expect } from 'vitest';
-
 import { Mongoose } from '#src/Mongoose';
 
 import type { MongooseOptions } from '#src/types/MongooseOptions';
@@ -21,8 +19,6 @@ function probeEdgeRejects(bot: HttpSeedcord<HttpEdgeConfig>): void {
     bot.attach('db', Mongoose, options);
 }
 
-describe('Mongoose attach scopes', () => {
-    it('attaches to a gateway bot and an http server bot, and an edge bot rejects it', () => {
-        expect([probeGatewayAccepts, probeHttpServerAccepts, probeEdgeRejects]).toHaveLength(3);
-    });
-});
+void probeGatewayAccepts;
+void probeHttpServerAccepts;
+void probeEdgeRejects;

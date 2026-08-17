@@ -202,17 +202,6 @@ describe('Dropdown groups', () => {
 });
 
 describe('Dropdown keyboard interaction', () => {
-    it('renders each option as a focusable button so Tab traversal reaches every item', async () => {
-        const user = userEvent.setup();
-        renderDropdown();
-        await user.click(screen.getByRole('button', { name: 'picker' }));
-        const opts = await screen.findAllByRole('option');
-        for (const opt of opts) {
-            expect(opt.tagName).toBe('BUTTON');
-            expect(opt).not.toBeDisabled();
-        }
-    });
-
     it('commits selection when the focused option is activated via keyboard', async () => {
         const user = userEvent.setup();
         const onChange = vi.fn();

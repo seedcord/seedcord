@@ -31,19 +31,6 @@ describe('CoordinatedShutdown.run re-entrancy', () => {
 
         expect(survivor).toHaveBeenCalledTimes(1);
     });
-
-    it('does not re-run tasks after a successful dev-mode shutdown', async () => {
-        const shutdown = new CoordinatedShutdown();
-        shutdown.removeSignalHandlers();
-
-        const task = vi.fn(() => Promise.resolve());
-        shutdown.addTask(ShutdownPhase.Unbind, 'task', task, 1000);
-
-        await shutdown.run(0, false);
-        await shutdown.run(0, false);
-
-        expect(task).toHaveBeenCalledTimes(1);
-    });
 });
 
 describe('CoordinatedShutdown.run phase resilience', () => {

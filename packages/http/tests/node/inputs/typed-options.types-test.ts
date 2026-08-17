@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type {
@@ -75,12 +75,8 @@ function unknownAndWrongKind(options: SlashOptions<'httpPurge'>): void {
     void options.getString('who');
 }
 
-describe('http SlashOptions view', () => {
-    it('exposes the type-checked option surface over api-types leaves', () => {
-        expect(typeof richKinds).toBe('function');
-        expect(typeof choices).toBe('function');
-        expect(typeof channelNarrowing).toBe('function');
-        expect(typeof onlyPresentKinds).toBe('function');
-        expect(typeof unknownAndWrongKind).toBe('function');
-    });
-});
+void richKinds;
+void choices;
+void channelNarrowing;
+void onlyPresentKinds;
+void unknownAndWrongKind;

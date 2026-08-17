@@ -40,6 +40,21 @@ const modal: ModalLike = { toJSON: () => ({ title: 'x', custom_id: 'y', componen
 // a command interaction carries no source message, so it seeds unacked and rejects update
 const commandFlags = { isMessageComponent: false, isModalSubmit: false } as const;
 
+class RejectsShowModalModalKindAt extends ModalHandler<never> {
+    async execute(): Promise<void> {
+        // @ts-expect-error a modal cannot open another modal
+        await this.showModal(modal);
+    }
+}
+void RejectsShowModalModalKindAt;
+
+class KeepsShowModalButtonKind extends ButtonHandler<never> {
+    async execute(): Promise<void> {
+        await this.showModal(modal);
+    }
+}
+void KeepsShowModalButtonKind;
+
 describe('SlashHandler base', () => {
     class Ban extends SlashHandler<never> {
         async execute(): Promise<void> {
@@ -96,27 +111,6 @@ describe('ButtonHandler base', () => {
         const mock = mockInteraction();
         await new Opens(asButton(mock), core).execute();
         expect(mock.showModal).toHaveBeenCalledOnce();
-    });
-});
-
-describe('showModal kind gating', () => {
-    it('rejects showModal on the modal kind at compile time', () => {
-        class Blocked extends ModalHandler<never> {
-            async execute(): Promise<void> {
-                // @ts-expect-error a modal cannot open another modal
-                await this.showModal(modal);
-            }
-        }
-        expect(Blocked).toBeDefined();
-    });
-
-    it('keeps showModal on the button kind', () => {
-        class Opens extends ButtonHandler<never> {
-            async execute(): Promise<void> {
-                await this.showModal(modal);
-            }
-        }
-        expect(Opens).toBeDefined();
     });
 });
 

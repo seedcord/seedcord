@@ -76,6 +76,7 @@ class DecoratedUser extends ContextMenuHandler<ApplicationCommandType.User> {
         await Promise.resolve();
     }
 }
+void DecoratedUser;
 
 @ContextMenuRoute(ApplicationCommandType.Message, 'Report Message')
 class DecoratedMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
@@ -83,6 +84,7 @@ class DecoratedMessage extends ContextMenuHandler<ApplicationCommandType.Message
         await Promise.resolve();
     }
 }
+void DecoratedMessage;
 
 // a handler may serve several names of one kind, reading this.target uniformly
 @ContextMenuRoute(ApplicationCommandType.User, 'View Profile', 'Report')
@@ -91,6 +93,7 @@ class MultiUser extends ContextMenuHandler<ApplicationCommandType.User> {
         await Promise.resolve();
     }
 }
+void MultiUser;
 
 // the decorator kind is User but the handler generic is Message
 // @ts-expect-error the handler declares Message, the decorator passes User.
@@ -138,10 +141,6 @@ describe('ContextMenuHandler', () => {
 
         const message = { id: 'msg1' } as unknown as Message<true>;
         expect(new ReportMessage(messageMenu(message), core).readTarget()).toBe(message);
-    });
-
-    it('cross-checks @ContextMenuRoute against the handler generic', () => {
-        expect([DecoratedUser, DecoratedMessage, MultiUser]).toHaveLength(3);
     });
 
     it('rejects kind and name mismatches', () => {

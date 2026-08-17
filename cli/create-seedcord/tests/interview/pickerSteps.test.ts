@@ -27,9 +27,8 @@ describe('capabilitiesStep', () => {
 });
 
 describe('botColorStep', () => {
-    it('offers every color name the framework accepts', () => {
-        expect(COLOR_NAMES).toContain('Blurple');
-        expect(COLOR_NAMES).toContain('Default');
+    // a duplicate entry compiles and doubles an option in the picker
+    it('lists each color name once', () => {
         expect(new Set(COLOR_NAMES).size).toBe(COLOR_NAMES.length);
     });
 

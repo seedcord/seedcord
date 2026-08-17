@@ -28,6 +28,7 @@ class KickHandler extends SlashHandler<'kick'> {
         await Promise.resolve();
     }
 }
+void KickHandler;
 
 // a multi-command handler branches with match, each arm typed for its own route
 class ModerationHandler extends SlashHandler<'kick' | 'warn'> {
@@ -42,6 +43,7 @@ class ModerationHandler extends SlashHandler<'kick' | 'warn'> {
         });
     }
 }
+void ModerationHandler;
 
 // every route needs an arm
 class MissingArm extends SlashHandler<'kick' | 'warn'> {
@@ -54,6 +56,7 @@ class MissingArm extends SlashHandler<'kick' | 'warn'> {
         });
     }
 }
+void MissingArm;
 
 // an arm cannot reach another route's option
 class CrossRoute extends SlashHandler<'kick' | 'warn'> {
@@ -69,6 +72,7 @@ class CrossRoute extends SlashHandler<'kick' | 'warn'> {
         });
     }
 }
+void CrossRoute;
 
 // @SlashRoute routes must match the handler generic exactly, in both directions.
 @SlashRoute('kick')
@@ -77,6 +81,7 @@ class DecoratedSingle extends SlashHandler<'kick'> {
         await Promise.resolve();
     }
 }
+void DecoratedSingle;
 
 @SlashRoute('kick', 'warn')
 class DecoratedMulti extends SlashHandler<'kick' | 'warn'> {
@@ -84,6 +89,7 @@ class DecoratedMulti extends SlashHandler<'kick' | 'warn'> {
         await Promise.resolve();
     }
 }
+void DecoratedMulti;
 
 // the handler declares a route the decorator omits
 // @ts-expect-error 'warn' is in the generic but not listed on the decorator.
@@ -93,6 +99,7 @@ class OmitsRoute extends SlashHandler<'kick' | 'warn'> {
         await Promise.resolve();
     }
 }
+void OmitsRoute;
 
 // the decorator lists a route the handler does not declare
 // @ts-expect-error 'warn' is listed on the decorator but not in the generic.
@@ -102,6 +109,7 @@ class ExtraRoute extends SlashHandler<'kick'> {
         await Promise.resolve();
     }
 }
+void ExtraRoute;
 
 // this.options on a union route keeps only the options common to every member route
 class UnionOptionsHandler extends SlashHandler<'mute' | 'note'> {
@@ -199,14 +207,6 @@ describe('SlashHandler', () => {
         await expect(handler.execute()).rejects.toMatchObject({
             code: SeedcordErrorCode.SlashMatchArmMissing
         });
-    });
-
-    it('exposes the typed slash handlers', () => {
-        expect([KickHandler, ModerationHandler, MissingArm, CrossRoute]).toHaveLength(4);
-    });
-
-    it('cross-checks @SlashRoute against the handler generic', () => {
-        expect([DecoratedSingle, DecoratedMulti, OmitsRoute, ExtraRoute]).toHaveLength(4);
     });
 
     it('exposes the additional typed slash handlers', () => {

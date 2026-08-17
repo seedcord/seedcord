@@ -76,6 +76,352 @@ const AnyInteractionGate = defineGate('anyIx', (ctx: InteractionGateContext) => 
 const ModalProbeId = new CustomId('modalprobe').str('x');
 const SelectProbeId = new CustomId('selectprobe').str('x');
 
+@Gated(ButtonGate)
+@ButtonRoute(ProbeId)
+class AcceptsGateWhoseContextHandler extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsGateWhoseContextHandler;
+
+// @ts-expect-error a button gate cannot attach to a slash handler
+@Gated(ButtonGate)
+class RejectsGateNeedsContextHandler extends SlashHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsGateNeedsContextHandler;
+
+// @ts-expect-error SlashGate requires a slash interaction, so it cannot stack onto a button handler
+@Gated(ButtonGate, SlashGate)
+@ButtonRoute(ProbeId)
+class RejectsStackedGateWhoseContext extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsStackedGateWhoseContext;
+
+@Gated(AgnosticGate, ButtonGate)
+@ButtonRoute(ProbeId)
+class AcceptsStackGatesHandlerProvides extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsStackGatesHandlerProvides;
+
+@Gated(or(ButtonGate, SlashGate))
+@ButtonRoute(ProbeId)
+class AcceptsOrWhenHandlerMatches extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsOrWhenHandlerMatches;
+
+@Gated(or(and(AgnosticGate, ButtonGate), SlashGate))
+@ButtonRoute(ProbeId)
+class AcceptsNestedOrHandlerSatisfies extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsNestedOrHandlerSatisfies;
+
+// @ts-expect-error neither a button nor a slash gate fits an event handler
+@Gated(or(ButtonGate, SlashGate))
+class RejectsOrWhenHandlerMatches extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsOrWhenHandlerMatches;
+
+@Gated(AgnosticGate)
+class AcceptsAgnosticGateEventHandler extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsAgnosticGateEventHandler;
+
+@Gated(MessageGate)
+class AcceptsEventGateMatchingEvent extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsEventGateMatchingEvent;
+
+// @ts-expect-error a message-event gate cannot attach to a slash handler
+@Gated(MessageGate)
+class RejectsEventGateInteraction extends SlashHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsEventGateInteraction;
+
+// @ts-expect-error a button gate cannot attach to an event handler
+@Gated(ButtonGate)
+class RejectsInteractionGateEvent extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsInteractionGateEvent;
+
+// @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
+@Gated(AgnosticGate)
+class RejectsAnyGateAutocomplete extends AutocompleteHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsAnyGateAutocomplete;
+
+// @ts-expect-error @Gated requires at least one gate
+@Gated()
+@ButtonRoute(ProbeId)
+class RejectsGatedNoGates extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsGatedNoGates;
+
+@Gated(or(ButtonGate, MessageGate))
+class AcceptsOrInteractionEventEvent extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsOrInteractionEventEvent;
+
+@Gated(or(ButtonGate, MessageGate))
+@ButtonRoute(ProbeId)
+class AcceptsOrInteractionEventInteraction extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsOrInteractionEventInteraction;
+
+// @ts-expect-error a slash handler matches neither the button nor the event arm
+@Gated(or(ButtonGate, MessageGate))
+class RejectsOrInteractionEventHandler extends SlashHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsOrInteractionEventHandler;
+
+// @ts-expect-error and(button, message) requires a context that is both an interaction and an event
+@Gated(and(ButtonGate, MessageGate))
+@ButtonRoute(ProbeId)
+class RejectsUninhabitableInteraction extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsUninhabitableInteraction;
+
+// @ts-expect-error and(button, message) requires a context that is both an interaction and an event
+@Gated(and(ButtonGate, MessageGate))
+class RejectsUninhabitableInteraction2 extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsUninhabitableInteraction2;
+
+// @ts-expect-error and(button, slash) requires an interaction that is both kinds
+@Gated(and(ButtonGate, SlashGate))
+@ButtonRoute(ProbeId)
+class RejectsUninhabitableButton extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsUninhabitableButton;
+
+@Gated(or(and(AgnosticGate, ButtonGate), and(AgnosticGate, SlashGate)))
+@ButtonRoute(ProbeId)
+class AcceptsOrWhenOneInhabitable extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsOrWhenOneInhabitable;
+
+@Gated(or(and(AgnosticGate, ButtonGate), SlashGate))
+class AcceptsOrAgnosticButtonSlash extends SlashHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsOrAgnosticButtonSlash;
+
+@Gated(or(ButtonGate, SlashGate), or(ButtonGate, ModalGate))
+@ButtonRoute(ProbeId)
+class AcceptsStackedOrsWhenHandler extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsStackedOrsWhenHandler;
+
+// @ts-expect-error a button handler satisfies the first or but not the second
+@Gated(or(ButtonGate, SlashGate), or(SlashGate, ModalGate))
+@ButtonRoute(ProbeId)
+class RejectsStackedOrsWhenSecond extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsStackedOrsWhenSecond;
+
+@Gated(ModalGate)
+@ModalRoute(ModalProbeId)
+class AcceptsModalGateModalHandler extends ModalHandler<[typeof ModalProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsModalGateModalHandler;
+
+@Gated(UserSelectGate)
+@SelectMenuRoute(SelectMenuKind.User, SelectProbeId)
+class AcceptsUserSelectGateUserSelect extends SelectMenuHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsUserSelectGateUserSelect;
+
+@Gated(UserMenuGate)
+@ContextMenuRoute(ApplicationCommandType.User, 'Probe User')
+class AcceptsUserMenuGateUserContext extends ContextMenuHandler<ApplicationCommandType.User> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsUserMenuGateUserContext;
+
+@Gated(MessageMenuGate)
+@ContextMenuRoute(ApplicationCommandType.Message, 'Probe Message')
+class AcceptsMessageMenuGateMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsMessageMenuGateMessage;
+
+// @ts-expect-error a modal gate cannot attach to a button handler
+@Gated(ModalGate)
+@ButtonRoute(ProbeId)
+class RejectsModalGateButtonHandler extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsModalGateButtonHandler;
+
+// @ts-expect-error the two context-menu kinds do not interchange
+@Gated(UserMenuGate)
+@ContextMenuRoute(ApplicationCommandType.Message, 'Probe Message')
+class RejectsUserMenuGateMessage extends ContextMenuHandler<ApplicationCommandType.Message> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsUserMenuGateMessage;
+
+// @ts-expect-error the two select kinds do not interchange
+@Gated(UserSelectGate)
+@SelectMenuRoute(SelectMenuKind.String, SelectProbeId)
+class RejectsUserSelectGateString extends SelectMenuHandler<SelectMenuKind.String, [typeof SelectProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsUserSelectGateString;
+
+@Gated(AnyInteractionGate)
+@ButtonRoute(ProbeId)
+class AcceptsGenericInteractionGate extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsGenericInteractionGate;
+
+// @ts-expect-error an interaction gate cannot attach to an event handler
+@Gated(AnyInteractionGate)
+class RejectsGenericInteractionGate extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsGenericInteractionGate;
+
+// @ts-expect-error a messageCreate gate cannot attach to a guildMemberAdd handler
+@Gated(MessageGate)
+class RejectsEventGateHandlerFor extends EventHandler<Events.GuildMemberAdd> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsEventGateHandlerFor;
+
+// @ts-expect-error the handler can fire messageUpdate, which the gate does not cover
+@Gated(MessageGate)
+class RejectsNarrowEventGateWider extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsNarrowEventGateWider;
+
+@Gated(WideGate)
+class AcceptsWideEventGateNarrower extends EventHandler<Events.MessageCreate> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void AcceptsWideEventGateNarrower;
+
+// @ts-expect-error the modal gate in the middle does not fit a button handler
+@Gated(AgnosticGate, ModalGate, ButtonGate)
+@ButtonRoute(ProbeId)
+class Rejects3GateStackMiddleWrong extends ButtonHandler<[typeof ProbeId]> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void Rejects3GateStackMiddleWrong;
+
+// @ts-expect-error autocomplete handlers take no gates
+@Gated(SlashGate)
+class RejectsOwnKindGateAutocomplete extends AutocompleteHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsOwnKindGateAutocomplete;
+
+// @ts-expect-error autocomplete handlers take no gates
+@Gated(or(ButtonGate, SlashGate))
+class RejectsOrAutocompleteHandler extends AutocompleteHandler<'gateprobe'> {
+    async execute(): Promise<void> {
+        await Promise.resolve();
+    }
+}
+void RejectsOrAutocompleteHandler;
+
 describe('@Gated', () => {
     it('stores its gates in metadata on the handler class', () => {
         @Gated(AgnosticGate)
@@ -88,43 +434,6 @@ describe('@Gated', () => {
         expect(Reflect.getMetadata(GatedMetadataKey, Handler)).toEqual([AgnosticGate]);
     });
 
-    it('accepts a gate whose context the handler provides', () => {
-        @Gated(ButtonGate)
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a gate that needs a context the handler does not provide', () => {
-        // @ts-expect-error a button gate cannot attach to a slash handler
-        @Gated(ButtonGate)
-        class Handler extends SlashHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a stacked gate whose context the handler does not provide', () => {
-        // @ts-expect-error SlashGate requires a slash interaction, so it cannot stack onto a button handler
-        @Gated(ButtonGate, SlashGate)
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
     it('stores stacked gates in order in metadata', () => {
         @Gated(AgnosticGate, ButtonGate)
         @ButtonRoute(ProbeId)
@@ -135,432 +444,5 @@ describe('@Gated', () => {
         }
 
         expect(Reflect.getMetadata(GatedMetadataKey, Handler)).toEqual([AgnosticGate, ButtonGate]);
-    });
-
-    it('accepts a stack of gates the handler provides', () => {
-        @Gated(AgnosticGate, ButtonGate)
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts an or() when the handler matches one of its arms', () => {
-        @Gated(or(ButtonGate, SlashGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts a nested or(and(...)) the handler satisfies', () => {
-        @Gated(or(and(AgnosticGate, ButtonGate), SlashGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects an or() when the handler matches none of its arms', () => {
-        // @ts-expect-error neither a button nor a slash gate fits an event handler
-        @Gated(or(ButtonGate, SlashGate))
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts an agnostic gate on an event handler', () => {
-        @Gated(AgnosticGate)
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts an event gate on the matching event handler', () => {
-        @Gated(MessageGate)
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects an event gate on an interaction handler', () => {
-        // @ts-expect-error a message-event gate cannot attach to a slash handler
-        @Gated(MessageGate)
-        class Handler extends SlashHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects an interaction gate on an event handler', () => {
-        // @ts-expect-error a button gate cannot attach to an event handler
-        @Gated(ButtonGate)
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects any gate on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates, a refusal has no reply target there
-        @Gated(AgnosticGate)
-        class Handler extends AutocompleteHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects @Gated with no gates', () => {
-        // @ts-expect-error @Gated requires at least one gate
-        @Gated()
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-});
-
-describe('@Gated combinator coverage', () => {
-    it('accepts or(interaction, event) on the event arm', () => {
-        @Gated(or(ButtonGate, MessageGate))
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts or(interaction, event) on the interaction arm', () => {
-        @Gated(or(ButtonGate, MessageGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects or(interaction, event) on a handler matching neither arm', () => {
-        // @ts-expect-error a slash handler matches neither the button nor the event arm
-        @Gated(or(ButtonGate, MessageGate))
-        class Handler extends SlashHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects uninhabitable and(interaction, event) on the interaction handler', () => {
-        // @ts-expect-error and(button, message) requires a context that is both an interaction and an event
-        @Gated(and(ButtonGate, MessageGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects uninhabitable and(interaction, event) on the event handler', () => {
-        // @ts-expect-error and(button, message) requires a context that is both an interaction and an event
-        @Gated(and(ButtonGate, MessageGate))
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects uninhabitable and(button, slash) on a button handler', () => {
-        // @ts-expect-error and(button, slash) requires an interaction that is both kinds
-        @Gated(and(ButtonGate, SlashGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts or(and(...), and(...)) when one inhabitable arm matches', () => {
-        @Gated(or(and(AgnosticGate, ButtonGate), and(AgnosticGate, SlashGate)))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts or(and(agnostic, button), slash) on a slash handler via the other arm', () => {
-        @Gated(or(and(AgnosticGate, ButtonGate), SlashGate))
-        class Handler extends SlashHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts stacked ors when the handler satisfies every or', () => {
-        @Gated(or(ButtonGate, SlashGate), or(ButtonGate, ModalGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects stacked ors when the second or has no matching arm', () => {
-        // @ts-expect-error a button handler satisfies the first or but not the second
-        @Gated(or(ButtonGate, SlashGate), or(SlashGate, ModalGate))
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-});
-
-describe('@Gated kind coverage', () => {
-    it('accepts a modal gate on a modal handler', () => {
-        @Gated(ModalGate)
-        @ModalRoute(ModalProbeId)
-        class Handler extends ModalHandler<[typeof ModalProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts a user-select gate on a user-select handler', () => {
-        @Gated(UserSelectGate)
-        @SelectMenuRoute(SelectMenuKind.User, SelectProbeId)
-        class Handler extends SelectMenuHandler<SelectMenuKind.User, [typeof SelectProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts a user-menu gate on a user context-menu handler', () => {
-        @Gated(UserMenuGate)
-        @ContextMenuRoute(ApplicationCommandType.User, 'Probe User')
-        class Handler extends ContextMenuHandler<ApplicationCommandType.User> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts a message-menu gate on a message context-menu handler', () => {
-        @Gated(MessageMenuGate)
-        @ContextMenuRoute(ApplicationCommandType.Message, 'Probe Message')
-        class Handler extends ContextMenuHandler<ApplicationCommandType.Message> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a modal gate on a button handler', () => {
-        // @ts-expect-error a modal gate cannot attach to a button handler
-        @Gated(ModalGate)
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a user-menu gate on a message context-menu handler', () => {
-        // @ts-expect-error the two context-menu kinds do not interchange
-        @Gated(UserMenuGate)
-        @ContextMenuRoute(ApplicationCommandType.Message, 'Probe Message')
-        class Handler extends ContextMenuHandler<ApplicationCommandType.Message> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a user-select gate on a string-select handler', () => {
-        // @ts-expect-error the two select kinds do not interchange
-        @Gated(UserSelectGate)
-        @SelectMenuRoute(SelectMenuKind.String, SelectProbeId)
-        class Handler extends SelectMenuHandler<SelectMenuKind.String, [typeof SelectProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts a generic interaction gate on a button handler', () => {
-        @Gated(AnyInteractionGate)
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a generic interaction gate on an event handler', () => {
-        // @ts-expect-error an interaction gate cannot attach to an event handler
-        @Gated(AnyInteractionGate)
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects an event gate on a handler for a different event', () => {
-        // @ts-expect-error a messageCreate gate cannot attach to a guildMemberAdd handler
-        @Gated(MessageGate)
-        class Handler extends EventHandler<Events.GuildMemberAdd> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a narrow event gate on a wider multi-event handler', () => {
-        // @ts-expect-error the handler can fire messageUpdate, which the gate does not cover
-        @Gated(MessageGate)
-        class Handler extends EventHandler<Events.MessageCreate | Events.MessageUpdate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('accepts a wide event gate on a narrower single-event handler', () => {
-        @Gated(WideGate)
-        class Handler extends EventHandler<Events.MessageCreate> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects a 3-gate stack on the middle wrong-kind gate', () => {
-        // @ts-expect-error the modal gate in the middle does not fit a button handler
-        @Gated(AgnosticGate, ModalGate, ButtonGate)
-        @ButtonRoute(ProbeId)
-        class Handler extends ButtonHandler<[typeof ProbeId]> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects an own-kind gate on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates
-        @Gated(SlashGate)
-        class Handler extends AutocompleteHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
-    });
-
-    it('rejects an or() on an autocomplete handler', () => {
-        // @ts-expect-error autocomplete handlers take no gates
-        @Gated(or(ButtonGate, SlashGate))
-        class Handler extends AutocompleteHandler<'gateprobe'> {
-            async execute(): Promise<void> {
-                await Promise.resolve();
-            }
-        }
-
-        expect(Handler).toBeDefined();
     });
 });

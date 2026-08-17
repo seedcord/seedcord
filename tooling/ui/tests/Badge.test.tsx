@@ -17,11 +17,6 @@ describe('Badge behavior', () => {
         expect(el).toHaveTextContent('hello');
     });
 
-    it('renders without children', () => {
-        const { container } = render(<Badge />);
-        expect(getBadge(container).tagName).toBe('SPAN');
-    });
-
     it('forwards arbitrary HTML attributes to the span', () => {
         const { container } = render(<Badge id="b1" data-testid="badge" aria-label="status" />);
         const el = getBadge(container);

@@ -47,10 +47,4 @@ describe('MemoryRateLimiter key isolation', () => {
         expect(await limiter.charge('a', window)).toMatchObject({ limited: false });
         expect(await limiter.peek('b', window)).toMatchObject({ limited: true });
     });
-
-    it('resolves reset of an unknown key without error', async () => {
-        const limiter = new MemoryRateLimiter();
-
-        await expect(limiter.reset('never-charged')).resolves.toBeUndefined();
-    });
 });

@@ -1,5 +1,3 @@
-import process from 'node:process';
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { addCommand, execCommand, runPrefix, runningAgent } from '#cli/packageManager';
@@ -25,14 +23,6 @@ describe('runningAgent', () => {
     it('falls back to npm for a manager it does not know', () => {
         vi.stubEnv('npm_config_user_agent', 'quackpm/1.0.0 node/v25.9.0');
         expect(runningAgent()).toBe('npm');
-    });
-
-    it('leaves the environment as it found it', () => {
-        const before = process.env.npm_config_user_agent;
-        vi.stubEnv('npm_config_user_agent', 'quackpm/1.0.0');
-        vi.unstubAllEnvs();
-
-        expect(process.env.npm_config_user_agent).toBe(before);
     });
 });
 

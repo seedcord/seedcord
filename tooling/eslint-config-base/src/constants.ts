@@ -19,4 +19,4 @@ export const TYPESCRIPT_LANGUAGE_OPTIONS = {
 export const ALL_FILES = ['**/*.js', '**/*.mjs', '**/*.ts', '**/*.tsx'] as const;
 export const JS_FILES = ['**/*.js', '**/*.mjs'] as const;
 export const TS_FILES = ['**/*.ts', '**/*.tsx'] as const;
-export const TEST_FILES = ['**/*.test.ts', '**/*.test.tsx'] as const;
+export const TEST_FILES = ['**/*.test.ts', '**/*.test.tsx', '**/*.types-test.ts'] as const;

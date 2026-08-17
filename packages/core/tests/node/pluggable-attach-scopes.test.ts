@@ -90,6 +90,10 @@ class TestHost extends Pluggable<'gateway', 'server'> {
     }
 }
 
+expectTypeOf<FullyScoped['__transport']>().toEqualTypeOf<'gateway' | undefined>();
+expectTypeOf<FullyScoped['__runtime']>().toEqualTypeOf<'server' | undefined>();
+expectTypeOf<GatewayScoped['__runtime']>().toEqualTypeOf<'any' | undefined>();
+
 describe('attaching a plugin that declares options', () => {
     afterEach(() => {
         TestHost.resetHost();
@@ -111,12 +115,6 @@ describe('attaching a plugin that declares options', () => {
 
         expect(attached.scoped).toBeInstanceOf(FullyScoped);
         expectTypeOf(attached.scoped).toEqualTypeOf<FullyScoped>();
-    });
-
-    it('keeps the declared brands readable off the attached instance type', () => {
-        expectTypeOf<FullyScoped['__transport']>().toEqualTypeOf<'gateway' | undefined>();
-        expectTypeOf<FullyScoped['__runtime']>().toEqualTypeOf<'server' | undefined>();
-        expectTypeOf<GatewayScoped['__runtime']>().toEqualTypeOf<'any' | undefined>();
     });
 
     it('rejects a plugin scoped to the other transport', () => {

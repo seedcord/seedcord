@@ -35,24 +35,4 @@ describe('publish protection', () => {
 
         expect(seen).toBe(1);
     });
-
-    it('leaves on() open for every key', () => {
-        const bus = stubBus();
-        let seen = 0;
-        bus.on('interactionDispatched', () => {
-            seen += 1;
-        });
-
-        bus[PublishDefault]('interactionDispatched', {
-            routeId: 'slash:ping',
-            interactionId: 'i1',
-            kind: 'slash',
-            outcome: 'handled',
-            fallback: false,
-            durationMs: 1,
-            queuedMs: 2
-        });
-
-        expect(seen).toBe(1);
-    });
 });

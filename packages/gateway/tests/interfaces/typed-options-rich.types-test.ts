@@ -1,4 +1,4 @@
-import { describe, expect, expectTypeOf, it } from 'vitest';
+import { expectTypeOf } from 'vitest';
 
 import type { SlashOptions } from '#inputs/SlashOptions';
 import type {
@@ -169,19 +169,15 @@ function wrongKindRejected(options: SlashOptions<'purge'>): void {
     void options.getChannel('who');
 }
 
-describe('SlashOptions rich kinds and cache variants', () => {
-    it('exposes the type-checked rich-option surface', () => {
-        expect(typeof purgeRequired).toBe('function');
-        expect(typeof purgeOptional).toBe('function');
-        expect(typeof auditStringChoices).toBe('function');
-        expect(typeof auditIntegerChoices).toBe('function');
-        expect(typeof memberAlwaysNullable).toBe('function');
-        expect(typeof channelIsWide).toBe('function');
-        expect(typeof channelNarrowsToDeclaredTypes).toBe('function');
-        expect(typeof rawCacheVariant).toBe('function');
-        expect(typeof mentionableHasMemberArm).toBe('function');
-        expect(typeof onlyPresentKindGetters).toBe('function');
-        expect(typeof unknownNameRejected).toBe('function');
-        expect(typeof wrongKindRejected).toBe('function');
-    });
-});
+void purgeRequired;
+void purgeOptional;
+void auditStringChoices;
+void auditIntegerChoices;
+void memberAlwaysNullable;
+void channelIsWide;
+void channelNarrowsToDeclaredTypes;
+void rawCacheVariant;
+void mentionableHasMemberArm;
+void onlyPresentKindGetters;
+void unknownNameRejected;
+void wrongKindRejected;

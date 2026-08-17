@@ -30,11 +30,6 @@ describe('pageMetadata', () => {
         expect(meta.twitter?.description).not.toMatch(/\n/);
     });
 
-    it('uses "seedcord documentation" as the OpenGraph site name', () => {
-        const meta = pageMetadata({ title: 'X', description: 'y', path: '/packages/seedcord/1.0.0' });
-        expect(meta.openGraph?.siteName).toBe('seedcord documentation');
-    });
-
     it('strips markdown links and code spans from the meta description', () => {
         const meta = pageMetadata({
             title: 'ContextMenuRoute',

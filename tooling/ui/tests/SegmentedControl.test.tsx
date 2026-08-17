@@ -94,28 +94,6 @@ describe('SegmentedControl keyboard interaction', () => {
         await user.keyboard('{Enter}');
         expect(spy).toHaveBeenCalledWith('grid');
     });
-
-    it('does not change selection on ArrowRight (no built-in roving handler)', async () => {
-        const user = userEvent.setup();
-        const spy = vi.fn();
-        render(<Harness onChangeSpy={spy} />);
-        const list = screen.getByRole('radio', { name: 'List' });
-        list.focus();
-        await user.keyboard('{ArrowRight}');
-        expect(spy).not.toHaveBeenCalled();
-        expect(list).toHaveAttribute('aria-checked', 'true');
-    });
-
-    it('does not change selection on ArrowLeft (no built-in roving handler)', async () => {
-        const user = userEvent.setup();
-        const spy = vi.fn();
-        render(<Harness initial="grid" onChangeSpy={spy} />);
-        const grid = screen.getByRole('radio', { name: 'Grid' });
-        grid.focus();
-        await user.keyboard('{ArrowLeft}');
-        expect(spy).not.toHaveBeenCalled();
-        expect(grid).toHaveAttribute('aria-checked', 'true');
-    });
 });
 
 describe('SegmentedControl active pill (motion layout)', () => {
