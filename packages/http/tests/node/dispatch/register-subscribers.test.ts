@@ -1,5 +1,5 @@
 import { Bus } from '@seedcord/core';
-import { PublishDefault } from '@seedcord/core/internal';
+import { busLoggerOf, PublishDefault } from '@seedcord/core/internal';
 import { isSeedcordError, SeedcordErrorCode } from '@seedcord/errors';
 import { describe, it, expect, vi } from 'vitest';
 
@@ -69,7 +69,7 @@ describe('registerSubscribers', () => {
 
     it('logs a row whose export is not a subscriber', async () => {
         const bus = stubBus();
-        const error = vi.spyOn(bus.logger, 'error');
+        const error = vi.spyOn(busLoggerOf(bus), 'error');
         registerSubscribers(
             bus,
             manifestWith(() =>
@@ -94,7 +94,7 @@ describe('registerSubscribers', () => {
 
     it('translates a row whose module throws while importing, keeping the cause', async () => {
         const bus = stubBus();
-        const error = vi.spyOn(bus.logger, 'error');
+        const error = vi.spyOn(busLoggerOf(bus), 'error');
         const boom = new Error('module init exploded');
         registerSubscribers(
             bus,
@@ -113,7 +113,7 @@ describe('registerSubscribers', () => {
 
     it('logs a row whose named export is missing', async () => {
         const bus = stubBus();
-        const error = vi.spyOn(bus.logger, 'error');
+        const error = vi.spyOn(busLoggerOf(bus), 'error');
         registerSubscribers(
             bus,
             manifestWith(() => Promise.resolve({}))

@@ -2,7 +2,7 @@ import { LoggerChannelRegistry } from '@seedcord/logger';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HealthCheck } from '#node/HealthCheck';
-import { Bus } from '#subscribers/Bus';
+import { Bus, busLoggerOf } from '#subscribers/Bus';
 
 import type { CoreBase } from '#interfaces/CoreBase';
 import type { CoordinatedShutdown } from '#node/Lifecycle/CoordinatedShutdown';
@@ -30,7 +30,7 @@ beforeEach(() => {
 describe('flat-site log channels', () => {
     it('puts the bus on the subscribers channel', () => {
         // justified: Bus reads only the host reference in its ctor
-        new Bus({} as CoreBase).logger.info('ran');
+        busLoggerOf(new Bus({} as CoreBase)).info('ran');
 
         expect(sink.records[0]).toMatchObject({ channel: 'subscribers', label: 'Subscribers' });
     });

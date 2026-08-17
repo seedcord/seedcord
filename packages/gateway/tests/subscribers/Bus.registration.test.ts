@@ -1,3 +1,4 @@
+import { busLoggerOf } from '@seedcord/core/internal';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { Seedcord } from '#src/Seedcord';
@@ -68,7 +69,7 @@ describe('Bus webhook reporter registration', () => {
         );
 
         seedcord = new Seedcord(testConfig({ subscribers: testEnv.resolvePath('subscribers') }));
-        const warnSpy = vi.spyOn(seedcord.bus.logger, 'warn');
+        const warnSpy = vi.spyOn(busLoggerOf(seedcord.bus), 'warn');
         await loaderOf(seedcord).init();
 
         // justified: PrivateBus exposes the private subscribersMap for assertion
@@ -151,7 +152,7 @@ describe('Bus webhook reporter registration', () => {
         await loaderOf(seedcord).init();
 
         restMocks.getMock.mockRejectedValue(new TypeError('fetch failed'));
-        const warnSpy = vi.spyOn(seedcord.bus.logger, 'warn');
+        const warnSpy = vi.spyOn(busLoggerOf(seedcord.bus), 'warn');
         await expect(seedcord.bus.verifyWebhooks()).resolves.toBeUndefined();
         expect(warnSpy).toHaveBeenCalled();
     });

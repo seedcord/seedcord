@@ -1,6 +1,7 @@
 import { PublishDefault } from '@seedcord/core/internal';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { botLoggerOf } from '#bot/Bot';
 import { Seedcord } from '#src/Seedcord';
 
 import { seedcordPath } from '../utils/source-path';
@@ -525,7 +526,7 @@ describe('EventDispatcher Integration', () => {
         it('runs later unhandledEventError listeners after an earlier one throws', async () => {
             const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'processEvent').mockRejectedValue(new Error('boom'));
-            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+            vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
             let reached = false;
             seedcord.bus.on('unhandledEventError', () => {
@@ -545,7 +546,7 @@ describe('EventDispatcher Integration', () => {
         it('wraps a non-Error rejection at the root, so the payload still carries an Error', async () => {
             const { controller, fire } = await clientHarness();
             vi.spyOn(controller, 'processEvent').mockRejectedValue('a bare string');
-            vi.spyOn(seedcord.bot.logger, 'error').mockImplementation(() => undefined);
+            vi.spyOn(botLoggerOf(seedcord.bot), 'error').mockImplementation(() => undefined);
 
             const seen: SubscriptionData<'unhandledEventError'>[] = [];
             seedcord.bus.on('unhandledEventError', (payload) => seen.push(payload));

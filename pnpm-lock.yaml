@@ -604,9 +604,6 @@ importers:
       '@seedcord/utils':
         specifier: workspace:^
         version: link:../../packages/utils
-      chalk:
-        specifier: catalog:deps
-        version: 6.0.0
       commander:
         specifier: ^15.0.0
         version: 15.0.0

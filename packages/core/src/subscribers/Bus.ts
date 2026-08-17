@@ -45,13 +45,17 @@ export interface SubscriberRegistration {
     ctor?: StoredSubscriberCtor | undefined;
 }
 
+const loggerSlot = Symbol('seedcord:bus:logger');
+
 /**
  * Registers and dispatches subscribers. Subscribers run on a programmatic or framework publish.
  * Accessed via `core.bus`. Do not construct it directly.
  */
 export class Bus extends TypedEventEmitter<SubscriptionTuples> {
+    private readonly logger = new Logger('Subscribers', { channel: 'subscribers' });
+
     /** @internal */
-    public readonly logger = new Logger('Subscribers', { channel: 'subscribers' });
+    readonly [loggerSlot]: Logger = this.logger;
 
     private readonly subscribersMap = new Map<SubscriptionKey, SubscriberRegistration[]>();
     private readonly executedOnce = new Set<SubscriberRegistration>();
@@ -226,4 +230,9 @@ export class Bus extends TypedEventEmitter<SubscriptionTuples> {
 export function registrationFor(ctor: StoredSubscriberCtor): SubscriberRegistration {
     const meta = Reflect.getMetadata(SubscribeMetadataKey, ctor) as SubscribeMetadataEntry;
     return { keys: [meta.subscriber], frequency: meta.frequency ?? 'on', resolve: () => ctor, ctor };
+}
+
+/** @internal */
+export function busLoggerOf(bus: Bus): Logger {
+    return bus[loggerSlot];
 }

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 
 import { describe, it, expect, vi } from 'vitest';
 
-import { Bus } from '#subscribers/Bus';
+import { Bus, busLoggerOf } from '#subscribers/Bus';
 import { PublishDefault } from '#subscribers/publishDefault';
 
 import type { CoreBase } from '#interfaces/CoreBase';
@@ -52,7 +52,7 @@ describe('Bus listener isolation', () => {
 
     it('logs the listener error through its own logger', () => {
         const bus = stubBus();
-        const error = vi.spyOn(bus.logger, 'error');
+        const error = vi.spyOn(busLoggerOf(bus), 'error');
         const thrown = new Error('listener blew up');
 
         bus.on('unknownException', () => {

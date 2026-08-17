@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 
 import { REST } from '@discordjs/rest';
 import { Bus } from '@seedcord/core';
-import { CommandInjector, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
+import { busLoggerOf, CommandInjector, getDevChannel, HmrManager, setBotColor } from '@seedcord/core/internal';
 import {
     CommandRegistry,
     CoordinatedShutdown,
@@ -156,9 +156,9 @@ export class Seedcord<Cfg extends HttpConfig = HttpConfig>
         if (Envapter.isDevelopment || Envapter.isTest) this.registerHmrAwareModules();
 
         this.startup.addTask(StartupPhase.Configuration, 'bus-initialization', async () => {
-            this.bus.logger.utils.initialization('Subscribers', 'start');
+            busLoggerOf(this.bus).utils.initialization('Subscribers', 'start');
             await this.subscribers.init();
-            this.bus.logger.utils.initialization('Subscribers', 'end');
+            busLoggerOf(this.bus).utils.initialization('Subscribers', 'end');
         });
 
         const { interactions } = this;
