@@ -5,7 +5,6 @@ export * from '#src/anchors';
 export * from '#src/tones';
 export * from '#routing/url-builder';
 export * from '#packages/identity';
-export { DEFAULT_SEARCH_TARGETS } from '#src/search-targets';
 export { formatVersionLabel } from '#src/version-label';
 export * from '#src/versions';
 export type * from '#src/types';
