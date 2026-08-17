@@ -88,6 +88,21 @@ const TONE_PRESENTATION = {
 type EntityToneConfig = (typeof TONE_PRESENTATION)[EntityTone];
 export type EntityToneStyle = EntityToneConfig['styles'];
 
+const TONE_TITLES = {
+    class: 'Classes',
+    interface: 'Interfaces',
+    function: 'Functions',
+    enum: 'Enums',
+    type: 'Types',
+    variable: 'Variables'
+} as const satisfies Record<EntityTone, string>;
+
+export const TONE_ORDER = Object.keys(TONE_TITLES) as (keyof typeof TONE_TITLES)[];
+
 export function getToneConfig(tone: EntityTone): EntityToneConfig {
     return TONE_PRESENTATION[tone];
+}
+
+export function getToneTitle(tone: EntityTone): string {
+    return TONE_TITLES[tone];
 }
