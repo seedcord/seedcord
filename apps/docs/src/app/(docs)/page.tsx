@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 import { loadDocsCatalog } from '#lib/docs/catalog';
 import { pageMetadata, SITE_DESCRIPTION } from '#lib/site';
-import { getToneConfig, TONE_ORDER } from '#lib/tonePresentation';
+import { getToneConfig, getToneTitle, TONE_ORDER } from '#lib/tonePresentation';
 
 import type { PackageCatalogEntry } from '#lib/docs/types';
 import type { EntityTone } from '@seedcord/docs-engine/client';
@@ -51,6 +51,7 @@ function ToneCounts({ card }: { card: PackageCard }): ReactElement {
                         )}
                     >
                         <ToneIcon size={12} strokeWidth={2} aria-hidden />
+                        <span className={cn('sr-only')}>{getToneTitle(tone)}: </span>
                         {card.entry.symbolCounts.get(tone)}
                     </span>
                 );
@@ -159,7 +160,7 @@ export default async function DocsIndexPage(): Promise<ReactElement> {
     const rest = cards.filter((card) => !TRANSPORT_PACKAGES.has(card.entry.manifestName));
 
     return (
-        <main className={cn('mx-auto w-full max-w-5xl space-y-8 px-5 py-10 sm:px-6 sm:py-14')}>
+        <main className={cn('mx-auto w-full max-w-6xl space-y-8 px-5 py-10 sm:px-6 sm:py-14')}>
             <div className={cn('space-y-1')}>
                 <p className={cn('text-subtle text-xs font-semibold tracking-[0.35em] uppercase')}>Docs</p>
                 <h1 className={cn('font-display text-2xl font-semibold text-(--text)')}>Reference</h1>
