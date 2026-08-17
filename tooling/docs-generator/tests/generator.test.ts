@@ -52,7 +52,8 @@ describe('ApiDocsGenerator', () => {
                 'dist/index.d.ts',
                 'dist/variable.d.ts',
                 'dist/variable.d.ts',
-                'dist/extra.d.ts'
+                'dist/extra.d.ts',
+                'dist/shared.d.ts'
             ]);
         });
 

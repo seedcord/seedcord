@@ -11,6 +11,8 @@ export interface AdapterEntry {
     subpath: string;
     apiPackage: ApiPackage;
     model: ApiModel;
+    /** Keys the package root really exports, set when `apiPackage` is the widened shared model. */
+    rootExports?: ReadonlySet<string>;
 }
 
 export function entryMembers(apiPackage: ApiPackage): readonly ApiItem[] {
@@ -25,11 +27,11 @@ const memberKey = (member: ApiItem): string => nodeKey(apiKindToDocKind(member),
 const exportsMember = (member: ApiItem): boolean => (ApiExportedMixin.isBaseClassOf(member) ? member.isExported : true);
 
 // groupOverloads matches how the adapter builds nodes
-function exportedKeysOf(apiPackage: ApiPackage): string[] {
-    return groupOverloads(entryMembers(apiPackage)).reduce<string[]>((acc, [primary]) => {
-        if (primary && exportsMember(primary)) acc.push(memberKey(primary));
+export function exportedKeysOf(apiPackage: ApiPackage): Set<string> {
+    return groupOverloads(entryMembers(apiPackage)).reduce<Set<string>>((acc, [primary]) => {
+        if (primary && exportsMember(primary)) acc.add(memberKey(primary));
         return acc;
-    }, []);
+    }, new Set());
 }
 
 /**
@@ -42,11 +44,13 @@ export function mergeEntries(adapter: ApiAdapter, entries: readonly AdapterEntry
     if (!root) throw new Error('mergeEntries needs at least one entry point.');
 
     const tree = adapter.transform(root.apiPackage);
+    const rootExports = root.rootExports;
     const byKey = new Map<string, DocNode>();
     for (const child of tree.children) {
+        const key = nodeKey(child.kind, child.name);
         // includeForgottenExports pulls in declarations no entry point exports
-        if (child.isExported) child.entries = [root.subpath];
-        byKey.set(nodeKey(child.kind, child.name), child);
+        if (child.isExported && (!rootExports || rootExports.has(key))) child.entries = [root.subpath];
+        byKey.set(key, child);
     }
 
     for (const entry of subpaths) {

@@ -17,6 +17,9 @@ export const metadata: Metadata = pageMetadata({
     image: '/og'
 });
 
+// the publish pipeline rewrites index.json between builds
+export const revalidate = 300; // 5 mins
+
 const TRANSPORT_PACKAGES = new Set(['@seedcord/gateway', '@seedcord/http']);
 
 // matches the entity chips on a package's reference tab

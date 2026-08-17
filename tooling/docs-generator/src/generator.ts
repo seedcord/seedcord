@@ -21,6 +21,8 @@ export interface ApiDocsGeneratorOptions extends ApiDocsPathConfig {
     githubBase?: string;
     /** Git ref the source links point at: the default branch locally, the tag for an archived version. */
     ref?: string;
+    /** Overrides `ref` for a single package, keyed by full name. */
+    refs?: Readonly<Record<string, string>>;
 }
 
 export interface ApiDocsGeneratorResult {
@@ -38,6 +40,7 @@ export class ApiDocsGenerator {
     private readonly packageName?: string;
     private readonly githubBase?: string;
     private readonly ref: string;
+    private readonly refs: Readonly<Record<string, string>>;
     private lastResults: PackageDocResult[] = [];
     private lastPackages: string[] = [];
 
@@ -54,6 +57,11 @@ export class ApiDocsGenerator {
         if (options.packageName) this.packageName = options.packageName;
         if (options.githubBase) this.githubBase = options.githubBase;
         this.ref = options.ref ?? 'next';
+        this.refs = options.refs ?? {};
+    }
+
+    private refFor(packageName: string): string {
+        return this.refs[packageName] ?? this.ref;
     }
 
     getPaths(): ApiDocsPaths {
@@ -142,7 +150,8 @@ export class ApiDocsGenerator {
                 throw new Error(`API Extractor extraction failed for ${result.name}. see logs above.`);
             }
 
-            this.attachSourceIndex(result, packageDir, packageNames);
+            const ref = this.refFor(result.name);
+            this.attachSourceIndex(result, packageDir, packageNames, ref);
 
             const readme = await readReadme(packageDir);
             if (readme) result.readme = readme;
@@ -152,7 +161,7 @@ export class ApiDocsGenerator {
 
             if (this.githubBase && existsSync(path.join(packageDir, 'CHANGELOG.md'))) {
                 const repoRelativeDir = this.paths.toRepoRelative(packageDir).split(path.sep).join('/');
-                result.changelogUrl = `${this.githubBase}/blob/${this.ref}/${repoRelativeDir}/CHANGELOG.md`;
+                result.changelogUrl = `${this.githubBase}/blob/${ref}/${repoRelativeDir}/CHANGELOG.md`;
             }
         }
 
@@ -181,13 +190,14 @@ export class ApiDocsGenerator {
     private attachSourceIndex(
         result: PackageDocResult,
         packageDir: string,
-        packageNames: Record<string, string>
+        packageNames: Record<string, string>,
+        ref: string
     ): void {
         const scan = buildSourceIndex({
             packageDir,
             repoRoot: this.paths.repoRoot,
             githubBase: this.githubBase ?? '',
-            ref: this.ref,
+            ref,
             packageNames,
             ...(result.sourceEntry && { entry: result.sourceEntry })
         });

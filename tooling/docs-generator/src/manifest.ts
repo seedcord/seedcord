@@ -27,6 +27,7 @@ export async function writeManifest(
                 output: entry.outputPath ? paths.toRepoRelative(entry.outputPath) : null
             })),
             output: result.outputPath ? paths.toRepoRelative(result.outputPath) : null,
+            ...(result.sharedModelPath && { sharedModel: paths.toRepoRelative(result.sharedModelPath) }),
             warningCount: result.warnings.length,
             errorCount: result.errors.length,
             warnings: result.warnings,

@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { buildPackageFromApi } from '#builders/package-builder';
 import { createApiModel, loadApiPackage } from '#model/load-model';
+import { exportedKeysOf } from '#model/merge-entries';
 
 import type { AdapterEntry } from '#model/merge-entries';
 import type { GlobalId } from '#src/ids';
@@ -144,8 +145,29 @@ function loadEntries(
         const apiJsonPath = resolveOutput(entry.output);
         if (!apiJsonPath) return acc;
 
-        const model = entry.subpath === '.' ? sharedModel : createApiModel();
-        acc.push({ subpath: entry.subpath, apiPackage: loadApiPackage(model, apiJsonPath), model });
+        if (entry.subpath !== '.') {
+            const model = createApiModel();
+            acc.push({ subpath: entry.subpath, apiPackage: loadApiPackage(model, apiJsonPath), model });
+            return acc;
+        }
+
+        const sharedModelPath = resolveOutput(pkg.sharedModel ?? null);
+        if (!sharedModelPath) {
+            acc.push({
+                subpath: entry.subpath,
+                apiPackage: loadApiPackage(sharedModel, apiJsonPath),
+                model: sharedModel
+            });
+            return acc;
+        }
+
+        // the widened model exports subpath symbols too
+        acc.push({
+            subpath: entry.subpath,
+            apiPackage: loadApiPackage(sharedModel, sharedModelPath),
+            model: sharedModel,
+            rootExports: exportedKeysOf(loadApiPackage(createApiModel(), apiJsonPath))
+        });
         return acc;
     }, []);
 }
