@@ -28,6 +28,7 @@ export const rawExternalLinks = {
     RangeError: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RangeError',
     ReadableStream: 'https://developer.mozilla.org/docs/Web/API/ReadableStream',
     RegExp: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/RegExp',
+    Request: 'https://developer.mozilla.org/docs/Web/API/Request',
     Response: 'https://developer.mozilla.org/docs/Web/API/Response',
     Set: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Set',
     SymbolConstructor: 'https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Symbol',
@@ -105,11 +106,15 @@ export const rawExternalLinks = {
     Readable: 'https://nodejs.org/api/stream.html#class-streamreadable',
     Writable: 'https://nodejs.org/api/stream.html#class-streamwritable',
     Stream: 'https://nodejs.org/api/stream.html#stream',
+    'node:crypto': 'https://nodejs.org/api/crypto.html',
+    'node:fs': 'https://nodejs.org/api/fs.html',
 
     // External Libraries
     'discord.js': 'https://discord.js.org/docs',
     '@discordjs/builders': 'https://discord.js.org/docs',
     '@discordjs/collection': 'https://discord.js.org/docs',
+    '@discordjs/core': 'https://discord.js.org/docs',
+    '@discordjs/rest': 'https://discord.js.org/docs',
     '@discordjs/util': 'https://discord.js.org/docs',
     'discord-api-types': 'https://discord.js.org/docs',
     chalk: 'https://github.com/chalk/chalk',
@@ -123,5 +128,6 @@ export const rawExternalLinks = {
     kysely: 'https://kysely.dev/docs/intro',
     pg: 'https://node-postgres.com',
     eslint: 'https://eslint.org/docs/latest/',
+    'eslint-import-context': 'https://github.com/un-ts/eslint-import-context',
     '@typescript-eslint/utils': 'https://typescript-eslint.io'
 } as const;
