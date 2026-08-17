@@ -3,8 +3,10 @@
 import { Button, GithubIcon, Icon, cn } from '@seedcord/ui';
 import { Menu } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useLayoutEffect, useRef } from 'react';
 
+import { hasMobileNavPanel } from '#components/layout/sidebar/utils/hasMobileNavPanel';
 import { useUIStore } from '#store/ui';
 
 import { HeaderSettingsPopover } from './HeaderSettingsPopover';
@@ -16,6 +18,7 @@ import type { ReactElement } from 'react';
 export function Navbar(): ReactElement {
     const setMobileNavOpen = useUIStore((state) => state.setMobileNavOpen);
     const isMobileNavOpen = useUIStore((state) => state.isMobileNavOpen);
+    const showMobileNavButton = hasMobileNavPanel(usePathname());
     const ref = useRef<HTMLElement>(null);
 
     // the fixed navbar reserves its height as --nav-h for the content offset and the sidebar top
@@ -46,17 +49,19 @@ export function Navbar(): ReactElement {
                     <div className={cn('flex items-center gap-3')}>
                         <div className={cn('flex items-center gap-2')}>
                             <HeaderSearchControls />
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Open navigation menu"
-                                aria-haspopup="dialog"
-                                aria-expanded={isMobileNavOpen}
-                                className={cn('text-(--text) lg:hidden')}
-                                onClick={() => setMobileNavOpen(true)}
-                            >
-                                <Icon icon={Menu} size={20} />
-                            </Button>
+                            {showMobileNavButton ? (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Open navigation menu"
+                                    aria-haspopup="dialog"
+                                    aria-expanded={isMobileNavOpen}
+                                    className={cn('text-(--text) lg:hidden')}
+                                    onClick={() => setMobileNavOpen(true)}
+                                >
+                                    <Icon icon={Menu} size={20} />
+                                </Button>
+                            ) : null}
                             <div className={cn('hidden items-center gap-2 lg:flex')}>
                                 <HeaderSettingsPopover />
                                 <Button
